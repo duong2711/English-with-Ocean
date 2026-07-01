@@ -829,8 +829,8 @@ function toggleCompletion(symbolElement) {
         // Xóa các ô cũ nếu inline script HTML đã tạo trước
         Array.from(grid.querySelectorAll('.slot, .time-cell')).forEach(el => el.remove());
 
-        for (let h = 0; h <= 23; h++) {
-            for (let m = 0; m < 60; m += 15) {
+        for (let h = 5; h <= 23; h++) {
+            for (let m = 0; m < 60; m += 30) {
                 const time = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
                 const tc = document.createElement('div');
                 tc.className = 'time-cell';
