@@ -5,6 +5,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl3cWJha3NtbXR2d2JvamNnc2RkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxNjc3NTAsImV4cCI6MjA5Nzc0Mzc1MH0.vhgt7cB6w2elm-MXY57U_wJtYkJQHDFAEsJwAArOjhQ'; 
     const AUDIO_BUCKET_NAME = 'audio_comments'; 
     const ADMIN_PASSWORD = 'admin'; 
+    // Email của (các) giảng viên — được quyền xem mọi bài dịch và để lại nhận xét.
+    // ⚠️ Sửa danh sách này thành email thật của giảng viên (đúng email dùng để đăng nhập).
+    // Nhớ cập nhật CÙNG danh sách này trong policy RLS ở Supabase (xem hướng dẫn SQL).
+    const TEACHER_EMAILS = ['giangvien@gmail.com'];
     const { createClient } = supabase;
     const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     // ------------------------------------------
@@ -35,6 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const commentToggleHeader = document.getElementById('comment-toggle-header');
     const commentContentWrapper = document.getElementById('comment-content-wrapper');
     const authContainer = document.getElementById('auth-container');
+    const insideWrapper = document.getElementById('inside');
     const authStatus = document.getElementById('auth-status');
     const loginForm = document.getElementById('login-form');
     const logoutBtn = document.getElementById('logout-btn');
@@ -43,7 +48,73 @@ document.addEventListener('DOMContentLoaded', () => {
     
     let currentUserId = null; 
     let currentEmail = ''; 
+    let isTeacher = false; // true nếu email đăng nhập nằm trong TEACHER_EMAILS
     let holdTimer = null; // Thêm biến này
+
+    // --- [MỚI] GHI NHỚ VỊ TRÍ ĐANG XEM + TỰ DỪNG AUDIO KHI CHUYỂN TAB ---
+    const MAIN_TAB_STORAGE_KEY = 'ldd_active_main_tab';
+    const IPA_SUBTAB_STORAGE_KEY = 'ldd_active_ipa_subtab';
+
+    // Dừng toàn bộ audio (ghi âm) đang phát trên trang
+    function pauseAllAudio() {
+        document.querySelectorAll('audio').forEach(audioEl => {
+            if (!audioEl.paused) audioEl.pause();
+        });
+    }
+
+    // [MỚI] Dừng toàn bộ video YouTube đang nhúng trong trang (tab Ngữ pháp...)
+    // Các iframe YouTube đã được bật enablejsapi=1 nên có thể điều khiển qua postMessage.
+    function pauseAllYoutubeVideos() {
+        document.querySelectorAll('iframe[src*="youtube.com/embed"]').forEach(iframe => {
+            try {
+                iframe.contentWindow.postMessage(
+                    JSON.stringify({ event: 'command', func: 'pauseVideo', args: [] }),
+                    '*'
+                );
+            } catch (e) { /* bỏ qua nếu trình duyệt chặn cross-origin */ }
+        });
+    }
+
+    // [MỚI] Dừng video hướng dẫn phát âm (Vimeo) nếu đang phát
+    function pauseGuideVideo() {
+        try {
+            if (currentVideoSrc && videoPauseBtn && !videoPauseBtn.disabled) {
+                videoPauseBtn.click();
+            }
+        } catch (e) { /* bỏ qua nếu có lỗi */ }
+    }
+
+    // [MỚI] Dừng TẤT CẢ media (audio ghi âm + video YouTube + video Vimeo hướng dẫn)
+    function pauseAllMedia() {
+        pauseAllAudio();
+        pauseAllYoutubeVideos();
+        pauseGuideVideo();
+    }
+
+    // Khi tab trình duyệt bị chuyển đi/ẩn đi (sang tab khác, thu nhỏ, khóa máy...)
+    // thì mọi audio/video đang phát sẽ tự động dừng lại.
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) pauseAllMedia();
+    });
+
+    // Khôi phục tab chính (Phiên âm / Từ vựng / ...) đã xem lần trước
+    function restoreActiveMainTab() {
+        try {
+            const savedTarget = localStorage.getItem(MAIN_TAB_STORAGE_KEY);
+            if (!savedTarget) return;
+
+            const savedBtn = document.querySelector(`.main-tab-btn[data-main-target="${savedTarget}"]`);
+            const savedContent = document.getElementById(savedTarget);
+            if (!savedBtn || !savedContent) return;
+
+            document.querySelectorAll('.main-tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.main-tab-content').forEach(c => c.classList.remove('active'));
+
+            savedBtn.classList.add('active');
+            savedContent.classList.add('active');
+        } catch (e) { /* localStorage có thể bị chặn (chế độ ẩn danh...) - bỏ qua */ }
+    }
+    // --- KẾT THÚC PHẦN GHI NHỚ VỊ TRÍ ---
 
     // --- LOGIC XÁC THỰC (ĐĂNG NHẬP BẮT BUỘC) ---
     async function handleLogin(e) {
@@ -100,7 +171,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (user) {
             currentUserId = user.id;
             currentEmail = user.email;
+            isTeacher = TEACHER_EMAILS.includes((user.email || '').toLowerCase());
             authContainer.style.display = 'none';
+            if (insideWrapper) insideWrapper.style.display = 'block';
             logoutBtn.style.display = 'block';
             authStatus.textContent = `Đã đăng nhập: ${user.email} (ID: ${user.id.substring(0, 8)}...)`;
             
@@ -111,6 +184,10 @@ document.addEventListener('DOMContentLoaded', () => {
             // Xóa inline style cũ để CSS Grid mới tự hoạt động chuẩn xác
             if (ipaChart) ipaChart.style.display = ''; 
             if (guideDisplay) guideDisplay.style.display = ''; 
+
+            // [MỚI] Khôi phục tab đang xem lần trước (nếu có), để khi tải lại trang
+            // người dùng vẫn ở đúng nơi họ đang xem thay vì quay về tab đầu tiên.
+            restoreActiveMainTab();
 
             // Tải trạng thái hoàn thành ngay lập tức
             loadCompletionStatus(user);
@@ -123,7 +200,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             currentUserId = null;
             currentEmail = '';
+            isTeacher = false;
             authContainer.style.display = 'block';
+            if (insideWrapper) insideWrapper.style.display = 'none';
             logoutBtn.style.display = 'none';
             authStatus.innerText = 'Tài khoản demo: hv2@gmail.com, Mật khẩu: hv2\n\nTài khoản demo: hv3@gmail.com, Mật khẩu: hv3';
 
@@ -134,6 +213,8 @@ document.addEventListener('DOMContentLoaded', () => {
             ipaChart.style.display = 'none'; 
             guideDisplay.style.display = 'none'; 
             hideVideoAndShowPlaceholder();
+            pauseAllAudio(); // [MỚI] Dừng audio đang phát khi đăng xuất
+            pauseAllYoutubeVideos(); // [MỚI] Dừng video YouTube (nếu có) khi đăng xuất
             
             // Xóa trạng thái hoàn thành trên giao diện khi đăng xuất
             symbols.forEach(symbolElement => {
@@ -280,6 +361,9 @@ document.addEventListener('DOMContentLoaded', () => {
                  return;
             }
 
+            // [MỚI] Dừng audio đang phát khi chuyển sang ký tự khác
+            pauseAllAudio();
+
             const videoSrc = symbol.dataset.videoSrc;
             currentVideoSrc = videoSrc; 
             
@@ -336,6 +420,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     mainTabBtns.forEach(btn => {
         btn.addEventListener('click', () => {
+            // [MỚI] Dừng mọi audio/video (ghi âm, YouTube, Vimeo) trước khi chuyển sang tab khác
+            pauseAllMedia();
+
             // Xóa class active của tất cả các nút và nội dung
             mainTabBtns.forEach(b => b.classList.remove('active'));
             mainTabContents.forEach(c => c.classList.remove('active'));
@@ -349,6 +436,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (targetContent) {
                 targetContent.classList.add('active');
             }
+
+            // [MỚI] Ghi nhớ tab đang chọn để khôi phục khi tải lại trang
+            try {
+                localStorage.setItem(MAIN_TAB_STORAGE_KEY, targetId);
+            } catch (e) { /* bỏ qua nếu localStorage bị chặn */ }
         });
     });
     // --- KẾT THÚC LOGIC CHUYỂN MAIN TABS ---
@@ -773,17 +865,29 @@ function toggleCompletion(symbolElement) {
         if (contentIndex !== -1) {
             ipaTabsContainer.scrollLeft = contentIndex * ipaTabsContainer.clientWidth;
         }
+
+        // [MỚI] Ghi nhớ mục đang xem để khôi phục khi tải lại trang
+        try {
+            localStorage.setItem(IPA_SUBTAB_STORAGE_KEY, targetId);
+        } catch (e) { /* bỏ qua nếu localStorage bị chặn */ }
     }
 
     tabButtons.forEach(button => {
         button.addEventListener('click', (e) => {
+            // [MỚI] Dừng mọi audio/video (ghi âm, video hướng dẫn) trước khi chuyển mục
+            pauseAllMedia();
             const targetId = e.target.dataset.target;
             activateTab(targetId);
         });
     });
     
-    // Đảm bảo tab đầu tiên được hiển thị khi tải trang
-    activateTab('monophthongs');
+    // [CẬP NHẬT] Khôi phục đúng mục đã xem lần trước khi tải lại trang
+    // (mặc định là "Nguyên âm đơn" nếu chưa từng chọn)
+    let savedIpaSubtab = 'monophthongs';
+    try {
+        savedIpaSubtab = localStorage.getItem(IPA_SUBTAB_STORAGE_KEY) || 'monophthongs';
+    } catch (e) { /* bỏ qua nếu localStorage bị chặn */ }
+    activateTab(savedIpaSubtab);
     
     // Chú ý: Hàm loadCompletionStatus đã được cập nhật logic ở trên không cần thay đổi thêm gì.
 
@@ -1090,7 +1194,336 @@ function toggleCompletion(symbolElement) {
         const newsQuizSubmit       = document.getElementById('news-quiz-submit');
         const newsQuizResult       = document.getElementById('news-quiz-result');
 
+        // --- Refs cho khung dịch bài ---
+        const newsTeacherBadge     = document.getElementById('news-teacher-badge');
+        const newsTranslateCompose = document.getElementById('news-translate-compose');
+        const newsTranslateTextarea = document.getElementById('news-translate-textarea');
+        const newsTranslateStatus  = document.getElementById('news-translate-status');
+        const newsTranslateSubmitBtn = document.getElementById('news-translate-submit-btn');
+        const newsTranslateCancelBtn = document.getElementById('news-translate-cancel-btn');
+        const newsTranslatePeers   = document.getElementById('news-translate-peers');
+        const newsPeersRefreshBtn  = document.getElementById('news-peers-refresh-btn');
+
+        const NEWS_TRANSLATE_PLACEHOLDER = 'Nhập bản dịch tiếng Việt của bạn cho bài báo này...';
+
+        let currentArticleId = null;   // bài tin đang mở
+        let mySubmitted = false;       // học viên đã nộp bài dịch cho bài tin đang mở chưa
+        let myRowId = null;            // id hàng của bài dịch của chính mình (dùng khi cần)
+        let myRowData = null;          // dữ liệu hàng bài dịch của chính mình (cache)
+        let isEditingMine = false;     // học viên đang bấm ✏️ để sửa bài đã nộp
+        let translateSaveTimer = null; // debounce timer cho autosave (chỉ dùng khi chưa nộp)
+
         if (!newsFolderCard) return;
+
+        // ===== KHUNG DỊCH BÀI: helper & logic =====
+        function escapeHtmlNews(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function newsDisplayName(email) {
+            if (!email) return 'Ẩn danh';
+            return email.split('@')[0];
+        }
+
+        function newsFormatTime(iso) {
+            if (!iso) return '';
+            return new Date(iso).toLocaleString('vi-VN');
+        }
+
+        // Đặt lại toàn bộ khung dịch bài về trạng thái mặc định + tải dữ liệu cho bài tin mới
+        async function initTranslateSection(articleId) {
+            currentArticleId = articleId;
+            mySubmitted = false;
+            myRowId = null;
+            myRowData = null;
+            isEditingMine = false;
+
+            newsTeacherBadge.style.display = isTeacher ? 'inline-block' : 'none';
+            // Giảng viên không cần khung soạn bài — chỉ xem & nhận xét
+            newsTranslateCompose.style.display = isTeacher ? 'none' : '';
+
+            newsTranslateTextarea.placeholder = NEWS_TRANSLATE_PLACEHOLDER;
+            newsTranslateTextarea.value = '';
+            newsTranslateTextarea.disabled = true;
+            newsTranslateSubmitBtn.style.display = '';
+            newsTranslateSubmitBtn.textContent = 'Nộp bài dịch';
+            newsTranslateSubmitBtn.disabled = true;
+            newsTranslateCancelBtn.style.display = 'none';
+            newsTranslateStatus.textContent = isTeacher ? '' : 'Đang tải bài dịch của bạn...';
+            newsTranslateStatus.className = 'news-translate-status';
+            newsTranslatePeers.innerHTML = '<p class="news-translate-locked-msg">Đang tải...</p>';
+
+            if (!currentUserId) {
+                newsTranslateStatus.textContent = 'Vui lòng đăng nhập để dịch bài.';
+                newsTranslatePeers.innerHTML = '<p class="news-translate-locked-msg">Vui lòng đăng nhập để xem bài dịch của học viên khác.</p>';
+                return;
+            }
+
+            if (!isTeacher) {
+                newsTranslateTextarea.disabled = false;
+                newsTranslateSubmitBtn.disabled = false;
+
+                const myRow = await loadMyTranslation(articleId);
+                myRowData = myRow;
+                if (myRow) {
+                    myRowId = myRow.id;
+                    mySubmitted = !!myRow.submitted;
+                    if (mySubmitted) {
+                        enterLockedComposeState();
+                    } else {
+                        newsTranslateTextarea.value = myRow.translation || '';
+                        newsTranslateStatus.textContent = 'Đã lưu bản nháp. Nộp bài để xem bài dịch của học viên khác.';
+                    }
+                } else {
+                    newsTranslateStatus.textContent = 'Nhập bản dịch của bạn — hệ thống sẽ tự lưu khi bạn gõ.';
+                }
+            }
+
+            await refreshPeerList(articleId);
+        }
+
+        // Trạng thái "đã nộp": ô soạn bài trống lại và bị khóa, không autosave
+        function enterLockedComposeState() {
+            isEditingMine = false;
+            clearTimeout(translateSaveTimer);
+            newsTranslateTextarea.value = '';
+            newsTranslateTextarea.disabled = true;
+            newsTranslateTextarea.placeholder = 'Bạn đã nộp bài dịch cho bài này. Bấm biểu tượng ✏️ trong danh sách bên dưới để chỉnh sửa.';
+            newsTranslateSubmitBtn.style.display = 'none';
+            newsTranslateCancelBtn.style.display = 'none';
+            newsTranslateStatus.textContent = myRowData ? `✅ Đã nộp lúc ${newsFormatTime(myRowData.submitted_at)}.` : '✅ Đã nộp bài.';
+            newsTranslateStatus.className = 'news-translate-status submitted';
+        }
+
+        // Trạng thái chỉnh sửa: học viên vừa bấm ✏️ trên bài dịch đã nộp của mình
+        function enterEditingState() {
+            isEditingMine = true;
+            newsTranslateTextarea.placeholder = NEWS_TRANSLATE_PLACEHOLDER;
+            newsTranslateTextarea.value = myRowData ? (myRowData.translation || '') : '';
+            newsTranslateTextarea.disabled = false;
+            newsTranslateSubmitBtn.style.display = '';
+            newsTranslateSubmitBtn.textContent = 'Lưu chỉnh sửa';
+            newsTranslateCancelBtn.style.display = '';
+            newsTranslateStatus.textContent = 'Đang chỉnh sửa bài dịch của bạn...';
+            newsTranslateStatus.className = 'news-translate-status';
+            newsTranslateTextarea.focus();
+            newsTranslateTextarea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            refreshPeerList(currentArticleId); // ẩn tạm thẻ "Bạn" khỏi danh sách trong lúc sửa
+        }
+
+        // Tải bài dịch của chính học viên đang đăng nhập cho 1 bài tin
+        async function loadMyTranslation(articleId) {
+            try {
+                const { data, error } = await sb
+                    .from('news_translations')
+                    .select('*')
+                    .eq('article_id', articleId)
+                    .eq('user_id', currentUserId)
+                    .maybeSingle();
+                if (error) throw error;
+                return data;
+            } catch (err) {
+                console.error('Lỗi khi tải bài dịch của bạn:', err.message);
+                return null;
+            }
+        }
+
+        // Lưu (upsert) bài dịch của học viên — dùng cho autosave (bản nháp) và khi nộp/sửa bài
+        // touchSubmittedAt: chỉ true ở lần NỘP ĐẦU TIÊN (để không ghi đè thời gian nộp gốc khi sửa sau đó).
+        async function saveMyTranslation(articleId, translationText, submitted, touchSubmittedAt) {
+            const payload = {
+                article_id: articleId,
+                user_id: currentUserId,
+                email: currentEmail,
+                translation: translationText,
+                submitted: submitted,
+                updated_at: new Date().toISOString()
+            };
+            if (touchSubmittedAt) payload.submitted_at = new Date().toISOString();
+
+            const { data, error } = await sb
+                .from('news_translations')
+                .upsert(payload, { onConflict: 'article_id,user_id' })
+                .select()
+                .maybeSingle();
+
+            if (error) throw error;
+            return data;
+        }
+
+        // Autosave có debounce — CHỈ áp dụng khi đang soạn bản nháp (chưa nộp lần nào).
+        // Sau khi đã nộp, việc sửa phải qua nút ✏️ + bấm "Lưu chỉnh sửa" một cách chủ động.
+        function scheduleAutosave() {
+            if (!currentUserId || currentArticleId === null || mySubmitted) return;
+            newsTranslateStatus.textContent = 'Đang gõ...';
+            newsTranslateStatus.className = 'news-translate-status';
+            clearTimeout(translateSaveTimer);
+            translateSaveTimer = setTimeout(async () => {
+                const text = newsTranslateTextarea.value;
+                try {
+                    const saved = await saveMyTranslation(currentArticleId, text, false, false);
+                    if (saved) { myRowId = saved.id; myRowData = saved; }
+                    newsTranslateStatus.textContent = '💾 Đã lưu bản nháp tự động.';
+                    newsTranslateStatus.className = 'news-translate-status saved';
+                } catch (err) {
+                    console.error('Lỗi autosave bài dịch:', err.message);
+                    newsTranslateStatus.textContent = '❌ Lưu thất bại: ' + err.message;
+                    newsTranslateStatus.className = 'news-translate-status';
+                }
+            }, 900);
+        }
+
+        newsTranslateTextarea.addEventListener('input', scheduleAutosave);
+
+        // Nộp bài dịch (lần đầu) hoặc Lưu chỉnh sửa (sau khi bấm ✏️)
+        newsTranslateSubmitBtn.addEventListener('click', async () => {
+            if (!currentUserId || isTeacher) return;
+            if (currentArticleId === null) return;
+            const text = newsTranslateTextarea.value.trim();
+            if (!text) {
+                alert('Vui lòng nhập bản dịch trước khi nộp.');
+                return;
+            }
+            clearTimeout(translateSaveTimer);
+            const isFirstSubmission = !mySubmitted;
+            newsTranslateSubmitBtn.disabled = true;
+            newsTranslateStatus.textContent = isFirstSubmission ? 'Đang nộp bài...' : 'Đang lưu chỉnh sửa...';
+            try {
+                const saved = await saveMyTranslation(currentArticleId, text, true, isFirstSubmission);
+                myRowData = saved || { ...(myRowData || {}), translation: text, submitted: true };
+                myRowId = myRowData.id || myRowId;
+                mySubmitted = true;
+                enterLockedComposeState();
+                await refreshPeerList(currentArticleId);
+            } catch (err) {
+                console.error('Lỗi khi nộp bài dịch:', err.message);
+                newsTranslateStatus.textContent = '❌ Nộp bài thất bại: ' + err.message;
+            } finally {
+                newsTranslateSubmitBtn.disabled = false;
+            }
+        });
+
+        // Hủy chỉnh sửa — quay lại trạng thái đã nộp, không lưu thay đổi
+        newsTranslateCancelBtn.addEventListener('click', () => {
+            enterLockedComposeState();
+            refreshPeerList(currentArticleId);
+        });
+
+        // Tải danh sách bài dịch (RLS tự chặn nếu chưa nộp bài / không phải giảng viên)
+        async function loadPeerTranslations(articleId) {
+            try {
+                const { data, error } = await sb
+                    .from('news_translations')
+                    .select('*')
+                    .eq('article_id', articleId)
+                    .order('updated_at', { ascending: false });
+                if (error) throw error;
+                return data || [];
+            } catch (err) {
+                console.error('Lỗi khi tải bài dịch của học viên khác:', err.message);
+                return null; // null = có lỗi/không có quyền xem
+            }
+        }
+
+        // Vẽ lại danh sách bài dịch — bao gồm cả bài của chính mình (đánh dấu "Bạn" + nút ✏️),
+        // trừ khi đang trong lúc chỉnh sửa thì tạm ẩn thẻ của mình để tránh hiển thị trùng lặp.
+        function renderPeerList(rows) {
+            if (rows === null) {
+                newsTranslatePeers.innerHTML = '<p class="news-translate-locked-msg">Hãy nộp bài dịch của bạn để xem bài dịch của các học viên khác.</p>';
+                return;
+            }
+            const visibleRows = rows.filter(r => !(isEditingMine && r.user_id === currentUserId));
+            if (visibleRows.length === 0) {
+                newsTranslatePeers.innerHTML = '<p class="news-translate-locked-msg">Chưa có bài dịch nào được nộp cho bài này.</p>';
+                return;
+            }
+            newsTranslatePeers.innerHTML = visibleRows.map(row => {
+                const isMe = row.user_id === currentUserId;
+                const canEdit = isMe && !isTeacher;
+                const feedbackBlock = row.teacher_feedback
+                    ? `<div class="news-peer-feedback-existing"><strong>💬 Nhận xét của giảng viên:</strong>${escapeHtmlNews(row.teacher_feedback)}</div>`
+                    : '';
+                const feedbackForm = isTeacher
+                    ? `<div class="news-peer-feedback-form">
+                            <textarea data-row-id="${row.id}" class="news-feedback-input" placeholder="Viết nhận xét cho bài dịch này...">${escapeHtmlNews(row.teacher_feedback || '')}</textarea>
+                            <button type="button" class="news-peer-feedback-save-btn" data-row-id="${row.id}">Lưu nhận xét</button>
+                       </div>`
+                    : '';
+                const editBtn = canEdit
+                    ? `<button type="button" class="news-peer-edit-btn" data-row-id="${row.id}" title="Chỉnh sửa bài dịch của bạn">✏️</button>`
+                    : '';
+                return `<div class="news-peer-item ${isMe ? 'is-me' : ''}">
+                    <div class="news-peer-header">
+                        <span class="news-peer-name">${isMe ? '👤 Bạn' : '👤 ' + escapeHtmlNews(newsDisplayName(row.email))}</span>
+                        <span class="news-peer-header-right">
+                            <span class="news-peer-time">${row.submitted ? 'Nộp lúc ' + newsFormatTime(row.submitted_at) : 'Bản nháp'}</span>
+                            ${editBtn}
+                        </span>
+                    </div>
+                    <div class="news-peer-text">${escapeHtmlNews(row.translation)}</div>
+                    ${feedbackBlock}
+                    ${feedbackForm}
+                </div>`;
+            }).join('');
+        }
+
+        // Kết hợp tải + vẽ danh sách bài dịch
+        async function refreshPeerList(articleId) {
+            if (!currentUserId) return;
+            if (!mySubmitted && !isTeacher) {
+                newsTranslatePeers.innerHTML = '<p class="news-translate-locked-msg">Hãy nộp bài dịch của bạn để xem bài dịch của các học viên khác.</p>';
+                return;
+            }
+            const rows = await loadPeerTranslations(articleId);
+            renderPeerList(rows);
+        }
+
+        newsPeersRefreshBtn.addEventListener('click', () => {
+            if (currentArticleId !== null) refreshPeerList(currentArticleId);
+        });
+
+        // Ủy quyền sự kiện trên danh sách: bấm ✏️ để sửa bài của mình, hoặc (giảng viên) lưu nhận xét
+        newsTranslatePeers.addEventListener('click', async (e) => {
+            const editBtn = e.target.closest('.news-peer-edit-btn');
+            if (editBtn) {
+                if (!isTeacher) enterEditingState();
+                return;
+            }
+
+            const btn = e.target.closest('.news-peer-feedback-save-btn');
+            if (!btn) return;
+            if (!isTeacher) return;
+            const rowId = btn.dataset.rowId;
+            const textarea = newsTranslatePeers.querySelector(`.news-feedback-input[data-row-id="${rowId}"]`);
+            const feedbackText = textarea ? textarea.value.trim() : '';
+            btn.disabled = true;
+            btn.textContent = 'Đang lưu...';
+            try {
+                const { error } = await sb
+                    .from('news_translations')
+                    .update({
+                        teacher_feedback: feedbackText,
+                        teacher_feedback_at: new Date().toISOString(),
+                        teacher_feedback_by: currentEmail
+                    })
+                    .eq('id', rowId);
+                if (error) throw error;
+                btn.textContent = '✅ Đã lưu';
+                setTimeout(() => { btn.disabled = false; btn.textContent = 'Lưu nhận xét'; }, 1200);
+            } catch (err) {
+                console.error('Lỗi khi lưu nhận xét:', err.message);
+                alert('Lưu nhận xét thất bại: ' + err.message + '\n(Kiểm tra email giảng viên đã đúng trong TEACHER_EMAILS và trong policy RLS trên Supabase.)');
+                btn.disabled = false;
+                btn.textContent = 'Lưu nhận xét';
+            }
+        });
+        // ===== KẾT THÚC KHUNG DỊCH BÀI =====
 
         // Render thumbnail cards
         function renderNewsCards() {
@@ -1147,6 +1580,9 @@ function toggleCompletion(symbolElement) {
             newsArticleImg.src = article.thumb;
             newsArticleImg.alt = article.title;
             newsArticleText.innerHTML = article.content;
+
+            // Khởi tạo khung dịch bài cho bài tin này
+            initTranslateSection(article.id);
 
             // Render quiz
             newsQuizQuestions.innerHTML = '';
@@ -1790,7 +2226,7 @@ function toggleCompletion(symbolElement) {
     // ===== KẾT THÚC TRÒ CHƠI LÔ TÔ =====
 
     // ===================================================================
-    // ===== BẮT ĐẦU: "CHO BÉ" — 50 CHỦ ĐỀ (flashcard / nối từ / câu chuyện / dịch câu) =====
+    // ===== BẮT ĐẦU: "CHO BÉ" — 50 CHỦ ĐỀ (flashcard / nối từ / câu chuyện) =====
     // ===================================================================
     (() => {
         const kidFolderCard   = document.getElementById('kid-folder-card');
@@ -1809,6 +2245,78 @@ function toggleCompletion(symbolElement) {
         let currentTopic = null;
         let flashIndex = 0;
         let flashOrder = [];
+
+        // ================== [MỚI] ẢNH DỰ PHÒNG TỰ ĐỘNG QUA PIXABAY API ==================
+        // Khi ảnh gốc của 1 từ vựng bị lỗi (404, mất link...), hệ thống sẽ tự động gọi
+        // Pixabay API để tìm 1 ảnh khác PHÙ HỢP VỚI CHÍNH TỪ ĐÓ (vd "Cat" -> ảnh con mèo),
+        // thay vì chỉ hiện 1 icon chung chung cho mọi trường hợp.
+        //
+        // ⚠️ BẠN CẦN TỰ ĐĂNG KÝ API KEY (miễn phí) TẠI: https://pixabay.com/api/docs/
+        // rồi dán vào biến PIXABAY_API_KEY bên dưới. Vì đây là web app chạy hoàn toàn
+        // phía trình duyệt (không có server riêng), API key sẽ lộ ra nếu ai đó xem
+        // mã nguồn trang (View Source). Với gói Pixabay miễn phí thì rủi ro thấp (chỉ bị
+        // giới hạn số lượt gọi/giờ nếu bị lạm dụng, không tốn phí), nhưng bạn nên biết điều này.
+        const PIXABAY_API_KEY = '56544847-409d66abd567108a329537591';
+
+        // Ảnh dự phòng "cuối cùng" (icon hình ảnh trung tính) - chỉ dùng khi:
+        //   - chưa cấu hình PIXABAY_API_KEY, HOẶC
+        //   - gọi API cũng thất bại / không tìm thấy kết quả nào
+        const KID_IMG_FALLBACK = 'https://pixabay.com/get/g35bba82e19b67f01c030530e510650a0f492021083641f5b76f475ca52ccb857865f553ffb533dd6a508974fe7b3b661_1920.png?longlived=';
+
+        // Cache kết quả tra cứu để không gọi API nhiều lần cho cùng 1 từ
+        const kidPixabayCache = {};
+
+        // Escape ký tự đặc biệt để nhét an toàn vào thuộc tính HTML/JS string bên dưới
+        function kidEscAttr(s) {
+            return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        // Gọi Pixabay API tìm ảnh theo từ khoá tiếng Anh, có cache + fallback an toàn
+        async function kidFetchPixabayImage(term) {
+            if (kidPixabayCache[term] !== undefined) return kidPixabayCache[term];
+            if (!PIXABAY_API_KEY || PIXABAY_API_KEY === 'YOUR_PIXABAY_API_KEY_HERE') {
+                return null; // chưa cấu hình key -> để hàm gọi dùng ảnh dự phòng chung
+            }
+            try {
+                const url = `https://pixabay.com/api/?key=${encodeURIComponent(PIXABAY_API_KEY)}&q=${encodeURIComponent(term)}&image_type=photo&safesearch=true&per_page=3`;
+                const res = await fetch(url);
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const data = await res.json();
+                const found = (data.hits && data.hits.length > 0) ? data.hits[0].webformatURL : null;
+                kidPixabayCache[term] = found;
+                return found;
+            } catch (err) {
+                console.warn(`[Pixabay] Không lấy được ảnh cho từ "${term}":`, err);
+                kidPixabayCache[term] = null;
+                return null;
+            }
+        }
+
+        // Hàm xử lý khi 1 thẻ <img> từ vựng bị lỗi (gọi từ thuộc tính onerror bên dưới):
+        // 1) Hiện ngay icon dự phòng trong lúc chờ
+        // 2) Âm thầm gọi Pixabay API tìm ảnh đúng từ đó, thay vào nếu tìm được
+        window.kidHandleImgError = function (imgEl, term) {
+            imgEl.onerror = null; // tránh lặp vô hạn nếu ảnh dự phòng cũng lỗi
+            imgEl.src = KID_IMG_FALLBACK;
+            imgEl.classList.add('kid-img-fallback');
+
+            kidFetchPixabayImage(term).then((foundUrl) => {
+                if (!foundUrl) return; // giữ nguyên icon dự phòng nếu không tìm được ảnh nào khác
+                imgEl.onerror = function () {
+                    imgEl.onerror = null;
+                    imgEl.src = KID_IMG_FALLBACK;
+                    imgEl.classList.add('kid-img-fallback');
+                };
+                imgEl.src = foundUrl;
+                imgEl.classList.remove('kid-img-fallback');
+            });
+        };
+
+        // Thuộc tính onerror gắn vào mọi thẻ <img> từ vựng
+        function kidImgErrorAttr(term) {
+            return `onerror="window.kidHandleImgError(this, '${kidEscAttr(term)}')"`;
+        }
+        // ================================================================================
 
         // ---------- Danh sách chủ đề ----------
         function renderTopicGrid() {
@@ -1859,7 +2367,7 @@ function toggleCompletion(symbolElement) {
             initFlashcards(topic);
             initMatchGame(topic);
             initStory(topic);
-            initTranslate(topic);
+            initGame(topic);
         }
 
         // ---------- Chuyển tab con ----------
@@ -1881,19 +2389,100 @@ function toggleCompletion(symbolElement) {
         const kidFlashNext   = document.getElementById('kid-flash-next');
         const kidFlashFlip   = document.getElementById('kid-flash-flip');
 
+        // ----- Phát âm từ vựng bằng loa 🔊 (Web Speech API) -----
+        // [MỚI] Bỏ alert chặn màn hình vì hàm này giờ còn được gọi TỰ ĐỘNG mỗi khi đổi thẻ/bấm từ.
+        function speakEnglishWord(text) {
+            if (!text) return;
+            if (!('speechSynthesis' in window)) return; // trình duyệt không hỗ trợ -> bỏ qua trong im lặng
+            window.speechSynthesis.cancel(); // dừng câu đang đọc dở (nếu có)
+            const utter = new SpeechSynthesisUtterance(text);
+            utter.lang = 'en-US';
+            utter.rate = 0.85;
+            window.speechSynthesis.speak(utter);
+        }
+
+        // ----- [MỚI] Âm thanh hiệu ứng ĐÚNG / SAI khi chơi Nối từ -----
+        // Tự tạo âm thanh bằng Web Audio API (không cần file mp3 nào cả).
+        let kidSfxCtx = null;
+        function getKidSfxCtx() {
+            const AC = window.AudioContext || window.webkitAudioContext;
+            if (!AC) return null;
+            if (!kidSfxCtx) kidSfxCtx = new AC();
+            if (kidSfxCtx.state === 'suspended') kidSfxCtx.resume();
+            return kidSfxCtx;
+        }
+        function playKidTone(freq, startTime, duration, type, peakGain) {
+            const ctx = getKidSfxCtx();
+            if (!ctx) return;
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = type || 'sine';
+            osc.frequency.setValueAtTime(freq, ctx.currentTime + startTime);
+            gain.gain.setValueAtTime(0.0001, ctx.currentTime + startTime);
+            gain.gain.linearRampToValueAtTime(peakGain || 0.22, ctx.currentTime + startTime + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + startTime + duration);
+            osc.connect(gain).connect(ctx.destination);
+            osc.start(ctx.currentTime + startTime);
+            osc.stop(ctx.currentTime + startTime + duration + 0.05);
+        }
+        // Chuỗi 3 nốt đi lên vui tai (Đô-Mi-Sol) báo hiệu NỐI ĐÚNG
+        function playKidCorrectSound() {
+            playKidTone(523.25, 0,    0.16, 'sine', 0.22); // C5
+            playKidTone(659.25, 0.12, 0.16, 'sine', 0.22); // E5
+            playKidTone(783.99, 0.24, 0.22, 'sine', 0.22); // G5
+        }
+        // 2 tiếng buzz trầm ngắn báo hiệu NỐI SAI
+        function playKidWrongSound() {
+            playKidTone(180, 0,    0.18, 'square', 0.16);
+            playKidTone(140, 0.15, 0.22, 'square', 0.16);
+        }
+
+        // Bấm loa trên mặt trước thẻ flashcard -> phát âm, không lật thẻ
+        kidFlashFront.addEventListener('click', (e) => {
+            const btn = e.target.closest('.kf-speak-btn');
+            if (!btn) return;
+            e.stopPropagation();
+            speakEnglishWord(btn.dataset.speak);
+        });
+
         function initFlashcards(topic) {
             flashIndex = 0;
             flashOrder = topic.words;
             renderFlashcard();
         }
 
-        function renderFlashcard() {
-            const w = flashOrder[flashIndex];
-            kidFlashcard.classList.remove('flipped');
-            kidFlashFront.innerHTML = `<div class="kf-word">${w.en}</div><div class="kf-ipa">${w.ipa}</div>`;
-            kidFlashBack.innerHTML  = `<div class="kf-vi">${w.vi}</div><div class="kf-ex">"${w.ex}"</div>`;
-            kidFlashProg.textContent = `Thẻ ${flashIndex + 1} / ${flashOrder.length}`;
-        }
+       function renderFlashcard() {
+    const w = flashOrder[flashIndex];
+    kidFlashcard.classList.remove('flipped');
+    
+    kidFlashFront.innerHTML = `
+        <div class="kf-img-wrap">
+            <img src="${w.img}" class="kf-img kf-anim-img" alt="${w.en}" ${kidImgErrorAttr(w.en)}>
+            <span class="kf-sparkle kf-sparkle-1">✨</span>
+            <span class="kf-sparkle kf-sparkle-2">✨</span>
+        </div>
+        <div class="kf-word-row kf-anim-word">
+            <span class="kf-word">${w.en}</span>
+            <button type="button" class="kf-speak-btn kf-anim-speak" data-speak="${w.en}" aria-label="Phát âm từ ${w.en}" title="Nghe phát âm">🔊</button>
+        </div>
+        <div class="kf-ipa kf-anim-ipa">${w.ipa}</div>
+    `;
+    
+    kidFlashBack.innerHTML  = `<div class="kf-vi">${w.vi}</div><div class="kf-ex">"${w.ex}"</div>${w.trVi ? `<div class="kf-ex-vi">${w.trVi}</div>` : ''}`;
+    kidFlashProg.textContent = `Thẻ ${flashIndex + 1} / ${flashOrder.length}`;
+
+    // [MỚI] Tự động đọc từ tiếng Anh mỗi khi chuyển sang thẻ khác
+    speakEnglishWord(w.en);
+
+
+    // TẢI TRƯỚC (PRELOAD) ẢNH TIẾP THEO
+    const nextIndex = (flashIndex + 1) % flashOrder.length;
+    const nextWord = flashOrder[nextIndex];
+    if (nextWord && nextWord.img) {
+        const imgPreload = new Image();
+        imgPreload.src = nextWord.img;
+    }
+}
 
         kidFlashFlip.addEventListener('click', () => kidFlashcard.classList.toggle('flipped'));
         kidFlashcard.addEventListener('click', () => kidFlashcard.classList.toggle('flipped'));
@@ -1929,7 +2518,7 @@ function toggleCompletion(symbolElement) {
         function initMatchGame(topic) {
             // Lấy tối đa 8 từ ngẫu nhiên mỗi lượt chơi cho vừa màn hình
             const pool = shuffleArr(topic.words).slice(0, Math.min(8, topic.words.length));
-            matchPairs = pool.map((w, i) => ({ id: i, en: w.en, vi: w.vi, done: false }));
+            matchPairs = pool.map((w, i) => ({ id: i, en: w.en, vi: w.vi, img: w.img, done: false }));
             matchSelectedEn = null;
             matchSelectedVi = null;
             matchCorrectCount = 0;
@@ -1945,9 +2534,11 @@ function toggleCompletion(symbolElement) {
             enShuffled.forEach(p => {
                 const el = document.createElement('div');
                 el.className = 'kid-match-item';
-                el.textContent = p.en;
                 el.dataset.id = p.id;
                 el.dataset.side = 'en';
+                el.innerHTML = p.img
+                    ? `<img class="kmi-img" src="${p.img}" alt="${p.en}" ${kidImgErrorAttr(p.en)}><span>${p.en}</span>`
+                    : `<span>${p.en}</span>`;
                 kidMatchEn.appendChild(el);
             });
 
@@ -1972,6 +2563,9 @@ function toggleCompletion(symbolElement) {
                 if (matchSelectedEn) matchSelectedEn.classList.remove('selected');
                 matchSelectedEn = item;
                 item.classList.add('selected');
+                // [MỚI] Tự đọc từ tiếng Anh mỗi khi bấm vào
+                const tappedPair = matchPairs.find(p => String(p.id) === String(id));
+                if (tappedPair) speakEnglishWord(tappedPair.en);
             } else {
                 if (matchSelectedVi) matchSelectedVi.classList.remove('selected');
                 matchSelectedVi = item;
@@ -1985,6 +2579,7 @@ function toggleCompletion(symbolElement) {
                     matchSelectedEn.classList.add('correct');
                     matchSelectedVi.classList.add('correct');
                     matchCorrectCount++;
+                    playKidCorrectSound(); // [MỚI] âm thanh báo nối đúng
                     kidMatchResult.textContent = `✅ Đúng! (${matchCorrectCount}/${matchPairs.length})`;
                     if (matchCorrectCount === matchPairs.length) {
                         kidMatchResult.textContent = `🎉 Hoàn thành! Bạn đã nối đúng tất cả ${matchPairs.length} cặp từ.`;
@@ -1992,6 +2587,7 @@ function toggleCompletion(symbolElement) {
                 } else {
                     matchSelectedEn.classList.add('wrong');
                     matchSelectedVi.classList.add('wrong');
+                    playKidWrongSound(); // [MỚI] âm thanh báo nối sai
                     kidMatchResult.textContent = '❌ Chưa đúng, thử lại nhé!';
                     setTimeout(() => {
                         matchSelectedEn.classList.remove('selected', 'wrong');
@@ -2008,57 +2604,611 @@ function toggleCompletion(symbolElement) {
         kidMatchReset.addEventListener('click', () => initMatchGame(currentTopic));
 
         // ---------- 3. CÂU CHUYỆN ----------
+        const kidStoryTranslateBtn = document.getElementById('kid-story-translate-btn');
+        const kidStoryTextVi = document.getElementById('kid-story-text-vi');
+
         function initStory(topic) {
             document.getElementById('kid-story-title').textContent = topic.story.title;
             document.getElementById('kid-story-text').innerHTML = topic.story.text;
-        }
 
-        // ---------- 4. DỊCH CÂU ----------
-        const kidTrProg     = document.getElementById('kid-translate-progress');
-        const kidTrVi       = document.getElementById('kid-translate-vi');
-        const kidTrInput    = document.getElementById('kid-translate-input');
-        const kidTrCheck    = document.getElementById('kid-translate-check');
-        const kidTrNext     = document.getElementById('kid-translate-next');
-        const kidTrFeedback = document.getElementById('kid-translate-feedback');
-
-        let trIndex = 0;
-        let trWords = [];
-
-        function initTranslate(topic) {
-            trIndex = 0;
-            trWords = topic.words;
-            renderTranslate();
-        }
-
-        function renderTranslate() {
-            const w = trWords[trIndex];
-            kidTrProg.textContent = `Câu ${trIndex + 1} / ${trWords.length}`;
-            kidTrVi.textContent = `"${w.trVi}"  (gợi ý từ: ${w.en})`;
-            kidTrInput.value = '';
-            kidTrFeedback.className = 'kid-translate-feedback';
-            kidTrFeedback.textContent = '';
-            kidTrInput.focus();
-        }
-
-        kidTrCheck.addEventListener('click', () => {
-            const w = trWords[trIndex];
-            const userAns = kidTrInput.value.trim().toLowerCase();
-            const keyword = w.trKey.toLowerCase();
-            if (userAns.length > 0 && userAns.includes(keyword)) {
-                kidTrFeedback.className = 'kid-translate-feedback ok';
-                kidTrFeedback.textContent = `✅ Tốt lắm! Gợi ý đáp án: "${w.trAnswer}"`;
+            // [MỚI] Bản dịch tiếng Việt của câu chuyện (ẩn/hiện bằng nút bấm)
+            if (topic.story.textVi) {
+                kidStoryTextVi.innerHTML = topic.story.textVi;
+                kidStoryTranslateBtn.style.display = '';
             } else {
-                kidTrFeedback.className = 'kid-translate-feedback no';
-                kidTrFeedback.textContent = `❌ Chưa đúng. Đáp án gợi ý: "${w.trAnswer}"`;
+                kidStoryTextVi.innerHTML = '';
+                kidStoryTranslateBtn.style.display = 'none';
             }
-        });
+            kidStoryTextVi.style.display = 'none';
+            kidStoryTranslateBtn.textContent = '🇻🇳 Xem bản dịch tiếng Việt';
 
-        kidTrNext.addEventListener('click', () => {
-            trIndex = (trIndex + 1) % trWords.length;
-            renderTranslate();
+            // [MỚI] Hiển thị ảnh minh họa cho các từ vựng xuất hiện trong câu chuyện
+            const gallery = document.getElementById('kid-story-gallery');
+            gallery.innerHTML = '';
+            const usedList = Array.isArray(topic.story.used) ? topic.story.used : [];
+
+            usedList.forEach(term => {
+                const word = topic.words.find(w => w.en.toLowerCase() === term.toLowerCase());
+                if (!word) return; // không tìm thấy từ tương ứng thì bỏ qua
+
+                const item = document.createElement('div');
+                item.className = 'kid-story-gallery-item';
+                item.innerHTML = word.img
+                    ? `<div class="ksg-img-wrap"><img src="${word.img}" alt="${word.en}" ${kidImgErrorAttr(word.en)}></div><div class="ksg-label">${word.en}</div>`
+                    : `<div class="ksg-img-wrap"><span class="ksg-placeholder">🖼️</span></div><div class="ksg-label">${word.en}</div>`;
+                gallery.appendChild(item);
+            });
+        }
+
+        if (kidStoryTranslateBtn) {
+            kidStoryTranslateBtn.addEventListener('click', () => {
+                const isHidden = kidStoryTextVi.style.display === 'none';
+                kidStoryTextVi.style.display = isHidden ? '' : 'none';
+                kidStoryTranslateBtn.textContent = isHidden
+                    ? '🙈 Ẩn bản dịch tiếng Việt'
+                    : '🇻🇳 Xem bản dịch tiếng Việt';
+            });
+        }
+
+        // ---------- 4. TRÒ CHƠI HỨNG TỪ ----------
+        const kidGameStartBtn    = document.getElementById('kid-game-start');
+        const kidGamePauseBtn    = document.getElementById('kid-game-pause');
+        const kidGameRestartBtn  = document.getElementById('kid-game-restart');
+        const kidGameArea        = document.getElementById('kid-game-area');
+        const kidGameStatus      = document.getElementById('kid-game-status');
+        const kidGameSpeedInput  = document.getElementById('kid-game-speed');
+        const kidGameOverlay     = document.getElementById('kid-game-overlay');
+        const kidGameRedline     = document.getElementById('kid-game-redline');
+        const kidGameResultPanel = document.getElementById('kid-game-result-panel');
+        const kidGameKeyword     = document.getElementById('kid-game-keyword');
+
+        let gameFullWords    = [];   // toàn bộ từ vựng chủ đề (nguồn tạo 2 lựa chọn gây nhiễu)
+        let gameWordsPool    = [];   // 20 từ khóa (rút ra không lặp) dùng cho 20 lượt chơi
+        let currentTurn      = 0;
+        let isDeathMode      = false;
+        let gameRunId        = 0;    // đổi mỗi lần init/bắt đầu để hủy hẹn giờ của lượt chơi cũ còn sót lại
+        let gameLoopInterval = null;
+        let turnTimer        = null; // hẹn giờ (có thể tạm dừng) nghỉ giữa 2 lượt, hoặc mở màn Tử Thần 8s
+        // idle: chưa chạy (mới mở chủ đề / vừa bấm "Chơi lại", đang chờ bấm "Bắt đầu chơi")
+        // running: đang chơi | paused: đang tạm dừng | finished: đã xong 20 lượt
+        let gameStatus       = 'idle';
+        let turnHistory      = []; // { turn, mode: 'normal'|'death', word, correct } — dùng để lập bảng tổng kết
+
+        function kidShuffle(arr) { return [...arr].sort(() => 0.5 - Math.random()); }
+
+        // ----- Hẹn giờ có thể TẠM DỪNG / TIẾP TỤC (giữ nguyên thời gian còn lại) -----
+        function createPausableTimeout(callback, delay) {
+            let remaining = delay;
+            let startedAt = Date.now();
+            let timerId = setTimeout(callback, remaining);
+            let paused = false;
+            return {
+                pause() {
+                    if (paused || !timerId) return;
+                    clearTimeout(timerId);
+                    timerId = null;
+                    remaining -= (Date.now() - startedAt);
+                    if (remaining < 0) remaining = 0;
+                    paused = true;
+                },
+                resume() {
+                    if (!paused) return;
+                    paused = false;
+                    startedAt = Date.now();
+                    timerId = setTimeout(callback, remaining);
+                },
+                cancel() {
+                    if (timerId) clearTimeout(timerId);
+                    timerId = null;
+                }
+            };
+        }
+
+        function clearGameTimers() {
+            if (gameLoopInterval) { clearInterval(gameLoopInterval); gameLoopInterval = null; }
+            if (turnTimer)        { turnTimer.cancel(); turnTimer = null; }
+        }
+
+        // Chỉ dọn các ô đang rơi / hiệu ứng Tử Thần — KHÔNG đụng tới vạch đỏ hay lớp overlay
+        // (giữ nguyên 2 phần tử này trong DOM để tránh mất tham chiếu khi chơi lại nhiều lần).
+        function resetGameVisuals() {
+            document.querySelectorAll('.kid-game-block, .hell-eyes-decor').forEach(el => el.remove());
+            kidGameArea.classList.remove('death-mode', 'game-paused');
+            kidGameOverlay.style.display = 'none';
+            kidGameOverlay.innerHTML = '';
+            if (kidGameResultPanel) { kidGameResultPanel.style.display = 'none'; kidGameResultPanel.innerHTML = ''; }
+            if (kidGameKeyword) {
+                kidGameKeyword.textContent = '';
+                kidGameKeyword.classList.remove('kid-game-keyword-hidden');
+            }
+            kidGameSpeedInput.disabled = false;
+            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        }
+
+        // Đưa trò chơi về trạng thái "sẵn sàng" (0/20, chế độ Thường) — dùng chung cho lúc mở
+        // chủ đề, bấm "Chơi lại" (không tự chạy) và bấm "Bắt đầu chơi" (có tự chạy).
+        function resetGameState(autoStart) {
+            gameRunId++; // hủy mọi hẹn giờ / vòng lặp của phiên chơi trước đó
+            clearGameTimers();
+            resetGameVisuals();
+            gameWordsPool = kidShuffle(gameFullWords).slice(0, 20); // 20 từ khóa, không lặp lại
+            currentTurn = 0;
+            isDeathMode = false;
+            turnHistory = [];
+            gameStatus = 'idle';
+            kidGameStatus.textContent = `Lượt: 0/20 | Chế độ: Thường`;
+            if (kidGamePauseBtn) {
+                kidGamePauseBtn.disabled = true;
+                kidGamePauseBtn.textContent = '⏸ Dừng lại';
+                kidGamePauseBtn.classList.remove('is-paused');
+            }
+            if (autoStart) {
+                gameStatus = 'running';
+                if (kidGameStartBtn) kidGameStartBtn.disabled = true;
+                if (kidGamePauseBtn) kidGamePauseBtn.disabled = false;
+                playTurn(gameRunId);
+            } else {
+                if (kidGameStartBtn) kidGameStartBtn.disabled = false;
+            }
+        }
+
+        function initGame(topic) {
+            gameFullWords = topic.words;
+            resetGameState(false); // mở chủ đề -> chỉ chuẩn bị, chưa tự chạy
+        }
+
+        // Nút "Bắt đầu chơi": xáo bài mới và chạy luôn từ lượt 1.
+        function startGame() {
+            resetGameState(true);
+        }
+
+        // Nút "Chơi lại": CHỈ đưa về trạng thái ban đầu (0/20, chế độ Thường), KHÔNG tự
+        // chạy — người chơi phải bấm "Bắt đầu chơi" thì ván mới mới thật sự bắt đầu.
+        function restartGame() {
+            resetGameState(false);
+        }
+
+        if (kidGameStartBtn) kidGameStartBtn.addEventListener('click', startGame);
+        if (kidGameRestartBtn) kidGameRestartBtn.addEventListener('click', restartGame);
+
+        // ----- Tạm dừng / Tiếp tục (nút bấm thủ công + tự động khi rời trò chơi) -----
+        function pauseGame() {
+            if (gameStatus !== 'running') return; // chỉ tạm dừng khi đang thực sự chơi
+            gameStatus = 'paused';
+            document.querySelectorAll('.kid-game-block').forEach(b => { b.style.animationPlayState = 'paused'; });
+            if (turnTimer) turnTimer.pause();
+            if ('speechSynthesis' in window) {
+                try { window.speechSynthesis.pause(); } catch (e) { /* một số trình duyệt không hỗ trợ */ }
+            }
+            kidGameArea.classList.add('game-paused');
+            if (kidGamePauseBtn) {
+                kidGamePauseBtn.disabled = false;
+                kidGamePauseBtn.textContent = '▶ Tiếp tục';
+                kidGamePauseBtn.classList.add('is-paused');
+            }
+        }
+
+        function resumeGame() {
+            if (gameStatus !== 'paused') return;
+            gameStatus = 'running';
+            document.querySelectorAll('.kid-game-block').forEach(b => { b.style.animationPlayState = 'running'; });
+            if (turnTimer) turnTimer.resume();
+            if ('speechSynthesis' in window) {
+                try { window.speechSynthesis.resume(); } catch (e) { /* một số trình duyệt không hỗ trợ */ }
+            }
+            kidGameArea.classList.remove('game-paused');
+            if (kidGamePauseBtn) {
+                kidGamePauseBtn.textContent = '⏸ Dừng lại';
+                kidGamePauseBtn.classList.remove('is-paused');
+            }
+        }
+
+        if (kidGamePauseBtn) {
+            kidGamePauseBtn.addEventListener('click', () => {
+                if (gameStatus === 'running') pauseGame();
+                else if (gameStatus === 'paused') resumeGame();
+            });
+        }
+
+        function playTurn(runId) {
+            if (runId !== gameRunId) return; // phiên chơi cũ đã bị hủy, bỏ qua
+
+            if (currentTurn >= 20) {
+                finishGame(runId);
+                return;
+            }
+
+            currentTurn++;
+            const enteringDeathMode = (currentTurn === 11);
+            isDeathMode = currentTurn > 10;
+            kidGameStatus.textContent = `Lượt: ${currentTurn}/20 | Chế độ: ${isDeathMode ? 'TỬ THẦN 💀' : 'Thường'}`;
+            kidGameArea.classList.toggle('death-mode', isDeathMode);
+            kidGameSpeedInput.disabled = isDeathMode; // Tử Thần luôn dùng vận tốc mặc định 5-7s
+
+            if (enteringDeathMode) {
+                kidGameArea.insertAdjacentHTML('beforeend', '<div class="hell-eyes-decor"><span class="hell-eye"><span class="hell-pupil"></span></span><span class="hell-eye"><span class="hell-pupil"></span></span></div>');
+                kidGameOverlay.innerHTML = "🔥 MODE TỬ THẦN BẮT ĐẦU 🔥<br><span style='font-size:18px; color:#fff;'>Nghe kỹ và bấm thật nhanh!</span>";
+                kidGameOverlay.style.display = "flex";
+                playKidVillainLaugh();
+
+                turnTimer = createPausableTimeout(() => {
+                    if (runId !== gameRunId) return;
+                    kidGameOverlay.style.display = "none";
+                    spawnFallingWords(runId);
+                }, 8000); // đúng 8 giây thông báo trước khi bắt đầu
+            } else {
+                spawnFallingWords(runId);
+            }
+        }
+
+        function spawnFallingWords(runId) {
+            document.querySelectorAll('.kid-game-block').forEach(b => b.remove());
+
+            const correctWord = gameWordsPool[currentTurn - 1];
+            // 2 lựa chọn gây nhiễu, khác với từ khóa
+            const distractPool = gameFullWords.filter(w => w !== correctWord);
+            const wrongWords = kidShuffle(distractPool).slice(0, 2);
+            const options = kidShuffle([correctWord, ...wrongWords]);
+
+            // Đọc từ khóa bằng giọng đọc — áp dụng cho cả 2 chế độ (Thường + Tử Thần)
+            speakEnglishWord(correctWord.en);
+
+            // Ô hiển thị từ khóa: chỉ hiện với 10 lượt chế độ Thường; 10 lượt Tử Thần thì ẩn đi
+            // (bắt buộc phải nghe giọng đọc và tự đoán, không được nhìn chữ có sẵn).
+            if (kidGameKeyword) {
+                if (isDeathMode) {
+                    kidGameKeyword.textContent = '🔒 Bí mật — chỉ nghe và đoán!';
+                    kidGameKeyword.classList.add('kid-game-keyword-hidden');
+                } else {
+                    kidGameKeyword.textContent = `🎯 Từ khóa: ${correctWord.en}`;
+                    kidGameKeyword.classList.remove('kid-game-keyword-hidden');
+                }
+            }
+
+            let baseSpeed = parseFloat(kidGameSpeedInput.value);
+            if (isNaN(baseSpeed) || baseSpeed < 3) baseSpeed = 6;
+
+            function recordTurnResult(isCorrect) {
+                turnHistory.push({
+                    turn: currentTurn,
+                    mode: isDeathMode ? 'death' : 'normal',
+                    word: correctWord.en,
+                    correct: isCorrect
+                });
+            }
+
+            const blocks = [];
+            options.forEach((opt, index) => {
+                const block = document.createElement('div');
+                block.className = 'kid-game-block';
+                // Cả 2 chế độ đều hiện tiếng Anh trên ô rơi (Tử Thần chỉ khác ở nền tối + nhịp gấp hơn).
+                block.textContent = opt.en;
+                block.style.left = `${15 + index * 30}%`;
+
+                // Vận tốc rơi RIÊNG cho từng ô (3 ô rơi nhanh chậm khác nhau)
+                const fallSeconds = isDeathMode
+                    ? (5 + Math.random() * 2)                                        // Tử Thần: luôn mặc định 5-7s
+                    : Math.min(12, Math.max(3, baseSpeed + (Math.random() * 2 - 1))); // Thường: dao động quanh mức người chơi chọn
+                // Dùng animation CSS (thay vì transition + đổi top bằng setTimeout) để
+                // ô luôn chắc chắn rơi ngay khi vừa được thêm vào, không phụ thuộc thời điểm reflow.
+                block.style.animationDuration = fallSeconds.toFixed(2) + 's';
+
+                kidGameArea.appendChild(block);
+                blocks.push({ el: block });
+
+                block.addEventListener('click', () => {
+                    if (runId !== gameRunId || gameStatus === 'paused' || block.style.pointerEvents === 'none') return;
+                    freezeBlocks();
+
+                    const isCorrect = (opt === correctWord);
+                    if (isCorrect) {
+                        block.style.backgroundColor = '#2fb56d';
+                        block.style.color = '#fff';
+                        playKidCorrectSound(); // "good job"
+                    } else {
+                        block.style.backgroundColor = '#ff5d5d';
+                        block.style.color = '#fff';
+                        playKidWrongSound(); // "you lose"
+                        if (isDeathMode) playKidVillainLaugh(); // thêm tiếng cười phản diện trầm
+                    }
+                    recordTurnResult(isCorrect);
+                    endTurn(runId);
+                });
+            });
+
+            // Theo dõi xem có ô nào (chưa ai bấm) vượt qua vạch đỏ chưa
+            gameLoopInterval = setInterval(() => {
+                if (runId !== gameRunId) { clearInterval(gameLoopInterval); return; }
+                if (gameStatus === 'paused') return; // đang tạm dừng -> các ô không di chuyển, khỏi cần kiểm tra
+
+                const lineRect = kidGameRedline.getBoundingClientRect();
+                const passed = blocks.some(b => b.el.style.pointerEvents !== 'none' && b.el.getBoundingClientRect().bottom >= lineRect.top);
+
+                if (passed) {
+                    freezeBlocks();
+                    playKidWrongSound(); // hết giờ = tính như chọn sai
+                    if (isDeathMode) playKidVillainLaugh();
+                    recordTurnResult(false);
+                    endTurn(runId);
+                }
+            }, 50);
+
+            function freezeBlocks() {
+                clearInterval(gameLoopInterval);
+                blocks.forEach(b => {
+                    const frozenTop = getComputedStyle(b.el).top; // vị trí rơi hiện tại (đọc trước khi tắt animation)
+                    b.el.style.animation = 'none'; // dừng animation rơi ngay lập tức
+                    b.el.style.top = frozenTop;     // giữ nguyên tại chỗ, không nhảy về vị trí đầu
+                    b.el.style.pointerEvents = 'none';
+                });
+            }
+        }
+
+        function endTurn(runId) {
+            turnTimer = createPausableTimeout(() => {
+                if (runId !== gameRunId) return;
+                playTurn(runId);
+            }, 2000); // lượt tiếp theo cách 2 giây kể từ khi lượt này kết thúc
+        }
+
+        // Kết thúc 20 lượt chơi -> hiện bảng tổng kết điểm
+        function finishGame(runId) {
+            if (runId !== gameRunId) return;
+            gameStatus = 'finished';
+            clearGameTimers();
+            kidGameArea.classList.remove('game-paused', 'death-mode');
+            document.querySelectorAll('.hell-eyes-decor').forEach(el => el.remove());
+            if (kidGameStartBtn) kidGameStartBtn.disabled = false;
+            if (kidGamePauseBtn) {
+                kidGamePauseBtn.disabled = true;
+                kidGamePauseBtn.textContent = '⏸ Dừng lại';
+                kidGamePauseBtn.classList.remove('is-paused');
+            }
+            kidGameSpeedInput.disabled = false;
+            renderResultPanel();
+        }
+
+        // Dựng bảng tổng kết: mỗi lượt 1 dòng. Từ khóa tiếng Anh chỉ hiện với các lượt
+        // chế độ Thường (1-10); các lượt Tử Thần (11-20) giữ bí mật, chỉ hiện Đúng/Sai.
+        function renderResultPanel() {
+            if (!kidGameResultPanel) return;
+            const correctCount = turnHistory.filter(h => h.correct).length;
+
+            const rows = turnHistory.map(h => {
+                const modeLabel = h.mode === 'death' ? 'Tử Thần 💀' : 'Thường';
+                const keywordCell = h.mode === 'death' ? '🔒 Ẩn' : kidEscAttr(h.word);
+                const resultCell = h.correct ? '✅ Đúng' : '❌ Sai';
+                const rowClass = h.correct ? 'kid-result-row-correct' : 'kid-result-row-wrong';
+                return `<tr class="${rowClass}"><td>${h.turn}</td><td>${modeLabel}</td><td>${keywordCell}</td><td>${resultCell}</td></tr>`;
+            }).join('');
+
+            kidGameResultPanel.innerHTML = `
+                <h3 class="kid-result-title">🎉 Hoàn thành 20 lượt chơi!</h3>
+                <div class="kid-result-score">Tổng điểm: ${correctCount}/20 câu đúng</div>
+                <table class="kid-result-table">
+                    <thead><tr><th>Lượt</th><th>Chế độ</th><th>Từ khóa</th><th>Kết quả</th></tr></thead>
+                    <tbody>${rows}</tbody>
+                </table>
+                <button type="button" id="kid-result-close-btn" class="kid-btn kid-btn-primary kid-result-close-btn">Đóng bảng kết quả</button>
+            `;
+            kidGameResultPanel.style.display = 'flex';
+
+            const closeBtn = document.getElementById('kid-result-close-btn');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => { kidGameResultPanel.style.display = 'none'; });
+            }
+        }
+
+        // Tiếng cười phản diện trầm — phát khi vừa vào Mode Tử Thần và khi bấm sai trong Mode Tử Thần
+        function playKidVillainLaugh() {
+            const notes = [146.83, 130.81, 116.54, 98.00, 87.31]; // các nốt giáng dần, âm vực trầm
+            notes.forEach((freq, i) => playKidTone(freq, i * 0.16, 0.24, 'sawtooth', 0.16));
+        }
+
+        // ----- Tự động tạm dừng khi rời khỏi trò chơi (đổi tab chính, đổi tab con
+        // trong "Cho bé", quay lại danh sách chủ đề, ẩn/chuyển tab trình duyệt...) -----
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) pauseGame();
+        });
+        window.addEventListener('blur', pauseGame);
+
+        mainTabBtns.forEach(btn => btn.addEventListener('click', pauseGame));
+        if (kidBackBtn) kidBackBtn.addEventListener('click', pauseGame);
+        if (kidTopicBackBtn) kidTopicBackBtn.addEventListener('click', pauseGame);
+        kidSubtabs.addEventListener('click', (e) => {
+            const btn = e.target.closest('.kid-subtab-btn');
+            if (btn && btn.dataset.sub !== 'game') pauseGame();
         });
 
     })();
     // ===== KẾT THÚC: "CHO BÉ" — 50 CHỦ ĐỀ =====
+
+    // ===================================================================
+    // ===== BẮT ĐẦU: TAB "HƯỚNG DẪN" (cách học / chat cộng đồng / liên hệ admin) =====
+    // ===================================================================
+    (() => {
+        const huongDanTabBtn = document.querySelector('.main-tab-btn[data-main-target="tab-huong-dan"]');
+        if (!huongDanTabBtn) return;
+
+        // ---------- 1. ĐIỀU HƯỚNG 3 FOLDER (giống các tab khác) ----------
+        const hdFolderGrid = document.getElementById('huongdan-folder-grid');
+        const hdPanels = {
+            'huongdan-cachhoc-card': document.getElementById('huongdan-cachhoc-panel'),
+            'huongdan-chat-card':    document.getElementById('huongdan-chat-panel'),
+            'huongdan-admin-card':   document.getElementById('huongdan-admin-panel')
+        };
+
+        function hdShowPanel(panel) {
+            hdFolderGrid.style.display = 'none';
+            Object.values(hdPanels).forEach(p => { if (p) p.style.display = 'none'; });
+            if (panel) panel.style.display = '';
+            if (panel === hdPanels['huongdan-chat-card']) {
+                loadCommunityChat();
+                subscribeCommunityChat();
+            } else {
+                unsubscribeCommunityChat();
+            }
+        }
+
+        function hdShowGrid() {
+            unsubscribeCommunityChat();
+            Object.values(hdPanels).forEach(p => { if (p) p.style.display = 'none'; });
+            hdFolderGrid.style.display = '';
+        }
+
+        Object.keys(hdPanels).forEach(cardId => {
+            const card = document.getElementById(cardId);
+            if (card) card.addEventListener('click', () => hdShowPanel(hdPanels[cardId]));
+        });
+
+        document.querySelectorAll('#tab-huong-dan .huongdan-back-btn').forEach(btn => {
+            btn.addEventListener('click', hdShowGrid);
+        });
+
+        // Nếu rời khỏi tab Hướng dẫn (chuyển sang tab chính khác) thì hủy kết nối realtime chat
+        mainTabBtns.forEach(btn => {
+            if (btn !== huongDanTabBtn) {
+                btn.addEventListener('click', unsubscribeCommunityChat);
+            }
+        });
+        logoutBtn.addEventListener('click', unsubscribeCommunityChat);
+
+        // ---------- 2. KHUNG CHAT CỘNG ĐỒNG (Supabase realtime) ----------
+        // Bảng cần tạo trong Supabase: community_chat (id, user_id, email, content, created_at)
+        // Xem file community_chat_schema.sql để lấy đúng câu lệnh SQL cần chạy 1 lần trong Supabase SQL Editor.
+        const chatMessagesBox = document.getElementById('community-chat-messages');
+        const chatInput       = document.getElementById('community-chat-input');
+        const chatSendBtn     = document.getElementById('community-chat-send-btn');
+        const chatStatus      = document.getElementById('community-chat-status');
+        let chatChannel = null;
+        let chatLoaded = false;
+
+        function chatFormatTime(iso) {
+            try {
+                const d = new Date(iso);
+                return d.toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' });
+            } catch (e) { return ''; }
+        }
+
+        function chatSenderName(row) {
+            if (row.email) return row.email.split('@')[0];
+            if (row.user_id) return 'HV_' + row.user_id.substring(0, 6);
+            return 'Ẩn danh';
+        }
+
+        function chatAppendMessage(row, scroll = true) {
+            const emptyMsg = chatMessagesBox.querySelector('.chat-empty-msg');
+            if (emptyMsg) emptyMsg.remove();
+
+            const div = document.createElement('div');
+            div.className = 'chat-message' + (currentUserId && row.user_id === currentUserId ? ' own' : '');
+
+            const senderEl = document.createElement('div');
+            senderEl.className = 'chat-sender';
+            senderEl.textContent = chatSenderName(row);
+            div.appendChild(senderEl);
+
+            const textEl = document.createElement('div');
+            textEl.className = 'chat-text';
+            textEl.textContent = row.content;
+            div.appendChild(textEl);
+
+            if (row.created_at) {
+                const timeEl = document.createElement('div');
+                timeEl.className = 'chat-time';
+                timeEl.textContent = chatFormatTime(row.created_at);
+                div.appendChild(timeEl);
+            }
+
+            chatMessagesBox.appendChild(div);
+            if (scroll) chatMessagesBox.scrollTop = chatMessagesBox.scrollHeight;
+        }
+
+        async function loadCommunityChat() {
+            if (chatLoaded) return; // đã tải rồi thì không tải lại mỗi lần mở panel
+            chatMessagesBox.innerHTML = '<p class="chat-empty-msg">Đang tải tin nhắn...</p>';
+            chatStatus.textContent = '';
+
+            const { data, error } = await sb
+                .from('community_chat')
+                .select('*')
+                .order('created_at', { ascending: true })
+                .limit(200);
+
+            if (error) {
+                chatMessagesBox.innerHTML = '';
+                chatStatus.textContent = '⚠️ Chưa tải được chat (' + error.message + '). Bạn đã chạy file community_chat_schema.sql trong Supabase SQL Editor chưa?';
+                return;
+            }
+
+            chatMessagesBox.innerHTML = '';
+            if (!data || data.length === 0) {
+                chatMessagesBox.innerHTML = '<p class="chat-empty-msg">Chưa có tin nhắn nào. Hãy là người đầu tiên trao đổi nhé!</p>';
+            } else {
+                data.forEach(row => chatAppendMessage(row, false));
+                chatMessagesBox.scrollTop = chatMessagesBox.scrollHeight;
+            }
+            chatLoaded = true;
+        }
+
+        function subscribeCommunityChat() {
+            if (chatChannel) return;
+            chatChannel = sb
+                .channel('community-chat-channel')
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'community_chat' }, payload => {
+                    if (payload.new) chatAppendMessage(payload.new, true);
+                })
+                .subscribe();
+        }
+
+        function unsubscribeCommunityChat() {
+            if (chatChannel) { sb.removeChannel(chatChannel); chatChannel = null; }
+        }
+        window.unsubscribeCommunityChat = unsubscribeCommunityChat; // để có thể gọi từ ngoài nếu cần
+
+        async function chatSendMessage() {
+            const content = chatInput.value.trim();
+            if (!content) return;
+            if (!currentUserId) {
+                chatStatus.textContent = 'Vui lòng đăng nhập để gửi tin nhắn.';
+                return;
+            }
+            chatSendBtn.disabled = true;
+            chatStatus.textContent = '';
+
+            const { error } = await sb.from('community_chat').insert([{
+                user_id: currentUserId,
+                email: currentEmail,
+                content: content,
+                created_at: new Date().toISOString()
+            }]);
+
+            chatSendBtn.disabled = false;
+
+            if (error) {
+                chatStatus.textContent = 'Gửi thất bại: ' + error.message;
+                return;
+            }
+            chatInput.value = '';
+            chatInput.style.height = 'auto';
+        }
+
+        if (chatSendBtn) chatSendBtn.addEventListener('click', chatSendMessage);
+        if (chatInput) {
+            chatInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    chatSendMessage();
+                }
+            });
+            // Tự giãn chiều cao ô nhập theo nội dung
+            chatInput.addEventListener('input', () => {
+                chatInput.style.height = 'auto';
+                chatInput.style.height = Math.min(chatInput.scrollHeight, 120) + 'px';
+            });
+        }
+
+    })();
+    // ===== KẾT THÚC TAB "HƯỚNG DẪN" =====
 
 });

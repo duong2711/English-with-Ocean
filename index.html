@@ -467,7 +467,7 @@
                     <div class="grammar-video-block">
                         <h4 class="grammar-section-label">🎬 Video bài học</h4>
                         <div class="grammar-video-wrapper">
-                            <iframe src="https://www.youtube.com/embed/FGtJf6wNhJ0?si=kMB-M7ObkBokFBYa" title="Thì hiện tại đơn" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                            <iframe src="https://www.youtube.com/embed/FGtJf6wNhJ0?si=kMB-M7ObkBokFBYa&enablejsapi=1" title="Thì hiện tại đơn" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
                         </div>
                     </div>
                     <div class="grammar-images-block">
@@ -494,7 +494,7 @@
                     <div class="grammar-video-block">
                         <h4 class="grammar-section-label">🎬 Video bài học</h4>
                         <div class="grammar-video-wrapper">
-                            <iframe src="https://www.youtube.com/embed/FGtJf6wNhJ0?si=kMB-M7ObkBokFBYa" title="Thì hiện tại tiếp diễn" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                            <iframe src="https://www.youtube.com/embed/FGtJf6wNhJ0?si=kMB-M7ObkBokFBYa&enablejsapi=1" title="Thì hiện tại tiếp diễn" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
                         </div>
                     </div>
                     <div class="grammar-images-block">
@@ -521,7 +521,7 @@
                     <div class="grammar-video-block">
                         <h4 class="grammar-section-label">🎬 Video bài học</h4>
                         <div class="grammar-video-wrapper">
-                            <iframe src="https://www.youtube.com/embed/FGtJf6wNhJ0?si=kMB-M7ObkBokFBYa" title="So sánh hơn" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                            <iframe src="https://www.youtube.com/embed/FGtJf6wNhJ0?si=kMB-M7ObkBokFBYa&enablejsapi=1" title="So sánh hơn" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
                         </div>
                     </div>
                     <div class="grammar-images-block">
@@ -548,7 +548,7 @@
                     <div class="grammar-video-block">
                         <h4 class="grammar-section-label">🎬 Video bài học</h4>
                         <div class="grammar-video-wrapper">
-                            <iframe src="https://www.youtube.com/embed/FGtJf6wNhJ0?si=kMB-M7ObkBokFBYa" title="Từ loại" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                            <iframe src="https://www.youtube.com/embed/FGtJf6wNhJ0?si=kMB-M7ObkBokFBYa&enablejsapi=1" title="Từ loại" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
                         </div>
                     </div>
                     <div class="grammar-images-block">
@@ -583,7 +583,9 @@
         <h2>Kiểm tra Đánh giá</h2>
         <div class="folder-grid">
             <div id="vocab-test-folder" class="folder-card">📁 từ vựng</div>
-            <div class="folder-card">📁 đề thi</div>
+            <div class="folder-card">📁 đề thi lớp 6->12</div>
+            <div class="folder-card">📁 đề thi chuyển cấp THCS/THPT</div>
+            <div class="folder-card">📁 đề minh họa IELTS</div>
         </div>
     </div>
 
@@ -591,7 +593,7 @@
         <h2>Từ vựng theo chủ đề</h2>
         <!-- Danh sách folder từ vựng -->
         <div class="folder-grid" id="vocab-folder-grid">
-            <div class="folder-card" id="kid-folder-card">📁 Cho bé (50 chủ đề)</div>
+            <div class="folder-card" id="kid-folder-card">📁 Vận dụng (20 chủ đề)</div>
             <div class="folder-card">📁 THCS/THPT (theo SGK Global success)</div>
             <div class="folder-card">📁 IELTS (theo sách Perfect IELTS vocab)</div>
             <div class="folder-card">📁 TOEIC (web byetoeic)</div>
@@ -600,14 +602,16 @@
 
         <!-- ===== Panel "Cho bé" (50 chủ đề) ===== -->
         <div id="kid-panel" style="display:none;">
-            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border);">
-                <button class="grammar-back-btn" id="kid-back-btn">← Quay lại</button>
-                <h3>📁 Cho bé (50 chủ đề)</h3>
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <button class="grammar-back-btn" id="kid-back-btn">← Quay lại</button>
+                    <h3 style="margin:0;">📁 Vận dụng (20 chủ đề)</h3>
+                </div>
             </div>
             <div class="kid-topic-grid" id="kid-topic-grid"></div>
         </div>
 
-        <!-- Panel chi tiết 1 chủ đề: flashcard / nối từ / câu chuyện / dịch câu -->
+        <!-- Panel chi tiết 1 chủ đề: flashcard / nối từ / câu chuyện -->
         <div id="kid-topic-panel" style="display:none;">
             <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border);">
                 <button class="grammar-back-btn" id="kid-topic-back-btn">← Quay lại</button>
@@ -618,7 +622,7 @@
                 <button class="kid-subtab-btn active" data-sub="flashcard">🃏 Flashcard</button>
                 <button class="kid-subtab-btn" data-sub="match">🔗 Nối từ</button>
                 <button class="kid-subtab-btn" data-sub="story">📖 Câu chuyện</button>
-                <button class="kid-subtab-btn" data-sub="translate">✍️ Dịch câu</button>
+                <button class="kid-subtab-btn" data-sub="game">🎮 Trò chơi</button>
             </div>
 
             <!-- 1. Flashcard -->
@@ -652,21 +656,27 @@
             <div class="kid-sub-content" id="kid-sub-story" style="display:none;">
                 <h4 id="kid-story-title" class="kid-story-title"></h4>
                 <p id="kid-story-text" class="kid-story-text"></p>
-                <p class="kid-hint">Các từ vựng in đậm ở trên nằm trong chủ đề bạn đang học.</p>
+                <button type="button" id="kid-story-translate-btn" class="kid-story-translate-btn">🇻🇳 Xem bản dịch tiếng Việt</button>
+                <p id="kid-story-text-vi" class="kid-story-text-vi" style="display:none;"></p>
+                <div class="kid-story-gallery" id="kid-story-gallery"></div>
             </div>
 
-            <!-- 4. Dịch câu -->
-            <div class="kid-sub-content" id="kid-sub-translate" style="display:none;">
-                <div class="kid-translate-progress" id="kid-translate-progress"></div>
-                <div class="kid-translate-box">
-                    <p class="kid-translate-vi" id="kid-translate-vi"></p>
-                    <input type="text" id="kid-translate-input" class="kid-translate-input" placeholder="Nhập câu tiếng Anh của bạn...">
-                    <div class="kid-translate-actions">
-                        <button id="kid-translate-check" class="kid-btn kid-btn-primary">Kiểm tra</button>
-                        <button id="kid-translate-next" class="kid-btn">Câu tiếp ›</button>
-                    </div>
-                    <div id="kid-translate-feedback" class="kid-translate-feedback"></div>
-                </div>
+            <!-- 4. Trò chơi Hứng từ -->
+            <div class="kid-sub-content" id="kid-sub-game" style="display:none;">
+    <p class="kid-hint">Nghe từ khóa rồi bấm đúng ô chứa từ đó (tiếng Anh) trước khi nó rơi qua vạch đỏ. 10 lượt đầu là chế độ Thường (hiện sẵn từ khóa để đối chiếu), 10 lượt sau là chế độ Tử Thần 💀 (ẩn từ khóa, chỉ nghe để đoán).</p>
+    <div class="kid-game-controls">
+        <span id="kid-game-status" class="kid-game-status">Lượt: 0/20 | Chế độ: Thường</span>
+        <label>Tốc độ rơi cơ bản (giây): <input type="number" id="kid-game-speed" value="6" min="3" max="10" step="1"></label>
+        <button id="kid-game-start" class="kid-btn kid-btn-primary">Bắt đầu chơi</button>
+        <button id="kid-game-pause" class="kid-btn" disabled>⏸ Dừng lại</button>
+        <button id="kid-game-restart" class="kid-btn">🔄 Chơi lại</button>
+    </div>
+    <div id="kid-game-keyword" class="kid-game-keyword"></div>
+    <div id="kid-game-area" class="kid-game-area">
+        <div id="kid-game-redline" class="kid-game-redline"></div>
+        <div id="kid-game-overlay" class="kid-game-overlay" style="display:none;"></div>
+        <div id="kid-game-result-panel" class="kid-game-result-panel" style="display:none;"></div>
+    </div>
             </div>
         </div>
 
@@ -690,10 +700,42 @@
                     <img id="news-article-img" src="" alt="Ảnh bài báo" class="news-article-img">
                     <div class="news-article-text" id="news-article-text"></div>
                 </div>
+
+                <!-- Khung dịch bài của học viên -->
+                <div class="news-translate-section" id="news-translate-section">
+                    <div class="news-translate-header">
+                        <h4 class="grammar-section-label">📝 Dịch bài</h4>
+                        <span class="news-teacher-badge" id="news-teacher-badge" style="display:none;">🎓 Chế độ giảng viên — chỉ nhận xét</span>
+                    </div>
+
+                    <!-- Khung soạn/nộp bài dịch — ẩn hoàn toàn với giảng viên -->
+                    <div class="news-translate-compose" id="news-translate-compose">
+                        <textarea id="news-translate-textarea" class="news-translate-textarea" placeholder="Nhập bản dịch tiếng Việt của bạn cho bài báo này..."></textarea>
+
+                        <div class="news-translate-actions">
+                            <div class="news-translate-status" id="news-translate-status"></div>
+                            <div class="news-translate-actions-buttons">
+                                <button id="news-translate-cancel-btn" class="news-translate-cancel-btn" style="display:none;" type="button">Hủy</button>
+                                <button id="news-translate-submit-btn" class="news-translate-submit-btn" type="button">Nộp bài dịch</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="news-translate-peers-wrap">
+                        <div class="news-translate-peers-header">
+                            <h4 class="grammar-section-label">👥 Bài dịch của học viên</h4>
+                            <button class="news-refresh-btn" id="news-peers-refresh-btn" type="button" title="Làm mới">🔄</button>
+                        </div>
+                        <div class="news-translate-peers" id="news-translate-peers">
+                            <p class="news-translate-locked-msg">Hãy nộp bài dịch của bạn để xem bài dịch của các học viên khác.</p>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="news-quiz-section">
                     <h4 class="grammar-section-label">✏️ Câu hỏi trắc nghiệm</h4>
                     <div id="news-quiz-questions"></div>
-                    <button id="news-quiz-submit" class="grammar-quiz-btn" style="margin:18px auto 0; display:block;">Nộp đáp án</button>
+                    <button id="news-quiz-submit" class="news-quiz-submit-btn" style="margin:18px auto 0; display:block;">Nộp đáp án</button>
                     <div id="news-quiz-result" class="news-quiz-result" style="display:none;"></div>
                 </div>
             </div>
@@ -861,7 +903,96 @@
     }
 </script>
 </div>
-    
+
+    <!-- ===== TAB HƯỚNG DẪN ===== -->
+    <div id="tab-huong-dan" class="main-tab-content">
+        <h2>Hướng dẫn</h2>
+        <div class="folder-grid" id="huongdan-folder-grid">
+            <div class="folder-card" id="huongdan-cachhoc-card">📘 Cách học trên web</div>
+            <div class="folder-card" id="huongdan-chat-card">💬 Trao đổi học tập</div>
+            <div class="folder-card" id="huongdan-admin-card">☎️ Liên hệ admin Dương</div>
+        </div>
+
+        <!-- PANEL 1: Cách học trên web -->
+        <div id="huongdan-cachhoc-panel" class="huongdan-panel" style="display:none;">
+            <div class="grammar-panel-header">
+                <button class="grammar-back-btn huongdan-back-btn">← Quay lại</button>
+                <h3>📘 Cách học trên web</h3>
+            </div>
+            <div class="huongdan-guide-content">
+                <div class="huongdan-guide-section">
+                    <h4>🔤 Phiên âm</h4>
+                    <p>Bấm vào từng ký tự IPA để xem video hướng dẫn khẩu hình và đọc phần mô tả cách phát âm. Sau đó bấm <strong>"Bắt đầu ghi âm"</strong> để tự thu và gửi bài luyện đọc của mình lên hệ thống cho admin nghe và nhận xét.</p>
+                </div>
+                <div class="huongdan-guide-section">
+                    <h4>📚 Từ vựng</h4>
+                    <p>Chọn 1 trong các folder: <strong>Cho bé</strong> (học qua Flashcard, Nối từ, Câu chuyện), <strong>THCS/THPT</strong>, <strong>IELTS</strong>, <strong>TOEIC</strong>, hoặc <strong>Tin ngắn</strong> để đọc bài báo tiếng Anh, tự dịch bài và làm trắc nghiệm kiểm tra hiểu bài.</p>
+                </div>
+                <div class="huongdan-guide-section">
+                    <h4>📖 Ngữ pháp</h4>
+                    <p>Chọn chủ điểm ngữ pháp cần học, xem video bài giảng, hình ảnh minh họa rồi bấm <strong>"Bắt đầu kiểm tra"</strong> để luyện tập ngay chủ điểm vừa học.</p>
+                </div>
+                <div class="huongdan-guide-section">
+                    <h4>✏️ Kiểm tra</h4>
+                    <p>Khu vực chứa các đề kiểm tra từ vựng, đề thi lớp 6 → 12, đề thi chuyển cấp THCS/THPT và đề minh họa IELTS để bạn tự đánh giá năng lực của mình.</p>
+                </div>
+                <div class="huongdan-guide-section">
+                    <h4>🎮 Giải trí</h4>
+                    <p>Chơi <strong>Lô tô tiếng Anh</strong> cùng bạn học (2 người chơi + 1 trọng tài) để vừa học vừa ôn số đếm và luyện phản xạ đọc tiếng Anh.</p>
+                </div>
+                <div class="huongdan-guide-section">
+                    <h4>🗓️ Lịch học</h4>
+                    <p>Xem khung giờ học trong tuần. Ô màu xanh lá là giờ gia sư rảnh, xem xong bạn liên hệ báo lịch học với gia sư</p>
+                </div>
+                <div class="huongdan-guide-section">
+                    <h4>💡 Mẹo nhỏ</h4>
+                    <ul>
+                        <li>Hệ thống tự ghi nhớ tab bạn đang xem — tải lại trang sẽ quay về đúng chỗ bạn đang học.</li>
+                        <li>Cần đăng nhập để gửi ghi âm, nộp bài dịch, nhắn tin trong khung chat cộng đồng...</li>
+                        <li>Có thắc mắc gì cứ vào mục <strong>"Trao đổi học tập"</strong> hoặc liên hệ admin Dương ở mục bên cạnh nhé!</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- PANEL 2: Chat cộng đồng -->
+        <div id="huongdan-chat-panel" class="huongdan-panel" style="display:none;">
+            <div class="grammar-panel-header">
+                <button class="grammar-back-btn huongdan-back-btn">← Quay lại</button>
+                <h3>💬 Trao đổi học tập</h3>
+            </div>
+            <p class="chat-hint">Đặt câu hỏi, chia sẻ mẹo học hoặc trao đổi bài với các bạn học khác ở đây. Cần đăng nhập để gửi tin nhắn — mọi thành viên đã đăng nhập đều xem được nội dung chat.</p>
+            <div id="community-chat-box">
+                <div id="community-chat-messages">
+                    <p class="chat-empty-msg">Đang tải tin nhắn...</p>
+                </div>
+                <div id="community-chat-composer">
+                    <textarea id="community-chat-input" placeholder="Nhập tin nhắn..." rows="1"></textarea>
+                    <button id="community-chat-send-btn">Gửi</button>
+                </div>
+                <div id="community-chat-status"></div>
+            </div>
+        </div>
+
+        <!-- PANEL 3: Liên hệ admin Dương -->
+        <div id="huongdan-admin-panel" class="huongdan-panel" style="display:none;">
+            <div class="grammar-panel-header">
+                <button class="grammar-back-btn huongdan-back-btn">← Quay lại</button>
+                <h3>☎️ Liên hệ admin Dương</h3>
+            </div>
+            <div class="admin-contact-card">
+                <div class="admin-avatar">D</div>
+                <h4>Admin Dương</h4>
+                <p class="admin-contact-desc">Có thắc mắc về bài học, tài khoản, hoặc muốn góp ý cho web? Nhắn trực tiếp cho admin nhé!</p>
+                <div class="admin-contact-row">
+                    <span class="admin-contact-label">📱 Số điện thoại:</span>
+                    <a href="tel:0988007529" class="admin-phone-link">0988 007 529</a>
+                </div>
+                <a href="https://zalo.me/0988007529" target="_blank" rel="noopener" class="zalo-btn">💬 Nhắn Zalo cho Dương</a>
+            </div>
+        </div>
+    </div>
+    <!-- ===== KẾT THÚC TAB HƯỚNG DẪN ===== -->
 
     <!-- ===== FOOTER ===== -->
     <footer id="site-footer">
