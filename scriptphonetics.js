@@ -1021,164 +1021,84 @@ function toggleCompletion(symbolElement) {
             return `${d} ${months[m - 1]}, ${y}`;
         }
 
-        const NEWS_DATA = [
-            {
-                id: 1,
-                date: "2026-06-24",
-                title: "Giant Panda Twins Born at Zoo",
-                thumb: "https://images.unsplash.com/photo-1564349683136-77e08dba1ef7?w=400&q=80",
-                content: `<p>A zoo in the United States celebrated the birth of giant panda twins last week. The two cubs, a male and a female, were born to mother <strong>Bao Bao</strong>, who arrived from China three years ago. Zoo staff say the babies are healthy and feeding well.</p>
-<p>Giant pandas are an endangered species. There are fewer than 2,000 of them living in the wild today. Most live in the mountains of central China, where they eat bamboo all day long. Zoos around the world help protect pandas through special breeding programs.</p>
-<p>The twin cubs do not have names yet. The zoo plans to hold a public naming contest next month. Visitors are excited to see the new arrivals, but the cubs will stay in a private area for several weeks until they are strong enough to be seen by the public.</p>`,
-                quiz: [
-                    {
-                        q: "Where were the panda twins born?",
-                        options: ["In China", "At a zoo in the US", "In the wild", "At a university"],
-                        answer: 1
-                    },
-                    {
-                        q: "What do giant pandas eat every day?",
-                        options: ["Fish", "Fruit", "Bamboo", "Insects"],
-                        answer: 2
-                    },
-                    {
-                        q: "What does the zoo plan to do next month?",
-                        options: ["Release the pandas into the wild", "Hold a naming contest", "Send the cubs back to China", "Open a new panda exhibit"],
-                        answer: 1
-                    }
-                ]
-            },
-            {
-                id: 2,
-                date: "2026-06-25",
-                title: "Electric Cars Now Outsell Gas Cars in Norway",
-                thumb: "https://images.unsplash.com/photo-1593941707882-a5bba14938c7?w=400&q=80",
-                content: `<p>Norway has become the first country in the world where <strong>electric cars</strong> outsell traditional gasoline-powered cars. In the last quarter, electric vehicles made up over 80% of all new car sales in the country.</p>
-<p>The Norwegian government has supported electric cars for many years. It offers tax benefits and allows electric cars to use bus lanes. There are also many charging stations across the country, making it easy for people to charge their vehicles.</p>
-<p>Other countries are now looking at Norway's example. Experts say that if more governments offer similar support, electric car sales could grow quickly around the world. The goal for many countries is to stop selling new gasoline cars by 2035.</p>`,
-                quiz: [
-                    {
-                        q: "What percentage of new car sales in Norway are electric vehicles?",
-                        options: ["Over 50%", "Over 80%", "Over 60%", "Over 90%"],
-                        answer: 1
-                    },
-                    {
-                        q: "Which of the following is NOT a benefit the Norwegian government offers for electric cars?",
-                        options: ["Tax benefits", "Use of bus lanes", "Free parking everywhere", "Many charging stations"],
-                        answer: 2
-                    },
-                    {
-                        q: "What is the goal for many countries regarding gasoline cars?",
-                        options: ["Stop making them by 2025", "Stop selling new ones by 2035", "Make them cheaper by 2030", "Ban them immediately"],
-                        answer: 1
-                    }
-                ]
-            },
-            {
-                id: 3,
-                date: "2026-06-26",
-                title: "Scientists Discover New Deep-Sea Species",
-                thumb: "https://images.unsplash.com/photo-1518020382113-a7e8fc38eac9?w=400&q=80",
-                content: `<p>A team of marine biologists has discovered several new species of fish and other sea creatures deep in the Pacific Ocean. The scientists used a special underwater robot to explore areas more than 3,000 meters below the surface.</p>
-<p>One of the most interesting discoveries was a glowing jellyfish that had never been seen before. The jellyfish produces its own light, a process called <strong>bioluminescence</strong>. Scientists believe this light helps it attract prey in the dark ocean depths.</p>
-<p>The researchers say that the deep sea is still one of the least explored places on Earth. Less than 20% of the ocean floor has been mapped in detail. Each expedition brings new surprises and shows just how much we still have to learn about our planet.</p>`,
-                quiz: [
-                    {
-                        q: "How deep did the scientists explore in the Pacific Ocean?",
-                        options: ["1,000 meters", "2,000 meters", "3,000 meters", "5,000 meters"],
-                        answer: 2
-                    },
-                    {
-                        q: "What is 'bioluminescence'?",
-                        options: ["A deep-sea robot", "The ability to produce one's own light", "A type of jellyfish", "A mapping technique"],
-                        answer: 1
-                    },
-                    {
-                        q: "How much of the ocean floor has been mapped in detail?",
-                        options: ["Less than 10%", "About 50%", "Less than 20%", "About 30%"],
-                        answer: 2
-                    }
-                ]
-            },
-            {
-                id: 4,
-                date: "2026-06-27",
-                title: "Young Chef Wins International Cooking Contest",
-                thumb: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&q=80",
-                content: `<p>A 16-year-old student from Vietnam has won an international cooking competition held in Paris, France. <strong>Nguyen Minh Duc</strong> beat more than 200 competitors from 45 countries to take the top prize.</p>
-<p>Duc prepared a three-course meal that combined traditional Vietnamese ingredients with French cooking techniques. The judges praised his creative use of lemongrass, fish sauce, and fresh herbs. They said his food was both delicious and beautifully presented.</p>
-<p>Duc said he learned to cook from his grandmother when he was just six years old. He hopes to open his own restaurant one day and show the world how wonderful Vietnamese cuisine can be. His school in Ho Chi Minh City held a small celebration in his honor after he returned home.</p>`,
-                quiz: [
-                    {
-                        q: "How old is Nguyen Minh Duc?",
-                        options: ["14", "15", "16", "17"],
-                        answer: 2
-                    },
-                    {
-                        q: "Where was the cooking competition held?",
-                        options: ["Vietnam", "London", "Paris", "Tokyo"],
-                        answer: 2
-                    },
-                    {
-                        q: "Who taught Duc how to cook?",
-                        options: ["His mother", "His teacher", "A famous chef", "His grandmother"],
-                        answer: 3
-                    }
-                ]
-            },
-            {
-                id: 5,
-                date: "2026-06-28",
-                title: "City Plants One Million Trees in Green Initiative",
-                thumb: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=400&q=80",
-                content: `<p>The city of Melbourne, Australia, has completed its goal of planting one million trees over the past ten years as part of a major environmental project. City officials announced the milestone last Tuesday at a ceremony in the central park.</p>
-<p>The project was started in 2015 after scientists warned that rising temperatures in the city were causing health problems for residents. Trees provide <strong>shade</strong>, reduce heat, clean the air, and provide homes for birds and insects. Officials say the city is now measurably cooler than it was a decade ago.</p>
-<p>Other cities around the world have noticed Melbourne's success and are planning similar programs. Environmental groups say this kind of urban greening is one of the most effective and affordable ways to fight climate change at the local level.</p>`,
-                quiz: [
-                    {
-                        q: "How long did the tree-planting project take?",
-                        options: ["5 years", "10 years", "15 years", "20 years"],
-                        answer: 1
-                    },
-                    {
-                        q: "Why was the tree-planting project started in 2015?",
-                        options: ["To attract tourists", "To build new parks", "Because rising temperatures caused health problems", "To celebrate a city anniversary"],
-                        answer: 2
-                    },
-                    {
-                        q: "According to environmental groups, what is urban greening?",
-                        options: ["An expensive solution to climate change", "One of the most effective and affordable ways to fight climate change", "Only useful in large cities", "A temporary solution"],
-                        answer: 1
-                    }
-                ]
-            },
-            {
-                id: 6,
-                date: "2026-06-29",
-                title: "Robot Helps Elderly People Live Independently",
-                thumb: "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=400&q=80",
-                content: `<p>A Japanese technology company has released a home robot designed to help elderly people with daily tasks. The robot, called <strong>CareBot</strong>, can remind users to take their medicine, help them stand up from chairs, and even call for help if there is an emergency.</p>
-<p>Japan has one of the oldest populations in the world, and there is a growing need for elderly care. Many older people want to continue living at home rather than move to a care facility. The CareBot is designed to make this possible by providing support throughout the day.</p>
-<p>Early users say they feel safer and more confident with the robot at home. One 82-year-old user said, "It feels like having a patient helper who never gets tired." The robot currently costs around $3,000, but the company hopes to lower the price as production increases.</p>`,
-                quiz: [
-                    {
-                        q: "What is the name of the Japanese home robot?",
-                        options: ["HomeBot", "CareBot", "ElderBot", "HelpBot"],
-                        answer: 1
-                    },
-                    {
-                        q: "Which of the following can CareBot NOT do?",
-                        options: ["Remind users to take medicine", "Help users stand up", "Cook meals", "Call for help in emergencies"],
-                        answer: 2
-                    },
-                    {
-                        q: "How much does the CareBot currently cost?",
-                        options: ["$1,000", "$2,000", "$3,000", "$5,000"],
-                        answer: 2
-                    }
-                ]
+        // Dữ liệu tin tức giờ được tải động từ bảng "news_articles" trên Supabase
+        // (xem file SQL "news_articles_setup.sql" để tạo bảng + chèn 6 bài mẫu ban đầu).
+        // Chỉ tài khoản trong TEACHER_EMAILS (giangvien@gmail.com) mới có quyền
+        // thêm / sửa / xóa — quyền này được chặn ở CẢ giao diện lẫn RLS trên Supabase.
+        let NEWS_DATA = [];
+
+        // Tải toàn bộ danh sách tin tức từ Supabase
+        async function loadNewsArticlesFromDB() {
+            try {
+                const { data, error } = await sb
+                    .from('news_articles')
+                    .select('*')
+                    .order('date', { ascending: false })
+                    .order('id', { ascending: false });
+                if (error) throw error;
+                NEWS_DATA = (data || []).map(row => ({
+                    id: row.id,
+                    date: row.date,
+                    title: row.title,
+                    thumb: row.thumb,
+                    content: row.content,
+                    quiz: Array.isArray(row.quiz) ? row.quiz : []
+                }));
+            } catch (err) {
+                console.error('Lỗi khi tải danh sách tin tức:', err.message);
+                NEWS_DATA = [];
             }
-        ];
+        }
+
+        // Tạo 1 bài tin mới (rỗng, sẵn sàng để giảng viên chỉnh sửa) — chỉ giảng viên được gọi
+        async function createNewsArticleDB() {
+            const todayIso = new Date().toISOString().slice(0, 10);
+            const payload = {
+                date: todayIso,
+                title: 'Bài viết mới (bấm vào tiêu đề để đổi tên)',
+                thumb: 'https://placehold.co/400x225.jpg?text=Dan+link+anh+.jpg',
+                content: '<p>Nhập nội dung bài viết tại đây...</p>',
+                quiz: [
+                    { q: 'Câu hỏi 1?', options: ['Đáp án A', 'Đáp án B', 'Đáp án C', 'Đáp án D'], answer: 0 },
+                    { q: 'Câu hỏi 2?', options: ['Đáp án A', 'Đáp án B', 'Đáp án C', 'Đáp án D'], answer: 0 },
+                    { q: 'Câu hỏi 3?', options: ['Đáp án A', 'Đáp án B', 'Đáp án C', 'Đáp án D'], answer: 0 }
+                ],
+                created_by: currentEmail
+            };
+            const { data, error } = await sb
+                .from('news_articles')
+                .insert(payload)
+                .select()
+                .single();
+            if (error) throw error;
+            return {
+                id: data.id,
+                date: data.date,
+                title: data.title,
+                thumb: data.thumb,
+                content: data.content,
+                quiz: Array.isArray(data.quiz) ? data.quiz : []
+            };
+        }
+
+        // Cập nhật 1 hoặc nhiều trường của 1 bài tin — dùng cho autosave từng phần
+        async function updateNewsArticleDB(articleId, fields) {
+            const payload = { ...fields, updated_at: new Date().toISOString(), updated_by: currentEmail };
+            const { error } = await sb
+                .from('news_articles')
+                .update(payload)
+                .eq('id', articleId);
+            if (error) throw error;
+        }
+
+        // Xóa 1 bài tin
+        async function deleteNewsArticleDB(articleId) {
+            const { error } = await sb
+                .from('news_articles')
+                .delete()
+                .eq('id', articleId);
+            if (error) throw error;
+        }
 
         const newsFolderCard  = document.getElementById('news-folder-card');
         const vocabFolderGrid = document.getElementById('vocab-folder-grid');
@@ -1190,9 +1110,26 @@ function toggleCompletion(symbolElement) {
         const newsArticleTitle     = document.getElementById('news-article-title');
         const newsArticleImg       = document.getElementById('news-article-img');
         const newsArticleText      = document.getElementById('news-article-text');
+        const newsQuizSection      = document.getElementById('news-quiz-section');
         const newsQuizQuestions    = document.getElementById('news-quiz-questions');
         const newsQuizSubmit       = document.getElementById('news-quiz-submit');
         const newsQuizResult       = document.getElementById('news-quiz-result');
+
+        // --- Refs cho khu vực quản trị tin tức (chỉ giảng viên) ---
+        const newsAdminBar         = document.getElementById('news-admin-bar');
+        const newsAddBtn           = document.getElementById('news-add-btn');
+        const newsArticleDeleteBtn = document.getElementById('news-article-delete-btn');
+        const newsArticleDateEdit  = document.getElementById('news-article-date-edit');
+        const newsEditMetaStatus   = document.getElementById('news-edit-meta-status');
+        const newsEditImageBar     = document.getElementById('news-edit-image-bar');
+        const newsEditImageInput   = document.getElementById('news-edit-image-input');
+        const newsEditImageBtn     = document.getElementById('news-edit-image-btn');
+        const newsEditToolbar      = document.getElementById('news-edit-toolbar');
+        const newsEditBoldBtn      = document.getElementById('news-edit-bold-btn');
+        const newsEditContentStatus = document.getElementById('news-edit-content-status');
+        const newsQuizEditSection  = document.getElementById('news-quiz-edit-section');
+        const newsQuizEditQuestions = document.getElementById('news-quiz-edit-questions');
+        const newsQuizEditStatus   = document.getElementById('news-quiz-edit-status');
 
         // --- Refs cho khung dịch bài ---
         const newsTeacherBadge     = document.getElementById('news-teacher-badge');
@@ -1525,28 +1462,76 @@ function toggleCompletion(symbolElement) {
         });
         // ===== KẾT THÚC KHUNG DỊCH BÀI =====
 
-        // Render thumbnail cards
-        function renderNewsCards() {
+        // Render thumbnail cards (tải danh sách từ Supabase trước khi vẽ)
+        async function renderNewsCards() {
+            newsCardsGrid.innerHTML = '<p class="news-loading-msg">Đang tải danh sách tin...</p>';
+            newsAdminBar.style.display = isTeacher ? 'flex' : 'none';
+
+            await loadNewsArticlesFromDB();
+
             newsCardsGrid.innerHTML = '';
+            if (NEWS_DATA.length === 0) {
+                newsCardsGrid.innerHTML = '<p class="news-empty-msg">Chưa có bài tin nào.</p>';
+                return;
+            }
+
             NEWS_DATA.forEach(article => {
                 const card = document.createElement('div');
                 card.className = 'news-card';
                 card.innerHTML = `
-                    <img class="news-card-thumb" src="${article.thumb}" alt="${article.title}" loading="lazy" onerror="this.style.background='var(--surface-2)';this.style.minHeight='120px'">
-                    <div class="news-card-title">${article.title}</div>
+                    <img class="news-card-thumb" src="${article.thumb}" alt="${escapeHtmlNews(article.title)}" loading="lazy" onerror="this.style.background='var(--surface-2)';this.style.minHeight='120px'">
+                    ${isTeacher ? `<button type="button" class="news-card-delete-btn" data-article-id="${article.id}" title="Xóa bài tin này">🗑️</button>` : ''}
+                    <div class="news-card-title">${escapeHtmlNews(article.title)}</div>
                     <div class="news-card-date">📅 ${formatDate(article.date)}</div>
                 `;
-                card.addEventListener('click', () => openArticle(article));
+                card.addEventListener('click', (e) => {
+                    if (e.target.closest('.news-card-delete-btn')) return; // nút xóa xử lý riêng
+                    openArticle(article);
+                });
                 newsCardsGrid.appendChild(card);
             });
         }
 
+        // Xóa bài tin ngay trên thẻ (danh sách) — chỉ giảng viên thấy nút này
+        newsCardsGrid.addEventListener('click', async (e) => {
+            const btn = e.target.closest('.news-card-delete-btn');
+            if (!btn || !isTeacher) return;
+            const articleId = btn.dataset.articleId;
+            const article = NEWS_DATA.find(a => String(a.id) === String(articleId));
+            if (!confirm(`Xóa bài tin "${article ? article.title : ''}"? Hành động này không thể hoàn tác.`)) return;
+            btn.disabled = true;
+            try {
+                await deleteNewsArticleDB(articleId);
+                await renderNewsCards();
+            } catch (err) {
+                alert('Xóa bài tin thất bại: ' + err.message);
+                btn.disabled = false;
+            }
+        });
+
+        // Thêm bài tin mới — tạo 1 bài rỗng trên Supabase rồi mở luôn để giảng viên nhập liệu
+        newsAddBtn.addEventListener('click', async () => {
+            if (!isTeacher) return;
+            newsAddBtn.disabled = true;
+            newsAddBtn.textContent = 'Đang tạo...';
+            try {
+                const newArticle = await createNewsArticleDB();
+                NEWS_DATA.unshift(newArticle);
+                openArticle(newArticle);
+            } catch (err) {
+                alert('Tạo bài tin mới thất bại: ' + err.message);
+            } finally {
+                newsAddBtn.disabled = false;
+                newsAddBtn.textContent = '➕ Thêm bài tin mới';
+            }
+        });
+
         // Mở folder tin ngắn
-        newsFolderCard.addEventListener('click', () => {
+        newsFolderCard.addEventListener('click', async () => {
             vocabFolderGrid.style.display = 'none';
             newsPanel.style.display = 'block';
             newsArticlePanel.style.display = 'none';
-            renderNewsCards();
+            await renderNewsCards();
         });
 
         // Quay lại folder list
@@ -1561,30 +1546,14 @@ function toggleCompletion(symbolElement) {
             newsPanel.style.display = 'block';
         });
 
-        // Mở bài báo chi tiết
-        function openArticle(article) {
-            newsPanel.style.display = 'none';
-            newsArticlePanel.style.display = 'block';
-            newsArticleTitle.textContent = article.title;
+        // Cập nhật 1 bài trong mảng NEWS_DATA đang giữ trên trình duyệt (sau khi lưu thành công)
+        function patchLocalArticle(articleId, fields) {
+            const art = NEWS_DATA.find(a => String(a.id) === String(articleId));
+            if (art) Object.assign(art, fields);
+        }
 
-            // Hiển thị ngày đăng bên dưới tiêu đề
-            let dateEl = document.getElementById('news-article-date');
-            if (!dateEl) {
-                dateEl = document.createElement('div');
-                dateEl.id = 'news-article-date';
-                dateEl.className = 'news-article-date';
-                newsArticleTitle.after(dateEl);
-            }
-            dateEl.textContent = '📅 ' + formatDate(article.date);
-
-            newsArticleImg.src = article.thumb;
-            newsArticleImg.alt = article.title;
-            newsArticleText.innerHTML = article.content;
-
-            // Khởi tạo khung dịch bài cho bài tin này
-            initTranslateSection(article.id);
-
-            // Render quiz
+        // ===== HIỂN THỊ TRẮC NGHIỆM CHO HỌC VIÊN (làm bài, chấm điểm) =====
+        function renderStudentQuiz(article) {
             newsQuizQuestions.innerHTML = '';
             newsQuizResult.style.display = 'none';
             newsQuizResult.className = 'news-quiz-result';
@@ -1594,11 +1563,11 @@ function toggleCompletion(symbolElement) {
             article.quiz.forEach((q, qi) => {
                 const block = document.createElement('div');
                 block.className = 'news-question-block';
-                block.innerHTML = `<div class="news-question-text">${qi + 1}. ${q.q}</div>
+                block.innerHTML = `<div class="news-question-text">${qi + 1}. ${escapeHtmlNews(q.q)}</div>
                     <div class="news-options">
                         ${q.options.map((opt, oi) => `
                             <label class="news-option-label">
-                                <input type="radio" name="news-q${qi}" value="${oi}"> ${opt}
+                                <input type="radio" name="news-q${qi}" value="${oi}"> ${escapeHtmlNews(opt)}
                             </label>
                         `).join('')}
                     </div>`;
@@ -1635,6 +1604,214 @@ function toggleCompletion(symbolElement) {
                     newsQuizResult.textContent = `Bạn trả lời đúng ${correct}/${total} câu. Hãy xem lại những câu sai nhé!`;
                 }
             };
+        }
+
+        // ===== KHUNG CHỈNH SỬA TRẮC NGHIỆM CHO GIẢNG VIÊN (thấy đáp án + sửa được) =====
+        function renderQuizEditor(article) {
+            newsQuizEditQuestions.innerHTML = '';
+            newsQuizEditStatus.textContent = '';
+            article.quiz.forEach((q, qi) => {
+                const block = document.createElement('div');
+                block.className = 'news-quiz-edit-block';
+                block.innerHTML = `
+                    <label class="news-quiz-edit-label">Câu hỏi ${qi + 1}</label>
+                    <input type="text" class="news-edit-input news-quiz-edit-question" data-qi="${qi}" value="${escapeHtmlNews(q.q)}" placeholder="Nhập câu hỏi...">
+                    <div class="news-quiz-edit-options">
+                        ${(q.options || []).map((opt, oi) => `
+                            <div class="news-quiz-edit-option-row">
+                                <input type="radio" name="news-edit-answer-${qi}" data-qi="${qi}" data-oi="${oi}" class="news-quiz-edit-answer-radio" ${q.answer === oi ? 'checked' : ''} title="Đánh dấu đây là đáp án đúng">
+                                <input type="text" class="news-edit-input news-quiz-edit-option" data-qi="${qi}" data-oi="${oi}" value="${escapeHtmlNews(opt)}" placeholder="Đáp án ${oi + 1}...">
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                newsQuizEditQuestions.appendChild(block);
+            });
+        }
+
+        // Gom toàn bộ dữ liệu 3 câu hỏi đang hiển thị trong khung chỉnh sửa thành mảng quiz
+        function collectQuizFromEditor() {
+            const quiz = [];
+            newsQuizEditQuestions.querySelectorAll('.news-quiz-edit-block').forEach(block => {
+                const qText = block.querySelector('.news-quiz-edit-question').value;
+                const options = Array.from(block.querySelectorAll('.news-quiz-edit-option')).map(inp => inp.value);
+                const checkedRadio = block.querySelector('.news-quiz-edit-answer-radio:checked');
+                const answer = checkedRadio ? parseInt(checkedRadio.dataset.oi, 10) : 0;
+                quiz.push({ q: qText, options, answer });
+            });
+            return quiz;
+        }
+
+        // Autosave (debounce) cho khung chỉnh sửa trắc nghiệm — lưu cả câu hỏi/đáp án/câu trả lời đúng cùng lúc
+        let quizEditSaveTimer = null;
+        function scheduleQuizEditSave() {
+            if (!isTeacher || currentArticleId === null) return;
+            newsQuizEditStatus.textContent = 'Đang gõ...';
+            clearTimeout(quizEditSaveTimer);
+            quizEditSaveTimer = setTimeout(async () => {
+                const quiz = collectQuizFromEditor();
+                try {
+                    await updateNewsArticleDB(currentArticleId, { quiz });
+                    patchLocalArticle(currentArticleId, { quiz });
+                    newsQuizEditStatus.textContent = '💾 Đã lưu câu hỏi trắc nghiệm.';
+                } catch (err) {
+                    newsQuizEditStatus.textContent = '❌ Lưu thất bại: ' + err.message;
+                }
+            }, 800);
+        }
+        newsQuizEditQuestions.addEventListener('input', scheduleQuizEditSave);   // gõ chữ vào câu hỏi/đáp án
+        newsQuizEditQuestions.addEventListener('change', scheduleQuizEditSave);  // chọn lại đáp án đúng (radio)
+
+        // ===== AUTOSAVE: TIÊU ĐỀ (giảng viên gõ trực tiếp vào tiêu đề) =====
+        let titleSaveTimer = null;
+        newsArticleTitle.addEventListener('input', () => {
+            if (!isTeacher || currentArticleId === null) return;
+            newsEditMetaStatus.textContent = 'Đang gõ...';
+            clearTimeout(titleSaveTimer);
+            titleSaveTimer = setTimeout(async () => {
+                const newTitle = newsArticleTitle.textContent.trim();
+                try {
+                    await updateNewsArticleDB(currentArticleId, { title: newTitle });
+                    patchLocalArticle(currentArticleId, { title: newTitle });
+                    newsEditMetaStatus.textContent = '💾 Đã lưu tiêu đề.';
+                } catch (err) {
+                    newsEditMetaStatus.textContent = '❌ Lưu thất bại: ' + err.message;
+                }
+            }, 800);
+        });
+
+        // ===== AUTOSAVE: NGÀY ĐĂNG =====
+        newsArticleDateEdit.addEventListener('change', async () => {
+            if (!isTeacher || currentArticleId === null) return;
+            const newDate = newsArticleDateEdit.value;
+            if (!newDate) return;
+            try {
+                await updateNewsArticleDB(currentArticleId, { date: newDate });
+                patchLocalArticle(currentArticleId, { date: newDate });
+                newsEditMetaStatus.textContent = '💾 Đã lưu ngày đăng.';
+            } catch (err) {
+                newsEditMetaStatus.textContent = '❌ Lưu thất bại: ' + err.message;
+            }
+        });
+
+        // ===== CẬP NHẬT ẢNH: dán link .jpg rồi bấm nút =====
+        newsEditImageBtn.addEventListener('click', async () => {
+            if (!isTeacher || currentArticleId === null) return;
+            const url = newsEditImageInput.value.trim();
+            if (!url) { alert('Vui lòng dán link ảnh (.jpg) trước khi cập nhật.'); return; }
+            newsEditImageBtn.disabled = true;
+            const oldLabel = newsEditImageBtn.textContent;
+            newsEditImageBtn.textContent = 'Đang lưu...';
+            try {
+                await updateNewsArticleDB(currentArticleId, { thumb: url });
+                patchLocalArticle(currentArticleId, { thumb: url });
+                newsArticleImg.src = url;
+                newsEditImageBtn.textContent = '✅ Đã cập nhật';
+                setTimeout(() => { newsEditImageBtn.textContent = oldLabel; newsEditImageBtn.disabled = false; }, 1300);
+            } catch (err) {
+                alert('Cập nhật ảnh thất bại: ' + err.message);
+                newsEditImageBtn.textContent = oldLabel;
+                newsEditImageBtn.disabled = false;
+            }
+        });
+
+        // ===== AUTOSAVE: NỘI DUNG BÀI (contenteditable) + nút In đậm =====
+        let contentSaveTimer = null;
+        newsArticleText.addEventListener('input', () => {
+            if (!isTeacher || currentArticleId === null) return;
+            newsEditContentStatus.textContent = 'Đang gõ...';
+            clearTimeout(contentSaveTimer);
+            contentSaveTimer = setTimeout(async () => {
+                const newContent = newsArticleText.innerHTML;
+                try {
+                    await updateNewsArticleDB(currentArticleId, { content: newContent });
+                    patchLocalArticle(currentArticleId, { content: newContent });
+                    newsEditContentStatus.textContent = '💾 Đã lưu nội dung.';
+                } catch (err) {
+                    newsEditContentStatus.textContent = '❌ Lưu thất bại: ' + err.message;
+                }
+            }, 800);
+        });
+
+        newsEditBoldBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            newsArticleText.focus();
+            document.execCommand('bold');
+            newsArticleText.dispatchEvent(new Event('input')); // kích hoạt autosave ngay sau khi in đậm
+        });
+
+        // ===== XÓA BÀI TIN đang mở (trong trang chi tiết) =====
+        newsArticleDeleteBtn.addEventListener('click', async () => {
+            if (!isTeacher || currentArticleId === null) return;
+            const art = NEWS_DATA.find(a => String(a.id) === String(currentArticleId));
+            if (!confirm(`Xóa bài tin "${art ? art.title : ''}"? Hành động này không thể hoàn tác.`)) return;
+            newsArticleDeleteBtn.disabled = true;
+            try {
+                await deleteNewsArticleDB(currentArticleId);
+                newsArticlePanel.style.display = 'none';
+                newsPanel.style.display = 'block';
+                await renderNewsCards();
+            } catch (err) {
+                alert('Xóa bài tin thất bại: ' + err.message);
+            } finally {
+                newsArticleDeleteBtn.disabled = false;
+            }
+        });
+
+        // Mở bài báo chi tiết
+        function openArticle(article) {
+            newsPanel.style.display = 'none';
+            newsArticlePanel.style.display = 'block';
+            currentArticleId = article.id;
+
+            // ----- Tiêu đề -----
+            newsArticleTitle.textContent = article.title;
+            newsArticleTitle.contentEditable = isTeacher ? 'true' : 'false';
+            newsArticleTitle.classList.toggle('news-editable', isTeacher);
+
+            // ----- Ngày đăng: hiển thị thường cho học viên, input ngày cho giảng viên -----
+            let dateEl = document.getElementById('news-article-date');
+            if (!dateEl) {
+                dateEl = document.createElement('div');
+                dateEl.id = 'news-article-date';
+                dateEl.className = 'news-article-date';
+                newsArticleDateEdit.after(dateEl);
+            }
+            dateEl.textContent = '📅 ' + formatDate(article.date);
+            dateEl.style.display = isTeacher ? 'none' : '';
+            newsArticleDateEdit.style.display = isTeacher ? 'inline-block' : 'none';
+            newsArticleDateEdit.value = article.date;
+
+            // ----- Nút xóa bài (chỉ giảng viên) -----
+            newsArticleDeleteBtn.style.display = isTeacher ? 'inline-block' : 'none';
+            newsEditMetaStatus.textContent = '';
+
+            // ----- Ảnh + khung dán link ảnh mới -----
+            newsArticleImg.src = article.thumb;
+            newsArticleImg.alt = article.title;
+            newsEditImageBar.style.display = isTeacher ? 'flex' : 'none';
+            newsEditImageInput.value = article.thumb;
+
+            // ----- Nội dung bài + thanh công cụ (In đậm) -----
+            newsArticleText.innerHTML = article.content;
+            newsArticleText.contentEditable = isTeacher ? 'true' : 'false';
+            newsArticleText.classList.toggle('news-editable', isTeacher);
+            newsEditToolbar.style.display = isTeacher ? 'flex' : 'none';
+            newsEditContentStatus.textContent = '';
+
+            // Khởi tạo khung dịch bài cho bài tin này
+            initTranslateSection(article.id);
+
+            // ----- Trắc nghiệm: học viên làm bài / giảng viên chỉnh sửa + thấy đáp án -----
+            if (isTeacher) {
+                newsQuizSection.style.display = 'none';
+                newsQuizEditSection.style.display = 'block';
+                renderQuizEditor(article);
+            } else {
+                newsQuizSection.style.display = 'block';
+                newsQuizEditSection.style.display = 'none';
+                renderStudentQuiz(article);
+            }
         }
     })();
     // ===== KẾT THÚC LOGIC TIN NGẮN =====
@@ -2887,7 +3064,7 @@ function toggleCompletion(symbolElement) {
 
                 // Vận tốc rơi RIÊNG cho từng ô (3 ô rơi nhanh chậm khác nhau)
                 const fallSeconds = isDeathMode
-                    ? (5 + Math.random() * 2)                                        // Tử Thần: luôn mặc định 5-7s
+                    ? (4 + Math.random() * 2)                                        // Tử Thần: luôn mặc định 5-7s
                     : Math.min(12, Math.max(3, baseSpeed + (Math.random() * 2 - 1))); // Thường: dao động quanh mức người chơi chọn
                 // Dùng animation CSS (thay vì transition + đổi top bằng setTimeout) để
                 // ô luôn chắc chắn rơi ngay khi vừa được thêm vào, không phụ thuộc thời điểm reflow.
@@ -3211,4 +3388,4 @@ function toggleCompletion(symbolElement) {
     })();
     // ===== KẾT THÚC TAB "HƯỚNG DẪN" =====
 
-});
+});

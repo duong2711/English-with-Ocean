@@ -686,18 +686,36 @@
                 <button class="grammar-back-btn" id="news-back-btn">← Quay lại</button>
                 <h3>📁 Tin ngắn (nguồn newsinlevels)</h3>
             </div>
+            <!-- Thanh quản trị: chỉ hiển thị cho giảng viên (giangvien@gmail.com) -->
+            <div class="news-admin-bar" id="news-admin-bar" style="display:none;">
+                <button type="button" id="news-add-btn" class="news-admin-btn news-admin-btn-primary">➕ Thêm bài tin mới</button>
+            </div>
             <div class="news-cards-grid" id="news-cards-grid"></div>
         </div>
 
         <!-- Panel chi tiết 1 bài tin -->
         <div id="news-article-panel" style="display:none;">
-            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border);">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border); flex-wrap:wrap; gap:10px;">
                 <button class="grammar-back-btn" id="news-article-back-btn">← Danh sách tin</button>
                 <h3 id="news-article-title">Bài đọc</h3>
+                <!-- Chỉ giảng viên mới thấy input ngày + nút xóa -->
+                <input type="date" id="news-article-date-edit" class="news-edit-date-input" style="display:none;">
+                <button type="button" id="news-article-delete-btn" class="news-admin-btn news-admin-btn-danger" style="display:none;">🗑️ Xóa bài tin này</button>
             </div>
+            <div class="news-edit-save-status" id="news-edit-meta-status"></div>
             <div class="news-article-body">
                 <div class="news-article-top">
                     <img id="news-article-img" src="" alt="Ảnh bài báo" class="news-article-img">
+                    <!-- Khung dán link ảnh mới — chỉ hiện với giảng viên -->
+                    <div class="news-edit-image-bar" id="news-edit-image-bar" style="display:none;">
+                        <input type="text" id="news-edit-image-input" class="news-edit-input" placeholder="Dán link ảnh .jpg...">
+                        <button type="button" id="news-edit-image-btn" class="news-admin-btn">Cập nhật ảnh</button>
+                    </div>
+                    <!-- Thanh công cụ chỉnh sửa nội dung — chỉ hiện với giảng viên -->
+                    <div class="news-edit-toolbar" id="news-edit-toolbar" style="display:none;">
+                        <button type="button" id="news-edit-bold-btn" class="news-edit-tool-btn" title="In đậm phần đang chọn"><strong>B</strong> In đậm</button>
+                        <span class="news-edit-save-status" id="news-edit-content-status"></span>
+                    </div>
                     <div class="news-article-text" id="news-article-text"></div>
                 </div>
 
@@ -732,11 +750,19 @@
                     </div>
                 </div>
 
-                <div class="news-quiz-section">
+                <div class="news-quiz-section" id="news-quiz-section">
                     <h4 class="grammar-section-label">✏️ Câu hỏi trắc nghiệm</h4>
                     <div id="news-quiz-questions"></div>
                     <button id="news-quiz-submit" class="news-quiz-submit-btn" style="margin:18px auto 0; display:block;">Nộp đáp án</button>
                     <div id="news-quiz-result" class="news-quiz-result" style="display:none;"></div>
+                </div>
+
+                <!-- Khung chỉnh sửa trắc nghiệm dành cho giảng viên — chỉ hiện với giangvien@gmail.com -->
+                <div class="news-quiz-section" id="news-quiz-edit-section" style="display:none;">
+                    <h4 class="grammar-section-label">✏️ Chỉnh sửa câu hỏi trắc nghiệm (giảng viên)</h4>
+                    <p class="news-quiz-edit-hint">Tick vào ô tròn trước đáp án đúng. Mọi thay đổi được tự động lưu.</p>
+                    <div id="news-quiz-edit-questions"></div>
+                    <div class="news-edit-save-status" id="news-quiz-edit-status"></div>
                 </div>
             </div>
         </div>
@@ -1007,4 +1033,4 @@
     <script src="topics-data.js"></script>
     <script src="scriptphonetics.js"></script>
 </body>
-</html>
+</html>
