@@ -594,11 +594,24 @@
         <h2>Từ vựng theo chủ đề</h2>
         <!-- Danh sách folder từ vựng -->
         <div class="folder-grid" id="vocab-folder-grid">
+            <div class="folder-card myvocab-folder-trigger" id="myvocab-folder-card">⭐ Từ vựng của tôi</div>
             <div class="folder-card" id="kid-folder-card">📁 Vận dụng (20 chủ đề)</div>
-            <div class="folder-card">📁 THCS/THPT (theo SGK Global success)</div>
+            <div class="folder-card" id="thcs-folder-card">📁 THCS/THPT (theo SGK Global success)</div>
+            <div class="folder-card news-folder-trigger" id="news-folder-card">📁 Tin ngắn (nguồn newsinlevels)</div>
             <div class="folder-card">📁 IELTS (theo sách Perfect IELTS vocab)</div>
             <div class="folder-card">📁 TOEIC (web byetoeic)</div>
-            <div class="folder-card news-folder-trigger" id="news-folder-card">📁 Tin ngắn (nguồn newsinlevels)</div>
+        </div>
+
+        <!-- ===== Panel "Từ vựng của tôi" — các từ học viên đã chạm để tra nghĩa khi luyện dịch ===== -->
+        <div id="myvocab-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <button class="grammar-back-btn" id="myvocab-back-btn">← Quay lại</button>
+                    <h3 style="margin:0;">⭐ Từ vựng của tôi</h3>
+                </div>
+            </div>
+            <p class="kid-hint">Đây là những từ bạn đã chạm vào để tra nghĩa trong lúc luyện dịch bài đọc (mục "Tin ngắn"). Danh sách này được lưu lại cho riêng bạn và không mất khi tải lại trang.</p>
+            <div id="myvocab-list" class="myvocab-list"></div>
         </div>
 
         <!-- ===== Panel "Cho bé" (50 chủ đề) ===== -->
@@ -681,7 +694,105 @@
             </div>
         </div>
 
-        <!-- Panel tin ngắn: danh sách bài -->
+        <!-- ===== Panel "THCS/THPT" — chọn khối lớp ===== -->
+        <div id="thcs-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <button class="grammar-back-btn" id="thcs-back-btn">← Quay lại</button>
+                    <h3 style="margin:0;">📁 THCS/THPT (theo SGK Global success)</h3>
+                </div>
+            </div>
+            <div class="kid-topic-grid" id="thcs-grade-grid"></div>
+        </div>
+
+        <!-- Panel danh sách Unit của khối lớp 6 -->
+        <div id="thcs-grade6-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border);">
+                <button class="grammar-back-btn" id="thcs-grade6-back-btn">← Quay lại</button>
+                <h3>📁 Lớp 6 (Global Success)</h3>
+            </div>
+            <div class="kid-topic-grid" id="thcs-unit-grid"></div>
+        </div>
+
+        <!-- Panel chi tiết 1 Unit: flashcard / dịch câu / câu chuyện / trò chơi -->
+        <div id="thcs-unit-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border);">
+                <button class="grammar-back-btn" id="thcs-unit-back-btn">← Quay lại</button>
+                <h3 id="thcs-unit-title"></h3>
+            </div>
+
+            <div class="kid-subtabs" id="thcs-subtabs">
+                <button class="kid-subtab-btn active" data-sub="flashcard">🃏 Flashcard</button>
+                <button class="kid-subtab-btn" data-sub="translate">✍️ Dịch câu</button>
+                <button class="kid-subtab-btn" data-sub="story">📖 Câu chuyện</button>
+                <button class="kid-subtab-btn" data-sub="game">🎮 Trò chơi</button>
+            </div>
+
+            <!-- 1. Flashcard -->
+            <div class="kid-sub-content" id="thcs-sub-flashcard">
+                <div class="kid-flash-progress" id="thcs-flash-progress"></div>
+                <div class="kid-flashcard" id="thcs-flashcard">
+                    <div class="kid-flashcard-inner" id="thcs-flashcard-inner">
+                        <div class="kid-flashcard-face kid-flashcard-front" id="thcs-flash-front"></div>
+                        <div class="kid-flashcard-face kid-flashcard-back" id="thcs-flash-back"></div>
+                    </div>
+                </div>
+                <div class="kid-flash-nav">
+                    <button id="thcs-flash-prev" class="kid-btn">‹ Trước</button>
+                    <button id="thcs-flash-flip" class="kid-btn kid-btn-primary">Lật thẻ</button>
+                    <button id="thcs-flash-next" class="kid-btn">Sau ›</button>
+                </div>
+            </div>
+
+            <!-- 2. Dịch câu (Việt -> Anh) -->
+            <div class="kid-sub-content" id="thcs-sub-translate" style="display:none;">
+                <p class="kid-hint">Đọc câu tiếng Việt rồi gõ bản dịch tiếng Anh vào ô bên dưới. Cố dùng đúng từ vựng của unit này nhé!</p>
+                <div class="thcs-translate-progress" id="thcs-translate-progress"></div>
+                <div class="thcs-translate-card">
+                    <div class="thcs-translate-vi" id="thcs-translate-vi"></div>
+                    <textarea id="thcs-translate-input" class="thcs-translate-input" rows="2" placeholder="Nhập câu tiếng Anh của bạn ở đây..."></textarea>
+                    <div class="thcs-translate-actions">
+                        <button id="thcs-translate-check-btn" class="kid-btn kid-btn-primary">✔️ Kiểm tra</button>
+                        <button id="thcs-translate-hint-btn" class="kid-btn">💡 Gợi ý</button>
+                        <button id="thcs-translate-reveal-btn" class="kid-btn">👀 Xem đáp án</button>
+                    </div>
+                    <div class="thcs-translate-feedback" id="thcs-translate-feedback"></div>
+                </div>
+                <div class="kid-flash-nav">
+                    <button id="thcs-translate-prev" class="kid-btn">‹ Trước</button>
+                    <button id="thcs-translate-next" class="kid-btn">Sau ›</button>
+                </div>
+            </div>
+
+            <!-- 3. Câu chuyện -->
+            <div class="kid-sub-content" id="thcs-sub-story" style="display:none;">
+                <h4 id="thcs-story-title" class="kid-story-title"></h4>
+                <p id="thcs-story-text" class="kid-story-text"></p>
+                <button type="button" id="thcs-story-translate-btn" class="kid-story-translate-btn">🇻🇳 Xem bản dịch tiếng Việt</button>
+                <p id="thcs-story-text-vi" class="kid-story-text-vi" style="display:none;"></p>
+                <div class="kid-story-gallery" id="thcs-story-gallery"></div>
+            </div>
+
+            <!-- 4. Trò chơi Hứng từ -->
+            <div class="kid-sub-content" id="thcs-sub-game" style="display:none;">
+                <p class="kid-hint">Nghe từ khóa rồi bấm đúng ô chứa từ đó (tiếng Anh) trước khi nó rơi qua vạch đỏ. 10 lượt đầu là chế độ Thường (hiện sẵn từ khóa để đối chiếu), 10 lượt sau là chế độ Tử Thần 💀 (ẩn từ khóa, chỉ nghe để đoán).</p>
+                <div class="kid-game-controls">
+                    <span id="thcs-game-status" class="kid-game-status">Lượt: 0/20 | Chế độ: Thường</span>
+                    <label>Tốc độ rơi cơ bản (giây): <input type="number" id="thcs-game-speed" value="6" min="3" max="10" step="1"></label>
+                    <button id="thcs-game-start" class="kid-btn kid-btn-primary">Bắt đầu chơi</button>
+                    <button id="thcs-game-pause" class="kid-btn" disabled>⏸ Dừng lại</button>
+                    <button id="thcs-game-restart" class="kid-btn">🔄 Chơi lại</button>
+                </div>
+                <div id="thcs-game-keyword" class="kid-game-keyword"></div>
+                <div id="thcs-game-area" class="kid-game-area">
+                    <div id="thcs-game-redline" class="kid-game-redline"></div>
+                    <div id="thcs-game-overlay" class="kid-game-overlay" style="display:none;"></div>
+                    <div id="thcs-game-result-panel" class="kid-game-result-panel" style="display:none;"></div>
+                </div>
+            </div>
+        </div>
+
+<!-- Panel tin ngắn: danh sách bài -->
         <div id="news-panel" style="display:none;">
             <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border);">
                 <button class="grammar-back-btn" id="news-back-btn">← Quay lại</button>
@@ -720,39 +831,54 @@
                     <div class="news-article-text" id="news-article-text"></div>
                 </div>
 
-                <!-- Khung dịch bài của học viên -->
+                <!-- Luyện dịch từng câu (AI hỗ trợ dịch mẫu + đặt câu hỏi dẫn dắt) -->
                 <div class="news-translate-section" id="news-translate-section">
                     <div class="news-translate-header">
-                        <h4 class="grammar-section-label">📝 Dịch bài</h4>
-                        <span class="news-teacher-badge" id="news-teacher-badge" style="display:none;">🎓 Chế độ giảng viên — chỉ nhận xét</span>
+                        <h4 class="grammar-section-label">📝 Luyện dịch từng câu</h4>
+                        <span class="news-teacher-badge" id="news-teacher-badge" style="display:none;">🎓 Chế độ giảng viên</span>
                     </div>
 
-                    <!-- Khung soạn/nộp bài dịch — ẩn hoàn toàn với giảng viên -->
-                    <div class="news-translate-compose" id="news-translate-compose">
-                        <textarea id="news-translate-textarea" class="news-translate-textarea" placeholder="Nhập bản dịch tiếng Việt của bạn cho bài báo này..."></textarea>
+                    <p class="news-translate-teacher-hint" id="news-translate-teacher-hint" style="display:none;">
+                        Học viên sẽ dịch lần lượt từng câu của bài đọc ở đây. Sau mỗi câu, AI sẽ đưa ra bản dịch gợi ý
+                        và đặt một câu hỏi dẫn sang câu tiếp theo, cứ như vậy cho đến hết bài.
+                    </p>
 
+                    <div class="news-sentence-progress" id="news-sentence-progress"></div>
+                    <div class="news-sentence-history" id="news-sentence-history"></div>
+
+                    <div class="news-sentence-card" id="news-sentence-card">
+                        <div class="news-sentence-en" id="news-sentence-en"></div>
+
+                        <textarea id="news-translate-textarea" class="news-translate-textarea" placeholder="Nhập bản dịch tiếng Việt của bạn cho câu này. Bí quá thì bấm vào từ để tra nghĩa nha ^_^"></textarea>
                         <div class="news-translate-actions">
                             <div class="news-translate-status" id="news-translate-status"></div>
                             <div class="news-translate-actions-buttons">
-                                <button id="news-translate-cancel-btn" class="news-translate-cancel-btn" style="display:none;" type="button">Hủy</button>
-                                <button id="news-translate-submit-btn" class="news-translate-submit-btn" type="button">Nộp bài dịch</button>
+                                <button id="news-translate-submit-btn" class="news-translate-submit-btn" type="button">Nộp bản dịch</button>
                             </div>
+                        </div>
+
+                        <div class="news-sentence-comment" id="news-sentence-comment" style="display:none;">
+                            <div class="news-sentence-comment-label" id="news-sentence-comment-label">📝 Nhận xét của AI</div>
+                            <div class="news-sentence-comment-text" id="news-sentence-comment-text"></div>
+                        </div>
+
+                        <div class="news-sentence-answer" id="news-sentence-answer" style="display:none;">
+                            <div class="news-sentence-answer-label">💡 Đáp án gợi ý (AI dịch)</div>
+                            <div class="news-sentence-answer-text" id="news-sentence-answer-text"></div>
+                        </div>
+
+                        <div class="news-sentence-question" id="news-sentence-question" style="display:none;">
+                            <div class="news-sentence-question-text" id="news-sentence-question-text"></div>
+                            <button id="news-sentence-next-btn" class="news-translate-submit-btn news-sentence-next-btn" type="button">👉 Xem câu tiếp theo</button>
                         </div>
                     </div>
 
-                    <div class="news-translate-peers-wrap">
-                        <div class="news-translate-peers-header">
-                            <h4 class="grammar-section-label">👥 Bài dịch của học viên</h4>
-                            <button class="news-refresh-btn" id="news-peers-refresh-btn" type="button" title="Làm mới">🔄</button>
-                        </div>
-                        <div class="news-translate-peers" id="news-translate-peers">
-                            <p class="news-translate-locked-msg">Hãy nộp bài dịch của bạn để xem bài dịch của các học viên khác.</p>
-                        </div>
-                    </div>
+                    <div class="news-sentence-done" id="news-sentence-done" style="display:none;">🎉 Bạn đã dịch xong toàn bộ bài đọc! Cùng làm phần trắc nghiệm bên dưới nhé.</div>
+                    <p class="news-translate-locked-msg" id="news-translate-empty-msg" style="display:none;">Bài đọc này chưa có nội dung để luyện dịch.</p>
                 </div>
 
                 <div class="news-quiz-section" id="news-quiz-section">
-                    <h4 class="grammar-section-label">✏️ Câu hỏi trắc nghiệm</h4>
+                    <h4 class="grammar-section-label">✏️ Câu hỏi trắc nghiệm (Dành cho người luyện thi IELTs, Toeic)</h4>
                     <div id="news-quiz-questions"></div>
                     <button id="news-quiz-submit" class="news-quiz-submit-btn" style="margin:18px auto 0; display:block;">Nộp đáp án</button>
                     <div id="news-quiz-result" class="news-quiz-result" style="display:none;"></div>
@@ -1031,7 +1157,20 @@
         <a class="footer-link" href="https://duong2711.github.io/Duong-s-portfolio/" target="_blank">About me ↗</a>
     </footer>
 
+        <!-- ===== POPUP TRA NHANH 1 TỪ (hiện khi học viên chạm vào từ lúc luyện dịch) ===== -->
+    <div id="word-lookup-popup" class="word-lookup-popup" style="display:none;">
+        <div class="word-lookup-inner">
+            <button type="button" id="word-lookup-close" class="word-lookup-close" aria-label="Đóng">✕</button>
+            <div class="word-lookup-word" id="word-lookup-word"></div>
+            <div class="word-lookup-body" id="word-lookup-body"></div>
+        </div>
+    </div>
+
+    <!-- ===== KHUNG TOAST THÔNG BÁO NHỎ (vd: "Đã thêm từ vào từ vựng của bạn") ===== -->
+    <div id="app-toast-container" class="app-toast-container"></div>
+
     <script src="topics-data.js"></script>
+    <script src="grade6-data.js"></script>
     <script src="scriptphonetics.js"></script>
 </body>
 </html>
