@@ -2236,63 +2236,370 @@ function toggleCompletion(symbolElement) {
     // ===== KẾT THÚC LOGIC TIN NGẮN =====
 
     (function initGrammarTab() {
-        const grammarFolderGrid = document.getElementById('grammar-folder-grid');
-        const grammarPanels     = document.getElementById('grammar-panels');
+        const grammarAdminBar        = document.getElementById('grammar-admin-bar');
+        const grammarAddFolderBtn    = document.getElementById('grammar-add-folder-btn');
+        const grammarFolderGrid      = document.getElementById('grammar-folder-grid');
+        const grammarPanels          = document.getElementById('grammar-panels');
+        const grammarDetailPanel     = document.getElementById('grammar-detail-panel');
+        const grammarBackBtn         = document.getElementById('grammar-panel-back-btn');
+        const grammarPanelTitle      = document.getElementById('grammar-panel-title');
+        const grammarDeleteBtn       = document.getElementById('grammar-delete-folder-btn');
+        const grammarEditStatus      = document.getElementById('grammar-edit-status');
+
+        const grammarVideoIframe     = document.getElementById('grammar-video-iframe');
+        const grammarEditYoutubeBar  = document.getElementById('grammar-edit-youtube-bar');
+        const grammarEditYoutubeInp  = document.getElementById('grammar-edit-youtube-input');
+        const grammarEditYoutubeBtn  = document.getElementById('grammar-edit-youtube-btn');
+
+        const grammarDriveIframe     = document.getElementById('grammar-drive-iframe');
+        const grammarDetailBtn       = document.getElementById('grammar-detail-btn');
+        const grammarEditDriveBar    = document.getElementById('grammar-edit-drive-bar');
+        const grammarEditDriveInp    = document.getElementById('grammar-edit-drive-input');
+        const grammarEditDriveBtn    = document.getElementById('grammar-edit-drive-btn');
+
+        const grammarQuizOpenBtn     = document.getElementById('grammar-quiz-open-btn');
+        const grammarEditQuizBar     = document.getElementById('grammar-edit-quiz-bar');
+        const grammarEditQuizInp     = document.getElementById('grammar-edit-quiz-input');
+        const grammarEditQuizBtn     = document.getElementById('grammar-edit-quiz-btn');
+
         const searchInput       = document.getElementById('grammar-search-input');
         const searchClear       = document.getElementById('grammar-search-clear');
-        const folderCards       = document.querySelectorAll('.grammar-folder-card');
-        const quizModal         = document.getElementById('grammar-quiz-modal');
-        const quizIframe        = document.getElementById('grammar-quiz-iframe');
-        const quizClose         = document.getElementById('grammar-quiz-close');
+        const quizModal          = document.getElementById('grammar-quiz-modal');
+        const quizIframe         = document.getElementById('grammar-quiz-iframe');
+        const quizClose          = document.getElementById('grammar-quiz-close');
 
-        // Helper: hiển thị folder list, ẩn panels
+        if (!grammarFolderGrid || !grammarDetailPanel) return;
+
+        // Dữ liệu folder ngữ pháp giờ được tải động từ bảng "grammar_folders" trên Supabase
+        // (xem file SQL "grammar_folders_setup.sql" để tạo bảng + chèn 4 folder mẫu ban đầu).
+        // Chỉ tài khoản trong TEACHER_EMAILS (giangvien@gmail.com) mới có quyền
+        // thêm / sửa / xóa — quyền này được chặn ở CẢ giao diện lẫn RLS trên Supabase.
+        let GRAMMAR_DATA = [];
+        let currentFolderId = null;
+
+        function escapeHtmlGrammar(str) {
+            return String(str == null ? '' : str).replace(/[&<>"']/g, ch => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[ch]));
+        }
+
+        // Nhận 1 link YouTube bất kỳ (watch/youtu.be/shorts/embed) → trả về link embed chuẩn
+        function youtubeEmbedUrl(rawUrl) {
+            const url = (rawUrl || '').trim();
+            if (!url) return '';
+            const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|shorts\/|watch\?v=|watch\?.*[?&]v=))([a-zA-Z0-9_-]{6,})/);
+            if (match) return `https://www.youtube.com/embed/${match[1]}?enablejsapi=1`;
+            return url; // không nhận diện được thì dùng nguyên link đã dán (best-effort)
+        }
+
+        // Nhận 1 link chia sẻ Google Drive bất kỳ → trích ra ID file
+        function driveFileId(rawUrl) {
+            const url = (rawUrl || '').trim();
+            if (!url) return null;
+            let match = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+            if (match) return match[1];
+            match = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+            if (match) return match[1];
+            if (/^[a-zA-Z0-9_-]{10,}$/.test(url)) return url; // có thể người dùng dán sẵn ID
+            return null;
+        }
+        function drivePreviewUrl(rawUrl) {
+            const id = driveFileId(rawUrl);
+            return id ? `https://drive.google.com/file/d/${id}/preview` : 'about:blank';
+        }
+        function driveViewUrl(rawUrl) {
+            const id = driveFileId(rawUrl);
+            return id ? `https://drive.google.com/file/d/${id}/view` : (rawUrl || '').trim();
+        }
+
+        // ===== SUPABASE: CRUD cho bảng "grammar_folders" =====
+        async function loadGrammarFoldersFromDB() {
+            try {
+                const { data, error } = await sb
+                    .from('grammar_folders')
+                    .select('*')
+                    .order('id', { ascending: true });
+                if (error) throw error;
+                GRAMMAR_DATA = data || [];
+            } catch (err) {
+                console.error('Lỗi khi tải danh sách folder ngữ pháp:', err.message);
+                GRAMMAR_DATA = [];
+            }
+        }
+
+        // Tạo 1 folder mới (rỗng, sẵn sàng để giảng viên chỉnh sửa) — chỉ giảng viên được gọi
+        async function createGrammarFolderDB() {
+            const payload = {
+                title: 'Folder mới (bấm vào tiêu đề để đổi tên)',
+                youtube_url: '',
+                drive_url: '',
+                quiz_url: '',
+                created_by: currentEmail
+            };
+            const { data, error } = await sb
+                .from('grammar_folders')
+                .insert(payload)
+                .select()
+                .single();
+            if (error) throw error;
+            return data;
+        }
+
+        // Cập nhật 1 hoặc nhiều trường của 1 folder — dùng cho autosave từng phần
+        async function updateGrammarFolderDB(folderId, fields) {
+            const payload = { ...fields, updated_at: new Date().toISOString(), updated_by: currentEmail };
+            const { error } = await sb
+                .from('grammar_folders')
+                .update(payload)
+                .eq('id', folderId);
+            if (error) throw error;
+        }
+
+        // Xóa 1 folder
+        async function deleteGrammarFolderDB(folderId) {
+            const { error } = await sb
+                .from('grammar_folders')
+                .delete()
+                .eq('id', folderId);
+            if (error) throw error;
+        }
+
+        // Cập nhật 1 folder trong mảng GRAMMAR_DATA đang giữ trên trình duyệt (sau khi lưu thành công)
+        function patchLocalFolder(folderId, fields) {
+            const f = GRAMMAR_DATA.find(x => String(x.id) === String(folderId));
+            if (f) Object.assign(f, fields);
+        }
+
+        // Helper: hiển thị folder list, ẩn panel chi tiết
         function showFolderList() {
             grammarFolderGrid.style.display = '';
             grammarPanels.style.display = 'none';
-            document.querySelectorAll('.grammar-panel').forEach(p => p.classList.remove('active'));
+            grammarDetailPanel.classList.remove('active');
+            currentFolderId = null;
         }
 
-        // Helper: hiển thị panel cụ thể
-        function showPanel(folderId) {
-            grammarFolderGrid.style.display = 'none';
-            grammarPanels.style.display = 'block';
-            const panel = document.getElementById('panel-' + folderId);
-            if (panel) panel.classList.add('active');
+        // Render danh sách thẻ folder (tải danh sách từ Supabase trước khi vẽ)
+        async function renderGrammarFolders() {
+            if (grammarAdminBar) grammarAdminBar.style.display = isTeacher ? 'flex' : 'none';
+            grammarFolderGrid.innerHTML = '<p class="grammar-loading-msg">Đang tải danh sách folder...</p>';
+
+            await loadGrammarFoldersFromDB();
+
+            grammarFolderGrid.innerHTML = '';
+            if (GRAMMAR_DATA.length === 0) {
+                grammarFolderGrid.innerHTML = '<p class="grammar-empty-msg">Chưa có folder nào.</p>';
+            } else {
+                GRAMMAR_DATA.forEach(folder => {
+                    const card = document.createElement('div');
+                    card.className = 'folder-card grammar-folder-card';
+                    card.dataset.folderId = folder.id;
+                    card.innerHTML = `
+                        📁 ${escapeHtmlGrammar(folder.title)}
+                        ${isTeacher ? `<button type="button" class="grammar-card-delete-btn" data-folder-id="${folder.id}" title="Xóa folder này">🗑️</button>` : ''}
+                    `;
+                    card.addEventListener('click', (e) => {
+                        if (e.target.closest('.grammar-card-delete-btn')) return; // nút xóa xử lý riêng
+                        openFolder(folder);
+                    });
+                    grammarFolderGrid.appendChild(card);
+                });
+            }
+
+            // Nếu ô tìm kiếm đang có nội dung, áp dụng lại bộ lọc cho danh sách vừa tải
+            if (searchInput && searchInput.value.trim()) doSearch(searchInput.value);
         }
 
-        // Click folder card → mở panel
-        folderCards.forEach(card => {
-            card.addEventListener('click', () => {
-                const folderId = card.dataset.folder;
-                showPanel(folderId);
-            });
+        // Xóa folder ngay trên thẻ (danh sách) — chỉ giảng viên thấy nút này
+        grammarFolderGrid.addEventListener('click', async (e) => {
+            const btn = e.target.closest('.grammar-card-delete-btn');
+            if (!btn || !isTeacher) return;
+            const folderId = btn.dataset.folderId;
+            const folder = GRAMMAR_DATA.find(f => String(f.id) === String(folderId));
+            if (!confirm(`Xóa folder "${folder ? folder.title : ''}"? Hành động này không thể hoàn tác.`)) return;
+            btn.disabled = true;
+            try {
+                await deleteGrammarFolderDB(folderId);
+                await renderGrammarFolders();
+            } catch (err) {
+                alert('Xóa folder thất bại: ' + err.message);
+                btn.disabled = false;
+            }
         });
 
-        // Nút quay lại trong panel
-        document.querySelectorAll('.grammar-back-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                showFolderList();
+        // Thêm folder mới — tạo 1 folder rỗng trên Supabase rồi mở luôn để giảng viên nhập liệu
+        if (grammarAddFolderBtn) {
+            grammarAddFolderBtn.addEventListener('click', async () => {
+                if (!isTeacher) return;
+                grammarAddFolderBtn.disabled = true;
+                grammarAddFolderBtn.textContent = 'Đang tạo...';
+                try {
+                    const newFolder = await createGrammarFolderDB();
+                    GRAMMAR_DATA.push(newFolder);
+                    openFolder(newFolder);
+                } catch (err) {
+                    alert('Tạo folder mới thất bại: ' + err.message);
+                } finally {
+                    grammarAddFolderBtn.disabled = false;
+                    grammarAddFolderBtn.textContent = '➕ Thêm folder mới';
+                }
             });
+        }
+
+        // Mở 1 folder → hiển thị panel chi tiết, đổ dữ liệu vào video/ảnh/bài kiểm tra
+        function openFolder(folder) {
+            currentFolderId = folder.id;
+            grammarFolderGrid.style.display = 'none';
+            grammarPanels.style.display = 'block';
+            grammarDetailPanel.classList.add('active');
+            grammarEditStatus.textContent = '';
+
+            // Tiêu đề (chỉ giảng viên mới sửa được trực tiếp)
+            grammarPanelTitle.textContent = folder.title || '';
+            grammarPanelTitle.contentEditable = isTeacher ? 'true' : 'false';
+            grammarPanelTitle.classList.toggle('grammar-editable', isTeacher);
+
+            // Video YouTube
+            grammarVideoIframe.src = youtubeEmbedUrl(folder.youtube_url) || 'about:blank';
+            if (grammarEditYoutubeBar) grammarEditYoutubeBar.style.display = isTeacher ? 'flex' : 'none';
+            if (grammarEditYoutubeInp) grammarEditYoutubeInp.value = folder.youtube_url || '';
+
+            // Hình ảnh minh họa (Google Drive)
+            grammarDriveIframe.src = drivePreviewUrl(folder.drive_url);
+            grammarDetailBtn.dataset.quizUrl = driveViewUrl(folder.drive_url);
+            if (grammarEditDriveBar) grammarEditDriveBar.style.display = isTeacher ? 'flex' : 'none';
+            if (grammarEditDriveInp) grammarEditDriveInp.value = folder.drive_url || '';
+
+            // Bài kiểm tra
+            grammarQuizOpenBtn.dataset.quizUrl = folder.quiz_url || '';
+            if (grammarEditQuizBar) grammarEditQuizBar.style.display = isTeacher ? 'flex' : 'none';
+            if (grammarEditQuizInp) grammarEditQuizInp.value = folder.quiz_url || '';
+
+            // Nút xóa folder (trong panel chi tiết) — chỉ giảng viên
+            grammarDeleteBtn.style.display = isTeacher ? 'inline-block' : 'none';
+        }
+
+        // Nút quay lại danh sách folder
+        grammarBackBtn.addEventListener('click', showFolderList);
+
+        // ===== AUTOSAVE: TIÊU ĐỀ (giảng viên gõ trực tiếp vào tiêu đề) =====
+        let grammarTitleSaveTimer = null;
+        grammarPanelTitle.addEventListener('input', () => {
+            if (!isTeacher || currentFolderId === null) return;
+            grammarEditStatus.textContent = 'Đang gõ...';
+            clearTimeout(grammarTitleSaveTimer);
+            grammarTitleSaveTimer = setTimeout(async () => {
+                const newTitle = grammarPanelTitle.textContent.trim();
+                try {
+                    await updateGrammarFolderDB(currentFolderId, { title: newTitle });
+                    patchLocalFolder(currentFolderId, { title: newTitle });
+                    grammarEditStatus.textContent = '💾 Đã lưu tiêu đề.';
+                } catch (err) {
+                    grammarEditStatus.textContent = '❌ Lưu thất bại: ' + err.message;
+                }
+            }, 800);
+        });
+
+        // ===== CẬP NHẬT LINK YOUTUBE: dán link rồi bấm nút =====
+        if (grammarEditYoutubeBtn) {
+            grammarEditYoutubeBtn.addEventListener('click', async () => {
+                if (!isTeacher || currentFolderId === null) return;
+                const url = grammarEditYoutubeInp.value.trim();
+                if (!url) { alert('Vui lòng dán link YouTube trước khi cập nhật.'); return; }
+                grammarEditYoutubeBtn.disabled = true;
+                const oldLabel = grammarEditYoutubeBtn.textContent;
+                grammarEditYoutubeBtn.textContent = 'Đang lưu...';
+                try {
+                    await updateGrammarFolderDB(currentFolderId, { youtube_url: url });
+                    patchLocalFolder(currentFolderId, { youtube_url: url });
+                    grammarVideoIframe.src = youtubeEmbedUrl(url);
+                    grammarEditYoutubeBtn.textContent = '✅ Đã cập nhật';
+                    setTimeout(() => { grammarEditYoutubeBtn.textContent = oldLabel; grammarEditYoutubeBtn.disabled = false; }, 1300);
+                } catch (err) {
+                    alert('Cập nhật video thất bại: ' + err.message);
+                    grammarEditYoutubeBtn.textContent = oldLabel;
+                    grammarEditYoutubeBtn.disabled = false;
+                }
+            });
+        }
+
+        // ===== CẬP NHẬT LINK GOOGLE DRIVE: dán link rồi bấm nút =====
+        if (grammarEditDriveBtn) {
+            grammarEditDriveBtn.addEventListener('click', async () => {
+                if (!isTeacher || currentFolderId === null) return;
+                const url = grammarEditDriveInp.value.trim();
+                if (!url) { alert('Vui lòng dán link Google Drive trước khi cập nhật.'); return; }
+                grammarEditDriveBtn.disabled = true;
+                const oldLabel = grammarEditDriveBtn.textContent;
+                grammarEditDriveBtn.textContent = 'Đang lưu...';
+                try {
+                    await updateGrammarFolderDB(currentFolderId, { drive_url: url });
+                    patchLocalFolder(currentFolderId, { drive_url: url });
+                    grammarDriveIframe.src = drivePreviewUrl(url);
+                    grammarDetailBtn.dataset.quizUrl = driveViewUrl(url);
+                    grammarEditDriveBtn.textContent = '✅ Đã cập nhật';
+                    setTimeout(() => { grammarEditDriveBtn.textContent = oldLabel; grammarEditDriveBtn.disabled = false; }, 1300);
+                } catch (err) {
+                    alert('Cập nhật ảnh thất bại: ' + err.message);
+                    grammarEditDriveBtn.textContent = oldLabel;
+                    grammarEditDriveBtn.disabled = false;
+                }
+            });
+        }
+
+        // ===== CẬP NHẬT LINK BÀI KIỂM TRA: dán link rồi bấm nút =====
+        if (grammarEditQuizBtn) {
+            grammarEditQuizBtn.addEventListener('click', async () => {
+                if (!isTeacher || currentFolderId === null) return;
+                const url = grammarEditQuizInp.value.trim();
+                if (!url) { alert('Vui lòng dán link bài kiểm tra trước khi cập nhật.'); return; }
+                grammarEditQuizBtn.disabled = true;
+                const oldLabel = grammarEditQuizBtn.textContent;
+                grammarEditQuizBtn.textContent = 'Đang lưu...';
+                try {
+                    await updateGrammarFolderDB(currentFolderId, { quiz_url: url });
+                    patchLocalFolder(currentFolderId, { quiz_url: url });
+                    grammarQuizOpenBtn.dataset.quizUrl = url;
+                    grammarEditQuizBtn.textContent = '✅ Đã cập nhật';
+                    setTimeout(() => { grammarEditQuizBtn.textContent = oldLabel; grammarEditQuizBtn.disabled = false; }, 1300);
+                } catch (err) {
+                    alert('Cập nhật bài kiểm tra thất bại: ' + err.message);
+                    grammarEditQuizBtn.textContent = oldLabel;
+                    grammarEditQuizBtn.disabled = false;
+                }
+            });
+        }
+
+        // ===== XÓA FOLDER ĐANG MỞ (trong panel chi tiết) =====
+        grammarDeleteBtn.addEventListener('click', async () => {
+            if (!isTeacher || currentFolderId === null) return;
+            const folder = GRAMMAR_DATA.find(f => String(f.id) === String(currentFolderId));
+            if (!confirm(`Xóa folder "${folder ? folder.title : ''}"? Hành động này không thể hoàn tác.`)) return;
+            grammarDeleteBtn.disabled = true;
+            try {
+                await deleteGrammarFolderDB(currentFolderId);
+                showFolderList();
+                await renderGrammarFolders();
+            } catch (err) {
+                alert('Xóa folder thất bại: ' + err.message);
+            } finally {
+                grammarDeleteBtn.disabled = false;
+            }
         });
 
         // Nút xem chi tiết hình minh họa → mở tab mới (tránh lỗi iframe Google Drive)
-        document.querySelectorAll('.grammar-detail-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const url = btn.dataset.quizUrl;
-                window.open(url, '_blank');
-            });
+        grammarDetailBtn.addEventListener('click', () => {
+            const url = grammarDetailBtn.dataset.quizUrl;
+            if (url) window.open(url, '_blank');
         });
 
         // Nút kiểm tra → mở modal
-        document.querySelectorAll('.grammar-quiz-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const url = btn.dataset.quizUrl;
-                if (quizModal && quizIframe) {
-                    quizIframe.src = url;
-                    quizModal.style.display = 'flex';
-                    quizModal.querySelector('span').textContent = '✏️ Bài kiểm tra ngữ pháp';
-                }
-            });
+        grammarQuizOpenBtn.addEventListener('click', () => {
+            const url = grammarQuizOpenBtn.dataset.quizUrl;
+            if (url && quizModal && quizIframe) {
+                quizIframe.src = url;
+                quizModal.style.display = 'flex';
+                quizModal.querySelector('span').textContent = '✏️ Bài kiểm tra ngữ pháp';
+            }
         });
 
         // Đóng modal kiểm tra
@@ -2311,7 +2618,8 @@ function toggleCompletion(symbolElement) {
             });
         }
 
-        // Thanh tìm kiếm
+        // Thanh tìm kiếm (tìm trên danh sách thẻ folder hiện có — được truy vấn lại mỗi lần
+        // vì danh sách folder giờ là động, không còn cố định như trước)
         const noResults = document.createElement('div');
         noResults.id = 'grammar-no-results';
         noResults.textContent = 'Không tìm thấy kết quả phù hợp.';
@@ -2321,8 +2629,9 @@ function toggleCompletion(symbolElement) {
             const q = query.trim().toLowerCase()
                 .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
             let visibleCount = 0;
+            const cards = grammarFolderGrid.querySelectorAll('.grammar-folder-card');
 
-            folderCards.forEach(card => {
+            cards.forEach(card => {
                 const text = card.textContent.toLowerCase()
                     .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
                 const match = !q || text.includes(q);
@@ -2331,7 +2640,7 @@ function toggleCompletion(symbolElement) {
                 if (match) visibleCount++;
             });
 
-            noResults.classList.toggle('visible', visibleCount === 0);
+            noResults.classList.toggle('visible', cards.length > 0 && visibleCount === 0);
             searchClear.classList.toggle('visible', !!q);
         }
 
@@ -2344,6 +2653,12 @@ function toggleCompletion(symbolElement) {
             doSearch('');
             searchInput.focus();
         });
+
+        // Tải danh sách folder lần đầu, và tải lại mỗi khi bấm vào tab "Ngữ pháp"
+        // (đảm bảo danh sách + quyền giảng viên luôn được cập nhật mới nhất)
+        renderGrammarFolders();
+        const grammarNavBtn = document.querySelector('.main-tab-btn[data-main-target="tab-ngu-phap"]');
+        if (grammarNavBtn) grammarNavBtn.addEventListener('click', renderGrammarFolders);
 
     })();
     // ===== KẾT THÚC LOGIC TAB NGỮ PHÁP =====
@@ -3624,7 +3939,24 @@ function toggleCompletion(symbolElement) {
     // ===================================================================
     (() => {
         const thcsFolderCard = document.getElementById('thcs-folder-card');
-        if (!thcsFolderCard || typeof GRADE6_UNITS === 'undefined') return;
+        if (!thcsFolderCard) return;
+
+        // Ánh xạ khối lớp -> bộ dữ liệu unit tương ứng (mỗi khối lớp có 1 file <lớp>-data.js riêng,
+        // khai báo biến toàn cục GRADE<N>_UNITS). Dùng typeof vì các file dữ liệu khai báo bằng "const"
+        // (const/let ở top-level không gắn vào window, nên phải kiểm tra bằng typeof thay vì window[...]).
+        function thcsGetGradeUnits(gradeNum) {
+            switch (gradeNum) {
+                case 6: return (typeof GRADE6_UNITS !== 'undefined') ? GRADE6_UNITS : null;
+                case 7: return (typeof GRADE7_UNITS !== 'undefined') ? GRADE7_UNITS : null;
+                case 8: return (typeof GRADE8_UNITS !== 'undefined') ? GRADE8_UNITS : null;
+                case 9: return (typeof GRADE9_UNITS !== 'undefined') ? GRADE9_UNITS : null;
+                case 10: return (typeof GRADE10_UNITS !== 'undefined') ? GRADE10_UNITS : null;
+                case 11: return (typeof GRADE11_UNITS !== 'undefined') ? GRADE11_UNITS : null;
+                case 12: return (typeof GRADE12_UNITS !== 'undefined') ? GRADE12_UNITS : null;
+                default: return null;
+            }
+        }
+        if (!thcsGetGradeUnits(6)) return;
 
         const vocabFolderGrid   = document.getElementById('vocab-folder-grid');
         const thcsPanel         = document.getElementById('thcs-panel');
@@ -3633,6 +3965,7 @@ function toggleCompletion(symbolElement) {
 
         const thcsGrade6Panel   = document.getElementById('thcs-grade6-panel');
         const thcsGrade6BackBtn = document.getElementById('thcs-grade6-back-btn');
+        const thcsGradePanelTitle = document.getElementById('thcs-grade-panel-title');
         const thcsUnitGrid      = document.getElementById('thcs-unit-grid');
 
         const thcsUnitPanel     = document.getElementById('thcs-unit-panel');
@@ -3641,6 +3974,7 @@ function toggleCompletion(symbolElement) {
         const thcsSubtabs       = document.getElementById('thcs-subtabs');
 
         let currentUnit = null;
+        let currentGradeUnits = null;
 
         // ---------- Tiện ích dùng chung ----------
         function thcsEscAttr(s) {
@@ -3703,16 +4037,19 @@ function toggleCompletion(symbolElement) {
         function renderGradeGrid() {
             thcsGradeGrid.innerHTML = '';
             for (let g = 6; g <= 12; g++) {
-                const isReady = (g === 6);
+                const gradeUnits = thcsGetGradeUnits(g);
+                const isReady = !!gradeUnits;
                 const card = document.createElement('div');
                 card.className = 'kid-topic-card thcs-grade-card' + (isReady ? '' : ' locked');
                 card.innerHTML = `
                     <span class="kid-icon">${isReady ? '📘' : '🔒'}</span>
                     <div class="kid-title">Lớp ${g}</div>
-                    <div class="kid-count">${isReady ? (GRADE6_UNITS.length + ' unit') : 'Sắp ra mắt'}</div>
+                    <div class="kid-count">${isReady ? (gradeUnits.length + ' unit') : 'Sắp ra mắt'}</div>
                 `;
                 if (isReady) {
                     card.addEventListener('click', () => {
+                        currentGradeUnits = gradeUnits;
+                        if (thcsGradePanelTitle) thcsGradePanelTitle.textContent = `📁 Lớp ${g} (Global Success)`;
                         thcsPanel.style.display = 'none';
                         thcsGrade6Panel.style.display = 'block';
                         renderUnitGrid();
@@ -3742,10 +4079,10 @@ function toggleCompletion(symbolElement) {
             thcsPanel.style.display = 'block';
         });
 
-        // ---------- Bước 2: Danh sách Unit của lớp 6 ----------
+        // ---------- Bước 2: Danh sách Unit của khối lớp đang chọn ----------
         function renderUnitGrid() {
             thcsUnitGrid.innerHTML = '';
-            GRADE6_UNITS.forEach(unit => {
+            (currentGradeUnits || []).forEach(unit => {
                 const card = document.createElement('div');
                 card.className = 'kid-topic-card';
                 card.innerHTML = `

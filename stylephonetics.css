@@ -1275,6 +1275,127 @@ h3 { font-size:0.95rem; font-weight:600; color:var(--text); margin:0 0 8px; }
 }
 
 /* =====================================================
+   KHU VỰC QUẢN TRỊ NGỮ PHÁP (chỉ dành cho giảng viên)
+   Cho phép giảng viên (giangvien@gmail.com) thêm / xóa folder con
+   và chỉnh sửa tiêu đề, link YouTube, link Drive, link bài kiểm tra.
+   ===================================================== */
+
+/* Nút chung dùng trong khu vực quản trị ngữ pháp */
+.grammar-admin-btn {
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, transform 0.1s;
+    white-space: nowrap;
+}
+.grammar-admin-btn:hover { border-color: var(--primary); background: var(--primary-light); }
+.grammar-admin-btn:active { transform: translateY(1px); }
+.grammar-admin-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.grammar-admin-btn-primary {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+}
+.grammar-admin-btn-primary:hover { background: var(--primary-dark); border-color: var(--primary-dark); }
+
+.grammar-admin-btn-danger {
+    background: #fff;
+    border-color: var(--danger);
+    color: var(--danger-dark);
+    margin-left: auto;
+}
+.grammar-admin-btn-danger:hover { background: #fee2e2; }
+
+/* Thanh quản trị phía trên danh sách folder (nút Thêm folder mới) */
+.grammar-admin-bar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 14px;
+}
+
+/* Nút xóa nổi trên góc thẻ folder ngữ pháp — chỉ giảng viên thấy nút này */
+.grammar-card-delete-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(239,68,68,0.92);
+    color: #fff;
+    font-size: 0.8rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.15s, background 0.15s;
+    z-index: 2;
+}
+.grammar-card-delete-btn:hover { transform: scale(1.1); background: var(--danger-dark); }
+
+/* Trạng thái lưu tự động (tiêu đề / video / ảnh / bài kiểm tra) */
+.grammar-edit-save-status {
+    font-size: 0.76rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    min-height: 1.1em;
+    margin: -8px 2px 10px;
+}
+
+/* Tiêu đề folder có thể chỉnh sửa trực tiếp (contenteditable) — chỉ giảng viên */
+#grammar-panel-title.grammar-editable {
+    display: inline-block;
+    min-width: 60px;
+    outline: none;
+    border: 1.5px dashed var(--border-strong);
+    border-radius: var(--radius-sm);
+    padding: 2px 8px;
+    background: var(--surface-2);
+    cursor: text;
+    transition: border-color 0.15s, background 0.15s;
+}
+#grammar-panel-title.grammar-editable:focus {
+    border-color: var(--primary);
+    background: var(--surface);
+}
+
+/* Khung dán link (YouTube / Drive / bài kiểm tra) — chỉ hiện với giảng viên */
+.grammar-edit-bar {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+}
+.grammar-edit-input {
+    flex: 1;
+    min-width: 0;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border);
+    font-size: 0.82rem;
+    color: var(--text);
+    background: var(--surface);
+}
+.grammar-edit-input:focus { outline: none; border-color: var(--primary); }
+
+/* Thông báo tải/rỗng cho danh sách folder ngữ pháp */
+.grammar-loading-msg,
+.grammar-empty-msg {
+    grid-column: 1 / -1;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.86rem;
+    padding: 24px 0;
+}
+
+/* =====================================================
    TIN NGẮN (NEWS)
    ===================================================== */
 

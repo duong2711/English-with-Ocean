@@ -439,133 +439,63 @@
             </div>
         </div>
 
-        <!-- Danh sách folder -->
-        <div class="folder-grid" id="grammar-folder-grid">
-            <div class="folder-card grammar-folder-card" data-folder="thi-hien-tai-don">
-                📁 Thì hiện tại đơn
-            </div>
-            <div class="folder-card grammar-folder-card" data-folder="thi-hien-tai-tiep-dien">
-                📁 Thì hiện tại tiếp diễn
-            </div>
-            <div class="folder-card grammar-folder-card" data-folder="so-sanh-hon">
-                📁 So sánh hơn
-            </div>
-            <div class="folder-card grammar-folder-card" data-folder="dong-tinh-trang-danh">
-                📁 Động từ, tính từ, trạng từ, danh từ
-            </div>
+        <!-- Thanh quản trị: chỉ hiển thị cho giảng viên (giangvien@gmail.com) -->
+        <div class="grammar-admin-bar" id="grammar-admin-bar" style="display:none;">
+            <button type="button" id="grammar-add-folder-btn" class="grammar-admin-btn grammar-admin-btn-primary">➕ Thêm folder mới</button>
         </div>
 
-        <!-- Panel nội dung từng folder -->
+        <!-- Danh sách folder — được tải động từ bảng "grammar_folders" trên Supabase.
+             Chỉ tài khoản trong TEACHER_EMAILS (giangvien@gmail.com) mới có quyền
+             thêm / sửa / xóa — quyền này được chặn ở CẢ giao diện lẫn RLS trên Supabase
+             (xem file SQL "grammar_folders_setup.sql"). -->
+        <div class="folder-grid" id="grammar-folder-grid">
+            <p class="grammar-loading-msg">Đang tải danh sách folder...</p>
+        </div>
+
+        <!-- Panel nội dung: DÙNG CHUNG cho mọi folder, dữ liệu được đổ vào động khi mở -->
         <div id="grammar-panels">
-
-            <!-- PANEL: Thì hiện tại đơn -->
-            <div class="grammar-panel" id="panel-thi-hien-tai-don">
+            <div class="grammar-panel" id="grammar-detail-panel">
                 <div class="grammar-panel-header">
-                    <button class="grammar-back-btn">← Quay lại</button>
-                    <h3>📁 Thì hiện tại đơn</h3>
+                    <button class="grammar-back-btn" id="grammar-panel-back-btn">← Quay lại</button>
+                    <h3 class="grammar-panel-header-title">📁 <span id="grammar-panel-title"></span></h3>
+                    <button type="button" id="grammar-delete-folder-btn" class="grammar-admin-btn grammar-admin-btn-danger" style="display:none;">🗑️ Xóa folder này</button>
                 </div>
+                <div class="grammar-edit-save-status" id="grammar-edit-status"></div>
+
                 <div class="grammar-panel-body">
                     <div class="grammar-video-block">
                         <h4 class="grammar-section-label">🎬 Video bài học</h4>
                         <div class="grammar-video-wrapper">
-                            <iframe src="https://www.youtube.com/embed/FGtJf6wNhJ0?si=kMB-M7ObkBokFBYa&enablejsapi=1" title="Thì hiện tại đơn" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                            <iframe id="grammar-video-iframe" src="about:blank" title="Video bài học" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                        </div>
+                        <!-- Khung dán link YouTube mới — chỉ hiện với giảng viên -->
+                        <div class="grammar-edit-bar" id="grammar-edit-youtube-bar" style="display:none;">
+                            <input type="text" id="grammar-edit-youtube-input" class="grammar-edit-input" placeholder="Dán link YouTube (watch/youtu.be/embed đều được)...">
+                            <button type="button" id="grammar-edit-youtube-btn" class="grammar-admin-btn">Cập nhật video</button>
                         </div>
                     </div>
                     <div class="grammar-images-block">
                         <h4 class="grammar-section-label">🖼️ Hình ảnh minh họa</h4>
                         <div class="grammar-single-image">
-                            <iframe src="https://drive.google.com/file/d/1OrAHA2-1ngd3s3xbcd238muPDfATsqbG/preview" allowfullscreen></iframe>
+                            <iframe id="grammar-drive-iframe" src="about:blank" allowfullscreen></iframe>
                         </div>
-                        <button class="grammar-detail-btn" data-quiz-url="https://drive.google.com/file/d/1OrAHA2-1ngd3s3xbcd238muPDfATsqbG/view">🔍 Xem chi tiết</button>
+                        <button class="grammar-detail-btn" id="grammar-detail-btn" data-quiz-url="">🔍 Xem chi tiết</button>
+                        <!-- Khung dán link Google Drive mới — chỉ hiện với giảng viên -->
+                        <div class="grammar-edit-bar" id="grammar-edit-drive-bar" style="display:none;">
+                            <input type="text" id="grammar-edit-drive-input" class="grammar-edit-input" placeholder="Dán link chia sẻ Google Drive...">
+                            <button type="button" id="grammar-edit-drive-btn" class="grammar-admin-btn">Cập nhật ảnh</button>
+                        </div>
                     </div>
                     <div class="grammar-quiz-block">
-                        
-                        <button class="grammar-quiz-btn" data-quiz-url="https://duong2711.github.io/So-s-nh-h-n/">Bắt đầu kiểm tra</button>
+                        <button class="grammar-quiz-btn" id="grammar-quiz-open-btn" data-quiz-url="">Bắt đầu kiểm tra</button>
+                        <!-- Khung dán link bài kiểm tra mới — chỉ hiện với giảng viên -->
+                        <div class="grammar-edit-bar" id="grammar-edit-quiz-bar" style="display:none;">
+                            <input type="text" id="grammar-edit-quiz-input" class="grammar-edit-input" placeholder="Dán link bài kiểm tra...">
+                            <button type="button" id="grammar-edit-quiz-btn" class="grammar-admin-btn">Cập nhật bài kiểm tra</button>
+                        </div>
                     </div>
                 </div>
             </div>
-
-            <!-- PANEL: Thì hiện tại tiếp diễn -->
-            <div class="grammar-panel" id="panel-thi-hien-tai-tiep-dien">
-                <div class="grammar-panel-header">
-                    <button class="grammar-back-btn">← Quay lại</button>
-                    <h3>📁 Thì hiện tại tiếp diễn</h3>
-                </div>
-                <div class="grammar-panel-body">
-                    <div class="grammar-video-block">
-                        <h4 class="grammar-section-label">🎬 Video bài học</h4>
-                        <div class="grammar-video-wrapper">
-                            <iframe src="https://www.youtube.com/embed/FGtJf6wNhJ0?si=kMB-M7ObkBokFBYa&enablejsapi=1" title="Thì hiện tại tiếp diễn" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-                        </div>
-                    </div>
-                    <div class="grammar-images-block">
-                        <h4 class="grammar-section-label">🖼️ Hình ảnh minh họa</h4>
-                        <div class="grammar-single-image">
-                            <iframe src="https://drive.google.com/file/d/1OrAHA2-1ngd3s3xbcd238muPDfATsqbG/preview" allowfullscreen></iframe>
-                        </div>
-                        <button class="grammar-detail-btn" data-quiz-url="https://drive.google.com/file/d/1OrAHA2-1ngd3s3xbcd238muPDfATsqbG/view">🔍 Xem chi tiết</button>
-                    </div>
-                    <div class="grammar-quiz-block">
-                        
-                        <button class="grammar-quiz-btn" data-quiz-url="https://duong2711.github.io/So-s-nh-h-n/">Bắt đầu kiểm tra</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- PANEL: So sánh hơn -->
-            <div class="grammar-panel" id="panel-so-sanh-hon">
-                <div class="grammar-panel-header">
-                    <button class="grammar-back-btn">← Quay lại</button>
-                    <h3>📁 So sánh hơn</h3>
-                </div>
-                <div class="grammar-panel-body">
-                    <div class="grammar-video-block">
-                        <h4 class="grammar-section-label">🎬 Video bài học</h4>
-                        <div class="grammar-video-wrapper">
-                            <iframe src="https://www.youtube.com/embed/FGtJf6wNhJ0?si=kMB-M7ObkBokFBYa&enablejsapi=1" title="So sánh hơn" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-                        </div>
-                    </div>
-                    <div class="grammar-images-block">
-                        <h4 class="grammar-section-label">🖼️ Hình ảnh minh họa</h4>
-                        <div class="grammar-single-image">
-                            <iframe src="https://drive.google.com/file/d/1OrAHA2-1ngd3s3xbcd238muPDfATsqbG/preview" allowfullscreen></iframe>
-                        </div>
-                        <button class="grammar-detail-btn" data-quiz-url="https://drive.google.com/file/d/1OrAHA2-1ngd3s3xbcd238muPDfATsqbG/view">🔍 Xem chi tiết</button>
-                    </div>
-                    <div class="grammar-quiz-block">
-                        
-                        <button class="grammar-quiz-btn" data-quiz-url="https://duong2711.github.io/So-s-nh-h-n/">Bắt đầu kiểm tra</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- PANEL: Động từ, tính từ, trạng từ, danh từ -->
-            <div class="grammar-panel" id="panel-dong-tinh-trang-danh">
-                <div class="grammar-panel-header">
-                    <button class="grammar-back-btn">← Quay lại</button>
-                    <h3>📁 Động từ, tính từ, trạng từ, danh từ</h3>
-                </div>
-                <div class="grammar-panel-body">
-                    <div class="grammar-video-block">
-                        <h4 class="grammar-section-label">🎬 Video bài học</h4>
-                        <div class="grammar-video-wrapper">
-                            <iframe src="https://www.youtube.com/embed/FGtJf6wNhJ0?si=kMB-M7ObkBokFBYa&enablejsapi=1" title="Từ loại" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-                        </div>
-                    </div>
-                    <div class="grammar-images-block">
-                        <h4 class="grammar-section-label">🖼️ Hình ảnh minh họa</h4>
-                        <div class="grammar-single-image">
-                            <iframe src="https://drive.google.com/file/d/1OrAHA2-1ngd3s3xbcd238muPDfATsqbG/preview" allowfullscreen></iframe>
-                        </div>
-                        <button class="grammar-detail-btn" data-quiz-url="https://drive.google.com/file/d/1OrAHA2-1ngd3s3xbcd238muPDfATsqbG/view">🔍 Xem chi tiết</button>
-                    </div>
-                    <div class="grammar-quiz-block">
-                        
-                        <button class="grammar-quiz-btn" data-quiz-url="https://duong2711.github.io/So-s-nh-h-n/">Bắt đầu kiểm tra</button>
-                    </div>
-                </div>
-            </div>
-
         </div><!-- end #grammar-panels -->
     </div>
     <!-- ===== KẾT THÚC TAB NGỮ PHÁP ===== -->
@@ -709,7 +639,7 @@
         <div id="thcs-grade6-panel" style="display:none;">
             <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border);">
                 <button class="grammar-back-btn" id="thcs-grade6-back-btn">← Quay lại</button>
-                <h3>📁 Lớp 6 (Global Success)</h3>
+                <h3 id="thcs-grade-panel-title">📁 Lớp 6 (Global Success)</h3>
             </div>
             <div class="kid-topic-grid" id="thcs-unit-grid"></div>
         </div>
@@ -1171,6 +1101,7 @@
 
     <script src="topics-data.js"></script>
     <script src="grade6-data.js"></script>
+    <script src="grade7-data.js"></script>
     <script src="scriptphonetics.js"></script>
 </body>
 </html>
