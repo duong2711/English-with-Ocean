@@ -676,31 +676,30 @@
 
             <!-- 2. Dịch câu (Việt -> Anh) -->
             <div class="kid-sub-content" id="thcs-sub-translate" style="display:none;">
-                <p class="kid-hint">Đọc câu tiếng Việt rồi gõ bản dịch tiếng Anh vào ô bên dưới. Cố dùng đúng từ vựng của unit này nhé!</p>
+                <p class="kid-hint">Đọc câu tiếng Anh và điền từ khóa còn thiếu vào chỗ trống. Chạm vào một từ bất kỳ trong câu để xem nghĩa — từ đó sẽ tự động được lưu vào "Từ vựng của tôi". Cần làm đúng hết tất cả các câu theo thứ tự thì Unit mới được tính là hoàn thành!</p>
                 <div class="thcs-translate-progress" id="thcs-translate-progress"></div>
                 <div class="thcs-translate-card">
                     <div class="thcs-translate-vi" id="thcs-translate-vi"></div>
-                    <textarea id="thcs-translate-input" class="thcs-translate-input" rows="2" placeholder="Nhập câu tiếng Anh của bạn ở đây..."></textarea>
+                    <div class="thcs-translate-sentence" id="thcs-translate-sentence"></div>
                     <div class="thcs-translate-actions">
                         <button id="thcs-translate-check-btn" class="kid-btn kid-btn-primary">✔️ Kiểm tra</button>
-                        <button id="thcs-translate-hint-btn" class="kid-btn">💡 Gợi ý</button>
-                        <button id="thcs-translate-reveal-btn" class="kid-btn">👀 Xem đáp án</button>
+                        <button id="thcs-translate-restart-btn" class="kid-btn">🔄 Làm lại từ đầu</button>
                     </div>
                     <div class="thcs-translate-feedback" id="thcs-translate-feedback"></div>
                 </div>
-                <div class="kid-flash-nav">
-                    <button id="thcs-translate-prev" class="kid-btn">‹ Trước</button>
-                    <button id="thcs-translate-next" class="kid-btn">Sau ›</button>
-                </div>
             </div>
 
-            <!-- 3. Câu chuyện -->
+            <!-- 3. Câu chuyện: tối đa 4 khung ảnh 16:9 kèm câu điền từ khóa -->
             <div class="kid-sub-content" id="thcs-sub-story" style="display:none;">
-                <h4 id="thcs-story-title" class="kid-story-title"></h4>
-                <p id="thcs-story-text" class="kid-story-text"></p>
-                <button type="button" id="thcs-story-translate-btn" class="kid-story-translate-btn">🇻🇳 Xem bản dịch tiếng Việt</button>
-                <p id="thcs-story-text-vi" class="kid-story-text-vi" style="display:none;"></p>
-                <div class="kid-story-gallery" id="thcs-story-gallery"></div>
+                <p class="kid-hint">Điền từ khóa tiếng Anh còn thiếu vào câu bên dưới mỗi ảnh (dựa vào nghĩa tiếng Việt gợi ý trong ngoặc) để xóa lớp mờ và xem trọn ảnh minh họa.</p>
+                <div class="thcs-story-frames" id="thcs-story-frames"></div>
+
+                <!-- Khung quản lý nội dung — CHỈ hiện với tài khoản giangvien@gmail.com -->
+                <div class="thcs-story-editor" id="thcs-story-editor" style="display:none;">
+                    <h4 class="thcs-story-editor-title">✏️ Quản lý khung truyện của Unit này (tối đa 4 khung)</h4>
+                    <p class="kid-hint">Dán link ảnh 16:9, gõ đoạn văn tiếng Anh rồi bôi đen từ khóa và bấm "In đậm". Sau đó nhập nghĩa tiếng Việt cho từng từ khóa vừa in đậm — nghĩa này sẽ hiện cho học viên thay cho từ khóa.</p>
+                    <div class="thcs-story-editor-frames" id="thcs-story-editor-frames"></div>
+                </div>
             </div>
 
             <!-- 4. Trò chơi Hứng từ -->
@@ -1102,6 +1101,11 @@
     <script src="topics-data.js"></script>
     <script src="grade6-data.js"></script>
     <script src="grade7-data.js"></script>
+    <script src="grade8-data.js"></script>
+    <script src="grade9-data.js"></script>
+    <script src="grade10-data.js"></script>
+    <script src="grade11-data.js"></script>
+    <script src="grade12-data.js"></script>
     <script src="scriptphonetics.js"></script>
 </body>
 </html>

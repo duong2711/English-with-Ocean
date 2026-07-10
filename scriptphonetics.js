@@ -1972,9 +1972,19 @@ function toggleCompletion(symbolElement) {
             }).join('');
         }
 
-        // Cập nhật lại lớp "known-word" trên các từ đang hiển thị, không cần render lại toàn bộ câu
+        // Giống wrapWordsForTap ở trên, nhưng dùng cho nội dung có thể chứa sẵn vài thẻ
+        // HTML đơn giản (vd: "<br><br>" để xuống dòng trong đoạn văn/câu chuyện).
+        // Chỉ phần VĂN BẢN mới được bọc lại để tra từ; các thẻ HTML được giữ nguyên,
+        // không bị escape thành chữ.
+        function wrapWordsForTapHtml(html) {
+            const parts = String(html || '').split(/(<[^>]+>)/g);
+            return parts.map(part => (/^<[^>]+>$/.test(part) ? part : wrapWordsForTap(part))).join('');
+        }
+
+        // Cập nhật lại lớp "known-word" trên các từ đang hiển thị, không cần render lại toàn bộ câu.
+        // Dùng chung cho mọi khu vực có từ tappable (Tin ngắn, THCS/THPT: Dịch câu, Câu chuyện...).
         function markKnownWordsInDom() {
-            document.querySelectorAll('#news-translate-section .tappable-word').forEach(el => {
+            document.querySelectorAll('.tappable-word').forEach(el => {
                 const norm = normalizeWord(el.dataset.word);
                 el.classList.toggle('known-word', myVocabNormSet.has(norm));
             });
@@ -2034,10 +2044,25 @@ function toggleCompletion(symbolElement) {
             const rawWord = wordEl.dataset.word;
             if (!rawWord) return;
             const norm = normalizeWord(rawWord);
+
+            // Tìm câu ngữ cảnh + tên nguồn: ưu tiên cách cũ dành riêng cho "Tin ngắn",
+            // nếu không phải khu vực Tin ngắn thì dùng thuộc tính data-vocab-context /
+            // data-vocab-source dùng chung cho các khu vực khác (THCS/THPT: Dịch câu,
+            // Câu chuyện...). Nhờ vậy hành vi cũ của Tin ngắn không đổi.
+            let contextSentence = rawWord;
+            let sourceTitle = '';
             const sentenceHost = wordEl.closest('.news-sentence-en, .news-sentence-history-en');
-            const contextSentence = sentenceHost ? sentenceHost.textContent : rawWord;
-            const article = NEWS_DATA.find(a => String(a.id) === String(currentArticleId));
-            const sourceTitle = article ? article.title : '';
+            if (sentenceHost) {
+                contextSentence = sentenceHost.textContent;
+                const article = NEWS_DATA.find(a => String(a.id) === String(currentArticleId));
+                sourceTitle = article ? article.title : '';
+            } else {
+                const genericHost = wordEl.closest('[data-vocab-context]');
+                if (genericHost) {
+                    contextSentence = genericHost.dataset.vocabContext || genericHost.textContent || rawWord;
+                    sourceTitle = genericHost.dataset.vocabSource || '';
+                }
+            }
 
             wordLookupWordEl.textContent = rawWord;
             wordLookupPopup.style.display = 'flex';
@@ -2231,6 +2256,18 @@ function toggleCompletion(symbolElement) {
                 }
             });
         }
+
+        // Cho phép các khu vực khác trong app (VD: THCS/THPT — Dịch câu, Câu chuyện)
+        // dùng lại đúng 1 bộ logic tra từ + lưu từ vựng này, tránh viết trùng lặp.
+        window.vocabTap = {
+            wrap: wrapWordsForTap,           // bọc 1 câu thuần văn bản để tra từ
+            wrapHtml: wrapWordsForTapHtml,   // bọc nội dung có thể chứa thẻ <br>...
+            handleTap: handleWordTap,        // xử lý khi chạm vào 1 từ đã bọc
+            markKnown: markKnownWordsInDom,  // tô lại các từ đã biết sau khi lưu/xóa từ vựng
+            ensureLoaded: ensureMyVocabLoaded,// tải từ vựng cá nhân (chỉ tải lại khi đổi tài khoản)
+            normalize: normalizeWord,
+            toast: showVocabToast
+        };
         // ===== KẾT THÚC TRA TỪ NHANH + TỪ VỰNG CÁ NHÂN =====
     })();
     // ===== KẾT THÚC LOGIC TIN NGẮN =====
@@ -3975,10 +4012,118 @@ function toggleCompletion(symbolElement) {
 
         let currentUnit = null;
         let currentGradeUnits = null;
+        let currentGradeNum = null;
+
+        // ===================================================================
+        // ----- TIẾN ĐỘ HOÀN THÀNH UNIT (lưu trên Supabase, bảng "thcs_unit_progress") -----
+        // Một Unit được coi là HOÀN THÀNH khi học viên đã:
+        //   1) Xem qua hết toàn bộ Flashcard của Unit đó, VÀ
+        //   2) Làm đúng hết tất cả các câu ở mục "Dịch câu" theo đúng thứ tự (không sai câu nào).
+        // Khi hoàn thành 1 Unit: folder Unit đó chuyển nền sang xanh lá, và Unit kế tiếp
+        // được mở khóa. Mặc định chỉ Unit 1 của mỗi khối lớp được mở khóa sẵn.
+        // (Xem file "thcs_progress_setup.sql" đi kèm để tạo bảng trên Supabase.)
+        // ===================================================================
+        let thcsProgressMap = {};             // "grade::unitId" -> {flashcard_done, translate_done, completed}
+        let thcsProgressLoadedForUser = null; // userId đã tải xong — tránh gọi Supabase lặp lại
+
+        function thcsProgressKey(gradeNum, unitId) {
+            return gradeNum + '::' + unitId;
+        }
+
+        async function thcsLoadProgress() {
+            if (!currentUserId) { thcsProgressMap = {}; return; }
+            try {
+                const { data, error } = await sb
+                    .from('thcs_unit_progress')
+                    .select('grade, unit_id, flashcard_done, translate_done, completed')
+                    .eq('user_id', currentUserId);
+                if (error) throw error;
+                thcsProgressMap = {};
+                (data || []).forEach(row => {
+                    thcsProgressMap[thcsProgressKey(row.grade, row.unit_id)] = row;
+                });
+            } catch (err) {
+                console.error('Lỗi khi tải tiến độ Unit (THCS/THPT):', err.message);
+                thcsProgressMap = {};
+            }
+        }
+
+        // Chỉ tải lại khi đổi tài khoản, để không gọi Supabase mỗi lần mở 1 Unit
+        async function thcsEnsureProgressLoaded() {
+            if (!currentUserId) { thcsProgressMap = {}; thcsProgressLoadedForUser = null; return; }
+            if (thcsProgressLoadedForUser === currentUserId) return;
+            await thcsLoadProgress();
+            thcsProgressLoadedForUser = currentUserId;
+        }
+
+        function thcsGetProgress(gradeNum, unitId) {
+            return thcsProgressMap[thcsProgressKey(gradeNum, unitId)] || { flashcard_done: false, translate_done: false, completed: false };
+        }
+
+        // Lưu (upsert) tiến độ của 1 Unit — patch chỉ chứa các cờ cần cập nhật.
+        // Trả về bản ghi tiến độ đầy đủ sau khi gộp (đã tính lại completed).
+        async function thcsSaveProgress(gradeNum, unitId, patch) {
+            if (!gradeNum || !unitId) return null;
+            const key = thcsProgressKey(gradeNum, unitId);
+            const existing = thcsProgressMap[key] || { flashcard_done: false, translate_done: false, completed: false };
+            const merged = Object.assign({}, existing, patch);
+            merged.completed = !!(merged.flashcard_done && merged.translate_done);
+            thcsProgressMap[key] = merged; // cập nhật cache ngay để UI phản hồi tức thì
+
+            if (!currentUserId) return merged; // chưa đăng nhập: chỉ giữ tạm trong phiên này
+
+            try {
+                const payload = {
+                    user_id: currentUserId,
+                    grade: gradeNum,
+                    unit_id: unitId,
+                    flashcard_done: merged.flashcard_done,
+                    translate_done: merged.translate_done,
+                    completed: merged.completed,
+                    updated_at: new Date().toISOString()
+                };
+                const { error } = await sb
+                    .from('thcs_unit_progress')
+                    .upsert(payload, { onConflict: 'user_id, grade, unit_id' });
+                if (error) console.error('Lỗi khi lưu tiến độ Unit (THCS/THPT — kiểm tra RLS trên bảng thcs_unit_progress):', error);
+            } catch (err) {
+                console.error('Lỗi ngoại lệ khi lưu tiến độ Unit (THCS/THPT):', err.message);
+            }
+            return merged;
+        }
+
+        // Unit đầu tiên (index 0) của mỗi khối lớp luôn mở khóa; các Unit sau chỉ mở khóa
+        // khi Unit ngay trước đó đã hoàn thành.
+        function thcsIsUnitUnlocked(gradeNum, units, idx) {
+            if (isTeacher) return true; // giảng viên luôn mở khóa hết tất cả Unit để tiện xem/soạn nội dung
+            if (idx <= 0) return true;
+            const prevUnit = units[idx - 1];
+            if (!prevUnit) return true;
+            return !!thcsGetProgress(gradeNum, prevUnit.id).completed;
+        }
+
+        function thcsNotifyUnitCompleted() {
+            if (window.vocabTap && window.vocabTap.toast) {
+                window.vocabTap.toast('🎉 Chúc mừng! Bạn đã hoàn thành Unit này. Unit tiếp theo đã được mở khóa.', 'success');
+            }
+        }
+        function thcsNotifyLoginToSave() {
+            if (window.vocabTap && window.vocabTap.toast) {
+                window.vocabTap.toast('⚠️ Đăng nhập để lưu tiến độ hoàn thành Unit của bạn.', 'info');
+            }
+        }
 
         // ---------- Tiện ích dùng chung ----------
         function thcsEscAttr(s) {
             return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+        function thcsEscHtml(s) {
+            return String(s == null ? '' : s)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
         }
         function thcsImgErrorAttr(term) {
             // Tái dùng cơ chế tự tìm ảnh dự phòng (Pixabay) đã có sẵn ở phần "Cho bé"
@@ -4049,6 +4194,7 @@ function toggleCompletion(symbolElement) {
                 if (isReady) {
                     card.addEventListener('click', () => {
                         currentGradeUnits = gradeUnits;
+                        currentGradeNum = g;
                         if (thcsGradePanelTitle) thcsGradePanelTitle.textContent = `📁 Lớp ${g} (Global Success)`;
                         thcsPanel.style.display = 'none';
                         thcsGrade6Panel.style.display = 'block';
@@ -4080,17 +4226,26 @@ function toggleCompletion(symbolElement) {
         });
 
         // ---------- Bước 2: Danh sách Unit của khối lớp đang chọn ----------
-        function renderUnitGrid() {
+        async function renderUnitGrid() {
+            await thcsEnsureProgressLoaded();
             thcsUnitGrid.innerHTML = '';
-            (currentGradeUnits || []).forEach(unit => {
+            (currentGradeUnits || []).forEach((unit, idx) => {
+                const progress = thcsGetProgress(currentGradeNum, unit.id);
+                const unlocked = thcsIsUnitUnlocked(currentGradeNum, currentGradeUnits, idx);
                 const card = document.createElement('div');
-                card.className = 'kid-topic-card';
+                card.className = 'kid-topic-card thcs-unit-card' +
+                    (progress.completed ? ' completed' : '') +
+                    (!unlocked ? ' locked' : '');
                 card.innerHTML = `
-                    <span class="kid-icon">${unit.icon}</span>
+                    <span class="kid-icon">${unlocked ? unit.icon : '🔒'}</span>
                     <div class="kid-title">Unit ${unit.number}: ${unit.titleVi}</div>
-                    <div class="kid-count">${unit.words.length} từ vựng</div>
+                    <div class="kid-count">${progress.completed ? '✅ Đã hoàn thành' : (unlocked ? unit.words.length + ' từ vựng' : 'Hoàn thành Unit trước để mở khóa')}</div>
                 `;
-                card.addEventListener('click', () => openUnit(unit));
+                if (unlocked) {
+                    card.addEventListener('click', () => openUnit(unit));
+                } else {
+                    card.title = 'Hoàn thành Unit trước đó để mở khóa Unit này!';
+                }
                 thcsUnitGrid.appendChild(card);
             });
         }
@@ -4099,11 +4254,22 @@ function toggleCompletion(symbolElement) {
             thcsPauseGame();
             thcsUnitPanel.style.display = 'none';
             thcsGrade6Panel.style.display = 'block';
+            renderUnitGrid(); // làm mới trạng thái khóa/hoàn thành sau khi có thể vừa hoàn thành 1 Unit
         });
 
         // ---------- Mở 1 Unit ----------
-        function openUnit(unit) {
+        async function openUnit(unit) {
+            // Lớp bảo vệ: phòng trường hợp bị gọi trực tiếp dù Unit đang bị khóa
+            const idx = (currentGradeUnits || []).indexOf(unit);
+            if (idx > 0 && !thcsIsUnitUnlocked(currentGradeNum, currentGradeUnits, idx)) {
+                if (window.vocabTap && window.vocabTap.toast) {
+                    window.vocabTap.toast('🔒 Bạn cần hoàn thành Unit trước đó để mở khóa Unit này!', 'info');
+                }
+                return;
+            }
+
             currentUnit = unit;
+            thcsFlashSeenSet = new Set();
             thcsGrade6Panel.style.display = 'none';
             thcsUnitPanel.style.display = 'block';
             thcsUnitTitle.textContent = `${unit.icon} Unit ${unit.number}: ${unit.title}`;
@@ -4113,11 +4279,24 @@ function toggleCompletion(symbolElement) {
             thcsUnitPanel.querySelectorAll('.kid-sub-content').forEach(el => el.style.display = 'none');
             document.getElementById('thcs-sub-flashcard').style.display = 'block';
 
+            await thcsEnsureProgressLoaded();
+            if (window.vocabTap && window.vocabTap.ensureLoaded) {
+                try { await window.vocabTap.ensureLoaded(); } catch (e) { console.error('Lỗi khi tải từ vựng cá nhân:', e.message); }
+            }
+
             thcsInitFlashcards(unit);
             thcsInitTranslate(unit);
             thcsInitStory(unit);
             thcsInitGame(unit);
         }
+
+        // Bắt sự kiện chạm vào 1 từ tiếng Anh (tra nghĩa + tự lưu vào "Từ vựng của tôi")
+        // trong toàn bộ khung của Unit — dùng chung cho cả mục Dịch câu và Câu chuyện.
+        thcsUnitPanel.addEventListener('click', (e) => {
+            const wordEl = e.target.closest('.tappable-word');
+            if (!wordEl) return;
+            if (window.vocabTap && window.vocabTap.handleTap) window.vocabTap.handleTap(wordEl);
+        });
 
         thcsSubtabs.addEventListener('click', (e) => {
             const btn = e.target.closest('.kid-subtab-btn');
@@ -4140,6 +4319,7 @@ function toggleCompletion(symbolElement) {
 
         let flashWords = [];
         let flashIndex = 0;
+        let thcsFlashSeenSet = new Set(); // các chỉ số thẻ đã xem trong lượt mở Unit hiện tại
 
         thcsFlashFront.addEventListener('click', (e) => {
             const btn = e.target.closest('.kf-speak-btn');
@@ -4175,6 +4355,24 @@ function toggleCompletion(symbolElement) {
 
             const nextWord = flashWords[(flashIndex + 1) % flashWords.length];
             if (nextWord && nextWord.img) { const pre = new Image(); pre.src = nextWord.img; }
+
+            thcsFlashSeenSet.add(flashIndex);
+            if (flashWords.length > 0 && thcsFlashSeenSet.size >= flashWords.length) {
+                thcsHandleFlashcardsCompleted();
+            }
+        }
+
+        // Được gọi khi học viên đã xem qua hết toàn bộ Flashcard của Unit hiện tại ít nhất 1 lần
+        async function thcsHandleFlashcardsCompleted() {
+            if (!currentUnit) return;
+            const already = thcsGetProgress(currentGradeNum, currentUnit.id).flashcard_done;
+            if (already) return; // đã ghi nhận rồi, không cần lưu lại
+            const merged = await thcsSaveProgress(currentGradeNum, currentUnit.id, { flashcard_done: true });
+            if (merged && merged.completed) {
+                thcsNotifyUnitCompleted();
+            } else if (!currentUserId) {
+                thcsNotifyLoginToSave();
+            }
         }
 
         thcsFlashFlip.addEventListener('click', () => thcsFlashcard.classList.toggle('flipped'));
@@ -4188,34 +4386,23 @@ function toggleCompletion(symbolElement) {
             thcsRenderFlashcard();
         });
 
-        // ---------- 2. DỊCH CÂU (Việt -> Anh) ----------
-        const thcsTrProg     = document.getElementById('thcs-translate-progress');
-        const thcsTrVi       = document.getElementById('thcs-translate-vi');
-        const thcsTrInput    = document.getElementById('thcs-translate-input');
-        const thcsTrCheckBtn = document.getElementById('thcs-translate-check-btn');
-        const thcsTrHintBtn  = document.getElementById('thcs-translate-hint-btn');
-        const thcsTrRevealBtn= document.getElementById('thcs-translate-reveal-btn');
-        const thcsTrFeedback = document.getElementById('thcs-translate-feedback');
-        const thcsTrPrev     = document.getElementById('thcs-translate-prev');
-        const thcsTrNext     = document.getElementById('thcs-translate-next');
+        // ---------- 2. DỊCH CÂU (Việt -> Anh) — điền từ khóa còn thiếu vào câu có sẵn ----------
+        const thcsTrProg      = document.getElementById('thcs-translate-progress');
+        const thcsTrVi        = document.getElementById('thcs-translate-vi');
+        const thcsTrSentence  = document.getElementById('thcs-translate-sentence');
+        const thcsTrCheckBtn  = document.getElementById('thcs-translate-check-btn');
+        const thcsTrRestartBtn= document.getElementById('thcs-translate-restart-btn');
+        const thcsTrFeedback  = document.getElementById('thcs-translate-feedback');
 
         let trWords = [];
         let trIndex = 0;
+        let thcsTranslateBusy = false; // chặn bấm "Kiểm tra" nhiều lần trong lúc đang chuyển câu
 
         function thcsInitTranslate(unit) {
             trIndex = 0;
             trWords = unit.words;
+            thcsTranslateBusy = false;
             thcsRenderTranslate();
-        }
-
-        function thcsRenderTranslate() {
-            const w = trWords[trIndex];
-            thcsTrProg.textContent = `Câu ${trIndex + 1} / ${trWords.length}`;
-            thcsTrVi.textContent = w.trVi || w.vi;
-            thcsTrInput.value = '';
-            thcsTrFeedback.className = 'thcs-translate-feedback';
-            thcsTrFeedback.innerHTML = '';
-            thcsTrInput.focus();
         }
 
         function thcsNormalize(s) {
@@ -4226,103 +4413,542 @@ function toggleCompletion(symbolElement) {
                 .trim();
         }
 
-        function thcsCheckAnswer() {
+        function thcsEscapeRegex(s) {
+            return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        // Tìm vị trí của "từ khóa" (trKey) trong câu đầy đủ (trAnswer) để tạo chỗ trống.
+        // 1) Thử khớp chính xác (không phân biệt hoa/thường), phải đúng ranh giới từ.
+        // 2) Nếu không có, thử khớp linh hoạt: cho phép số ít/số nhiều, thì của động từ
+        //    (vd: từ khóa "outdoor activity" vẫn khớp với "outdoor activities" trong câu).
+        // Trả về {start, end} theo chỉ số ký tự trong câu gốc, hoặc null nếu không tìm thấy.
+        function thcsFindKeySpan(answer, key) {
+            const ans = String(answer || '');
+            const k = String(key || '').trim();
+            if (!k) return null;
+            const lowerAns = ans.toLowerCase();
+            const lowerKey = k.toLowerCase();
+
+            const idx = lowerAns.indexOf(lowerKey);
+            if (idx !== -1) {
+                const end = idx + lowerKey.length;
+                const beforeOk = idx === 0 || !/[a-zA-Z]/.test(lowerAns[idx - 1]);
+                const afterOk = end === lowerAns.length || !/[a-zA-Z]/.test(lowerAns[end]);
+                if (beforeOk && afterOk) return { start: idx, end };
+            }
+
+            const words = lowerKey.split(/\s+/).filter(Boolean);
+            const wordPatterns = words.map(w => {
+                if (w.length > 2 && /[^aeiou]y$/.test(w)) {
+                    return thcsEscapeRegex(w.slice(0, -1)) + '(?:y|ies)';
+                }
+                return thcsEscapeRegex(w) + '(?:e?s|ing|ed|d)?';
+            });
+            try {
+                const re = new RegExp('\\b' + wordPatterns.join('\\s+') + '\\b', 'i');
+                const m = ans.match(re);
+                if (m) return { start: m.index, end: m.index + m[0].length };
+            } catch (e) { /* bỏ qua nếu regex lỗi */ }
+
+            return null;
+        }
+
+        function thcsRenderTranslate() {
             const w = trWords[trIndex];
-            const userAns = thcsNormalize(thcsTrInput.value);
-            const correctAns = thcsNormalize(w.trAnswer || w.ex);
-            if (!userAns) return;
+            thcsTrProg.textContent = `Câu ${trIndex + 1} / ${trWords.length}`;
+            thcsTrVi.textContent = w.trVi || w.vi;
+            thcsTrFeedback.className = 'thcs-translate-feedback';
+            thcsTrFeedback.innerHTML = '';
+
+            const fullAnswer = w.trAnswer || w.ex || '';
+            const span = thcsFindKeySpan(fullAnswer, w.trKey || w.en);
+            const wrapFn = (window.vocabTap && window.vocabTap.wrap) ? window.vocabTap.wrap : (s => thcsEscHtml(s));
+            const sourceLabel = (currentGradeNum && currentUnit) ? `Lớp ${currentGradeNum} - Unit ${currentUnit.number}: ${currentUnit.titleVi}` : '';
+
+            if (span) {
+                const before = fullAnswer.slice(0, span.start);
+                const answerPart = fullAnswer.slice(span.start, span.end);
+                const after = fullAnswer.slice(span.end);
+                const widthCh = Math.max(answerPart.length + 2, 4);
+                thcsTrSentence.innerHTML = wrapFn(before) +
+                    `<input type="text" id="thcs-translate-blank-input" class="thcs-translate-blank-input" style="width:${widthCh}ch" autocomplete="off" autocapitalize="off" spellcheck="false">` +
+                    wrapFn(after);
+                thcsTrSentence.dataset.expectedAnswer = answerPart;
+            } else {
+                // Dữ liệu thiếu từ khóa khớp với câu — hiện cả câu (không tạo được chỗ trống)
+                thcsTrSentence.innerHTML = wrapFn(fullAnswer);
+                thcsTrSentence.dataset.expectedAnswer = '';
+            }
+            thcsTrSentence.dataset.vocabContext = fullAnswer;
+            thcsTrSentence.dataset.vocabSource = sourceLabel;
+
+            const blankInput = document.getElementById('thcs-translate-blank-input');
+            if (blankInput) {
+                blankInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') { e.preventDefault(); thcsCheckAnswer(); }
+                });
+                blankInput.focus();
+            }
+        }
+
+        function thcsCheckAnswer() {
+            if (thcsTranslateBusy) return;
+            const expected = thcsTrSentence.dataset.expectedAnswer || '';
+
+            if (!expected) {
+                // Không tạo được chỗ trống cho câu này (thiếu dữ liệu trKey khớp) — bỏ qua, sang câu tiếp
+                thcsAdvanceTranslate();
+                return;
+            }
+
+            const blankInput = document.getElementById('thcs-translate-blank-input');
+            if (!blankInput) return;
+            const userAns = thcsNormalize(blankInput.value);
+            if (!userAns) { blankInput.focus(); return; }
+            const correctAns = thcsNormalize(expected);
+
+            thcsTranslateBusy = true;
+            blankInput.disabled = true;
 
             if (userAns === correctAns) {
                 thcsPlayCorrectSound();
                 thcsTrFeedback.className = 'thcs-translate-feedback is-correct';
-                thcsTrFeedback.innerHTML = '✅ Chính xác! Câu dịch của bạn rất tốt.';
-                return;
-            }
-
-            const userTokens = new Set(userAns.split(' ').filter(Boolean));
-            const correctTokens = correctAns.split(' ').filter(Boolean);
-            const matchedCount = correctTokens.filter(t => userTokens.has(t)).length;
-            const ratio = correctTokens.length ? matchedCount / correctTokens.length : 0;
-            const hasKeyWord = w.trKey ? userAns.includes(String(w.trKey).toLowerCase()) : true;
-
-            if (ratio >= 0.7 && hasKeyWord) {
-                thcsPlayCorrectSound();
-                thcsTrFeedback.className = 'thcs-translate-feedback is-correct';
-                thcsTrFeedback.innerHTML = `👍 Gần đúng rồi, rất tốt! Đáp án đầy đủ:<span class="tf-answer"><b>${w.trAnswer || w.ex}</b></span>`;
+                thcsTrFeedback.innerHTML = (trIndex === trWords.length - 1)
+                    ? '✅ Chính xác! Bạn đã hoàn thành tất cả câu dịch của Unit này 🎉'
+                    : '✅ Chính xác! Đang chuyển sang câu tiếp theo...';
+                setTimeout(() => {
+                    thcsTranslateBusy = false;
+                    thcsAdvanceTranslate();
+                }, 900);
             } else {
                 thcsPlayWrongSound();
+                blankInput.classList.add('is-wrong');
                 thcsTrFeedback.className = 'thcs-translate-feedback is-wrong';
-                thcsTrFeedback.innerHTML = '❌ Chưa đúng, thử lại nhé! Bạn có thể bấm "Gợi ý" nếu cần trợ giúp.';
+                thcsTrFeedback.innerHTML = `❌ Chưa đúng chỗ trống này. Đáp án đúng: <span class="tf-answer"><b>${thcsEscHtml(expected)}</b></span><br>Bạn sẽ làm lại từ câu đầu tiên nhé!`;
+                setTimeout(() => {
+                    thcsTranslateBusy = false;
+                    trIndex = 0;
+                    thcsRenderTranslate();
+                }, 2000);
+            }
+        }
+
+        // Chuyển sang câu tiếp theo; nếu vừa xong câu cuối cùng thì coi như đã hoàn thành
+        // đúng hết tất cả các câu dịch theo thứ tự -> ghi nhận tiến độ + kiểm tra hoàn thành Unit.
+        function thcsAdvanceTranslate() {
+            if (trIndex >= trWords.length - 1) {
+                thcsHandleTranslateCompleted();
+                trIndex = 0; // cho phép luyện lại thoải mái, không ảnh hưởng tiến độ đã lưu
+                thcsRenderTranslate();
+                return;
+            }
+            trIndex += 1;
+            thcsRenderTranslate();
+        }
+
+        async function thcsHandleTranslateCompleted() {
+            if (!currentUnit) return;
+            const merged = await thcsSaveProgress(currentGradeNum, currentUnit.id, { translate_done: true });
+            if (merged && merged.completed) {
+                thcsNotifyUnitCompleted();
+            } else if (!currentUserId) {
+                thcsNotifyLoginToSave();
             }
         }
 
         thcsTrCheckBtn.addEventListener('click', thcsCheckAnswer);
-        thcsTrInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); thcsCheckAnswer(); }
-        });
-
-        thcsTrHintBtn.addEventListener('click', () => {
-            const w = trWords[trIndex];
-            thcsTrFeedback.className = 'thcs-translate-feedback';
-            thcsTrFeedback.innerHTML = `💡 Gợi ý: câu này cần dùng từ <b>${w.en}</b>.`;
-        });
-
-        thcsTrRevealBtn.addEventListener('click', () => {
-            const w = trWords[trIndex];
-            thcsTrFeedback.className = 'thcs-translate-feedback';
-            thcsTrFeedback.innerHTML = `👀 Đáp án: <span class="tf-answer"><b>${w.trAnswer || w.ex}</b></span>`;
-        });
-
-        thcsTrPrev.addEventListener('click', () => {
-            trIndex = (trIndex - 1 + trWords.length) % trWords.length;
-            thcsRenderTranslate();
-        });
-        thcsTrNext.addEventListener('click', () => {
-            trIndex = (trIndex + 1) % trWords.length;
+        thcsTrRestartBtn.addEventListener('click', () => {
+            if (thcsTranslateBusy) return;
+            trIndex = 0;
             thcsRenderTranslate();
         });
 
-        // ---------- 3. CÂU CHUYỆN ----------
-        const thcsStoryTranslateBtn = document.getElementById('thcs-story-translate-btn');
-        const thcsStoryTextVi       = document.getElementById('thcs-story-text-vi');
+        // ---------- 3. CÂU CHUYỆN: tối đa 4 khung ảnh 16:9 + câu điền từ khóa ----------
+        // Nội dung (ảnh + đoạn văn có từ khóa in đậm) do tài khoản giangvien@gmail.com
+        // biên soạn và lưu chung trên Supabase (bảng "thcs_story_frames") — mọi học viên
+        // đều thấy cùng 1 nội dung. Tiến độ MỞ từng khung ảnh thì lưu RIÊNG cho từng học
+        // viên (bảng "thcs_story_frame_progress"). Xem file "thcs_story_frames_setup.sql".
+        const thcsStoryFramesEl       = document.getElementById('thcs-story-frames');
+        const thcsStoryEditorEl       = document.getElementById('thcs-story-editor');
+        const thcsStoryEditorFramesEl = document.getElementById('thcs-story-editor-frames');
 
-        function thcsInitStory(unit) {
-            document.getElementById('thcs-story-title').textContent = unit.story.title;
-            document.getElementById('thcs-story-text').innerHTML = unit.story.text;
-
-            if (unit.story.textVi) {
-                thcsStoryTextVi.innerHTML = unit.story.textVi;
-                thcsStoryTranslateBtn.style.display = '';
-            } else {
-                thcsStoryTextVi.innerHTML = '';
-                thcsStoryTranslateBtn.style.display = 'none';
+        // ----- CRUD nội dung khung truyện (chỉ giảng viên được ghi, chặn cả UI lẫn RLS) -----
+        async function loadStoryFrames(gradeNum, unitId) {
+            try {
+                const { data, error } = await sb
+                    .from('thcs_story_frames')
+                    .select('*')
+                    .eq('grade', gradeNum)
+                    .eq('unit_id', unitId)
+                    .order('frame_index', { ascending: true });
+                if (error) throw error;
+                return data || [];
+            } catch (err) {
+                console.error('Lỗi khi tải khung truyện:', err.message);
+                return [];
             }
-            thcsStoryTextVi.style.display = 'none';
-            thcsStoryTranslateBtn.textContent = '🇻🇳 Xem bản dịch tiếng Việt';
+        }
 
-            const gallery = document.getElementById('thcs-story-gallery');
-            gallery.innerHTML = '';
-            const usedList = Array.isArray(unit.story.used) ? unit.story.used : [];
-            usedList.forEach(term => {
-                const word = unit.words.find(w => w.en.toLowerCase() === term.toLowerCase());
-                if (!word) return;
-                const item = document.createElement('div');
-                item.className = 'kid-story-gallery-item';
-                item.innerHTML = word.img
-                    ? `<div class="ksg-img-wrap"><img src="${word.img}" alt="${word.en}" ${thcsImgErrorAttr(word.en)}></div><div class="ksg-label">${word.en}</div>`
-                    : `<div class="ksg-img-wrap"><span class="ksg-placeholder">🖼️</span></div><div class="ksg-label">${word.en}</div>`;
-                gallery.appendChild(item);
+        async function saveStoryFrame(gradeNum, unitId, frameIndex, fields) {
+            const payload = Object.assign({
+                grade: gradeNum,
+                unit_id: unitId,
+                frame_index: frameIndex,
+                updated_by: currentEmail,
+                updated_at: new Date().toISOString()
+            }, fields);
+            const { data, error } = await sb
+                .from('thcs_story_frames')
+                .upsert(payload, { onConflict: 'grade, unit_id, frame_index' })
+                .select()
+                .single();
+            if (error) throw error;
+            return data;
+        }
+
+        async function deleteStoryFrame(gradeNum, unitId, frameIndex) {
+            const { error } = await sb
+                .from('thcs_story_frames')
+                .delete()
+                .eq('grade', gradeNum)
+                .eq('unit_id', unitId)
+                .eq('frame_index', frameIndex);
+            if (error) throw error;
+        }
+
+        // ----- Tiến độ MỞ khung ảnh của từng học viên -----
+        let thcsFrameProgressMap = {}; // "grade::unitId::frameIndex" -> true/false
+
+        function thcsFrameProgressKey(gradeNum, unitId, frameIndex) {
+            return gradeNum + '::' + unitId + '::' + frameIndex;
+        }
+
+        async function thcsLoadFrameProgress(gradeNum, unitId) {
+            if (!currentUserId) return;
+            try {
+                const { data, error } = await sb
+                    .from('thcs_story_frame_progress')
+                    .select('frame_index, completed')
+                    .eq('user_id', currentUserId)
+                    .eq('grade', gradeNum)
+                    .eq('unit_id', unitId);
+                if (error) throw error;
+                (data || []).forEach(row => {
+                    thcsFrameProgressMap[thcsFrameProgressKey(gradeNum, unitId, row.frame_index)] = !!row.completed;
+                });
+            } catch (err) {
+                console.error('Lỗi khi tải tiến độ khung truyện:', err.message);
+            }
+        }
+
+        function thcsIsFrameUnlocked(gradeNum, unitId, frameIndex) {
+            return !!thcsFrameProgressMap[thcsFrameProgressKey(gradeNum, unitId, frameIndex)];
+        }
+
+        async function thcsSaveFrameProgress(gradeNum, unitId, frameIndex) {
+            thcsFrameProgressMap[thcsFrameProgressKey(gradeNum, unitId, frameIndex)] = true;
+            if (!currentUserId) return;
+            try {
+                const payload = {
+                    user_id: currentUserId,
+                    grade: gradeNum,
+                    unit_id: unitId,
+                    frame_index: frameIndex,
+                    completed: true,
+                    updated_at: new Date().toISOString()
+                };
+                const { error } = await sb
+                    .from('thcs_story_frame_progress')
+                    .upsert(payload, { onConflict: 'user_id, grade, unit_id, frame_index' });
+                if (error) console.error('Lỗi khi lưu tiến độ khung truyện:', error);
+            } catch (err) {
+                console.error('Lỗi ngoại lệ khi lưu tiến độ khung truyện:', err.message);
+            }
+        }
+
+        // ----- Tiện ích xử lý nội dung HTML của 1 khung truyện -----
+        function thcsExtractKeywordsFromHtml(html) {
+            const tmp = document.createElement('div');
+            tmp.innerHTML = html || '';
+            return Array.from(tmp.querySelectorAll('b, strong'))
+                .map(el => el.textContent.trim())
+                .filter(Boolean);
+        }
+
+        function thcsPlainTextFromHtml(html) {
+            const tmp = document.createElement('div');
+            tmp.innerHTML = html || '';
+            return (tmp.textContent || '').replace(/\s+/g, ' ').trim();
+        }
+
+        // Dựng lại đoạn văn cho HỌC VIÊN: từ khóa (chữ in đậm) -> ô trống + nghĩa tiếng Việt gợi ý;
+        // phần chữ còn lại vẫn được bọc "tappable-word" để chạm tra nghĩa như bình thường.
+        function thcsBuildStoryBlankHtml(contentHtml, keywordsMeta) {
+            const tmp = document.createElement('div');
+            tmp.innerHTML = contentHtml || '';
+            const wrapFn = (window.vocabTap && window.vocabTap.wrap) ? window.vocabTap.wrap : (s => thcsEscHtml(s));
+            let keyIdx = 0;
+            let out = '';
+
+            function walk(node) {
+                if (node.nodeType === Node.TEXT_NODE) {
+                    out += wrapFn(node.textContent);
+                    return;
+                }
+                if (node.nodeType !== Node.ELEMENT_NODE) return;
+                const tag = node.tagName.toLowerCase();
+                if (tag === 'b' || tag === 'strong') {
+                    const meta = keywordsMeta[keyIdx] || {};
+                    const answer = (meta.key || node.textContent || '').trim();
+                    const meaningVi = meta.meaningVi || '';
+                    keyIdx += 1;
+                    const widthCh = Math.max(answer.length + 2, 3);
+                    out += `<span class="thcs-story-blank-wrap">` +
+                        `<input type="text" class="thcs-story-blank-input" data-answer="${thcsEscAttr(answer)}" style="width:${widthCh}ch" autocomplete="off" autocapitalize="off" spellcheck="false">` +
+                        (meaningVi ? `<span class="thcs-story-blank-hint">(${thcsEscHtml(meaningVi)})</span>` : '') +
+                        `</span>`;
+                } else if (tag === 'br') {
+                    out += '<br>';
+                } else {
+                    Array.from(node.childNodes).forEach(walk);
+                    if (tag === 'div' || tag === 'p') out += '<br>';
+                }
+            }
+            Array.from(tmp.childNodes).forEach(walk);
+            return out;
+        }
+
+        // ----- Hiển thị lưới khung truyện cho HỌC VIÊN (và cả giảng viên, để xem trước) -----
+        function thcsRenderStoryFramesGrid(unit, frames) {
+            if (!frames.length) {
+                thcsStoryFramesEl.innerHTML = '<p class="kid-hint">Unit này chưa có khung truyện nào. Giảng viên sẽ sớm cập nhật nhé!</p>';
+                return;
+            }
+            thcsStoryFramesEl.innerHTML = '';
+            frames.forEach(frame => {
+                const unlocked = thcsIsFrameUnlocked(currentGradeNum, unit.id, frame.frame_index);
+                const keywordsMeta = Array.isArray(frame.keywords) ? frame.keywords : [];
+                const blankHtml = thcsBuildStoryBlankHtml(frame.content_html, keywordsMeta);
+                const sourceLabel = `Lớp ${currentGradeNum} - Unit ${unit.number}: ${unit.titleVi} (câu chuyện - khung ${frame.frame_index})`;
+
+                const card = document.createElement('div');
+                card.className = 'thcs-story-frame-card' + (unlocked ? ' unlocked' : '');
+                card.dataset.frameIndex = frame.frame_index;
+                card.innerHTML = `
+                    <div class="thcs-story-frame-img-wrap">
+                        <img src="${thcsEscAttr(frame.image_url)}" class="thcs-story-frame-img" alt="Khung truyện ${frame.frame_index}">
+                        <div class="thcs-story-frame-overlay">
+                            <span class="thcs-story-frame-lock">🔒</span>
+                            <span>Điền đúng câu bên dưới để mở ảnh</span>
+                        </div>
+                    </div>
+                    <div class="thcs-story-frame-text" data-vocab-context="${thcsEscAttr(thcsPlainTextFromHtml(frame.content_html))}" data-vocab-source="${thcsEscAttr(sourceLabel)}">${blankHtml}</div>
+                    <div class="thcs-story-frame-actions">
+                        <button type="button" class="kid-btn kid-btn-primary thcs-story-frame-check-btn">✔️ Kiểm tra</button>
+                    </div>
+                    <div class="thcs-story-frame-feedback"></div>
+                `;
+                if (unlocked) {
+                    card.querySelectorAll('.thcs-story-blank-input').forEach(inp => {
+                        inp.value = inp.dataset.answer;
+                        inp.disabled = true;
+                        inp.classList.add('is-correct');
+                    });
+                    const checkBtn = card.querySelector('.thcs-story-frame-check-btn');
+                    if (checkBtn) checkBtn.style.display = 'none';
+                }
+                thcsStoryFramesEl.appendChild(card);
             });
         }
 
-        if (thcsStoryTranslateBtn) {
-            thcsStoryTranslateBtn.addEventListener('click', () => {
-                const isHidden = thcsStoryTextVi.style.display === 'none';
-                thcsStoryTextVi.style.display = isHidden ? '' : 'none';
-                thcsStoryTranslateBtn.textContent = isHidden
-                    ? '🙈 Ẩn bản dịch tiếng Việt'
-                    : '🇻🇳 Xem bản dịch tiếng Việt';
+        function thcsCheckStoryFrame(card) {
+            const frameIndex = Number(card.dataset.frameIndex);
+            const inputs = Array.from(card.querySelectorAll('.thcs-story-blank-input'));
+            if (!inputs.length) return;
+            let allCorrect = true;
+            inputs.forEach(inp => {
+                if (inp.disabled) return; // đã đúng từ trước
+                const ok = thcsNormalize(inp.value) === thcsNormalize(inp.dataset.answer);
+                inp.classList.remove('is-correct', 'is-wrong');
+                inp.classList.add(ok ? 'is-correct' : 'is-wrong');
+                if (ok) inp.disabled = true;
+                else allCorrect = false;
             });
+            const feedback = card.querySelector('.thcs-story-frame-feedback');
+            if (allCorrect) {
+                thcsPlayCorrectSound();
+                card.classList.add('unlocked');
+                const checkBtn = card.querySelector('.thcs-story-frame-check-btn');
+                if (checkBtn) checkBtn.style.display = 'none';
+                if (feedback) { feedback.className = 'thcs-story-frame-feedback is-correct'; feedback.innerHTML = '✅ Chính xác! Ảnh đã được mở.'; }
+                thcsSaveFrameProgress(currentGradeNum, currentUnit.id, frameIndex);
+            } else {
+                thcsPlayWrongSound();
+                if (feedback) { feedback.className = 'thcs-story-frame-feedback is-wrong'; feedback.innerHTML = '❌ Còn chỗ trống chưa đúng (đang tô đỏ), thử lại nhé!'; }
+            }
+        }
+
+        thcsStoryFramesEl.addEventListener('click', (e) => {
+            const btn = e.target.closest('.thcs-story-frame-check-btn');
+            if (!btn) return;
+            const card = btn.closest('.thcs-story-frame-card');
+            if (card) thcsCheckStoryFrame(card);
+        });
+        thcsStoryFramesEl.addEventListener('keydown', (e) => {
+            if (e.key !== 'Enter') return;
+            const inp = e.target.closest('.thcs-story-blank-input');
+            if (!inp) return;
+            e.preventDefault();
+            const card = inp.closest('.thcs-story-frame-card');
+            if (card) thcsCheckStoryFrame(card);
+        });
+
+        // ----- Khung soạn thảo (CHỈ giảng viên) -----
+        function thcsRenderKeywordInputs(card, contentEl, existingKeywords) {
+            const keywordsWrap = card.querySelector('.thcs-story-editor-keywords');
+            const existingMap = {};
+            (existingKeywords || []).forEach(k => { existingMap[String(k.key || '').toLowerCase()] = k.meaningVi || ''; });
+
+            function rebuild() {
+                const typedMap = {};
+                keywordsWrap.querySelectorAll('.thcs-story-editor-keyword-row').forEach(row => {
+                    const key = row.dataset.key;
+                    const input = row.querySelector('input');
+                    if (key && input) typedMap[key.toLowerCase()] = input.value;
+                });
+
+                const keys = thcsExtractKeywordsFromHtml(contentEl.innerHTML);
+                keywordsWrap.innerHTML = '';
+                if (!keys.length) {
+                    keywordsWrap.innerHTML = '<p class="thcs-story-editor-keyword-empty">Chưa có từ khóa nào được in đậm.</p>';
+                    return;
+                }
+                keys.forEach(key => {
+                    const lower = key.toLowerCase();
+                    const meaning = (lower in typedMap) ? typedMap[lower] : (existingMap[lower] || '');
+                    const row = document.createElement('div');
+                    row.className = 'thcs-story-editor-keyword-row';
+                    row.dataset.key = key;
+                    row.innerHTML = `
+                        <span class="thcs-story-editor-keyword-label"><b>${thcsEscHtml(key)}</b> →</span>
+                        <input type="text" class="thcs-story-editor-keyword-input" placeholder="Nghĩa tiếng Việt cho từ khóa này...">
+                    `;
+                    row.querySelector('input').value = meaning;
+                    keywordsWrap.appendChild(row);
+                });
+            }
+
+            rebuild();
+            contentEl.addEventListener('input', rebuild);
+        }
+
+        function thcsRenderStoryEditor(unit, frames) {
+            if (!isTeacher) { thcsStoryEditorEl.style.display = 'none'; return; }
+            thcsStoryEditorEl.style.display = 'block';
+            thcsStoryEditorFramesEl.innerHTML = '';
+
+            const frameByIndex = {};
+            frames.forEach(f => { frameByIndex[f.frame_index] = f; });
+
+            for (let i = 1; i <= 4; i++) {
+                const frame = frameByIndex[i] || null;
+                const card = document.createElement('div');
+                card.className = 'thcs-story-editor-card';
+                card.dataset.frameIndex = i;
+                card.innerHTML = `
+                    <h5 class="thcs-story-editor-card-title">Khung ${i}</h5>
+                    <div class="thcs-story-editor-image-row">
+                        <input type="text" class="thcs-story-editor-image-input" placeholder="Dán link ảnh 16:9 (.jpg/.png)..." value="${frame ? thcsEscAttr(frame.image_url) : ''}">
+                        <img class="thcs-story-editor-preview" src="${frame ? thcsEscAttr(frame.image_url) : ''}" style="${frame && frame.image_url ? '' : 'display:none;'}">
+                    </div>
+                    <div class="thcs-story-editor-toolbar">
+                        <button type="button" class="thcs-story-editor-bold-btn" title="In đậm phần đang chọn"><strong>B</strong> In đậm</button>
+                        <span>Bôi đen từ khóa rồi bấm nút này để đánh dấu từ khóa</span>
+                    </div>
+                    <div class="thcs-story-editor-content news-editable" contenteditable="true" data-placeholder="Nhập đoạn văn tiếng Anh, bôi đen từ khóa rồi bấm 'In đậm'...">${frame ? frame.content_html : ''}</div>
+                    <div class="thcs-story-editor-keywords"></div>
+                    <div class="thcs-story-editor-actions">
+                        <button type="button" class="kid-btn kid-btn-primary thcs-story-editor-save-btn">💾 Lưu Khung ${i}</button>
+                        ${frame ? `<button type="button" class="kid-btn thcs-story-editor-delete-btn">🗑️ Xóa Khung ${i}</button>` : ''}
+                        <span class="thcs-story-editor-status"></span>
+                    </div>
+                `;
+                thcsStoryEditorFramesEl.appendChild(card);
+
+                const contentEl = card.querySelector('.thcs-story-editor-content');
+                const imageInput = card.querySelector('.thcs-story-editor-image-input');
+                const preview = card.querySelector('.thcs-story-editor-preview');
+                const statusEl = card.querySelector('.thcs-story-editor-status');
+
+                thcsRenderKeywordInputs(card, contentEl, frame ? frame.keywords : []);
+
+                imageInput.addEventListener('input', () => {
+                    const url = imageInput.value.trim();
+                    if (url) { preview.src = url; preview.style.display = ''; }
+                    else { preview.style.display = 'none'; }
+                });
+
+                card.querySelector('.thcs-story-editor-bold-btn').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    contentEl.focus();
+                    document.execCommand('bold');
+                    contentEl.dispatchEvent(new Event('input'));
+                });
+
+                card.querySelector('.thcs-story-editor-save-btn').addEventListener('click', async () => {
+                    const imageUrl = imageInput.value.trim();
+                    const contentHtml = contentEl.innerHTML.trim();
+                    if (!imageUrl) { alert('Vui lòng dán link ảnh 16:9 trước khi lưu.'); return; }
+                    if (!contentHtml) { alert('Vui lòng nhập đoạn văn tiếng Anh trước khi lưu.'); return; }
+
+                    const keywords = Array.from(card.querySelectorAll('.thcs-story-editor-keyword-row')).map(row => ({
+                        key: row.dataset.key,
+                        meaningVi: row.querySelector('input').value.trim()
+                    }));
+                    const missing = keywords.find(k => !k.meaningVi);
+                    if (missing && !confirm(`Từ khóa "${missing.key}" chưa có nghĩa tiếng Việt. Vẫn lưu?`)) return;
+
+                    statusEl.textContent = 'Đang lưu...';
+                    try {
+                        await saveStoryFrame(currentGradeNum, unit.id, i, {
+                            image_url: imageUrl,
+                            content_html: contentHtml,
+                            keywords,
+                            created_by: frame ? frame.created_by : currentEmail
+                        });
+                        statusEl.textContent = '💾 Đã lưu Khung ' + i + '.';
+                        await thcsInitStory(unit); // tải + vẽ lại cả 2 phía (học viên + soạn thảo)
+                    } catch (err) {
+                        statusEl.textContent = '❌ Lưu thất bại: ' + err.message;
+                    }
+                });
+
+                const deleteBtn = card.querySelector('.thcs-story-editor-delete-btn');
+                if (deleteBtn) {
+                    deleteBtn.addEventListener('click', async () => {
+                        if (!confirm(`Xóa Khung ${i}? Học viên sẽ không còn thấy khung này nữa.`)) return;
+                        try {
+                            await deleteStoryFrame(currentGradeNum, unit.id, i);
+                            await thcsInitStory(unit);
+                        } catch (err) {
+                            alert('Xóa thất bại: ' + err.message);
+                        }
+                    });
+                }
+            }
+        }
+
+        // ----- Khởi tạo tab Câu chuyện khi mở 1 Unit -----
+        async function thcsInitStory(unit) {
+            thcsStoryFramesEl.innerHTML = '<p class="kid-hint">Đang tải khung truyện...</p>';
+            thcsStoryEditorEl.style.display = 'none';
+
+            const frames = await loadStoryFrames(currentGradeNum, unit.id);
+            thcsFrameProgressMap = {};
+            await thcsLoadFrameProgress(currentGradeNum, unit.id);
+
+            thcsRenderStoryFramesGrid(unit, frames);
+            thcsRenderStoryEditor(unit, frames);
         }
 
         // ---------- 4. TRÒ CHƠI HỨNG TỪ ----------
