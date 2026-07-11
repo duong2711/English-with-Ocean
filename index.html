@@ -511,13 +511,13 @@
     </div>
 
     <div id="tab-kiem-tra" class="main-tab-content">
-        <h2>Kiểm tra Đánh giá</h2>
+        <!--<h2>Kiểm tra Đánh giá</h2>
         <div class="folder-grid">
             <div id="vocab-test-folder" class="folder-card">📁 từ vựng</div>
             <div class="folder-card">📁 đề thi lớp 6->12</div>
             <div class="folder-card">📁 đề thi chuyển cấp THCS/THPT</div>
             <div class="folder-card">📁 đề minh họa IELTS</div>
-        </div>
+        </div>-->
     </div>
 
     <div id="tab-tu-vung" class="main-tab-content">
@@ -528,8 +528,8 @@
             <div class="folder-card" id="kid-folder-card">📁 Vận dụng (20 chủ đề)</div>
             <div class="folder-card" id="thcs-folder-card">📁 THCS/THPT (theo SGK Global success)</div>
             <div class="folder-card news-folder-trigger" id="news-folder-card">📁 Tin ngắn (nguồn newsinlevels)</div>
-            <div class="folder-card">📁 IELTS (theo sách Perfect IELTS vocab)</div>
-            <div class="folder-card">📁 TOEIC (web byetoeic)</div>
+           <!-- <div class="folder-card">📁 IELTS (theo sách Perfect IELTS vocab)</div>
+            <div class="folder-card">📁 TOEIC (web byetoeic)</div> -->
         </div>
 
         <!-- ===== Panel "Từ vựng của tôi" — các từ học viên đã chạm để tra nghĩa khi luyện dịch ===== -->
@@ -565,12 +565,14 @@
             <div class="kid-subtabs" id="kid-subtabs">
                 <button class="kid-subtab-btn active" data-sub="flashcard">🃏 Flashcard</button>
                 <button class="kid-subtab-btn" data-sub="match">🔗 Nối từ</button>
+                <button class="kid-subtab-btn" data-sub="crossword">🧩 Ô chữ</button>
                 <button class="kid-subtab-btn" data-sub="story">📖 Câu chuyện</button>
                 <button class="kid-subtab-btn" data-sub="game">🎮 Trò chơi</button>
             </div>
 
             <!-- 1. Flashcard -->
             <div class="kid-sub-content" id="kid-sub-flashcard">
+                <div class="kid-flash-lock-notice" id="kid-flash-lock-notice" style="display:none;"></div>
                 <div class="kid-flash-progress" id="kid-flash-progress"></div>
                 <div class="kid-flashcard" id="kid-flashcard">
                     <div class="kid-flashcard-inner" id="kid-flashcard-inner">
@@ -596,18 +598,38 @@
                 <button id="kid-match-reset" class="kid-btn">🔄 Chơi lại</button>
             </div>
 
-            <!-- 3. Câu chuyện -->
+            <!-- 3. Ô chữ (Word Search: tìm từ ẩn trong bảng chữ cái) -->
+            <div class="kid-sub-content" id="kid-sub-crossword" style="display:none;">
+                <p class="kid-hint">Dựa vào gợi ý nghĩa tiếng Việt bên dưới, tìm từ tiếng Anh tương ứng đang ẩn trong bảng ô chữ. Có 2 cách chọn: (1) <b>chạm vào chữ cái đầu tiên rồi chạm chữ cái cuối cùng</b> của từ, hoặc (2) <b>kéo (rê) ngón tay/chuột</b> từ chữ đầu tới chữ cuối — theo hàng ngang, hàng dọc hoặc đường chéo (xuôi hoặc ngược).</p>
+                <div class="kid-ws-wrap">
+                    <ol id="kid-crossword-clues" class="kid-ws-clues"></ol>
+                    <div class="kid-ws-grid-col">
+                        <div class="kid-ws-scroll-hint" id="kid-ws-scroll-hint">↔️ Kéo ngang, dọc để xem toàn bộ bảng ô chữ ↕️</div>
+                        <div class="kid-ws-grid-scroll">
+                            <div id="kid-crossword-grid" class="kid-ws-table"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="kid-crossword-feedback" id="kid-crossword-feedback"></div>
+                <div class="thcs-translate-actions">
+                    <button id="kid-crossword-reset-btn" class="kid-btn">🔄 Ô chữ mới</button>
+                </div>
+            </div>
+
+            <!-- 4. Câu chuyện -->
             <div class="kid-sub-content" id="kid-sub-story" style="display:none;">
                 <h4 id="kid-story-title" class="kid-story-title"></h4>
                 <p id="kid-story-text" class="kid-story-text"></p>
-                <button type="button" id="kid-story-translate-btn" class="kid-story-translate-btn">🇻🇳 Xem bản dịch tiếng Việt</button>
-                <p id="kid-story-text-vi" class="kid-story-text-vi" style="display:none;"></p>
+                <div class="thcs-translate-actions">
+                    <button id="kid-story-check-btn" class="kid-btn kid-btn-primary">✔️ Kiểm tra</button>
+                </div>
+                <div class="kid-story-feedback" id="kid-story-feedback"></div>
                 <div class="kid-story-gallery" id="kid-story-gallery"></div>
             </div>
 
-            <!-- 4. Trò chơi Hứng từ -->
+            <!-- 5. Trò chơi Hứng từ -->
             <div class="kid-sub-content" id="kid-sub-game" style="display:none;">
-    <p class="kid-hint">Nghe từ khóa rồi bấm đúng ô chứa từ đó (tiếng Anh) trước khi nó rơi qua vạch đỏ. 10 lượt đầu là chế độ Thường (hiện sẵn từ khóa để đối chiếu), 10 lượt sau là chế độ Tử Thần 💀 (ẩn từ khóa, chỉ nghe để đoán).</p>
+    <p class="kid-hint">Nghe từ khóa rồi bấm đúng ô chứa từ đó (tiếng Anh) trước khi nó rơi qua vạch đỏ. Nửa số lượt đầu là chế độ Thường (hiện sẵn từ khóa để đối chiếu), nửa sau là chế độ Tử Thần 💀 (ẩn từ khóa, chỉ nghe để đoán).</p>
     <div class="kid-game-controls">
         <span id="kid-game-status" class="kid-game-status">Lượt: 0/20 | Chế độ: Thường</span>
         <label>Tốc độ rơi cơ bản (giây): <input type="number" id="kid-game-speed" value="6" min="3" max="10" step="1"></label>
@@ -1092,6 +1114,16 @@
             <button type="button" id="word-lookup-close" class="word-lookup-close" aria-label="Đóng">✕</button>
             <div class="word-lookup-word" id="word-lookup-word"></div>
             <div class="word-lookup-body" id="word-lookup-body"></div>
+        </div>
+    </div>
+
+    <!-- ===== HỘP THOẠI "HOÀN THÀNH CHỦ ĐỀ" (Cho bé) — hiện khi học viên xong hết cả 2 đợt 25 từ ===== -->
+    <div id="kid-topic-complete-modal" class="kid-complete-modal" style="display:none;">
+        <div class="kid-complete-modal-box">
+            <div class="kid-complete-emoji">🏆</div>
+            <h3>Hoàn thành chủ đề!</h3>
+            <p id="kid-complete-desc"></p>
+            <button type="button" id="kid-complete-close-btn" class="kid-btn kid-btn-primary">Tuyệt vời!</button>
         </div>
     </div>
 

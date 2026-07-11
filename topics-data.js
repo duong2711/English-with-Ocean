@@ -498,10 +498,18 @@ const KID_TOPICS = [
       }
     ],
     story: {
-      title: `A Big Family Reunion`,
-      text: `Today, our <b>close-knit</b> family is having a big <b>family reunion</b>. My <b>parents</b> and <b>siblings</b> are very excited. My <b>grandfather</b> and <b>grandmother</b> love to tell us great stories. My <b>cousin</b> brought her cute <b>newborn</b> baby. Everyone is so <b>caring</b> and <b>supportive</b>. After dinner, we all help with the <b>chores</b>. I love my <b>extended family</b>!`,
-      textVi: `Hôm nay, gia đình <b>gắn bó</b> của chúng tôi có một buổi <b>họp mặt gia đình</b> thật đông vui. <b>Cha mẹ</b> và <b>anh chị em ruột</b> của tôi rất phấn khích. <b>Ông</b> và <b>bà</b> tôi rất thích kể cho chúng tôi nghe những câu chuyện hay. <b>Anh/chị họ</b> của tôi mang theo em bé <b>sơ sinh</b> đáng yêu của cô ấy. Mọi người đều rất <b>biết quan tâm</b> và <b>hay hỗ trợ</b> nhau. Sau bữa tối, cả nhà cùng nhau làm <b>việc nhà</b>. Tôi yêu <b>đại gia đình</b> của mình!`,
-      used: ["close-knit", "family reunion", "parents", "siblings", "grandfather", "grandmother", "cousin", "newborn", "caring", "supportive", "chores", "extended family"]
+      batch1: {
+        title: `Our Big Weekend`,
+        text: `This weekend, my <b>Uncle</b> and <b>Aunt</b> came to visit us. They brought their <b>Son</b> and <b>Daughter</b> to play with me. My <b>Stepfather</b> cooked a delicious lunch for everyone. We had so much fun together!`,
+        textVi: `Cuối tuần này, <b>chú/cậu/bác</b> và <b>cô/dì/bác</b> của tôi đến thăm nhà. Họ mang theo <b>con trai</b> và <b>con gái</b> của họ đến chơi cùng tôi. <b>Cha dượng</b> của tôi nấu một bữa trưa ngon cho mọi người. Chúng tôi đã có khoảng thời gian thật vui vẻ bên nhau!`,
+        used: ["Son", "Daughter", "Uncle", "Aunt", "Stepfather"]
+      },
+      batch2: {
+        title: `Different Kinds of Families`,
+        text: `My neighbor is a <b>Single parent</b> raising a little <b>Toddler</b> all by herself. Next door, an old man is <b>Widowed</b> and lives alone, but his children visit every week. My aunt got <b>Divorced</b> last year, yet she is still very happy. All of them are kind and <b>Family-oriented</b> people who love spending time with their relatives.`,
+        textVi: `Hàng xóm của tôi là một <b>người mẹ đơn thân</b> đang nuôi một <b>đứa trẻ tập đi</b> một mình. Nhà bên cạnh có một ông cụ đã <b>goá vợ</b> và sống một mình, nhưng con cái ông vẫn đến thăm mỗi tuần. Dì tôi đã <b>ly hôn</b> năm ngoái, nhưng dì vẫn rất vui vẻ. Tất cả họ đều là những người <b>coi trọng gia đình</b> và thích dành thời gian cho người thân.`,
+        used: ["Toddler", "Single parent", "Widowed", "Divorced", "Family-oriented"]
+      }
     }
   },
   {
@@ -1011,10 +1019,18 @@ const KID_TOPICS = [
       }
     ],
     story: {
-      title: `A Day at School`,
-      text: `Every morning, the young <b>Student</b> puts her books and a <b>Notebook</b> into her heavy <b>Backpack</b>. In the <b>Classroom</b>, her favorite <b>Teacher</b> writes today's <b>Lesson</b> on the <b>Blackboard</b>. During the <b>Break</b>, she plays with her <b>Classmate</b>s in the sunny <b>Schoolyard</b>. When they return, they study hard to prepare for the final <b>Exam</b> and earn a good <b>Grade</b>.`,
-      textVi: `Mỗi sáng, cô <b>học sinh</b> nhỏ bỏ sách vở và một quyển <b>vở ghi</b> vào chiếc <b>ba lô</b> nặng trĩu của mình. Trong <b>lớp học</b>, <b>giáo viên</b> yêu thích của cô viết <b>bài học</b> hôm nay lên <b>bảng đen</b>. Vào <b>giờ ra chơi</b>, cô chơi cùng các <b>bạn cùng lớp</b> ở <b>sân trường</b> đầy nắng. Khi quay lại lớp, các bạn học chăm chỉ để chuẩn bị cho <b>kỳ thi</b> cuối kỳ và đạt được <b>điểm số</b> tốt.`,
-      used: ["Student", "Notebook", "Backpack", "Classroom", "Teacher", "Lesson", "Blackboard", "Break", "Classmate", "Schoolyard", "Exam", "Grade"]
+      batch1: {
+        title: `A Busy School Day`,
+        text: `This morning I wore my school <b>Uniform</b> and packed my <b>Notebook</b> into my bag. In class, the teacher wrote the new <b>Lesson</b> on the board using white <b>Chalk</b>. Before I go home, I must finish my <b>Assignment</b> for tomorrow.`,
+        textVi: `Sáng nay tôi mặc <b>đồng phục</b> đi học và bỏ <b>vở ghi</b> vào cặp. Trong lớp, cô giáo viết <b>bài học</b> mới lên bảng bằng <b>phấn</b> trắng. Trước khi về nhà, tôi phải hoàn thành <b>bài tập</b> cho ngày mai.`,
+        used: ["Assignment", "Notebook", "Uniform", "Lesson", "Chalk"]
+      },
+      batch2: {
+        title: `Exploring the Bigger School`,
+        text: `In the big <b>Lecture hall</b>, the professor writes notes on the <b>Whiteboard</b> with a colorful <b>Marker</b>. I always bring a small <b>Notepad</b> to copy down important points. After class, my friends and I love to play in the <b>Schoolyard</b>.`,
+        textVi: `Trong <b>giảng đường</b> lớn, thầy giáo viết ghi chú lên <b>bảng trắng</b> bằng <b>bút lông</b> đầy màu sắc. Tôi luôn mang theo một cuốn <b>sổ tay</b> nhỏ để chép lại những điểm quan trọng. Sau giờ học, tôi và các bạn thích chơi ở <b>sân trường</b>.`,
+        used: ["Notepad", "Marker", "Whiteboard", "Lecture hall", "Schoolyard"]
+      }
     }
   },
   {
@@ -1524,10 +1540,18 @@ const KID_TOPICS = [
       }
     ],
     story: {
-      title: `Finding a Good Job`,
-      text: `When finding a <b>Job</b>, you need to show your <b>Experience</b> and <b>Skill</b> in a <b>Resume</b>. A good <b>Employer</b> will look at your <b>Interview</b> to see if you can <b>Work</b> well with a <b>Team</b>. A <b>Full-time</b> job offers a steady <b>Salary</b>, but some prefer <b>Remote work</b> as a <b>Freelancer</b> to manage their own <b>Workspace</b> and <b>Schedule</b>. In any job, <b>Productivity</b> and meeting a <b>Deadline</b> are important for <b>Promotion</b>.`,
-      textVi: `Khi tìm một <b>công việc</b>, bạn cần thể hiện <b>kinh nghiệm</b> và <b>kỹ năng</b> của mình trong bản <b>sơ yếu lý lịch</b>. Một <b>nhà tuyển dụng</b> tốt sẽ dựa vào buổi <b>phỏng vấn</b> của bạn để xem bạn có <b>làm việc</b> tốt cùng một <b>nhóm</b> được hay không. Một công việc <b>toàn thời gian</b> mang lại <b>lương</b> ổn định, nhưng một số người lại thích <b>làm việc từ xa</b> với tư cách <b>người làm tự do</b> để tự quản lý <b>nơi làm việc</b> và <b>lịch trình</b> của mình. Trong bất kỳ công việc nào, <b>năng suất</b> và việc hoàn thành đúng <b>hạn chót</b> đều quan trọng để được <b>thăng chức</b>.`,
-      used: ["Job", "Experience", "Skill", "Resume", "Employer", "Interview", "Work", "Team", "Full-time", "Salary", "Remote work", "Freelancer", "Workspace", "Productivity", "Deadline", "Promotion"]
+      batch1: {
+        title: `A Hard-Working Day`,
+        text: `My father is working on a big <b>Project</b> at his company. He has one more <b>Task</b> to finish before the <b>Deadline</b> tomorrow. At the end of the month, he receives his <b>Salary</b>, while my mother, who works part-time, gets her <b>Wage</b> every week.`,
+        textVi: `Bố tôi đang thực hiện một <b>dự án</b> lớn tại công ty. Ông còn một <b>nhiệm vụ</b> nữa phải hoàn thành trước <b>hạn chót</b> vào ngày mai. Cuối tháng, ông nhận <b>lương</b>, còn mẹ tôi làm bán thời gian thì nhận <b>tiền công</b> mỗi tuần.`,
+        used: ["Task", "Deadline", "Project", "Salary", "Wage"]
+      },
+      batch2: {
+        title: `Working in a New Way`,
+        text: `My cousin is a <b>Freelancer</b> who is <b>Self-employed</b> and works from home. Before starting a new job, she always signs a <b>Contract</b> with her clients. She has a lot of <b>Skill</b> and years of <b>Experience</b> in graphic design.`,
+        textVi: `Anh họ tôi là một <b>người làm tự do</b>, <b>tự kinh doanh</b> và làm việc tại nhà. Trước khi nhận việc mới, anh luôn ký <b>hợp đồng</b> với khách hàng. Anh có nhiều <b>kỹ năng</b> và nhiều năm <b>kinh nghiệm</b> trong lĩnh vực thiết kế đồ họa.`,
+        used: ["Contract", "Freelancer", "Self-employed", "Skill", "Experience"]
+      }
     }
   },
   {
@@ -2037,10 +2061,18 @@ const KID_TOPICS = [
       }
     ],
     story: {
-      title: `Many Different Jobs`,
-      text: `Every day, the <b>Teacher</b> teaches the <b>Student</b> in class. If someone is sick, the <b>Doctor</b> and <b>Nurse</b> help them feel better. Outside, the <b>Police officer</b> keeps the city safe, while the <b>Firefighter</b> is ready for emergencies. Whether you are an <b>Engineer</b>, a <b>Chef</b>, or an <b>Artist</b>, every job is important.`,
-      textVi: `Mỗi ngày, <b>giáo viên</b> dạy <b>học sinh</b> trong lớp học. Nếu ai đó bị ốm, <b>bác sĩ</b> và <b>y tá</b> sẽ giúp họ khỏe lại. Bên ngoài, <b>cảnh sát</b> giữ gìn an toàn cho thành phố, còn <b>lính cứu hỏa</b> luôn sẵn sàng cho các tình huống khẩn cấp. Dù bạn là một <b>kỹ sư</b>, một <b>đầu bếp</b>, hay một <b>nghệ sĩ</b>, công việc nào cũng đều quan trọng.`,
-      used: ["Teacher", "Student", "Doctor", "Nurse", "Police officer", "Firefighter", "Engineer", "Chef", "Artist"]
+      batch1: {
+        title: `Talented People Around Us`,
+        text: `In this restaurant, the <b>Cook</b> makes delicious food while the <b>Waiter</b> and <b>Waitress</b> serve the customers with a smile. My sister is a talented <b>Artist</b> who loves painting, and my brother dreams of becoming a famous <b>Singer</b>.`,
+        textVi: `Trong nhà hàng này, <b>người nấu ăn</b> làm những món ăn ngon trong khi <b>bồi bàn nam</b> và <b>bồi bàn nữ</b> phục vụ khách hàng với nụ cười. Chị tôi là một <b>họa sĩ</b> tài năng thích vẽ tranh, còn anh tôi mơ ước trở thành một <b>ca sĩ</b> nổi tiếng.`,
+        used: ["Cook", "Waiter", "Waitress", "Artist", "Singer"]
+      },
+      batch2: {
+        title: `Creative Careers`,
+        text: `My aunt works as a <b>Designer</b>, creating beautiful clothes every day. Her friend is a <b>Photographer</b> who takes amazing pictures for magazines. At the newspaper, a <b>Journalist</b> writes stories while a <b>Reporter</b> shares the news on TV. My uncle works as a <b>Translator</b>, helping people understand different languages.`,
+        textVi: `Dì tôi làm <b>nhà thiết kế</b>, mỗi ngày tạo ra những bộ quần áo đẹp. Bạn của dì là một <b>nhiếp ảnh gia</b> chụp những bức ảnh tuyệt đẹp cho tạp chí. Tại tòa soạn, một <b>nhà báo</b> viết bài trong khi một <b>phóng viên</b> đưa tin trên truyền hình. Chú tôi làm <b>phiên dịch viên</b>, giúp mọi người hiểu các ngôn ngữ khác nhau.`,
+        used: ["Designer", "Photographer", "Journalist", "Reporter", "Translator"]
+      }
     }
   },
   {
@@ -2550,10 +2582,18 @@ const KID_TOPICS = [
       }
     ],
     story: {
-      title: `A Delicious Dinner`,
-      text: `For our evening <b>Meal</b>, we had a lot of delicious <b>Food</b>. My mother cooked <b>Rice</b>, fresh <b>Vegetable</b>s, and tasty <b>Beef</b> using a little <b>Oil</b>, <b>Salt</b>, and <b>Pepper</b>. I used a <b>Bowl</b> and <b>Chopsticks</b> to eat, while my sister used a <b>Plate</b>, a <b>Fork</b>, and a <b>Knife</b>. For a sweet <b>Snack</b> afterward, we enjoyed some fresh <b>Fruit</b> and <b>Ice cream</b>.`,
-      textVi: `Cho <b>bữa ăn</b> tối, chúng tôi có rất nhiều <b>món ăn</b> ngon. Mẹ tôi nấu <b>cơm</b>, <b>rau</b> tươi, và <b>thịt bò</b> thơm ngon với một chút <b>dầu</b>, <b>muối</b>, và <b>tiêu</b>. Tôi dùng <b>tô</b> và <b>đũa</b> để ăn, còn chị tôi thì dùng <b>đĩa</b>, <b>nĩa</b>, và <b>dao</b>. Sau đó, để ăn tráng miệng với <b>món ăn nhẹ</b> ngọt, chúng tôi thưởng thức <b>trái cây</b> tươi và <b>kem</b>.`,
-      used: ["Meal", "Food", "Rice", "Vegetable", "Beef", "Oil", "Salt", "Pepper", "Bowl", "Chopsticks", "Plate", "Fork", "Knife", "Snack", "Fruit", "Ice cream"]
+      batch1: {
+        title: `Breakfast Time`,
+        text: `Every morning, my father drinks a cup of <b>Coffee</b> while my mother prefers a warm cup of <b>Tea</b>. I drink a glass of <b>Milk</b> with my <b>Bread</b>. For lunch, we usually eat <b>Rice</b> with vegetables and meat.`,
+        textVi: `Mỗi sáng, bố tôi uống một tách <b>cà phê</b> còn mẹ tôi thích một tách <b>trà</b> ấm. Tôi uống một ly <b>sữa</b> cùng với <b>bánh mì</b>. Vào bữa trưa, chúng tôi thường ăn <b>cơm</b> với rau và thịt.`,
+        used: ["Coffee", "Tea", "Milk", "Bread", "Rice"]
+      },
+      batch2: {
+        title: `Cooking in the Kitchen`,
+        text: `My mother heats some <b>Oil</b> in the pan to cook eggs. She also spreads <b>Butter</b> and <b>Cheese</b> on the bread to make a tasty <b>Sandwich</b> for me. On weekends, my father grills a juicy <b>Hamburger</b> for the whole family.`,
+        textVi: `Mẹ tôi làm nóng một ít <b>dầu</b> trong chảo để chiên trứng. Mẹ cũng phết <b>bơ</b> và <b>phô mai</b> lên bánh mì để làm một chiếc <b>bánh mì kẹp</b> ngon cho tôi. Vào cuối tuần, bố tôi nướng một chiếc <b>bánh hamburger</b> thơm ngon cho cả nhà.`,
+        used: ["Oil", "Butter", "Cheese", "Sandwich", "Hamburger"]
+      }
     }
   },
   {
@@ -3063,10 +3103,18 @@ const KID_TOPICS = [
       }
     ],
     story: {
-      title: `A Fun Vacation`,
-      text: `For our <b>Vacation</b>, we planned a <b>Trip</b> to a famous <b>Destination</b>. We booked a <b>Flight</b> and arrived at the <b>Airport</b> with our <b>Luggage</b>. First, we went to our <b>Hotel</b> for <b>Check-in</b>. The next day, a <b>Tour guide</b> led us to <b>Explore</b> the city. We saw a big <b>Museum</b> and a beautiful <b>Temple</b>, and then relaxed at the <b>Beach</b>. It was a wonderful <b>Journey</b>!`,
-      textVi: `Cho <b>kỳ nghỉ</b> của mình, chúng tôi lên kế hoạch cho một <b>chuyến đi</b> đến một <b>điểm đến</b> nổi tiếng. Chúng tôi đặt một <b>chuyến bay</b> và đến <b>sân bay</b> cùng với <b>hành lý</b> của mình. Đầu tiên, chúng tôi đến <b>khách sạn</b> để <b>làm thủ tục nhận phòng</b>. Ngày hôm sau, một <b>hướng dẫn viên du lịch</b> dẫn chúng tôi đi <b>khám phá</b> thành phố. Chúng tôi đã thấy một <b>bảo tàng</b> lớn và một <b>ngôi đền</b> xinh đẹp, rồi thư giãn ở <b>bãi biển</b>. Đó thật là một <b>hành trình</b> tuyệt vời!`,
-      used: ["Vacation", "Trip", "Destination", "Flight", "Airport", "Luggage", "Hotel", "Check-in", "Tour guide", "Explore", "Museum", "Temple", "Beach", "Journey"]
+      batch1: {
+        title: `Getting Ready to Travel`,
+        text: `Before our trip abroad, my father applied for a <b>Visa</b> and bought our <b>Ticket</b> online. Our <b>Flight</b> leaves early in the morning, so we must arrive at the <b>Airport</b> on time. We are flying with a famous <b>Airline</b> this year.`,
+        textVi: `Trước chuyến đi nước ngoài, bố tôi xin <b>thị thực</b> và mua <b>vé</b> trực tuyến. <b>Chuyến bay</b> của chúng tôi khởi hành sớm vào buổi sáng, nên chúng tôi phải đến <b>sân bay</b> đúng giờ. Năm nay chúng tôi bay cùng một <b>hãng hàng không</b> nổi tiếng.`,
+        used: ["Visa", "Ticket", "Flight", "Airport", "Airline"]
+      },
+      batch2: {
+        title: `Exploring a New City`,
+        text: `On our trip, we visited an old <b>Temple</b> and learned about the history at the <b>Museum</b>. Then we walked around the local <b>Market</b> to buy a small <b>Souvenir</b> for our friends. We had to exchange our money into the local <b>Currency</b> first.`,
+        textVi: `Trong chuyến đi, chúng tôi đã ghé thăm một ngôi <b>đền</b> cổ và tìm hiểu lịch sử tại <b>bảo tàng</b>. Sau đó chúng tôi đi dạo quanh <b>chợ</b> địa phương để mua một món <b>quà lưu niệm</b> nhỏ cho bạn bè. Chúng tôi phải đổi tiền sang <b>tiền tệ</b> địa phương trước.`,
+        used: ["Museum", "Temple", "Market", "Souvenir", "Currency"]
+      }
     }
   },
   {
@@ -3576,10 +3624,18 @@ const KID_TOPICS = [
       }
     ],
     story: {
-      title: `A Weekend Shopping Trip`,
-      text: `On the weekend, I went <b>Shopping</b> at a big <b>Mall</b>. First, I went to a clothes <b>Store</b> to find a new jacket. The <b>Price</b> was very <b>Affordable</b> because of a special <b>Sale</b>, so I got a great <b>Discount</b>. The <b>Cashier</b> scanned the <b>Barcode</b> and gave me a <b>Receipt</b>. Later, I used <b>Cash</b> to buy some fresh fruit at the <b>Market</b> before putting it all in my <b>Bag</b>.`,
-      textVi: `Vào cuối tuần, tôi đi <b>mua sắm</b> ở một <b>trung tâm thương mại</b> lớn. Đầu tiên, tôi ghé một <b>cửa hàng</b> quần áo để tìm một chiếc áo khoác mới. <b>Giá</b> rất <b>phải chăng</b> vì có một <b>đợt giảm giá</b> đặc biệt, nên tôi được <b>giảm giá</b> khá nhiều. <b>Thu ngân</b> quét <b>mã vạch</b> và đưa cho tôi <b>hóa đơn</b>. Sau đó, tôi dùng <b>tiền mặt</b> để mua ít trái cây tươi ở <b>chợ</b> rồi bỏ tất cả vào <b>túi</b> của mình.`,
-      used: ["Shopping", "Mall", "Store", "Price", "Affordable", "Sale", "Discount", "Cashier", "Barcode", "Receipt", "Cash", "Market", "Bag"]
+      batch1: {
+        title: `Paying at the Store`,
+        text: `At the supermarket, my mother pays with <b>Cash</b>, using both <b>Coin</b>s and paper <b>Note</b>s. The cashier gives her a <b>Bill</b> to check the total price. Then she keeps the <b>Receipt</b> in her bag just in case.`,
+        textVi: `Tại siêu thị, mẹ tôi trả bằng <b>tiền mặt</b>, dùng cả <b>tiền xu</b> và <b>tiền giấy</b>. Người thu ngân đưa cho mẹ một <b>hóa đơn thanh toán</b> để kiểm tra tổng số tiền. Sau đó mẹ giữ <b>hóa đơn</b> trong túi để phòng khi cần.`,
+        used: ["Receipt", "Bill", "Coin", "Note", "Cash"]
+      },
+      batch2: {
+        title: `Buying Things Online`,
+        text: `My sister loves <b>Online shopping</b> because it is easy and fast. Last week, she ordered a dress, and the <b>Shipping</b> only took two days. The <b>Delivery</b> man brought it right to our door. But the dress was too small, so she asked for an <b>Exchange</b>, and later she got a full <b>Refund</b>.`,
+        textVi: `Chị tôi thích <b>mua sắm trực tuyến</b> vì nó dễ dàng và nhanh chóng. Tuần trước, chị đặt một chiếc váy, và việc <b>vận chuyển</b> chỉ mất hai ngày. Người <b>giao hàng</b> mang nó đến tận cửa nhà. Nhưng chiếc váy quá nhỏ, nên chị xin <b>đổi hàng</b>, và sau đó chị được <b>hoàn tiền</b> đầy đủ.`,
+        used: ["Refund", "Exchange", "Delivery", "Shipping", "Online shopping"]
+      }
     }
   },
   {
@@ -4069,10 +4125,18 @@ const KID_TOPICS = [
       }
     ],
     story: {
-      title: `A Visit to the Clinic`,
-      text: `When my sister was feeling <b>Ill</b> with a high <b>Temperature</b> and a <b>Cough</b>, she became a <b>Patient</b> at the local <b>Clinic</b>. The friendly <b>Nurse</b> took her <b>Blood pressure</b>, and the <b>Doctor</b> examined her carefully. He wrote a <b>Prescription</b> for some <b>Medicine</b> and told her she must get plenty of <b>Rest</b> to completely <b>Recover</b>. Thanks to the good <b>Health</b> care, she will <b>Heal</b> soon.`,
-      textVi: `Khi chị tôi cảm thấy <b>bị bệnh</b> với <b>nhiệt độ cơ thể</b> cao và bị <b>ho</b>, chị trở thành <b>bệnh nhân</b> tại <b>phòng khám</b> gần nhà. <b>Y tá</b> thân thiện đo <b>huyết áp</b> cho chị, và <b>bác sĩ</b> khám rất cẩn thận. Bác sĩ viết <b>đơn thuốc</b> để mua <b>thuốc</b> và dặn chị phải <b>nghỉ ngơi</b> thật nhiều để <b>hồi phục</b> hoàn toàn. Nhờ được chăm sóc <b>sức khỏe</b> tốt, chị sẽ <b>lành lại</b> sớm thôi.`,
-      used: ["Ill", "Temperature", "Cough", "Patient", "Clinic", "Nurse", "Blood pressure", "Doctor", "Prescription", "Medicine", "Rest", "Recover", "Health", "Heal"]
+      batch1: {
+        title: `A Visit to the Doctor`,
+        text: `Yesterday I had a high <b>Fever</b>, so my mother took me to the doctor. The doctor gave us a <b>Prescription</b> for some <b>Medicine</b>. I need to take one <b>Pill</b> in the morning and one <b>Tablet</b> at night until I feel better.`,
+        textVi: `Hôm qua tôi bị <b>sốt</b> cao, nên mẹ đưa tôi đi khám bác sĩ. Bác sĩ đưa cho chúng tôi một <b>đơn thuốc</b> để mua <b>thuốc</b>. Tôi cần uống một <b>viên thuốc</b> vào buổi sáng và một <b>thuốc viên</b> vào buổi tối cho đến khi khỏe lại.`,
+        used: ["Medicine", "Pill", "Tablet", "Prescription", "Fever"]
+      },
+      batch2: {
+        title: `Staying Healthy`,
+        text: `Good <b>Nutrition</b> is very important for our health. My father counts his <b>Calories</b> every day to control his <b>Weight</b>. He also checks his <b>Blood pressure</b> and his <b>Heartbeat</b> regularly to make sure his heart is healthy.`,
+        textVi: `<b>Dinh dưỡng</b> tốt rất quan trọng đối với sức khỏe của chúng ta. Bố tôi đếm lượng <b>calo</b> mỗi ngày để kiểm soát <b>cân nặng</b>. Ông cũng thường xuyên kiểm tra <b>huyết áp</b> và <b>nhịp tim</b> để chắc chắn rằng tim mình khỏe mạnh.`,
+        used: ["Nutrition", "Calories", "Weight", "Blood pressure", "Heartbeat"]
+      }
     }
   },
   {
@@ -4131,10 +4195,18 @@ const KID_TOPICS = [
       { en: `Navigation`, ipa: `/ˌnævɪˈɡeɪʃn/`, vi: `định vị, dẫn đường`, img: `https://byetoeic.com/storage/v1/object/public/vocabulary-images/68f47ed19a4e8dd8355a229e_1760871235088.w-43bbdc7cdaf8.webp`, ex: `Use navigation to find the way.`, trVi: `Sử dụng định vị để tìm đường.` , trAnswer: `Use navigation to find the way.`, trKey: `navigation` }
     ],
     story: {
-      title: `A City Journey`,
-      text: `Every day, thousands of <b>Vehicle</b>s use the <b>Highway</b> to cross the city. During the rush hour, <b>Traffic</b> <b>Congestion</b> often causes a huge traffic <b>Jam</b>, and you might get a <b>Delay</b> on your <b>Commute</b>. You can choose to go by <b>Bus</b>, <b>Train</b>, or <b>Subway</b> using your <b>Travel card</b>. Always follow the <b>Traffic light</b>s and signs, respect the <b>Pedestrian</b>s on the <b>Crosswalk</b>, and remember that <b>Navigation</b> helps you find the fastest <b>Route</b> to your <b>Destination</b>.`,
-      textVi: `Mỗi ngày, hàng ngàn <b>phương tiện</b> sử dụng <b>đường cao tốc</b> để băng qua thành phố. Vào giờ cao điểm, tình trạng <b>giao thông</b> <b>tắc nghẽn</b> thường gây ra <b>kẹt xe</b> nghiêm trọng, và bạn có thể bị <b>chậm trễ</b> trong hành trình <b>đi lại hằng ngày</b>. Bạn có thể chọn đi bằng <b>xe buýt</b>, <b>tàu hỏa</b>, hoặc <b>tàu điện ngầm</b> bằng <b>thẻ đi lại</b> của mình. Hãy luôn tuân theo <b>đèn giao thông</b> và biển báo, nhường đường cho <b>người đi bộ</b> ở <b>vạch sang đường</b>, và nhớ rằng hệ thống <b>định vị</b> sẽ giúp bạn tìm ra <b>tuyến đường</b> nhanh nhất đến <b>điểm đến</b> của mình.`,
-      used: ["Vehicle", "Highway", "Traffic", "Congestion", "Jam", "Delay", "Commute", "Bus", "Train", "Subway", "Travel card", "Traffic light", "Pedestrian", "Crosswalk", "Navigation", "Route", "Destination"]
+      batch1: {
+        title: `Getting Around Town`,
+        text: `There are many kinds of <b>Vehicle</b>s on the road. My father drives a <b>Car</b> to work, while my brother rides his <b>Motorbike</b> to school. I prefer riding my <b>Bicycle</b> around the neighborhood, and my sister loves her fast <b>Scooter</b>.`,
+        textVi: `Có rất nhiều loại <b>phương tiện</b> trên đường. Bố tôi lái <b>ô tô</b> đi làm, còn anh tôi đi <b>xe máy</b> đến trường. Tôi thích đi <b>xe đạp</b> quanh khu nhà, còn chị tôi thích chiếc <b>xe tay ga</b> chạy nhanh của mình.`,
+        used: ["Vehicle", "Car", "Motorbike", "Bicycle", "Scooter"]
+      },
+      batch2: {
+        title: `Rules of the Road`,
+        text: `Before driving, my father had to get his driving <b>License</b>. When we take the bus, we must pay the <b>Fare</b> or buy a <b>Ticket</b>. In the city, it is hard to find a <b>Parking</b> spot to <b>Park</b> our car.`,
+        textVi: `Trước khi lái xe, bố tôi phải có <b>giấy phép lái xe</b>. Khi đi xe buýt, chúng tôi phải trả <b>giá vé</b> hoặc mua <b>vé</b>. Ở thành phố, rất khó để tìm một chỗ <b>bãi đỗ xe</b> để <b>đỗ xe</b> của chúng tôi.`,
+        used: ["Fare", "Ticket", "License", "Parking", "Park"]
+      }
     }
   },
   {
@@ -4193,10 +4265,18 @@ const KID_TOPICS = [
       { en: `Cloud`, ipa: `/klaʊd/`, vi: `điện toán đám mây`, img: `https://byetoeic.com/storage/v1/object/public/vocabulary-images/68f47ed99a4e8dd8355a2331_1760871617547.w-cfc48de323f0.webp`, ex: `I save my photos in the cloud.`, trVi: `Tôi lưu ảnh trên đám mây.` , trAnswer: `I save my photos in the cloud.`, trKey: `cloud` }
     ],
     story: {
-      title: `Living in a Digital World`,
-      text: `In our modern world, <b>Technology</b> is everywhere. We use a <b>Computer</b> or a <b>Laptop</b> to work, and a <b>Smartphone</b> to connect with friends. We often <b>Download</b> apps and <b>Upload</b> files to the <b>Cloud</b>. When we need information, we visit a <b>Website</b> on a <b>Browser</b>. We keep our data safe with a strong <b>Password</b>, but sometimes we spend too much <b>Screen time</b> on <b>Social media</b>.`,
-      textVi: `Trong thế giới hiện đại ngày nay, <b>công nghệ</b> có mặt ở khắp mọi nơi. Chúng ta dùng <b>máy tính</b> hoặc <b>máy tính xách tay</b> để làm việc, và <b>điện thoại thông minh</b> để kết nối với bạn bè. Chúng ta thường <b>tải xuống</b> các ứng dụng và <b>tải lên</b> tệp tin lên <b>điện toán đám mây</b>. Khi cần thông tin, chúng ta truy cập một <b>trang web</b> bằng <b>trình duyệt</b>. Chúng ta giữ an toàn cho dữ liệu bằng một <b>mật khẩu</b> mạnh, nhưng đôi khi lại dành quá nhiều <b>thời gian dùng màn hình</b> cho <b>mạng xã hội</b>.`,
-      used: ["Technology", "Computer", "Laptop", "Smartphone", "Download", "Upload", "Cloud", "Website", "Browser", "Password", "Screen time", "Social media"]
+      batch1: {
+        title: `My Favorite Gadgets`,
+        text: `I love listening to music through my <b>Speaker</b> at home, but outside I use my <b>Earphones</b>. My phone's <b>Battery</b> is low, so I need to connect the <b>Cable</b> to the <b>Charger</b>.`,
+        textVi: `Tôi thích nghe nhạc qua <b>loa</b> ở nhà, nhưng khi ra ngoài tôi dùng <b>tai nghe</b>. <b>Pin</b> điện thoại của tôi sắp hết, nên tôi cần cắm <b>dây cáp</b> vào <b>sạc</b>.`,
+        used: ["Speaker", "Earphones", "Cable", "Charger", "Battery"]
+      },
+      batch2: {
+        title: `Working on the Computer`,
+        text: `My sister keeps every <b>File</b> neatly inside a <b>Folder</b> on her computer. She is writing an important <b>Document</b> for school. Later, she will make a <b>Video call</b> with her friend and <b>Chat</b> about their homework.`,
+        textVi: `Chị tôi lưu mỗi <b>tập tin</b> gọn gàng trong một <b>thư mục</b> trên máy tính. Chị đang viết một <b>tài liệu</b> quan trọng cho trường học. Sau đó, chị sẽ thực hiện một <b>cuộc gọi video</b> với bạn và <b>trò chuyện</b> về bài tập.`,
+        used: ["File", "Folder", "Document", "Video call", "Chat"]
+      }
     }
   },
   {
@@ -4256,10 +4336,18 @@ const KID_TOPICS = [
       { en: `Compassionate`, ipa: `/kəmˈpæʃənət/`, vi: `giàu lòng trắc ẩn`, img: `https://byetoeic.com/storage/v1/object/public/vocabulary-images/68f47ef79a4e8dd8355a23d5_1760870498808.w-3ee791a89394.webp`, ex: `He is a compassionate leader.`, trVi: `Anh ấy là một nhà lãnh đạo giàu lòng trắc ẩn.` , trAnswer: `He is a compassionate leader.`, trKey: `compassionate` }
     ],
     story: {
-      title: `Understanding Our Feelings`,
-      text: `We feel <b>Happy</b> when we achieve a <b>Goal</b> and <b>Grateful</b> for what we have. Sometimes we get <b>Annoyed</b> or <b>Frustrated</b>, and feel <b>Upset</b>. It is okay to be <b>Sad</b> or <b>Lonely</b> at times. We should be <b>Compassionate</b> to others and stay <b>Calm</b>. Even when we feel <b>Stressed</b>, we can find a way to stay <b>Motivated</b> and <b>Hopeful</b> about our day.`,
-      textVi: `Chúng ta cảm thấy <b>vui vẻ</b> khi đạt được một <b>mục tiêu</b> và <b>biết ơn</b> vì những gì mình đang có. Đôi khi chúng ta cảm thấy <b>bực mình</b> hoặc <b>thất vọng</b>, và cảm thấy <b>buồn bực</b>. Đôi lúc cảm thấy <b>buồn</b> hay <b>cô đơn</b> cũng không sao cả. Chúng ta nên <b>giàu lòng trắc ẩn</b> với người khác và giữ <b>bình tĩnh</b>. Ngay cả khi cảm thấy <b>căng thẳng</b>, chúng ta vẫn có thể tìm cách giữ <b>động lực</b> và <b>hy vọng</b> cho ngày hôm đó.`,
-      used: ["Happy", "Grateful", "Annoyed", "Frustrated", "Upset", "Sad", "Lonely", "Compassionate", "Calm", "Stressed", "Motivated", "Hopeful"]
+      batch1: {
+        title: `A Day of Mixed Feelings`,
+        text: `Today at school, I felt <b>Stressed</b> because of the big test. During a long lecture, I got <b>Bored</b> and started to daydream. When the teacher asked a hard question, I felt <b>Confused</b>. I also felt <b>Embarrassed</b> when I answered wrong, and a little <b>Jealous</b> when my friend got a perfect score.`,
+        textVi: `Hôm nay ở trường, tôi cảm thấy <b>căng thẳng</b> vì bài kiểm tra lớn. Trong một bài giảng dài, tôi cảm thấy <b>chán</b> và bắt đầu mơ mộng. Khi cô giáo hỏi một câu khó, tôi cảm thấy <b>bối rối</b>. Tôi cũng cảm thấy <b>xấu hổ</b> khi trả lời sai, và hơi <b>ghen tị</b> khi bạn tôi đạt điểm tuyệt đối.`,
+        used: ["Stressed", "Bored", "Confused", "Embarrassed", "Jealous"]
+      },
+      batch2: {
+        title: `Understanding My Feelings`,
+        text: `Sometimes my little brother makes noise and I feel <b>Annoyed</b>. When I am not sure about my answer, I feel <b>Doubtful</b>. During a thunderstorm, I feel a bit <b>Fearful</b>. Once, after failing a test, I felt <b>Hopeless</b>, but my mother helped me so I would not feel <b>Overwhelmed</b>.`,
+        textVi: `Đôi khi em trai tôi gây ồn ào và tôi cảm thấy <b>bực mình</b>. Khi không chắc về câu trả lời của mình, tôi cảm thấy <b>nghi ngờ</b>. Trong một cơn giông bão, tôi cảm thấy hơi <b>sợ sệt</b>. Có lần, sau khi trượt một bài kiểm tra, tôi cảm thấy <b>tuyệt vọng</b>, nhưng mẹ đã giúp tôi để tôi không cảm thấy <b>quá tải</b>.`,
+        used: ["Annoyed", "Doubtful", "Fearful", "Hopeless", "Overwhelmed"]
+      }
     }
   },
   {
@@ -4318,10 +4406,18 @@ const KID_TOPICS = [
       { en: `Go for a run`, ipa: `/ɡəʊ fɔːr ə rʌn/`, vi: `đi chạy bộ`, img: `https://byetoeic.com/storage/v1/object/public/vocabulary-images/68f47f249a4e8dd8355a2476_1760872363712.w-cc981212679a.webp`, ex: `I go for a run every morning.`, trVi: `Tôi đi chạy bộ mỗi sáng.` , trAnswer: `I go for a run every morning.`, trKey: `go for a run` }
     ],
     story: {
-      title: `My Busy Day`,
-      text: `Every morning, I <b>Wake up</b> and <b>Get up</b> when I <b>Set the alarm</b>. I <b>Make the bed</b>, <b>Brush teeth</b>, <b>Wash face</b>, and <b>Take a shower</b>. After I <b>Get dressed</b>, I <b>Have breakfast</b> and <b>Go to school</b>. At school, I <b>Attend class</b> and <b>Study</b> hard. During the break, I <b>Have lunch</b>, then I <b>Go for a run</b> or <b>Take a walk</b> to <b>Relax</b>. In the evening, I <b>Do homework</b>, <b>Cook dinner</b>, and <b>Watch TV</b>. Before I <b>Go to bed</b>, I <b>Turn off the light</b> and <b>Fall asleep</b>.`,
-      textVi: `Mỗi sáng, tôi <b>thức dậy</b> và <b>ra khỏi giường</b> khi <b>đặt báo thức</b> reo. Tôi <b>dọn giường</b>, <b>đánh răng</b>, <b>rửa mặt</b>, và <b>tắm vòi sen</b>. Sau khi <b>mặc quần áo</b>, tôi <b>ăn sáng</b> rồi <b>đi học</b>. Ở trường, tôi <b>tham gia lớp học</b> và <b>học</b> chăm chỉ. Trong giờ nghỉ, tôi <b>ăn trưa</b>, sau đó <b>đi chạy bộ</b> hoặc <b>đi dạo</b> để <b>thư giãn</b>. Vào buổi tối, tôi <b>làm bài tập về nhà</b>, <b>nấu bữa tối</b>, và <b>xem TV</b>. Trước khi <b>đi ngủ</b>, tôi <b>tắt đèn</b> và <b>chìm vào giấc ngủ</b>.`,
-      used: ["Wake up", "Get up", "Set the alarm", "Make the bed", "Brush teeth", "Wash face", "Take a shower", "Get dressed", "Have breakfast", "Go to school", "Attend class", "Study", "Have lunch", "Go for a run", "Take a walk", "Relax", "Do homework", "Cook dinner", "Watch TV", "Go to bed", "Turn off the light", "Fall asleep"]
+      batch1: {
+        title: `My Daily Routine`,
+        text: `Every day, my father goes to <b>Work</b> and my brother has to <b>Study</b> hard for university. I <b>Attend class</b> from Monday to Friday. After school, we <b>Have lunch</b> together, and then I like to <b>Take a nap</b> before doing homework.`,
+        textVi: `Mỗi ngày, bố tôi đi <b>làm việc</b> còn anh tôi phải <b>học</b> chăm chỉ cho trường đại học. Tôi <b>tham gia lớp học</b> từ thứ Hai đến thứ Sáu. Sau giờ học, chúng tôi <b>ăn trưa</b> cùng nhau, và sau đó tôi thích <b>chợp mắt</b> trước khi làm bài tập.`,
+        used: ["Work", "Study", "Attend class", "Have lunch", "Take a nap"]
+      },
+      batch2: {
+        title: `Getting Ready for Bed`,
+        text: `Every evening, I like to <b>Take a bath</b> before dinner. After that, I <b>Brush hair</b> in front of the mirror. Before going to sleep, I <b>Pack a bag</b> for school tomorrow and <b>Set the alarm</b> on my phone. Finally, I <b>Turn off the light</b> and go to sleep.`,
+        textVi: `Mỗi tối, tôi thích <b>tắm bồn</b> trước bữa tối. Sau đó, tôi <b>chải tóc</b> trước gương. Trước khi đi ngủ, tôi <b>chuẩn bị cặp</b> cho ngày mai và <b>đặt báo thức</b> trên điện thoại. Cuối cùng, tôi <b>tắt đèn</b> và đi ngủ.`,
+        used: ["Take a bath", "Brush hair", "Pack a bag", "Set the alarm", "Turn off the light"]
+      }
     }
   },
   {
@@ -4380,10 +4476,18 @@ const KID_TOPICS = [
       { en: `Speaker`, ipa: `/ˈspiːkə(r)/`, vi: `loa`, img: `https://byetoeic.com/storage/v1/object/public/vocabulary-images/68f47f729a4e8dd8355a25bf_1760871334496.w-fd56e4aedf4b.webp`, ex: `The music comes from the speaker.`, trVi: `Âm nhạc phát ra từ loa.` , trAnswer: `The music comes from the speaker.`, trKey: `speaker` }
     ],
     story: {
-      title: `A Day at the Art Gallery`,
-      text: `Today, we visited an art <b>Gallery</b> for an <b>Exhibition</b>. The <b>Artist</b> showed us a beautiful <b>Painting</b> and a <b>Sculpture</b>. I was <b>Amazed</b> by the <b>Visual</b> effects and the <b>Animation</b> in a short <b>Movie</b>. We also talked to a <b>Musician</b> who plays the <b>Guitar</b> and <b>Piano</b>. He played a <b>Song</b>, and we all felt <b>Inspired</b> by the <b>Sound</b>. It was a day full of <b>Art</b> and <b>Entertainment</b>.`,
-      textVi: `Hôm nay, chúng tôi đến thăm một <b>phòng trưng bày nghệ thuật</b> nhân dịp một <b>triển lãm</b>. <b>Nghệ sĩ</b> đã cho chúng tôi xem một <b>bức tranh</b> đẹp và một tác phẩm <b>điêu khắc</b>. Tôi <b>kinh ngạc</b> trước hiệu ứng <b>hình ảnh</b> và phần <b>hoạt hình</b> trong một bộ <b>phim</b> ngắn. Chúng tôi cũng trò chuyện với một <b>nhạc sĩ</b> chơi <b>đàn guitar</b> và <b>đàn piano</b>. Anh ấy chơi một <b>bài hát</b>, và tất cả chúng tôi đều cảm thấy <b>được truyền cảm hứng</b> bởi <b>âm thanh</b> đó. Đó là một ngày tràn ngập <b>nghệ thuật</b> và <b>giải trí</b>.`,
-      used: ["Gallery", "Exhibition", "Artist", "Painting", "Sculpture", "Amazed", "Visual", "Animation", "Movie", "Musician", "Guitar", "Piano", "Song", "Inspired", "Sound", "Art", "Entertainment"]
+      batch1: {
+        title: `A Night of Music`,
+        text: `Last night, my favorite <b>Band</b> performed a wonderful <b>Concert</b>. They played every song from their new <b>Album</b>. On stage, a talented <b>Dancer</b> joined them to <b>Dance</b> along with the music.`,
+        textVi: `Tối qua, <b>ban nhạc</b> yêu thích của tôi đã biểu diễn một <b>buổi hòa nhạc</b> tuyệt vời. Họ chơi mọi bài hát trong <b>album nhạc</b> mới. Trên sân khấu, một <b>vũ công</b> tài năng đã cùng tham gia <b>nhảy</b> theo nhạc.`,
+        used: ["Band", "Concert", "Album", "Dance", "Dancer"]
+      },
+      batch2: {
+        title: `Making a Movie`,
+        text: `Making a good movie needs great <b>Sound</b> and beautiful <b>Light</b>. Artists also work hard on the <b>Visual</b> effects. My favorite <b>Animation</b> studio makes a funny <b>Cartoon</b> that I watch every weekend.`,
+        textVi: `Làm một bộ phim hay cần có <b>âm thanh</b> tuyệt vời và <b>ánh sáng</b> đẹp. Các nghệ sĩ cũng làm việc chăm chỉ cho hiệu ứng <b>hình ảnh</b>. Xưởng phim <b>hoạt hình</b> yêu thích của tôi làm một bộ <b>phim hoạt hình</b> vui nhộn mà tôi xem mỗi cuối tuần.`,
+        used: ["Sound", "Light", "Visual", "Animation", "Cartoon"]
+      }
     }
   },
   {
@@ -4443,10 +4547,18 @@ const KID_TOPICS = [
       { en: `Paw`, ipa: `/pɔː/`, vi: `chân (động vật)`, img: `https://byetoeic.com/storage/v1/object/public/vocabulary-images/68f47f9f9a4e8dd8355a2663_1760873491855.w-b1b3ae436d3b.webp`, ex: `The dog has a hurt paw.`, trVi: `Chú chó bị thương ở chân.` , trAnswer: `The dog has a hurt paw.`, trKey: `paw` }
     ],
     story: {
-      title: `Life in the Wild`,
-      text: `Every <b>Animal</b> lives in its own home. A <b>Lion</b> and a <b>Tiger</b> live in the wild, while a <b>Dog</b> or a <b>Cat</b> might be your <b>Pet</b>. In the farm, we see a <b>Cow</b>, a <b>Bull</b>, a <b>Sheep</b>, a <b>Goat</b>, a <b>Pig</b>, a <b>Chicken</b>, a <b>Duck</b>, a <b>Goose</b>, and a <b>Rooster</b>. Some animals like a <b>Bird</b>, a <b>Butterfly</b>, or a <b>Bee</b> can fly, and others like a <b>Fish</b>, a <b>Whale</b>, a <b>Dolphin</b>, or an <b>Octopus</b> swim in the water. An <b>Elephant</b> and a <b>Giraffe</b> are huge, but an <b>Ant</b> is very small. Whether it has a <b>Paw</b> or wings, every animal is special.`,
-      textVi: `Mỗi <b>động vật</b> đều sống trong ngôi nhà riêng của mình. <b>Sư tử</b> và <b>hổ</b> sống trong tự nhiên hoang dã, còn <b>chó</b> hay <b>mèo</b> thì có thể là <b>thú cưng</b> của bạn. Ở nông trại, chúng ta thấy <b>bò cái</b>, <b>bò đực</b>, <b>cừu</b>, <b>dê</b>, <b>heo</b>, <b>gà</b>, <b>vịt</b>, <b>ngỗng</b>, và <b>gà trống</b>. Một số loài như <b>chim</b>, <b>bướm</b>, hay <b>ong</b> có thể bay, còn những loài khác như <b>cá</b>, <b>cá voi</b>, <b>cá heo</b>, hay <b>bạch tuộc</b> thì bơi dưới nước. <b>Voi</b> và <b>hươu cao cổ</b> rất to lớn, nhưng <b>kiến</b> thì lại rất nhỏ bé. Dù có <b>chân</b> hay có cánh, mỗi loài động vật đều đặc biệt.`,
-      used: ["Animal", "Lion", "Tiger", "Dog", "Cat", "Pet", "Cow", "Bull", "Sheep", "Goat", "Pig", "Chicken", "Duck", "Goose", "Rooster", "Bird", "Butterfly", "Bee", "Fish", "Whale", "Dolphin", "Octopus", "Elephant", "Giraffe", "Ant", "Paw"]
+      batch1: {
+        title: `A Trip to the Zoo`,
+        text: `At the zoo, we saw a huge <b>Elephant</b> spraying water with its trunk. Nearby, a fierce <b>Tiger</b> and a proud <b>Lion</b> were resting under a tree. A big brown <b>Bear</b> was sleeping, while a funny <b>Monkey</b> jumped from branch to branch.`,
+        textVi: `Ở sở thú, chúng tôi thấy một chú <b>voi</b> to lớn phun nước bằng vòi của nó. Gần đó, một chú <b>hổ</b> dữ tợn và một chú <b>sư tử</b> oai vệ đang nghỉ ngơi dưới gốc cây. Một chú <b>gấu</b> nâu to đang ngủ, trong khi một chú <b>khỉ</b> hài hước nhảy từ cành này sang cành khác.`,
+        used: ["Elephant", "Tiger", "Lion", "Bear", "Monkey"]
+      },
+      batch2: {
+        title: `Creatures of Water`,
+        text: `Near the pond, a green <b>Frog</b> jumped into the water while a long <b>Crocodile</b> floated silently nearby. On the beach, we found a small <b>Crab</b> walking sideways. At the aquarium, we watched a smart <b>Octopus</b> and a giant <b>Whale</b> swimming gracefully.`,
+        textVi: `Gần ao, một chú <b>ếch</b> xanh nhảy xuống nước trong khi một con <b>cá sấu</b> dài nổi lặng lẽ gần đó. Trên bãi biển, chúng tôi tìm thấy một con <b>cua</b> nhỏ đi ngang. Tại thủy cung, chúng tôi xem một con <b>bạch tuộc</b> thông minh và một con <b>cá voi</b> khổng lồ bơi lượn duyên dáng.`,
+        used: ["Frog", "Crocodile", "Crab", "Octopus", "Whale"]
+      }
     }
   },
   {
@@ -4506,10 +4618,18 @@ const KID_TOPICS = [
       { en: `Earth`, ipa: `/ɜːθ/`, vi: `Trái Đất`, img: `https://byetoeic.com/storage/v1/object/public/vocabulary-images/68f47fd29a4e8dd8355a270a_1760873878468.w-ba120943b22f.webp`, ex: `We must take care of the Earth.`, trVi: `Chúng ta phải chăm sóc Trái Đất.` , trAnswer: `We must take care of the Earth.`, trKey: `earth` }
     ],
     story: {
-      title: `Saving Our Planet`,
-      text: `We live on a beautiful <b>Planet</b> called <b>Earth</b>. <b>Nature</b> provides us with <b>Air</b>, <b>Water</b>, and <b>Land</b>. However, <b>Pollution</b> like <b>Air pollution</b> and <b>Water pollution</b> from <b>Waste</b> and <b>Trash</b> is hurting our <b>Ecosystem</b> and <b>Environment</b>. We must <b>Reduce</b>, <b>Reuse</b>, and <b>Recycle</b> to <b>Protect</b> our home. We need <b>Conservation</b> of the <b>Rainforest</b> and <b>Habitat</b> for <b>Endangered</b> animals so they don't become <b>Extinct</b>. Let's make choices that are <b>Eco-friendly</b> and choose <b>Solar energy</b> or <b>Wind energy</b> to <b>Save</b> the world.`,
-      textVi: `Chúng ta sống trên một <b>hành tinh</b> xinh đẹp có tên <b>Trái Đất</b>. <b>Thiên nhiên</b> ban tặng cho chúng ta <b>không khí</b>, <b>nước</b>, và <b>đất đai</b>. Tuy nhiên, <b>ô nhiễm</b> như <b>ô nhiễm không khí</b> và <b>ô nhiễm nước</b> do <b>rác thải</b> và <b>rác</b> gây ra đang làm tổn hại <b>hệ sinh thái</b> và <b>môi trường</b> của chúng ta. Chúng ta phải <b>giảm thiểu</b>, <b>tái sử dụng</b>, và <b>tái chế</b> để <b>bảo vệ</b> ngôi nhà chung. Chúng ta cần <b>bảo tồn</b> <b>rừng mưa nhiệt đới</b> và <b>môi trường sống</b> cho các loài động vật <b>bị đe dọa tuyệt chủng</b> để chúng không bị <b>tuyệt chủng</b>. Hãy đưa ra những lựa chọn <b>thân thiện với môi trường</b> và chọn <b>năng lượng mặt trời</b> hay <b>năng lượng gió</b> để <b>cứu lấy</b> thế giới này.`,
-      used: ["Planet", "Earth", "Nature", "Air", "Water", "Land", "Pollution", "Air pollution", "Water pollution", "Waste", "Trash", "Ecosystem", "Environment", "Reduce", "Reuse", "Recycle", "Protect", "Conservation", "Rainforest", "Habitat", "Endangered", "Extinct", "Eco-friendly", "Solar energy", "Wind energy", "Save"]
+      batch1: {
+        title: `Our Amazing Planet`,
+        text: `Our planet has a huge <b>Ocean</b> and many smaller <b>Sea</b>s full of life. In hot countries, there is a dry <b>Desert</b> with very little rain. Every place on Earth has its own <b>Climate</b>, and the daily <b>Weather</b> can change quickly.`,
+        textVi: `Hành tinh của chúng ta có một <b>đại dương</b> rộng lớn và nhiều <b>biển</b> nhỏ hơn đầy sự sống. Ở những nước nóng, có <b>sa mạc</b> khô cằn với rất ít mưa. Mỗi nơi trên Trái Đất đều có <b>khí hậu</b> riêng, và <b>thời tiết</b> hằng ngày có thể thay đổi nhanh chóng.`,
+        used: ["Ocean", "Sea", "Desert", "Climate", "Weather"]
+      },
+      batch2: {
+        title: `Protecting Our Earth`,
+        text: `Scientists are worried about <b>Global warming</b> and its effects on <b>Climate change</b>. To help our planet, many countries now use <b>Wind energy</b> and other <b>Renewable</b> resources. We should all try to live in an <b>Environment-friendly</b> way.`,
+        textVi: `Các nhà khoa học lo ngại về <b>hiện tượng nóng lên toàn cầu</b> và ảnh hưởng của nó đến <b>biến đổi khí hậu</b>. Để giúp hành tinh, nhiều quốc gia hiện dùng <b>năng lượng gió</b> và các nguồn <b>có thể tái tạo</b> khác. Tất cả chúng ta nên cố gắng sống theo cách <b>thân thiện với môi trường</b>.`,
+        used: ["Wind energy", "Renewable", "Global warming", "Climate change", "Environment-friendly"]
+      }
     }
   },
   {
@@ -4568,10 +4688,18 @@ const KID_TOPICS = [
       { en: `Painting`, ipa: `/ˈpeɪntɪŋ/`, vi: `bức tranh`, img: `https://byetoeic.com/storage/v1/object/public/vocabulary-images/68f47ff99a4e8dd8355a27ab_1760874244189.w-475932be020e.webp`, ex: `The painting is beautiful.`, trVi: `Bức tranh rất đẹp.` , trAnswer: `The painting is beautiful.`, trKey: `painting` }
     ],
     story: {
-      title: `My Cozy Home`,
-      text: `I live in a comfortable <b>House</b>. My <b>Bedroom</b> has a soft <b>Bed</b> with a warm <b>Blanket</b> and a comfortable <b>Mattress</b>, and a <b>Pillow</b>. In the <b>Living room</b>, there is a big <b>Sofa</b> and a <b>Carpet</b> on the <b>Floor</b>. My <b>Kitchen</b> has a <b>Stove</b>, a <b>Fridge</b>, and a <b>Microwave</b>. I often read a <b>Painting</b> on the <b>Wall</b> while sitting on a <b>Chair</b> at my <b>Desk</b>. I love my <b>Home</b>!`,
-      textVi: `Tôi sống trong một <b>ngôi nhà</b> tiện nghi. <b>Phòng ngủ</b> của tôi có một chiếc <b>giường</b> êm ái với <b>chăn</b> ấm, một tấm <b>nệm</b> thoải mái, và một chiếc <b>gối</b>. Trong <b>phòng khách</b>, có một chiếc <b>ghế sofa</b> lớn và một tấm <b>thảm trải sàn</b> trên <b>sàn nhà</b>. <b>Nhà bếp</b> của tôi có <b>bếp lò</b>, <b>tủ lạnh</b>, và <b>lò vi sóng</b>. Tôi thường ngắm một <b>bức tranh</b> treo trên <b>tường</b> trong khi ngồi trên <b>ghế</b> tại <b>bàn làm việc</b> của mình. Tôi yêu <b>ngôi nhà</b> của mình!`,
-      used: ["House", "Bedroom", "Bed", "Blanket", "Mattress", "Pillow", "Living room", "Sofa", "Carpet", "Floor", "Kitchen", "Stove", "Fridge", "Microwave", "Painting", "Wall", "Chair", "Desk", "Home"]
+      batch1: {
+        title: `My New House`,
+        text: `My family just moved into a new house. I love standing on the <b>Balcony</b> to enjoy the fresh air. My father parks his car in the <b>Garage</b>, and my mother grows flowers in the <b>Garden</b>. The <b>Wall</b>s are painted white, and the <b>Floor</b> is made of wood.`,
+        textVi: `Gia đình tôi vừa chuyển đến một ngôi nhà mới. Tôi thích đứng trên <b>ban công</b> để hít thở không khí trong lành. Bố tôi đỗ xe trong <b>nhà để xe</b>, còn mẹ tôi trồng hoa trong <b>khu vườn</b>. <b>Tường</b> nhà được sơn màu trắng, và <b>sàn nhà</b> được làm bằng gỗ.`,
+        used: ["Balcony", "Garage", "Garden", "Wall", "Floor"]
+      },
+      batch2: {
+        title: `Inside My Room`,
+        text: `In my bedroom, I have a small <b>Lamp</b> on my desk for reading at night. There is also a <b>Light</b> on the ceiling and a <b>Fan</b> to keep me cool. On hot days, we turn on the <b>Air conditioner</b>. A round <b>Clock</b> on the wall helps me know the time.`,
+        textVi: `Trong phòng ngủ, tôi có một chiếc <b>đèn bàn</b> nhỏ trên bàn học để đọc sách vào ban đêm. Trên trần nhà cũng có một chiếc <b>đèn</b> và một chiếc <b>quạt</b> để làm mát. Vào những ngày nóng, chúng tôi bật <b>máy điều hòa</b>. Một chiếc <b>đồng hồ</b> tròn trên tường giúp tôi biết giờ.`,
+        used: ["Lamp", "Light", "Fan", "Air conditioner", "Clock"]
+      }
     }
   },
   {
@@ -4630,10 +4758,18 @@ const KID_TOPICS = [
     { en: `Edge`, ipa: `/edʒ/`, vi: `cạnh`, img: `https://byetoeic.com/storage/v1/object/public/vocabulary-images/68f480269a4e8dd8355a284c_1760874601931.w-e3c65096b769.webp`, ex: `Be careful at the edge.`, trVi: `Hãy cẩn thận ở phần cạnh.` , trAnswer: `Be careful at the edge.`, trKey: `edge` }
   ],
   story: {
-    title: `Shapes and Colors Everywhere`,
-    text: `Look at the world! There is so much <b>Color</b>. The sky is <b>Blue</b>, the grass is <b>Green</b>, and the sun is <b>Yellow</b>. Everything has a <b>Shape</b> too. A <b>Circle</b> ball, a <b>Square</b> box, or a <b>Triangle</b> slice of pizza. Some things are <b>Thick</b> or <b>Thin</b>, <b>Wide</b> or <b>Narrow</b>. Even a <b>Star</b> or a <b>Heart</b> makes the world beautiful and <b>Colorful</b>.`,
-    textVi: `Hãy nhìn ra thế giới xung quanh! Có rất nhiều <b>màu sắc</b>. Bầu trời <b>màu xanh dương</b>, cỏ <b>màu xanh lá cây</b>, và mặt trời <b>màu vàng</b>. Mọi thứ cũng đều có <b>hình dạng</b>. Một quả bóng <b>hình tròn</b>, một chiếc hộp <b>hình vuông</b>, hay một miếng pizza <b>hình tam giác</b>. Một số thứ thì <b>dày</b> hay <b>mỏng</b>, <b>rộng</b> hay <b>hẹp</b>. Ngay cả một <b>hình ngôi sao</b> hay <b>hình trái tim</b> cũng làm cho thế giới trở nên đẹp đẽ và <b>sặc sỡ</b>.`,
-    used: ["Color", "Blue", "Green", "Yellow", "Shape", "Circle", "Square", "Triangle", "Thick", "Thin", "Wide", "Narrow", "Star", "Heart", "Colorful"]
+    batch1: {
+      title: `Painting a Picture`,
+      text: `In art class, I painted a little bear in <b>Brown</b> and a cloud in <b>Gray</b>. The sky above is <b>Light blue</b>, and the tall trees are <b>Dark green</b>. My friend's shirt in the picture is <b>Navy</b>.`,
+      textVi: `Trong giờ mỹ thuật, tôi vẽ một chú gấu nhỏ màu <b>nâu</b> và một đám mây màu <b>xám</b>. Bầu trời phía trên có màu <b>xanh nhạt</b>, và những cây cao có màu <b>xanh đậm</b>. Áo của bạn tôi trong bức tranh có màu <b>xanh hải quân</b>.`,
+      used: ["Brown", "Gray", "Light blue", "Dark green", "Navy"]
+    },
+    batch2: {
+      title: `Shapes All Around`,
+      text: `A ball is a perfect <b>Sphere</b>, while an ice-cream is shaped like a <b>Cone</b>. A can of soda has the shape of a <b>Cylinder</b>. A table top is <b>Flat</b>, and its legs are <b>Straight</b>.`,
+      textVi: `Một quả bóng là một <b>khối cầu</b> hoàn hảo, trong khi một cây kem có hình <b>khối nón</b>. Một lon nước ngọt có hình <b>hình trụ</b>. Mặt bàn thì <b>phẳng</b>, và chân bàn thì <b>thẳng</b>.`,
+      used: ["Sphere", "Cone", "Cylinder", "Flat", "Straight"]
+    }
   }
   },
   {
@@ -4692,10 +4828,18 @@ const KID_TOPICS = [
       { en: `Yoga`, ipa: `/ˈjəʊɡə/`, vi: `yoga`, img: `https://byetoeic.com/storage/v1/object/public/vocabulary-images/68f47f539a4e8dd8355a251e_1760872758640.w-0298e4f16e69.webp`, ex: `I do yoga every morning.`, trVi: `Tôi tập yoga mỗi sáng.` , trAnswer: `I do yoga every morning.`, trKey: `yoga` }
     ],
     story: {
-      title: `The Big Match`,
-      text: `Today is the final <b>Match</b> of the <b>Tournament</b>! Our <b>Team</b> of <b>Athlete</b>s is ready, and the <b>Coach</b> is very <b>Enthusiastic</b>. The <b>Player</b>s are wearing their <b>Uniform</b> and have all their <b>Equipment</b> like <b>Racket</b> and <b>Ball</b>. The <b>Fan</b>s are cheering in the <b>Stadium</b>. When the <b>Referee whistle</b> blows, the <b>Match</b> begins. They run, <b>Kick</b>, <b>Throw</b>, and <b>Catch</b> to <b>Score</b> a <b>Goal</b>. In the end, they <b>Win</b> the game and get a gold <b>Medal</b>!`,
-      textVi: `Hôm nay là <b>trận đấu</b> chung kết của <b>giải đấu</b>! <b>Đội</b> <b>vận động viên</b> của chúng tôi đã sẵn sàng, và <b>huấn luyện viên</b> thì vô cùng <b>nhiệt huyết</b>. Các <b>cầu thủ</b> mặc <b>đồng phục thể thao</b> và mang đầy đủ <b>dụng cụ</b> như <b>vợt</b> và <b>quả bóng</b>. <b>Người hâm mộ</b> đang cổ vũ trong <b>sân vận động</b>. Khi <b>còi trọng tài</b> vang lên, <b>trận đấu</b> bắt đầu. Họ chạy, <b>đá</b>, <b>ném</b>, và <b>bắt</b> bóng để <b>ghi điểm</b> một <b>bàn thắng</b>. Cuối cùng, họ <b>thắng</b> trận đấu và nhận được <b>huy chương</b> vàng!`,
-      used: ["Match", "Tournament", "Team", "Athlete", "Coach", "Enthusiastic", "Player", "Uniform", "Equipment", "Racket", "Ball", "Fan", "Stadium", "Referee whistle", "Kick", "Throw", "Catch", "Score", "Goal", "Win", "Medal"]
+      batch1: {
+        title: `A Big Sports Day`,
+        text: `Today, I played tennis on the <b>Court</b> near my house. My brother had a football <b>Match</b> in a school <b>Tournament</b>. He scored a great <b>Goal</b> and his team won the first <b>Medal</b> of the year!`,
+        textVi: `Hôm nay, tôi chơi tennis trên <b>sân</b> gần nhà. Anh tôi có một <b>trận đấu</b> bóng đá trong một <b>giải đấu</b> của trường. Anh ghi một <b>bàn thắng</b> tuyệt vời và đội của anh giành được <b>huy chương</b> đầu tiên trong năm!`,
+        used: ["Court", "Match", "Tournament", "Medal", "Goal"]
+      },
+      batch2: {
+        title: `Trying Different Sports`,
+        text: `My friend plays baseball and always brings his <b>Bat</b> and <b>Helmet</b>. I love <b>Swimming</b> at the pool every summer. On weekends, we play <b>Basketball</b> or <b>Football</b> with our neighbors.`,
+        textVi: `Bạn tôi chơi bóng chày và luôn mang theo <b>gậy bóng chày</b> và <b>mũ bảo hộ</b>. Tôi thích <b>bơi lội</b> ở hồ bơi mỗi mùa hè. Vào cuối tuần, chúng tôi chơi <b>bóng rổ</b> hoặc <b>bóng đá</b> với hàng xóm.`,
+        used: ["Bat", "Helmet", "Swimming", "Basketball", "Football"]
+      }
     }
   },
   {
@@ -4754,10 +4898,18 @@ const KID_TOPICS = [
       { en: `Umbrella`, ipa: `/ʌmˈbrelə/`, vi: `ô`, img: `https://byetoeic.com/storage/v1/object/public/vocabulary-images/68f47e909a4e8dd8355a21fd_1760870862032.w-05a131007e62.webp`, ex: `Don't forget your umbrella.`, trVi: `Đừng quên mang theo ô của bạn.`, trAnswer: `Don't forget your umbrella.`, trKey: `umbrella` },
     ],
     story: {
-      title: `The Changing Weather`,
-      text: `Every day, the <b>Weather</b> changes. Sometimes it is <b>Sunny</b> and hot under the <b>Sun</b>, but other times it can be <b>Cloudy</b> or <b>Rainy</b>. In winter, the air is <b>Cold</b> and there might be <b>Snowy</b> days with <b>Ice</b> everywhere. I like watching the <b>Sunrise</b> and <b>Sunset</b> from the <b>Sky</b>, and I always carry an <b>Umbrella</b> if the <b>Forecast</b> says it will be a <b>Stormy</b> day.`,
-      textVi: `Mỗi ngày, <b>thời tiết</b> đều thay đổi. Đôi khi trời <b>nắng</b> và nóng dưới <b>mặt trời</b>, nhưng có lúc lại <b>nhiều mây</b> hoặc <b>mưa</b>. Vào mùa đông, không khí <b>lạnh</b> và có thể có những ngày <b>có tuyết</b> với <b>băng</b> phủ khắp nơi. Tôi thích ngắm <b>bình minh</b> và <b>hoàng hôn</b> trên <b>bầu trời</b>, và tôi luôn mang theo một chiếc <b>ô</b> nếu <b>dự báo thời tiết</b> nói rằng hôm đó sẽ <b>có bão</b>.`,
-      used: ["Weather", "Sunny", "Sun", "Cloudy", "Rainy", "Cold", "Snowy", "Ice", "Sunrise", "Sunset", "Sky", "Umbrella", "Forecast", "Stormy"]
+      batch1: {
+        title: `Weather Through the Seasons`,
+        text: `In spring, the weather is <b>Warm</b> and pleasant. In autumn, it becomes <b>Cool</b>, and a light <b>Drizzle</b> often falls in the morning. Winter mornings can feel <b>Chilly</b>, and in the coldest days, it is truly <b>Freezing</b>.`,
+        textVi: `Vào mùa xuân, thời tiết <b>ấm áp</b> và dễ chịu. Vào mùa thu, trời trở nên <b>mát</b>, và thường có <b>mưa phùn</b> nhẹ vào buổi sáng. Buổi sáng mùa đông có thể cảm thấy <b>se lạnh</b>, và vào những ngày lạnh nhất, trời thực sự <b>rét buốt</b>.`,
+        used: ["Warm", "Cool", "Freezing", "Chilly", "Drizzle"]
+      },
+      batch2: {
+        title: `Looking Up at the Sky`,
+        text: `After the rain stopped, a beautiful <b>Rainbow</b> appeared in the <b>Sky</b>. During the day, the bright <b>Sun</b> warms the earth, and at night, the gentle <b>Moon</b> shines above us. I love breathing the fresh <b>Air</b> outside.`,
+        textVi: `Sau khi mưa tạnh, một <b>cầu vồng</b> đẹp xuất hiện trên <b>bầu trời</b>. Ban ngày, <b>mặt trời</b> rực rỡ sưởi ấm trái đất, và ban đêm, <b>mặt trăng</b> dịu dàng chiếu sáng phía trên chúng ta. Tôi thích hít thở <b>không khí</b> trong lành bên ngoài.`,
+        used: ["Rainbow", "Sun", "Moon", "Sky", "Air"]
+      }
     }
   },
   {
@@ -4817,10 +4969,18 @@ const KID_TOPICS = [
       { en: `Spine`, ipa: `/spaɪn/`, vi: `xương sống`, img: `https://byetoeic.com/storage/v1/object/public/vocabulary-images/68f4804f9a4e8dd8355a28f0_1760874960624.w-fce1e7d9dc84.webp`, ex: `Keep your spine straight.`, trVi: `Hãy giữ lưng thẳng.` , trAnswer: `Keep your spine straight.`, trKey: `spine` }
     ],
     story: {
-      title: `My Amazing Body`,
-      text: `Every day, I use my <b>Body</b> to move and play! My <b>Head</b> has a <b>Face</b> with two <b>Eye</b>s, a <b>Nose</b>, a <b>Mouth</b> with <b>Teeth</b> and a <b>Tongue</b>, and two <b>Ear</b>s. I have <b>Hair</b> on my <b>Head</b>. My <b>Neck</b> connects my <b>Head</b> to my <b>Shoulder</b>s. I have two <b>Arm</b>s, with an <b>Elbow</b>, a <b>Hand</b>, a <b>Palm</b>, <b>Finger</b>s, and <b>Nail</b>s. In my body, there is a <b>Heart</b>, <b>Brain</b>, <b>Lungs</b>, <b>Liver</b>, and <b>Kidney</b>s. My <b>Chest</b> and <b>Back</b> protect them. My <b>Stomach</b> or <b>Belly</b> holds my food. I have two <b>Leg</b>s, with a <b>Thigh</b>, <b>Knee</b>, <b>Calf</b>, <b>Foot</b> (or <b>Feet</b>) and <b>Toe</b>s. My <b>Skin</b> and <b>Bone</b>s hold everything together. And remember to keep your <b>Spine</b> straight!`,
-      textVi: `Mỗi ngày, tôi dùng <b>cơ thể</b> của mình để vận động và vui chơi! <b>Đầu</b> tôi có <b>khuôn mặt</b> với hai con <b>mắt</b>, một cái <b>mũi</b>, một cái <b>miệng</b> với <b>răng</b> và <b>lưỡi</b>, cùng hai cái <b>tai</b>. Tôi có <b>tóc</b> trên đầu. <b>Cổ</b> nối <b>đầu</b> với <b>vai</b>. Tôi có hai <b>cánh tay</b>, với <b>khuỷu tay</b>, <b>bàn tay</b>, <b>lòng bàn tay</b>, <b>ngón tay</b>, và <b>móng tay</b>. Bên trong cơ thể, có <b>tim</b>, <b>não</b>, <b>phổi</b>, <b>gan</b>, và <b>thận</b>. <b>Ngực</b> và <b>lưng</b> bảo vệ chúng. <b>Bụng</b> chứa thức ăn của tôi. Tôi có hai <b>chân</b>, với <b>đùi</b>, <b>đầu gối</b>, <b>bắp chân</b>, <b>bàn chân</b> và <b>ngón chân</b>. <b>Da</b> và <b>xương</b> giữ mọi thứ gắn kết với nhau. Và hãy nhớ luôn giữ <b>xương sống</b> thẳng!`,
-      used: ["Body", "Head", "Face", "Eye", "Nose", "Mouth", "Teeth", "Tongue", "Ear", "Hair", "Neck", "Shoulder", "Arm", "Elbow", "Hand", "Palm", "Finger", "Nail", "Heart", "Brain", "Lungs", "Liver", "Kidney", "Chest", "Back", "Stomach", "Belly", "Leg", "Thigh", "Knee", "Calf", "Foot", "Feet", "Toe", "Skin", "Bone", "Spine"]
+      batch1: {
+        title: `My Body Moves`,
+        text: `I turn my <b>Neck</b> to look around, and I lift my <b>Shoulder</b>s when I shrug. My <b>Arm</b> helps me carry my bag, and I bend my <b>Elbow</b> to eat. I use my <b>Hand</b> to write and draw.`,
+        textVi: `Tôi xoay <b>cổ</b> để nhìn xung quanh, và tôi nhấc <b>vai</b> khi nhún vai. <b>Cánh tay</b> giúp tôi mang cặp, và tôi gập <b>khuỷu tay</b> khi ăn. Tôi dùng <b>bàn tay</b> để viết và vẽ.`,
+        used: ["Neck", "Shoulder", "Arm", "Elbow", "Hand"]
+      },
+      batch2: {
+        title: `Inside Our Body`,
+        text: `Our <b>Brain</b> helps us think and learn new things. Our <b>Lungs</b> let us breathe fresh air. The <b>Liver</b> and the <b>Kidney</b> clean our blood every day, and the blood travels through every <b>Vein</b> in our body.`,
+        textVi: `<b>Não</b> của chúng ta giúp chúng ta suy nghĩ và học những điều mới. <b>Phổi</b> giúp chúng ta hít thở không khí trong lành. <b>Gan</b> và <b>thận</b> làm sạch máu mỗi ngày, và máu di chuyển qua mỗi <b>tĩnh mạch</b> trong cơ thể.`,
+        used: ["Brain", "Lungs", "Liver", "Kidney", "Vein"]
+      }
     }
   }
 ];

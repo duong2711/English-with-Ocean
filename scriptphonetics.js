@@ -3266,18 +3266,288 @@ function toggleCompletion(symbolElement) {
         }
         // ================================================================================
 
+        // ===================================================================
+        // ----- LỘ TRÌNH MỞ KHÓA THEO 25 TỪ / ĐỢT (Flashcard + Nối từ + Ô chữ + Câu chuyện + Trò chơi) -----
+        // Mỗi chủ đề: 25 từ đầu tiên là ĐỢT 1 — Flashcard chỉ hiện 25 từ này cho tới khi
+        // học viên hoàn thành đủ cả 4 phần luyện tập (mỗi phần dùng 1 dải từ riêng trong
+        // 25 từ đó). Xong Đợt 1 -> Flashcard mở hết toàn bộ từ vựng, đồng thời 4 phần luyện
+        // tập chuyển sang dùng dải từ của ĐỢT 2 (từ 26 trở đi). Xong luôn Đợt 2 (nếu chủ đề
+        // đủ từ) -> 4 phần luyện tập chuyển về chế độ LUYỆN TỰ DO (dùng toàn bộ từ vựng,
+        // giống hành vi gốc trước đây). Tiến độ lưu trên Supabase, bảng "kid_topic_progress".
+        // (Xem file "kid_topic_progress_setup.sql" đi kèm để tạo bảng trên Supabase.)
+        // ===================================================================
+        const KID_BATCH1_RANGES = { match: [0, 5],  crossword: [5, 10],  story: [10, 15], game: [15, 25] };
+        const KID_BATCH2_RANGES = { match: [25, 30], crossword: [30, 35], story: [35, 40], game: [40, Infinity] };
+
+        function kidTopicKey(topic) {
+            return String(topic.title || 'topic').trim().toLowerCase()
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // bỏ dấu tiếng Việt cho khóa gọn, an toàn
+                .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'topic';
+        }
+
+        function kidSliceRange(words, range) {
+            const start = Math.min(range[0], words.length);
+            const end = Math.min(range[1] === Infinity ? words.length : range[1], words.length);
+            return start < end ? words.slice(start, end) : [];
+        }
+
+        function kidEmptyProgress() {
+            return {
+                batch1_match: false, batch1_crossword: false, batch1_story: false, batch1_game: false,
+                batch2_match: false, batch2_crossword: false, batch2_story: false, batch2_game: false
+            };
+        }
+
+        let kidTopicProgress = kidEmptyProgress();
+        let kidTopicProgressLoadedKey = null; // "userId::topicKey" đã tải xong, tránh gọi Supabase lặp lại
+
+        // [MỚI] Bản đồ tiến độ CỦA TẤT CẢ CHỦ ĐỀ (topic_key -> progress row), dùng để tô nền
+        // xanh lá cho những chủ đề đã hoàn thành ngay trong danh sách (kid-topic-grid), không
+        // cần mở từng chủ đề mới biết. Tải 1 lần/tài khoản, giữ nguyên khi tải lại trang.
+        let kidProgressMap = {};
+        let kidProgressMapLoadedForUser = null;
+
+        async function kidEnsureProgressMapLoaded() {
+            if (!currentUserId) { kidProgressMap = {}; kidProgressMapLoadedForUser = null; return; }
+            if (kidProgressMapLoadedForUser === currentUserId) return; // đã tải đúng user này rồi
+            try {
+                const { data, error } = await sb
+                    .from('kid_topic_progress')
+                    .select('*')
+                    .eq('user_id', currentUserId);
+                if (error) throw error;
+                kidProgressMap = {};
+                (data || []).forEach(row => { kidProgressMap[row.topic_key] = row; });
+            } catch (err) {
+                console.error('Lỗi khi tải tiến độ tất cả chủ đề (Cho bé):', err.message);
+                kidProgressMap = {};
+            }
+            kidProgressMapLoadedForUser = currentUserId;
+        }
+
+        // 1 chủ đề được coi là "đã hoàn thành" khi đã xong toàn bộ lộ trình (giai đoạn 'free')
+        function kidIsTopicCompleted(topic) {
+            const progress = kidProgressMap[kidTopicKey(topic)] || kidEmptyProgress();
+            return kidGetStage(topic, progress) === 'free';
+        }
+
+        async function kidLoadTopicProgress(topic) {
+            const key = kidTopicKey(topic);
+            const cacheKey = currentUserId + '::' + key;
+            if (!currentUserId) { kidTopicProgress = kidEmptyProgress(); kidTopicProgressLoadedKey = null; return; }
+            if (kidTopicProgressLoadedKey === cacheKey) return; // đã tải đúng user + đúng chủ đề này rồi
+
+            try {
+                const { data, error } = await sb
+                    .from('kid_topic_progress')
+                    .select('*')
+                    .eq('user_id', currentUserId)
+                    .eq('topic_key', key)
+                    .maybeSingle();
+                if (error) throw error;
+                kidTopicProgress = data || kidEmptyProgress();
+            } catch (err) {
+                console.error('Lỗi khi tải tiến độ chủ đề:', err.message);
+                kidTopicProgress = kidEmptyProgress();
+            }
+            kidTopicProgressLoadedKey = cacheKey;
+        }
+
+        async function kidSaveTopicProgress(topic, patch) {
+            Object.assign(kidTopicProgress, patch); // cập nhật cache ngay để UI phản hồi tức thì
+            if (!currentUserId) return;
+            const key = kidTopicKey(topic);
+            try {
+                const payload = Object.assign(
+                    { user_id: currentUserId, topic_key: key, updated_at: new Date().toISOString() },
+                    kidEmptyProgress(),
+                    kidTopicProgress
+                );
+                delete payload.id;
+                const { error } = await sb
+                    .from('kid_topic_progress')
+                    .upsert(payload, { onConflict: 'user_id, topic_key' });
+                if (error) console.error('Lỗi khi lưu tiến độ chủ đề (kiểm tra RLS trên bảng kid_topic_progress):', error);
+                else kidProgressMap[key] = payload; // [MỚI] cập nhật luôn cache danh sách chủ đề, khỏi cần tải lại từ Supabase
+            } catch (err) {
+                console.error('Lỗi ngoại lệ khi lưu tiến độ chủ đề:', err.message);
+            }
+        }
+
+        function kidIsBatch1Done(p) { return !!(p.batch1_match && p.batch1_crossword && p.batch1_story && p.batch1_game); }
+        function kidIsBatch2Done(p) { return !!(p.batch2_match && p.batch2_crossword && p.batch2_story && p.batch2_game); }
+
+        // 'batch1'  = đang học 25 từ đầu (Flashcard chỉ hiện 25 từ này)
+        // 'batch2'  = đã xong Đợt 1, Flashcard đã mở hết, đang học tiếp phần còn lại
+        // 'free'    = đã xong hết lộ trình (hoặc chủ đề không đủ >25 từ để có Đợt 2) -> luyện tự do
+        function kidGetStage(topic, progress) {
+            if (!kidIsBatch1Done(progress)) return 'batch1';
+            if (topic.words.length > 25 && !kidIsBatch2Done(progress)) return 'batch2';
+            return 'free';
+        }
+
+        function kidNotifyUnlocked(msg) {
+            if (window.vocabTap && window.vocabTap.toast) window.vocabTap.toast(msg, 'success');
+        }
+
+        // [MỚI] Tô nền xanh lá cho các tab con (Nối từ / Ô chữ / Câu chuyện / Trò chơi) đã hoàn
+        // thành ở đợt hiện tại. Đọc thẳng từ kidTopicProgress (đã tải từ Supabase) nên giữ đúng
+        // trạng thái khi tải lại trang. Khi đợt chuyển sang đợt mới (hoặc luyện tự do), các cờ
+        // của đợt mới đều là false nên tab tự động trở về nền trắng mặc định.
+        function kidUpdateSubtabIndicators(topic) {
+            if (!kidSubtabs) return;
+            const stage = kidGetStage(topic, kidTopicProgress);
+            ['match', 'crossword', 'story', 'game'].forEach(phase => {
+                const btn = kidSubtabs.querySelector(`[data-sub="${phase}"]`);
+                if (!btn) return;
+                const done = (stage === 'free') || !!kidTopicProgress[`batch${stage === 'batch1' ? 1 : 2}_${phase}`];
+                btn.classList.toggle('phase-completed', done);
+            });
+        }
+
+        // [MỚI] Hộp thoại chúc mừng khi học viên hoàn thành TOÀN BỘ lộ trình của 1 chủ đề
+        // (xong cả 4 phần của cả 2 đợt 25 từ). Đồng thời chủ đề sẽ được tô xanh lá trong danh sách.
+        const kidCompleteModal    = document.getElementById('kid-topic-complete-modal');
+        const kidCompleteDesc     = document.getElementById('kid-complete-desc');
+        const kidCompleteCloseBtn = document.getElementById('kid-complete-close-btn');
+
+        function kidShowTopicCompletedDialog(topic) {
+            if (!kidCompleteModal) return;
+            if (kidCompleteDesc) {
+                kidCompleteDesc.textContent = `Bạn đã hoàn thành tất cả các phần luyện tập của chủ đề "${topic.title}". Flashcard, Nối từ, Ô chữ, Câu chuyện và Trò chơi của chủ đề này đã được mở khóa toàn bộ để bạn luyện tập tự do!`;
+            }
+            kidCompleteModal.style.display = 'flex';
+        }
+        if (kidCompleteCloseBtn) {
+            kidCompleteCloseBtn.addEventListener('click', () => { kidCompleteModal.style.display = 'none'; });
+        }
+        if (kidCompleteModal) {
+            kidCompleteModal.addEventListener('click', (e) => {
+                if (e.target === kidCompleteModal) kidCompleteModal.style.display = 'none';
+            });
+        }
+
+        function kidNormalize(s) {
+            return String(s || '').toLowerCase().replace(/['".,!?;:]/g, '').replace(/\s+/g, ' ').trim();
+        }
+        function kidEscapeRegex(s) { return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+        function kidEscHtml(s) {
+            return String(s == null ? '' : s)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        // Được gọi mỗi khi học viên hoàn thành 1 trong 4 phần (match/crossword/story/game) của 1 đợt.
+        // Tự kiểm tra xem cả đợt đã xong chưa -> nếu xong thì mở khóa + vẽ lại toàn bộ các tab.
+        async function kidHandlePhaseCompleted(topic, phaseName, batchNum) {
+            const field = `batch${batchNum}_${phaseName}`;
+            if (kidTopicProgress[field]) return; // đã ghi nhận rồi, khỏi lưu lại
+            const stageBefore = kidGetStage(topic, kidTopicProgress);
+            await kidSaveTopicProgress(topic, { [field]: true });
+            // [MỚI] Tô xanh lá tab vừa hoàn thành NGAY LẬP TỨC, kể cả khi cả đợt chưa xong hết
+            kidUpdateSubtabIndicators(topic);
+            const stageAfter = kidGetStage(topic, kidTopicProgress);
+
+            if (stageBefore === stageAfter) return; // đợt hiện tại vẫn chưa xong hết cả 4 phần
+
+            if (stageAfter === 'batch2') {
+                kidNotifyUnlocked('🎉 Bạn đã hoàn thành 25 từ đầu tiên! Toàn bộ từ vựng của chủ đề đã được mở khóa.');
+            } else if (stageAfter === 'free') {
+                // [MỚI] Hoàn thành toàn bộ lộ trình -> hiện hộp thoại chúc mừng + chủ đề chuyển xanh lá trong danh sách
+                kidShowTopicCompletedDialog(topic);
+                renderTopicGrid();
+            }
+            // Vẽ lại toàn bộ các tab để phản ánh đúng dải từ / trạng thái mở khóa mới
+            initFlashcards(topic);
+            initMatchGame(topic);
+            initCrossword(topic);
+            initStory(topic);
+            initGame(topic);
+            // [MỚI] Đợt mới bắt đầu (hoặc đã chuyển sang luyện tự do) -> vẽ lại màu tab cho đúng
+            // (các cờ của đợt mới đều false nên tab tự động trở về nền trắng, trừ khi đã 'free')
+            kidUpdateSubtabIndicators(topic);
+        }
+
+        // ---------- [MỚI] TRICK ADMIN: giữ 5 giây vào 1 THẺ CHỦ ĐỀ trong danh sách -> hiện hộp
+        // thoại nhập mật khẩu admin -> bật/tắt trạng thái "ĐÃ HOÀN THÀNH" của TOÀN BỘ chủ đề đó
+        // (cả đợt 1 lẫn đợt 2 cùng lúc). Dùng để test nhanh, không có gợi ý gì trên giao diện.
+        function kidAttachAdminHoldToggle(el, onTrigger) {
+            const KID_ADMIN_HOLD_MS = 5000;
+            let holdTimer = null;
+            const startHold = () => {
+                if (holdTimer) clearTimeout(holdTimer);
+                holdTimer = setTimeout(() => {
+                    holdTimer = null;
+                    onTrigger();
+                }, KID_ADMIN_HOLD_MS);
+            };
+            const cancelHold = () => {
+                if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+            };
+            el.addEventListener('mousedown', startHold);
+            el.addEventListener('mouseup', cancelHold);
+            el.addEventListener('mouseleave', cancelHold);
+            el.addEventListener('touchstart', startHold, { passive: true });
+            el.addEventListener('touchend', cancelHold);
+            el.addEventListener('touchcancel', cancelHold);
+        }
+
+        async function kidAdminToggleTopicCompletion(topic) {
+            if (!currentUserId) {
+                alert('Vui lòng đăng nhập trước khi dùng chức năng này!');
+                return;
+            }
+            const pass = prompt('Nhập mật khẩu Admin để bật/tắt trạng thái hoàn thành chủ đề:');
+            if (pass === null) return; // bấm Cancel
+            if (pass !== ADMIN_PASSWORD) {
+                alert('Sai mật khẩu!');
+                return;
+            }
+
+            const isCompletedNow = kidIsTopicCompleted(topic);
+            // Đánh dấu hoàn thành -> bật hết cờ của cả 2 đợt. Bỏ hoàn thành -> tắt hết, về lại đợt 1.
+            const patch = isCompletedNow
+                ? kidEmptyProgress()
+                : {
+                    batch1_match: true, batch1_crossword: true, batch1_story: true, batch1_game: true,
+                    batch2_match: true, batch2_crossword: true, batch2_story: true, batch2_game: true
+                };
+
+            await kidSaveTopicProgress(topic, patch);
+            renderTopicGrid();
+
+            // Nếu đúng chủ đề này đang mở sẵn (panel chi tiết) -> vẽ lại luôn các tab bên trong cho khớp
+            if (currentTopic && kidTopicKey(currentTopic) === kidTopicKey(topic)) {
+                kidTopicProgress = Object.assign(kidEmptyProgress(), patch);
+                kidUpdateSubtabIndicators(topic);
+                initFlashcards(topic);
+                initMatchGame(topic);
+                initCrossword(topic);
+                initStory(topic);
+                initGame(topic);
+            }
+
+            alert(isCompletedNow
+                ? `⬜ Đã BỎ đánh dấu hoàn thành chủ đề "${topic.title}".`
+                : `✅ Đã đánh dấu HOÀN THÀNH toàn bộ chủ đề "${topic.title}".`);
+        }
+
         // ---------- Danh sách chủ đề ----------
-        function renderTopicGrid() {
+        // [MỚI] async: tải trước tiến độ TẤT CẢ chủ đề để biết chủ đề nào đã hoàn thành (tô xanh lá)
+        async function renderTopicGrid() {
+            await kidEnsureProgressMapLoaded();
             kidTopicGrid.innerHTML = '';
             KID_TOPICS.forEach(topic => {
+                const completed = kidIsTopicCompleted(topic);
                 const card = document.createElement('div');
-                card.className = 'kid-topic-card';
+                card.className = 'kid-topic-card' + (completed ? ' completed' : '');
                 card.innerHTML = `
                     <span class="kid-icon">${topic.icon}</span>
                     <div class="kid-title">${topic.title}</div>
-                    <div class="kid-count">${topic.words.length} từ vựng</div>
+                    <div class="kid-count">${completed ? '✅ Đã hoàn thành' : topic.words.length + ' từ vựng'}</div>
                 `;
                 card.addEventListener('click', () => openTopic(topic));
+                kidAttachAdminHoldToggle(card, () => kidAdminToggleTopicCompletion(topic));
                 kidTopicGrid.appendChild(card);
             });
         }
@@ -3297,10 +3567,11 @@ function toggleCompletion(symbolElement) {
         kidTopicBackBtn.addEventListener('click', () => {
             kidTopicPanel.style.display = 'none';
             kidPanel.style.display = 'block';
+            renderTopicGrid(); // [MỚI] vẽ lại danh sách để cập nhật ngay nếu chủ đề vừa xong đã chuyển xanh lá
         });
 
         // ---------- Mở 1 chủ đề ----------
-        function openTopic(topic) {
+        async function openTopic(topic) {
             currentTopic = topic;
             kidPanel.style.display = 'none';
             kidTopicPanel.style.display = 'block';
@@ -3312,10 +3583,14 @@ function toggleCompletion(symbolElement) {
             document.querySelectorAll('.kid-sub-content').forEach(el => el.style.display = 'none');
             document.getElementById('kid-sub-flashcard').style.display = 'block';
 
+            await kidLoadTopicProgress(topic);
+
             initFlashcards(topic);
             initMatchGame(topic);
+            initCrossword(topic);
             initStory(topic);
             initGame(topic);
+            kidUpdateSubtabIndicators(topic); // [MỚI] khôi phục đúng màu xanh lá đã lưu trước đó (không mất khi refresh)
         }
 
         // ---------- Chuyển tab con ----------
@@ -3328,6 +3603,83 @@ function toggleCompletion(symbolElement) {
             document.getElementById('kid-sub-' + btn.dataset.sub).style.display = 'block';
         });
 
+        // ---------- [MỚI] TRICK ADMIN: giữ 5 giây vào tab Nối từ / Ô chữ / Câu chuyện / Trò
+        // chơi -> hiện hộp thoại nhập mật khẩu admin -> bật/tắt trạng thái "hoàn thành" của
+        // đúng phần đó (ở đợt hiện tại của chủ đề đang mở). Dùng để test nhanh, không có gợi
+        // ý gì trên giao diện nên học viên bình thường sẽ không biết đến chức năng này.
+        (function setupKidAdminPhaseHoldTrick() {
+            const KID_ADMIN_HOLD_MS = 5000;
+            let kidAdminHoldTimer = null;
+
+            async function kidAdminTogglePhase(topic, phase) {
+                if (!currentUserId) {
+                    alert('Vui lòng đăng nhập trước khi dùng chức năng này!');
+                    return;
+                }
+                const pass = prompt('Nhập mật khẩu Admin để bật/tắt trạng thái hoàn thành:');
+                if (pass === null) return; // bấm Cancel
+                if (pass !== ADMIN_PASSWORD) {
+                    alert('Sai mật khẩu!');
+                    return;
+                }
+
+                const stageBefore = kidGetStage(topic, kidTopicProgress);
+                const batchNum = stageBefore === 'batch1' ? 1 : 2; // 'batch2' và 'free' đều thao tác trên đợt 2
+                const field = `batch${batchNum}_${phase}`;
+                const newValue = !kidTopicProgress[field];
+
+                await kidSaveTopicProgress(topic, { [field]: newValue });
+                kidUpdateSubtabIndicators(topic);
+
+                const stageAfter = kidGetStage(topic, kidTopicProgress);
+                if (stageAfter !== stageBefore) {
+                    if (stageAfter === 'batch2') {
+                        kidNotifyUnlocked('🎉 Bạn đã hoàn thành 25 từ đầu tiên! Toàn bộ từ vựng của chủ đề đã được mở khóa.');
+                    } else if (stageAfter === 'free') {
+                        kidShowTopicCompletedDialog(topic);
+                    }
+                    renderTopicGrid();
+                }
+                // Vẽ lại toàn bộ tab để phản ánh đúng dải từ / trạng thái mở khóa mới
+                initFlashcards(topic);
+                initMatchGame(topic);
+                initCrossword(topic);
+                initStory(topic);
+                initGame(topic);
+                kidUpdateSubtabIndicators(topic);
+
+                alert(newValue
+                    ? `✅ Đã đánh dấu HOÀN THÀNH phần này (đợt ${batchNum}).`
+                    : `⬜ Đã BỎ đánh dấu hoàn thành phần này (đợt ${batchNum}).`);
+            }
+
+            kidSubtabs.querySelectorAll('.kid-subtab-btn').forEach(btn => {
+                const phase = btn.dataset.sub;
+                if (phase === 'flashcard') return; // Flashcard không có trạng thái hoàn thành riêng
+
+                const startHold = (e) => {
+                    e.stopPropagation();
+                    if (kidAdminHoldTimer) clearTimeout(kidAdminHoldTimer);
+                    kidAdminHoldTimer = setTimeout(() => {
+                        kidAdminHoldTimer = null;
+                        if (!currentTopic) return;
+                        kidAdminTogglePhase(currentTopic, phase);
+                    }, KID_ADMIN_HOLD_MS);
+                };
+                const cancelHold = () => {
+                    if (kidAdminHoldTimer) { clearTimeout(kidAdminHoldTimer); kidAdminHoldTimer = null; }
+                };
+
+                btn.addEventListener('mousedown', startHold);
+                btn.addEventListener('mouseup', cancelHold);
+                btn.addEventListener('mouseleave', cancelHold);
+                // Hỗ trợ thêm cảm ứng (điện thoại/tablet)
+                btn.addEventListener('touchstart', startHold, { passive: true });
+                btn.addEventListener('touchend', cancelHold);
+                btn.addEventListener('touchcancel', cancelHold);
+            });
+        })();
+
         // ---------- 1. FLASHCARD ----------
         const kidFlashcard   = document.getElementById('kid-flashcard');
         const kidFlashFront  = document.getElementById('kid-flash-front');
@@ -3339,6 +3691,15 @@ function toggleCompletion(symbolElement) {
 
         // ----- Phát âm từ vựng bằng loa 🔊 (Web Speech API) -----
         // [MỚI] Bỏ alert chặn màn hình vì hàm này giờ còn được gọi TỰ ĐỘNG mỗi khi đổi thẻ/bấm từ.
+        // [SỬA LỖI] "Làm nóng" danh sách giọng đọc (voices) ngay khi script chạy: ở lần đọc ĐẦU
+        // TIÊN sau khi tải trang, một số trình duyệt (đặc biệt Chrome) vẫn chưa nạp xong danh
+        // sách giọng đọc nên gọi speak() sẽ bị bỏ qua trong im lặng (không đọc, không báo lỗi).
+        // Từ lần thứ 2 trở đi thì danh sách đã có sẵn nên vẫn đọc bình thường như trước giờ.
+        let kidSpeechVoicesReady = ('speechSynthesis' in window) && window.speechSynthesis.getVoices().length > 0;
+        if ('speechSynthesis' in window && !kidSpeechVoicesReady) {
+            window.speechSynthesis.getVoices(); // một số trình duyệt cần gọi 1 lần để bắt đầu nạp
+            window.speechSynthesis.onvoiceschanged = () => { kidSpeechVoicesReady = true; };
+        }
         function speakEnglishWord(text) {
             if (!text) return;
             if (!('speechSynthesis' in window)) return; // trình duyệt không hỗ trợ -> bỏ qua trong im lặng
@@ -3346,7 +3707,14 @@ function toggleCompletion(symbolElement) {
             const utter = new SpeechSynthesisUtterance(text);
             utter.lang = 'en-US';
             utter.rate = 0.85;
-            window.speechSynthesis.speak(utter);
+            if (kidSpeechVoicesReady || window.speechSynthesis.getVoices().length > 0) {
+                kidSpeechVoicesReady = true;
+                window.speechSynthesis.speak(utter);
+            } else {
+                // Giọng đọc chưa kịp nạp xong (thường chỉ xảy ra đúng lần đọc đầu tiên) -> đợi
+                // một nhịp ngắn rồi đọc, thay vì để trình duyệt âm thầm bỏ qua câu này.
+                setTimeout(() => window.speechSynthesis.speak(utter), 200);
+            }
         }
 
         // ----- [MỚI] Âm thanh hiệu ứng ĐÚNG / SAI khi chơi Nối từ -----
@@ -3395,8 +3763,21 @@ function toggleCompletion(symbolElement) {
 
         function initFlashcards(topic) {
             flashIndex = 0;
-            flashOrder = topic.words;
+            const stage = kidGetStage(topic, kidTopicProgress);
+            const visibleCount = (stage === 'batch1') ? Math.min(25, topic.words.length) : topic.words.length;
+            flashOrder = topic.words.slice(0, visibleCount);
             renderFlashcard();
+
+            const notice = document.getElementById('kid-flash-lock-notice');
+            if (notice) {
+                if (stage === 'batch1' && topic.words.length > visibleCount) {
+                    notice.style.display = '';
+                    notice.innerHTML = `🔒 Còn <b>${topic.words.length - visibleCount}</b> từ vựng nữa sẽ được mở khóa sau khi bạn hoàn thành đủ 4 phần: <b>Nối từ</b>, <b>Ô chữ</b>, <b>Câu chuyện</b> và <b>Trò chơi</b> ứng với 25 từ đầu tiên.`;
+                } else {
+                    notice.style.display = 'none';
+                    notice.innerHTML = '';
+                }
+            }
         }
 
        function renderFlashcard() {
@@ -3453,6 +3834,7 @@ function toggleCompletion(symbolElement) {
         let matchSelectedEn = null;
         let matchSelectedVi = null;
         let matchCorrectCount = 0;
+        let kidCurrentMatchStage = 'free';
 
         function shuffleArr(arr) {
             const a = arr.slice();
@@ -3464,8 +3846,22 @@ function toggleCompletion(symbolElement) {
         }
 
         function initMatchGame(topic) {
-            // Lấy tối đa 8 từ ngẫu nhiên mỗi lượt chơi cho vừa màn hình
-            const pool = shuffleArr(topic.words).slice(0, Math.min(8, topic.words.length));
+            const stage = kidGetStage(topic, kidTopicProgress);
+            kidCurrentMatchStage = stage;
+            let pool;
+            if (stage === 'batch1') pool = kidSliceRange(topic.words, KID_BATCH1_RANGES.match);
+            else if (stage === 'batch2') pool = kidSliceRange(topic.words, KID_BATCH2_RANGES.match);
+            else pool = shuffleArr(topic.words).slice(0, Math.min(8, topic.words.length)); // luyện tự do như cũ
+
+            if (stage !== 'free' && !pool.length) {
+                // Chủ đề không đủ từ cho dải này -> coi như xong ngay để không kẹt học viên
+                kidMatchEn.innerHTML = '';
+                kidMatchVi.innerHTML = '';
+                kidMatchResult.textContent = '';
+                kidHandlePhaseCompleted(topic, 'match', stage === 'batch1' ? 1 : 2);
+                return;
+            }
+
             matchPairs = pool.map((w, i) => ({ id: i, en: w.en, vi: w.vi, img: w.img, done: false }));
             matchSelectedEn = null;
             matchSelectedVi = null;
@@ -3531,6 +3927,9 @@ function toggleCompletion(symbolElement) {
                     kidMatchResult.textContent = `✅ Đúng! (${matchCorrectCount}/${matchPairs.length})`;
                     if (matchCorrectCount === matchPairs.length) {
                         kidMatchResult.textContent = `🎉 Hoàn thành! Bạn đã nối đúng tất cả ${matchPairs.length} cặp từ.`;
+                        if (kidCurrentMatchStage !== 'free') {
+                            kidHandlePhaseCompleted(currentTopic, 'match', kidCurrentMatchStage === 'batch1' ? 1 : 2);
+                        }
                     }
                 } else {
                     matchSelectedEn.classList.add('wrong');
@@ -3551,34 +3950,475 @@ function toggleCompletion(symbolElement) {
         kidMatchVi.addEventListener('click', handleMatchClick);
         kidMatchReset.addEventListener('click', () => initMatchGame(currentTopic));
 
-        // ---------- 3. CÂU CHUYỆN ----------
-        const kidStoryTranslateBtn = document.getElementById('kid-story-translate-btn');
-        const kidStoryTextVi = document.getElementById('kid-story-text-vi');
+        // ---------- 3. Ô CHỮ (Word Search: tìm từ tiếng Anh ẩn trong bảng chữ cái) ----------
+        const kidCrosswordGrid     = document.getElementById('kid-crossword-grid');
+        const kidCrosswordClues    = document.getElementById('kid-crossword-clues');
+        const kidCrosswordResetBtn = document.getElementById('kid-crossword-reset-btn');
+        const kidCrosswordFeedback = document.getElementById('kid-crossword-feedback');
+
+        let kidCurrentCrosswordStage = 'free';
+
+        // Kích thước cố định của bảng: ngang 20 ô (cột) x dọc 9 ô (hàng).
+        const WS_ROWS = 9;
+        const WS_COLS = 20;
+        // 8 hướng có thể đặt từ: ngang/dọc/chéo, mỗi trục đều có 2 chiều (thuận + ngược).
+        // Khi kiểm tra lựa chọn của học viên, chuỗi ký tự được so khớp cả xuôi lẫn ngược,
+        // nên chỉ cần đặt từ theo 1 chiều bất kỳ của mỗi hướng là đủ để tìm được cả 2 chiều.
+        const WS_DIRS = [
+            { dr: 0,  dc: 1  }, { dr: 0,  dc: -1 }, // ngang: sang phải / sang trái
+            { dr: 1,  dc: 0  }, { dr: -1, dc: 0  }, // dọc: xuống / lên
+            { dr: 1,  dc: 1  }, { dr: 1,  dc: -1 }, // chéo xuống: phải / trái
+            { dr: -1, dc: 1  }, { dr: -1, dc: -1 }  // chéo lên: phải / trái
+        ];
+
+        let wsCurrentData       = null;  // { letters: string[][], placements: [{answer,vi,row,col,dr,dc}] }
+        let wsFoundAnswers      = new Set();
+        let wsCurrentStorageKey = null;
+        let wsCurrentWordsHash  = null;
+        // [MỚI] Hỗ trợ 2 cách chọn: KÉO liên tục (giữ + rê tới ô cuối) hoặc CHẠM TỪNG CHỮ
+        // (chạm ô đầu tiên rồi chạm ô cuối cùng, không cần giữ/rê). Vì khung bảng giờ có thể
+        // cuộn ngang/dọc trên điện thoại, chỉ khi nào xác định chắc chắn là đang KÉO CHỌN CHỮ
+        // (di chuyển vượt ngưỡng WS_DRAG_THRESHOLD) mới preventDefault để khoá cuộn trang lại;
+        // một cú chạm nhẹ (không di chuyển) sẽ không chặn việc cuộn khung.
+        let wsSelecting         = false;
+        let wsDragActive        = false; // đã xác nhận đây là thao tác KÉO (đã vượt ngưỡng di chuyển)
+        let wsDownPoint         = null;  // { x, y } toạ độ màn hình lúc vừa nhấn/chạm xuống
+        let wsDownCell          = null;  // { row, col } ô lúc vừa nhấn/chạm xuống
+        let wsPendingStart      = null;  // { row, col } ô đã CHẠM chọn làm điểm bắt đầu, đang chờ chạm ô kết thúc
+        const WS_DRAG_THRESHOLD = 10;    // px - di chuyển quá ngưỡng này mới coi là kéo (thay vì chạm)
+
+        // Toạ độ bắt đầu hợp lệ cho 1 từ dài `len` ký tự theo hướng (dr,dc), sao cho
+        // toàn bộ từ nằm gọn trong bảng WS_ROWS x WS_COLS.
+        function wsValidStarts(len, dr, dc) {
+            const rows = [], cols = [];
+            if (dr === 0) { for (let r = 0; r < WS_ROWS; r++) rows.push(r); }
+            else if (dr > 0) { for (let r = 0; r <= WS_ROWS - len; r++) rows.push(r); }
+            else { for (let r = len - 1; r < WS_ROWS; r++) rows.push(r); }
+            if (dc === 0) { for (let c = 0; c < WS_COLS; c++) cols.push(c); }
+            else if (dc > 0) { for (let c = 0; c <= WS_COLS - len; c++) cols.push(c); }
+            else { for (let c = len - 1; c < WS_COLS; c++) cols.push(c); }
+            return { rows, cols };
+        }
+
+        // Sinh 1 bảng ô chữ mới: đặt lần lượt từng từ (dài nhất trước cho dễ đặt) vào 1 hướng
+        // + vị trí ngẫu nhiên hợp lệ (cho phép giao nhau nếu trùng chữ cái, giống ô chữ thật),
+        // rồi lấp các ô còn trống bằng chữ cái ngẫu nhiên.
+        function kidBuildCrossword(words) {
+            const items = words
+                .map(w => ({ answer: String(w.en).toUpperCase().replace(/[^A-Z]/g, ''), en: String(w.en), vi: w.vi }))
+                .filter(it => it.answer.length > 0 && it.answer.length <= WS_COLS);
+            items.sort((a, b) => b.answer.length - a.answer.length);
+
+            const grid = {}; // "r,c" -> chữ cái
+            const placements = [];
+
+            function canPlace(word, row, col, dr, dc) {
+                for (let i = 0; i < word.length; i++) {
+                    const existing = grid[(row + dr * i) + ',' + (col + dc * i)];
+                    if (existing !== undefined && existing !== word[i]) return false;
+                }
+                return true;
+            }
+            function place(word, row, col, dr, dc) {
+                for (let i = 0; i < word.length; i++) {
+                    grid[(row + dr * i) + ',' + (col + dc * i)] = word[i];
+                }
+            }
+
+            items.forEach(item => {
+                const word = item.answer;
+                const dirsShuffled = shuffleArr(WS_DIRS.slice());
+                let placed = null;
+
+                for (let attempt = 0; attempt < 400 && !placed; attempt++) {
+                    const dir = dirsShuffled[attempt % dirsShuffled.length];
+                    const { rows, cols } = wsValidStarts(word.length, dir.dr, dir.dc);
+                    if (!rows.length || !cols.length) continue;
+                    const row = rows[Math.floor(Math.random() * rows.length)];
+                    const col = cols[Math.floor(Math.random() * cols.length)];
+                    if (canPlace(word, row, col, dir.dr, dir.dc)) placed = { row, col, dr: dir.dr, dc: dir.dc };
+                }
+                if (!placed) {
+                    // Hết may mắn với vị trí ngẫu nhiên -> dò tuần tự toàn bộ vị trí/hướng còn lại.
+                    search:
+                    for (const dir of WS_DIRS) {
+                        const { rows, cols } = wsValidStarts(word.length, dir.dr, dir.dc);
+                        for (const row of rows) {
+                            for (const col of cols) {
+                                if (canPlace(word, row, col, dir.dr, dir.dc)) {
+                                    placed = { row, col, dr: dir.dr, dc: dir.dc };
+                                    break search;
+                                }
+                            }
+                        }
+                    }
+                }
+                if (placed) {
+                    place(word, placed.row, placed.col, placed.dr, placed.dc);
+                    placements.push(Object.assign({}, item, placed));
+                }
+                // Nếu bảng quá chật (rất hiếm với 20x9 ô cho ~5-6 từ) thì đành bỏ qua từ đó.
+            });
+
+            const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            const letters = [];
+            for (let r = 0; r < WS_ROWS; r++) {
+                const rowArr = [];
+                for (let c = 0; c < WS_COLS; c++) {
+                    const existing = grid[r + ',' + c];
+                    rowArr.push(existing !== undefined ? existing : LETTERS[Math.floor(Math.random() * LETTERS.length)]);
+                }
+                letters.push(rowArr);
+            }
+
+            return { letters, placements };
+        }
+
+        function kidRenderCrossword(ws) {
+            kidCrosswordGrid.style.display = '';
+            let html = '';
+            for (let r = 0; r < WS_ROWS; r++) {
+                for (let c = 0; c < WS_COLS; c++) {
+                    html += `<div class="ws-cell" data-row="${r}" data-col="${c}">${kidEscHtml(ws.letters[r][c])}</div>`;
+                }
+            }
+            kidCrosswordGrid.innerHTML = html;
+
+            kidCrosswordClues.innerHTML = ws.placements.map(p =>
+                `<li data-answer="${kidEscAttr(p.answer)}" class="${wsFoundAnswers.has(p.answer) ? 'ws-clue-found' : ''}">${kidEscHtml(p.vi)} <span class="ws-clue-en">(${kidEscHtml(p.en)})</span></li>`
+            ).join('');
+
+            // Khôi phục nền xanh lá cho các từ đã tìm thấy trước đó (không mất khi refresh trang).
+            ws.placements.forEach(p => {
+                if (!wsFoundAnswers.has(p.answer)) return;
+                for (let i = 0; i < p.answer.length; i++) {
+                    const cell = kidCrosswordGrid.querySelector(`.ws-cell[data-row="${p.row + p.dr * i}"][data-col="${p.col + p.dc * i}"]`);
+                    if (cell) cell.classList.add('ws-found');
+                }
+            });
+        }
+
+        function wsWordsHash(words) {
+            return words.map(w => String(w.en).toUpperCase().replace(/[^A-Z]/g, '')).join('|');
+        }
+        // Khoá lưu trên localStorage riêng theo tài khoản + chủ đề + đợt học, để bảng ô chữ
+        // (và các từ đã tìm được) giữ nguyên khi tải lại trang, thay vì sinh bảng mới mỗi lần.
+        function wsStorageKey(topic, stage) {
+            const uid = currentUserId || 'anon';
+            const tid = (topic && topic.id) ? topic.id : kidTopicKey(topic);
+            return `kid_wordsearch_v2_${uid}_${tid}_${stage}`;
+        }
+        function wsSaveState() {
+            if (!wsCurrentData || !wsCurrentStorageKey) return;
+            try {
+                localStorage.setItem(wsCurrentStorageKey, JSON.stringify({
+                    wordsHash: wsCurrentWordsHash,
+                    letters: wsCurrentData.letters,
+                    placements: wsCurrentData.placements,
+                    found: Array.from(wsFoundAnswers)
+                }));
+            } catch (e) { /* localStorage có thể bị chặn (chế độ ẩn danh...) - bỏ qua */ }
+        }
+
+        function wsCellFromPoint(clientX, clientY) {
+            const el = document.elementFromPoint(clientX, clientY);
+            const cellEl = el && el.closest ? el.closest('.ws-cell') : null;
+            if (!cellEl || !kidCrosswordGrid.contains(cellEl)) return null;
+            return { row: Number(cellEl.dataset.row), col: Number(cellEl.dataset.col) };
+        }
+
+        // Tính chuỗi ô liên tiếp từ điểm bắt đầu tới điểm hiện tại, CHỈ hợp lệ nếu 2 điểm
+        // thẳng hàng ngang, thẳng hàng dọc, hoặc thẳng hàng chéo (không chấp nhận đường gấp khúc).
+        function wsComputePath(start, end) {
+            if (!start || !end) return null;
+            const dRow = end.row - start.row, dCol = end.col - start.col;
+            if (dRow === 0 && dCol === 0) return [{ row: start.row, col: start.col }];
+            const absR = Math.abs(dRow), absC = Math.abs(dCol);
+            if (!(dRow === 0 || dCol === 0 || absR === absC)) return null;
+            const steps = Math.max(absR, absC);
+            const dr = dRow === 0 ? 0 : dRow / absR;
+            const dc = dCol === 0 ? 0 : dCol / absC;
+            const path = [];
+            for (let i = 0; i <= steps; i++) path.push({ row: start.row + dr * i, col: start.col + dc * i });
+            return path;
+        }
+
+        function wsClearSelectingHighlight() {
+            kidCrosswordGrid.querySelectorAll('.ws-selecting').forEach(el => el.classList.remove('ws-selecting'));
+        }
+        function wsHighlightPath(path) {
+            wsClearSelectingHighlight();
+            path.forEach(p => {
+                const cell = kidCrosswordGrid.querySelector(`.ws-cell[data-row="${p.row}"][data-col="${p.col}"]`);
+                if (cell) cell.classList.add('ws-selecting');
+            });
+        }
+
+        function wsUpdateFeedback() {
+            if (!wsCurrentData) return;
+            const total = wsCurrentData.placements.length;
+            const found = wsFoundAnswers.size;
+            kidCrosswordFeedback.className = 'kid-crossword-feedback';
+            kidCrosswordFeedback.textContent = total > 0 ? `Đã tìm: ${found}/${total} từ` : '';
+        }
+
+        // Học viên kéo/chạm chọn xong 1 chuỗi ô -> tự động so khớp (xuôi hoặc ngược) với các
+        // từ khoá chưa tìm thấy. Khớp đúng: tô xanh lá vĩnh viễn + lưu lại. Sai: chớp đỏ rồi bỏ.
+        function wsTryMatch(path) {
+            if (!wsCurrentData || path.length < 2) return;
+            const letters = path.map(p => wsCurrentData.letters[p.row][p.col]).join('');
+            const reversed = letters.split('').reverse().join('');
+            const match = wsCurrentData.placements.find(p => !wsFoundAnswers.has(p.answer) && (p.answer === letters || p.answer === reversed));
+
+            if (match) {
+                wsFoundAnswers.add(match.answer);
+                path.forEach(p => {
+                    const cell = kidCrosswordGrid.querySelector(`.ws-cell[data-row="${p.row}"][data-col="${p.col}"]`);
+                    if (cell) cell.classList.add('ws-found');
+                });
+                const clueEl = kidCrosswordClues.querySelector(`li[data-answer="${match.answer}"]`);
+                if (clueEl) clueEl.classList.add('ws-clue-found');
+                playKidCorrectSound();
+                wsSaveState();
+
+                if (wsFoundAnswers.size === wsCurrentData.placements.length) {
+                    kidCrosswordFeedback.className = 'kid-crossword-feedback is-correct';
+                    kidCrosswordFeedback.textContent = '🎉 Chính xác! Bạn đã tìm hết các từ trong ô chữ.';
+                    if (kidCurrentCrosswordStage !== 'free') {
+                        kidHandlePhaseCompleted(currentTopic, 'crossword', kidCurrentCrosswordStage === 'batch1' ? 1 : 2);
+                    }
+                } else {
+                    wsUpdateFeedback();
+                }
+            } else {
+                path.forEach(p => {
+                    const cell = kidCrosswordGrid.querySelector(`.ws-cell[data-row="${p.row}"][data-col="${p.col}"]`);
+                    if (cell) cell.classList.add('ws-wrong');
+                });
+                playKidWrongSound();
+                setTimeout(() => {
+                    kidCrosswordGrid.querySelectorAll('.ws-wrong').forEach(el => el.classList.remove('ws-wrong'));
+                }, 400);
+            }
+        }
+
+        function initCrossword(topic) {
+            const stage = kidGetStage(topic, kidTopicProgress);
+            kidCurrentCrosswordStage = stage;
+            kidCrosswordFeedback.className = 'kid-crossword-feedback';
+            kidCrosswordFeedback.textContent = '';
+            // [MỚI] Bảng mới -> huỷ mọi lựa chọn CHẠM đang dang dở của bảng cũ (tránh lệch toạ độ)
+            wsSelecting = false;
+            wsDragActive = false;
+            wsDownCell = null;
+            wsPendingStart = null;
+
+            let words;
+            if (stage === 'batch1') words = kidSliceRange(topic.words, KID_BATCH1_RANGES.crossword);
+            else if (stage === 'batch2') words = kidSliceRange(topic.words, KID_BATCH2_RANGES.crossword);
+            else words = shuffleArr(topic.words).slice(0, Math.min(6, topic.words.length)); // luyện tự do
+
+            if (stage !== 'free' && words.length < 2) {
+                kidCrosswordGrid.style.display = 'block';
+                kidCrosswordGrid.innerHTML = '<p class="kid-hint">Chủ đề này chưa đủ từ vựng cho phần Ô chữ.</p>';
+                kidCrosswordClues.innerHTML = '';
+                wsCurrentData = null;
+                kidHandlePhaseCompleted(topic, 'crossword', stage === 'batch1' ? 1 : 2);
+                return;
+            }
+
+            // Tải lại đúng bảng ô chữ + các từ đã tìm được của lần chơi trước (nếu có và vẫn
+            // dùng cùng bộ từ) để không bị mất tiến độ / đổi bảng khác khi tải lại trang.
+            const key = wsStorageKey(topic, stage);
+            const hash = wsWordsHash(words);
+            let saved = null;
+            try {
+                const raw = localStorage.getItem(key);
+                if (raw) saved = JSON.parse(raw);
+            } catch (e) { saved = null; }
+
+            if (saved && saved.wordsHash === hash && Array.isArray(saved.letters) && Array.isArray(saved.placements)) {
+                wsCurrentData = { letters: saved.letters, placements: saved.placements };
+                wsFoundAnswers = new Set(saved.found || []);
+            } else {
+                wsCurrentData = kidBuildCrossword(words);
+                wsFoundAnswers = new Set();
+            }
+            wsCurrentStorageKey = key;
+            wsCurrentWordsHash = hash;
+
+            kidRenderCrossword(wsCurrentData);
+            if (wsCurrentData.placements.length > 0 && wsFoundAnswers.size === wsCurrentData.placements.length) {
+                kidCrosswordFeedback.className = 'kid-crossword-feedback is-correct';
+                kidCrosswordFeedback.textContent = '🎉 Chính xác! Bạn đã tìm hết các từ trong ô chữ.';
+            } else {
+                wsUpdateFeedback();
+            }
+            wsSaveState(); // lưu ngay bảng vừa sinh/khôi phục để không bị đổi bảng khác nếu refresh giữa chừng
+        }
+
+        // Kéo (chuột) hoặc chạm (cảm ứng) qua các ô để chọn 1 chuỗi ký tự — dùng Pointer Events
+        // để dùng chung 1 bộ xử lý cho cả chuột lẫn cảm ứng. Hỗ trợ 2 kiểu:
+        //  1) KÉO: nhấn giữ ở ô đầu, rê tới ô cuối rồi thả tay.
+        //  2) CHẠM TỪNG CHỮ: chạm nhẹ (không rê) vào ô đầu tiên -> chạm nhẹ vào ô cuối cùng.
+        // Không preventDefault ngay khi vừa chạm xuống, để khung bảng vẫn cuộn được bình thường
+        // nếu học viên chỉ đang muốn kéo xem toàn bộ bảng; chỉ khi di chuyển vượt ngưỡng
+        // WS_DRAG_THRESHOLD mới coi là "đang kéo chọn chữ" và khoá cuộn lại từ lúc đó.
+        kidCrosswordGrid.addEventListener('pointerdown', (e) => {
+            const cell = e.target.closest('.ws-cell');
+            if (!cell) return;
+            wsSelecting = true;
+            wsDragActive = false;
+            wsDownPoint = { x: e.clientX, y: e.clientY };
+            wsDownCell = { row: Number(cell.dataset.row), col: Number(cell.dataset.col) };
+        });
+
+        window.addEventListener('pointermove', (e) => {
+            if (!wsSelecting) return;
+            if (!wsDragActive) {
+                const dx = e.clientX - wsDownPoint.x, dy = e.clientY - wsDownPoint.y;
+                if (Math.hypot(dx, dy) < WS_DRAG_THRESHOLD) return; // chưa rê đủ xa -> vẫn có thể là đang cuộn khung
+                wsDragActive = true; // xác nhận đây là thao tác KÉO CHỌN CHỮ -> khoá cuộn trang từ đây
+            }
+            e.preventDefault();
+            const startCell = wsPendingStart || wsDownCell;
+            const cur = wsCellFromPoint(e.clientX, e.clientY);
+            if (!cur) return;
+            const path = wsComputePath(startCell, cur);
+            if (path) wsHighlightPath(path);
+        }, { passive: false });
+
+        window.addEventListener('pointerup', (e) => {
+            if (!wsSelecting) return;
+            wsSelecting = false;
+            const cur = wsCellFromPoint(e.clientX, e.clientY);
+
+            if (wsDragActive) {
+                // ----- Kết thúc thao tác KÉO -----
+                const startCell = wsPendingStart || wsDownCell;
+                const endCell = cur || wsDownCell;
+                const path = wsComputePath(startCell, endCell) || [startCell];
+                wsClearSelectingHighlight();
+                wsPendingStart = null;
+                wsTryMatch(path);
+            } else {
+                // ----- Chỉ là 1 cú CHẠM nhẹ (không rê) -----
+                const tappedCell = cur || wsDownCell;
+                if (!wsPendingStart) {
+                    // Chạm đầu tiên: đánh dấu làm điểm bắt đầu, chờ chạm ô kế tiếp
+                    wsPendingStart = tappedCell;
+                    wsHighlightPath([tappedCell]);
+                } else if (tappedCell.row === wsPendingStart.row && tappedCell.col === wsPendingStart.col) {
+                    // Chạm lại đúng ô đang chờ -> huỷ điểm bắt đầu vừa chọn
+                    wsPendingStart = null;
+                    wsClearSelectingHighlight();
+                } else {
+                    const path = wsComputePath(wsPendingStart, tappedCell);
+                    wsClearSelectingHighlight();
+                    wsPendingStart = null;
+                    if (path) {
+                        wsTryMatch(path);
+                    } else {
+                        // Ô chạm sau không thẳng hàng với điểm bắt đầu -> coi luôn ô này là điểm
+                        // bắt đầu MỚI, thay vì bắt học viên phải chạm huỷ trước rồi chọn lại.
+                        wsPendingStart = tappedCell;
+                        wsHighlightPath([tappedCell]);
+                    }
+                }
+            }
+            wsDownCell = null;
+            wsDragActive = false;
+        });
+
+        window.addEventListener('pointercancel', () => {
+            if (!wsSelecting) return;
+            wsSelecting = false;
+            wsDragActive = false;
+            wsDownCell = null;
+            // Giữ nguyên wsPendingStart (nếu có từ trước) và vẽ lại đúng nền của riêng nó,
+            // vì pointercancel thường xảy ra khi trình duyệt giành quyền cuộn giữa chừng.
+            wsClearSelectingHighlight();
+            if (wsPendingStart) wsHighlightPath([wsPendingStart]);
+        });
+
+
+        if (kidCrosswordResetBtn) {
+            kidCrosswordResetBtn.addEventListener('click', () => {
+                if (!currentTopic) return;
+                try { if (wsCurrentStorageKey) localStorage.removeItem(wsCurrentStorageKey); } catch (e) { /* bỏ qua */ }
+                initCrossword(currentTopic);
+            });
+        }
+
+        // ---------- 4. CÂU CHUYỆN ----------
+        const kidStoryCheckBtn = document.getElementById('kid-story-check-btn');
+        const kidStoryFeedback = document.getElementById('kid-story-feedback');
+        let kidCurrentStoryStage = 'free';
+
+        // Thay các từ khóa của dải (batch) hiện tại bằng ô trống + gợi ý nghĩa tiếng Việt.
+        // Ở giai đoạn luyện tự do (không có dải từ nào) thì giữ nguyên đoạn văn, chỉ bọc
+        // tappable-word để chạm tra nghĩa như bình thường (không có ô trống).
+        function kidBuildStoryBlankHtml(storyHtml, rangeWords) {
+            if (!rangeWords.length) {
+                const wrapFn = (window.vocabTap && window.vocabTap.wrapHtml) ? window.vocabTap.wrapHtml : (s => s);
+                return wrapFn(storyHtml);
+            }
+            let html = String(storyHtml || '');
+            rangeWords.forEach(w => {
+                const key = String(w.en || '').trim();
+                if (!key) return;
+                const re = new RegExp('\\b' + kidEscapeRegex(key) + '\\b', 'i');
+                const m = html.match(re);
+                if (!m) return;
+                const answer = m[0];
+                const widthCh = Math.max(answer.length + 2, 3);
+                const blank = `<span class="kid-story-blank-wrap"><input type="text" class="kid-story-blank-input" data-answer="${kidEscAttr(answer)}" style="width:${widthCh}ch" autocomplete="off" autocapitalize="off" spellcheck="false"><span class="kid-story-blank-hint">(${kidEscHtml(w.vi)})</span></span>`;
+                html = html.slice(0, m.index) + blank + html.slice(m.index + answer.length);
+            });
+            return html;
+        }
 
         function initStory(topic) {
-            document.getElementById('kid-story-title').textContent = topic.story.title;
-            document.getElementById('kid-story-text').innerHTML = topic.story.text;
+            const storyTextEl = document.getElementById('kid-story-text');
 
-            // [MỚI] Bản dịch tiếng Việt của câu chuyện (ẩn/hiện bằng nút bấm)
-            if (topic.story.textVi) {
-                kidStoryTextVi.innerHTML = topic.story.textVi;
-                kidStoryTranslateBtn.style.display = '';
+            const stage = kidGetStage(topic, kidTopicProgress);
+            kidCurrentStoryStage = stage;
+            let rangeWords = [];
+            let storyData;
+            if (stage === 'batch1') {
+                rangeWords = kidSliceRange(topic.words, KID_BATCH1_RANGES.story);
+                storyData = topic.story.batch1;
+            } else if (stage === 'batch2') {
+                rangeWords = kidSliceRange(topic.words, KID_BATCH2_RANGES.story);
+                storyData = topic.story.batch2;
             } else {
-                kidStoryTextVi.innerHTML = '';
-                kidStoryTranslateBtn.style.display = 'none';
+                // 'free': đã xong cả 2 đợt -> ghép 2 câu chuyện lại để luyện tự do (chạm để xem nghĩa, không có ô trống)
+                const b1 = topic.story.batch1, b2 = topic.story.batch2;
+                storyData = {
+                    title: `${b1.title} & ${b2.title}`,
+                    text: `${b1.text}<br><br>${b2.text}`,
+                    used: [...(b1.used || []), ...(b2.used || [])]
+                };
             }
-            kidStoryTextVi.style.display = 'none';
-            kidStoryTranslateBtn.textContent = '🇻🇳 Xem bản dịch tiếng Việt';
 
-            // [MỚI] Hiển thị ảnh minh họa cho các từ vựng xuất hiện trong câu chuyện
+            document.getElementById('kid-story-title').textContent = storyData.title;
+            storyTextEl.innerHTML = kidBuildStoryBlankHtml(storyData.text, rangeWords);
+            kidStoryFeedback.className = 'kid-story-feedback';
+            kidStoryFeedback.textContent = '';
+            if (kidStoryCheckBtn) kidStoryCheckBtn.style.display = rangeWords.length ? '' : 'none';
+
+            if (stage !== 'free' && rangeWords.length === 0 && topic.words.length) {
+                // Chủ đề không đủ từ cho dải này -> coi như xong ngay để không kẹt học viên
+                kidHandlePhaseCompleted(topic, 'story', stage === 'batch1' ? 1 : 2);
+            }
+
+            // Hiển thị ảnh minh họa cho các từ vựng xuất hiện trong câu chuyện
             const gallery = document.getElementById('kid-story-gallery');
             gallery.innerHTML = '';
-            const usedList = Array.isArray(topic.story.used) ? topic.story.used : [];
-
+            const usedList = Array.isArray(storyData.used) ? storyData.used : [];
             usedList.forEach(term => {
                 const word = topic.words.find(w => w.en.toLowerCase() === term.toLowerCase());
-                if (!word) return; // không tìm thấy từ tương ứng thì bỏ qua
-
+                if (!word) return;
                 const item = document.createElement('div');
                 item.className = 'kid-story-gallery-item';
                 item.innerHTML = word.img
@@ -3588,13 +4428,31 @@ function toggleCompletion(symbolElement) {
             });
         }
 
-        if (kidStoryTranslateBtn) {
-            kidStoryTranslateBtn.addEventListener('click', () => {
-                const isHidden = kidStoryTextVi.style.display === 'none';
-                kidStoryTextVi.style.display = isHidden ? '' : 'none';
-                kidStoryTranslateBtn.textContent = isHidden
-                    ? '🙈 Ẩn bản dịch tiếng Việt'
-                    : '🇻🇳 Xem bản dịch tiếng Việt';
+        if (kidStoryCheckBtn) {
+            kidStoryCheckBtn.addEventListener('click', () => {
+                const inputs = Array.from(document.querySelectorAll('#kid-story-text .kid-story-blank-input'));
+                if (!inputs.length) return;
+                let allCorrect = true;
+                inputs.forEach(inp => {
+                    if (inp.disabled) return; // đã đúng từ trước
+                    const ok = kidNormalize(inp.value) === kidNormalize(inp.dataset.answer);
+                    inp.classList.toggle('is-correct', ok);
+                    inp.classList.toggle('is-wrong', !ok);
+                    if (ok) inp.disabled = true;
+                    else allCorrect = false;
+                });
+                if (allCorrect) {
+                    playKidCorrectSound();
+                    kidStoryFeedback.className = 'kid-story-feedback is-correct';
+                    kidStoryFeedback.textContent = '🎉 Chính xác! Bạn đã điền đúng hết từ khóa.';
+                    if (kidCurrentStoryStage !== 'free') {
+                        kidHandlePhaseCompleted(currentTopic, 'story', kidCurrentStoryStage === 'batch1' ? 1 : 2);
+                    }
+                } else {
+                    playKidWrongSound();
+                    kidStoryFeedback.className = 'kid-story-feedback is-wrong';
+                    kidStoryFeedback.textContent = '❌ Còn từ khóa chưa đúng (đang tô đỏ), thử lại nhé!';
+                }
             });
         }
 
@@ -3610,8 +4468,11 @@ function toggleCompletion(symbolElement) {
         const kidGameResultPanel = document.getElementById('kid-game-result-panel');
         const kidGameKeyword     = document.getElementById('kid-game-keyword');
 
-        let gameFullWords    = [];   // toàn bộ từ vựng chủ đề (nguồn tạo 2 lựa chọn gây nhiễu)
-        let gameWordsPool    = [];   // 20 từ khóa (rút ra không lặp) dùng cho 20 lượt chơi
+        let gameFullWords    = [];   // nguồn từ vựng cho lượt chơi hiện tại (toàn bộ chủ đề, hoặc dải batch hiện tại)
+        let gameWordsPool    = [];   // các từ khóa (rút ra không lặp) dùng cho các lượt chơi
+        let gameTotalTurns   = 20;   // tổng số lượt của phiên chơi hiện tại
+        let gameNormalTurns  = 10;   // số lượt đầu là chế độ Thường (các lượt còn lại là Tử Thần)
+        let kidCurrentGameStage = 'free';
         let currentTurn      = 0;
         let isDeathMode      = false;
         let gameRunId        = 0;    // đổi mỗi lần init/bắt đầu để hủy hẹn giờ của lượt chơi cũ còn sót lại
@@ -3679,12 +4540,22 @@ function toggleCompletion(symbolElement) {
             gameRunId++; // hủy mọi hẹn giờ / vòng lặp của phiên chơi trước đó
             clearGameTimers();
             resetGameVisuals();
-            gameWordsPool = kidShuffle(gameFullWords).slice(0, 20); // 20 từ khóa, không lặp lại
+
+            if (kidCurrentGameStage === 'free') {
+                gameTotalTurns = 20;
+                gameNormalTurns = 10;
+                gameWordsPool = kidShuffle(gameFullWords).slice(0, Math.min(20, gameFullWords.length));
+            } else {
+                gameTotalTurns = gameFullWords.length;
+                gameNormalTurns = Math.min(5, gameFullWords.length);
+                gameWordsPool = kidShuffle(gameFullWords); // dùng hết toàn bộ dải từ được giao, chỉ xáo thứ tự
+            }
+
             currentTurn = 0;
             isDeathMode = false;
             turnHistory = [];
             gameStatus = 'idle';
-            kidGameStatus.textContent = `Lượt: 0/20 | Chế độ: Thường`;
+            kidGameStatus.textContent = `Lượt: 0/${gameTotalTurns} | Chế độ: Thường`;
             if (kidGamePauseBtn) {
                 kidGamePauseBtn.disabled = true;
                 kidGamePauseBtn.textContent = '⏸ Dừng lại';
@@ -3701,7 +4572,17 @@ function toggleCompletion(symbolElement) {
         }
 
         function initGame(topic) {
-            gameFullWords = topic.words;
+            const stage = kidGetStage(topic, kidTopicProgress);
+            kidCurrentGameStage = stage;
+            if (stage === 'batch1') gameFullWords = kidSliceRange(topic.words, KID_BATCH1_RANGES.game);
+            else if (stage === 'batch2') gameFullWords = kidSliceRange(topic.words, KID_BATCH2_RANGES.game);
+            else gameFullWords = topic.words;
+
+            if (stage !== 'free' && gameFullWords.length < 2) {
+                // Chủ đề không đủ từ cho dải này -> coi như xong ngay để không kẹt học viên
+                kidHandlePhaseCompleted(topic, 'game', stage === 'batch1' ? 1 : 2);
+                return;
+            }
             resetGameState(false); // mở chủ đề -> chỉ chuẩn bị, chưa tự chạy
         }
 
@@ -3761,17 +4642,17 @@ function toggleCompletion(symbolElement) {
         function playTurn(runId) {
             if (runId !== gameRunId) return; // phiên chơi cũ đã bị hủy, bỏ qua
 
-            if (currentTurn >= 20) {
+            if (currentTurn >= gameTotalTurns) {
                 finishGame(runId);
                 return;
             }
 
             currentTurn++;
-            const enteringDeathMode = (currentTurn === 11);
-            isDeathMode = currentTurn > 10;
-            kidGameStatus.textContent = `Lượt: ${currentTurn}/20 | Chế độ: ${isDeathMode ? 'TỬ THẦN 💀' : 'Thường'}`;
+            const enteringDeathMode = (currentTurn === gameNormalTurns + 1);
+            isDeathMode = currentTurn > gameNormalTurns;
+            kidGameStatus.textContent = `Lượt: ${currentTurn}/${gameTotalTurns} | Chế độ: ${isDeathMode ? 'TỬ THẦN 💀' : 'Thường'}`;
             kidGameArea.classList.toggle('death-mode', isDeathMode);
-            kidGameSpeedInput.disabled = isDeathMode; // Tử Thần luôn dùng vận tốc mặc định 5-7s
+            kidGameSpeedInput.disabled = isDeathMode; // Tử Thần luôn dùng vận tốc mặc định cố định
 
             if (enteringDeathMode) {
                 kidGameArea.insertAdjacentHTML('beforeend', '<div class="hell-eyes-decor"><span class="hell-eye"><span class="hell-pupil"></span></span><span class="hell-eye"><span class="hell-pupil"></span></span></div>');
@@ -3835,7 +4716,7 @@ function toggleCompletion(symbolElement) {
 
                 // Vận tốc rơi RIÊNG cho từng ô (3 ô rơi nhanh chậm khác nhau)
                 const fallSeconds = isDeathMode
-                    ? (4 + Math.random() * 2)                                        // Tử Thần: luôn mặc định 5-7s
+                    ? 4                                                               // Tử Thần: cố định 4 giây (đã giảm từ mức 4-6s trước đây)
                     : Math.min(12, Math.max(3, baseSpeed + (Math.random() * 2 - 1))); // Thường: dao động quanh mức người chơi chọn
                 // Dùng animation CSS (thay vì transition + đổi top bằng setTimeout) để
                 // ô luôn chắc chắn rơi ngay khi vừa được thêm vào, không phụ thuộc thời điểm reflow.
@@ -3914,6 +4795,9 @@ function toggleCompletion(symbolElement) {
             }
             kidGameSpeedInput.disabled = false;
             renderResultPanel();
+            if (kidCurrentGameStage !== 'free') {
+                kidHandlePhaseCompleted(currentTopic, 'game', kidCurrentGameStage === 'batch1' ? 1 : 2);
+            }
         }
 
         // Dựng bảng tổng kết: mỗi lượt 1 dòng. Từ khóa tiếng Anh chỉ hiện với các lượt
@@ -5159,7 +6043,7 @@ function toggleCompletion(symbolElement) {
                 block.style.left = `${15 + index * (spacing || 30)}%`;
 
                 const fallSeconds = thcsIsDeathMode
-                    ? (4 + Math.random() * 2)
+                    ? 4                                                               // Tử Thần: cố định 4 giây (đồng bộ với phần "Cho bé")
                     : Math.min(12, Math.max(3, baseSpeed + (Math.random() * 2 - 1)));
                 block.style.animationDuration = fallSeconds.toFixed(2) + 's';
 
