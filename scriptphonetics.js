@@ -3193,6 +3193,9 @@ function toggleCompletion(symbolElement) {
         let currentTopic = null;
         let flashIndex = 0;
         let flashOrder = [];
+        // [SỬA LỖI] Đánh dấu để renderFlashcard() bỏ qua việc đọc lại từ đầu tiên khi vừa mở
+        // chủ đề, vì từ đó đã được đọc ĐỒNG BỘ ngay trong lúc bấm (xem openTopic bên dưới).
+        let kidSkipNextAutoSpeak = false;
 
         // ================== [MỚI] ẢNH DỰ PHÒNG TỰ ĐỘNG QUA PIXABAY API ==================
         // Khi ảnh gốc của 1 từ vựng bị lỗi (404, mất link...), hệ thống sẽ tự động gọi
@@ -3390,10 +3393,111 @@ function toggleCompletion(symbolElement) {
             if (window.vocabTap && window.vocabTap.toast) window.vocabTap.toast(msg, 'success');
         }
 
-        // [MỚI] Tô nền xanh lá cho các tab con (Nối từ / Ô chữ / Câu chuyện / Trò chơi) đã hoàn
-        // thành ở đợt hiện tại. Đọc thẳng từ kidTopicProgress (đã tải từ Supabase) nên giữ đúng
-        // trạng thái khi tải lại trang. Khi đợt chuyển sang đợt mới (hoặc luyện tự do), các cờ
-        // của đợt mới đều là false nên tab tự động trở về nền trắng mặc định.
+        // [MỚI] Sinh nội dung dòng NHẮC TIẾN ĐỘ của 1 chủ đề, dùng chung cho cả dòng chữ tĩnh
+        // trên Flashcard lẫn thông báo pop-up (toast) khi chuyển sang tab khác:
+        //  - Đợt 1 CHƯA xong (stage 'batch1'): nhắc còn bao nhiêu từ sẽ được mở khóa sau khi
+        //    xong đủ 4 phần (Nối từ/Ô chữ/Câu chuyện/Trò chơi) ứng với 25 từ đầu.
+        //  - Đợt 1 đã xong nhưng Đợt 2 CHƯA xong (stage 'batch2'): nhắc còn bao nhiêu từ (của
+        //    Đợt 2) cần học xong 4 phần còn lại để hoàn thành trọn vẹn chủ đề.
+        //  - Đã xong hết (stage 'free'): không cần nhắc gì nữa -> trả về null.
+        // Tham số html=true để chèn thẻ <b> (dùng cho innerHTML của dòng chữ tĩnh); html=false
+        // trả về chữ thường (dùng cho toast vì toast chỉ gán bằng textContent, không đọc HTML).
+        function kidStageHintText(topic, html) {
+            const b = (s) => html ? `<b>${s}</b>` : s;
+            const stage = kidGetStage(topic, kidTopicProgress);
+            if (stage === 'batch1') {
+                const visibleCount = Math.min(25, topic.words.length);
+                const remain = topic.words.length - visibleCount;
+                if (remain <= 0) return null; // chủ đề vốn không đủ hơn 25 từ -> không có gì để khóa
+                return `🔒 Còn ${b(remain)} từ vựng nữa sẽ được mở khóa sau khi bạn hoàn thành đủ 4 phần: `
+                     + `${b('Nối từ')}, ${b('Ô chữ')}, ${b('Câu chuyện')} và ${b('Trò chơi')} ứng với 25 từ đầu tiên.`;
+            }
+            if (stage === 'batch2') {
+                const remain = topic.words.length - 25;
+                if (remain <= 0) return null;
+                return `📚 Học ${b(remain)} từ vựng nữa để hoàn thành chủ đề ${b('"' + topic.title + '"')}.`;
+            }
+            return null;
+        }
+
+        // [MỚI] Khung NHẮC TIẾN ĐỘ hiện GIỮA MÀN HÌNH (không tự ẩn) — học viên phải bấm dấu ✕
+        // mới đóng được, để chắc chắn học viên đọc và biết cần làm gì để mở khóa/hoàn thành.
+        const kidStageHintModal    = document.getElementById('kid-stage-hint-modal');
+        const kidStageHintTextEl   = document.getElementById('kid-stage-hint-text');
+        const kidStageHintCloseBtn = document.getElementById('kid-stage-hint-close');
+        const kidStageHintEmojiEl  = kidStageHintModal ? kidStageHintModal.querySelector('.kid-hint-emoji') : null;
+
+        // [MỚI] Emoji hiển thị trên popup ứng với từng phần (subtab) của 1 chủ đề "Cho bé",
+        // để popup trông sinh động và đúng ngữ cảnh hơn thay vì luôn dùng 1 icon 📌 cố định.
+        const KID_SUBTAB_HINT_EMOJI = {
+            flashcard: '🃏',
+            match:     '🔗',
+            crossword: '🧩',
+            story:     '📖',
+            game:      '🎮'
+        };
+
+        // [MỚI] Lấy đúng nội dung hướng dẫn (.kid-hint) đã có sẵn trong phần (subtab) tương
+        // ứng, để popup nhắc nhở của mỗi phần khác nhau, dựa trên đúng nội dung kid-hint của
+        // phần đó thay vì luôn hiện chung 1 dòng chữ.
+        function kidSectionHintHtml(subTab) {
+            const container = document.getElementById('kid-sub-' + subTab);
+            if (!container) return null;
+            const hintEl = container.querySelector('.kid-hint');
+            return (hintEl && hintEl.innerHTML.trim()) ? hintEl.innerHTML.trim() : null;
+        }
+
+        // [MỚI] Ghi nhớ những popup (theo từng chủ đề + từng phần) mà học viên đã bấm ✕ tắt đi
+        // trong PHIÊN HIỆN TẠI của trang -> sẽ không tự hiện lại nữa cho tới khi tải lại trang
+        // (biến JS thường, không lưu localStorage/DB nên load lại trang là quên hết, đúng như
+        // mong muốn: tắt rồi thì thôi, nhưng refresh lại thì hiện lại từ đầu).
+        const kidDismissedHintKeys = new Set();
+        let kidCurrentHintPopupKey = null; // key của popup đang hiển thị -> dùng để đánh dấu "đã tắt" khi bấm ✕
+
+        function kidShowStageHintPopup(topic, subTab) {
+            subTab = subTab || 'flashcard';
+            const key = kidTopicKey(topic) + '::' + subTab;
+            if (kidDismissedHintKeys.has(key)) return; // học viên đã tắt popup của đúng phần này rồi -> không hiện lại nữa
+            const sectionHint  = kidSectionHintHtml(subTab); // hướng dẫn cách chơi riêng của phần đang mở
+            const progressHint = kidStageHintText(topic, true); // nhắc còn bao nhiêu từ nữa để mở khóa/hoàn thành
+            if (!sectionHint && !progressHint) return; // không có gì để nhắc -> bỏ qua, không hiện popup
+            if (!kidStageHintModal || !kidStageHintTextEl) return;
+
+            if (kidStageHintEmojiEl) kidStageHintEmojiEl.textContent = KID_SUBTAB_HINT_EMOJI[subTab] || '📌';
+
+            let html = '';
+            if (sectionHint)  html += `<span class="kid-hint-section-text">${sectionHint}</span>`;
+            if (progressHint) html += `<span class="kid-hint-progress-text">${progressHint}</span>`;
+            kidStageHintTextEl.innerHTML = html;
+            kidStageHintModal.style.display = 'flex';
+            kidCurrentHintPopupKey = key; // ghi nhớ để khi bấm ✕ biết cần đánh dấu đúng key nào là "đã tắt"
+        }
+
+        // [MỚI] Popup ăn mừng GIỮA MÀN HÌNH khi học viên vừa hoàn thành xong 25 từ vựng đầu tiên
+        // (Đợt 1) — dùng chung khung popup nhắc nhở, nhưng luôn hiện ra bất kể trước đó học viên
+        // đã tắt popup nhắc nhở của phần nào hay chưa, vì đây là một cột mốc mới, đáng thông báo.
+        function kidShowBatch1CompletedPopup(topic) {
+            const remain = topic.words.length - 25;
+            if (remain <= 0) return; // chủ đề vốn không đủ >25 từ -> không có "phần còn lại" để nhắc
+            if (!kidStageHintModal || !kidStageHintTextEl) return;
+            kidCurrentHintPopupKey = null; // đây là popup ăn mừng, không gắn với 1 phần cụ thể nào -> không tính vào danh sách đã tắt
+
+            if (kidStageHintEmojiEl) kidStageHintEmojiEl.textContent = '🎉';
+            kidStageHintTextEl.innerHTML =
+                  `<span class="kid-hint-section-text">🎉 Chúc mừng! Bạn đã hoàn thành <b>25 từ vựng</b> đầu tiên của chủ đề `
+                + `<b>"${topic.title}"</b>.</span>`
+                + `<span class="kid-hint-progress-text">📚 Hãy tiếp tục hoàn thành <b>${remain} từ vựng</b> còn lại để hoàn thành trọn vẹn chủ đề này nhé!</span>`;
+            kidStageHintModal.style.display = 'flex';
+        }
+        function kidCloseStageHintPopup() {
+            if (kidStageHintModal) kidStageHintModal.style.display = 'none';
+            if (kidCurrentHintPopupKey) {
+                kidDismissedHintKeys.add(kidCurrentHintPopupKey); // ghi nhớ "đã tắt" -> không tự hiện lại nữa cho tới khi tải lại trang
+                kidCurrentHintPopupKey = null;
+            }
+        }
+        if (kidStageHintCloseBtn) kidStageHintCloseBtn.addEventListener('click', kidCloseStageHintPopup);
+
         function kidUpdateSubtabIndicators(topic) {
             if (!kidSubtabs) return;
             const stage = kidGetStage(topic, kidTopicProgress);
@@ -3452,6 +3556,7 @@ function toggleCompletion(symbolElement) {
 
             if (stageAfter === 'batch2') {
                 kidNotifyUnlocked('🎉 Bạn đã hoàn thành 25 từ đầu tiên! Toàn bộ từ vựng của chủ đề đã được mở khóa.');
+                kidShowBatch1CompletedPopup(topic); // [MỚI] popup nhắc nhở giữa màn hình: đã xong 25 từ, hãy học nốt phần còn lại
             } else if (stageAfter === 'free') {
                 // [MỚI] Hoàn thành toàn bộ lộ trình -> hiện hộp thoại chúc mừng + chủ đề chuyển xanh lá trong danh sách
                 kidShowTopicCompletedDialog(topic);
@@ -3583,6 +3688,16 @@ function toggleCompletion(symbolElement) {
             document.querySelectorAll('.kid-sub-content').forEach(el => el.style.display = 'none');
             document.getElementById('kid-sub-flashcard').style.display = 'block';
 
+            // [SỬA LỖI] Đọc từ đầu tiên NGAY LẬP TỨC, đồng bộ trong lúc xử lý cú bấm của người
+            // dùng — không được đặt sau "await" bên dưới. Một số trình duyệt (đặc biệt
+            // Safari/iOS) chỉ cho phép speechSynthesis.speak() chạy khi nó được gọi trực tiếp,
+            // không có khoảng trễ (kể cả 1 "await") kể từ thao tác bấm của người dùng; nếu
+            // không, lệnh đọc sẽ bị trình duyệt âm thầm bỏ qua (không lỗi, không có tiếng).
+            if (topic.words && topic.words[0]) {
+                speakEnglishWord(topic.words[0].en);
+                kidSkipNextAutoSpeak = true;
+            }
+
             await kidLoadTopicProgress(topic);
 
             initFlashcards(topic);
@@ -3591,6 +3706,7 @@ function toggleCompletion(symbolElement) {
             initStory(topic);
             initGame(topic);
             kidUpdateSubtabIndicators(topic); // [MỚI] khôi phục đúng màu xanh lá đã lưu trước đó (không mất khi refresh)
+            kidShowStageHintPopup(topic, 'flashcard'); // [MỚI] tự động nhắc tiến độ ngay khi vừa mở chủ đề
         }
 
         // ---------- Chuyển tab con ----------
@@ -3601,6 +3717,7 @@ function toggleCompletion(symbolElement) {
             btn.classList.add('active');
             document.querySelectorAll('.kid-sub-content').forEach(el => el.style.display = 'none');
             document.getElementById('kid-sub-' + btn.dataset.sub).style.display = 'block';
+            if (currentTopic) kidShowStageHintPopup(currentTopic, btn.dataset.sub); // [MỚI] nhắc lại tiến độ mỗi khi chuyển sang tab này, ứng đúng nội dung của phần vừa chuyển tới
         });
 
         // ---------- [MỚI] TRICK ADMIN: giữ 5 giây vào tab Nối từ / Ô chữ / Câu chuyện / Trò
@@ -3770,9 +3887,10 @@ function toggleCompletion(symbolElement) {
 
             const notice = document.getElementById('kid-flash-lock-notice');
             if (notice) {
-                if (stage === 'batch1' && topic.words.length > visibleCount) {
+                const hintMsg = kidStageHintText(topic, true);
+                if (hintMsg) {
                     notice.style.display = '';
-                    notice.innerHTML = `🔒 Còn <b>${topic.words.length - visibleCount}</b> từ vựng nữa sẽ được mở khóa sau khi bạn hoàn thành đủ 4 phần: <b>Nối từ</b>, <b>Ô chữ</b>, <b>Câu chuyện</b> và <b>Trò chơi</b> ứng với 25 từ đầu tiên.`;
+                    notice.innerHTML = hintMsg;
                 } else {
                     notice.style.display = 'none';
                     notice.innerHTML = '';
@@ -3801,7 +3919,13 @@ function toggleCompletion(symbolElement) {
     kidFlashProg.textContent = `Thẻ ${flashIndex + 1} / ${flashOrder.length}`;
 
     // [MỚI] Tự động đọc từ tiếng Anh mỗi khi chuyển sang thẻ khác
-    speakEnglishWord(w.en);
+    // [SỬA LỖI] Bỏ qua nếu từ này vừa được đọc đồng bộ ngay lúc mở chủ đề (xem openTopic),
+    // tránh đọc lặp 2 lần liên tiếp cho đúng 1 từ.
+    if (kidSkipNextAutoSpeak) {
+        kidSkipNextAutoSpeak = false;
+    } else {
+        speakEnglishWord(w.en);
+    }
 
 
     // TẢI TRƯỚC (PRELOAD) ẢNH TIẾP THEO
@@ -5163,6 +5287,16 @@ function toggleCompletion(symbolElement) {
             thcsUnitPanel.querySelectorAll('.kid-sub-content').forEach(el => el.style.display = 'none');
             document.getElementById('thcs-sub-flashcard').style.display = 'block';
 
+            // [SỬA LỖI] Đọc từ đầu tiên NGAY LẬP TỨC, đồng bộ trong lúc xử lý cú bấm của người
+            // dùng — không được đặt sau "await" bên dưới. Một số trình duyệt (đặc biệt
+            // Safari/iOS) chỉ cho phép speechSynthesis.speak() chạy khi nó được gọi trực tiếp,
+            // không có khoảng trễ (kể cả 1 "await") kể từ thao tác bấm của người dùng; nếu
+            // không, lệnh đọc sẽ bị trình duyệt âm thầm bỏ qua (không lỗi, không có tiếng).
+            if (unit.words && unit.words[0]) {
+                thcsSpeak(unit.words[0].en);
+                thcsSkipNextAutoSpeak = true;
+            }
+
             await thcsEnsureProgressLoaded();
             if (window.vocabTap && window.vocabTap.ensureLoaded) {
                 try { await window.vocabTap.ensureLoaded(); } catch (e) { console.error('Lỗi khi tải từ vựng cá nhân:', e.message); }
@@ -5204,6 +5338,9 @@ function toggleCompletion(symbolElement) {
         let flashWords = [];
         let flashIndex = 0;
         let thcsFlashSeenSet = new Set(); // các chỉ số thẻ đã xem trong lượt mở Unit hiện tại
+        // [SỬA LỖI] Đánh dấu để thcsRenderFlashcard() bỏ qua việc đọc lại từ đầu tiên khi vừa
+        // mở Unit, vì từ đó đã được đọc ĐỒNG BỘ ngay trong lúc bấm (xem openUnit bên dưới).
+        let thcsSkipNextAutoSpeak = false;
 
         thcsFlashFront.addEventListener('click', (e) => {
             const btn = e.target.closest('.kf-speak-btn');
@@ -5235,7 +5372,13 @@ function toggleCompletion(symbolElement) {
             `;
             thcsFlashBack.innerHTML = `<div class="kf-vi">${w.vi}</div><div class="kf-ex">"${w.ex}"</div>${w.trVi ? `<div class="kf-ex-vi">${w.trVi}</div>` : ''}`;
             thcsFlashProg.textContent = `Thẻ ${flashIndex + 1} / ${flashWords.length}`;
-            thcsSpeak(w.en);
+            // [SỬA LỖI] Bỏ qua nếu từ này vừa được đọc đồng bộ ngay lúc mở Unit (xem openUnit),
+            // tránh đọc lặp 2 lần liên tiếp cho đúng 1 từ.
+            if (thcsSkipNextAutoSpeak) {
+                thcsSkipNextAutoSpeak = false;
+            } else {
+                thcsSpeak(w.en);
+            }
 
             const nextWord = flashWords[(flashIndex + 1) % flashWords.length];
             if (nextWord && nextWord.img) { const pre = new Image(); pre.src = nextWord.img; }

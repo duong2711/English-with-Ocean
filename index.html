@@ -511,13 +511,13 @@
     </div>
 
     <div id="tab-kiem-tra" class="main-tab-content">
-        <!--<h2>Kiểm tra Đánh giá</h2>
+        <h2>Kiểm tra Đánh giá</h2>
         <div class="folder-grid">
             <div id="vocab-test-folder" class="folder-card">📁 từ vựng</div>
             <div class="folder-card">📁 đề thi lớp 6->12</div>
             <div class="folder-card">📁 đề thi chuyển cấp THCS/THPT</div>
             <div class="folder-card">📁 đề minh họa IELTS</div>
-        </div>-->
+        </div>
     </div>
 
     <div id="tab-tu-vung" class="main-tab-content">
@@ -528,8 +528,8 @@
             <div class="folder-card" id="kid-folder-card">📁 Vận dụng (20 chủ đề)</div>
             <div class="folder-card" id="thcs-folder-card">📁 THCS/THPT (theo SGK Global success)</div>
             <div class="folder-card news-folder-trigger" id="news-folder-card">📁 Tin ngắn (nguồn newsinlevels)</div>
-           <!-- <div class="folder-card">📁 IELTS (theo sách Perfect IELTS vocab)</div>
-            <div class="folder-card">📁 TOEIC (web byetoeic)</div> -->
+            <div class="folder-card">📁 IELTS (theo sách Perfect IELTS vocab)</div>
+            <div class="folder-card">📁 TOEIC (web byetoeic)</div>
         </div>
 
         <!-- ===== Panel "Từ vựng của tôi" — các từ học viên đã chạm để tra nghĩa khi luyện dịch ===== -->
@@ -1124,6 +1124,16 @@
             <h3>Hoàn thành chủ đề!</h3>
             <p id="kid-complete-desc"></p>
             <button type="button" id="kid-complete-close-btn" class="kid-btn kid-btn-primary">Tuyệt vời!</button>
+        </div>
+    </div>
+
+    <!-- ===== KHUNG NHẮC TIẾN ĐỘ (Cho bé) — hiện GIỮA MÀN HÌNH khi chủ đề còn phần/từ vựng
+         chưa hoàn thành; học viên phải bấm dấu ✕ mới đóng được (không tự động ẩn) ===== -->
+    <div id="kid-stage-hint-modal" class="kid-hint-modal" style="display:none;">
+        <div class="kid-hint-modal-box">
+            <button type="button" id="kid-stage-hint-close" class="kid-hint-close" aria-label="Đóng">✕</button>
+            <div class="kid-hint-emoji">📌</div>
+            <p id="kid-stage-hint-text"></p>
         </div>
     </div>
 
