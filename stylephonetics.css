@@ -193,6 +193,554 @@ h3 { font-size:0.95rem; font-weight:600; color:var(--text); margin:0 0 8px; }
     color: var(--text);
 }
 
+/* --- [MỚI] TAB MẸ DẠNG DROPDOWN (Nền tảng / Chuyên sâu) --- */
+.header-tab-dropdown {
+    position: relative;
+    flex-shrink: 0;
+    display: flex;
+}
+.main-tab-dropdown-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.main-tab-dropdown-btn .dropdown-arrow {
+    font-size: 0.62rem;
+    display: inline-block;
+    transition: transform 0.2s;
+    transform: translateY(1px);
+}
+.header-tab-dropdown.open .dropdown-arrow {
+    transform: rotate(180deg) translateY(-1px);
+}
+/* Menu xổ xuống: dùng position:fixed (canh vị trí bằng JS) để không bị thanh tab
+   (overflow-x:auto trên mobile) cắt mất phần tràn theo chiều dọc. */
+.header-tab-dropdown-menu {
+    position: fixed;
+    display: none;
+    flex-direction: column;
+    min-width: 172px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    padding: 6px;
+    gap: 2px;
+    z-index: 950;
+}
+.header-tab-dropdown-menu.open { display: flex; }
+.header-tab-dropdown-menu .header-tab-btn {
+    width: 100%;
+    text-align: left;
+    padding: 9px 12px;
+}
+.header-tab-dropdown-menu .header-tab-btn::after { display: none; }
+.header-tab-dropdown-menu .header-tab-btn.active {
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+/* --- [MỚI] Khung "Nội dung đang xây dựng" dùng cho các tab con của "Chuyên sâu" --- */
+.wip-panel {
+    background: var(--surface);
+    border: 1.5px dashed var(--border-strong);
+    border-radius: var(--radius-lg);
+    padding: 54px 24px;
+    text-align: center;
+    color: var(--text-muted);
+}
+.wip-panel .wip-icon {
+    display: block;
+    font-size: 2.6rem;
+    margin-bottom: 12px;
+}
+.wip-panel h3 {
+    color: var(--text);
+    font-size: 1.05rem;
+    margin-bottom: 8px;
+}
+.wip-panel p {
+    font-size: 0.85rem;
+    line-height: 1.6;
+    max-width: 420px;
+    margin: 0 auto;
+}
+
+/* =====================================================
+   [MỚI] SƠ ĐỒ LỘ TRÌNH PHIÊN ÂM — TAB "MẤT GỐC" (Chuyên sâu)
+   ===================================================== */
+.roadmap-wrap { max-width: 760px; margin: 0 auto; }
+
+/* --- Khối giới thiệu --- */
+.roadmap-intro {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    border-radius: var(--radius-lg);
+    padding: 26px 22px;
+    color: #fff;
+    text-align: center;
+    box-shadow: var(--shadow-md);
+    margin-bottom: 20px;
+}
+.roadmap-intro-badge {
+    display: inline-block;
+    background: rgba(255,255,255,0.18);
+    border: 1px solid rgba(255,255,255,0.32);
+    border-radius: 999px;
+    padding: 4px 14px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    margin-bottom: 12px;
+}
+.roadmap-intro h3 {
+    font-size: 1.22rem;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 8px;
+    letter-spacing: -0.01em;
+}
+.roadmap-intro p {
+    font-size: 0.84rem;
+    color: rgba(255,255,255,0.9);
+    line-height: 1.6;
+    max-width: 480px;
+    margin: 0 auto 18px;
+}
+.roadmap-stats {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.roadmap-stat {
+    background: rgba(255,255,255,0.15);
+    border-radius: var(--radius);
+    padding: 9px 16px;
+    min-width: 74px;
+}
+.roadmap-stat strong { display: block; font-size: 1.2rem; font-weight: 800; line-height: 1.2; }
+.roadmap-stat span { display: block; font-size: 0.64rem; color: rgba(255,255,255,0.85); margin-top: 2px; letter-spacing: 0.02em; }
+
+/* --- Dải tổng quan các giai đoạn --- */
+.roadmap-stages {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 2px 2px 16px;
+}
+.roadmap-stages::-webkit-scrollbar { display: none; }
+.roadmap-stage-pill {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 13px;
+    border-radius: 999px;
+    font-size: 0.73rem;
+    font-weight: 700;
+    white-space: nowrap;
+    border: 1.5px solid transparent;
+}
+.roadmap-stage-arrow { flex-shrink: 0; color: var(--text-light); font-size: 0.75rem; }
+
+.stage-intro      { background: var(--primary-light); color: var(--primary-dark); border-color: var(--primary); }
+.stage-vowel      { background: var(--vowel-bg);       color: #92660a; border-color: var(--vowel-border); }
+.stage-diphthong  { background: var(--diphthong-bg);   color: #17794f; border-color: var(--diphthong-border); }
+.stage-consonant  { background: var(--consonant-bg);   color: #b5324a; border-color: var(--consonant-border); }
+.stage-stress     { background: var(--warning-light);  color: #92620a; border-color: var(--warning); }
+.stage-flow       { background: var(--success-light);  color: var(--success-dark); border-color: var(--success); }
+
+/* --- Timeline dọc 9 buổi học --- */
+.roadmap-timeline { position: relative; padding-left: 34px; }
+.roadmap-timeline::before {
+    content: '';
+    position: absolute;
+    left: 14px; top: 6px; bottom: 6px;
+    width: 2px;
+    background: var(--border-strong);
+    border-radius: 2px;
+}
+.roadmap-day { position: relative; margin-bottom: 14px; }
+.roadmap-day:last-child { margin-bottom: 0; }
+.roadmap-day-marker {
+    position: absolute;
+    left: -34px; top: 0;
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: #fff;
+    box-shadow: 0 0 0 4px var(--surface);
+    z-index: 1;
+}
+.roadmap-day.stage-intro     .roadmap-day-marker { background: var(--primary); }
+.roadmap-day.stage-vowel     .roadmap-day-marker { background: var(--vowel-border); }
+.roadmap-day.stage-diphthong .roadmap-day-marker { background: var(--diphthong-border); }
+.roadmap-day.stage-consonant .roadmap-day-marker { background: var(--consonant-border); }
+.roadmap-day.stage-stress    .roadmap-day-marker { background: var(--warning); }
+.roadmap-day.stage-flow      .roadmap-day-marker { background: var(--success); }
+
+.roadmap-day-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 4px solid transparent;
+    border-radius: var(--radius);
+    padding: 13px 15px;
+    box-shadow: var(--shadow-xs);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.roadmap-day:hover .roadmap-day-card { transform: translateX(3px); box-shadow: var(--shadow-sm); }
+.roadmap-day.stage-intro     .roadmap-day-card { border-left-color: var(--primary); }
+.roadmap-day.stage-vowel     .roadmap-day-card { border-left-color: var(--vowel-border); }
+.roadmap-day.stage-diphthong .roadmap-day-card { border-left-color: var(--diphthong-border); }
+.roadmap-day.stage-consonant .roadmap-day-card { border-left-color: var(--consonant-border); }
+.roadmap-day.stage-stress    .roadmap-day-card { border-left-color: var(--warning); }
+.roadmap-day.stage-flow      .roadmap-day-card { border-left-color: var(--success); }
+
+.roadmap-day-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+}
+.roadmap-day-label { font-size: 0.66rem; font-weight: 800; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.05em; }
+.roadmap-stage-tag { font-size: 0.66rem; font-weight: 700; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+.roadmap-day.stage-intro     .roadmap-stage-tag { background: var(--primary-light); color: var(--primary-dark); }
+.roadmap-day.stage-vowel     .roadmap-stage-tag { background: var(--vowel-bg); color: #92660a; }
+.roadmap-day.stage-diphthong .roadmap-stage-tag { background: var(--diphthong-bg); color: #17794f; }
+.roadmap-day.stage-consonant .roadmap-stage-tag { background: var(--consonant-bg); color: #b5324a; }
+.roadmap-day.stage-stress    .roadmap-stage-tag { background: var(--warning-light); color: #92620a; }
+.roadmap-day.stage-flow      .roadmap-stage-tag { background: var(--success-light); color: var(--success-dark); }
+
+.roadmap-day-card h4 {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 8px;
+    letter-spacing: -0.005em;
+}
+.roadmap-topic-list { list-style: none; display: flex; flex-direction: column; gap: 5px; margin-bottom: 4px; }
+.roadmap-topic-list li { font-size: 0.79rem; color: var(--text-muted); line-height: 1.5; padding-left: 15px; position: relative; }
+.roadmap-topic-list li::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 7px;
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--border-strong);
+}
+.roadmap-test-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 8px;
+    font-size: 0.71rem;
+    font-weight: 700;
+    color: #92620a;
+    background: var(--warning-light);
+    border: 1px dashed var(--warning);
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+}
+
+/* --- Đích đến --- */
+.roadmap-finish {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: linear-gradient(135deg, var(--success-light), #ecfdf5);
+    border: 1.5px dashed var(--success);
+    border-radius: var(--radius-lg);
+    padding: 18px 20px;
+    margin-top: 18px;
+}
+.roadmap-finish-icon { font-size: 1.9rem; flex-shrink: 0; }
+.roadmap-finish h4 { font-size: 0.94rem; font-weight: 800; color: var(--success-dark); margin-bottom: 3px; }
+.roadmap-finish p { font-size: 0.79rem; color: var(--text-muted); line-height: 1.5; }
+
+@media (min-width: 600px) {
+    .roadmap-intro { padding: 32px 30px; }
+    .roadmap-intro h3 { font-size: 1.45rem; }
+    .roadmap-day-card { padding: 16px 20px; }
+    .roadmap-day-card h4 { font-size: 0.98rem; }
+    .roadmap-topic-list li { font-size: 0.82rem; }
+}
+
+/* =====================================================
+   [MỚI] THANH CHUYỂN ĐỔI LỘ TRÌNH (Phiên âm ⇄ Ngữ pháp)
+   ===================================================== */
+.roadmap-switcher {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    max-width: 760px;
+    margin: 0 auto 18px;
+}
+.roadmap-nav-btn {
+    flex-shrink: 0;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--primary);
+    font-size: 1.15rem;
+    font-weight: 800;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+    box-shadow: var(--shadow-xs);
+}
+.roadmap-nav-btn:hover { background: var(--primary-light); }
+.roadmap-nav-btn:active { transform: scale(0.9); }
+.roadmap-nav-btn:disabled { opacity: 0.35; cursor: default; box-shadow: none; }
+.roadmap-nav-btn:disabled:hover { background: var(--surface); }
+
+.roadmap-switcher-tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 3px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    max-width: 100%;
+}
+.roadmap-switcher-tabs::-webkit-scrollbar { display: none; }
+.roadmap-switcher-tab {
+    flex-shrink: 0;
+    border: none;
+    background: transparent;
+    padding: 7px 13px;
+    border-radius: 999px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s, color 0.2s;
+}
+.roadmap-switcher-tab.active {
+    background: var(--primary);
+    color: #fff;
+    box-shadow: var(--shadow-xs);
+}
+
+/* --- Khung trượt (pager) chứa 2 trang lộ trình --- */
+.roadmap-pager { overflow: hidden; }
+.roadmap-track {
+    display: flex;
+    align-items: flex-start;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.roadmap-page {
+    flex: 0 0 100%;
+    min-width: 100%;
+    box-sizing: border-box;
+}
+
+.roadmap-dots {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 7px;
+    margin-top: 18px;
+}
+.roadmap-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--border-strong);
+    cursor: pointer;
+    transition: background 0.2s, width 0.2s, border-radius 0.2s;
+}
+.roadmap-dot.active {
+    background: var(--primary);
+    width: 20px;
+    border-radius: 4px;
+}
+
+/* =====================================================
+   [MỚI] LỘ TRÌNH NGỮ PHÁP 2 THÁNG — ACCORDION 4 GIAI ĐOẠN
+   ===================================================== */
+.roadmap-intro-grammar { background: linear-gradient(135deg, #6d5ef7 0%, #4c37c9 100%); }
+
+.gstage-hint {
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--text-light);
+    margin: -6px 0 14px;
+}
+
+/* Bảng màu riêng cho từng giai đoạn ngữ pháp */
+.gstage-pill-1 { background: var(--diphthong-bg); color: #17794f; border-color: var(--diphthong-border); }
+.gstage-pill-2 { background: var(--vowel-bg);     color: #92660a; border-color: var(--vowel-border); }
+.gstage-pill-3 { background: #fff7ed;             color: #b45309; border-color: #fb923c; }
+.gstage-pill-4 { background: #fee2e2;             color: var(--danger-dark); border-color: var(--danger); }
+
+.gstage-accordion { display: flex; flex-direction: column; gap: 12px; }
+
+.gstage-block {
+    --gstage-bg: var(--surface-2);
+    --gstage-border: var(--border-strong);
+    --gstage-text: var(--text-muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-xs);
+}
+.gstage-1 { --gstage-bg: var(--diphthong-bg); --gstage-border: var(--diphthong-border); --gstage-text: #17794f; }
+.gstage-2 { --gstage-bg: var(--vowel-bg);     --gstage-border: var(--vowel-border);     --gstage-text: #92660a; }
+.gstage-3 { --gstage-bg: #fff7ed;             --gstage-border: #fb923c;                 --gstage-text: #b45309; }
+.gstage-4 { --gstage-bg: #fee2e2;             --gstage-border: var(--danger);           --gstage-text: var(--danger-dark); }
+
+.gstage-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: var(--gstage-bg);
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+}
+.gstage-icon { font-size: 1.25rem; flex-shrink: 0; }
+.gstage-header-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.gstage-header-text h4 { font-size: 0.87rem; font-weight: 800; color: var(--text); letter-spacing: -0.005em; }
+.gstage-meta { font-size: 0.69rem; font-weight: 700; color: var(--gstage-text); }
+.gstage-chevron {
+    flex-shrink: 0;
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: var(--gstage-text);
+    transition: transform 0.25s;
+}
+.gstage-block.open .gstage-chevron { transform: rotate(180deg); }
+
+.gstage-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s ease;
+}
+.gstage-desc {
+    padding: 12px 16px 0;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    line-height: 1.55;
+}
+.gday-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 8px 10px 14px;
+}
+.gday-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    transition: background 0.15s;
+}
+.gday-row:hover { background: var(--surface-2); }
+.gday-num {
+    flex-shrink: 0;
+    width: 23px;
+    height: 23px;
+    margin-top: 1px;
+    border-radius: 50%;
+    background: var(--gstage-border);
+    color: #fff;
+    font-size: 0.66rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.gday-text { font-size: 0.79rem; color: var(--text-muted); line-height: 1.5; padding-top: 3px; }
+.gday-row.gday-review .gday-num { background: var(--warning); }
+.gday-row.gday-test .gday-num { background: var(--danger); }
+.gday-row.gday-review .gday-text,
+.gday-row.gday-test .gday-text { color: var(--text); font-weight: 700; }
+
+@media (min-width: 600px) {
+    .gstage-header-text h4 { font-size: 0.95rem; }
+    .gday-text { font-size: 0.82rem; }
+}
+
+/* =====================================================
+   [MỚI] LỘ TRÌNH TỪ VỰNG — KHÔNG GIỚI HẠN (mốc, không phải deadline)
+   ===================================================== */
+.roadmap-intro-vocab { background: linear-gradient(135deg, #0ea5b7 0%, #0b7285 100%); }
+
+.vpill-1         { background: var(--primary-light); color: var(--primary-dark); border-color: var(--primary); }
+.vpill-milestone { background: var(--warning-light);  color: #92620a;            border-color: var(--warning); }
+.vpill-2         { background: var(--success-light);  color: var(--success-dark); border-color: var(--success); }
+
+.vstage-block {
+    --vstage-bg: var(--surface-2);
+    --vstage-text: var(--text-muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-xs);
+    margin-bottom: 14px;
+}
+.vstage-block:last-of-type { margin-bottom: 0; }
+.vstage-1 { --vstage-bg: var(--primary-light); --vstage-text: var(--primary-dark); }
+.vstage-2 { --vstage-bg: var(--success-light); --vstage-text: var(--success-dark); }
+
+.vstage-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: var(--vstage-bg);
+}
+.vstage-icon { font-size: 1.3rem; flex-shrink: 0; }
+.vstage-header-text h4 { font-size: 0.9rem; font-weight: 800; color: var(--text); margin-bottom: 2px; letter-spacing: -0.005em; }
+.vstage-header-text span { font-size: 0.71rem; font-weight: 700; color: var(--vstage-text); }
+.vstage-body { padding: 14px 16px 16px; }
+.vstage-body .roadmap-topic-list { margin-bottom: 10px; }
+.vstage-body .roadmap-topic-list li strong { color: var(--text); font-weight: 700; }
+
+/* --- Ghi chú hành trình không hồi kết --- */
+.vocab-infinity {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: linear-gradient(135deg, var(--primary-light), #eef1ff);
+    border: 1.5px dashed var(--primary);
+    border-radius: var(--radius-lg);
+    padding: 18px 20px;
+    margin-top: 18px;
+}
+.vocab-infinity-icon { font-size: 1.9rem; flex-shrink: 0; }
+.vocab-infinity h4 { font-size: 0.94rem; font-weight: 800; color: var(--primary-dark); margin-bottom: 3px; }
+.vocab-infinity p { font-size: 0.79rem; color: var(--text-muted); line-height: 1.5; }
+
+@media (min-width: 600px) {
+    .vstage-header-text h4 { font-size: 0.98rem; }
+    .vstage-body .roadmap-topic-list li { font-size: 0.82rem; }
+}
+
 /* Nút đăng xuất trong header */
 #logout-btn {
     margin-left: auto;

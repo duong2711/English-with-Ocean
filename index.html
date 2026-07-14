@@ -21,9 +21,31 @@
         </a>
 
         <nav class="header-tabs" id="header-tabs-nav">
-            <button class="header-tab-btn main-tab-btn active" data-main-target="tab-phien-am">Phiên âm</button>
-            <button class="header-tab-btn main-tab-btn" data-main-target="tab-tu-vung">Từ vựng</button>
-            <button class="header-tab-btn main-tab-btn" data-main-target="tab-ngu-phap">Ngữ pháp</button>
+            <div class="header-tab-dropdown" id="dropdown-nen-tang">
+                <button type="button" class="header-tab-btn main-tab-dropdown-btn active">
+                    Nền tảng <span class="dropdown-arrow">▾</span>
+                </button>
+                <div class="header-tab-dropdown-menu">
+                    <button class="header-tab-btn main-tab-btn active" data-main-target="tab-phien-am">Phiên âm</button>
+                    <button class="header-tab-btn main-tab-btn" data-main-target="tab-tu-vung">Từ vựng</button>
+                    <button class="header-tab-btn main-tab-btn" data-main-target="tab-ngu-phap">Ngữ pháp</button>
+                </div>
+            </div>
+
+            <div class="header-tab-dropdown" id="dropdown-chuyen-sau">
+                <button type="button" class="header-tab-btn main-tab-dropdown-btn">
+                    Chuyên sâu <span class="dropdown-arrow">▾</span>
+                </button>
+                <div class="header-tab-dropdown-menu">
+                    <button class="header-tab-btn main-tab-btn" data-main-target="tab-mat-goc">Mất gốc</button>
+                    <button class="header-tab-btn main-tab-btn" data-main-target="tab-di-lam">Đi làm</button>
+                    <button class="header-tab-btn main-tab-btn" data-main-target="tab-ielts">IELTS</button>
+                    <button class="header-tab-btn main-tab-btn" data-main-target="tab-toeic">TOEIC</button>
+                    <button class="header-tab-btn main-tab-btn" data-main-target="tab-thi-thpt">Thi THPT</button>
+                    <button class="header-tab-btn main-tab-btn" data-main-target="tab-thi-thcs">Thi THCS</button>
+                </div>
+            </div>
+
             <button class="header-tab-btn main-tab-btn" data-main-target="tab-kiem-tra">Kiểm tra</button>
             <button class="header-tab-btn main-tab-btn" data-main-target="tab-giai-tri">Giải trí</button>
             <button class="header-tab-btn main-tab-btn" data-main-target="tab-lich-hoc">Lịch học</button>
@@ -528,8 +550,6 @@
             <div class="folder-card" id="kid-folder-card">📁 Vận dụng (20 chủ đề)</div>
             <div class="folder-card" id="thcs-folder-card">📁 THCS/THPT (theo SGK Global success)</div>
             <div class="folder-card news-folder-trigger" id="news-folder-card">📁 Tin ngắn (nguồn newsinlevels)</div>
-            <div class="folder-card">📁 IELTS (theo sách Perfect IELTS vocab)</div>
-            <div class="folder-card">📁 TOEIC (web byetoeic)</div>
         </div>
 
         <!-- ===== Panel "Từ vựng của tôi" — các từ học viên đã chạm để tra nghĩa khi luyện dịch ===== -->
@@ -1097,6 +1117,526 @@
         </div>
     </div>
     <!-- ===== KẾT THÚC TAB HƯỚNG DẪN ===== -->
+
+    <!-- ===== TAB MẸ "CHUYÊN SÂU" — các lộ trình theo mục tiêu (nội dung sẽ cập nhật sau) ===== -->
+    <div id="tab-mat-goc" class="main-tab-content">
+        <h2>Mất gốc</h2>
+
+        <!-- ----- Thanh chuyển đổi giữa các lộ trình ----- -->
+        <div class="roadmap-switcher">
+            <button type="button" class="roadmap-nav-btn" id="roadmap-prev-btn" aria-label="Lộ trình trước">‹</button>
+            <div class="roadmap-switcher-tabs">
+                <button type="button" class="roadmap-switcher-tab active" data-roadmap-page="0">🔤 Lộ trình phiên âm</button>
+                <button type="button" class="roadmap-switcher-tab" data-roadmap-page="1">📖 Lộ trình ngữ pháp</button>
+                <button type="button" class="roadmap-switcher-tab" data-roadmap-page="2">📚 Lộ trình từ vựng</button>
+            </div>
+            <button type="button" class="roadmap-nav-btn" id="roadmap-next-btn" aria-label="Lộ trình sau">›</button>
+        </div>
+
+        <div class="roadmap-pager" id="roadmap-pager">
+        <div class="roadmap-track" id="roadmap-track">
+
+        <!-- ===== TRANG 1: LỘ TRÌNH PHIÊN ÂM ===== -->
+        <div class="roadmap-page" data-page="0">
+        <div class="roadmap-wrap">
+
+            <!-- ----- Giới thiệu lộ trình ----- -->
+            <div class="roadmap-intro">
+                <span class="roadmap-intro-badge">🎯 Lộ trình mất gốc</span>
+                <h3>Từ mất gốc đến tự tin phát âm chuẩn IPA</h3>
+                <p>9 buổi học cô đọng, mỗi tuần học 3 buổi trong khoảng 3 tuần — đi từ bảng phiên âm cơ bản đến nói tiếng Anh tự nhiên với trọng âm, ngữ điệu và nối âm.</p>
+                <div class="roadmap-stats">
+                    <div class="roadmap-stat"><strong>9</strong><span>buổi học</span></div>
+                    <div class="roadmap-stat"><strong>6</strong><span>giai đoạn</span></div>
+                    <div class="roadmap-stat"><strong>8</strong><span>bài kiểm tra</span></div>
+                    <div class="roadmap-stat"><strong>~3</strong><span>tuần</span></div>
+                </div>
+            </div>
+
+            <!-- ----- Dải tổng quan 6 giai đoạn ----- -->
+            <div class="roadmap-stages">
+                <span class="roadmap-stage-pill stage-intro"><span>🔤</span>Nền tảng IPA</span>
+                <span class="roadmap-stage-arrow">→</span>
+                <span class="roadmap-stage-pill stage-vowel"><span>🟡</span>Nguyên âm đơn</span>
+                <span class="roadmap-stage-arrow">→</span>
+                <span class="roadmap-stage-pill stage-diphthong"><span>🟢</span>Nguyên âm đôi</span>
+                <span class="roadmap-stage-arrow">→</span>
+                <span class="roadmap-stage-pill stage-consonant"><span>🔴</span>Phụ âm</span>
+                <span class="roadmap-stage-arrow">→</span>
+                <span class="roadmap-stage-pill stage-stress"><span>⚡</span>Trọng âm</span>
+                <span class="roadmap-stage-arrow">→</span>
+                <span class="roadmap-stage-pill stage-flow"><span>🌊</span>Nói tự nhiên</span>
+            </div>
+
+            <!-- ----- Timeline 9 buổi học ----- -->
+            <div class="roadmap-timeline">
+
+                <div class="roadmap-day stage-intro">
+                    <div class="roadmap-day-marker">1</div>
+                    <div class="roadmap-day-card">
+                        <div class="roadmap-day-header">
+                            <span class="roadmap-day-label">Ngày 1</span>
+                            <span class="roadmap-stage-tag">🔤 Nền tảng IPA</span>
+                        </div>
+                        <h4>Làm quen bảng phiên âm & chữa lỗi cơ bản</h4>
+                        <ul class="roadmap-topic-list">
+                            <li>Phân biệt bảng chữ cái và bảng phiên âm IPA — tổng quan</li>
+                            <li>Chữa lỗi phát âm âm cuối "s" và lỗi /θ/ – /ð/</li>
+                            <li>Thực hành bắt lỗi 15 từ vựng dễ phát âm sai</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="roadmap-day stage-vowel">
+                    <div class="roadmap-day-marker">2</div>
+                    <div class="roadmap-day-card">
+                        <div class="roadmap-day-header">
+                            <span class="roadmap-day-label">Ngày 2</span>
+                            <span class="roadmap-stage-tag">🟡 Nguyên âm đơn</span>
+                        </div>
+                        <h4>Ôn tập & Nguyên âm đơn (phần 1)</h4>
+                        <ul class="roadmap-topic-list">
+                            <li>Tổng quan nguyên âm đơn</li>
+                            <li>Phân biệt cặp /iː/ – /ɪ/ và cặp /uː/ – /ʊ/</li>
+                        </ul>
+                        <span class="roadmap-test-badge">📝 Review Ngày 1 + Mini-test 1</span>
+                    </div>
+                </div>
+
+                <div class="roadmap-day stage-vowel">
+                    <div class="roadmap-day-marker">3</div>
+                    <div class="roadmap-day-card">
+                        <div class="roadmap-day-header">
+                            <span class="roadmap-day-label">Ngày 3</span>
+                            <span class="roadmap-stage-tag">🟡 Nguyên âm đơn</span>
+                        </div>
+                        <h4>Nguyên âm đơn (phần 2 & 3)</h4>
+                        <ul class="roadmap-topic-list">
+                            <li>Phân biệt cặp /ɑː/ – /ʌ/ và cặp /ɒ/ – /ɔː/</li>
+                            <li>Phân biệt cặp /e/ – /æ/ và cặp /ə/ – /ɜː/</li>
+                        </ul>
+                        <span class="roadmap-test-badge">📝 Review Ngày 2 + Mini-test 2</span>
+                    </div>
+                </div>
+
+                <div class="roadmap-day stage-diphthong">
+                    <div class="roadmap-day-marker">4</div>
+                    <div class="roadmap-day-card">
+                        <div class="roadmap-day-header">
+                            <span class="roadmap-day-label">Ngày 4</span>
+                            <span class="roadmap-stage-tag">🟢 Nguyên âm đôi</span>
+                        </div>
+                        <h4>Nguyên âm đôi & tổng kết nguyên âm</h4>
+                        <ul class="roadmap-topic-list">
+                            <li>Tổng quan nguyên âm đôi</li>
+                            <li>Bộ 3 /ɪə/, /eə/, /ʊə/ và bộ 3 /eɪ/, /aɪ/, /ɔɪ/</li>
+                            <li>Cặp /aʊ/ – /əʊ/ & tổng kết toàn bộ âm nguyên âm</li>
+                        </ul>
+                        <span class="roadmap-test-badge">📝 Review Ngày 3 + Mini-test 3</span>
+                    </div>
+                </div>
+
+                <div class="roadmap-day stage-consonant">
+                    <div class="roadmap-day-marker">5</div>
+                    <div class="roadmap-day-card">
+                        <div class="roadmap-day-header">
+                            <span class="roadmap-day-label">Ngày 5</span>
+                            <span class="roadmap-stage-tag">🔴 Phụ âm</span>
+                        </div>
+                        <h4>Phụ âm toàn tập</h4>
+                        <ul class="roadmap-topic-list">
+                            <li>Tổng quan phụ âm; cặp /p/ – /b/</li>
+                            <li>Các cặp /t/ – /d/, /k/ – /g/, /w/ – /j/</li>
+                            <li>Bộ 3 /m/, /n/, /ŋ/ và bộ 3 /h/, /l/, /r/</li>
+                            <li>Cặp /f/ – /v/, /ʃ/ – /ʒ/, /tʃ/ – /dʒ/ & tổng ôn phụ âm</li>
+                        </ul>
+                        <span class="roadmap-test-badge">📝 Review Ngày 4 + Mini-test 4</span>
+                    </div>
+                </div>
+
+                <div class="roadmap-day stage-stress">
+                    <div class="roadmap-day-marker">6</div>
+                    <div class="roadmap-day-card">
+                        <div class="roadmap-day-header">
+                            <span class="roadmap-day-label">Ngày 6</span>
+                            <span class="roadmap-stage-tag">⚡ Trọng âm</span>
+                        </div>
+                        <h4>Trọng âm từ</h4>
+                        <ul class="roadmap-topic-list">
+                            <li>Học về âm cuối; âm tiết & quy tắc trọng âm từ 2 âm tiết</li>
+                            <li>Quy tắc trọng âm từ 3 âm tiết trở lên & từ ghép; tổng kết trọng âm</li>
+                        </ul>
+                        <span class="roadmap-test-badge">📝 Review Ngày 5 + Mini-test 5</span>
+                    </div>
+                </div>
+
+                <div class="roadmap-day stage-flow">
+                    <div class="roadmap-day-marker">7</div>
+                    <div class="roadmap-day-card">
+                        <div class="roadmap-day-header">
+                            <span class="roadmap-day-label">Ngày 7</span>
+                            <span class="roadmap-stage-tag">🌊 Nói tự nhiên</span>
+                        </div>
+                        <h4>Kỹ năng nói — Chunking & Nối âm</h4>
+                        <ul class="roadmap-topic-list">
+                            <li>Kỹ thuật Chunking (ngắt nghỉ câu) & luyện tập</li>
+                            <li>Kỹ thuật Nối âm (linking sound) & luyện tập</li>
+                        </ul>
+                        <span class="roadmap-test-badge">📝 Review Ngày 6 + Final Test</span>
+                    </div>
+                </div>
+
+                <div class="roadmap-day stage-flow">
+                    <div class="roadmap-day-marker">8</div>
+                    <div class="roadmap-day-card">
+                        <div class="roadmap-day-header">
+                            <span class="roadmap-day-label">Ngày 8</span>
+                            <span class="roadmap-stage-tag">🌊 Nói tự nhiên</span>
+                        </div>
+                        <h4>Trọng âm câu & Ngữ điệu</h4>
+                        <ul class="roadmap-topic-list">
+                            <li>Trọng âm câu & luyện tập</li>
+                            <li>Ngữ điệu & luyện tập</li>
+                        </ul>
+                        <span class="roadmap-test-badge">📝 Review Ngày 7 + Progress test</span>
+                    </div>
+                </div>
+
+                <div class="roadmap-day stage-flow">
+                    <div class="roadmap-day-marker">9</div>
+                    <div class="roadmap-day-card">
+                        <div class="roadmap-day-header">
+                            <span class="roadmap-day-label">Ngày 9</span>
+                            <span class="roadmap-stage-tag">🌊 Nói tự nhiên</span>
+                        </div>
+                        <h4>Nâng cao — Ngữ điệu & Nối âm nâng cao</h4>
+                        <ul class="roadmap-topic-list">
+                            <li>Ngữ điệu nâng cao — học & thực hành</li>
+                            <li>Nối âm nâng cao — học & thực hành</li>
+                        </ul>
+                        <span class="roadmap-test-badge">📝 Review Ngày 8 + Final Test (nâng cao)</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ----- Đích đến ----- -->
+            <div class="roadmap-finish">
+                <span class="roadmap-finish-icon">🏁</span>
+                <div>
+                    <h4>Hoàn thành lộ trình!</h4>
+                    <p>Tự tin phát âm chuẩn IPA, nói tiếng Anh trôi chảy và tự nhiên hơn.</p>
+                </div>
+            </div>
+
+        </div>
+        </div>
+        <!-- ===== KẾT THÚC TRANG 1: LỘ TRÌNH PHIÊN ÂM ===== -->
+
+        <!-- ===== TRANG 2: LỘ TRÌNH NGỮ PHÁP (2 THÁNG / 60 NGÀY) ===== -->
+        <div class="roadmap-page" data-page="1">
+        <div class="roadmap-wrap">
+
+            <!-- ----- Giới thiệu lộ trình ----- -->
+            <div class="roadmap-intro roadmap-intro-grammar">
+                <span class="roadmap-intro-badge">📖 Lộ trình ngữ pháp</span>
+                <h3>Ngữ pháp mất gốc — Chinh phục trong 2 tháng</h3>
+                <p>60 ngày học cô đọng, chia thành 4 giai đoạn từ nền tảng từ loại đến ngữ pháp chuyên sâu — mỗi giai đoạn đều có buổi ôn tập và bài kiểm tra để chắc kiến thức trước khi học tiếp.</p>
+                <div class="roadmap-stats">
+                    <div class="roadmap-stat"><strong>60</strong><span>ngày học</span></div>
+                    <div class="roadmap-stat"><strong>4</strong><span>giai đoạn</span></div>
+                    <div class="roadmap-stat"><strong>4</strong><span>bài test</span></div>
+                    <div class="roadmap-stat"><strong>2</strong><span>tháng</span></div>
+                </div>
+            </div>
+
+            <!-- ----- Dải tổng quan 4 giai đoạn ----- -->
+            <div class="roadmap-stages">
+                <span class="roadmap-stage-pill gstage-pill-1"><span>🟢</span>Từ loại &amp; cấu trúc vi mô</span>
+                <span class="roadmap-stage-arrow">→</span>
+                <span class="roadmap-stage-pill gstage-pill-2"><span>🟡</span>Thì &amp; động từ</span>
+                <span class="roadmap-stage-arrow">→</span>
+                <span class="roadmap-stage-pill gstage-pill-3"><span>🟠</span>Câu, mệnh đề &amp; từ nối</span>
+                <span class="roadmap-stage-arrow">→</span>
+                <span class="roadmap-stage-pill gstage-pill-4"><span>🔴</span>Ngữ pháp nâng cao</span>
+            </div>
+
+            <p class="gstage-hint">👇 Nhấn vào từng giai đoạn để xem chi tiết lịch học từng ngày</p>
+
+            <!-- ----- 4 khối giai đoạn dạng accordion ----- -->
+            <div class="gstage-accordion">
+
+                <!-- GIAI ĐOẠN 1 -->
+                <div class="gstage-block gstage-1 open">
+                    <button type="button" class="gstage-header" data-gstage-toggle>
+                        <span class="gstage-icon">🟢</span>
+                        <span class="gstage-header-text">
+                            <h4>Giai đoạn 1: Từ loại &amp; Cấu trúc vi mô</h4>
+                            <span class="gstage-meta">Ngày 1 – 15 · 15 ngày</span>
+                        </span>
+                        <span class="gstage-chevron">▾</span>
+                    </button>
+                    <div class="gstage-body">
+                        <p class="gstage-desc">Giai đoạn này xử lý toàn bộ các thành phần tạo nên một cụm từ, rà soát từng lỗi sai nhỏ nhất.</p>
+                        <div class="gday-list">
+                            <div class="gday-row"><span class="gday-num">1</span><span class="gday-text">Danh từ (1) - Danh từ đếm được, không đếm được &amp; Quy tắc thêm s/es.</span></div>
+                            <div class="gday-row"><span class="gday-num">2</span><span class="gday-text">Danh từ (2) - Danh từ ghép, Danh từ tập hợp &amp; Sở hữu cách (N's vs Of).</span></div>
+                            <div class="gday-row"><span class="gday-num">3</span><span class="gday-text">Đại từ (1) - Đại từ nhân xưng (Chủ ngữ/Tân ngữ), Tính từ sở hữu &amp; Đại từ sở hữu.</span></div>
+                            <div class="gday-row"><span class="gday-num">4</span><span class="gday-text">Đại từ (2) - Đại từ phản thân (myself, yourself), Đại từ tương hỗ (each other, one another).</span></div>
+                            <div class="gday-row"><span class="gday-num">5</span><span class="gday-text">Đại từ (3) - Đại từ bất định (someone, anything...) &amp; Chủ ngữ giả (Dummy It/There).</span></div>
+                            <div class="gday-row gday-review"><span class="gday-num">6</span><span class="gday-text">Review &amp; Thực hành (Ngày 1 - 5)</span></div>
+                            <div class="gday-row"><span class="gday-num">7</span><span class="gday-text">Mạo từ (A/An/The) - Quy tắc sử dụng cơ bản.</span></div>
+                            <div class="gday-row"><span class="gday-num">8</span><span class="gday-text">Mạo từ rỗng (Zero Article) - Các trường hợp tuyệt đối không dùng mạo từ.</span></div>
+                            <div class="gday-row"><span class="gday-num">9</span><span class="gday-text">Lượng từ (1) - Some/Any, Much/Many, A lot of/Lots of.</span></div>
+                            <div class="gday-row"><span class="gday-num">10</span><span class="gday-text">Lượng từ (2) - Phân biệt vi mô: A few/Few, A little/Little, All/Both, Each/Every, Either/Neither.</span></div>
+                            <div class="gday-row"><span class="gday-num">11</span><span class="gday-text">Tính từ (1) - Vị trí, chức năng &amp; Phân biệt tính từ đuôi -ed / -ing.</span></div>
+                            <div class="gday-row"><span class="gday-num">12</span><span class="gday-text">Tính từ (2) - Trật tự sắp xếp tính từ (OSASCOMP: Ý kiến - Kích cỡ - Tuổi - Hình dáng - Màu sắc...).</span></div>
+                            <div class="gday-row"><span class="gday-num">13</span><span class="gday-text">Trạng từ (1) - Vị trí, phân loại (Tần suất, Mức độ, Cách thức, Nơi chốn, Thời gian).</span></div>
+                            <div class="gday-row"><span class="gday-num">14</span><span class="gday-text">Trạng từ (2) - Quy tắc tạo đuôi -ly &amp; Các tính/trạng từ dễ nhầm (hard/hardly, late/lately, fast).</span></div>
+                            <div class="gday-row gday-test"><span class="gday-num">15</span><span class="gday-text">Mini-test 1 &amp; Tổng ôn Giai đoạn 1</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GIAI ĐOẠN 2 -->
+                <div class="gstage-block gstage-2">
+                    <button type="button" class="gstage-header" data-gstage-toggle>
+                        <span class="gstage-icon">🟡</span>
+                        <span class="gstage-header-text">
+                            <h4>Giai đoạn 2: Thì &amp; Các dạng động từ</h4>
+                            <span class="gstage-meta">Ngày 16 – 33 · 18 ngày</span>
+                        </span>
+                        <span class="gstage-chevron">▾</span>
+                    </button>
+                    <div class="gstage-body">
+                        <p class="gstage-desc">Giai đoạn này làm chủ hoàn toàn thời gian và sắc thái của hành động.</p>
+                        <div class="gday-list">
+                            <div class="gday-row"><span class="gday-num">16</span><span class="gday-text">Động từ cơ bản - Động từ To be, Động từ thường &amp; Động từ liên kết (Linking verbs).</span></div>
+                            <div class="gday-row"><span class="gday-num">17</span><span class="gday-text">Thì Hiện tại đơn (Bao gồm cả cách dùng diễn tả lịch trình tương lai).</span></div>
+                            <div class="gday-row"><span class="gday-num">18</span><span class="gday-text">Thì Hiện tại tiếp diễn (Bao gồm cách dùng diễn tả kế hoạch tương lai &amp; Phàn nàn với "always").</span></div>
+                            <div class="gday-row"><span class="gday-num">19</span><span class="gday-text">Động từ trạng thái (Stative verbs) - Các từ không bao giờ dùng ở dạng V-ing (know, believe, like...).</span></div>
+                            <div class="gday-row"><span class="gday-num">20</span><span class="gday-text">Thì Quá khứ đơn &amp; Cấu trúc Used to / Be used to / Get used to.</span></div>
+                            <div class="gday-row"><span class="gday-num">21</span><span class="gday-text">Thì Quá khứ tiếp diễn &amp; Sự kết hợp với Quá khứ đơn (When/While).</span></div>
+                            <div class="gday-row gday-review"><span class="gday-num">22</span><span class="gday-text">Review &amp; Thực hành (Ngày 16 - 21)</span></div>
+                            <div class="gday-row"><span class="gday-num">23</span><span class="gday-text">Thì Tương lai đơn (Will) &amp; Tương lai gần (Be going to) - Phân biệt ý định và suy đoán.</span></div>
+                            <div class="gday-row"><span class="gday-num">24</span><span class="gday-text">Thì Hiện tại hoàn thành - Dấu hiệu (Since, For, Yet, Already, Just).</span></div>
+                            <div class="gday-row"><span class="gday-num">25</span><span class="gday-text">Phân biệt Hiện tại hoàn thành &amp; Quá khứ đơn (Lỗi sai kinh điển).</span></div>
+                            <div class="gday-row"><span class="gday-num">26</span><span class="gday-text">Thì Hiện tại hoàn thành tiếp diễn &amp; So sánh với Hiện tại hoàn thành.</span></div>
+                            <div class="gday-row"><span class="gday-num">27</span><span class="gday-text">Thì Quá khứ hoàn thành &amp; Quá khứ hoàn thành tiếp diễn.</span></div>
+                            <div class="gday-row"><span class="gday-num">28</span><span class="gday-text">Thì Tương lai tiếp diễn &amp; Tương lai hoàn thành.</span></div>
+                            <div class="gday-row gday-review"><span class="gday-num">29</span><span class="gday-text">Review 12 Thì &amp; Bài tập chia động từ tổng hợp</span></div>
+                            <div class="gday-row"><span class="gday-num">30</span><span class="gday-text">Động từ khiếm khuyết (Modal verbs) - Can/Could, May/Might, Must/Have to, Should/Ought to.</span></div>
+                            <div class="gday-row"><span class="gday-num">31</span><span class="gday-text">Sự suy luận trong quá khứ (Modals + Have + V3/ed: Must have, Should have, Could have...).</span></div>
+                            <div class="gday-row"><span class="gday-num">32</span><span class="gday-text">Danh động từ (Gerunds: V-ing) &amp; Động từ nguyên mẫu (To V / V-bare) - Bảng các động từ đi kèm.</span></div>
+                            <div class="gday-row gday-test"><span class="gday-num">33</span><span class="gday-text">Mini-test 2 &amp; Tổng ôn Giai đoạn 2</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GIAI ĐOẠN 3 -->
+                <div class="gstage-block gstage-3">
+                    <button type="button" class="gstage-header" data-gstage-toggle>
+                        <span class="gstage-icon">🟠</span>
+                        <span class="gstage-header-text">
+                            <h4>Giai đoạn 3: Cấu trúc câu, mệnh đề &amp; từ nối</h4>
+                            <span class="gstage-meta">Ngày 34 – 45 · 12 ngày</span>
+                        </span>
+                        <span class="gstage-chevron">▾</span>
+                    </button>
+                    <div class="gstage-body">
+                        <p class="gstage-desc">Nâng cấp từ cụm từ đơn giản lên các câu ghép, câu phức có tính liên kết logic cao.</p>
+                        <div class="gday-list">
+                            <div class="gday-row"><span class="gday-num">34</span><span class="gday-text">Giới từ (In/On/At) &amp; Giới từ đi kèm danh từ/tính từ/động từ cố định (Dependent prepositions).</span></div>
+                            <div class="gday-row"><span class="gday-num">35</span><span class="gday-text">Cụm động từ (Phrasal Verbs) - Tách biệt cụm có thể chia tách và không thể chia tách.</span></div>
+                            <div class="gday-row"><span class="gday-num">36</span><span class="gday-text">Liên từ (1) - Liên từ kết hợp (FANBOYS: For, And, Nor, But, Or, Yet, So).</span></div>
+                            <div class="gday-row"><span class="gday-num">37</span><span class="gday-text">Liên từ (2) - Liên từ tương quan (Both...and, Not only...but also, Either...or, Neither...nor).</span></div>
+                            <div class="gday-row"><span class="gday-num">38</span><span class="gday-text">Câu hỏi đuôi (Tag questions) - Bao gồm các trường hợp đặc biệt (Let's, I am, Câu mệnh lệnh).</span></div>
+                            <div class="gday-row"><span class="gday-num">39</span><span class="gday-text">Câu đồng tình (So/Too, Either/Neither) &amp; Câu cảm thán (What a/How).</span></div>
+                            <div class="gday-row gday-review"><span class="gday-num">40</span><span class="gday-text">Review &amp; Thực hành (Ngày 34 - 39)</span></div>
+                            <div class="gday-row"><span class="gday-num">41</span><span class="gday-text">Cấu trúc So sánh (Bằng, Hơn, Nhất) &amp; Cách nhấn mạnh so sánh (much/far better).</span></div>
+                            <div class="gday-row"><span class="gday-num">42</span><span class="gday-text">So sánh kép (The comparative..., the comparative... / comparative and comparative).</span></div>
+                            <div class="gday-row"><span class="gday-num">43</span><span class="gday-text">Mệnh đề quan hệ (Xác định &amp; Không xác định) với Who, Whom, Which, That, Whose.</span></div>
+                            <div class="gday-row"><span class="gday-num">44</span><span class="gday-text">Mệnh đề quan hệ rút gọn (V-ing, V3/ed, To V).</span></div>
+                            <div class="gday-row gday-test"><span class="gday-num">45</span><span class="gday-text">Mini-test 3 &amp; Tổng ôn Giai đoạn 3</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GIAI ĐOẠN 4 -->
+                <div class="gstage-block gstage-4">
+                    <button type="button" class="gstage-header" data-gstage-toggle>
+                        <span class="gstage-icon">🔴</span>
+                        <span class="gstage-header-text">
+                            <h4>Giai đoạn 4: Ngữ pháp chuyên sâu &amp; nâng cao</h4>
+                            <span class="gstage-meta">Ngày 46 – 60 · 15 ngày</span>
+                        </span>
+                        <span class="gstage-chevron">▾</span>
+                    </button>
+                    <div class="gstage-body">
+                        <p class="gstage-desc">Chinh phục các chủ điểm khó nhất, thường xuất hiện trong các bài thi phân loại.</p>
+                        <div class="gday-list">
+                            <div class="gday-row"><span class="gday-num">46</span><span class="gday-text">Mệnh đề trạng ngữ (1) - Nhượng bộ (Although/Even though vs Despite/In spite of).</span></div>
+                            <div class="gday-row"><span class="gday-num">47</span><span class="gday-text">Mệnh đề trạng ngữ (2) - Kết quả/Mức độ (So...that, Such...that, Too...to, Enough).</span></div>
+                            <div class="gday-row"><span class="gday-num">48</span><span class="gday-text">Mệnh đề danh từ (Noun clauses) - Mệnh đề đóng vai trò làm chủ ngữ hoặc tân ngữ (Cực kỳ hay quên).</span></div>
+                            <div class="gday-row"><span class="gday-num">49</span><span class="gday-text">Câu điều kiện Loại 0, Loại 1 &amp; Loại 2.</span></div>
+                            <div class="gday-row"><span class="gday-num">50</span><span class="gday-text">Câu điều kiện Loại 3, Loại hỗn hợp &amp; Các từ thay thế If (Unless, As long as, Provided that).</span></div>
+                            <div class="gday-row gday-review"><span class="gday-num">51</span><span class="gday-text">Review &amp; Thực hành (Ngày 46 - 50)</span></div>
+                            <div class="gday-row"><span class="gday-num">52</span><span class="gday-text">Cấu trúc mong ước (Wish / If only) &amp; Would rather / It's time.</span></div>
+                            <div class="gday-row"><span class="gday-num">53</span><span class="gday-text">Câu bị động (1) - Cấu trúc cơ bản ở 12 thì.</span></div>
+                            <div class="gday-row"><span class="gday-num">54</span><span class="gday-text">Câu bị động (2) - Bị động khách quan (It is said that...), Bị động với động từ tri giác, Bị động kép.</span></div>
+                            <div class="gday-row"><span class="gday-num">55</span><span class="gday-text">Thể sai khiến (Causative Form) - Chủ động &amp; Bị động với Have/Get/Make/Let/Help.</span></div>
+                            <div class="gday-row"><span class="gday-num">56</span><span class="gday-text">Câu tường thuật (1) - Tường thuật câu kể, câu hỏi Yes/No &amp; Wh-questions.</span></div>
+                            <div class="gday-row"><span class="gday-num">57</span><span class="gday-text">Câu tường thuật (2) - Tường thuật bằng các động từ đặc biệt (advise, suggest, accuse, deny...).</span></div>
+                            <div class="gday-row"><span class="gday-num">58</span><span class="gday-text">Đảo ngữ (Inversion) - Với trạng từ phủ định, Only, Not only, Điều kiện.</span></div>
+                            <div class="gday-row"><span class="gday-num">59</span><span class="gday-text">Câu chẻ (Cleft sentences: It is/was... that...) &amp; Sự hòa hợp Chủ ngữ - Động từ (Subject-Verb Agreement).</span></div>
+                            <div class="gday-row gday-test"><span class="gday-num">60</span><span class="gday-text">FINAL TEST TỔNG HỢP (Đánh giá toàn diện 60 ngày)</span></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ----- Đích đến ----- -->
+            <div class="roadmap-finish">
+                <span class="roadmap-finish-icon">🏁</span>
+                <div>
+                    <h4>Hoàn thành lộ trình!</h4>
+                    <p>Nắm chắc toàn bộ ngữ pháp tiếng Anh từ cơ bản đến nâng cao, tự tin làm bài tập và giao tiếp đúng cấu trúc.</p>
+                </div>
+            </div>
+
+        </div>
+        </div>
+        <!-- ===== KẾT THÚC TRANG 2: LỘ TRÌNH NGỮ PHÁP ===== -->
+
+        <!-- ===== TRANG 3: LỘ TRÌNH TỪ VỰNG (KHÔNG GIỚI HẠN) ===== -->
+        <div class="roadmap-page" data-page="2">
+        <div class="roadmap-wrap">
+
+            <!-- ----- Giới thiệu lộ trình ----- -->
+            <div class="roadmap-intro roadmap-intro-vocab">
+                <span class="roadmap-intro-badge">📚 Lộ trình từ vựng</span>
+                <h3>Từ vựng không có điểm dừng — chỉ có tích lũy mỗi ngày</h3>
+                <p>Không giống phát âm hay ngữ pháp, từ vựng không có "giới hạn" để hoàn thành. Đây là các mốc gợi ý để bạn biết mình đang ở đâu và nên làm gì tiếp theo trên hành trình học từ vựng của mình.</p>
+                <div class="roadmap-stats">
+                    <div class="roadmap-stat"><strong>20</strong><span>chủ đề mở đầu</span></div>
+                    <div class="roadmap-stat"><strong>1000+</strong><span>từ vựng — mốc lên trình độ</span></div>
+                    <div class="roadmap-stat"><strong>∞</strong><span>không giới hạn</span></div>
+                </div>
+            </div>
+
+            <!-- ----- Dải tổng quan các mốc ----- -->
+            <div class="roadmap-stages">
+                <span class="roadmap-stage-pill vpill-1"><span>🌱</span>Người mới — 20 chủ đề</span>
+                <span class="roadmap-stage-arrow">→</span>
+                <span class="roadmap-stage-pill vpill-milestone"><span>🎓</span>Mốc 1000+ từ</span>
+                <span class="roadmap-stage-arrow">→</span>
+                <span class="roadmap-stage-pill vpill-2"><span>📰</span>Trung cấp — đọc &amp; thi hàng tuần</span>
+            </div>
+
+            <!-- ----- Giai đoạn xuất phát ----- -->
+            <div class="vstage-block vstage-1">
+                <div class="vstage-header">
+                    <span class="vstage-icon">🌱</span>
+                    <div class="vstage-header-text">
+                        <h4>Xuất phát điểm — Người mới bắt đầu</h4>
+                        <span>Xây nền vốn từ trước khi tăng tốc</span>
+                    </div>
+                </div>
+                <div class="vstage-body">
+                    <ul class="roadmap-topic-list">
+                        <li>Bắt đầu bằng <strong>20 chủ đề từ vựng</strong> cơ bản trong ứng dụng — mỗi chủ đề khoảng 48–50 từ, học theo từng bước nhỏ để không bị ngợp.</li>
+                        <li>Nếu bạn vẫn còn đang đi học ở trường (THCS/THPT), hãy học thêm song song từ vựng theo sách giáo khoa <strong>Global Success</strong> — vừa củng cố bài trên lớp, vừa mở rộng vốn từ.</li>
+                    </ul>
+                    <span class="roadmap-test-badge">🎯 Hoàn thành = hơn 1000 từ vựng → Chính thức lên trình độ Trung cấp!</span>
+                </div>
+            </div>
+
+            <!-- ----- Giai đoạn trung cấp ----- -->
+            <div class="vstage-block vstage-2">
+                <div class="vstage-header">
+                    <span class="vstage-icon">🚀</span>
+                    <div class="vstage-header-text">
+                        <h4>Trung cấp — Làm giàu vốn từ mỗi ngày</h4>
+                        <span>Không còn học theo chủ đề cố định, mà học từ đời sống thật</span>
+                    </div>
+                </div>
+                <div class="vstage-body">
+                    <ul class="roadmap-topic-list">
+                        <li>Chăm chỉ đọc <strong>tin tức ngắn mỗi ngày</strong> để liên tục bổ sung từ mới theo ngữ cảnh thực tế.</li>
+                        <li>Tham gia <strong>cuộc thi từ vựng hàng tuần</strong> — đề thi được lấy trực tiếp từ chính kho từ vựng bạn đã tích lũy, giúp ôn lại và khắc sâu kiến thức.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- ----- Ghi chú: hành trình không hồi kết ----- -->
+            <div class="vocab-infinity">
+                <span class="vocab-infinity-icon">♾️</span>
+                <div>
+                    <h4>Hành trình không có điểm kết thúc</h4>
+                    <p>Vốn từ vựng luôn có thể lớn hơn mỗi ngày — cứ tiếp tục đọc, học và ôn luyện đều đặn.</p>
+                </div>
+            </div>
+
+        </div>
+        </div>
+        <!-- ===== KẾT THÚC TRANG 3: LỘ TRÌNH TỪ VỰNG ===== -->
+
+        </div>
+        </div>
+        <!-- ----- Chấm điều hướng (dots) ----- -->
+        <div class="roadmap-dots" id="roadmap-dots">
+            <span class="roadmap-dot active" data-dot="0"></span>
+            <span class="roadmap-dot" data-dot="1"></span>
+            <span class="roadmap-dot" data-dot="2"></span>
+        </div>
+    </div>
+
+    <div id="tab-di-lam" class="main-tab-content">
+        <h2>Đi làm</h2>
+        <div class="wip-panel">
+            <span class="wip-icon">🚧</span>
+            <h3>Nội dung đang được xây dựng</h3>
+            <p>Lộ trình tiếng Anh cho người đi làm sẽ sớm được cập nhật tại đây. Cảm ơn bạn đã kiên nhẫn chờ đợi!</p>
+        </div>
+    </div>
+
+    <div id="tab-ielts" class="main-tab-content">
+        <h2>IELTS</h2>
+        <div class="wip-panel">
+            <span class="wip-icon">🚧</span>
+            <h3>Nội dung đang được xây dựng</h3>
+            <p>Lộ trình luyện thi IELTS sẽ sớm được cập nhật tại đây. Cảm ơn bạn đã kiên nhẫn chờ đợi!</p>
+        </div>
+    </div>
+
+    <div id="tab-toeic" class="main-tab-content">
+        <h2>TOEIC</h2>
+        <div class="wip-panel">
+            <span class="wip-icon">🚧</span>
+            <h3>Nội dung đang được xây dựng</h3>
+            <p>Lộ trình luyện thi TOEIC sẽ sớm được cập nhật tại đây. Cảm ơn bạn đã kiên nhẫn chờ đợi!</p>
+        </div>
+    </div>
+
+    <div id="tab-thi-thpt" class="main-tab-content">
+        <h2>Thi THPT</h2>
+        <div class="wip-panel">
+            <span class="wip-icon">🚧</span>
+            <h3>Nội dung đang được xây dựng</h3>
+            <p>Lộ trình luyện thi THPT Quốc gia sẽ sớm được cập nhật tại đây. Cảm ơn bạn đã kiên nhẫn chờ đợi!</p>
+        </div>
+    </div>
+
+    <div id="tab-thi-thcs" class="main-tab-content">
+        <h2>Thi THCS</h2>
+        <div class="wip-panel">
+            <span class="wip-icon">🚧</span>
+            <h3>Nội dung đang được xây dựng</h3>
+            <p>Lộ trình luyện thi vào lớp 10 (chuyển cấp THCS → THPT) sẽ sớm được cập nhật tại đây. Cảm ơn bạn đã kiên nhẫn chờ đợi!</p>
+        </div>
+    </div>
+    <!-- ===== KẾT THÚC TAB MẸ "CHUYÊN SÂU" ===== -->
 
     <!-- ===== FOOTER ===== -->
     <footer id="site-footer">

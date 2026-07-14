@@ -112,9 +112,83 @@ document.addEventListener('DOMContentLoaded', () => {
 
             savedBtn.classList.add('active');
             savedContent.classList.add('active');
+            if (typeof window.syncHeaderDropdownActiveState === 'function') window.syncHeaderDropdownActiveState();
         } catch (e) { /* localStorage có thể bị chặn (chế độ ẩn danh...) - bỏ qua */ }
     }
     // --- KẾT THÚC PHẦN GHI NHỚ VỊ TRÍ ---
+
+    // --- [MỚI] LOGIC 2 TAB MẸ DẠNG DROPDOWN: "Nền tảng" (Phiên âm/Từ vựng/Ngữ pháp)
+    // và "Chuyên sâu" (Mất gốc/Đi làm/IELTS/TOEIC/Thi THPT/Thi THCS). Bấm vào tab mẹ sẽ
+    // xổ xuống danh sách tab con; bấm 1 tab con sẽ chuyển nội dung như các tab thường
+    // (dùng chung logic ở khối "LOGIC CHUYỂN MAIN TABS" bên dưới) và tự đóng menu lại.
+    (function initHeaderDropdowns() {
+        const dropdowns = document.querySelectorAll('.header-tab-dropdown');
+        if (!dropdowns.length) return;
+
+        function closeAllDropdowns() {
+            dropdowns.forEach(dd => {
+                dd.classList.remove('open');
+                const menu = dd.querySelector('.header-tab-dropdown-menu');
+                if (menu) menu.classList.remove('open');
+            });
+        }
+
+        // Canh vị trí menu bằng JS (position:fixed) thay vì absolute, để menu không bị
+        // thanh tab (overflow-x:auto trên mobile) cắt mất phần tràn theo chiều dọc.
+        function positionMenu(dd) {
+            const btn = dd.querySelector('.main-tab-dropdown-btn');
+            const menu = dd.querySelector('.header-tab-dropdown-menu');
+            if (!btn || !menu) return;
+            const rect = btn.getBoundingClientRect();
+            menu.style.top = (rect.bottom + 6) + 'px';
+            let left = rect.left;
+            const menuWidth = menu.offsetWidth || 180;
+            if (left + menuWidth > window.innerWidth - 8) {
+                left = Math.max(8, window.innerWidth - menuWidth - 8);
+            }
+            menu.style.left = left + 'px';
+        }
+
+        dropdowns.forEach(dd => {
+            const btn = dd.querySelector('.main-tab-dropdown-btn');
+            const menu = dd.querySelector('.header-tab-dropdown-menu');
+            if (!btn || !menu) return;
+
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isOpen = dd.classList.contains('open');
+                closeAllDropdowns();
+                if (!isOpen) {
+                    dd.classList.add('open');
+                    menu.classList.add('open');
+                    positionMenu(dd);
+                }
+            });
+
+            // Bấm 1 mục con -> đóng dropdown lại (việc đổi tab do listener chung xử lý)
+            menu.querySelectorAll('.main-tab-btn').forEach(item => {
+                item.addEventListener('click', () => closeAllDropdowns());
+            });
+        });
+
+        // Bấm ra ngoài / cuộn thanh tab / đổi kích thước màn hình -> đóng dropdown đang mở
+        document.addEventListener('click', closeAllDropdowns);
+        const headerTabsNav = document.getElementById('header-tabs-nav');
+        if (headerTabsNav) headerTabsNav.addEventListener('scroll', closeAllDropdowns);
+        window.addEventListener('resize', closeAllDropdowns);
+
+        // Tô sáng tab mẹ tương ứng khi 1 tab con của nó đang được chọn
+        function syncDropdownActiveState() {
+            dropdowns.forEach(dd => {
+                const parentBtn = dd.querySelector('.main-tab-dropdown-btn');
+                const hasActiveChild = !!dd.querySelector('.main-tab-btn.active');
+                if (parentBtn) parentBtn.classList.toggle('active', hasActiveChild);
+            });
+        }
+        window.syncHeaderDropdownActiveState = syncDropdownActiveState;
+        syncDropdownActiveState();
+    })();
+    // --- KẾT THÚC LOGIC TAB MẸ DẠNG DROPDOWN ---
 
     // --- LOGIC XÁC THỰC (ĐĂNG NHẬP BẮT BUỘC) ---
     async function handleLogin(e) {
@@ -441,6 +515,9 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 localStorage.setItem(MAIN_TAB_STORAGE_KEY, targetId);
             } catch (e) { /* bỏ qua nếu localStorage bị chặn */ }
+
+            // [MỚI] Tô sáng đúng tab mẹ dạng dropdown ("Nền tảng"/"Chuyên sâu") tương ứng
+            if (typeof window.syncHeaderDropdownActiveState === 'function') window.syncHeaderDropdownActiveState();
         });
     });
     // --- KẾT THÚC LOGIC CHUYỂN MAIN TABS ---
@@ -933,7 +1010,7 @@ function toggleCompletion(symbolElement) {
         // Xóa các ô cũ nếu inline script HTML đã tạo trước
         Array.from(grid.querySelectorAll('.slot, .time-cell')).forEach(el => el.remove());
 
-        for (let h = 5; h <= 23; h++) {
+        for (let h = 6; h <= 22; h++) {
             for (let m = 0; m < 60; m += 30) {
                 const time = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
                 const tc = document.createElement('div');
@@ -6488,5 +6565,94 @@ function toggleCompletion(symbolElement) {
 
     })();
     // ===== KẾT THÚC TAB "HƯỚNG DẪN" =====
+
+    // ===== TAB "MẤT GỐC" — chuyển đổi Lộ trình phiên âm ⇄ Lộ trình ngữ pháp =====
+    (function() {
+        const track = document.getElementById('roadmap-track');
+        if (!track) return; // Tab chưa render hoặc không tồn tại trên trang này
+
+        const prevBtn = document.getElementById('roadmap-prev-btn');
+        const nextBtn = document.getElementById('roadmap-next-btn');
+        const tabs = Array.from(document.querySelectorAll('.roadmap-switcher-tab'));
+        const dots = Array.from(document.querySelectorAll('#roadmap-dots .roadmap-dot'));
+        const pageCount = track.querySelectorAll('.roadmap-page').length;
+        let currentPage = 0;
+
+        function renderRoadmapPage(index) {
+            currentPage = Math.max(0, Math.min(index, pageCount - 1));
+            track.style.transform = `translateX(-${currentPage * 100}%)`;
+
+            tabs.forEach(tab => {
+                tab.classList.toggle('active', Number(tab.dataset.roadmapPage) === currentPage);
+            });
+            dots.forEach(dot => {
+                dot.classList.toggle('active', Number(dot.dataset.dot) === currentPage);
+            });
+            if (prevBtn) prevBtn.disabled = currentPage === 0;
+            if (nextBtn) nextBtn.disabled = currentPage === pageCount - 1;
+        }
+
+        if (prevBtn) prevBtn.addEventListener('click', () => renderRoadmapPage(currentPage - 1));
+        if (nextBtn) nextBtn.addEventListener('click', () => renderRoadmapPage(currentPage + 1));
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => renderRoadmapPage(Number(tab.dataset.roadmapPage)));
+        });
+        dots.forEach(dot => {
+            dot.addEventListener('click', () => renderRoadmapPage(Number(dot.dataset.dot)));
+        });
+
+        // Vuốt (swipe) trái/phải trên di động
+        let touchStartX = null;
+        let touchStartY = null;
+        const pagerEl = document.getElementById('roadmap-pager');
+        if (pagerEl) {
+            pagerEl.addEventListener('touchstart', (e) => {
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+            }, { passive: true });
+
+            pagerEl.addEventListener('touchend', (e) => {
+                if (touchStartX === null) return;
+                const deltaX = e.changedTouches[0].clientX - touchStartX;
+                const deltaY = e.changedTouches[0].clientY - touchStartY;
+                touchStartX = null;
+                touchStartY = null;
+                // Chỉ tính là vuốt ngang khi di chuyển ngang đủ lớn và trội hơn di chuyển dọc
+                if (Math.abs(deltaX) > 45 && Math.abs(deltaX) > Math.abs(deltaY)) {
+                    if (deltaX < 0) renderRoadmapPage(currentPage + 1);
+                    else renderRoadmapPage(currentPage - 1);
+                }
+            }, { passive: true });
+        }
+
+        renderRoadmapPage(0);
+
+        // --- Accordion 4 giai đoạn của lộ trình ngữ pháp ---
+        const gstageBlocks = Array.from(document.querySelectorAll('.gstage-block'));
+        function setGstageBodyHeight(block, open) {
+            const body = block.querySelector('.gstage-body');
+            if (!body) return;
+            body.style.maxHeight = open ? (body.scrollHeight + 'px') : '0px';
+        }
+        gstageBlocks.forEach(block => {
+            const header = block.querySelector('[data-gstage-toggle]');
+            if (!header) return;
+            // Thiết lập trạng thái ban đầu (giai đoạn 1 mở sẵn)
+            setGstageBodyHeight(block, block.classList.contains('open'));
+
+            header.addEventListener('click', () => {
+                const isOpen = block.classList.contains('open');
+                block.classList.toggle('open', !isOpen);
+                setGstageBodyHeight(block, !isOpen);
+            });
+        });
+        // Đảm bảo chiều cao khối đang mở tính đúng sau khi web-font/hình ảnh load xong
+        window.addEventListener('load', () => {
+            gstageBlocks.forEach(block => {
+                if (block.classList.contains('open')) setGstageBodyHeight(block, true);
+            });
+        });
+    })();
+    // ===== KẾT THÚC TAB "MẤT GỐC" =====
 
 });
