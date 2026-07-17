@@ -6655,4 +6655,339 @@ function toggleCompletion(symbolElement) {
     })();
     // ===== KẾT THÚC TAB "MẤT GỐC" =====
 
+    // ===== TAB "ĐI LÀM" — chuyển đổi Lộ trình chung ⇄ 4 lộ trình kỹ năng riêng =====
+    (function() {
+        const track = document.getElementById('worklife-track');
+        if (!track) return; // Tab chưa render hoặc không tồn tại trên trang này
+
+        const prevBtn = document.getElementById('worklife-prev-btn');
+        const nextBtn = document.getElementById('worklife-next-btn');
+        const tabs = Array.from(document.querySelectorAll('.worklife-switcher-tab'));
+        const dots = Array.from(document.querySelectorAll('#worklife-dots .worklife-dot'));
+        const pageCount = track.querySelectorAll('.roadmap-page').length;
+        let currentPage = 0;
+
+        function renderWorklifePage(index) {
+            currentPage = Math.max(0, Math.min(index, pageCount - 1));
+            track.style.transform = `translateX(-${currentPage * 100}%)`;
+
+            tabs.forEach(tab => {
+                tab.classList.toggle('active', Number(tab.dataset.worklifePage) === currentPage);
+            });
+            dots.forEach(dot => {
+                dot.classList.toggle('active', Number(dot.dataset.dot) === currentPage);
+            });
+            if (prevBtn) prevBtn.disabled = currentPage === 0;
+            if (nextBtn) nextBtn.disabled = currentPage === pageCount - 1;
+        }
+
+        if (prevBtn) prevBtn.addEventListener('click', () => renderWorklifePage(currentPage - 1));
+        if (nextBtn) nextBtn.addEventListener('click', () => renderWorklifePage(currentPage + 1));
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => renderWorklifePage(Number(tab.dataset.worklifePage)));
+        });
+        dots.forEach(dot => {
+            dot.addEventListener('click', () => renderWorklifePage(Number(dot.dataset.dot)));
+        });
+
+        // Vuốt (swipe) trái/phải trên di động
+        let touchStartX = null;
+        let touchStartY = null;
+        const pagerEl = document.getElementById('worklife-pager');
+        if (pagerEl) {
+            pagerEl.addEventListener('touchstart', (e) => {
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+            }, { passive: true });
+
+            pagerEl.addEventListener('touchend', (e) => {
+                if (touchStartX === null) return;
+                const deltaX = e.changedTouches[0].clientX - touchStartX;
+                const deltaY = e.changedTouches[0].clientY - touchStartY;
+                touchStartX = null;
+                touchStartY = null;
+                if (Math.abs(deltaX) > 45 && Math.abs(deltaX) > Math.abs(deltaY)) {
+                    if (deltaX < 0) renderWorklifePage(currentPage + 1);
+                    else renderWorklifePage(currentPage - 1);
+                }
+            }, { passive: true });
+        }
+
+        renderWorklifePage(0);
+    })();
+    // ===== KẾT THÚC TAB "ĐI LÀM" =====
+
+    // ===== TAB "THI THCS" — chọn khối lớp (Lớp 6/7/8/9) =====
+    (function() {
+        const gradeTabs = Array.from(document.querySelectorAll('.grade-tab-btn'));
+        if (!gradeTabs.length) return;
+
+        const gradePanels = {
+            'grade-panel-6': document.getElementById('grade-panel-6'),
+            'grade-panel-7': document.getElementById('grade-panel-7'),
+            'grade-panel-8': document.getElementById('grade-panel-8'),
+            'grade-panel-9': document.getElementById('grade-panel-9'),
+        };
+
+        gradeTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const target = tab.dataset.gradeTarget;
+                gradeTabs.forEach(t => t.classList.toggle('active', t === tab));
+                Object.keys(gradePanels).forEach(key => {
+                    const panel = gradePanels[key];
+                    if (panel) panel.style.display = (key === target) ? '' : 'none';
+                });
+            });
+        });
+    })();
+    // ===== KẾT THÚC CHỌN KHỐI LỚP =====
+
+    // ===== KHỐI LỚP 6 — chuyển đổi Tổng quan ⇄ Phiên âm ⇄ Ngữ pháp ⇄ Từ vựng ⇄ Lịch 35 tuần =====
+    (function() {
+        const track = document.getElementById('g6-track');
+        if (!track) return;
+
+        const prevBtn = document.getElementById('g6-prev-btn');
+        const nextBtn = document.getElementById('g6-next-btn');
+        const tabs = Array.from(document.querySelectorAll('.g6-switcher-tab'));
+        const dots = Array.from(document.querySelectorAll('#g6-dots .g6-dot'));
+        const pageCount = track.querySelectorAll('.roadmap-page').length;
+        let currentPage = 0;
+
+        function renderG6Page(index) {
+            currentPage = Math.max(0, Math.min(index, pageCount - 1));
+            track.style.transform = `translateX(-${currentPage * 100}%)`;
+
+            tabs.forEach(tab => {
+                tab.classList.toggle('active', Number(tab.dataset.g6Page) === currentPage);
+            });
+            dots.forEach(dot => {
+                dot.classList.toggle('active', Number(dot.dataset.dot) === currentPage);
+            });
+            if (prevBtn) prevBtn.disabled = currentPage === 0;
+            if (nextBtn) nextBtn.disabled = currentPage === pageCount - 1;
+        }
+
+        if (prevBtn) prevBtn.addEventListener('click', () => renderG6Page(currentPage - 1));
+        if (nextBtn) nextBtn.addEventListener('click', () => renderG6Page(currentPage + 1));
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => renderG6Page(Number(tab.dataset.g6Page)));
+        });
+        dots.forEach(dot => {
+            dot.addEventListener('click', () => renderG6Page(Number(dot.dataset.dot)));
+        });
+
+        // Vuốt (swipe) trái/phải trên di động
+        let touchStartX = null;
+        let touchStartY = null;
+        const pagerEl = document.getElementById('g6-pager');
+        if (pagerEl) {
+            pagerEl.addEventListener('touchstart', (e) => {
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+            }, { passive: true });
+
+            pagerEl.addEventListener('touchend', (e) => {
+                if (touchStartX === null) return;
+                const deltaX = e.changedTouches[0].clientX - touchStartX;
+                const deltaY = e.changedTouches[0].clientY - touchStartY;
+                touchStartX = null;
+                touchStartY = null;
+                if (Math.abs(deltaX) > 45 && Math.abs(deltaX) > Math.abs(deltaY)) {
+                    if (deltaX < 0) renderG6Page(currentPage + 1);
+                    else renderG6Page(currentPage - 1);
+                }
+            }, { passive: true });
+        }
+
+        renderG6Page(0);
+    })();
+    // ===== KẾT THÚC KHỐI LỚP 6 =====
+
+    // ===== KHỐI LỚP 8 — chuyển đổi Tổng quan ⇄ Phiên âm ⇄ Ngữ pháp ⇄ Từ vựng =====
+    (function() {
+        const track = document.getElementById('g8-track');
+        if (!track) return;
+
+        const prevBtn = document.getElementById('g8-prev-btn');
+        const nextBtn = document.getElementById('g8-next-btn');
+        const tabs = Array.from(document.querySelectorAll('.g8-switcher-tab'));
+        const dots = Array.from(document.querySelectorAll('#g8-dots .g8-dot'));
+        const pageCount = track.querySelectorAll('.roadmap-page').length;
+        let currentPage = 0;
+
+        function renderG8Page(index) {
+            currentPage = Math.max(0, Math.min(index, pageCount - 1));
+            track.style.transform = `translateX(-${currentPage * 100}%)`;
+
+            tabs.forEach(tab => {
+                tab.classList.toggle('active', Number(tab.dataset.g8Page) === currentPage);
+            });
+            dots.forEach(dot => {
+                dot.classList.toggle('active', Number(dot.dataset.dot) === currentPage);
+            });
+            if (prevBtn) prevBtn.disabled = currentPage === 0;
+            if (nextBtn) nextBtn.disabled = currentPage === pageCount - 1;
+        }
+
+        if (prevBtn) prevBtn.addEventListener('click', () => renderG8Page(currentPage - 1));
+        if (nextBtn) nextBtn.addEventListener('click', () => renderG8Page(currentPage + 1));
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => renderG8Page(Number(tab.dataset.g8Page)));
+        });
+        dots.forEach(dot => {
+            dot.addEventListener('click', () => renderG8Page(Number(dot.dataset.dot)));
+        });
+
+        // Vuốt (swipe) trái/phải trên di động
+        let touchStartX = null;
+        let touchStartY = null;
+        const pagerEl = document.getElementById('g8-pager');
+        if (pagerEl) {
+            pagerEl.addEventListener('touchstart', (e) => {
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+            }, { passive: true });
+
+            pagerEl.addEventListener('touchend', (e) => {
+                if (touchStartX === null) return;
+                const deltaX = e.changedTouches[0].clientX - touchStartX;
+                const deltaY = e.changedTouches[0].clientY - touchStartY;
+                touchStartX = null;
+                touchStartY = null;
+                if (Math.abs(deltaX) > 45 && Math.abs(deltaX) > Math.abs(deltaY)) {
+                    if (deltaX < 0) renderG8Page(currentPage + 1);
+                    else renderG8Page(currentPage - 1);
+                }
+            }, { passive: true });
+        }
+
+        renderG8Page(0);
+    })();
+    // ===== KẾT THÚC KHỐI LỚP 8 =====
+
+    // ===== KHỐI LỚP 7 — chuyển đổi Tổng quan ⇄ Phiên âm ⇄ Ngữ pháp ⇄ Từ vựng ⇄ Lịch 35 tuần =====
+    (function() {
+        const track = document.getElementById('g7-track');
+        if (!track) return;
+
+        const prevBtn = document.getElementById('g7-prev-btn');
+        const nextBtn = document.getElementById('g7-next-btn');
+        const tabs = Array.from(document.querySelectorAll('.g7-switcher-tab'));
+        const dots = Array.from(document.querySelectorAll('#g7-dots .g7-dot'));
+        const pageCount = track.querySelectorAll('.roadmap-page').length;
+        let currentPage = 0;
+
+        function renderG7Page(index) {
+            currentPage = Math.max(0, Math.min(index, pageCount - 1));
+            track.style.transform = `translateX(-${currentPage * 100}%)`;
+
+            tabs.forEach(tab => {
+                tab.classList.toggle('active', Number(tab.dataset.g7Page) === currentPage);
+            });
+            dots.forEach(dot => {
+                dot.classList.toggle('active', Number(dot.dataset.dot) === currentPage);
+            });
+            if (prevBtn) prevBtn.disabled = currentPage === 0;
+            if (nextBtn) nextBtn.disabled = currentPage === pageCount - 1;
+        }
+
+        if (prevBtn) prevBtn.addEventListener('click', () => renderG7Page(currentPage - 1));
+        if (nextBtn) nextBtn.addEventListener('click', () => renderG7Page(currentPage + 1));
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => renderG7Page(Number(tab.dataset.g7Page)));
+        });
+        dots.forEach(dot => {
+            dot.addEventListener('click', () => renderG7Page(Number(dot.dataset.dot)));
+        });
+
+        // Vuốt (swipe) trái/phải trên di động
+        let touchStartX = null;
+        let touchStartY = null;
+        const pagerEl = document.getElementById('g7-pager');
+        if (pagerEl) {
+            pagerEl.addEventListener('touchstart', (e) => {
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+            }, { passive: true });
+
+            pagerEl.addEventListener('touchend', (e) => {
+                if (touchStartX === null) return;
+                const deltaX = e.changedTouches[0].clientX - touchStartX;
+                const deltaY = e.changedTouches[0].clientY - touchStartY;
+                touchStartX = null;
+                touchStartY = null;
+                if (Math.abs(deltaX) > 45 && Math.abs(deltaX) > Math.abs(deltaY)) {
+                    if (deltaX < 0) renderG7Page(currentPage + 1);
+                    else renderG7Page(currentPage - 1);
+                }
+            }, { passive: true });
+        }
+
+        renderG7Page(0);
+    })();
+    // ===== KẾT THÚC KHỐI LỚP 7 =====
+
+    // ===== KHỐI LỚP 9 — chuyển đổi Tổng quan ⇄ Phiên âm ⇄ Ngữ pháp ⇄ Từ vựng ⇄ Lịch 35 tuần =====
+    (function() {
+        const track = document.getElementById('g9-track');
+        if (!track) return;
+
+        const prevBtn = document.getElementById('g9-prev-btn');
+        const nextBtn = document.getElementById('g9-next-btn');
+        const tabs = Array.from(document.querySelectorAll('.g9-switcher-tab'));
+        const dots = Array.from(document.querySelectorAll('#g9-dots .g9-dot'));
+        const pageCount = track.querySelectorAll('.roadmap-page').length;
+        let currentPage = 0;
+
+        function renderG9Page(index) {
+            currentPage = Math.max(0, Math.min(index, pageCount - 1));
+            track.style.transform = `translateX(-${currentPage * 100}%)`;
+
+            tabs.forEach(tab => {
+                tab.classList.toggle('active', Number(tab.dataset.g9Page) === currentPage);
+            });
+            dots.forEach(dot => {
+                dot.classList.toggle('active', Number(dot.dataset.dot) === currentPage);
+            });
+            if (prevBtn) prevBtn.disabled = currentPage === 0;
+            if (nextBtn) nextBtn.disabled = currentPage === pageCount - 1;
+        }
+
+        if (prevBtn) prevBtn.addEventListener('click', () => renderG9Page(currentPage - 1));
+        if (nextBtn) nextBtn.addEventListener('click', () => renderG9Page(currentPage + 1));
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => renderG9Page(Number(tab.dataset.g9Page)));
+        });
+        dots.forEach(dot => {
+            dot.addEventListener('click', () => renderG9Page(Number(dot.dataset.dot)));
+        });
+
+        // Vuốt (swipe) trái/phải trên di động
+        let touchStartX = null;
+        let touchStartY = null;
+        const pagerEl = document.getElementById('g9-pager');
+        if (pagerEl) {
+            pagerEl.addEventListener('touchstart', (e) => {
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+            }, { passive: true });
+
+            pagerEl.addEventListener('touchend', (e) => {
+                if (touchStartX === null) return;
+                const deltaX = e.changedTouches[0].clientX - touchStartX;
+                const deltaY = e.changedTouches[0].clientY - touchStartY;
+                touchStartX = null;
+                touchStartY = null;
+                if (Math.abs(deltaX) > 45 && Math.abs(deltaX) > Math.abs(deltaY)) {
+                    if (deltaX < 0) renderG9Page(currentPage + 1);
+                    else renderG9Page(currentPage - 1);
+                }
+            }, { passive: true });
+        }
+
+        renderG9Page(0);
+    })();
+    // ===== KẾT THÚC KHỐI LỚP 9 =====
+
 });
