@@ -4564,3 +4564,451 @@ h3.news-editable:focus,
 @media (min-width: 600px) {
     .dub-admin-row-text { font-size: 0.86rem; }
 }
+/* =====================================================================
+   BÀI KIỂM TRA RIÊNG (CUSTOM TEST MODULE)
+   ===================================================================== */
+
+#ctest-panel { margin-top: 18px; }
+
+.ctest-loading-msg, .ctest-empty-msg {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    padding: 18px 4px;
+}
+
+/* ---- Danh sách bài kiểm tra ---- */
+.ctest-list-container { display: flex; flex-direction: column; gap: 12px; margin-top: 10px; }
+
+.ctest-test-row {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    padding: 14px 16px;
+    box-shadow: var(--shadow-xs);
+}
+
+.ctest-test-row-main {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    cursor: pointer;
+}
+
+.ctest-test-title { font-weight: 800; color: var(--text); font-size: 1rem; }
+.ctest-test-meta { font-size: 0.78rem; color: var(--text-muted); margin-top: 3px; }
+
+.ctest-test-row-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.ctest-status-badge {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+}
+.ctest-status-not-started { background: var(--border); color: var(--text-muted); }
+.ctest-status-in-progress { background: var(--warning-light); color: #92400e; }
+.ctest-status-submitted   { background: var(--success-light); color: var(--success-dark); }
+.ctest-status-draft       { background: var(--primary-light); color: var(--primary-dark); }
+
+.ctest-student-status-list {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.ctest-student-status-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 0.84rem;
+    flex-wrap: wrap;
+}
+.ctest-student-email { color: var(--text); font-weight: 600; }
+.ctest-retry-btn {
+    font-size: 0.72rem;
+    padding: 4px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border-strong);
+    background: var(--surface-2);
+    cursor: pointer;
+}
+.ctest-retry-btn:hover { background: var(--primary-light); border-color: var(--primary); }
+
+/* ---- Khung soạn bài (giảng viên) ---- */
+.ctest-editor-field { margin-bottom: 16px; }
+.ctest-editor-field .news-quiz-edit-label { display: block; margin-bottom: 6px; }
+.ctest-duration-input { max-width: 180px; }
+
+.ctest-save-status { font-size: 0.8rem; color: var(--text-muted); margin-right: 12px; }
+.ctest-editor-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+    flex-wrap: wrap;
+}
+
+/* ---- Trình soạn thảo văn bản đơn giản (đậm / gạch chân / nghiêng) ---- */
+.ctest-rich-wrap {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    overflow: hidden;
+}
+.ctest-rich-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 8px;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border);
+}
+.ctest-rich-btn {
+    width: 28px;
+    height: 26px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    line-height: 1;
+}
+.ctest-rich-btn:hover { background: var(--primary-light); border-color: var(--primary); }
+.ctest-rich-hint { font-size: 0.72rem; color: var(--text-muted); margin-left: 6px; }
+.ctest-rich-editable {
+    min-height: 40px;
+    padding: 9px 12px;
+    font-size: 0.92rem;
+    line-height: 1.5;
+    outline: none;
+    color: var(--text);
+}
+.ctest-rich-editable:empty:before {
+    content: attr(data-placeholder);
+    color: var(--text-light);
+}
+.ctest-rich-editable.ctest-rich-small { min-height: 22px; padding: 7px 10px; font-size: 0.88rem; }
+
+/* ---- Phần (section) trong khung soạn bài ---- */
+.ctest-section-card {
+    border: 2px solid var(--border-strong);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-bottom: 16px;
+    background: var(--surface-2);
+}
+.ctest-section-header-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+}
+.ctest-section-title-input {
+    flex: 1;
+    min-width: 160px;
+    font-weight: 800;
+    font-size: 0.98rem;
+}
+.ctest-section-remove-btn, .ctest-qcard-remove-btn, .ctest-row-remove-btn {
+    border: 1px solid var(--danger);
+    color: var(--danger-dark);
+    background: #fff;
+    border-radius: 8px;
+    padding: 5px 9px;
+    cursor: pointer;
+    font-size: 0.78rem;
+    flex-shrink: 0;
+}
+.ctest-section-remove-btn:hover, .ctest-qcard-remove-btn:hover, .ctest-row-remove-btn:hover { background: #fee2e2; }
+
+.ctest-question-list, .ctest-subq-list { display: flex; flex-direction: column; gap: 12px; }
+.ctest-subq-list { margin-top: 10px; padding: 10px; border-left: 3px solid var(--primary-light); background: var(--surface); border-radius: 8px; }
+
+.ctest-add-question-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 12px;
+}
+.ctest-add-question-row .ctest-type-btn {
+    font-size: 0.76rem;
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px dashed var(--border-strong);
+    background: var(--surface);
+    cursor: pointer;
+    color: var(--text-muted);
+}
+.ctest-add-question-row .ctest-type-btn:hover { background: var(--primary-light); color: var(--primary-dark); border-style: solid; }
+
+.ctest-qcard {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    padding: 12px;
+}
+.ctest-qcard-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+.ctest-qcard-type-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--primary-dark);
+    background: var(--primary-light);
+    padding: 2px 9px;
+    border-radius: 20px;
+}
+
+.ctest-image-field { margin-top: 8px; }
+.ctest-image-field input { width: 100%; }
+.ctest-image-preview { max-width: 220px; max-height: 140px; border-radius: 8px; margin-top: 6px; display: block; }
+
+.ctest-option-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+.ctest-option-row .ctest-rich-wrap { flex: 1; }
+.ctest-add-option-btn, .ctest-add-row-btn {
+    margin-top: 4px;
+    font-size: 0.78rem;
+    padding: 5px 10px;
+    border-radius: 8px;
+    border: 1px dashed var(--border-strong);
+    background: var(--surface);
+    cursor: pointer;
+    color: var(--text-muted);
+}
+.ctest-add-option-btn:hover, .ctest-add-row-btn:hover { background: var(--primary-light); color: var(--primary-dark); }
+
+.ctest-match-cols-editor { display: flex; gap: 14px; flex-wrap: wrap; }
+.ctest-match-col-editor { flex: 1; min-width: 220px; }
+.ctest-match-col-editor h5 { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px; }
+.ctest-match-item-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+.ctest-match-item-row input { flex: 1; }
+.ctest-match-pair-select { margin-top: 10px; }
+.ctest-match-pair-row { display: flex; align-items: center; gap: 8px; font-size: 0.84rem; margin-bottom: 4px; }
+.ctest-match-pair-row select { flex: 1; }
+
+/* ---- Ô trống trong câu điền khuyết / chọn từ trong khung ---- */
+.ctest-blank-render { display: inline; line-height: 2.1; }
+.ctest-blank-preview {
+    display: inline-block;
+    background: var(--warning-light);
+    color: #92400e;
+    padding: 1px 8px;
+    border-radius: 6px;
+    font-weight: 700;
+    margin: 0 2px;
+}
+.ctest-blank-input, .ctest-blank-select {
+    display: inline-block;
+    min-width: 90px;
+    border: none;
+    border-bottom: 2px solid var(--primary);
+    background: var(--primary-light);
+    padding: 2px 6px;
+    margin: 0 3px;
+    font-size: 0.95rem;
+    text-align: center;
+    border-radius: 4px;
+}
+.ctest-blank-input:focus, .ctest-blank-select:focus { outline: none; background: #fff; }
+.ctest-blank-result {
+    display: inline-block;
+    padding: 1px 8px;
+    border-radius: 6px;
+    margin: 0 2px;
+    font-weight: 700;
+}
+.ctest-blank-result.ctest-ok { background: var(--success-light); color: var(--success-dark); }
+.ctest-blank-result.ctest-wrong { background: #fee2e2; color: var(--danger-dark); }
+
+.ctest-wordbank-box {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px;
+    border: 2px dashed var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--surface-2);
+    margin-bottom: 12px;
+}
+.ctest-wordbank-word {
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    border-radius: 8px;
+    padding: 4px 12px;
+    font-weight: 700;
+    font-size: 0.86rem;
+}
+
+/* ---- Khu vực học viên làm bài ---- */
+.ctest-take-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 12px;
+    margin-bottom: 10px;
+}
+.ctest-take-timer {
+    font-weight: 800;
+    font-size: 1.05rem;
+    color: var(--primary-dark);
+    background: var(--primary-light);
+    padding: 6px 14px;
+    border-radius: 20px;
+}
+.ctest-take-timer.ctest-timer-low { color: var(--danger-dark); background: #fee2e2; animation: ctestPulse 1s infinite; }
+@keyframes ctestPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.55; } }
+
+.ctest-take-notes {
+    background: var(--warning-light);
+    color: #92400e;
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-size: 0.88rem;
+    margin-bottom: 14px;
+}
+
+.ctest-violation-banner {
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-weight: 700;
+    font-size: 0.88rem;
+    margin-bottom: 14px;
+    background: #fee2e2;
+    color: var(--danger-dark);
+    border: 1px solid var(--danger);
+}
+
+.ctest-take-section { margin-bottom: 26px; }
+.ctest-take-section-title { font-size: 1.05rem; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+.ctest-take-instructions {
+    font-size: 0.86rem;
+    color: var(--text-muted);
+    background: var(--surface-2);
+    border-left: 3px solid var(--primary);
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin-bottom: 14px;
+}
+
+.ctest-take-qblock {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    padding: 14px;
+    margin-bottom: 14px;
+}
+.ctest-take-qnum { font-weight: 800; color: var(--primary-dark); margin-right: 4px; }
+.ctest-take-qprompt { margin-bottom: 10px; line-height: 1.6; }
+.ctest-take-image { max-width: 100%; max-height: 260px; border-radius: 10px; margin: 8px 0; display: block; }
+
+.ctest-take-options { display: flex; flex-direction: column; gap: 8px; }
+.ctest-take-option-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+}
+.ctest-take-option-label:hover { background: var(--primary-light); }
+.ctest-take-option-label input { margin-top: 3px; }
+
+.ctest-reorder-strip, .ctest-reorder-pool {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-height: 42px;
+    padding: 8px;
+    border-radius: 8px;
+}
+.ctest-reorder-strip { border: 2px solid var(--primary); background: var(--primary-light); margin-bottom: 10px; }
+.ctest-reorder-pool { border: 2px dashed var(--border-strong); background: var(--surface-2); }
+.ctest-reorder-chip {
+    background: #fff;
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-weight: 600;
+    box-shadow: var(--shadow-xs);
+    user-select: none;
+}
+.ctest-reorder-chip:hover { border-color: var(--primary); }
+
+.ctest-match-take-wrap { display: flex; gap: 18px; flex-wrap: wrap; }
+.ctest-match-take-col { flex: 1; min-width: 160px; display: flex; flex-direction: column; gap: 8px; }
+.ctest-match-take-item {
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+    background: #fff;
+    font-weight: 600;
+    user-select: none;
+    position: relative;
+}
+.ctest-match-take-item.ctest-match-selected { border-color: var(--primary); background: var(--primary-light); }
+.ctest-match-take-item.ctest-match-paired { border-color: var(--success); }
+.ctest-match-badge {
+    display: inline-block;
+    min-width: 20px;
+    text-align: center;
+    background: var(--success);
+    color: #fff;
+    border-radius: 50%;
+    font-size: 0.7rem;
+    padding: 1px 5px;
+    margin-right: 6px;
+}
+
+.ctest-submit-btn { width: 100%; margin-top: 10px; font-size: 1rem; padding: 12px; }
+
+/* Chống bôi đen/copy trong lúc làm bài */
+.ctest-no-select, .ctest-no-select * {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* ---- Trang kết quả ---- */
+.ctest-result-score {
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: var(--primary-dark);
+    background: var(--primary-light);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin: 10px 0 20px;
+}
+.ctest-result-item-wrong { color: var(--danger-dark); font-weight: 700; }
+.ctest-result-correct-tag { color: var(--success-dark); font-weight: 700; margin-left: 6px; }
+
+@media (max-width: 700px) {
+    .ctest-match-cols-editor, .ctest-match-take-wrap { flex-direction: column; }
+    .ctest-test-row-main { flex-direction: column; align-items: flex-start; }
+}

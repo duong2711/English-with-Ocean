@@ -8339,4 +8339,1862 @@ function toggleCompletion(symbolElement) {
     ['g10', 'g11', 'g12'].forEach(initThptGradePager);
     // ===== KẾT THÚC KHỐI LỚP 10 / 11 / 12 =====
 
+// =====================================================================
+// ===== BÀI KIỂM TRA RIÊNG (CUSTOM TEST MODULE) ======================
+// Giảng viên (giangvien@gmail.com) soạn bài kiểm tra riêng cho từng học
+// viên: nhiều phần, nhiều dạng câu hỏi, giới hạn thời gian, chống gian
+// lận (chụp màn hình / copy / chuyển tab), tự động chấm điểm khi nộp.
+// Dữ liệu lưu ở bảng "custom_tests" / "custom_test_submissions" trên
+// Supabase — xem file "custom_tests_setup.sql" đi kèm để tạo bảng.
+//
+// GHI CHÚ QUAN TRỌNG:
+// - Trình duyệt KHÔNG có cách nào chặn tuyệt đối việc chụp màn hình ở
+//   cấp hệ điều hành (vd Cmd+Shift+4 trên Mac không hề gọi tới trang
+//   web). Module này áp dụng mọi biện pháp ngăn chặn khả thi từ phía
+//   web (chặn chuột phải/copy/bôi đen, phát hiện phím PrintScreen khi
+//   trình duyệt cho phép, phát hiện rời khỏi tab/cửa sổ) và tính đó là
+//   "vi phạm" theo đúng yêu cầu, nhưng không thể đảm bảo chặn được
+//   100% mọi công cụ chụp màn hình của hệ điều hành.
+// =====================================================================
+(function initCustomTestModule() {
+
+    const ctestFolderCard   = document.getElementById('ctest-folder-card');
+    const kiemtraFolderGrid = document.getElementById('kiemtra-folder-grid');
+    const ctestPanel        = document.getElementById('ctest-panel');
+    if (!ctestFolderCard || !ctestPanel) return;
+
+    const listView   = document.getElementById('ctest-list-view');
+    const editorView = document.getElementById('ctest-editor-view');
+    const takeView   = document.getElementById('ctest-take-view');
+    const resultView = document.getElementById('ctest-result-view');
+
+    const listContainer = document.getElementById('ctest-list-container');
+    const adminBar       = document.getElementById('ctest-admin-bar');
+    const createBtn      = document.getElementById('ctest-create-btn');
+
+    const titleInput        = document.getElementById('ctest-title-input');
+    const studentsInput     = document.getElementById('ctest-students-input');
+    const durationInput     = document.getElementById('ctest-duration-input');
+    const notesSlot         = document.getElementById('ctest-notes-editor-slot');
+    const sectionsContainer = document.getElementById('ctest-sections-container');
+    const addSectionBtn     = document.getElementById('ctest-add-section-btn');
+    const saveStatusEl      = document.getElementById('ctest-save-status');
+    const publishBtn        = document.getElementById('ctest-publish-btn');
+    const deleteBtn         = document.getElementById('ctest-delete-btn');
+
+    const takeTitleEl     = document.getElementById('ctest-take-title');
+    const takeTimerEl     = document.getElementById('ctest-take-timer');
+    const takeNotesEl     = document.getElementById('ctest-take-notes');
+    const violationBanner = document.getElementById('ctest-violation-banner');
+    const takeSectionsEl  = document.getElementById('ctest-take-sections');
+    const submitBtn       = document.getElementById('ctest-submit-btn');
+
+    const resultTitleEl    = document.getElementById('ctest-result-title');
+    const resultScoreEl    = document.getElementById('ctest-result-score');
+    const resultSectionsEl = document.getElementById('ctest-result-sections');
+
+    let notesEditor = null;
+
+    // =========================== TIỆN ÍCH CHUNG ===========================
+    function ctestUid(prefix) {
+        return (prefix || 'x') + '_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+    }
+
+    function ctestEscape(str) {
+        const div = document.createElement('div');
+        div.textContent = String(str == null ? '' : str);
+        return div.innerHTML;
+    }
+
+    function ctestShuffle(arr) {
+        const a = arr.slice();
+        for (let i = a.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            const tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+        }
+        return a;
+    }
+
+    function ctestNormalize(s) {
+        return String(s || '').trim().toLowerCase().replace(/\s+/g, ' ');
+    }
+
+    function ctestTokenize(text) {
+        return String(text || '').trim().split(/\s+/).filter(Boolean);
+    }
+
+    // Trình soạn thảo mini: đậm / gạch chân / nghiêng (dùng document.execCommand,
+    // đủ dùng cho nhu cầu định dạng đơn giản của trang, không cần thư viện ngoài)
+    function ctestCreateRichEditor(initialHtml, placeholder, hint, small) {
+        const wrap = document.createElement('div');
+        wrap.className = 'ctest-rich-wrap';
+        wrap.innerHTML =
+            '<div class="ctest-rich-toolbar">' +
+                '<button type="button" class="ctest-rich-btn" data-cmd="bold" title="In đậm"><b>B</b></button>' +
+                '<button type="button" class="ctest-rich-btn" data-cmd="underline" title="Gạch chân"><u>U</u></button>' +
+                '<button type="button" class="ctest-rich-btn" data-cmd="italic" title="In nghiêng"><i>I</i></button>' +
+                (hint ? '<span class="ctest-rich-hint">' + hint + '</span>' : '') +
+            '</div>' +
+            '<div class="ctest-rich-editable' + (small ? ' ctest-rich-small' : '') + '" contenteditable="true" data-placeholder="' + ctestEscape(placeholder || '') + '"></div>';
+        const editable = wrap.querySelector('.ctest-rich-editable');
+        editable.innerHTML = initialHtml || '';
+        wrap.querySelectorAll('.ctest-rich-btn').forEach(btn => {
+            btn.addEventListener('mousedown', e => e.preventDefault());
+            btn.addEventListener('click', () => {
+                editable.focus();
+                document.execCommand(btn.dataset.cmd, false, null);
+                editable.dispatchEvent(new Event('input', { bubbles: true }));
+            });
+        });
+        return wrap;
+    }
+    function ctestRichHtml(wrap) {
+        const ed = wrap && wrap.querySelector ? wrap.querySelector('.ctest-rich-editable') : null;
+        return ed ? ed.innerHTML.trim() : '';
+    }
+
+    // Tách các từ IN ĐẬM trong 1 đoạn HTML thành danh sách "chỗ trống" —
+    // trả về HTML hiển thị đã thay các từ đó bằng ô đánh dấu (data-blank-idx).
+    function ctestParseBlanks(html) {
+        const container = document.createElement('div');
+        container.innerHTML = html || '';
+        const blanks = [];
+        Array.from(container.querySelectorAll('b, strong')).forEach((elm, i) => {
+            blanks.push(elm.textContent.trim());
+            const marker = document.createElement('span');
+            marker.className = 'ctest-blank-slot';
+            marker.setAttribute('data-blank-idx', String(i));
+            elm.replaceWith(marker);
+        });
+        return { displayHtml: container.innerHTML, blanks };
+    }
+
+    function ctestImageField(initialUrl) {
+        const wrap = document.createElement('div');
+        wrap.className = 'ctest-image-field';
+        wrap.innerHTML =
+            '<label class="news-quiz-edit-label">Link hình minh hoạ (URL — tuỳ chọn)</label>' +
+            '<input type="text" class="news-edit-input ctest-image-url-input" placeholder="https://..." value="' + ctestEscape(initialUrl || '') + '">' +
+            '<img class="ctest-image-preview" style="display:none;">';
+        const input = wrap.querySelector('.ctest-image-url-input');
+        const preview = wrap.querySelector('.ctest-image-preview');
+        function refreshPreview() {
+            const url = input.value.trim();
+            if (url) { preview.src = url; preview.style.display = 'block'; }
+            else { preview.style.display = 'none'; }
+        }
+        input.addEventListener('input', refreshPreview);
+        input.addEventListener('input', () => wrap.dispatchEvent(new Event('ctest-changed', { bubbles: true })));
+        refreshPreview();
+        return wrap;
+    }
+    function ctestImageUrl(wrap) {
+        const input = wrap && wrap.querySelector ? wrap.querySelector('.ctest-image-url-input') : null;
+        return input ? input.value.trim() : '';
+    }
+
+    // =====================================================================
+    // ===== KHUNG SOẠN TỪNG DẠNG CÂU HỎI (giảng viên) ====================
+    // Mỗi hàm build...Editor(question) trả về 1 phần tử .ctest-qcard đã có
+    // sẵn dữ liệu; hàm collect...(qcardEl) đọc lại DOM để lấy dữ liệu khi lưu.
+    // =====================================================================
+
+    const CTEST_TYPE_LABELS = {
+        mcq: 'Trắc nghiệm',
+        fill_blank: 'Điền vào chỗ trống',
+        reorder: 'Sắp xếp câu',
+        reading: 'Bài đọc + trắc nghiệm',
+        mixed: 'Câu hỏi hỗn hợp',
+        matching: 'Nối từ',
+        wordbank: 'Chọn từ trong khung',
+        listening: 'Bài nghe',
+        essay: 'Tự luận'
+    };
+    // Các dạng hiện ra làm nút "+ Thêm câu hỏi" cấp PHẦN (không gồm "essay" vì
+    // dạng đó chỉ dùng làm 1 phần bên trong câu hỏi hỗn hợp, không đứng riêng).
+    const CTEST_TOP_LEVEL_TYPES = ['mcq', 'fill_blank', 'reorder', 'reading', 'mixed', 'matching', 'wordbank', 'listening'];
+
+    function ctestQcardShell(type, removeLabel) {
+        const card = document.createElement('div');
+        card.className = 'ctest-qcard';
+        card.dataset.qtype = type;
+        card.innerHTML =
+            '<div class="ctest-qcard-header">' +
+                '<span class="ctest-qcard-type-label">' + (CTEST_TYPE_LABELS[type] || type) + '</span>' +
+                '<button type="button" class="ctest-qcard-remove-btn">🗑️ ' + (removeLabel || 'Xoá câu này') + '</button>' +
+            '</div>';
+        return card;
+    }
+
+    function ctestOptionsEditor(options, correctIndex) {
+        const box = document.createElement('div');
+        box.className = 'ctest-options-editor';
+        (options && options.length ? options : ['', '']).forEach((opt, i) => {
+            box.appendChild(ctestOptionRow(opt, i === correctIndex));
+        });
+        const addBtn = document.createElement('button');
+        addBtn.type = 'button';
+        addBtn.className = 'ctest-add-option-btn';
+        addBtn.textContent = '+ Thêm đáp án';
+        addBtn.addEventListener('click', () => {
+            box.insertBefore(ctestOptionRow('', false), addBtn);
+            box.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
+        });
+        box.appendChild(addBtn);
+        // đảm bảo addBtn luôn nằm cuối dù thêm dòng ở giữa
+        return box;
+
+        function ctestOptionRow(text, isCorrect) {
+            const row = document.createElement('div');
+            row.className = 'ctest-option-row';
+            const radio = document.createElement('input');
+            radio.type = 'radio';
+            radio.name = 'ctest-correct-' + ctestUid('');
+            radio.className = 'ctest-option-correct-radio';
+            radio.checked = !!isCorrect;
+            radio.title = 'Đáp án đúng';
+            const richWrap = ctestCreateRichEditor(text || '', 'Nhập đáp án...', '', true);
+            const rm = document.createElement('button');
+            rm.type = 'button';
+            rm.className = 'ctest-row-remove-btn';
+            rm.textContent = '✕';
+            rm.addEventListener('click', () => {
+                if (box.querySelectorAll('.ctest-option-row').length <= 2) {
+                    alert('Cần ít nhất 2 đáp án.');
+                    return;
+                }
+                row.remove();
+                box.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
+            });
+            row.appendChild(radio);
+            row.appendChild(richWrap);
+            row.appendChild(rm);
+            return row;
+        }
+    }
+    function ctestCollectOptions(box) {
+        const rows = Array.from(box.querySelectorAll(':scope > .ctest-option-row'));
+        const options = rows.map(r => ctestRichHtml(r.querySelector('.ctest-rich-wrap')));
+        let correct = 0;
+        rows.forEach((r, i) => { if (r.querySelector('.ctest-option-correct-radio').checked) correct = i; });
+        return { options, correct };
+    }
+
+    // ---- 1) Trắc nghiệm ----
+    function buildMcqEditor(q) {
+        const card = ctestQcardShell('mcq');
+        const promptWrap = ctestCreateRichEditor(q.prompt || '', 'Nhập câu hỏi...', 'Bôi đen rồi bấm B/U/I để định dạng.');
+        promptWrap.classList.add('ctest-qprompt-editor');
+        card.appendChild(promptWrap);
+        const imgField = ctestImageField(q.image_url);
+        card.appendChild(imgField);
+        const optBox = ctestOptionsEditor(q.options, q.correct);
+        card.appendChild(optBox);
+        return card;
+    }
+    function collectMcq(card) {
+        const { options, correct } = ctestCollectOptions(card.querySelector(':scope > .ctest-options-editor'));
+        return {
+            type: 'mcq',
+            prompt: ctestRichHtml(card.querySelector(':scope > .ctest-qprompt-editor')),
+            image_url: ctestImageUrl(card.querySelector(':scope > .ctest-image-field')),
+            options, correct
+        };
+    }
+
+    // ---- 2) Điền vào chỗ trống ----
+    function buildFillBlankEditor(q) {
+        const card = ctestQcardShell('fill_blank');
+        const editor = ctestCreateRichEditor(q.html || '', 'Nhập câu đầy đủ...', 'Bôi đen từ cần ẩn rồi bấm <b>B</b> để biến thành chỗ trống.');
+        editor.classList.add('ctest-fillblank-editor');
+        card.appendChild(editor);
+        return card;
+    }
+    function collectFillBlank(card) {
+        return { type: 'fill_blank', html: ctestRichHtml(card.querySelector(':scope > .ctest-fillblank-editor')) };
+    }
+
+    // ---- 3) Sắp xếp câu ----
+    function buildReorderEditor(q) {
+        const card = ctestQcardShell('reorder');
+        const field = document.createElement('div');
+        field.innerHTML =
+            '<label class="news-quiz-edit-label">Câu hoàn chỉnh (hệ thống sẽ tự tách từ &amp; xáo trộn cho học viên sắp xếp lại)</label>' +
+            '<input type="text" class="news-edit-input ctest-reorder-sentence-input" placeholder="VD: The cat sat on the mat.">';
+        card.appendChild(field);
+        card.querySelector('.ctest-reorder-sentence-input').value = q.sentence || '';
+        return card;
+    }
+    function collectReorder(card) {
+        return { type: 'reorder', sentence: card.querySelector(':scope > div > .ctest-reorder-sentence-input').value.trim() };
+    }
+
+    // ---- 4) Bài đọc + trắc nghiệm ----
+    function buildReadingEditor(q) {
+        const card = ctestQcardShell('reading');
+        const passageWrap = ctestCreateRichEditor(q.passage || '', 'Dán/nhập đoạn văn...', 'Bôi đen rồi bấm B/U/I để định dạng.');
+        passageWrap.classList.add('ctest-reading-passage-editor');
+        card.appendChild(passageWrap);
+        const imgField = ctestImageField(q.image_url);
+        card.appendChild(imgField);
+
+        const subListLabel = document.createElement('label');
+        subListLabel.className = 'news-quiz-edit-label';
+        subListLabel.style.marginTop = '10px';
+        subListLabel.style.display = 'block';
+        subListLabel.textContent = 'Câu hỏi trắc nghiệm gắn liền với bài đọc:';
+        card.appendChild(subListLabel);
+
+        const subList = document.createElement('div');
+        subList.className = 'ctest-subq-list ctest-reading-sublist';
+        (q.sub_questions && q.sub_questions.length ? q.sub_questions : [{ prompt: '', options: ['', ''], correct: 0 }])
+            .forEach(sq => subList.appendChild(buildQuestionCard('mcq', sq)));
+        card.appendChild(subList);
+
+        const addSubBtn = document.createElement('button');
+        addSubBtn.type = 'button';
+        addSubBtn.className = 'ctest-add-row-btn';
+        addSubBtn.textContent = '+ Thêm câu trắc nghiệm cho bài đọc này';
+        addSubBtn.addEventListener('click', () => {
+            subList.appendChild(buildQuestionCard('mcq', { prompt: '', options: ['', ''], correct: 0 }));
+            subList.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
+        });
+        card.appendChild(addSubBtn);
+        return card;
+    }
+    function collectReading(card) {
+        const subList = card.querySelector(':scope > .ctest-reading-sublist');
+        const subQuestions = Array.from(subList.children).filter(c => c.classList.contains('ctest-qcard')).map(collectQuestionCard);
+        return {
+            type: 'reading',
+            passage: ctestRichHtml(card.querySelector(':scope > .ctest-reading-passage-editor')),
+            image_url: ctestImageUrl(card.querySelector(':scope > .ctest-image-field')),
+            sub_questions: subQuestions
+        };
+    }
+
+    // ---- 5) Câu hỏi hỗn hợp (điền khuyết + tự luận) ----
+    // ---- 5) Câu hỏi hỗn hợp (container tự do — thêm nhiều phần, lặp lại tuỳ ý) ----
+    // Mỗi "phần" bên trong có thể là bất kỳ dạng nào trong: trắc nghiệm, điền
+    // khuyết, sắp xếp câu, nối từ, chọn từ trong khung, hoặc tự luận — thêm
+    // bao nhiêu phần tuỳ thích, dạng nào cũng có thể lặp lại nhiều lần.
+    const CTEST_MIXED_PART_TYPES = ['mcq', 'fill_blank', 'reorder', 'matching', 'wordbank', 'essay'];
+    const CTEST_MIXED_PART_LABELS = {
+        mcq: 'Trắc nghiệm', fill_blank: 'Điền vào chỗ trống', reorder: 'Sắp xếp câu',
+        matching: 'Nối từ', wordbank: 'Chọn từ trong khung', essay: 'Tự luận'
+    };
+
+    // Chuyển dữ liệu "mixed" kiểu CŨ (html + essay_prompt + essay_answer cố định)
+    // sang dạng "parts" mới, để các bài đã lưu trước đây vẫn mở lại được bình thường.
+    function ctestNormalizeMixedParts(q) {
+        if (q && Array.isArray(q.parts)) return q.parts;
+        if (q && (q.html !== undefined || q.essay_prompt !== undefined)) {
+            const parts = [];
+            if (q.html) parts.push({ type: 'fill_blank', html: q.html });
+            parts.push({ type: 'essay', prompt: q.essay_prompt || '', answer: q.essay_answer || '' });
+            return parts;
+        }
+        return [{ type: 'fill_blank', html: '' }, { type: 'essay', prompt: '', answer: '' }];
+    }
+
+    function buildMixedEditor(q) {
+        const card = ctestQcardShell('mixed');
+        const subListLabel = document.createElement('label');
+        subListLabel.className = 'news-quiz-edit-label';
+        subListLabel.textContent = 'Các phần trong câu hỏi hỗn hợp này (thêm tự do, có thể lặp lại dạng bất kỳ):';
+        card.appendChild(subListLabel);
+
+        const subList = document.createElement('div');
+        subList.className = 'ctest-subq-list ctest-mixed-sublist';
+        ctestNormalizeMixedParts(q).forEach(part => subList.appendChild(buildQuestionCard(part.type, part)));
+        card.appendChild(subList);
+
+        const addRow = document.createElement('div');
+        addRow.className = 'ctest-add-question-row';
+        CTEST_MIXED_PART_TYPES.forEach(type => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'ctest-type-btn';
+            btn.textContent = '+ ' + CTEST_MIXED_PART_LABELS[type];
+            btn.addEventListener('click', () => {
+                subList.appendChild(buildQuestionCard(type, CTEST_DEFAULTS[type]()));
+                subList.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
+            });
+            addRow.appendChild(btn);
+        });
+        card.appendChild(addRow);
+        return card;
+    }
+    function collectMixed(card) {
+        const subList = card.querySelector(':scope > .ctest-mixed-sublist');
+        const parts = Array.from(subList.children).filter(c => c.classList.contains('ctest-qcard')).map(collectQuestionCard);
+        return { type: 'mixed', parts };
+    }
+
+    // ---- Phần "Tự luận" — chỉ dùng làm 1 phần bên trong câu hỏi hỗn hợp ----
+    function buildEssayEditor(q) {
+        const card = ctestQcardShell('essay');
+        const label1 = document.createElement('label');
+        label1.className = 'news-quiz-edit-label';
+        label1.textContent = 'Câu hỏi tự luận:';
+        card.appendChild(label1);
+        const promptWrap = ctestCreateRichEditor(q.prompt || '', 'Nhập câu hỏi tự luận...', '');
+        promptWrap.classList.add('ctest-essay-prompt-editor');
+        card.appendChild(promptWrap);
+
+        const label2 = document.createElement('label');
+        label2.className = 'news-quiz-edit-label';
+        label2.style.marginTop = '10px';
+        label2.style.display = 'block';
+        label2.textContent = 'Đáp án đúng (do bạn quy định, dùng để chấm tự động):';
+        card.appendChild(label2);
+        const answerInput = document.createElement('input');
+        answerInput.type = 'text';
+        answerInput.className = 'news-edit-input ctest-essay-answer-input';
+        answerInput.placeholder = 'Nhập đáp án chuẩn...';
+        answerInput.value = q.answer || '';
+        card.appendChild(answerInput);
+        return card;
+    }
+    function collectEssay(card) {
+        return {
+            type: 'essay',
+            prompt: ctestRichHtml(card.querySelector(':scope > .ctest-essay-prompt-editor')),
+            answer: card.querySelector(':scope > .ctest-essay-answer-input').value.trim()
+        };
+    }
+
+    // ---- 6) Nối từ (matching) ----
+    function ctestMatchItemRow(text, rid, isRight) {
+        const row = document.createElement('div');
+        row.className = 'ctest-match-item-row';
+        if (isRight) row.dataset.rid = rid || ctestUid('r');
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'news-edit-input ctest-match-item-input';
+        input.placeholder = isRight ? 'Nội dung cột phải...' : 'Nội dung cột trái...';
+        input.value = text || '';
+        const rm = document.createElement('button');
+        rm.type = 'button';
+        rm.className = 'ctest-row-remove-btn';
+        rm.textContent = '✕';
+        row.appendChild(input);
+        row.appendChild(rm);
+        rm.addEventListener('click', () => {
+            const col = row.parentElement;
+            if (col.querySelectorAll(':scope > .ctest-match-item-row').length <= 2) {
+                alert('Cần ít nhất 2 mục.');
+                return;
+            }
+            row.remove();
+            col.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
+        });
+        return row;
+    }
+
+    function buildMatchingEditor(q) {
+        const card = ctestQcardShell('matching');
+        const imgField = ctestImageField(q.image_url);
+        card.appendChild(imgField);
+
+        const colsWrap = document.createElement('div');
+        colsWrap.className = 'ctest-match-cols-editor';
+
+        const leftCol = document.createElement('div');
+        leftCol.className = 'ctest-match-col-editor ctest-match-left-editor';
+        leftCol.innerHTML = '<h5>Cột trái</h5>';
+        const rightCol = document.createElement('div');
+        rightCol.className = 'ctest-match-col-editor ctest-match-right-editor';
+        rightCol.innerHTML = '<h5>Cột phải</h5>';
+
+        const leftItems = (q.left && q.left.length) ? q.left : ['', ''];
+        const rightItems = (q.right && q.right.length) ? q.right : ['', ''];
+        leftItems.forEach(t => leftCol.appendChild(ctestMatchItemRow(t, null, false)));
+        rightItems.forEach((t, i) => rightCol.appendChild(ctestMatchItemRow(t, (q.right_ids && q.right_ids[i]) || null, true)));
+
+        const addLeftBtn = document.createElement('button');
+        addLeftBtn.type = 'button';
+        addLeftBtn.className = 'ctest-add-row-btn';
+        addLeftBtn.textContent = '+ Thêm mục trái';
+        addLeftBtn.addEventListener('click', () => {
+            leftCol.appendChild(ctestMatchItemRow('', null, false));
+            rebuildPairSelectors();
+            card.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
+        });
+        leftCol.appendChild(addLeftBtn);
+
+        const addRightBtn = document.createElement('button');
+        addRightBtn.type = 'button';
+        addRightBtn.className = 'ctest-add-row-btn';
+        addRightBtn.textContent = '+ Thêm mục phải';
+        addRightBtn.addEventListener('click', () => {
+            rightCol.appendChild(ctestMatchItemRow('', null, true));
+            rebuildPairSelectors();
+            card.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
+        });
+        rightCol.appendChild(addRightBtn);
+
+        colsWrap.appendChild(leftCol);
+        colsWrap.appendChild(rightCol);
+        card.appendChild(colsWrap);
+
+        const pairLabel = document.createElement('label');
+        pairLabel.className = 'news-quiz-edit-label ctest-match-pair-select';
+        pairLabel.textContent = 'Chọn đáp án đúng cho từng mục trái:';
+        card.appendChild(pairLabel);
+        const pairBox = document.createElement('div');
+        pairBox.className = 'ctest-match-pair-box';
+        card.appendChild(pairBox);
+
+        function rebuildPairSelectors() {
+            const rightRows = Array.from(rightCol.querySelectorAll(':scope > .ctest-match-item-row'));
+            const leftRows = Array.from(leftCol.querySelectorAll(':scope > .ctest-match-item-row'));
+            const prevSelections = Array.from(pairBox.querySelectorAll('select')).map(s => s.value);
+            pairBox.innerHTML = '';
+            leftRows.forEach((lr, li) => {
+                const row = document.createElement('div');
+                row.className = 'ctest-match-pair-row';
+                row.dataset.leftIndex = String(li);
+                const span = document.createElement('span');
+                span.textContent = (li + 1) + '.';
+                const select = document.createElement('select');
+                select.className = 'ctest-match-pair-select-input';
+                rightRows.forEach(rr => {
+                    const opt = document.createElement('option');
+                    opt.value = rr.dataset.rid;
+                    opt.textContent = rr.querySelector('.ctest-match-item-input').value || '(chưa nhập)';
+                    select.appendChild(opt);
+                });
+                if (prevSelections[li] && rightRows.some(rr => rr.dataset.rid === prevSelections[li])) {
+                    select.value = prevSelections[li];
+                } else if (q.correct_pairs && q.right_ids && q.correct_pairs[li] != null) {
+                    const rid = q.right_ids[q.correct_pairs[li]];
+                    if (rid) select.value = rid;
+                }
+                row.appendChild(span);
+                row.appendChild(select);
+                pairBox.appendChild(row);
+            });
+        }
+        rebuildPairSelectors();
+
+        // Cập nhật tên hiển thị trong dropdown + số lượng dòng mỗi khi gõ nội dung cột trái/phải
+        card.addEventListener('input', (e) => {
+            if (e.target.classList && e.target.classList.contains('ctest-match-item-input')) {
+                rebuildPairSelectors();
+            }
+        });
+
+        return card;
+    }
+    function collectMatching(card) {
+        const leftRows = Array.from(card.querySelectorAll(':scope > .ctest-match-cols-editor > .ctest-match-left-editor > .ctest-match-item-row'));
+        const rightRows = Array.from(card.querySelectorAll(':scope > .ctest-match-cols-editor > .ctest-match-right-editor > .ctest-match-item-row'));
+        const left = leftRows.map(r => r.querySelector('.ctest-match-item-input').value.trim());
+        const right = rightRows.map(r => r.querySelector('.ctest-match-item-input').value.trim());
+        const rightIds = rightRows.map(r => r.dataset.rid);
+        const pairRows = Array.from(card.querySelectorAll(':scope > .ctest-match-pair-box > .ctest-match-pair-row'));
+        const correctPairs = pairRows.map(row => {
+            const rid = row.querySelector('select').value;
+            const idx = rightIds.indexOf(rid);
+            return idx === -1 ? 0 : idx;
+        });
+        return {
+            type: 'matching',
+            image_url: ctestImageUrl(card.querySelector(':scope > .ctest-image-field')),
+            left, right, right_ids: rightIds, correct_pairs: correctPairs
+        };
+    }
+
+    // ---- 7) Chọn từ trong khung điền vào đoạn văn (word bank cloze) ----
+    function buildWordbankEditor(q) {
+        const card = ctestQcardShell('wordbank');
+        const editor = ctestCreateRichEditor(q.html || '', 'Nhập đoạn văn...', 'Bôi đen từ cần ẩn rồi bấm <b>B</b> — các từ này sẽ được đưa vào khung lớn cho học viên chọn.');
+        editor.classList.add('ctest-wordbank-editor');
+        card.appendChild(editor);
+        return card;
+    }
+    function collectWordbank(card) {
+        return { type: 'wordbank', html: ctestRichHtml(card.querySelector(':scope > .ctest-wordbank-editor')) };
+    }
+
+    // ---- 8) Bài nghe ----
+    function buildListeningEditor(q) {
+        const card = ctestQcardShell('listening');
+        const field = document.createElement('div');
+        field.innerHTML =
+            '<label class="news-quiz-edit-label">Link file nghe (URL — mp3/mp4 tải lên Backblaze B2 hoặc nguồn công khai khác)</label>' +
+            '<input type="text" class="news-edit-input ctest-audio-url-input" placeholder="https://...">';
+        card.appendChild(field);
+        field.querySelector('.ctest-audio-url-input').value = q.audio_url || '';
+
+        const subListLabel = document.createElement('label');
+        subListLabel.className = 'news-quiz-edit-label';
+        subListLabel.style.marginTop = '10px';
+        subListLabel.style.display = 'block';
+        subListLabel.textContent = 'Câu hỏi cho bài nghe (trắc nghiệm hoặc điền vào chỗ trống):';
+        card.appendChild(subListLabel);
+
+        const subList = document.createElement('div');
+        subList.className = 'ctest-subq-list ctest-listening-sublist';
+        (q.sub_questions && q.sub_questions.length ? q.sub_questions : [{ type: 'mcq', prompt: '', options: ['', ''], correct: 0 }])
+            .forEach(sq => subList.appendChild(buildQuestionCard(sq.type === 'fill_blank' ? 'fill_blank' : 'mcq', sq)));
+        card.appendChild(subList);
+
+        const addRow = document.createElement('div');
+        addRow.className = 'ctest-add-question-row';
+        const addMcqBtn = document.createElement('button');
+        addMcqBtn.type = 'button';
+        addMcqBtn.className = 'ctest-type-btn';
+        addMcqBtn.textContent = '+ Câu trắc nghiệm';
+        addMcqBtn.addEventListener('click', () => {
+            subList.appendChild(buildQuestionCard('mcq', { prompt: '', options: ['', ''], correct: 0 }));
+            subList.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
+        });
+        const addFillBtn = document.createElement('button');
+        addFillBtn.type = 'button';
+        addFillBtn.className = 'ctest-type-btn';
+        addFillBtn.textContent = '+ Câu điền khuyết';
+        addFillBtn.addEventListener('click', () => {
+            subList.appendChild(buildQuestionCard('fill_blank', { html: '' }));
+            subList.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
+        });
+        addRow.appendChild(addMcqBtn);
+        addRow.appendChild(addFillBtn);
+        card.appendChild(addRow);
+        return card;
+    }
+    function collectListening(card) {
+        const subList = card.querySelector(':scope > .ctest-listening-sublist');
+        const subQuestions = Array.from(subList.children).filter(c => c.classList.contains('ctest-qcard')).map(collectQuestionCard);
+        return {
+            type: 'listening',
+            audio_url: card.querySelector(':scope > div > .ctest-audio-url-input').value.trim(),
+            sub_questions: subQuestions
+        };
+    }
+
+    const CTEST_BUILDERS = {
+        mcq: buildMcqEditor, fill_blank: buildFillBlankEditor, reorder: buildReorderEditor,
+        reading: buildReadingEditor, mixed: buildMixedEditor, matching: buildMatchingEditor,
+        wordbank: buildWordbankEditor, listening: buildListeningEditor, essay: buildEssayEditor
+    };
+    const CTEST_COLLECTORS = {
+        mcq: collectMcq, fill_blank: collectFillBlank, reorder: collectReorder,
+        reading: collectReading, mixed: collectMixed, matching: collectMatching,
+        wordbank: collectWordbank, listening: collectListening, essay: collectEssay
+    };
+    const CTEST_DEFAULTS = {
+        mcq: () => ({ prompt: '', options: ['', ''], correct: 0 }),
+        fill_blank: () => ({ html: '' }),
+        reorder: () => ({ sentence: '' }),
+        reading: () => ({ passage: '', sub_questions: [{ prompt: '', options: ['', ''], correct: 0 }] }),
+        mixed: () => ({ parts: [{ type: 'fill_blank', html: '' }, { type: 'essay', prompt: '', answer: '' }] }),
+        matching: () => ({ left: ['', ''], right: ['', ''] }),
+        wordbank: () => ({ html: '' }),
+        listening: () => ({ audio_url: '', sub_questions: [{ type: 'mcq', prompt: '', options: ['', ''], correct: 0 }] }),
+        essay: () => ({ prompt: '', answer: '' })
+    };
+
+    function buildQuestionCard(type, question) {
+        const q = question || CTEST_DEFAULTS[type]();
+        const card = (CTEST_BUILDERS[type] || buildMcqEditor)(q);
+        card.dataset.qid = q.id || ctestUid('q');
+        card.querySelector(':scope > .ctest-qcard-header > .ctest-qcard-remove-btn').addEventListener('click', () => {
+            const list = card.parentElement;
+            if (list.querySelectorAll(':scope > .ctest-qcard').length <= 1 && !list.classList.contains('ctest-subq-list')) {
+                if (!confirm('Xoá câu hỏi cuối cùng của phần này?')) return;
+            }
+            card.remove();
+            list.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
+        });
+        return card;
+    }
+    function collectQuestionCard(card) {
+        const fn = CTEST_COLLECTORS[card.dataset.qtype] || collectMcq;
+        const data = fn(card);
+        data.id = card.dataset.qid;
+        return data;
+    }
+
+    // =====================================================================
+    // ===== PHẦN (SECTION) trong khung soạn bài ==========================
+    // =====================================================================
+    function buildSectionCard(section) {
+        const card = document.createElement('div');
+        card.className = 'ctest-section-card';
+        card.dataset.sectionId = section.id || ctestUid('sec');
+
+        const headerRow = document.createElement('div');
+        headerRow.className = 'ctest-section-header-row';
+        const titleInputEl = document.createElement('input');
+        titleInputEl.type = 'text';
+        titleInputEl.className = 'news-edit-input ctest-section-title-input';
+        titleInputEl.placeholder = 'Tên phần (VD: Phần 1 - Ngữ pháp)';
+        titleInputEl.value = section.title || '';
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'ctest-section-remove-btn';
+        removeBtn.textContent = '🗑️ Xoá phần này';
+        removeBtn.addEventListener('click', () => {
+            if (sectionsContainer.querySelectorAll(':scope > .ctest-section-card').length <= 1) {
+                alert('Cần giữ lại ít nhất 1 phần.');
+                return;
+            }
+            if (!confirm('Xoá cả phần này (gồm mọi câu hỏi bên trong)?')) return;
+            card.remove();
+            scheduleAutosave();
+        });
+        headerRow.appendChild(titleInputEl);
+        headerRow.appendChild(removeBtn);
+        card.appendChild(headerRow);
+
+        const instrLabel = document.createElement('label');
+        instrLabel.className = 'news-quiz-edit-label';
+        instrLabel.textContent = 'Yêu cầu / lưu ý cho phần này:';
+        card.appendChild(instrLabel);
+        const instrEditor = ctestCreateRichEditor(section.instructions || '', 'VD: Chọn đáp án đúng nhất...', '');
+        instrEditor.classList.add('ctest-section-instructions-editor');
+        card.appendChild(instrEditor);
+
+        const qList = document.createElement('div');
+        qList.className = 'ctest-question-list';
+        (section.questions && section.questions.length ? section.questions : []).forEach(q => {
+            qList.appendChild(buildQuestionCard(q.type, q));
+        });
+        card.appendChild(qList);
+
+        const addRow = document.createElement('div');
+        addRow.className = 'ctest-add-question-row';
+        CTEST_TOP_LEVEL_TYPES.forEach(type => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'ctest-type-btn';
+            btn.textContent = '+ ' + CTEST_TYPE_LABELS[type];
+            btn.addEventListener('click', () => {
+                qList.appendChild(buildQuestionCard(type, CTEST_DEFAULTS[type]()));
+                scheduleAutosave();
+            });
+            addRow.appendChild(btn);
+        });
+        card.appendChild(addRow);
+
+        return card;
+    }
+    function collectSectionCard(card) {
+        const questions = Array.from(card.querySelectorAll(':scope > .ctest-question-list > .ctest-qcard')).map(collectQuestionCard);
+        return {
+            id: card.dataset.sectionId,
+            title: card.querySelector(':scope > .ctest-section-header-row > .ctest-section-title-input').value.trim(),
+            instructions: ctestRichHtml(card.querySelector(':scope > .ctest-section-instructions-editor')),
+            questions
+        };
+    }
+
+    function renderSectionsEditor(sections) {
+        sectionsContainer.innerHTML = '';
+        (sections && sections.length ? sections : [{ id: ctestUid('sec'), title: 'Phần 1', instructions: '', questions: [] }])
+            .forEach(sec => sectionsContainer.appendChild(buildSectionCard(sec)));
+    }
+    function collectAllSections() {
+        return Array.from(sectionsContainer.querySelectorAll(':scope > .ctest-section-card')).map(collectSectionCard);
+    }
+
+    if (addSectionBtn) {
+        addSectionBtn.addEventListener('click', () => {
+            sectionsContainer.appendChild(buildSectionCard({ id: ctestUid('sec'), title: 'Phần ' + (sectionsContainer.children.length + 1), instructions: '', questions: [] }));
+            scheduleAutosave();
+        });
+    }
+
+    // =====================================================================
+    // ===== TẢI / LƯU / XUẤT BẢN BÀI KIỂM TRA (giảng viên) ===============
+    // =====================================================================
+    let currentEditingTestId = null;
+    let autosaveTimer = null;
+    let myTestsCache = []; // danh sách bài kiểm tra do giảng viên đang đăng nhập tạo
+
+    function collectEditorPayload() {
+        const emails = studentsInput.value.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+        const duration = durationInput.value.trim() ? parseInt(durationInput.value.trim(), 10) : null;
+        return {
+            title: titleInput.value.trim(),
+            student_emails: emails,
+            duration_minutes: (duration && duration > 0) ? duration : null,
+            notes_html: ctestRichHtml(notesEditor),
+            sections: collectAllSections()
+        };
+    }
+
+    function scheduleAutosave() {
+        if (!currentEditingTestId) return;
+        saveStatusEl.textContent = 'Đang gõ...';
+        clearTimeout(autosaveTimer);
+        autosaveTimer = setTimeout(async () => {
+            try {
+                const payload = collectEditorPayload();
+                const { error } = await sb.from('custom_tests').update(payload).eq('id', currentEditingTestId);
+                if (error) throw error;
+                saveStatusEl.textContent = '💾 Đã lưu lúc ' + new Date().toLocaleTimeString('vi-VN');
+                const cached = myTestsCache.find(t => t.id === currentEditingTestId);
+                if (cached) Object.assign(cached, payload);
+            } catch (err) {
+                saveStatusEl.textContent = '❌ Lưu thất bại: ' + err.message;
+            }
+        }, 800);
+    }
+    sectionsContainer.addEventListener('input', scheduleAutosave);
+    sectionsContainer.addEventListener('change', scheduleAutosave);
+    sectionsContainer.addEventListener('ctest-changed', scheduleAutosave);
+    [titleInput, studentsInput, durationInput].forEach(el => el && el.addEventListener('input', scheduleAutosave));
+
+    async function openEditorForTest(testRow) {
+        currentEditingTestId = testRow.id;
+        titleInput.value = testRow.title || '';
+        studentsInput.value = (testRow.student_emails || []).join(', ');
+        durationInput.value = testRow.duration_minutes || '';
+        notesSlot.innerHTML = '';
+        notesEditor = ctestCreateRichEditor(testRow.notes_html || '', 'VD: Làm bài nghiêm túc, không dùng tài liệu...', '');
+        notesSlot.appendChild(notesEditor);
+        notesEditor.addEventListener('input', scheduleAutosave);
+        renderSectionsEditor(testRow.sections && testRow.sections.length ? testRow.sections : null);
+        deleteBtn.style.display = 'inline-block';
+        publishBtn.textContent = testRow.status === 'published' ? '🔓 Đang giao bài (bấm để ẩn tạm)' : '📤 Lưu & Giao bài';
+        saveStatusEl.textContent = '';
+        showView('editor');
+    }
+
+    async function createNewTest() {
+        try {
+            const payload = {
+                teacher_email: currentEmail,
+                student_emails: [],
+                title: 'Bài kiểm tra mới',
+                notes_html: '',
+                duration_minutes: null,
+                sections: [{ id: ctestUid('sec'), title: 'Phần 1', instructions: '', questions: [] }],
+                status: 'draft'
+            };
+            const { data, error } = await sb.from('custom_tests').insert(payload).select().single();
+            if (error) throw error;
+            myTestsCache.unshift(data);
+            openEditorForTest(data);
+        } catch (err) {
+            alert('Không thể tạo bài kiểm tra mới: ' + err.message);
+        }
+    }
+    if (createBtn) createBtn.addEventListener('click', createNewTest);
+
+    if (publishBtn) {
+        publishBtn.addEventListener('click', async () => {
+            if (!currentEditingTestId) return;
+            const payload = collectEditorPayload();
+            if (!payload.student_emails.length) { alert('Hãy nhập ít nhất 1 email học viên trước khi giao bài.'); return; }
+            const totalQuestions = payload.sections.reduce((sum, s) => sum + s.questions.length, 0);
+            if (!totalQuestions) { alert('Hãy thêm ít nhất 1 câu hỏi trước khi giao bài.'); return; }
+            const cached = myTestsCache.find(t => t.id === currentEditingTestId);
+            const newStatus = (cached && cached.status === 'published') ? 'draft' : 'published';
+            try {
+                const { error } = await sb.from('custom_tests').update(Object.assign({}, payload, { status: newStatus })).eq('id', currentEditingTestId);
+                if (error) throw error;
+                if (cached) Object.assign(cached, payload, { status: newStatus });
+                publishBtn.textContent = newStatus === 'published' ? '🔓 Đang giao bài (bấm để ẩn tạm)' : '📤 Lưu & Giao bài';
+                saveStatusEl.textContent = newStatus === 'published' ? '✅ Đã giao bài cho học viên.' : '⏸️ Đã ẩn bài (học viên không còn thấy).';
+            } catch (err) {
+                alert('Lưu thất bại: ' + err.message);
+            }
+        });
+    }
+
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', async () => {
+            if (!currentEditingTestId) return;
+            if (!confirm('Xoá vĩnh viễn bài kiểm tra này (kèm mọi bài nộp của học viên)?')) return;
+            try {
+                const { error } = await sb.from('custom_tests').delete().eq('id', currentEditingTestId);
+                if (error) throw error;
+                myTestsCache = myTestsCache.filter(t => t.id !== currentEditingTestId);
+                currentEditingTestId = null;
+                showView('list');
+                renderTeacherList();
+            } catch (err) {
+                alert('Xoá thất bại: ' + err.message);
+            }
+        });
+    }
+
+    // =====================================================================
+    // ===== CHUYỂN ĐỔI GIỮA CÁC MÀN HÌNH ==================================
+    // =====================================================================
+    function showView(name) {
+        listView.style.display   = name === 'list'   ? 'block' : 'none';
+        editorView.style.display = name === 'editor' ? 'block' : 'none';
+        takeView.style.display   = name === 'take'   ? 'block' : 'none';
+        resultView.style.display = name === 'result' ? 'block' : 'none';
+        if (name !== 'take') ctestTeardownAntiCheat();
+    }
+
+    if (ctestFolderCard) {
+        ctestFolderCard.addEventListener('click', () => {
+            kiemtraFolderGrid.style.display = 'none';
+            ctestPanel.style.display = 'block';
+            showView('list');
+            loadAndRenderList();
+        });
+    }
+    function backToFolders() {
+        ctestPanel.style.display = 'none';
+        kiemtraFolderGrid.style.display = '';
+    }
+    const listBackBtn = document.getElementById('ctest-list-back-btn');
+    if (listBackBtn) listBackBtn.addEventListener('click', backToFolders);
+    const editorBackBtn = document.getElementById('ctest-editor-back-btn');
+    if (editorBackBtn) editorBackBtn.addEventListener('click', () => { showView('list'); loadAndRenderList(); });
+    const takeBackBtn = document.getElementById('ctest-take-back-btn');
+    if (takeBackBtn) takeBackBtn.addEventListener('click', () => {
+        if (!confirm('Thoát khỏi bài làm? Tiến độ hiện tại đã được lưu, bạn có thể quay lại làm tiếp sau.')) return;
+        showView('list'); loadAndRenderList();
+    });
+    const resultBackBtn = document.getElementById('ctest-result-back-btn');
+    if (resultBackBtn) resultBackBtn.addEventListener('click', () => { showView('list'); loadAndRenderList(); });
+
+    // =====================================================================
+    // ===== DANH SÁCH BÀI KIỂM TRA ========================================
+    // =====================================================================
+    async function loadAndRenderList() {
+        listContainer.innerHTML = '<p class="ctest-loading-msg">Đang tải danh sách bài kiểm tra...</p>';
+        adminBar.style.display = isTeacher ? 'flex' : 'none';
+        if (isTeacher) await renderTeacherList();
+        else await renderStudentList();
+    }
+
+    async function renderTeacherList() {
+        try {
+            const { data: tests, error } = await sb.from('custom_tests')
+                .select('*').eq('teacher_email', currentEmail).order('created_at', { ascending: false });
+            if (error) throw error;
+            myTestsCache = tests || [];
+            if (!myTestsCache.length) {
+                listContainer.innerHTML = '<p class="ctest-empty-msg">Chưa có bài kiểm tra nào. Bấm "➕ Tạo bài kiểm tra mới" để bắt đầu.</p>';
+                return;
+            }
+            const testIds = myTestsCache.map(t => t.id);
+            const { data: subs } = await sb.from('custom_test_submissions').select('*').in('test_id', testIds);
+            const subsByTest = {};
+            (subs || []).forEach(s => { (subsByTest[s.test_id] = subsByTest[s.test_id] || []).push(s); });
+
+            listContainer.innerHTML = '';
+            myTestsCache.forEach(test => {
+                const row = document.createElement('div');
+                row.className = 'ctest-test-row';
+                const totalQ = (test.sections || []).reduce((sum, s) => sum + (s.questions || []).length, 0);
+                const statusBadge = test.status === 'published'
+                    ? '<span class="ctest-status-badge ctest-status-submitted">Đang giao bài</span>'
+                    : '<span class="ctest-status-badge ctest-status-draft">Nháp</span>';
+                const main = document.createElement('div');
+                main.className = 'ctest-test-row-main';
+                main.innerHTML =
+                    '<div><div class="ctest-test-title">' + ctestEscape(test.title || '(chưa có tiêu đề)') + '</div>' +
+                    '<div class="ctest-test-meta">' + totalQ + ' câu hỏi · ' +
+                    (test.duration_minutes ? test.duration_minutes + ' phút' : 'không giới hạn giờ') + ' · ' +
+                    (test.student_emails || []).length + ' học viên được giao</div></div>' +
+                    statusBadge;
+                main.addEventListener('click', () => openEditorForTest(test));
+                row.appendChild(main);
+
+                const studentSubs = subsByTest[test.id] || [];
+                if ((test.student_emails || []).length) {
+                    const statusList = document.createElement('div');
+                    statusList.className = 'ctest-student-status-list';
+                    test.student_emails.forEach(email => {
+                        const sub = studentSubs.find(s => s.student_email === email);
+                        const item = document.createElement('div');
+                        item.className = 'ctest-student-status-item';
+                        let badge, retryBtn = '';
+                        if (!sub) badge = '<span class="ctest-status-badge ctest-status-not-started">Chưa làm</span>';
+                        else if (sub.status === 'submitted') {
+                            badge = '<span class="ctest-status-badge ctest-status-submitted">Đã nộp — ' + sub.score_correct + '/' + sub.score_total + '</span>';
+                            retryBtn = '<button type="button" class="ctest-retry-btn">🔄 Cho làm lại</button>';
+                        } else badge = '<span class="ctest-status-badge ctest-status-in-progress">Đang làm bài</span>';
+                        item.innerHTML = '<span class="ctest-student-email">' + ctestEscape(email) + '</span>' +
+                            '<span>' + badge + retryBtn + '</span>';
+                        if (retryBtn) {
+                            item.querySelector('.ctest-retry-btn').addEventListener('click', async (e) => {
+                                e.stopPropagation();
+                                if (!confirm('Cho phép ' + email + ' làm lại bài này? Kết quả cũ sẽ bị xoá.')) return;
+                                await sb.from('custom_test_submissions').delete().eq('id', sub.id);
+                                renderTeacherList();
+                            });
+                        }
+                        statusList.appendChild(item);
+                    });
+                    row.appendChild(statusList);
+                }
+                listContainer.appendChild(row);
+            });
+        } catch (err) {
+            listContainer.innerHTML = '<p class="ctest-empty-msg">❌ Lỗi tải danh sách: ' + ctestEscape(err.message) + '</p>';
+        }
+    }
+
+    async function renderStudentList() {
+        try {
+            const { data: tests, error } = await sb.from('custom_tests')
+                .select('*').eq('status', 'published').contains('student_emails', [currentEmail])
+                .order('created_at', { ascending: false });
+            if (error) throw error;
+            if (!tests || !tests.length) {
+                listContainer.innerHTML = '<p class="ctest-empty-msg">Bạn chưa được giao bài kiểm tra riêng nào.</p>';
+                return;
+            }
+            const testIds = tests.map(t => t.id);
+            const { data: subs } = await sb.from('custom_test_submissions').select('*')
+                .eq('student_email', currentEmail).in('test_id', testIds);
+            const subByTest = {};
+            (subs || []).forEach(s => { subByTest[s.test_id] = s; });
+
+            listContainer.innerHTML = '';
+            tests.forEach(test => {
+                const sub = subByTest[test.id];
+                const row = document.createElement('div');
+                row.className = 'ctest-test-row';
+                const totalQ = (test.sections || []).reduce((sum, s) => sum + (s.questions || []).length, 0);
+                let badge;
+                if (!sub) badge = '<span class="ctest-status-badge ctest-status-not-started">Chưa làm</span>';
+                else if (sub.status === 'submitted') badge = '<span class="ctest-status-badge ctest-status-submitted">Đã nộp — ' + sub.score_correct + '/' + sub.score_total + '</span>';
+                else badge = '<span class="ctest-status-badge ctest-status-in-progress">Đang làm dở</span>';
+                const main = document.createElement('div');
+                main.className = 'ctest-test-row-main';
+                main.innerHTML =
+                    '<div><div class="ctest-test-title">' + ctestEscape(test.title || '(chưa có tiêu đề)') + '</div>' +
+                    '<div class="ctest-test-meta">' + totalQ + ' câu hỏi · ' +
+                    (test.duration_minutes ? test.duration_minutes + ' phút' : 'không giới hạn giờ') + '</div></div>' +
+                    badge;
+                main.addEventListener('click', () => {
+                    if (sub && sub.status === 'submitted') openResultView(test, sub);
+                    else startOrResumeTest(test, sub);
+                });
+                row.appendChild(main);
+                listContainer.appendChild(row);
+            });
+        } catch (err) {
+            listContainer.innerHTML = '<p class="ctest-empty-msg">❌ Lỗi tải danh sách: ' + ctestEscape(err.message) + '</p>';
+        }
+    }
+
+    // =====================================================================
+    // ===== HỌC VIÊN LÀM BÀI ==============================================
+    // =====================================================================
+    let currentTest = null;
+    let currentSubmission = null;
+    let currentAnswers = {};
+    let violationCount = 0;
+    let testTimerInterval = null;
+    let remainingSeconds = null;
+    let answerSaveTimer = null;
+    let testStartedAtMs = null;
+
+    function keyFor(sectionId, questionId, suffix) {
+        return sectionId + ':' + questionId + (suffix ? ':' + suffix : '');
+    }
+
+    function scheduleAnswerAutosave() {
+        clearTimeout(answerSaveTimer);
+        answerSaveTimer = setTimeout(persistAnswers, 600);
+    }
+    async function persistAnswers() {
+        if (!currentSubmission) return;
+        try {
+            await sb.from('custom_test_submissions').update({
+                answers: currentAnswers,
+                violation_count: violationCount
+            }).eq('id', currentSubmission.id);
+        } catch (err) { /* im lặng — sẽ thử lại ở lần gõ tiếp theo */ }
+    }
+
+    // ---- Render 1 câu hỏi cho màn hình LÀM BÀI (trả về .ctest-take-qblock) ----
+    function renderTakeMcq(q, keyBase, labelPrefix) {
+        const block = document.createElement('div');
+        block.className = 'ctest-take-qblock';
+        const promptHtml = '<span class="ctest-take-qnum">' + labelPrefix + '</span>' + (q.prompt || '');
+        block.innerHTML = '<div class="ctest-take-qprompt">' + promptHtml + '</div>';
+        if (q.image_url) {
+            const img = document.createElement('img');
+            img.className = 'ctest-take-image';
+            img.src = q.image_url;
+            block.appendChild(img);
+        }
+        const optWrap = document.createElement('div');
+        optWrap.className = 'ctest-take-options';
+        (q.options || []).forEach((opt, i) => {
+            const label = document.createElement('label');
+            label.className = 'ctest-take-option-label';
+            const radio = document.createElement('input');
+            radio.type = 'radio';
+            radio.name = keyBase;
+            radio.value = String(i);
+            if (currentAnswers[keyBase] !== undefined && Number(currentAnswers[keyBase]) === i) radio.checked = true;
+            radio.addEventListener('change', () => { currentAnswers[keyBase] = i; scheduleAnswerAutosave(); });
+            const span = document.createElement('span');
+            span.innerHTML = opt;
+            label.appendChild(radio);
+            label.appendChild(span);
+            optWrap.appendChild(label);
+        });
+        block.appendChild(optWrap);
+        return block;
+    }
+
+    function renderTakeFillBlank(html, keyBase) {
+        const { displayHtml, blanks } = ctestParseBlanks(html);
+        const holder = document.createElement('div');
+        holder.className = 'ctest-blank-render';
+        holder.innerHTML = displayHtml;
+        holder.querySelectorAll('.ctest-blank-slot').forEach(slot => {
+            const idx = slot.getAttribute('data-blank-idx');
+            const key = keyBase + ':blank:' + idx;
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'ctest-blank-input';
+            input.autocomplete = 'off';
+            input.autocapitalize = 'off';
+            input.spellcheck = false;
+            input.value = currentAnswers[key] || '';
+            input.addEventListener('input', () => { currentAnswers[key] = input.value; scheduleAnswerAutosave(); });
+            slot.replaceWith(input);
+        });
+        return { el: holder, blanks };
+    }
+
+    function renderTakeFillBlankBlock(q, keyBase, labelPrefix) {
+        const block = document.createElement('div');
+        block.className = 'ctest-take-qblock';
+        const numEl = document.createElement('div');
+        numEl.className = 'ctest-take-qprompt';
+        numEl.innerHTML = '<span class="ctest-take-qnum">' + labelPrefix + '</span>Điền từ còn thiếu vào chỗ trống:';
+        block.appendChild(numEl);
+        const { el } = renderTakeFillBlank(q.html, keyBase);
+        block.appendChild(el);
+        return block;
+    }
+
+    function renderTakeReorder(q, keyBase, labelPrefix) {
+        const block = document.createElement('div');
+        block.className = 'ctest-take-qblock';
+        const tokens = ctestTokenize(q.sentence);
+        const numEl = document.createElement('div');
+        numEl.className = 'ctest-take-qprompt';
+        numEl.innerHTML = '<span class="ctest-take-qnum">' + labelPrefix + '</span>Sắp xếp lại các từ sau cho đúng thứ tự:';
+        block.appendChild(numEl);
+
+        const strip = document.createElement('div');
+        strip.className = 'ctest-reorder-strip';
+        const pool = document.createElement('div');
+        pool.className = 'ctest-reorder-pool';
+        block.appendChild(strip);
+        block.appendChild(pool);
+
+        const orderKey = keyBase + ':order';
+        let stripIdx = Array.isArray(currentAnswers[orderKey]) ? currentAnswers[orderKey].slice() : [];
+        let poolIdx = tokens.map((_, i) => i).filter(i => !stripIdx.includes(i));
+        poolIdx = ctestShuffle(poolIdx);
+
+        function render() {
+            strip.innerHTML = '';
+            pool.innerHTML = '';
+            stripIdx.forEach(i => {
+                const chip = document.createElement('span');
+                chip.className = 'ctest-reorder-chip';
+                chip.textContent = tokens[i];
+                chip.addEventListener('click', () => {
+                    stripIdx = stripIdx.filter(x => x !== i);
+                    poolIdx.push(i);
+                    currentAnswers[orderKey] = stripIdx.slice();
+                    scheduleAnswerAutosave();
+                    render();
+                });
+                strip.appendChild(chip);
+            });
+            poolIdx.forEach(i => {
+                const chip = document.createElement('span');
+                chip.className = 'ctest-reorder-chip';
+                chip.textContent = tokens[i];
+                chip.addEventListener('click', () => {
+                    poolIdx = poolIdx.filter(x => x !== i);
+                    stripIdx.push(i);
+                    currentAnswers[orderKey] = stripIdx.slice();
+                    scheduleAnswerAutosave();
+                    render();
+                });
+                pool.appendChild(chip);
+            });
+        }
+        render();
+        currentAnswers[orderKey] = stripIdx.slice();
+        return block;
+    }
+
+    function renderTakeReading(q, keyBase, labelPrefix) {
+        const block = document.createElement('div');
+        block.className = 'ctest-take-qblock';
+        const numEl = document.createElement('div');
+        numEl.className = 'ctest-take-qprompt';
+        numEl.innerHTML = '<span class="ctest-take-qnum">' + labelPrefix + '</span>Đọc đoạn văn sau và trả lời câu hỏi:';
+        block.appendChild(numEl);
+        if (q.image_url) {
+            const img = document.createElement('img');
+            img.className = 'ctest-take-image';
+            img.src = q.image_url;
+            block.appendChild(img);
+        }
+        const passage = document.createElement('div');
+        passage.className = 'ctest-take-instructions';
+        passage.innerHTML = q.passage || '';
+        block.appendChild(passage);
+        (q.sub_questions || []).forEach((sq, i) => {
+            block.appendChild(renderTakeMcq(sq, keyBase + ':sub:' + i, labelPrefix.replace(/\.$/, '') + String.fromCharCode(97 + i) + ') '));
+        });
+        return block;
+    }
+
+    function renderTakeEssay(part, keyBase, labelPrefix) {
+        const block = document.createElement('div');
+        block.className = 'ctest-take-qblock';
+        const numEl = document.createElement('div');
+        numEl.className = 'ctest-take-qprompt';
+        numEl.innerHTML = '<span class="ctest-take-qnum">' + labelPrefix + '</span>' + (part.prompt || '');
+        block.appendChild(numEl);
+        const textarea = document.createElement('textarea');
+        textarea.className = 'news-edit-input';
+        textarea.rows = 3;
+        textarea.style.width = '100%';
+        textarea.value = currentAnswers[keyBase] || '';
+        textarea.addEventListener('input', () => { currentAnswers[keyBase] = textarea.value; scheduleAnswerAutosave(); });
+        block.appendChild(textarea);
+        return block;
+    }
+
+    function renderTakeMixed(q, keyBase, labelPrefix) {
+        const block = document.createElement('div');
+        block.className = 'ctest-take-qblock';
+        const numEl = document.createElement('div');
+        numEl.className = 'ctest-take-qprompt';
+        numEl.innerHTML = '<span class="ctest-take-qnum">' + labelPrefix + '</span>Hoàn thành các phần sau:';
+        block.appendChild(numEl);
+        ctestNormalizeMixedParts(q).forEach((part, i) => {
+            const subKey = keyBase + ':part:' + i;
+            const subLabel = labelPrefix.replace(/\.$/, '') + String.fromCharCode(97 + i) + ') ';
+            block.appendChild(renderTakeQuestion(part, subKey, subLabel));
+        });
+        return block;
+    }
+
+    function renderTakeMatching(q, keyBase, labelPrefix) {
+        const block = document.createElement('div');
+        block.className = 'ctest-take-qblock';
+        const numEl = document.createElement('div');
+        numEl.className = 'ctest-take-qprompt';
+        numEl.innerHTML = '<span class="ctest-take-qnum">' + labelPrefix + '</span>Nối cột trái với cột phải tương ứng:';
+        block.appendChild(numEl);
+        if (q.image_url) {
+            const img = document.createElement('img');
+            img.className = 'ctest-take-image';
+            img.src = q.image_url;
+            block.appendChild(img);
+        }
+        const wrap = document.createElement('div');
+        wrap.className = 'ctest-match-take-wrap';
+        const leftCol = document.createElement('div');
+        leftCol.className = 'ctest-match-take-col';
+        const rightCol = document.createElement('div');
+        rightCol.className = 'ctest-match-take-col';
+        wrap.appendChild(leftCol);
+        wrap.appendChild(rightCol);
+        block.appendChild(wrap);
+
+        const pairsKey = keyBase + ':pairs';
+        const pairs = currentAnswers[pairsKey] && typeof currentAnswers[pairsKey] === 'object' ? Object.assign({}, currentAnswers[pairsKey]) : {};
+        const shuffledRightOrder = ctestShuffle((q.right || []).map((_, i) => i));
+        let selectedLeft = null;
+        const leftEls = [], rightEls = [];
+
+        function badgeFor(leftIndex) {
+            return leftIndex + 1;
+        }
+        function refreshVisuals() {
+            leftEls.forEach((el, li) => {
+                el.classList.toggle('ctest-match-selected', selectedLeft === li);
+                el.classList.toggle('ctest-match-paired', pairs[li] !== undefined);
+                el.querySelector('.ctest-match-badge-slot').textContent = pairs[li] !== undefined ? '✓ ' : '';
+            });
+            rightEls.forEach(({ el, rIdx }) => {
+                const pairedLeft = Object.keys(pairs).find(li => pairs[li] === rIdx);
+                el.classList.toggle('ctest-match-paired', pairedLeft !== undefined);
+                el.querySelector('.ctest-match-badge-slot').textContent = pairedLeft !== undefined ? (Number(pairedLeft) + 1) + '↔ ' : '';
+            });
+        }
+        (q.left || []).forEach((text, li) => {
+            const item = document.createElement('div');
+            item.className = 'ctest-match-take-item';
+            item.innerHTML = '<span class="ctest-match-badge-slot"></span>' + (li + 1) + '. ' + text;
+            item.addEventListener('click', () => { selectedLeft = li; refreshVisuals(); });
+            leftCol.appendChild(item);
+            leftEls.push(item);
+        });
+        shuffledRightOrder.forEach(rIdx => {
+            const item = document.createElement('div');
+            item.className = 'ctest-match-take-item';
+            item.innerHTML = '<span class="ctest-match-badge-slot"></span>' + (q.right || [])[rIdx];
+            item.addEventListener('click', () => {
+                if (selectedLeft === null) return;
+                pairs[selectedLeft] = rIdx;
+                currentAnswers[pairsKey] = Object.assign({}, pairs);
+                scheduleAnswerAutosave();
+                selectedLeft = null;
+                refreshVisuals();
+            });
+            rightCol.appendChild(item);
+            rightEls.push({ el: item, rIdx });
+        });
+        refreshVisuals();
+        currentAnswers[pairsKey] = Object.assign({}, pairs);
+        return block;
+    }
+
+    function renderTakeWordbank(q, keyBase, labelPrefix) {
+        const block = document.createElement('div');
+        block.className = 'ctest-take-qblock';
+        const numEl = document.createElement('div');
+        numEl.className = 'ctest-take-qprompt';
+        numEl.innerHTML = '<span class="ctest-take-qnum">' + labelPrefix + '</span>Chọn từ thích hợp trong khung để điền vào đoạn văn:';
+        block.appendChild(numEl);
+
+        const { blanks } = ctestParseBlanks(q.html);
+        const bankWords = ctestShuffle(blanks);
+        const bankBox = document.createElement('div');
+        bankBox.className = 'ctest-wordbank-box';
+        bankWords.forEach(w => {
+            const chip = document.createElement('span');
+            chip.className = 'ctest-wordbank-word';
+            chip.textContent = w;
+            bankBox.appendChild(chip);
+        });
+        block.appendChild(bankBox);
+
+        const { displayHtml } = ctestParseBlanks(q.html);
+        const holder = document.createElement('div');
+        holder.className = 'ctest-blank-render';
+        holder.innerHTML = displayHtml;
+        holder.querySelectorAll('.ctest-blank-slot').forEach(slot => {
+            const idx = slot.getAttribute('data-blank-idx');
+            const key = keyBase + ':blank:' + idx;
+            const select = document.createElement('select');
+            select.className = 'ctest-blank-select';
+            const emptyOpt = document.createElement('option');
+            emptyOpt.value = '';
+            emptyOpt.textContent = '— chọn —';
+            select.appendChild(emptyOpt);
+            bankWords.forEach(w => {
+                const opt = document.createElement('option');
+                opt.value = w;
+                opt.textContent = w;
+                select.appendChild(opt);
+            });
+            select.value = currentAnswers[key] || '';
+            select.addEventListener('change', () => { currentAnswers[key] = select.value; scheduleAnswerAutosave(); });
+            slot.replaceWith(select);
+        });
+        block.appendChild(holder);
+        return block;
+    }
+
+    function renderTakeListening(q, keyBase, labelPrefix) {
+        const block = document.createElement('div');
+        block.className = 'ctest-take-qblock';
+        const numEl = document.createElement('div');
+        numEl.className = 'ctest-take-qprompt';
+        numEl.innerHTML = '<span class="ctest-take-qnum">' + labelPrefix + '</span>Nghe đoạn ghi âm sau và trả lời câu hỏi:';
+        block.appendChild(numEl);
+        if (q.audio_url) {
+            const audio = document.createElement('audio');
+            audio.controls = true;
+            audio.src = q.audio_url;
+            audio.style.width = '100%';
+            audio.style.marginBottom = '10px';
+            block.appendChild(audio);
+        }
+        (q.sub_questions || []).forEach((sq, i) => {
+            const subLabel = labelPrefix.replace(/\.$/, '') + String.fromCharCode(97 + i) + ') ';
+            const subKey = keyBase + ':sub:' + i;
+            if (sq.type === 'fill_blank') block.appendChild(renderTakeFillBlankBlock(sq, subKey, subLabel));
+            else block.appendChild(renderTakeMcq(sq, subKey, subLabel));
+        });
+        return block;
+    }
+
+    function renderTakeQuestion(q, keyBase, labelPrefix) {
+        switch (q.type) {
+            case 'fill_blank': return renderTakeFillBlankBlock(q, keyBase, labelPrefix);
+            case 'reorder': return renderTakeReorder(q, keyBase, labelPrefix);
+            case 'reading': return renderTakeReading(q, keyBase, labelPrefix);
+            case 'mixed': return renderTakeMixed(q, keyBase, labelPrefix);
+            case 'matching': return renderTakeMatching(q, keyBase, labelPrefix);
+            case 'wordbank': return renderTakeWordbank(q, keyBase, labelPrefix);
+            case 'listening': return renderTakeListening(q, keyBase, labelPrefix);
+            case 'essay': return renderTakeEssay(q, keyBase, labelPrefix);
+            default: return renderTakeMcq(q, keyBase, labelPrefix);
+        }
+    }
+
+    // =====================================================================
+    // ===== CHỐNG GIAN LẬN (chụp màn hình / copy / chuyển tab) ===========
+    // Xem ghi chú ở đầu file: không thể chặn tuyệt đối việc chụp màn hình
+    // ở cấp hệ điều hành — đây là các biện pháp khả thi tốt nhất từ web.
+    // =====================================================================
+    const CTEST_RELOAD_FLAG_KEY = 'ctest_reloading_flag';
+    let antiCheatActive = false;
+    let hiddenSinceMs = null;
+    let hiddenCheckTimer = null;
+
+    function ctestRecordViolation(reason) {
+        if (!antiCheatActive || !currentSubmission) return;
+        violationCount++;
+        persistAnswers();
+        if (violationCount >= 3) {
+            violationBanner.style.display = 'block';
+            violationBanner.textContent = '🚫 Bạn đã vi phạm lần thứ 3 (' + reason + '). Bài làm đã được TỰ ĐỘNG NỘP.';
+            submitTest(true);
+        } else {
+            violationBanner.style.display = 'block';
+            violationBanner.textContent = '⚠️ Cảnh báo vi phạm lần ' + violationCount + '/3 (' + reason + '). Vi phạm lần thứ 3, bài sẽ tự động được nộp.';
+        }
+    }
+
+    function ctestOnVisibilityChange() {
+        if (document.hidden) {
+            hiddenSinceMs = Date.now();
+        } else if (hiddenSinceMs !== null) {
+            let wasReload = false;
+            try { wasReload = sessionStorage.getItem(CTEST_RELOAD_FLAG_KEY) === '1'; } catch (e) {}
+            hiddenSinceMs = null;
+            if (!wasReload) ctestRecordViolation('chuyển sang tab/cửa sổ khác');
+            try { sessionStorage.removeItem(CTEST_RELOAD_FLAG_KEY); } catch (e) {}
+        }
+    }
+    function ctestOnBeforeUnload() {
+        try { sessionStorage.setItem(CTEST_RELOAD_FLAG_KEY, '1'); } catch (e) {}
+    }
+    function ctestOnCopyCut(e) {
+        e.preventDefault();
+        ctestRecordViolation('cố gắng copy nội dung bài kiểm tra');
+    }
+    function ctestOnContextMenu(e) {
+        e.preventDefault();
+    }
+    function ctestOnKeyDown(e) {
+        if (e.key === 'PrintScreen') { ctestRecordViolation('cố gắng chụp màn hình'); }
+        const blockedCombo = (e.key === 'F12') ||
+            ((e.ctrlKey || e.metaKey) && e.shiftKey && ['I', 'J', 'C', 'i', 'j', 'c'].includes(e.key)) ||
+            ((e.ctrlKey || e.metaKey) && ['u', 'U', 'p', 'P', 's', 'S'].includes(e.key));
+        if (blockedCombo) { e.preventDefault(); ctestRecordViolation('cố gắng dùng công cụ không được phép'); }
+    }
+    function ctestOnKeyUp(e) {
+        if (e.key === 'PrintScreen') { ctestRecordViolation('cố gắng chụp màn hình'); }
+    }
+
+    function ctestSetupAntiCheat() {
+        if (antiCheatActive) return;
+        antiCheatActive = true;
+        hiddenSinceMs = null;
+        takeView.classList.add('ctest-no-select');
+        document.addEventListener('visibilitychange', ctestOnVisibilityChange);
+        window.addEventListener('beforeunload', ctestOnBeforeUnload);
+        takeView.addEventListener('copy', ctestOnCopyCut);
+        takeView.addEventListener('cut', ctestOnCopyCut);
+        takeView.addEventListener('contextmenu', ctestOnContextMenu);
+        document.addEventListener('keydown', ctestOnKeyDown);
+        document.addEventListener('keyup', ctestOnKeyUp);
+    }
+    function ctestTeardownAntiCheat() {
+        if (!antiCheatActive) return;
+        antiCheatActive = false;
+        takeView.classList.remove('ctest-no-select');
+        document.removeEventListener('visibilitychange', ctestOnVisibilityChange);
+        window.removeEventListener('beforeunload', ctestOnBeforeUnload);
+        takeView.removeEventListener('copy', ctestOnCopyCut);
+        takeView.removeEventListener('cut', ctestOnCopyCut);
+        takeView.removeEventListener('contextmenu', ctestOnContextMenu);
+        document.removeEventListener('keydown', ctestOnKeyDown);
+        document.removeEventListener('keyup', ctestOnKeyUp);
+        clearInterval(testTimerInterval);
+        testTimerInterval = null;
+    }
+
+    // =====================================================================
+    // ===== ĐỒNG HỒ ĐẾM GIỜ ================================================
+    // =====================================================================
+    function ctestStartTimer(durationMinutes, startedAtIso) {
+        clearInterval(testTimerInterval);
+        if (!durationMinutes) { takeTimerEl.style.display = 'none'; return; }
+        takeTimerEl.style.display = 'inline-block';
+        const startedAtMs = startedAtIso ? new Date(startedAtIso).getTime() : Date.now();
+        const totalSeconds = durationMinutes * 60;
+        function tick() {
+            const elapsed = Math.floor((Date.now() - startedAtMs) / 1000);
+            const remaining = Math.max(0, totalSeconds - elapsed);
+            const mm = String(Math.floor(remaining / 60)).padStart(2, '0');
+            const ss = String(remaining % 60).padStart(2, '0');
+            takeTimerEl.textContent = '⏱️ ' + mm + ':' + ss;
+            takeTimerEl.classList.toggle('ctest-timer-low', remaining <= 60);
+            if (remaining <= 0) {
+                clearInterval(testTimerInterval);
+                violationBanner.style.display = 'block';
+                violationBanner.textContent = '⏰ Hết thời gian làm bài — bài làm đã được tự động nộp.';
+                submitTest(true);
+            }
+        }
+        tick();
+        testTimerInterval = setInterval(tick, 1000);
+    }
+
+    // =====================================================================
+    // ===== BẮT ĐẦU / TIẾP TỤC LÀM BÀI ====================================
+    // =====================================================================
+    function renderTakeSections(test) {
+        takeTitleEl.textContent = test.title || '';
+        if (test.notes_html && test.notes_html.trim()) {
+            takeNotesEl.style.display = 'block';
+            takeNotesEl.innerHTML = test.notes_html;
+        } else {
+            takeNotesEl.style.display = 'none';
+        }
+        violationBanner.style.display = violationCount > 0 ? 'block' : 'none';
+        if (violationCount > 0) violationBanner.textContent = '⚠️ Bạn đã vi phạm ' + violationCount + '/3 lần trước đó trong bài này.';
+
+        takeSectionsEl.innerHTML = '';
+        let qNum = 0;
+        (test.sections || []).forEach(section => {
+            const secEl = document.createElement('div');
+            secEl.className = 'ctest-take-section';
+            secEl.innerHTML = '<div class="ctest-take-section-title">' + ctestEscape(section.title || '') + '</div>';
+            if (section.instructions && section.instructions.trim()) {
+                const instr = document.createElement('div');
+                instr.className = 'ctest-take-instructions';
+                instr.innerHTML = section.instructions;
+                secEl.appendChild(instr);
+            }
+            (section.questions || []).forEach(q => {
+                qNum++;
+                const keyBase = keyFor(section.id, q.id);
+                secEl.appendChild(renderTakeQuestion(q, keyBase, 'Câu ' + qNum + '. '));
+            });
+            takeSectionsEl.appendChild(secEl);
+        });
+    }
+
+    async function startOrResumeTest(test, existingSubmission) {
+        currentTest = test;
+        violationCount = 0;
+        currentAnswers = {};
+        try {
+            if (!existingSubmission) {
+                const { data, error } = await sb.from('custom_test_submissions').insert({
+                    test_id: test.id, student_email: currentEmail, answers: {}, violation_count: 0,
+                    status: 'in_progress', started_at: new Date().toISOString(), attempt_number: 1
+                }).select().single();
+                if (error) throw error;
+                currentSubmission = data;
+            } else {
+                currentSubmission = existingSubmission;
+                currentAnswers = existingSubmission.answers || {};
+                violationCount = existingSubmission.violation_count || 0;
+            }
+        } catch (err) {
+            alert('Không thể mở bài kiểm tra: ' + err.message);
+            return;
+        }
+        showView('take');
+        renderTakeSections(test);
+        ctestSetupAntiCheat();
+        ctestStartTimer(test.duration_minutes, currentSubmission.started_at);
+    }
+
+    if (submitBtn) {
+        submitBtn.addEventListener('click', () => {
+            if (!confirm('Nộp bài ngay bây giờ? Bạn sẽ không thể sửa lại câu trả lời sau khi nộp.')) return;
+            submitTest(false);
+        });
+    }
+
+    // =====================================================================
+    // ===== CHẤM ĐIỂM + HIỂN THỊ KẾT QUẢ ==================================
+    // Quy ước hiển thị (theo đúng yêu cầu): đáp án SAI → chữ đỏ + hiện đáp
+    // án đúng kế bên; đáp án ĐÚNG → không cần hiện thêm gì.
+    // =====================================================================
+    function ctestBlankResultNode(html, keyBase, answers) {
+        const { displayHtml, blanks } = ctestParseBlanks(html);
+        const holder = document.createElement('div');
+        holder.className = 'ctest-blank-render';
+        holder.innerHTML = displayHtml;
+        let correct = 0;
+        holder.querySelectorAll('.ctest-blank-slot').forEach(slot => {
+            const idx = Number(slot.getAttribute('data-blank-idx'));
+            const key = keyBase + ':blank:' + idx;
+            const given = answers[key] || '';
+            const correctWord = blanks[idx];
+            const ok = ctestNormalize(given) === ctestNormalize(correctWord);
+            if (ok) correct++;
+            const span = document.createElement('span');
+            span.className = 'ctest-blank-result ' + (ok ? 'ctest-ok' : 'ctest-wrong');
+            span.textContent = ok ? given : (given ? given : '(bỏ trống)') + ' → ' + correctWord;
+            slot.replaceWith(span);
+        });
+        return { el: holder, correct, total: blanks.length };
+    }
+
+    function ctestResultQBlock(labelPrefix, promptHtml) {
+        const block = document.createElement('div');
+        block.className = 'ctest-take-qblock';
+        const p = document.createElement('div');
+        p.className = 'ctest-take-qprompt';
+        p.innerHTML = '<span class="ctest-take-qnum">' + labelPrefix + '</span>' + (promptHtml || '');
+        block.appendChild(p);
+        return block;
+    }
+
+    function ctestResultMcq(q, keyBase, answers, labelPrefix) {
+        const block = ctestResultQBlock(labelPrefix, q.prompt);
+        if (q.image_url) {
+            const img = document.createElement('img');
+            img.className = 'ctest-take-image';
+            img.src = q.image_url;
+            block.appendChild(img);
+        }
+        const given = answers[keyBase];
+        const isCorrect = given !== undefined && Number(given) === Number(q.correct);
+        const optWrap = document.createElement('div');
+        optWrap.className = 'ctest-take-options';
+        (q.options || []).forEach((opt, i) => {
+            const row = document.createElement('div');
+            row.className = 'ctest-take-option-label';
+            let html = opt;
+            if (!isCorrect && Number(given) === i) html = '<span class="ctest-result-item-wrong">' + opt + '</span>';
+            if (!isCorrect && i === q.correct) html += '<span class="ctest-result-correct-tag">← đáp án đúng</span>';
+            row.innerHTML = html;
+            optWrap.appendChild(row);
+        });
+        block.appendChild(optWrap);
+        return { el: block, correct: isCorrect ? 1 : 0, total: 1 };
+    }
+
+    function ctestResultFillBlank(q, keyBase, answers, labelPrefix) {
+        const block = ctestResultQBlock(labelPrefix, 'Điền vào chỗ trống:');
+        const { el, correct, total } = ctestBlankResultNode(q.html, keyBase, answers);
+        block.appendChild(el);
+        return { el: block, correct, total };
+    }
+
+    function ctestResultReorder(q, keyBase, answers, labelPrefix) {
+        const block = ctestResultQBlock(labelPrefix, 'Sắp xếp câu:');
+        const tokens = ctestTokenize(q.sentence);
+        const order = Array.isArray(answers[keyBase + ':order']) ? answers[keyBase + ':order'] : [];
+        const isCorrect = order.length === tokens.length && order.every((v, i) => v === i);
+        const given = document.createElement('div');
+        if (isCorrect) {
+            given.textContent = order.map(i => tokens[i]).join(' ');
+        } else {
+            given.innerHTML = '<span class="ctest-result-item-wrong">' + (order.length ? order.map(i => tokens[i]).join(' ') : '(chưa sắp xếp)') + '</span>' +
+                '<span class="ctest-result-correct-tag">← đáp án đúng: ' + tokens.join(' ') + '</span>';
+        }
+        block.appendChild(given);
+        return { el: block, correct: isCorrect ? 1 : 0, total: 1 };
+    }
+
+    function ctestResultReading(q, keyBase, answers, labelPrefix) {
+        const block = ctestResultQBlock(labelPrefix, 'Bài đọc:');
+        if (q.image_url) {
+            const img = document.createElement('img');
+            img.className = 'ctest-take-image';
+            img.src = q.image_url;
+            block.appendChild(img);
+        }
+        const passage = document.createElement('div');
+        passage.className = 'ctest-take-instructions';
+        passage.innerHTML = q.passage || '';
+        block.appendChild(passage);
+        let correct = 0, total = 0;
+        (q.sub_questions || []).forEach((sq, i) => {
+            const sub = ctestResultMcq(sq, keyBase + ':sub:' + i, answers, labelPrefix.replace(/\.$/, '') + String.fromCharCode(97 + i) + ') ');
+            block.appendChild(sub.el);
+            correct += sub.correct; total += sub.total;
+        });
+        return { el: block, correct, total };
+    }
+
+    function ctestResultEssay(part, keyBase, answers, labelPrefix) {
+        const block = ctestResultQBlock(labelPrefix, part.prompt);
+        const given = answers[keyBase] || '';
+        const ok = ctestNormalize(given) === ctestNormalize(part.answer);
+        const el = document.createElement('div');
+        el.innerHTML = ok
+            ? ctestEscape(given)
+            : '<span class="ctest-result-item-wrong">' + ctestEscape(given || '(bỏ trống)') + '</span><span class="ctest-result-correct-tag">← đáp án đúng: ' + ctestEscape(part.answer) + '</span>';
+        block.appendChild(el);
+        return { el: block, correct: ok ? 1 : 0, total: 1 };
+    }
+
+    function ctestResultMixed(q, keyBase, answers, labelPrefix) {
+        const block = ctestResultQBlock(labelPrefix, 'Câu hỏi hỗn hợp:');
+        let correct = 0, total = 0;
+        ctestNormalizeMixedParts(q).forEach((part, i) => {
+            const subKey = keyBase + ':part:' + i;
+            const subLabel = labelPrefix.replace(/\.$/, '') + String.fromCharCode(97 + i) + ') ';
+            const r = ctestResultQuestion(part, subKey, answers, subLabel);
+            block.appendChild(r.el);
+            correct += r.correct; total += r.total;
+        });
+        return { el: block, correct, total };
+    }
+
+    function ctestResultMatching(q, keyBase, answers, labelPrefix) {
+        const block = ctestResultQBlock(labelPrefix, 'Nối từ:');
+        if (q.image_url) {
+            const img = document.createElement('img');
+            img.className = 'ctest-take-image';
+            img.src = q.image_url;
+            block.appendChild(img);
+        }
+        const pairs = answers[keyBase + ':pairs'] || {};
+        let correct = 0;
+        (q.left || []).forEach((text, i) => {
+            const chosenIdx = pairs[i];
+            const correctIdx = (q.correct_pairs || [])[i];
+            const ok = chosenIdx !== undefined && Number(chosenIdx) === Number(correctIdx);
+            if (ok) correct++;
+            const row = document.createElement('div');
+            row.style.marginBottom = '4px';
+            const chosenText = chosenIdx !== undefined ? (q.right || [])[chosenIdx] : null;
+            const correctText = (q.right || [])[correctIdx];
+            row.innerHTML = (i + 1) + '. ' + text + ' — ' +
+                (ok ? ctestEscape(chosenText || '')
+                    : '<span class="ctest-result-item-wrong">' + ctestEscape(chosenText || '(chưa nối)') + '</span><span class="ctest-result-correct-tag">← đáp án đúng: ' + ctestEscape(correctText || '') + '</span>');
+            block.appendChild(row);
+        });
+        return { el: block, correct, total: (q.left || []).length };
+    }
+
+    function ctestResultWordbank(q, keyBase, answers, labelPrefix) {
+        const block = ctestResultQBlock(labelPrefix, 'Chọn từ trong khung điền vào đoạn văn:');
+        const { el, correct, total } = ctestBlankResultNode(q.html, keyBase, answers);
+        block.appendChild(el);
+        return { el: block, correct, total };
+    }
+
+    function ctestResultListening(q, keyBase, answers, labelPrefix) {
+        const block = ctestResultQBlock(labelPrefix, 'Bài nghe:');
+        if (q.audio_url) {
+            const audio = document.createElement('audio');
+            audio.controls = true;
+            audio.src = q.audio_url;
+            audio.style.width = '100%';
+            audio.style.marginBottom = '10px';
+            block.appendChild(audio);
+        }
+        let correct = 0, total = 0;
+        (q.sub_questions || []).forEach((sq, i) => {
+            const subLabel = labelPrefix.replace(/\.$/, '') + String.fromCharCode(97 + i) + ') ';
+            const subKey = keyBase + ':sub:' + i;
+            const sub = sq.type === 'fill_blank' ? ctestResultFillBlank(sq, subKey, answers, subLabel) : ctestResultMcq(sq, subKey, answers, subLabel);
+            block.appendChild(sub.el);
+            correct += sub.correct; total += sub.total;
+        });
+        return { el: block, correct, total };
+    }
+
+    function ctestResultQuestion(q, keyBase, answers, labelPrefix) {
+        switch (q.type) {
+            case 'fill_blank': return ctestResultFillBlank(q, keyBase, answers, labelPrefix);
+            case 'reorder': return ctestResultReorder(q, keyBase, answers, labelPrefix);
+            case 'reading': return ctestResultReading(q, keyBase, answers, labelPrefix);
+            case 'mixed': return ctestResultMixed(q, keyBase, answers, labelPrefix);
+            case 'matching': return ctestResultMatching(q, keyBase, answers, labelPrefix);
+            case 'wordbank': return ctestResultWordbank(q, keyBase, answers, labelPrefix);
+            case 'listening': return ctestResultListening(q, keyBase, answers, labelPrefix);
+            case 'essay': return ctestResultEssay(q, keyBase, answers, labelPrefix);
+            default: return ctestResultMcq(q, keyBase, answers, labelPrefix);
+        }
+    }
+
+    function gradeWholeTest(test, answers) {
+        let correct = 0, total = 0;
+        (test.sections || []).forEach(section => {
+            (section.questions || []).forEach(q => {
+                const keyBase = keyFor(section.id, q.id);
+                const r = ctestResultQuestion(q, keyBase, answers, 'x');
+                correct += r.correct; total += r.total;
+            });
+        });
+        return { correct, total };
+    }
+
+    async function submitTest(auto) {
+        if (!currentSubmission || !currentTest) return;
+        clearTimeout(answerSaveTimer);
+        const { correct, total } = gradeWholeTest(currentTest, currentAnswers);
+        try {
+            const { data, error } = await sb.from('custom_test_submissions').update({
+                answers: currentAnswers,
+                violation_count: violationCount,
+                status: 'submitted',
+                submitted_at: new Date().toISOString(),
+                score_correct: correct,
+                score_total: total
+            }).eq('id', currentSubmission.id).select().single();
+            if (error) throw error;
+            currentSubmission = data;
+        } catch (err) {
+            if (!auto) { alert('Nộp bài thất bại: ' + err.message); return; }
+        }
+        ctestTeardownAntiCheat();
+        openResultView(currentTest, currentSubmission);
+    }
+
+    function openResultView(test, submission) {
+        showView('result');
+        resultTitleEl.textContent = test.title || '';
+        resultScoreEl.textContent = 'Điểm: ' + (submission.score_correct != null ? submission.score_correct : 0) + ' / ' + (submission.score_total != null ? submission.score_total : 0);
+        resultSectionsEl.innerHTML = '';
+        let qNum = 0;
+        (test.sections || []).forEach(section => {
+            const secEl = document.createElement('div');
+            secEl.className = 'ctest-take-section';
+            secEl.innerHTML = '<div class="ctest-take-section-title">' + ctestEscape(section.title || '') + '</div>';
+            if (section.instructions && section.instructions.trim()) {
+                const instr = document.createElement('div');
+                instr.className = 'ctest-take-instructions';
+                instr.innerHTML = section.instructions;
+                secEl.appendChild(instr);
+            }
+            (section.questions || []).forEach(q => {
+                qNum++;
+                const keyBase = keyFor(section.id, q.id);
+                const r = ctestResultQuestion(q, keyBase, submission.answers || {}, 'Câu ' + qNum + '. ');
+                secEl.appendChild(r.el);
+            });
+            resultSectionsEl.appendChild(secEl);
+        });
+    }
+
+    // Chuyển sang mục khác trong ứng dụng (vd "Từ vựng", "Ngữ pháp"...) khi đang
+    // làm bài cũng được tính là "chuyển tab" theo đúng yêu cầu chống gian lận.
+    document.querySelectorAll('.main-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (antiCheatActive && btn.getAttribute('data-main-target') !== 'tab-kiem-tra') {
+                ctestRecordViolation('chuyển sang mục khác trong ứng dụng khi đang làm bài');
+            }
+        });
+    });
+
+})();
+
 });

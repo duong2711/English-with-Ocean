@@ -534,11 +534,103 @@
 
     <div id="tab-kiem-tra" class="main-tab-content">
         <h2>Kiểm tra Đánh giá</h2>
-        <div class="folder-grid">
+        <div class="folder-grid" id="kiemtra-folder-grid">
             <div id="vocab-test-folder" class="folder-card">📁 từ vựng</div>
             <div class="folder-card">📁 đề thi lớp 6->12</div>
             <div class="folder-card">📁 đề thi chuyển cấp THCS/THPT</div>
             <div class="folder-card">📁 đề minh họa IELTS</div>
+            <div class="folder-card" id="ctest-folder-card">📝 Bài kiểm tra riêng</div>
+        </div>
+
+        <!-- ============================================================
+             BÀI KIỂM TRA RIÊNG — module hoàn toàn mới.
+             Giảng viên (giangvien@gmail.com) soạn bài, giao cho học viên
+             theo từng email; học viên vào làm bài, nộp bài, xem kết quả.
+             Dữ liệu lưu ở bảng "custom_tests" / "custom_test_submissions"
+             trên Supabase (xem file "custom_tests_setup.sql" đi kèm).
+        ============================================================= -->
+        <div id="ctest-panel" style="display:none;">
+
+            <!-- ---- 1) DANH SÁCH BÀI KIỂM TRA ---- -->
+            <div id="ctest-list-view">
+                <div class="grammar-panel-header">
+                    <button class="grammar-back-btn" id="ctest-list-back-btn">← Quay lại</button>
+                    <h3 style="margin:0;">📝 Bài kiểm tra riêng</h3>
+                </div>
+
+                <div class="grammar-admin-bar" id="ctest-admin-bar" style="display:none;">
+                    <button type="button" id="ctest-create-btn" class="grammar-admin-btn grammar-admin-btn-primary">➕ Tạo bài kiểm tra mới</button>
+                </div>
+
+                <div id="ctest-list-container" class="ctest-list-container">
+                    <p class="ctest-loading-msg">Đang tải danh sách bài kiểm tra...</p>
+                </div>
+            </div>
+
+            <!-- ---- 2) KHUNG SOẠN BÀI (chỉ giảng viên) ---- -->
+            <div id="ctest-editor-view" style="display:none;">
+                <div class="grammar-panel-header">
+                    <button class="grammar-back-btn" id="ctest-editor-back-btn">← Quay lại danh sách</button>
+                    <h3 class="grammar-panel-header-title" style="margin:0;">✏️ Soạn bài kiểm tra</h3>
+                    <button type="button" id="ctest-delete-btn" class="grammar-admin-btn grammar-admin-btn-danger">🗑️ Xoá bài này</button>
+                </div>
+
+                <div class="ctest-editor-field">
+                    <label class="news-quiz-edit-label">Tiêu đề bài kiểm tra</label>
+                    <input type="text" id="ctest-title-input" class="news-edit-input" placeholder="VD: Kiểm tra Unit 5 - Nguyễn Văn A">
+                </div>
+
+                <div class="ctest-editor-field">
+                    <label class="news-quiz-edit-label">Giao cho học viên (email, cách nhau bằng dấu phẩy nếu nhiều học viên)</label>
+                    <input type="text" id="ctest-students-input" class="news-edit-input" placeholder="hv2@gmail.com, hv3@gmail.com">
+                </div>
+
+                <div class="ctest-editor-field">
+                    <label class="news-quiz-edit-label">Thời gian làm bài (phút — để trống nếu không giới hạn)</label>
+                    <input type="number" id="ctest-duration-input" class="news-edit-input ctest-duration-input" min="1" placeholder="VD: 45">
+                </div>
+
+                <div class="ctest-editor-field">
+                    <label class="news-quiz-edit-label">Ghi chú bên dưới tiêu đề (học viên sẽ thấy khi mở bài)</label>
+                    <div id="ctest-notes-editor-slot"></div>
+                </div>
+
+                <div id="ctest-sections-container"></div>
+
+                <button type="button" id="ctest-add-section-btn" class="grammar-admin-btn grammar-admin-btn-primary" style="margin-top:6px;">➕ Thêm phần mới</button>
+
+                <div class="ctest-editor-actions">
+                    <span id="ctest-save-status" class="ctest-save-status"></span>
+                    <button type="button" id="ctest-publish-btn" class="grammar-admin-btn grammar-admin-btn-primary">📤 Lưu &amp; Giao bài</button>
+                </div>
+            </div>
+
+            <!-- ---- 3) HỌC VIÊN LÀM BÀI ---- -->
+            <div id="ctest-take-view" style="display:none;">
+                <div class="ctest-take-header">
+                    <div>
+                        <button class="grammar-back-btn" id="ctest-take-back-btn">← Quay lại</button>
+                        <h3 id="ctest-take-title" style="display:inline-block; margin-left:8px;"></h3>
+                    </div>
+                    <div class="ctest-take-timer" id="ctest-take-timer" style="display:none;"></div>
+                </div>
+                <div id="ctest-take-notes" class="ctest-take-notes" style="display:none;"></div>
+                <div id="ctest-violation-banner" class="ctest-violation-banner" style="display:none;"></div>
+                <div id="ctest-take-sections"></div>
+                <button type="button" id="ctest-submit-btn" class="grammar-admin-btn grammar-admin-btn-primary ctest-submit-btn">✅ Nộp bài</button>
+            </div>
+
+            <!-- ---- 4) KẾT QUẢ ---- -->
+            <div id="ctest-result-view" style="display:none;">
+                <div class="grammar-panel-header">
+                    <button class="grammar-back-btn" id="ctest-result-back-btn">← Quay lại danh sách</button>
+                    <h3 style="margin:0;">📊 Kết quả bài kiểm tra</h3>
+                </div>
+                <h4 id="ctest-result-title" style="margin:0 0 4px;"></h4>
+                <div id="ctest-result-score" class="ctest-result-score"></div>
+                <div id="ctest-result-sections"></div>
+            </div>
+
         </div>
     </div>
 
