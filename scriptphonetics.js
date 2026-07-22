@@ -3250,6 +3250,1266 @@ function toggleCompletion(symbolElement) {
     })();
     // ===== KẾT THÚC TRÒ CHƠI LÔ TÔ =====
 
+    // =====================================================================
+    // ===== LỒNG TIẾNG (tab Giải trí) =====
+    // Bảng Supabase "dubbing_content" (1 dòng, id = 1) lưu link YouTube +
+    // kịch bản thoại kèm mốc thời gian. Xem file SQL "dubbing_content_setup.sql".
+    // Chỉ tài khoản trong TEACHER_EMAILS (giangvien@gmail.com) mới được sửa
+    // link video / kịch bản — quyền này được chặn ở CẢ giao diện lẫn RLS.
+    // =====================================================================
+    (function initDubbingFeature() {
+        const dubFolderCard = document.getElementById('dub-folder-card');
+        if (!dubFolderCard) return;
+
+        const entertainmentGrid = document.getElementById('entertainment-folder-grid');
+        const dubPanel      = document.getElementById('dub-panel');
+        const dubBackBtn     = document.getElementById('dub-back-btn');
+
+        const dubStoryListView  = document.getElementById('dub-story-list-view');
+        const dubStoryAdminBar  = document.getElementById('dub-story-admin-bar');
+        const dubAddStoryBtn    = document.getElementById('dub-add-story-btn');
+        const dubStoryGrid      = document.getElementById('dub-story-grid');
+        const dubDetailView     = document.getElementById('dub-detail-view');
+        const dubDetailBackBtn  = document.getElementById('dub-detail-back-btn');
+        const dubDetailTitleEl  = document.getElementById('dub-detail-title');
+        const dubDeleteStoryBtn = document.getElementById('dub-delete-story-btn');
+
+        const adminBar        = document.getElementById('dub-admin-bar');
+        const videoInput      = document.getElementById('dub-admin-video-input');
+        const videoSaveBtn    = document.getElementById('dub-admin-video-save-btn');
+        const adminYtStatus   = document.getElementById('dub-admin-yt-status');
+        const adminRowsEl     = document.getElementById('dub-admin-rows');
+        const addRowBtn       = document.getElementById('dub-admin-add-row-btn');
+        const scriptStatusEl  = document.getElementById('dub-admin-script-status');
+        const importInput     = document.getElementById('dub-admin-import-input');
+        const importBtn       = document.getElementById('dub-admin-import-btn');
+        const importStatus    = document.getElementById('dub-admin-import-status');
+
+        const videoWrapEl   = document.querySelector('#dub-panel .dub-video-wrapper');
+        const emptyMsg       = document.getElementById('dub-empty-msg');
+        const startScreen    = document.getElementById('dub-start-screen');
+        const startBtn        = document.getElementById('dub-start-btn');
+        const resumeInfoEl    = document.getElementById('dub-resume-info');
+        const resumeCountEl   = document.getElementById('dub-resume-count');
+        const resumeRestartBtn = document.getElementById('dub-resume-restart-btn');
+
+        const sessionEl      = document.getElementById('dub-session');
+        const tallyDot        = document.getElementById('dub-tally-dot');
+        const tallyText       = document.getElementById('dub-tally-text');
+        const progressFill    = document.getElementById('dub-progress-fill');
+        const dubIdxEl        = document.getElementById('dub-idx');
+        const dubCurrentTextEl = document.getElementById('dub-current-text');
+        const dubCurrentTranslationEl = document.getElementById('dub-current-translation');
+        const phaseLabel      = document.getElementById('dub-phase-label');
+        const phaseFill       = document.getElementById('dub-phase-fill');
+        const phaseCountdown  = document.getElementById('dub-phase-countdown');
+        const replayBtn       = document.getElementById('dub-replay-btn');
+        const recordBtn       = document.getElementById('dub-record-btn');
+        const recordLabel     = document.getElementById('dub-record-label');
+        const reviewBox       = document.getElementById('dub-review-box');
+        const reviewAudio     = document.getElementById('dub-review-audio');
+        const retryBtn        = document.getElementById('dub-retry-btn');
+        const confirmBtn      = document.getElementById('dub-confirm-btn');
+        const recList         = document.getElementById('dub-rec-list');
+
+        const finishScreen   = document.getElementById('dub-finish-screen');
+        const finishCount     = document.getElementById('dub-finish-count');
+        const previewOfferEl  = document.getElementById('dub-preview-offer');
+        const previewYesBtn   = document.getElementById('dub-preview-yes-btn');
+        const previewSkipBtn  = document.getElementById('dub-preview-skip-btn');
+        const previewPlayingEl = document.getElementById('dub-preview-playing');
+        const previewStopBtn  = document.getElementById('dub-preview-stop-btn');
+        const finishChoiceEl  = document.getElementById('dub-finish-choice');
+        const choiceSaveBtn   = document.getElementById('dub-choice-save-btn');
+        const choiceDiscardBtn = document.getElementById('dub-choice-discard-btn');
+        const saveOptionsEl  = document.getElementById('dub-save-options');
+        const exportAudioBtn  = document.getElementById('dub-export-audio-btn');
+        const exportVideoBtn  = document.getElementById('dub-export-video-btn');
+        const exportStatus    = document.getElementById('dub-export-status');
+
+
+        let dubVideoUrl = '';
+        let dubContentId = 1; // id của dòng "dubbing_content" đang mở — dùng làm 1 phần khoá lưu tiến trình dở dang
+        let DUB_STORIES = []; // danh sách tất cả câu chuyện lồng tiếng (mỗi câu chuyện = 1 dòng dubbing_content)
+        let dubScript = []; // [{ time: seconds, text: '...' }, ...]
+        let dubPlayer = null;
+        let dubVideoElReady = false;
+        let dubResumeFromIndex = 0; // số câu đã có bản ghi dở dang từ lần trước (0 = không có gì để tiếp tục)
+        let dubResumeBlobs = []; // các blob đã lưu tương ứng, tải sẵn khi mở panel để bấm "Bắt đầu" là dùng ngay
+
+        let dubIndex = 0;
+        let dubStage = 'idle'; // 'idle' | 'preview' | 'recording'
+        let dubRecordings = [];
+        let dubMediaStream = null;
+        let dubMediaRecorder = null;
+        let dubRecordedChunks = [];
+        let dubSessionToken = 0; // tăng lên mỗi lần bắt đầu/kết thúc phiên để huỷ các bước đang hẹn giờ dở dang
+        let dubPhaseTimer = null;      // setTimeout kết thúc phase hiện tại (preview hoặc recording)
+        let dubPhaseTickTimer = null;  // setInterval cập nhật đồng hồ đếm ngược trên giao diện
+        let dubReplayRequested = false;
+        let dubPreviewCtx = null;
+        let dubPreviewTimer = null;
+        let adminSaveTimer = null;
+
+        function escapeHtmlDub(str) {
+            return String(str == null ? '' : str).replace(/[&<>"']/g, ch => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[ch]));
+        }
+
+        function parseTimeInput(str) {
+            str = String(str || '').trim();
+            if (str.includes(':')) {
+                const parts = str.split(':').map(Number);
+                if (parts.some(isNaN)) return 0;
+                if (parts.length === 2) return parts[0] * 60 + parts[1];
+                if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+            }
+            const n = parseFloat(str);
+            return isNaN(n) ? 0 : n;
+        }
+        function formatTimeShort(t) {
+            // Làm tròn về giây nguyên TRƯỚC khi tách phút/giây, tránh trường hợp
+            // 119.6s bị hiển thị sai thành "01:60" thay vì "02:00".
+            t = Math.max(0, Math.round(Number(t) || 0));
+            const m = Math.floor(t / 60);
+            const s = t % 60;
+            return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+        }
+
+        // ---------------- SUPABASE: TẢI / LƯU NỘI DUNG ----------------
+        // ---------------- DANH SÁCH CÂU CHUYỆN (nhiều dòng "dubbing_content") ----------------
+        async function loadDubStoriesFromDB() {
+            const { data, error } = await sb.from('dubbing_content').select('*').order('id', { ascending: true });
+            if (error) throw error;
+            DUB_STORIES = data || [];
+        }
+
+        // Tạo 1 câu chuyện mới (rỗng, sẵn sàng để giảng viên nhập link video + kịch bản)
+        async function createDubStoryDB() {
+            const payload = { title: 'Câu chuyện mới (bấm vào tiêu đề để đổi tên)', video_url: '', script: [], created_by: currentEmail };
+            const { data, error } = await sb.from('dubbing_content').insert(payload).select().single();
+            if (error) throw error;
+            return data;
+        }
+
+        async function deleteDubStoryDB(id) {
+            const { error } = await sb.from('dubbing_content').delete().eq('id', id);
+            if (error) throw error;
+        }
+
+        async function saveDubbingContent() {
+            dubScript.sort((a, b) => a.time - b.time);
+            try {
+                const { error } = await sb.from('dubbing_content').update({
+                    video_url: dubVideoUrl,
+                    script: dubScript,
+                    updated_at: new Date().toISOString(),
+                    updated_by: currentEmail
+                }).eq('id', dubContentId);
+                if (error) throw error;
+                return true;
+            } catch (err) {
+                console.error('Lỗi khi lưu nội dung lồng tiếng:', err.message);
+                return false;
+            }
+        }
+
+        function scheduleAdminSave() {
+            scriptStatusEl.textContent = 'Đang gõ...';
+            clearTimeout(adminSaveTimer);
+            adminSaveTimer = setTimeout(async () => {
+                scriptStatusEl.textContent = 'Đang lưu...';
+                const ok = await saveDubbingContent();
+                scriptStatusEl.textContent = ok ? '💾 Đã lưu kịch bản.' : '❌ Lưu thất bại, thử lại.';
+            }, 800);
+        }
+
+        // ---------------- KHUNG QUẢN TRỊ (GIẢNG VIÊN) ----------------
+        function renderAdminRows() {
+            adminRowsEl.innerHTML = '';
+            dubScript.forEach((row, i) => {
+                const div = document.createElement('div');
+                div.className = 'dub-admin-row';
+                div.dataset.i = i;
+                div.innerHTML =
+                    '<div class="dub-admin-row-main">' +
+                        '<input type="text" class="dub-admin-row-time" data-field="time" value="' + formatTimeShort(row.time) + '">' +
+                        '<input type="text" class="dub-admin-row-text" data-field="text" placeholder="Câu thoại..." value="' + escapeHtmlDub(row.text) + '">' +
+                        '<button type="button" class="dub-admin-row-getcur" title="Lấy giờ hiện tại từ video">⏱</button>' +
+                        '<button type="button" class="dub-admin-row-del" title="Xoá dòng">🗑</button>' +
+                    '</div>' +
+                    '<input type="text" class="dub-admin-row-translation" data-field="translation" placeholder="Bản dịch tiếng Việt của câu này..." value="' + escapeHtmlDub(row.translation || '') + '">';
+                adminRowsEl.appendChild(div);
+            });
+        }
+
+        adminRowsEl.addEventListener('input', (e) => {
+            const rowDiv = e.target.closest('.dub-admin-row');
+            if (!rowDiv) return;
+            const i = Number(rowDiv.dataset.i);
+            const field = e.target.dataset.field;
+            if (field === 'time') dubScript[i].time = parseTimeInput(e.target.value);
+            else if (field === 'text') dubScript[i].text = e.target.value;
+            else if (field === 'translation') dubScript[i].translation = e.target.value;
+            scheduleAdminSave();
+        });
+
+        adminRowsEl.addEventListener('click', (e) => {
+            const rowDiv = e.target.closest('.dub-admin-row');
+            if (!rowDiv) return;
+            const i = Number(rowDiv.dataset.i);
+            if (e.target.classList.contains('dub-admin-row-del')) {
+                dubScript.splice(i, 1);
+                renderAdminRows();
+                scheduleAdminSave();
+            } else if (e.target.classList.contains('dub-admin-row-getcur')) {
+                if (dubPlayer && typeof dubPlayer.getCurrentTime === 'function') {
+                    dubScript[i].time = dubPlayer.getCurrentTime();
+                    renderAdminRows();
+                    scheduleAdminSave();
+                }
+            }
+        });
+
+        addRowBtn.addEventListener('click', () => {
+            const lastTime = dubScript.length ? dubScript[dubScript.length - 1].time + 3 : 0;
+            dubScript.push({ time: lastTime, text: '', translation: '' });
+            renderAdminRows();
+            scheduleAdminSave();
+        });
+
+        // Phân tích transcript dạng "HH:MM:SS.mmm Câu thoại" (mỗi dòng 1 mốc thời gian),
+        // đúng định dạng tactiq.io / nhiều công cụ xuất phụ đề khác xuất ra.
+        // Dòng bắt đầu bằng "#" (dòng chú thích tiêu đề của tactiq) bị bỏ qua.
+        // Dòng không có mốc thời gian sẽ được nối vào câu thoại của dòng ngay trước đó.
+        function parseTranscriptText(raw) {
+            const lines = String(raw || '').split(/\r?\n/);
+            const timeLineRe = /^(\d{1,2}):(\d{2}):(\d{2})(?:\.(\d{1,3}))?\s+(.+)$/;
+            const entries = [];
+            let current = null;
+            for (const rawLine of lines) {
+                const line = rawLine.trim();
+                if (!line || line.startsWith('#')) continue;
+                const m = line.match(timeLineRe);
+                if (m) {
+                    const h = Number(m[1]), mi = Number(m[2]), s = Number(m[3]), ms = Number(m[4] || 0);
+                    const time = h * 3600 + mi * 60 + s + ms / 1000;
+                    current = { time: time, text: m[5].trim(), translation: '' };
+                    entries.push(current);
+                } else if (current) {
+                    current.text = (current.text + ' ' + line).trim();
+                }
+            }
+            return entries;
+        }
+
+        importBtn.addEventListener('click', async () => {
+            const entries = parseTranscriptText(importInput.value);
+            if (entries.length === 0) {
+                importStatus.textContent = '❌ Không tìm thấy dòng nào có mốc thời gian hợp lệ (dạng 00:00:04.656 ...).';
+                return;
+            }
+            if (dubScript.length > 0) {
+                const proceed = confirm('Thao tác này sẽ THAY THẾ toàn bộ ' + dubScript.length + ' dòng thoại hiện có bằng ' + entries.length + ' dòng vừa nhập. Tiếp tục?');
+                if (!proceed) return;
+            }
+            dubScript = entries;
+            renderAdminRows();
+            importStatus.textContent = 'Đang lưu...';
+            const ok = await saveDubbingContent();
+            importStatus.textContent = ok ? ('💾 Đã nhập và lưu ' + entries.length + ' dòng thoại. Bạn có thể xoá/sửa lại từng dòng bên dưới.') : '❌ Lưu thất bại, thử lại.';
+            if (ok) importInput.value = '';
+        });
+
+        videoSaveBtn.addEventListener('click', async () => {
+            const url = videoInput.value.trim();
+            if (!url) { adminYtStatus.textContent = '❌ Hãy dán link video trước.'; return; }
+            videoSaveBtn.disabled = true;
+            adminYtStatus.textContent = 'Đang lưu...';
+            try {
+                dubVideoUrl = url;
+                const ok = await saveDubbingContent();
+                if (!ok) { adminYtStatus.textContent = '❌ Lưu thất bại, thử lại.'; return; }
+
+                adminYtStatus.textContent = 'Đang tải video xem thử...';
+                videoWrapEl.style.display = 'block';
+                emptyMsg.style.display = 'none';
+                await ensurePlayer(dubVideoUrl);
+                startScreen.style.display = dubScript.length ? 'block' : 'none';
+                adminYtStatus.textContent = '💾 Đã lưu link video.';
+            } catch (err) {
+                adminYtStatus.textContent = '❌ Không tải được video từ link này: ' + err.message;
+            } finally {
+                videoSaveBtn.disabled = false;
+            }
+        });
+
+        // ---------------- TRÌNH PHÁT VIDEO (thẻ <video> gốc, không còn qua YouTube) ----------------
+        function getDubVideoAdapter() {
+            if (dubPlayer) return dubPlayer;
+            const videoEl = document.getElementById('dub-player');
+            dubPlayer = {
+                el: videoEl,
+                seekTo(t) { try { videoEl.currentTime = t; } catch (e) { /* bỏ qua */ } },
+                playVideo() { videoEl.play().catch(() => { /* bỏ qua lỗi autoplay */ }); },
+                pauseVideo() { videoEl.pause(); },
+                getCurrentTime() { return videoEl.currentTime || 0; },
+                getDuration() { return videoEl.duration || 0; },
+                mute() { videoEl.muted = true; },
+                unMute() { videoEl.muted = false; }
+            };
+            return dubPlayer;
+        }
+
+        async function ensurePlayer(url) {
+            const adapter = getDubVideoAdapter();
+            return new Promise((resolve) => {
+                function onReady() {
+                    adapter.el.removeEventListener('loadedmetadata', onReady);
+                    resolve();
+                }
+                adapter.el.addEventListener('loadedmetadata', onReady, { once: true });
+                adapter.el.src = url;
+                adapter.el.load();
+            });
+        }
+
+        // ---------------- MỞ / ĐÓNG PANEL ----------------
+        let currentDubStory = null;
+
+        async function renderDubStoryGrid() {
+            dubStoryAdminBar.style.display = isTeacher ? 'flex' : 'none';
+            dubStoryGrid.innerHTML = '<p class="grammar-loading-msg">Đang tải danh sách câu chuyện...</p>';
+            try {
+                await loadDubStoriesFromDB();
+            } catch (err) {
+                dubStoryGrid.innerHTML = '<p class="grammar-empty-msg">Lỗi tải danh sách: ' + escapeHtmlDub(err.message) + '</p>';
+                return;
+            }
+            dubStoryGrid.innerHTML = '';
+            if (DUB_STORIES.length === 0) {
+                dubStoryGrid.innerHTML = '<p class="grammar-empty-msg">' +
+                    (isTeacher ? 'Chưa có câu chuyện nào — bấm "Thêm câu chuyện mới" để bắt đầu.' : 'Giảng viên chưa thêm câu chuyện lồng tiếng nào.') +
+                    '</p>';
+                return;
+            }
+            DUB_STORIES.forEach(story => {
+                const card = document.createElement('div');
+                card.className = 'folder-card dub-story-card';
+                card.dataset.storyId = story.id;
+                card.innerHTML = '📖 ' + escapeHtmlDub(story.title || 'Câu chuyện chưa đặt tên') +
+                    (isTeacher ? '<button type="button" class="grammar-card-delete-btn" data-story-id="' + story.id + '" title="Xoá câu chuyện này">🗑️</button>' : '');
+                card.addEventListener('click', (e) => {
+                    if (e.target.closest('.grammar-card-delete-btn')) return; // nút xoá xử lý riêng
+                    openDubStory(story);
+                });
+                dubStoryGrid.appendChild(card);
+            });
+        }
+
+        // Quay lại danh sách câu chuyện (từ màn hình chi tiết 1 câu chuyện)
+        function showDubStoryList() {
+            teardownDubSession();
+            dubDetailView.classList.remove('dub-detail-open');
+            dubStoryListView.style.display = 'block';
+            currentDubStory = null;
+            renderDubStoryGrid();
+        }
+
+        // Mở 1 câu chuyện cụ thể → hiển thị màn hình chi tiết, đổ dữ liệu của đúng câu chuyện đó
+        async function openDubStory(story) {
+            currentDubStory = story;
+            dubContentId = story.id;
+            dubVideoUrl = story.video_url || '';
+            dubScript = Array.isArray(story.script)
+                ? story.script.map(r => ({ time: Number(r.time) || 0, text: String(r.text || ''), translation: String(r.translation || '') }))
+                : [];
+            dubScript.sort((a, b) => a.time - b.time);
+
+            dubStoryListView.style.display = 'none';
+            dubDetailView.classList.add('dub-detail-open');
+            dubDetailTitleEl.textContent = story.title || 'Câu chuyện chưa đặt tên';
+            dubDetailTitleEl.contentEditable = isTeacher ? 'true' : 'false';
+            dubDetailTitleEl.classList.toggle('grammar-editable', isTeacher);
+            dubDeleteStoryBtn.style.display = isTeacher ? 'inline-block' : 'none';
+
+            emptyMsg.style.display = 'none';
+            startScreen.style.display = 'none';
+            sessionEl.style.display = 'none';
+            finishScreen.style.display = 'none';
+            saveOptionsEl.style.display = 'none';
+            videoWrapEl.style.display = 'none';
+
+            if (window.vocabTap && window.vocabTap.ensureLoaded) {
+                try { await window.vocabTap.ensureLoaded(); } catch (e) { console.error('Lỗi khi tải từ vựng cá nhân:', e.message); }
+            }
+
+            if (isTeacher) {
+                adminBar.style.display = 'block';
+                adminYtStatus.textContent = dubVideoUrl ? '📹 Đang dùng 1 video đã tải lên.' : 'Chưa có video nào.';
+                renderAdminRows();
+            } else {
+                adminBar.style.display = 'none';
+            }
+
+            const hasContent = !!dubVideoUrl && dubScript.length > 0;
+
+            if (dubVideoUrl) {
+                videoWrapEl.style.display = 'block';
+                await ensurePlayer(dubVideoUrl);
+            }
+
+            if (hasContent) {
+                startScreen.style.display = 'block';
+                dubResumeBlobs = await loadSavedDubProgress();
+                dubResumeFromIndex = dubResumeBlobs.length;
+                if (dubResumeFromIndex > 0) {
+                    resumeCountEl.textContent = String(dubResumeFromIndex);
+                    resumeInfoEl.style.display = 'block';
+                    startBtn.textContent = '▶️ Tiếp tục lồng tiếng (từ câu ' + (dubResumeFromIndex + 1) + ')';
+                } else {
+                    resumeInfoEl.style.display = 'none';
+                    startBtn.textContent = '🎬 Bắt đầu lồng tiếng';
+                }
+            } else {
+                emptyMsg.style.display = 'block';
+            }
+        }
+
+        function cancelPhaseTimers() {
+            if (dubPhaseTimer) { clearTimeout(dubPhaseTimer); dubPhaseTimer = null; }
+            if (dubPhaseTickTimer) { clearInterval(dubPhaseTickTimer); dubPhaseTickTimer = null; }
+        }
+
+        function teardownDubSession() {
+            dubSessionToken++; // huỷ mọi phase (nghe/ghi) đang hẹn giờ dở dang của phiên cũ
+            cancelPhaseTimers();
+            if (dubPreviewTimer) { clearTimeout(dubPreviewTimer); dubPreviewTimer = null; }
+            if (dubPreviewCtx) { try { dubPreviewCtx.close(); } catch (e) { /* bỏ qua */ } dubPreviewCtx = null; }
+            if (dubMediaRecorder && dubMediaRecorder.state === 'recording') {
+                try { dubMediaRecorder.stop(); } catch (e) { /* bỏ qua */ }
+            }
+            if (dubMediaStream) { dubMediaStream.getTracks().forEach(t => t.stop()); dubMediaStream = null; }
+            if (dubPlayer && typeof dubPlayer.pauseVideo === 'function') {
+                try { dubPlayer.pauseVideo(); dubPlayer.unMute(); } catch (e) { /* bỏ qua */ }
+            }
+            dubStage = 'idle';
+        }
+
+        function showPanel() {
+            entertainmentGrid.style.display = 'none';
+            dubPanel.classList.add('dub-panel-open');
+            dubDetailView.classList.remove('dub-detail-open');
+            dubStoryListView.style.display = 'block';
+            renderDubStoryGrid();
+        }
+        function hidePanel() {
+            dubPanel.classList.remove('dub-panel-open');
+            entertainmentGrid.style.display = '';
+            teardownDubSession();
+        }
+        dubFolderCard.addEventListener('click', showPanel);
+        dubBackBtn.addEventListener('click', hidePanel);
+        logoutBtn.addEventListener('click', hidePanel);
+
+        dubDetailBackBtn.addEventListener('click', showDubStoryList);
+
+        // Thêm câu chuyện mới — tạo 1 dòng rỗng trên Supabase rồi mở luôn để giảng viên nhập liệu
+        dubAddStoryBtn.addEventListener('click', async () => {
+            if (!isTeacher) return;
+            dubAddStoryBtn.disabled = true;
+            const oldLabel = dubAddStoryBtn.textContent;
+            dubAddStoryBtn.textContent = 'Đang tạo...';
+            try {
+                const newStory = await createDubStoryDB();
+                DUB_STORIES.push(newStory);
+                openDubStory(newStory);
+            } catch (err) {
+                alert('Tạo câu chuyện mới thất bại: ' + err.message);
+            } finally {
+                dubAddStoryBtn.disabled = false;
+                dubAddStoryBtn.textContent = oldLabel;
+            }
+        });
+
+        // Xoá câu chuyện ngay trên thẻ (trong danh sách) — chỉ giảng viên thấy nút này
+        dubStoryGrid.addEventListener('click', async (e) => {
+            const btn = e.target.closest('.grammar-card-delete-btn');
+            if (!btn || !isTeacher) return;
+            const storyId = btn.dataset.storyId;
+            const story = DUB_STORIES.find(s => String(s.id) === String(storyId));
+            if (!confirm('Xoá câu chuyện "' + (story ? story.title : '') + '"? Hành động này không thể hoàn tác.')) return;
+            btn.disabled = true;
+            try {
+                await deleteDubStoryDB(storyId);
+                await renderDubStoryGrid();
+            } catch (err) {
+                alert('Xoá câu chuyện thất bại: ' + err.message);
+                btn.disabled = false;
+            }
+        });
+
+        // Xoá câu chuyện ngay trong màn hình chi tiết đang mở
+        dubDeleteStoryBtn.addEventListener('click', async () => {
+            if (!isTeacher || !currentDubStory) return;
+            if (!confirm('Xoá câu chuyện "' + (currentDubStory.title || '') + '"? Hành động này không thể hoàn tác.')) return;
+            dubDeleteStoryBtn.disabled = true;
+            try {
+                await deleteDubStoryDB(currentDubStory.id);
+                showDubStoryList();
+            } catch (err) {
+                alert('Xoá câu chuyện thất bại: ' + err.message);
+                dubDeleteStoryBtn.disabled = false;
+            }
+        });
+
+        // Đổi tên câu chuyện — giảng viên gõ trực tiếp vào tiêu đề, tự lưu sau khi ngừng gõ
+        let dubTitleSaveTimer = null;
+        dubDetailTitleEl.addEventListener('input', () => {
+            if (!isTeacher || !currentDubStory) return;
+            clearTimeout(dubTitleSaveTimer);
+            dubTitleSaveTimer = setTimeout(async () => {
+                const newTitle = dubDetailTitleEl.textContent.trim();
+                try {
+                    const { error } = await sb.from('dubbing_content')
+                        .update({ title: newTitle, updated_at: new Date().toISOString(), updated_by: currentEmail })
+                        .eq('id', currentDubStory.id);
+                    if (error) throw error;
+                    currentDubStory.title = newTitle;
+                    const cached = DUB_STORIES.find(s => String(s.id) === String(currentDubStory.id));
+                    if (cached) cached.title = newTitle;
+                } catch (err) {
+                    console.error('Lỗi khi lưu tiêu đề câu chuyện:', err.message);
+                }
+            }, 800);
+        });
+
+        // ---------------- LƯU TIẾN TRÌNH GHI ÂM DỞ DANG (IndexedDB) ----------------
+        // Mỗi khi học viên bấm "Xác nhận" ở 1 câu, bản ghi âm câu đó được lưu tạm vào
+        // IndexedDB của trình duyệt (không dùng localStorage vì localStorage chỉ lưu được
+        // chuỗi ký tự, dung lượng rất nhỏ — không hợp để lưu file âm thanh nhị phân).
+        // Nhờ vậy nếu học viên lỡ tải lại trang (F5) hoặc đóng tab giữa chừng, lần sau mở
+        // lại panel lồng tiếng sẽ tự phát hiện và cho tiếp tục đúng từ câu còn dang dở,
+        // không phải ghi lại từ đầu. Lưu riêng theo từng tài khoản (currentEmail) + đúng
+        // nội dung lồng tiếng hiện tại (dubContentId), để không lẫn giữa các học viên dùng
+        // chung máy hoặc khi giảng viên đổi sang video/kịch bản khác.
+        const DUB_PROGRESS_DB_NAME = 'dub_progress_db';
+        const DUB_PROGRESS_STORE = 'recordings';
+
+        function openDubProgressDB() {
+            return new Promise((resolve, reject) => {
+                if (!window.indexedDB) { reject(new Error('Trình duyệt không hỗ trợ IndexedDB')); return; }
+                const req = indexedDB.open(DUB_PROGRESS_DB_NAME, 1);
+                req.onupgradeneeded = () => {
+                    const db = req.result;
+                    if (!db.objectStoreNames.contains(DUB_PROGRESS_STORE)) db.createObjectStore(DUB_PROGRESS_STORE);
+                };
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            });
+        }
+        function dubProgressKeyPrefix() {
+            return (currentEmail || 'khach') + '::' + dubContentId + '::';
+        }
+        // Lưu 1 câu vừa xác nhận — cố ý KHÔNG chặn (không await) ở nơi gọi, để không làm
+        // chậm việc chuyển sang câu kế tiếp; nếu lưu lỗi (chế độ ẩn danh, trình duyệt cũ...)
+        // thì bỏ qua trong im lặng, không ảnh hưởng tới luồng ghi âm chính đang chạy.
+        async function saveDubRecordingProgress(index, blob) {
+            try {
+                const db = await openDubProgressDB();
+                await new Promise((resolve, reject) => {
+                    const tx = db.transaction(DUB_PROGRESS_STORE, 'readwrite');
+                    tx.objectStore(DUB_PROGRESS_STORE).put(blob, dubProgressKeyPrefix() + index);
+                    tx.oncomplete = resolve;
+                    tx.onerror = () => reject(tx.error);
+                });
+                db.close();
+            } catch (e) { /* bỏ qua */ }
+        }
+        // Đọc lại các bản ghi đã lưu, LIÊN TỤC từ câu 0 trở đi, dừng ngay khi gặp câu chưa có
+        // (đúng với cách ghi âm luôn tuần tự từng câu, không nhảy cóc).
+        async function loadSavedDubProgress() {
+            try {
+                const db = await openDubProgressDB();
+                const prefix = dubProgressKeyPrefix();
+                const result = [];
+                for (let i = 0; i < dubScript.length; i++) {
+                    const blob = await new Promise((resolve, reject) => {
+                        const tx = db.transaction(DUB_PROGRESS_STORE, 'readonly');
+                        const req = tx.objectStore(DUB_PROGRESS_STORE).get(prefix + i);
+                        req.onsuccess = () => resolve(req.result || null);
+                        req.onerror = () => reject(req.error);
+                    });
+                    if (!blob) break;
+                    result.push(blob);
+                }
+                db.close();
+                return result;
+            } catch (e) { return []; }
+        }
+        async function clearSavedDubProgress() {
+            try {
+                const db = await openDubProgressDB();
+                const prefix = dubProgressKeyPrefix();
+                await new Promise((resolve, reject) => {
+                    const tx = db.transaction(DUB_PROGRESS_STORE, 'readwrite');
+                    const store = tx.objectStore(DUB_PROGRESS_STORE);
+                    const req = store.getAllKeys();
+                    req.onsuccess = () => { req.result.filter(k => String(k).startsWith(prefix)).forEach(k => store.delete(k)); };
+                    tx.oncomplete = resolve;
+                    tx.onerror = () => reject(tx.error);
+                });
+                db.close();
+            } catch (e) { /* bỏ qua */ }
+        }
+
+        // ---------------- BUỔI LỒNG TIẾNG (HỌC VIÊN) ----------------
+        // Luồng cho mỗi câu thoại i:
+        //   1) Video TỰ ĐỘNG phát đúng đoạn thoại gốc của CÂU ĐÓ (khớp hình + khớp chữ hiển thị)
+        //      để học viên nghe & bắt chước — không cần bấm gì để bắt đầu bước này.
+        //   2) Sau khi phát xong, hệ thống DỪNG lại và CHỜ — học viên tự bấm "Bắt đầu ghi âm"
+        //      khi nào sẵn sàng, không tự động ghi âm.
+        //   3) Khi đã bấm, ghi âm chạy đúng khoảng thời gian tính sẵn rồi TỰ ĐỘNG dừng — học
+        //      viên không có cách nào tự kết thúc ghi âm sớm hơn hay trễ hơn.
+        //   4) Nghe lại bản ghi, rồi hoặc "Ghi âm lại" (thu lại từ đầu) hoặc "Xác nhận, tiếp tục".
+        //   5) Chỉ khi xác nhận, hệ thống mới chuyển sang câu kế tiếp — quay lại bước 1.
+        function setTally(cls, text) {
+            tallyDot.className = 'dub-tally-dot' + (cls ? ' ' + cls : '');
+            tallyText.textContent = text;
+        }
+
+        function renderDubCurrent() {
+            dubIdxEl.textContent = 'DÒNG ' + Math.min(dubIndex + 1, dubScript.length) + '/' + dubScript.length;
+            const row = dubScript[dubIndex];
+            if (row) {
+                const wrapFn = (window.vocabTap && window.vocabTap.wrap) ? window.vocabTap.wrap : escapeHtmlDub;
+                dubCurrentTextEl.innerHTML = wrapFn(row.text);
+                dubCurrentTextEl.dataset.vocabContext = row.text;
+                dubCurrentTextEl.dataset.vocabSource = 'Buổi lồng tiếng';
+                dubCurrentTranslationEl.textContent = row.translation || '';
+                dubCurrentTranslationEl.style.display = row.translation ? 'block' : 'none';
+            } else {
+                dubCurrentTextEl.textContent = '—';
+                dubCurrentTranslationEl.style.display = 'none';
+            }
+            progressFill.style.width = (dubIndex / dubScript.length * 100) + '%';
+        }
+
+        // Chạm/bấm vào 1 từ tiếng Anh trong câu thoại đang hiển thị -> tra nghĩa bằng AI +
+        // tự lưu vào "Từ vựng của tôi", dùng lại đúng 1 bộ máy đang chạy ở mục Tin ngắn /
+        // THCS-THPT (window.vocabTap), tránh viết trùng logic.
+        dubCurrentTextEl.addEventListener('click', (e) => {
+            const wordEl = e.target.closest('.tappable-word');
+            if (!wordEl) return;
+            if (window.vocabTap && window.vocabTap.handleTap) window.vocabTap.handleTap(wordEl);
+        });
+
+        // Khoảng thời gian của câu i = từ mốc giờ câu i tới mốc giờ câu (i+1) — đây là khoảng
+        // video THỰC SỰ đang nói câu i, dùng chung cho cả lúc PHÁT THOẠI GỐC lẫn lúc GHI ÂM,
+        // để học viên luôn có đủ thời gian đọc hết câu (không phải khoảng thời gian TRƯỚC câu
+        // đó, vốn có thể rất ngắn — ví dụ câu đầu tiên chỉ có 0.328s nếu tính kiểu cũ).
+        function computeLineSlot(i) {
+            const thisTime = dubScript[i].time;
+            const nextTime = (i + 1 < dubScript.length) ? dubScript[i + 1].time : (thisTime + 4);
+            return { start: thisTime, duration: Math.max(0.6, nextTime - thisTime) };
+        }
+
+        // Chạy đồng hồ đếm ngược trên giao diện (thanh tiến trình + số giây còn lại), gọi
+        // onDone() đúng lúc hết giờ. Dùng chung cho cả phase "nghe thoại gốc" lẫn "ghi âm".
+        function runCountdown(durationSec, fillClass, onDone) {
+            const startedAt = Date.now();
+            const totalMs = durationSec * 1000;
+            phaseFill.className = 'dub-phase-fill' + (fillClass ? ' ' + fillClass : '');
+            phaseFill.style.width = '100%';
+            phaseCountdown.textContent = durationSec.toFixed(1) + 's';
+
+            cancelPhaseTimers();
+            dubPhaseTickTimer = setInterval(() => {
+                const remainMs = Math.max(0, totalMs - (Date.now() - startedAt));
+                phaseFill.style.width = (remainMs / totalMs * 100) + '%';
+                phaseCountdown.textContent = (remainMs / 1000).toFixed(1) + 's';
+            }, 100);
+            dubPhaseTimer = setTimeout(() => {
+                cancelPhaseTimers();
+                onDone();
+            }, totalMs);
+        }
+
+        // Bước 1 (tự động): phát đúng đoạn thoại gốc của câu i, khớp với chữ đang hiển thị.
+        // Bấm "Nghe lại" trong lúc đang phát sẽ được ghi nhận, phát thêm 1 lượt sau khi lượt
+        // hiện tại kết thúc. Phát xong (không còn yêu cầu nghe lại) thì DỪNG và chờ ở bước 2,
+        // tuyệt đối không tự chuyển sang ghi âm.
+        function runPreviewPhase(i, token) {
+            return new Promise((resolve) => {
+                if (token !== dubSessionToken) { resolve(); return; }
+                const slot = computeLineSlot(i);
+                dubStage = 'preview';
+                dubReplayRequested = false;
+                setTally('standby', 'ĐANG NGHE THOẠI GỐC');
+                phaseLabel.textContent = '🔈 Đang phát thoại gốc — nghe để bắt chước…';
+                replayBtn.style.display = 'inline-block';
+                replayBtn.disabled = false;
+                recordBtn.style.display = 'none';
+                reviewBox.style.display = 'none';
+                try { dubPlayer.seekTo(slot.start, true); dubPlayer.playVideo(); } catch (e) { /* bỏ qua */ }
+
+                runCountdown(slot.duration, '', () => {
+                    if (token !== dubSessionToken) { resolve(); return; }
+                    try { dubPlayer.pauseVideo(); } catch (e) { /* bỏ qua */ }
+                    if (dubReplayRequested) {
+                        dubReplayRequested = false;
+                        runPreviewPhase(i, token).then(resolve);
+                    } else {
+                        resolve();
+                    }
+                });
+            });
+        }
+
+        // Bước 2: dừng hẳn, hiện nút "Bắt đầu ghi âm" và CHỜ học viên bấm — không có gì tự
+        // động xảy ra ở bước này.
+        function showReadyToRecord(i, token) {
+            if (token !== dubSessionToken) return;
+            dubStage = 'ready';
+            setTally('standby', 'SẴN SÀNG GHI ÂM');
+            phaseLabel.textContent = 'Sẵn sàng — bấm nút bên dưới khi bạn muốn bắt đầu đọc câu này.';
+            phaseFill.className = 'dub-phase-fill';
+            phaseFill.style.width = '0%';
+            phaseCountdown.textContent = '';
+            replayBtn.style.display = 'inline-block';
+            replayBtn.disabled = false;
+            recordBtn.style.display = 'flex';
+            recordBtn.disabled = false;
+            recordBtn.className = 'dub-record-btn idle';
+            recordLabel.textContent = '🎙️ Bắt đầu ghi âm';
+            reviewBox.style.display = 'none';
+        }
+
+        // Nghe lại thoại gốc của câu hiện tại — dùng được ở bước 2 (trước khi ghi) và bước 4
+        // (đang xem lại bản ghi), KHÔNG dùng được trong lúc đang ghi âm.
+        function replayOriginalForCurrentLine() {
+            if (dubIndex >= dubScript.length || !dubPlayer) return;
+            const slot = computeLineSlot(dubIndex);
+            const myToken = dubSessionToken;
+            replayBtn.disabled = true;
+            try { dubPlayer.seekTo(slot.start, true); dubPlayer.playVideo(); } catch (e) { /* bỏ qua */ }
+            setTimeout(() => {
+                if (myToken !== dubSessionToken) return;
+                try { dubPlayer.pauseVideo(); } catch (e) { /* bỏ qua */ }
+                replayBtn.disabled = false;
+            }, slot.duration * 1000);
+        }
+        replayBtn.addEventListener('click', () => {
+            if (dubStage === 'preview') {
+                dubReplayRequested = true;
+                phaseLabel.textContent = '🔈 Sẽ phát lại đoạn này sau khi phát xong lượt hiện tại…';
+            } else if (dubStage === 'ready' || dubStage === 'review') {
+                replayOriginalForCurrentLine();
+            }
+        });
+
+        // Bước 3: CHỈ chạy khi học viên bấm nút — ghi âm đúng khoảng thời gian tính sẵn rồi
+        // TỰ ĐỘNG dừng, học viên không có cách nào tự kết thúc sớm hay kéo dài.
+        function startTimedRecording(i, token) {
+            if (token !== dubSessionToken) return;
+            const slot = computeLineSlot(i);
+            dubStage = 'recording';
+            setTally('rec', 'ĐANG GHI ÂM');
+            phaseLabel.textContent = '🎙️ Đang ghi âm — đọc câu thoại này…';
+            replayBtn.style.display = 'none';
+            recordBtn.style.display = 'none';
+            reviewBox.style.display = 'none';
+
+            dubRecordedChunks = [];
+            dubMediaRecorder = new MediaRecorder(dubMediaStream);
+            dubMediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) dubRecordedChunks.push(e.data); };
+            dubMediaRecorder.onstop = () => {
+                if (token !== dubSessionToken) return;
+                const blob = new Blob(dubRecordedChunks, { type: 'audio/webm' });
+                const url = URL.createObjectURL(blob);
+                if (dubRecordings[i] && dubRecordings[i].url) URL.revokeObjectURL(dubRecordings[i].url);
+                dubRecordings[i] = { blob, url };
+                showReviewState(i, token);
+            };
+            dubMediaRecorder.start();
+
+            runCountdown(slot.duration, 'rec', () => {
+                // Tuyệt đối không để học viên tự kết thúc ghi âm — chỉ bộ đếm giờ này được
+                // phép gọi stop(). onstop() ở trên sẽ tự chuyển sang bước 4 sau khi lưu xong.
+                if (dubMediaRecorder && dubMediaRecorder.state === 'recording') {
+                    try { dubMediaRecorder.stop(); } catch (e) { /* bỏ qua */ }
+                }
+            });
+        }
+        recordBtn.addEventListener('click', () => {
+            if (dubStage !== 'ready') return; // chỉ bấm được khi đang ở bước chờ
+            startTimedRecording(dubIndex, dubSessionToken);
+        });
+
+        // Bước 4: nghe lại bản vừa ghi, rồi chọn ghi âm lại (thu 1 lượt mới, cũng tự canh giờ
+        // và tự dừng y hệt) hoặc xác nhận để mới được đi tiếp sang câu kế.
+        function showReviewState(i, token) {
+            if (token !== dubSessionToken) return;
+            dubStage = 'review';
+            setTally('standby', 'NGHE LẠI & XÁC NHẬN');
+            phaseLabel.textContent = 'Nghe lại bản ghi vừa rồi, rồi xác nhận hoặc ghi âm lại.';
+            phaseFill.className = 'dub-phase-fill';
+            phaseFill.style.width = '0%';
+            phaseCountdown.textContent = '';
+            replayBtn.style.display = 'inline-block';
+            replayBtn.disabled = false;
+            recordBtn.style.display = 'none';
+            reviewBox.style.display = 'block';
+            reviewAudio.src = dubRecordings[i].url;
+        }
+        // Dựng sẵn nội dung bên trong 1 dòng của danh sách "đã ghi âm" — dùng chung cho lúc
+        // vừa xác nhận, lúc khôi phục sau khi tải lại trang, và lúc ghi âm lại 1 câu cũ.
+        // Câu thoại được bọc để tra từ (giống mục Dịch câu/Câu chuyện), kèm bản dịch tiếng
+        // Việt nếu giảng viên đã nhập, và 1 nút để quay lại ghi âm lại đúng câu này.
+        function buildRecListItemHtml(i) {
+            const row = dubScript[i];
+            const rec = dubRecordings[i];
+            const wrapFn = (window.vocabTap && window.vocabTap.wrap) ? window.vocabTap.wrap : escapeHtmlDub;
+            return '<span class="dub-rec-time">' + formatTimeShort(row.time) + '</span>' +
+                '<span class="dub-rec-text" data-vocab-context="' + escapeHtmlDub(row.text) + '" data-vocab-source="Buổi lồng tiếng">' + wrapFn(row.text) + '</span>' +
+                (row.translation ? '<span class="dub-rec-translation">' + escapeHtmlDub(row.translation) + '</span>' : '') +
+                '<audio controls src="' + rec.url + '"></audio>' +
+                '<button type="button" class="dub-rec-redo-btn" data-redo-i="' + i + '" title="Ghi âm lại câu này">🔁</button>';
+        }
+
+        // Học viên bấm nút 🔁 trên 1 câu ĐÃ XÁC NHẬN trước đó (vì chưa hài lòng) -> quay lại
+        // đúng câu đó: phát lại thoại gốc rồi chờ ghi âm mới, y hệt luồng bình thường.
+        function goRedoLine(i) {
+            cancelPhaseTimers();
+            dubSessionToken++;
+            const token = dubSessionToken;
+            dubIndex = i;
+            reviewBox.style.display = 'none';
+            renderDubCurrent();
+            runPreviewPhase(i, token).then(() => showReadyToRecord(i, token));
+        }
+        recList.addEventListener('click', (e) => {
+            const wordEl = e.target.closest('.tappable-word');
+            if (wordEl) { if (window.vocabTap && window.vocabTap.handleTap) window.vocabTap.handleTap(wordEl); return; }
+            const redoBtn = e.target.closest('.dub-rec-redo-btn');
+            if (!redoBtn) return;
+            if (dubStage === 'recording') { alert('Đang ghi âm câu hiện tại — đợi ghi xong rồi mới quay lại sửa câu khác nhé.'); return; }
+            goRedoLine(Number(redoBtn.dataset.redoI));
+        });
+
+        retryBtn.addEventListener('click', () => {
+            if (dubStage !== 'review') return;
+            if (dubRecordings[dubIndex] && dubRecordings[dubIndex].url) {
+                URL.revokeObjectURL(dubRecordings[dubIndex].url);
+                dubRecordings[dubIndex] = null;
+            }
+            startTimedRecording(dubIndex, dubSessionToken); // bấm "ghi âm lại" CHÍNH LÀ hành động chủ động của học viên
+        });
+
+        // Bước 5: CHỈ khi xác nhận mới chốt bản ghi. Nếu đây là câu ĐÃ TỪNG xác nhận trước đó
+        // (học viên vừa bấm 🔁 quay lại sửa), cập nhật đúng dòng cũ trong danh sách thay vì
+        // thêm dòng mới, rồi tiếp tục ở câu TIẾP THEO CHƯA GHI (không nhảy lùi về ngay sau
+        // câu vừa sửa, vì các câu ở giữa có thể đã ghi xong từ trước rồi).
+        confirmBtn.addEventListener('click', () => {
+            if (dubStage !== 'review' || !dubRecordings[dubIndex]) return;
+            const i = dubIndex;
+
+            let li = recList.querySelector('.dub-rec-item[data-i="' + i + '"]');
+            if (!li) {
+                li = document.createElement('li');
+                li.className = 'dub-rec-item';
+                li.dataset.i = i;
+                recList.prepend(li);
+            }
+            li.innerHTML = buildRecListItemHtml(i);
+            saveDubRecordingProgress(i, dubRecordings[i].blob); // lưu tạm để giữ tiến trình nếu lỡ tải lại trang — không chờ xong mới đi tiếp
+
+            let next = -1;
+            for (let k = 0; k < dubScript.length; k++) { if (!dubRecordings[k]) { next = k; break; } }
+
+            const token = dubSessionToken;
+            if (next === -1) {
+                dubIndex = dubScript.length;
+                renderDubCurrent();
+                finishDubbingSession();
+            } else {
+                dubIndex = next;
+                renderDubCurrent();
+                runPreviewPhase(next, token).then(() => showReadyToRecord(next, token));
+            }
+        });
+
+        resumeRestartBtn.addEventListener('click', async () => {
+            if (!confirm('Xoá toàn bộ ' + dubResumeFromIndex + ' câu đã ghi âm dở dang và bắt đầu lại từ câu đầu tiên?')) return;
+            await clearSavedDubProgress();
+            dubResumeFromIndex = 0;
+            dubResumeBlobs = [];
+            resumeInfoEl.style.display = 'none';
+            startBtn.textContent = '🎬 Bắt đầu lồng tiếng';
+        });
+
+        startBtn.addEventListener('click', async () => {
+            if (startBtn.disabled) return; // chặn bấm dồn dập trong lúc chờ cấp quyền micro
+            startBtn.disabled = true;
+            try {
+                dubMediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            } catch (err) {
+                alert('Không lấy được quyền microphone: ' + err.message + '\nHãy cho phép truy cập micro rồi thử lại.');
+                startBtn.disabled = false;
+                return;
+            }
+            startBtn.disabled = false;
+            startScreen.style.display = 'none';
+            sessionEl.style.display = 'block';
+            dubRecordings = new Array(dubScript.length).fill(null);
+            recList.innerHTML = '';
+
+            // Khôi phục các câu đã ghi âm dở dang từ lần trước (nếu có) — dựng lại đúng danh
+            // sách bên phải + đặt dubIndex ngay sau câu cuối đã lưu, để tiếp tục đúng chỗ.
+            for (let i = 0; i < dubResumeBlobs.length; i++) {
+                const blob = dubResumeBlobs[i];
+                const url = URL.createObjectURL(blob);
+                dubRecordings[i] = { blob, url };
+                const li = document.createElement('li');
+                li.className = 'dub-rec-item';
+                li.dataset.i = i;
+                li.innerHTML = buildRecListItemHtml(i);
+                recList.prepend(li);
+            }
+            dubIndex = dubResumeFromIndex;
+
+            renderDubCurrent();
+            dubSessionToken++;
+            const token = dubSessionToken;
+            if (dubIndex < dubScript.length) {
+                runPreviewPhase(dubIndex, token).then(() => showReadyToRecord(dubIndex, token));
+            } else {
+                // Lần trước đã ghi đủ hết các câu (ví dụ tải lại trang ngay trước khi lưu/xuất
+                // file) — vào thẳng màn hình kết thúc thay vì chạy tiếp phần ghi âm không còn.
+                finishDubbingSession();
+            }
+        });
+
+        function finishDubbingSession() {
+            cancelPhaseTimers();
+            if (dubMediaStream) { dubMediaStream.getTracks().forEach(t => t.stop()); dubMediaStream = null; }
+            setTally('done', 'HOÀN THÀNH');
+            sessionEl.style.display = 'none';
+            finishCount.textContent = dubScript.length + '/' + dubScript.length + ' dòng';
+            previewOfferEl.style.display = 'block';
+            previewPlayingEl.style.display = 'none';
+            finishChoiceEl.style.display = 'none';
+            saveOptionsEl.style.display = 'none';
+            finishScreen.style.display = 'block';
+        }
+
+        // ---------------- XEM THỬ VIDEO ĐÃ LỒNG TIẾNG (trước khi lưu) ----------------
+        async function playDubPreview() {
+            try {
+                const AC = window.AudioContext || window.webkitAudioContext;
+                dubPreviewCtx = new AC();
+                dubPlayer.mute();
+                dubPlayer.seekTo(0, true);
+                dubPlayer.playVideo();
+                const startTime = dubPreviewCtx.currentTime;
+                for (let i = 0; i < dubRecordings.length; i++) {
+                    if (!dubRecordings[i]) continue;
+                    const arrBuf = await dubRecordings[i].blob.arrayBuffer();
+                    const audioBuf = await dubPreviewCtx.decodeAudioData(arrBuf);
+                    const src = dubPreviewCtx.createBufferSource();
+                    src.buffer = audioBuf;
+                    src.connect(dubPreviewCtx.destination);
+                    src.start(startTime + Math.max(0, dubScript[i].time));
+                }
+                const duration = dubPlayer.getDuration() || 10;
+                dubPreviewTimer = setTimeout(() => stopDubPreview(), (duration + 1) * 1000);
+            } catch (err) {
+                exportStatus.textContent = 'Không phát được video xem thử: ' + err.message;
+                stopDubPreview();
+            }
+        }
+        function stopDubPreview() {
+            if (dubPreviewTimer) { clearTimeout(dubPreviewTimer); dubPreviewTimer = null; }
+            if (dubPlayer) { try { dubPlayer.pauseVideo(); dubPlayer.unMute(); } catch (e) { /* bỏ qua */ } }
+            if (dubPreviewCtx) { try { dubPreviewCtx.close(); } catch (e) { /* bỏ qua */ } dubPreviewCtx = null; }
+            previewPlayingEl.style.display = 'none';
+            finishChoiceEl.style.display = 'block';
+        }
+        previewYesBtn.addEventListener('click', () => {
+            previewOfferEl.style.display = 'none';
+            previewPlayingEl.style.display = 'block';
+            playDubPreview();
+        });
+        previewSkipBtn.addEventListener('click', () => {
+            previewOfferEl.style.display = 'none';
+            finishChoiceEl.style.display = 'block';
+        });
+        previewStopBtn.addEventListener('click', stopDubPreview);
+
+        // ---------------- MÀN HÌNH KẾT THÚC: LƯU / KHÔNG LƯU ----------------
+        function releaseDubRecordings() {
+            dubRecordings.forEach(r => { if (r && r.url) URL.revokeObjectURL(r.url); });
+            dubRecordings = [];
+            recList.innerHTML = '';
+            clearSavedDubProgress();
+            dubResumeFromIndex = 0;
+            dubResumeBlobs = [];
+        }
+
+        // Dùng chung cho cả 3 trường hợp kết thúc buổi lồng tiếng: bấm "Xoá" (không lưu),
+        // xuất xong file âm thanh, hoặc xuất xong video hoàn chỉnh — tất cả đều quay lại
+        // đúng màn hình ban đầu "Bắt đầu lồng tiếng" thay vì kẹt lại ở màn hình kết thúc.
+        function returnToDubStartScreen() {
+            releaseDubRecordings();
+            finishScreen.style.display = 'none';
+            saveOptionsEl.style.display = 'none';
+            if (dubPlayer) { try { dubPlayer.seekTo(0, true); dubPlayer.pauseVideo(); } catch (e) { /* bỏ qua */ } }
+            if (currentDubStory) openDubStory(currentDubStory);
+        }
+
+        choiceSaveBtn.addEventListener('click', () => {
+            saveOptionsEl.style.display = 'block';
+        });
+
+        choiceDiscardBtn.addEventListener('click', () => {
+            if (!confirm('Xoá toàn bộ bản ghi âm vừa lồng tiếng và không lưu về máy?')) return;
+            returnToDubStartScreen();
+        });
+
+        // ---------------- XUẤT FILE ----------------
+        function writeStringDub(view, offset, str) { for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i)); }
+        function floatTo16BitPCMDub(view, offset, input) {
+            for (let i = 0; i < input.length; i++, offset += 2) {
+                const s = Math.max(-1, Math.min(1, input[i]));
+                view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+            }
+        }
+        function interleaveDub(a, b) {
+            const len = a.length + b.length;
+            const out = new Float32Array(len);
+            let idx = 0, i = 0;
+            while (idx < len) { out[idx++] = a[i]; out[idx++] = b[i]; i++; }
+            return out;
+        }
+        function encodeWAVDub(audioBuffer) {
+            const numChannels = audioBuffer.numberOfChannels;
+            const sampleRate = audioBuffer.sampleRate;
+            const samples = numChannels === 2
+                ? interleaveDub(audioBuffer.getChannelData(0), audioBuffer.getChannelData(1))
+                : audioBuffer.getChannelData(0);
+            const bytesPerSample = 2;
+            const blockAlign = numChannels * bytesPerSample;
+            const buffer = new ArrayBuffer(44 + samples.length * bytesPerSample);
+            const view = new DataView(buffer);
+            writeStringDub(view, 0, 'RIFF');
+            view.setUint32(4, 36 + samples.length * bytesPerSample, true);
+            writeStringDub(view, 8, 'WAVE');
+            writeStringDub(view, 12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, 1, true);
+            view.setUint16(22, numChannels, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * blockAlign, true);
+            view.setUint16(32, blockAlign, true);
+            view.setUint16(34, 16, true);
+            writeStringDub(view, 36, 'data');
+            view.setUint32(40, samples.length * bytesPerSample, true);
+            floatTo16BitPCMDub(view, 44, samples);
+            return new Blob([view], { type: 'audio/wav' });
+        }
+        function downloadDubBlob(blob, filename) {
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = filename;
+            document.body.appendChild(a); a.click(); a.remove();
+        }
+
+        // Dựng 1 file WAV duy nhất chứa toàn bộ giọng lồng tiếng, mỗi đoạn đặt đúng vị trí thời
+        // gian khớp với video — dùng chung cho cả nút "tải audio" lẫn nút "ghép video hoàn chỉnh".
+        async function buildDubbedAudioWav() {
+            const AC = window.AudioContext || window.webkitAudioContext;
+            const decodeCtx = new AC();
+            const times = dubScript.map(r => r.time);
+            const duration = Math.max(dubPlayer.getDuration() || 0, ...times, 0);
+            const sampleRate = 44100;
+            const offline = new OfflineAudioContext(2, Math.ceil((duration + 2) * sampleRate), sampleRate);
+            for (let i = 0; i < dubRecordings.length; i++) {
+                if (!dubRecordings[i]) continue;
+                const arrBuf = await dubRecordings[i].blob.arrayBuffer();
+                const audioBuf = await decodeCtx.decodeAudioData(arrBuf);
+                const src = offline.createBufferSource();
+                src.buffer = audioBuf;
+                src.connect(offline.destination);
+                src.start(Math.max(0, dubScript[i].time));
+            }
+            const rendered = await offline.startRendering();
+            return encodeWAVDub(rendered);
+        }
+
+        exportAudioBtn.addEventListener('click', async () => {
+            exportStatus.textContent = 'Đang ghép âm thanh…';
+            try {
+                const wav = await buildDubbedAudioWav();
+                downloadDubBlob(wav, 'long-tieng.wav');
+                exportStatus.textContent = 'Đã tải file âm thanh lồng tiếng. Đang quay về màn hình bắt đầu…';
+                setTimeout(returnToDubStartScreen, 1800);
+            } catch (err) {
+                exportStatus.textContent = 'Lỗi khi ghép âm thanh: ' + err.message;
+            }
+        });
+
+        // ---------------- GHÉP THÀNH 1 FILE VIDEO HOÀN CHỈNH (ffmpeg.wasm) ----------------
+        // Chỉ khả thi vì video giờ là file thật do giảng viên tải lên (không còn là YouTube),
+        // nên có thể lấy đúng byte gốc để xử lý ngay trong trình duyệt, không cần server riêng.
+        // Dùng bản ffmpeg.wasm ĐƠN LUỒNG (không cần header COOP/COEP đặc biệt từ server) —
+        // vẫn đủ nhanh vì chỉ thay track âm thanh (giữ nguyên hình ảnh gốc bằng "-c:v copy",
+        // không encode lại video nên không tốn nhiều CPU).
+        let dubFfmpegInstance = null;
+        let dubFfmpegLoadPromise = null;
+
+        // Tự tải rồi biến thành blob: URL, NHƯNG có báo tiến độ % thật (khác hàm toBlobURL có
+        // sẵn của @ffmpeg/util — hàm đó tải xong mới trả về 1 lần, không cho biết đang tải tới
+        // đâu). Nhờ vậy nếu bị đứng, ta biết chính xác là đứng ở đâu: 0% ngay từ đầu (mạng/CDN
+        // chặn hẳn) hay đang tăng dần rồi kẹt giữa chừng (mạng quá chậm/rớt giữa chừng).
+        async function fetchToBlobURLWithProgress(url, mimeType, onProgress) {
+            const resp = await fetch(url);
+            if (!resp.ok) throw new Error('Không tải được ' + url + ' (mã lỗi ' + resp.status + ')');
+            const total = Number(resp.headers.get('Content-Length')) || 0;
+            if (!resp.body || !total) {
+                const blob = await resp.blob();
+                return URL.createObjectURL(new Blob([blob], { type: mimeType }));
+            }
+            const reader = resp.body.getReader();
+            const chunks = [];
+            let received = 0;
+            for (;;) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                chunks.push(value);
+                received += value.length;
+                onProgress(received, total);
+            }
+            return URL.createObjectURL(new Blob(chunks, { type: mimeType }));
+        }
+
+        async function fetchText(url) {
+            const resp = await fetch(url);
+            if (!resp.ok) throw new Error('Không tải được ' + url + ' (mã lỗi ' + resp.status + ')');
+            return resp.text();
+        }
+        function blobUrlFromText(text, mimeType) {
+            return URL.createObjectURL(new Blob([text], { type: mimeType }));
+        }
+
+        function loadDubFfmpeg(onStatus) {
+            if (dubFfmpegInstance) return Promise.resolve(dubFfmpegInstance);
+            if (dubFfmpegLoadPromise) return dubFfmpegLoadPromise;
+            dubFfmpegLoadPromise = (async () => {
+                let timeoutId;
+                try {
+                    onStatus('Đang tải công cụ ghép video (bước 1/4: worker.js)…');
+                    const ffmpegBase = 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/esm';
+                    const { FFmpeg } = await import(ffmpegBase + '/index.js');
+                    const ffmpeg = new FFmpeg();
+
+                    // classWorkerURL: worker riêng của thư viện @ffmpeg/ffmpeg (khác ffmpeg-core).
+                    // Trình duyệt chặn "new Worker(url)" nếu url khác origin, nên phải tải về
+                    // rồi biến thành blob: URL (cùng origin) trước khi đưa cho FFmpeg dùng.
+                    //
+                    // QUAN TRỌNG (nguyên nhân treo ở bước 4): worker.js tự "import" thêm 2 file
+                    // nhỏ CÙNG THƯ MỤC là "./const.js" và "./errors.js". Nếu chỉ biến mỗi
+                    // worker.js thành blob mà bỏ qua 2 file này, khi worker chạy sẽ không tìm
+                    // thấy 2 đường dẫn tương đối đó nữa (blob: không có "thư mục" thật để tính
+                    // đường dẫn tương đối) — worker lỗi ngầm ngay từ đầu, chưa kịp lắng nghe tin
+                    // nhắn nào, khiến ffmpeg.load() treo vô thời hạn không báo lỗi gì. Cách sửa:
+                    // tải riêng const.js/errors.js thành blob, rồi thay 2 đường dẫn tương đối
+                    // trong nội dung worker.js bằng đúng 2 blob URL đó trước khi biến worker.js
+                    // thành blob.
+                    const [constJsText, errorsJsText, workerJsText] = await Promise.all([
+                        fetchText(ffmpegBase + '/const.js'),
+                        fetchText(ffmpegBase + '/errors.js'),
+                        fetchText(ffmpegBase + '/worker.js')
+                    ]);
+                    const constBlobUrl = blobUrlFromText(constJsText, 'text/javascript');
+                    const errorsBlobUrl = blobUrlFromText(errorsJsText, 'text/javascript');
+                    const patchedWorkerText = workerJsText
+                        .replace('"./const.js"', JSON.stringify(constBlobUrl))
+                        .replace('"./errors.js"', JSON.stringify(errorsBlobUrl));
+                    const workerBlobUrl = blobUrlFromText(patchedWorkerText, 'text/javascript');
+
+                    // QUAN TRỌNG: phải dùng bản "esm" của ffmpeg-core, KHÔNG phải "umd" — vì gói
+                    // @ffmpeg/ffmpeg ở trên đang được nạp theo kiểu esm (import()). Lệch định dạng
+                    // (nạp esm nhưng core lại là umd) từng khiến ffmpeg.load() treo vô thời hạn.
+                    const coreBase = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm';
+                    onStatus('Đang tải công cụ ghép video (bước 2/4: ffmpeg-core.js)…');
+                    const coreJsBlobUrl = await fetchToBlobURLWithProgress(coreBase + '/ffmpeg-core.js', 'text/javascript', () => {});
+
+                    onStatus('Đang tải công cụ ghép video (bước 3/4: ffmpeg-core.wasm, ~30MB — phần nặng nhất)… 0%');
+                    const wasmBlobUrl = await fetchToBlobURLWithProgress(coreBase + '/ffmpeg-core.wasm', 'application/wasm', (received, total) => {
+                        const pct = Math.round(received / total * 100);
+                        onStatus('Đang tải công cụ ghép video (bước 3/4: ffmpeg-core.wasm)… ' + pct + '% (' + (received / 1024 / 1024).toFixed(1) + 'MB / ' + (total / 1024 / 1024).toFixed(1) + 'MB)');
+                    });
+
+                    onStatus('Đang tải công cụ ghép video (bước 4/4: khởi tạo FFmpeg)…');
+                    const loadPromise = ffmpeg.load({
+                        classWorkerURL: workerBlobUrl,
+                        coreURL: coreJsBlobUrl,
+                        wasmURL: wasmBlobUrl
+                    });
+                    // An toàn: nếu quá 2 phút mà bước khởi tạo cuối vẫn chưa xong (worker con lỗi
+                    // âm thầm bên trong), báo lỗi rõ ràng thay vì để màn hình đứng im mãi mãi.
+                    const timeoutPromise = new Promise((_, reject) => {
+                        timeoutId = setTimeout(() => reject(new Error('Khởi tạo FFmpeg quá lâu (hơn 2 phút) sau khi đã tải xong file — có thể trình duyệt này không tương thích. Thử lại bằng Chrome/Edge bản mới.')), 120000);
+                    });
+                    await Promise.race([loadPromise, timeoutPromise]);
+                    dubFfmpegInstance = ffmpeg;
+                    return ffmpeg;
+                } finally {
+                    clearTimeout(timeoutId);
+                }
+            })();
+            dubFfmpegLoadPromise.catch(() => { dubFfmpegLoadPromise = null; }); // lỗi/treo thì lần bấm sau được thử tải lại từ đầu, không kẹt mãi
+            return dubFfmpegLoadPromise;
+        }
+
+        exportVideoBtn.addEventListener('click', async () => {
+            exportVideoBtn.disabled = true;
+            try {
+                const ffmpeg = await loadDubFfmpeg((msg) => { exportStatus.textContent = msg; });
+
+                exportStatus.textContent = 'Đang chuẩn bị âm thanh lồng tiếng…';
+                const wavBlob = await buildDubbedAudioWav();
+
+                exportStatus.textContent = 'Đang tải file video gốc…';
+                const videoResp = await fetch(dubVideoUrl);
+                if (!videoResp.ok) throw new Error('Không tải được video gốc (mã lỗi ' + videoResp.status + ')');
+                const videoBuf = new Uint8Array(await videoResp.arrayBuffer());
+                const wavBuf = new Uint8Array(await wavBlob.arrayBuffer());
+
+                await ffmpeg.writeFile('input.mp4', videoBuf);
+                await ffmpeg.writeFile('dub.wav', wavBuf);
+
+                exportStatus.textContent = 'Đang ghép video — vui lòng chờ, đừng đóng tab này…';
+                await ffmpeg.exec(['-i', 'input.mp4', '-i', 'dub.wav', '-map', '0:v:0', '-map', '1:a:0', '-c:v', 'copy', '-c:a', 'aac', '-shortest', 'output.mp4']);
+
+                const outData = await ffmpeg.readFile('output.mp4');
+                downloadDubBlob(new Blob([outData.buffer], { type: 'video/mp4' }), 'long-tieng-video.mp4');
+                exportStatus.textContent = 'Đã tải video hoàn chỉnh — hình gốc + giọng lồng tiếng. Đang quay về màn hình bắt đầu…';
+
+                try { await ffmpeg.deleteFile('input.mp4'); await ffmpeg.deleteFile('dub.wav'); await ffmpeg.deleteFile('output.mp4'); }
+                catch (e) { /* bỏ qua, chỉ là dọn bộ nhớ ảo tạm */ }
+                setTimeout(returnToDubStartScreen, 1800);
+            } catch (err) {
+                exportStatus.textContent = 'Không ghép được video: ' + err.message + '. Nếu lỗi liên quan tới tải file video gốc, có thể do bucket B2 chưa bật CORS — liên hệ giảng viên để kiểm tra.';
+            } finally {
+                exportVideoBtn.disabled = false;
+            }
+        });
+
+    })();
+    // ===== KẾT THÚC LỒNG TIẾNG =====
+
     // ===================================================================
     // ===== BẮT ĐẦU: "CHO BÉ" — 50 CHỦ ĐỀ (flashcard / nối từ / câu chuyện) =====
     // ===================================================================
@@ -6989,5 +8249,94 @@ function toggleCompletion(symbolElement) {
         renderG9Page(0);
     })();
     // ===== KẾT THÚC KHỐI LỚP 9 =====
+
+    // ===== TAB "THI THPT" — chọn khối lớp (Lớp 10/11/12) =====
+    (function() {
+        const gradeTabs = Array.from(document.querySelectorAll('.thpt-grade-tab-btn'));
+        if (!gradeTabs.length) return;
+
+        const gradePanels = {
+            'grade-panel-10': document.getElementById('grade-panel-10'),
+            'grade-panel-11': document.getElementById('grade-panel-11'),
+            'grade-panel-12': document.getElementById('grade-panel-12'),
+        };
+
+        gradeTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const target = tab.dataset.thptGradeTarget;
+                gradeTabs.forEach(t => t.classList.toggle('active', t === tab));
+                Object.keys(gradePanels).forEach(key => {
+                    const panel = gradePanels[key];
+                    if (panel) panel.style.display = (key === target) ? '' : 'none';
+                });
+            });
+        });
+    })();
+    // ===== KẾT THÚC CHỌN KHỐI LỚP (THPT) =====
+
+    // ===== KHỐI LỚP 10 / 11 / 12 — chuyển đổi Tổng quan ⇄ Phiên âm ⇄ Ngữ pháp ⇄ Từ vựng ⇄ Lịch 35 tuần =====
+    // Dùng chung 1 hàm khởi tạo cho cả 3 khối lớp (g10 / g11 / g12) vì cấu trúc trang giống hệt nhau.
+    function initThptGradePager(prefix) {
+        const track = document.getElementById(prefix + '-track');
+        if (!track) return;
+
+        const prevBtn = document.getElementById(prefix + '-prev-btn');
+        const nextBtn = document.getElementById(prefix + '-next-btn');
+        const tabs = Array.from(document.querySelectorAll('.' + prefix + '-switcher-tab'));
+        const dots = Array.from(document.querySelectorAll('#' + prefix + '-dots .' + prefix + '-dot'));
+        const pageCount = track.querySelectorAll('.roadmap-page').length;
+        let currentPage = 0;
+
+        function renderPage(index) {
+            currentPage = Math.max(0, Math.min(index, pageCount - 1));
+            track.style.transform = `translateX(-${currentPage * 100}%)`;
+
+            tabs.forEach(tab => {
+                tab.classList.toggle('active', Number(tab.dataset[prefix + 'Page']) === currentPage);
+            });
+            dots.forEach(dot => {
+                dot.classList.toggle('active', Number(dot.dataset.dot) === currentPage);
+            });
+            if (prevBtn) prevBtn.disabled = currentPage === 0;
+            if (nextBtn) nextBtn.disabled = currentPage === pageCount - 1;
+        }
+
+        if (prevBtn) prevBtn.addEventListener('click', () => renderPage(currentPage - 1));
+        if (nextBtn) nextBtn.addEventListener('click', () => renderPage(currentPage + 1));
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => renderPage(Number(tab.dataset[prefix + 'Page'])));
+        });
+        dots.forEach(dot => {
+            dot.addEventListener('click', () => renderPage(Number(dot.dataset.dot)));
+        });
+
+        // Vuốt (swipe) trái/phải trên di động
+        let touchStartX = null;
+        let touchStartY = null;
+        const pagerEl = document.getElementById(prefix + '-pager');
+        if (pagerEl) {
+            pagerEl.addEventListener('touchstart', (e) => {
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+            }, { passive: true });
+
+            pagerEl.addEventListener('touchend', (e) => {
+                if (touchStartX === null) return;
+                const deltaX = e.changedTouches[0].clientX - touchStartX;
+                const deltaY = e.changedTouches[0].clientY - touchStartY;
+                touchStartX = null;
+                touchStartY = null;
+                if (Math.abs(deltaX) > 45 && Math.abs(deltaX) > Math.abs(deltaY)) {
+                    if (deltaX < 0) renderPage(currentPage + 1);
+                    else renderPage(currentPage - 1);
+                }
+            }, { passive: true });
+        }
+
+        renderPage(0);
+    }
+
+    ['g10', 'g11', 'g12'].forEach(initThptGradePager);
+    // ===== KẾT THÚC KHỐI LỚP 10 / 11 / 12 =====
 
 });

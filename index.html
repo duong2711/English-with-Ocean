@@ -536,8 +536,8 @@
         <h2>Kiểm tra Đánh giá</h2>
         <div class="folder-grid">
             <div id="vocab-test-folder" class="folder-card">📁 từ vựng</div>
-            <div class="folder-card">📁 đề kiểm tra trên lớp</div>
-            <div class="folder-card">📁 đề minh họa chuyển cấp THCS/THPT</div>
+            <div class="folder-card">📁 đề thi lớp 6->12</div>
+            <div class="folder-card">📁 đề thi chuyển cấp THCS/THPT</div>
             <div class="folder-card">📁 đề minh họa IELTS</div>
         </div>
     </div>
@@ -869,6 +869,7 @@
     <h2>Giải trí</h2>
     <div class="folder-grid" id="entertainment-folder-grid">
         <div class="folder-card" id="loto-folder-card">📁 Lô tô (2 người chơi)</div>
+        <div class="folder-card" id="dub-folder-card">📁 Lồng tiếng</div>
     </div>
 
     <!-- ===== PANEL TRÒ CHƠI LÔ TÔ ===== -->
@@ -982,6 +983,153 @@
             <button class="loto-btn-secondary" id="loto-reset-btn" style="display:none; margin-top:14px; align-self:center;">🔄 Đổi người chơi / Reset toàn bộ</button>
         </div>
     </div>
+
+<!-- ===== PANEL LỒNG TIẾNG ===== -->
+<div id="dub-panel">
+    <div class="grammar-panel-header">
+        <button class="grammar-back-btn" id="dub-back-btn">← Quay lại</button>
+        <h3>🎙️ Lồng Tiếng</h3>
+    </div>
+
+    <!-- Danh sách các câu chuyện lồng tiếng — tải động từ bảng "dubbing_content" -->
+    <div id="dub-story-list-view">
+        <div class="grammar-admin-bar" id="dub-story-admin-bar" style="display:none;">
+            <button type="button" id="dub-add-story-btn" class="grammar-admin-btn grammar-admin-btn-primary">➕ Thêm câu chuyện mới</button>
+        </div>
+        <div class="folder-grid" id="dub-story-grid">
+            <p class="grammar-loading-msg">Đang tải danh sách câu chuyện...</p>
+        </div>
+    </div>
+
+    <!-- Chi tiết 1 câu chuyện — dùng chung cho mọi câu chuyện, dữ liệu đổ vào động khi mở -->
+    <div id="dub-detail-view">
+    <div class="grammar-panel-header">
+        <button class="grammar-back-btn" id="dub-detail-back-btn">← Quay lại danh sách</button>
+        <h3 class="grammar-panel-header-title">📖 <span id="dub-detail-title"></span></h3>
+        <button type="button" id="dub-delete-story-btn" class="grammar-admin-btn grammar-admin-btn-danger" style="display:none;">🗑️ Xoá câu chuyện này</button>
+    </div>
+
+    <!-- Khung quản trị: CHỈ hiện với tài khoản giangvien@gmail.com -->
+    <div id="dub-admin-bar" class="dub-admin-bar" style="display:none;">
+        <h4 class="dub-admin-title">✏️ Cập nhật nội dung (giảng viên)</h4>
+
+        <div class="dub-field">
+            <label class="news-quiz-edit-label" for="dub-admin-video-input">Link video (Backblaze B2)</label>
+            <p class="news-quiz-edit-hint">Tải video lên trực tiếp qua trang B2 của bạn (backblaze.com), đặt bucket ở chế độ Public, rồi dán link công khai của file vào đây. Trang web KHÔNG tự tải/upload video hộ bạn — làm vậy để không phải lưu mật khẩu B2 trong code, an toàn hơn nhiều.</p>
+            <div class="dub-admin-inline-row">
+                <input type="text" id="dub-admin-video-input" class="news-edit-input" placeholder="https://f00x.backblazeb2.com/file/ten-bucket/video.mp4">
+                <button class="loto-btn-secondary" id="dub-admin-video-save-btn">Lưu link</button>
+            </div>
+            <div class="dub-admin-status" id="dub-admin-yt-status"></div>
+        </div>
+
+        <div class="dub-field">
+            <label class="news-quiz-edit-label" for="dub-admin-import-input">Nhập nhanh từ transcript (tuỳ chọn)</label>
+            <p class="news-quiz-edit-hint">Dán transcript có mốc thời gian (ví dụ xuất từ tactiq.io hoặc YouTube), mỗi dòng dạng "00:00:04.656 Câu thoại...". Nhập sẽ THAY THẾ toàn bộ danh sách bên dưới, rồi bạn có thể xoá/sửa lại từng dòng trước khi lưu.</p>
+            <textarea id="dub-admin-import-input" class="news-edit-input dub-admin-import-textarea" placeholder="00:00:00.328 The Bear and the Bee&#10;00:00:04.656 (A version of the tale by TheFableCottage.com)&#10;00:00:10.386 Everybody knows that bears love honey."></textarea>
+            <button class="loto-btn-secondary" id="dub-admin-import-btn" style="margin-top:8px;">📥 Nhập &amp; thay thế danh sách</button>
+            <div class="dub-admin-status" id="dub-admin-import-status"></div>
+        </div>
+
+        <div class="dub-field">
+            <label class="news-quiz-edit-label">Kịch bản thoại</label>
+            <p class="news-quiz-edit-hint">Mỗi dòng gồm thời điểm bắt đầu (mm:ss hoặc số giây) và câu thoại. Khi đang xem thử video bên dưới, bấm "Lấy giờ hiện tại" để tự điền đúng thời điểm. Mọi thay đổi tự động lưu.</p>
+            <div id="dub-admin-rows"></div>
+            <button class="loto-btn-secondary" id="dub-admin-add-row-btn">+ Thêm dòng thoại</button>
+            <div class="dub-admin-status" id="dub-admin-script-status"></div>
+        </div>
+    </div>
+
+    <div class="grammar-video-wrapper dub-video-wrapper"><video id="dub-player" playsinline controls></video></div>
+
+    <div id="dub-left-col">
+    <div id="dub-empty-msg" class="dub-empty-msg" style="display:none;">Giảng viên chưa cập nhật nội dung lồng tiếng cho phần này.</div>
+
+    <div id="dub-start-screen" class="dub-start-screen" style="display:none;">
+        <p>Với mỗi câu thoại: video tự phát đúng đoạn thoại gốc để bạn nghe & bắt chước, rồi dừng lại chờ — bạn tự bấm "Bắt đầu ghi âm" khi sẵn sàng (hệ thống không tự ghi). Ghi âm sẽ tự canh đúng thời lượng rồi tự dừng. Nghe lại bản ghi, ghi âm lại nếu chưa ưng, rồi bấm "Xác nhận" mới chuyển sang câu kế tiếp.</p>
+        <div id="dub-resume-info" class="dub-resume-info" style="display:none;">
+            <p>📌 Bạn có <strong id="dub-resume-count">0</strong> câu đã ghi âm dở dang từ lần trước (có thể do tải lại trang giữa chừng) — bấm "Tiếp tục" bên dưới để ghi tiếp đúng từ chỗ đó, hoặc xoá đi để ghi lại từ đầu.</p>
+            <button class="loto-btn-secondary" id="dub-resume-restart-btn">🗑️ Xoá bản ghi dở dang, ghi lại từ đầu</button>
+        </div>
+        <button class="loto-action-btn" id="dub-start-btn">🎬 Bắt đầu lồng tiếng</button>
+    </div>
+
+    <div id="dub-session" class="dub-session" style="display:none;">
+        <div class="dub-tally-row">
+            <span class="dub-tally-dot" id="dub-tally-dot"></span>
+            <span id="dub-tally-text">ĐANG PHÁT</span>
+        </div>
+        <div class="dub-progress-track"><div class="dub-progress-fill" id="dub-progress-fill"></div></div>
+        <div class="dub-cue-line">
+            <div class="dub-cue-idx" id="dub-idx">DÒNG 0/0</div>
+            <div class="dub-cue-text" id="dub-current-text">—</div>
+            <div class="dub-cue-translation" id="dub-current-translation" style="display:none;"></div>
+        </div>
+
+        <div class="dub-phase-box">
+            <div class="dub-phase-label" id="dub-phase-label">🔈 Đang phát thoại gốc…</div>
+            <div class="dub-phase-track"><div class="dub-phase-fill" id="dub-phase-fill"></div></div>
+            <div class="dub-phase-countdown" id="dub-phase-countdown">0.0s</div>
+            <button class="dub-replay-btn" id="dub-replay-btn" style="display:none;">🔁 Nghe lại thoại gốc</button>
+        </div>
+
+        <button class="dub-record-btn idle" id="dub-record-btn" style="display:none;"><span class="dub-record-core"></span><span id="dub-record-label">🎙️ Bắt đầu ghi âm</span></button>
+        <p class="dub-auto-hint" id="dub-recording-hint" style="display:none;">Đang ghi âm — thời lượng được hệ thống tự canh sẵn theo đúng mốc thời gian, bạn không cần (và không thể) tự bấm dừng.</p>
+
+        <div id="dub-review-box" class="dub-review-box" style="display:none;">
+            <p class="dub-review-label">Nghe lại bản ghi của bạn:</p>
+            <audio id="dub-review-audio" controls></audio>
+            <div class="dub-review-actions">
+                <button class="loto-btn-secondary" id="dub-retry-btn">🔁 Ghi âm lại</button>
+                <button class="loto-action-btn" id="dub-confirm-btn">✅ Xác nhận, tiếp tục</button>
+            </div>
+        </div>
+
+        <ul class="dub-rec-list" id="dub-rec-list"></ul>
+    </div>
+
+    <div id="dub-finish-screen" class="dub-finish-screen" style="display:none;">
+        <h4>Đã lồng tiếng xong <span id="dub-finish-count"></span></h4>
+
+        <div id="dub-preview-offer" class="dub-preview-offer">
+            <p>Bạn có muốn xem thử video đã lồng tiếng không? (Video sẽ tắt tiếng gốc và phát cùng lúc với giọng lồng tiếng của bạn.)</p>
+            <div class="dub-finish-choice">
+                <button class="loto-action-btn" id="dub-preview-yes-btn">▶️ Xem thử video lồng tiếng</button>
+                <button class="loto-btn-secondary" id="dub-preview-skip-btn">Bỏ qua, tới phần lưu</button>
+            </div>
+        </div>
+
+        <div id="dub-preview-playing" class="dub-preview-playing" style="display:none;">
+            <p>🔈 Đang phát video (đã tắt tiếng gốc) cùng giọng lồng tiếng của bạn…</p>
+            <button class="loto-btn-secondary" id="dub-preview-stop-btn">⏹ Dừng xem thử</button>
+        </div>
+
+        <div id="dub-finish-choice" class="dub-finish-choice" style="display:none;">
+            <button class="loto-action-btn" id="dub-choice-save-btn">💾 Lưu về máy</button>
+            <button class="loto-btn-secondary" id="dub-choice-discard-btn">🚫 Không lưu về máy</button>
+        </div>
+
+        <div id="dub-save-options" class="dub-save-options" style="display:none;">
+            <p class="dub-finish-note">YouTube không cho phép tải xuống dữ liệu hình ảnh gốc của video, nên không thể tự động ghép trực tiếp thành 1 file video theo cách thông thường. Chọn 1 trong 2 cách bên dưới:</p>
+
+            <div class="dub-export-option">
+                <h5>Tải bản ghi âm lồng tiếng <span class="dub-tag dub-tag-stable">Ổn định</span></h5>
+                <p>File âm thanh (.wav) chứa giọng lồng tiếng của bạn, đã canh đúng thời điểm khớp với video. Mở video (tự tắt tiếng gốc) và phát file này song song là khớp cảnh.</p>
+                <button class="loto-action-btn" id="dub-export-audio-btn">Tải file âm thanh</button>
+            </div>
+
+            <div class="dub-export-option">
+                <h5>Tải video hoàn chỉnh <span class="dub-tag dub-tag-stable">Ổn định</span></h5>
+                <p>Ghép trực tiếp video gốc (tắt tiếng gốc) với giọng lồng tiếng của bạn thành 1 file .mp4 hoàn chỉnh, xử lý ngay trong trình duyệt. Video càng dài thì thời gian ghép càng lâu — vui lòng không đóng tab trong lúc chờ.</p>
+                <button class="loto-btn-secondary" id="dub-export-video-btn">Ghép & tải video</button>
+            </div>
+        </div>
+
+        <div class="dub-export-status" id="dub-export-status"></div>
+    </div>
+    </div>
+    </div><!-- end #dub-detail-view -->
+</div>
 </div>
 
 <div id="tab-lich-hoc" class="main-tab-content">
@@ -2184,11 +2332,1269 @@
 
     <div id="tab-thi-thpt" class="main-tab-content">
         <h2>Thi THPT</h2>
-        <div class="wip-panel">
-            <span class="wip-icon">🚧</span>
-            <h3>Nội dung đang được xây dựng</h3>
-            <p>Lộ trình luyện thi THPT Quốc gia sẽ sớm được cập nhật tại đây. Cảm ơn bạn đã kiên nhẫn chờ đợi!</p>
+
+        <!-- ----- Chọn khối lớp ----- -->
+        <div class="roadmap-switcher-tabs grade-tabs" id="thpt-grade-tabs-nav">
+            <button type="button" class="thpt-grade-tab-btn active" data-thpt-grade-target="grade-panel-10">Lớp 10</button>
+            <button type="button" class="thpt-grade-tab-btn" data-thpt-grade-target="grade-panel-11">Lớp 11</button>
+            <button type="button" class="thpt-grade-tab-btn" data-thpt-grade-target="grade-panel-12">Lớp 12</button>
         </div>
+
+        <!-- ===== KHỐI LỚP 10 ===== -->
+        <div class="grade-panel" id="grade-panel-10">
+
+            <!-- ----- Thanh chuyển đổi giữa Tổng quan / Phiên âm / Ngữ pháp / Từ vựng / Lịch trình ----- -->
+            <div class="roadmap-switcher">
+                <button type="button" class="roadmap-nav-btn" id="g10-prev-btn" aria-label="Trang trước">‹</button>
+                <div class="roadmap-switcher-tabs">
+                    <button type="button" class="g10-switcher-tab active" data-g10-page="0">📋 Tổng quan</button>
+                    <button type="button" class="g10-switcher-tab" data-g10-page="1">🔤 Phiên âm</button>
+                    <button type="button" class="g10-switcher-tab" data-g10-page="2">📐 Ngữ pháp</button>
+                    <button type="button" class="g10-switcher-tab" data-g10-page="3">📚 Từ vựng</button>
+                    <button type="button" class="g10-switcher-tab" data-g10-page="4">🗓️ Lịch 35 tuần</button>
+                </div>
+                <button type="button" class="roadmap-nav-btn" id="g10-next-btn" aria-label="Trang sau">›</button>
+            </div>
+
+            <div class="roadmap-pager" id="g10-pager">
+            <div class="roadmap-track" id="g10-track">
+
+            <!-- ===== TRANG 1: TỔNG QUAN ===== -->
+            <div class="roadmap-page" data-page="0">
+            <div class="roadmap-wrap">
+
+                <div class="roadmap-intro roadmap-intro-g10-overview">
+                    <span class="roadmap-intro-badge">📁 Lộ trình dạy học Lớp 10</span>
+                    <h3>Tiếng Anh 10 — Bộ sách Global Success</h3>
+                    <p>Lớp 10 là năm đầu cấp THPT: độ khó tăng dần so với THCS, với nhiều chủ đề học thuật và câu phức hơn. Chương trình gồm 10 unit chia 2 học kỳ (Học kỳ 1: Unit 1–5; Học kỳ 2: Unit 6–10), không nhóm theo chủ điểm như bậc THCS, kết thúc mỗi 2–3 unit bằng một bài Review. Đây là nền tảng ngữ pháp – từ vựng cho lớp 11, 12 và kỳ thi tốt nghiệp THPT sau này.</p>
+                    <div class="roadmap-stats">
+                        <div class="roadmap-stat"><strong>10</strong><span>units</span></div>
+                        <div class="roadmap-stat"><strong>2</strong><span>học kỳ</span></div>
+                        <div class="roadmap-stat"><strong>4</strong><span>bài Review</span></div>
+                        <div class="roadmap-stat"><strong>35</strong><span>tuần</span></div>
+                    </div>
+                </div>
+
+                <p class="gstage-hint">👇 Cấu trúc năm học — 2 học kỳ</p>
+
+                <div class="gday-list">
+                    <div class="gday-row"><span class="gday-num">HK1</span><span class="gday-text"><strong>Unit 1</strong> Family Life, <strong>Unit 2</strong> Humans and the Environment, <strong>Unit 3</strong> Music → Review 1. <strong>Unit 4</strong> For a Better Community, <strong>Unit 5</strong> Inventions → Review 2. <em>(≈18 tuần)</em></span></div>
+                    <div class="gday-row"><span class="gday-num">HK2</span><span class="gday-text"><strong>Unit 6</strong> Gender Equality, <strong>Unit 7</strong> Viet Nam and International Organisations, <strong>Unit 8</strong> New Ways to Learn → Review 3. <strong>Unit 9</strong> Protecting the Environment, <strong>Unit 10</strong> Ecotourism → Review 4. <em>(≈17 tuần)</em></span></div>
+                </div>
+
+                <div class="grade-note-box">
+                    <h4>📌 Lưu ý khi triển khai</h4>
+                    <ul>
+                        <li>3 hợp phần Phiên âm – Ngữ pháp – Từ vựng nên dạy tích hợp trong cùng một unit, theo đúng tiến trình sách Global Success (Getting Started → Language → Reading → Speaking → Listening → Writing → Communication and Culture / CLIL → Looking Back &amp; Project).</li>
+                        <li>Lớp 10 là năm bắt đầu làm quen với văn phong học thuật (academic) của bậc THPT — nên dành thời gian đầu năm ôn lại các thì và cấu trúc nền tảng đã học ở THCS trước khi vào bài mới.</li>
+                        <li>Điều chỉnh số tuần/tiết theo năng lực thực tế của học sinh và kế hoạch giáo dục nhà trường. Thời lượng trong lộ trình chỉ mang tính tham khảo.</li>
+                    </ul>
+                </div>
+
+            </div>
+            </div>
+            <!-- ===== KẾT THÚC TRANG 1: TỔNG QUAN ===== -->
+
+            <!-- ===== TRANG 2: PHIÊN ÂM ===== -->
+            <div class="roadmap-page" data-page="1">
+            <div class="roadmap-wrap">
+
+                <div class="roadmap-intro roadmap-intro-g10-phonetics">
+                    <span class="roadmap-intro-badge">🔤 Phần 1 · Phiên âm</span>
+                    <h3>Từ cụm phụ âm đến trọng âm, nhịp điệu và ngữ điệu câu</h3>
+                    <p>Học kỳ I tập trung vào các cụm phụ âm đầu từ và trọng âm từ (2–3 âm tiết) — nền tảng phát âm chính xác từng từ đơn lẻ. Học kỳ II chuyển dần sang trọng âm câu, nhịp điệu và ngữ điệu — kỹ năng nghe/nói cần thiết khi giao tiếp bằng câu dài, phức tạp hơn.</p>
+                    <div class="roadmap-stats">
+                        <div class="roadmap-stat"><strong>5</strong><span>unit cụm âm/trọng âm từ</span></div>
+                        <div class="roadmap-stat"><strong>5</strong><span>unit nhịp điệu/ngữ điệu</span></div>
+                        <div class="roadmap-stat"><strong>2</strong><span>học kỳ</span></div>
+                    </div>
+                </div>
+
+                <p class="gstage-hint">👇 Nhấn vào từng học kỳ để xem trọng tâm ngữ âm từng unit</p>
+
+                <div class="gstage-accordion">
+
+                    <div class="gstage-block gstage-1">
+                        <button type="button" class="gstage-header" data-gstage-toggle>
+                            <span class="gstage-icon">1️⃣</span>
+                            <span class="gstage-header-text">
+                                <h4>Học kỳ I</h4>
+                                <span class="gstage-meta">Unit 1 – 5</span>
+                            </span>
+                            <span class="gstage-chevron">▾</span>
+                        </button>
+                        <div class="gstage-body">
+                            <div class="gday-list">
+                                <div class="gday-row"><span class="gday-num">U1</span><span class="gday-text"><strong>Cụm phụ âm /tr/, /kr/, /br/</strong> — tree, truck, trust / cream, crowd, cry / bread, bring, brush. Kỹ thuật: minimal pairs theo từng cụm, đọc tongue twister ngắn để luyện phản xạ.</span></div>
+                                <div class="gday-row"><span class="gday-num">U2</span><span class="gday-text"><strong>Cụm phụ âm /kl/, /pl/, /gr/, /pr/</strong> — clean, class / play, place / green, grow / practice, price. Kỹ thuật: luyện khẩu hình môi–lưỡi trước gương, đọc theo nhịp chậm rồi tăng dần tốc độ.</span></div>
+                                <div class="gday-row"><span class="gday-num">U3</span><span class="gday-text"><strong>Trọng âm từ có hai âm tiết</strong> — MUsic, RHYthm, GUItar, perFORM. Kỹ thuật: vỗ tay theo âm tiết mang trọng âm, phân loại danh từ/động từ theo mẫu trọng âm.</span></div>
+                                <div class="gday-row gday-review"><span class="gday-num">R1</span><span class="gday-text">Review 1 (Unit 1–3) — ôn lại các cụm phụ âm và trọng âm 2 âm tiết bằng trò chơi (bingo âm, đọc nối tiếp).</span></div>
+                                <div class="gday-row"><span class="gday-num">U4</span><span class="gday-text"><strong>Trọng âm 2 âm tiết cùng chính tả, khác từ loại</strong> — REcord (n) / reCORD (v); PREsent (n) / preSENT (v). Kỹ thuật: đặt câu có cả 2 dạng để làm rõ sự thay đổi trọng âm theo từ loại.</span></div>
+                                <div class="gday-row"><span class="gday-num">U5</span><span class="gday-text"><strong>Trọng âm danh từ có ba âm tiết</strong> — INventor, INvention, TEchnology. Kỹ thuật: gõ nhịp 3 phách, khoanh tròn âm tiết mang trọng âm trong danh sách từ mới.</span></div>
+                                <div class="gday-row gday-review"><span class="gday-num">R2</span><span class="gday-text">Review 2 (Unit 4–5) — ôn lại trọng âm từ 2–3 âm tiết bằng bài tập nhận diện nhanh.</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="gstage-block gstage-2">
+                        <button type="button" class="gstage-header" data-gstage-toggle>
+                            <span class="gstage-icon">2️⃣</span>
+                            <span class="gstage-header-text">
+                                <h4>Học kỳ II</h4>
+                                <span class="gstage-meta">Unit 6 – 10</span>
+                            </span>
+                            <span class="gstage-chevron">▾</span>
+                        </button>
+                        <div class="gstage-body">
+                            <div class="gday-list">
+                                <div class="gday-row"><span class="gday-num">U6</span><span class="gday-text"><strong>Trọng âm tính từ &amp; động từ có ba âm tiết</strong> — imPORtant, deVELop. Kỹ thuật: so sánh với danh từ 3 âm tiết đã học ở Unit 5 để thấy sự khác biệt theo từ loại.</span></div>
+                                <div class="gday-row"><span class="gday-num">U7</span><span class="gday-text"><strong>Trọng âm chính trong từ có từ ba âm tiết trở lên</strong> — orGANisation, interNAtional. Kỹ thuật: tách âm tiết bằng vạch, đọc chậm rồi ghép lại thành từ hoàn chỉnh.</span></div>
+                                <div class="gday-row"><span class="gday-num">U8</span><span class="gday-text"><strong>Trọng âm câu (sentence stress)</strong> — "I REALLY like ONline LEARNing." Kỹ thuật: gạch chân từ mang nghĩa chính (nội dung) trong câu, đọc nhấn rõ các từ đó.</span></div>
+                                <div class="gday-row gday-review"><span class="gday-num">R3</span><span class="gday-text">Review 3 (Unit 6–8) — ôn lại trọng âm từ &amp; câu bằng bài đọc đoạn hội thoại ngắn.</span></div>
+                                <div class="gday-row"><span class="gday-num">U9</span><span class="gday-text"><strong>Nhịp điệu trong câu (rhythm)</strong> — "REduce, reUSE and reCYcle." Kỹ thuật: vỗ tay đều theo các phách mang trọng âm, giữ nhịp đều dù số âm tiết giữa các phách khác nhau.</span></div>
+                                <div class="gday-row"><span class="gday-num">U10</span><span class="gday-text"><strong>Ngữ điệu trong câu (intonation)</strong> — câu trần thuật xuống giọng cuối câu, câu hỏi Yes/No lên giọng cuối câu. Kỹ thuật: dùng tay vẽ đường lên/xuống trong không khí khi đọc mẫu câu.</span></div>
+                                <div class="gday-row gday-review"><span class="gday-num">R4</span><span class="gday-text">Review 4 (Unit 9–10) — tổng ôn nhịp điệu và ngữ điệu qua các đoạn hội thoại về môi trường/du lịch.</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="grade-note-box">
+                    <h4>📌 Ghi chú sư phạm</h4>
+                    <ul>
+                        <li>Ở bậc THPT, ngữ âm chuyển trọng tâm từ "âm đơn lẻ" (như THCS) sang "trọng âm – nhịp điệu – ngữ điệu" trong chuỗi lời nói — nên luyện qua câu và đoạn hội thoại thay vì chỉ từ đơn.</li>
+                        <li>Ghi âm lại giọng đọc của học sinh và so sánh với bản mẫu audio SGK là cách hiệu quả để tự sửa lỗi trọng âm/ngữ điệu.</li>
+                        <li>Tận dụng các bài Review để tổng hợp lại toàn bộ điểm ngữ âm đã học, tránh học rời rạc theo từng unit.</li>
+                    </ul>
+                </div>
+
+            </div>
+            </div>
+            <!-- ===== KẾT THÚC TRANG 2: PHIÊN ÂM ===== -->
+
+            <!-- ===== TRANG 3: NGỮ PHÁP ===== -->
+            <div class="roadmap-page" data-page="2">
+            <div class="roadmap-wrap">
+
+                <div class="roadmap-intro roadmap-intro-g10-grammar">
+                    <span class="roadmap-intro-badge">📐 Phần 2 · Ngữ pháp</span>
+                    <h3>Củng cố nền thì động từ, mở rộng sang câu ghép và câu điều kiện</h3>
+                    <p>Ngữ pháp lớp 10 vừa ôn lại vừa mở rộng các thì cơ bản (hiện tại, quá khứ, hiện tại hoàn thành), đồng thời giới thiệu các cấu trúc câu phức đầu tiên (mệnh đề quan hệ, câu tường thuật, câu điều kiện) — nền tảng quan trọng để tiếp cận ngữ pháp nâng cao ở lớp 11, 12.</p>
+                    <div class="roadmap-stats">
+                        <div class="roadmap-stat"><strong>10</strong><span>unit</span></div>
+                        <div class="roadmap-stat"><strong>2</strong><span>học kỳ</span></div>
+                        <div class="roadmap-stat"><strong>4</strong><span>bài Review</span></div>
+                    </div>
+                </div>
+
+                <p class="gstage-hint">👇 Nhấn vào từng học kỳ để xem cấu trúc ngữ pháp &amp; liên kết ôn tập xuyên suốt</p>
+
+                <div class="gstage-accordion">
+
+                    <div class="gstage-block gstage-1">
+                        <button type="button" class="gstage-header" data-gstage-toggle>
+                            <span class="gstage-icon">1️⃣</span>
+                            <span class="gstage-header-text">
+                                <h4>Học kỳ I</h4>
+                                <span class="gstage-meta">Unit 1 – 5</span>
+                            </span>
+                            <span class="gstage-chevron">▾</span>
+                        </button>
+                        <div class="gstage-body">
+                            <div class="gday-list">
+                                <div class="gday-row"><span class="gday-num">U1</span><span class="gday-text"><strong>Hiện tại đơn vs. Hiện tại tiếp diễn</strong> — "She does the dishes every day. She is doing the dishes now." Liên kết: nền tảng thì hiện tại, sẽ đối chiếu với Quá khứ đơn (U4) và Hiện tại hoàn thành (U5).</span></div>
+                                <div class="gday-row"><span class="gday-num">U2</span><span class="gday-text"><strong>Tương lai will/be going to; câu bị động</strong> — "The city will build a new park. Plastic bottles are recycled here." Liên kết: will là nền cho câu điều kiện loại 1 ở Unit 10.</span></div>
+                                <div class="gday-row"><span class="gday-num">U3</span><span class="gday-text"><strong>Câu ghép; động từ nguyên mẫu có to/không to</strong> — "I like music, so I joined the choir. I want to learn the guitar." Liên kết: câu ghép là bước đệm cho mệnh đề quan hệ ở Unit 8.</span></div>
+                                <div class="gday-row gday-review"><span class="gday-num">R1</span><span class="gday-text">Review 1 (Unit 1–3) — hệ thống lại thì hiện tại, câu ghép; luyện đề dạng bài kiểm tra giữa kỳ 1.</span></div>
+                                <div class="gday-row"><span class="gday-num">U4</span><span class="gday-text"><strong>Quá khứ đơn vs. Quá khứ tiếp diễn (when/while)</strong> — "While I was volunteering, I met new friends." Liên kết: đối chiếu trực tiếp với hiện tại đơn/tiếp diễn (U1).</span></div>
+                                <div class="gday-row"><span class="gday-num">U5</span><span class="gday-text"><strong>Hiện tại hoàn thành; danh động từ và to-infinitive</strong> — "She has invented a new machine. She enjoys inventing things." Liên kết: hoàn thiện chuỗi thì cùng U1, U4 — nên ôn so sánh 3 thì trong Review 2.</span></div>
+                                <div class="gday-row gday-review"><span class="gday-num">R2</span><span class="gday-text">Review 2 (Unit 4–5) — ôn tập tổng hợp chuỗi thì động từ, chuẩn bị kiểm tra cuối kỳ 1.</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="gstage-block gstage-2">
+                        <button type="button" class="gstage-header" data-gstage-toggle>
+                            <span class="gstage-icon">2️⃣</span>
+                            <span class="gstage-header-text">
+                                <h4>Học kỳ II</h4>
+                                <span class="gstage-meta">Unit 6 – 10</span>
+                            </span>
+                            <span class="gstage-chevron">▾</span>
+                        </button>
+                        <div class="gstage-body">
+                            <div class="gday-list">
+                                <div class="gday-row"><span class="gday-num">U6</span><span class="gday-text"><strong>Câu bị động với động từ khuyết thiếu</strong> — "Equal pay should be guaranteed for all workers." Liên kết: mở rộng câu bị động cơ bản đã học ở Unit 2.</span></div>
+                                <div class="gday-row"><span class="gday-num">U7</span><span class="gday-text"><strong>So sánh hơn và so sánh nhất</strong> — "Viet Nam is becoming more active in ASEAN — one of the most important members." Liên kết: nền cho double comparatives sẽ gặp lại ở lớp 12.</span></div>
+                                <div class="gday-row"><span class="gday-num">U8</span><span class="gday-text"><strong>Mệnh đề quan hệ xác định và không xác định</strong> — "Online courses, which are flexible, help students learn anywhere." Liên kết: câu phức đầu tiên, xây trên nền câu ghép đã học ở Unit 3.</span></div>
+                                <div class="gday-row gday-review"><span class="gday-num">R3</span><span class="gday-text">Review 3 (Unit 6–8) — luyện đề dạng bài kiểm tra giữa kỳ 2, tập trung mệnh đề quan hệ.</span></div>
+                                <div class="gday-row"><span class="gday-num">U9</span><span class="gday-text"><strong>Câu tường thuật (reported speech)</strong> — "She said that she recycled plastic bottles every day." Liên kết: cấu trúc while/when của Unit 4 thường xuất hiện lại trong câu tường thuật.</span></div>
+                                <div class="gday-row"><span class="gday-num">U10</span><span class="gday-text"><strong>Câu điều kiện loại 1 và loại 2</strong> — "If we protect the forest, we will save wildlife. If I were a tourist, I would choose an eco-lodge." Liên kết: hoàn thiện chuỗi điều kiện bắt đầu từ will ở Unit 2.</span></div>
+                                <div class="gday-row gday-review"><span class="gday-num">R4</span><span class="gday-text">Review 4 (Unit 9–10) — ôn tập tổng hợp câu tường thuật và câu điều kiện, chuẩn bị kiểm tra cuối kỳ 2.</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="grade-note-box">
+                    <h4>📌 Ghi chú sư phạm</h4>
+                    <ul>
+                        <li>Dạy theo tiến trình: giới thiệu cấu trúc qua ngữ cảnh có sẵn trong bài đọc/nghe, luyện tập có kiểm soát, rồi sản sinh tự do qua Speaking/Writing.</li>
+                        <li>Tận dụng các bài Review để so sánh – đối chiếu các thì/cấu trúc gần nhau (ví dụ Review 1: hiện tại đơn vs. tiếp diễn; Review 2: quá khứ đơn/tiếp diễn vs. hiện tại hoàn thành).</li>
+                        <li>Mệnh đề quan hệ (U8), câu tường thuật (U9) và câu điều kiện (U10) là 3 điểm ngữ pháp trọng tâm sẽ tiếp tục mở rộng ở lớp 11, 12 và xuất hiện thường xuyên trong đề thi tốt nghiệp THPT.</li>
+                    </ul>
+                </div>
+
+            </div>
+            </div>
+            <!-- ===== KẾT THÚC TRANG 3: NGỮ PHÁP ===== -->
+
+            <!-- ===== TRANG 4: TỪ VỰNG ===== -->
+            <div class="roadmap-page" data-page="3">
+            <div class="roadmap-wrap">
+
+                <div class="roadmap-intro roadmap-intro-g10-vocab">
+                    <span class="roadmap-intro-badge">📚 Phần 3 · Từ vựng</span>
+                    <h3>Chủ đề học thuật và xã hội gần gũi với học sinh THPT</h3>
+                    <p>Từ vựng lớp 10 mở rộng sang các chủ đề mang tính xã hội và học thuật hơn so với THCS (môi trường, phát minh, tổ chức quốc tế, giáo dục), đồng thời vẫn giữ các chủ đề gần gũi với đời sống học sinh (gia đình, âm nhạc, tình nguyện). Nên ưu tiên học theo cụm từ/collocation thay vì từ đơn lẻ.</p>
+                    <div class="roadmap-stats">
+                        <div class="roadmap-stat"><strong>10</strong><span>unit</span></div>
+                        <div class="roadmap-stat"><strong>8-12</strong><span>từ mới/tiết</span></div>
+                        <div class="roadmap-stat"><strong>2</strong><span>học kỳ</span></div>
+                    </div>
+                </div>
+
+                <p class="gstage-hint">👇 Nhấn vào từng học kỳ để xem chủ đề từ vựng &amp; chiến lược dạy đề xuất</p>
+
+                <div class="gstage-accordion">
+
+                    <div class="gstage-block gstage-1">
+                        <button type="button" class="gstage-header" data-gstage-toggle>
+                            <span class="gstage-icon">1️⃣</span>
+                            <span class="gstage-header-text">
+                                <h4>Học kỳ I</h4>
+                                <span class="gstage-meta">Unit 1 – 5</span>
+                            </span>
+                            <span class="gstage-chevron">▾</span>
+                        </button>
+                        <div class="gstage-body">
+                            <div class="gday-list">
+                                <div class="gday-row"><span class="gday-num">U1</span><span class="gday-text"><strong>Công việc nhà</strong> — do the laundry, sweep the floor, water the plants. Chiến lược: lập bảng phân công việc nhà theo tuần, đóng vai phỏng vấn "ai làm việc gì".</span></div>
+                                <div class="gday-row"><span class="gday-num">U2</span><span class="gday-text"><strong>Con người &amp; môi trường (năng lượng, rác thải)</strong> — renewable energy, carbon footprint, single-use plastic. Chiến lược: sơ đồ tư duy nguồn năng lượng, trò chơi phân loại rác tái chế.</span></div>
+                                <div class="gday-row"><span class="gday-num">U3</span><span class="gday-text"><strong>Thể loại nhạc, nhạc cụ</strong> — traditional instrument, pop, hip-hop, guitar. Chiến lược: nghe đoạn nhạc ngắn và đoán thể loại, giới thiệu nhạc cụ yêu thích trước lớp.</span></div>
+                                <div class="gday-row gday-review"><span class="gday-num">R1</span><span class="gday-text">Review 1 (Unit 1–3) — ôn từ vựng qua trò chơi ghép từ, đố vui chủ đề.</span></div>
+                                <div class="gday-row"><span class="gday-num">U4</span><span class="gday-text"><strong>Hoạt động tình nguyện &amp; cộng đồng</strong> — charity event, raise fund, homeless shelter. Chiến lược: thiết kế poster kêu gọi tình nguyện, thảo luận nhóm về một dự án cộng đồng.</span></div>
+                                <div class="gday-row"><span class="gday-num">U5</span><span class="gday-text"><strong>Phát minh, sáng chế</strong> — patent, breakthrough, gadget. Chiến lược: thuyết trình mini giới thiệu một phát minh yêu thích.</span></div>
+                                <div class="gday-row gday-review"><span class="gday-num">R2</span><span class="gday-text">Review 2 (Unit 4–5) — ôn tập tổng hợp từ vựng chuẩn bị kiểm tra cuối kỳ 1.</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="gstage-block gstage-2">
+                        <button type="button" class="gstage-header" data-gstage-toggle>
+                            <span class="gstage-icon">2️⃣</span>
+                            <span class="gstage-header-text">
+                                <h4>Học kỳ II</h4>
+                                <span class="gstage-meta">Unit 6 – 10</span>
+                            </span>
+                            <span class="gstage-chevron">▾</span>
+                        </button>
+                        <div class="gstage-body">
+                            <div class="gday-list">
+                                <div class="gday-row"><span class="gday-num">U6</span><span class="gday-text"><strong>Nghề nghiệp, bình đẳng giới</strong> — stereotype, equal opportunity, gender-neutral. Chiến lược: thảo luận nghề nghiệp không phân biệt giới, đóng vai phỏng vấn nghề nghiệp.</span></div>
+                                <div class="gday-row"><span class="gday-num">U7</span><span class="gday-text"><strong>Tổ chức quốc tế</strong> — member state, cooperation, humanitarian aid. Chiến lược: tìm hiểu vai trò của một tổ chức quốc tế, thuyết trình nhóm.</span></div>
+                                <div class="gday-row"><span class="gday-num">U8</span><span class="gday-text"><strong>Phương pháp học tập mới</strong> — online course, hybrid learning, e-book. Chiến lược: khảo sát cả lớp và so sánh ưu/nhược điểm học trực tuyến và học truyền thống.</span></div>
+                                <div class="gday-row gday-review"><span class="gday-num">R3</span><span class="gday-text">Review 3 (Unit 6–8) — ôn từ vựng qua trò chơi ghép từ, đố vui chủ đề.</span></div>
+                                <div class="gday-row"><span class="gday-num">U9</span><span class="gday-text"><strong>Vấn đề môi trường</strong> — deforestation, endangered species, global warming. Chiến lược: xem phóng sự ngắn, viết cam kết bảo vệ môi trường cá nhân.</span></div>
+                                <div class="gday-row"><span class="gday-num">U10</span><span class="gday-text"><strong>Du lịch sinh thái</strong> — eco-lodge, conservation, indigenous culture. Chiến lược: thiết kế một tour du lịch sinh thái giả định và thuyết trình trước lớp.</span></div>
+                                <div class="gday-row gday-review"><span class="gday-num">R4</span><span class="gday-text">Review 4 (Unit 9–10) — ôn tập tổng hợp từ vựng chuẩn bị kiểm tra cuối kỳ 2.</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="grade-note-box">
+                    <h4>📌 Ghi chú sư phạm</h4>
+                    <ul>
+                        <li>Ưu tiên dạy theo cụm từ/collocation (ví dụ "raise fund", "renewable energy") thay vì từ đơn lẻ — đây là dạng thường gặp trong bài đọc hiểu và bài viết ở bậc THPT.</li>
+                        <li>Xây dựng sổ tay từ vựng theo chủ đề, ôn lại đầu mỗi tiết bằng trò chơi nhanh hoặc flashcard/spaced repetition.</li>
+                        <li>Khuyến khích học sinh đặt câu hoặc viết đoạn ngắn với từ mới để ghi nhớ trong ngữ cảnh, thay vì chỉ học nghĩa.</li>
+                    </ul>
+                </div>
+
+            </div>
+            </div>
+            <!-- ===== KẾT THÚC TRANG 4: TỪ VỰNG ===== -->
+
+            <!-- ===== TRANG 5: LỊCH TRÌNH 35 TUẦN ===== -->
+            <div class="roadmap-page" data-page="4">
+            <div class="roadmap-wrap">
+
+                <div class="roadmap-intro roadmap-intro-g10-schedule">
+                    <span class="roadmap-intro-badge">🗓️ Lịch trình gợi ý</span>
+                    <h3>Phân bổ 35 tuần cho 10 unit &amp; 4 bài Review</h3>
+                    <p>Khung thời gian phân bổ 10 unit, 4 bài Review và các bài kiểm tra định kỳ trong 1 năm học 35 tuần (18 tuần HK I – 17 tuần HK II). Đây là khung tham khảo; cần đối chiếu với PPCT chính thức và số tiết/tuần thực tế của nhà trường.</p>
+                    <div class="roadmap-stats">
+                        <div class="roadmap-stat"><strong>35</strong><span>tuần</span></div>
+                        <div class="roadmap-stat"><strong>2</strong><span>học kỳ</span></div>
+                        <div class="roadmap-stat"><strong>4</strong><span>bài Review</span></div>
+                        <div class="roadmap-stat"><strong>4</strong><span>bài kiểm tra</span></div>
+                    </div>
+                </div>
+
+                <p class="gstage-hint">👇 Nhấn vào từng học kỳ để xem lịch trình chi tiết theo tuần</p>
+
+                <div class="gstage-accordion">
+
+                    <div class="gstage-block gstage-1">
+                        <button type="button" class="gstage-header" data-gstage-toggle>
+                            <span class="gstage-icon">1️⃣</span>
+                            <span class="gstage-header-text">
+                                <h4>Học kỳ I</h4>
+                                <span class="gstage-meta">Tuần 1 – 18</span>
+                            </span>
+                            <span class="gstage-chevron">▾</span>
+                        </button>
+                        <div class="gstage-body">
+                            <div class="gday-list">
+                                <div class="gday-row"><span class="gday-num">1-2</span><span class="gday-text">Unit 1 – Family Life — Dạy ngôn ngữ mới.</span></div>
+                                <div class="gday-row"><span class="gday-num">3-4</span><span class="gday-text">Unit 2 – Humans and the Environment — Dạy ngôn ngữ mới.</span></div>
+                                <div class="gday-row"><span class="gday-num">5-6</span><span class="gday-text">Unit 3 – Music — Dạy ngôn ngữ mới.</span></div>
+                                <div class="gday-row gday-review"><span class="gday-num">7</span><span class="gday-text">Review 1 (Unit 1–3) — Ôn tập, củng cố.</span></div>
+                                <div class="gday-row gday-test"><span class="gday-num">8</span><span class="gday-text">Kiểm tra giữa kỳ I — Đánh giá.</span></div>
+                                <div class="gday-row"><span class="gday-num">9-10</span><span class="gday-text">Unit 4 – For a Better Community — Dạy ngôn ngữ mới.</span></div>
+                                <div class="gday-row"><span class="gday-num">11-12</span><span class="gday-text">Unit 5 – Inventions — Dạy ngôn ngữ mới.</span></div>
+                                <div class="gday-row gday-review"><span class="gday-num">13</span><span class="gday-text">Review 2 (Unit 4–5) — Ôn tập, củng cố.</span></div>
+                                <div class="gday-row"><span class="gday-num">14-15</span><span class="gday-text">Ôn luyện đề, củng cố kỹ năng nghe – nói – đọc – viết.</span></div>
+                                <div class="gday-row"><span class="gday-num">16</span><span class="gday-text">Ôn tập cuối kỳ I — Ôn tập tổng hợp.</span></div>
+                                <div class="gday-row gday-test"><span class="gday-num">17</span><span class="gday-text">Kiểm tra cuối kỳ I — Đánh giá.</span></div>
+                                <div class="gday-row"><span class="gday-num">18</span><span class="gday-text">Chữa bài kiểm tra / dự phòng.</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="gstage-block gstage-3">
+                        <button type="button" class="gstage-header" data-gstage-toggle>
+                            <span class="gstage-icon">2️⃣</span>
+                            <span class="gstage-header-text">
+                                <h4>Học kỳ II</h4>
+                                <span class="gstage-meta">Tuần 19 – 35</span>
+                            </span>
+                            <span class="gstage-chevron">▾</span>
+                        </button>
+                        <div class="gstage-body">
+                            <div class="gday-list">
+                                <div class="gday-row"><span class="gday-num">19-20</span><span class="gday-text">Unit 6 – Gender Equality — Dạy ngôn ngữ mới.</span></div>
+                                <div class="gday-row"><span class="gday-num">21-22</span><span class="gday-text">Unit 7 – Viet Nam and International Organisations — Dạy ngôn ngữ mới.</span></div>
+                                <div class="gday-row"><span class="gday-num">23-24</span><span class="gday-text">Unit 8 – New Ways to Learn — Dạy ngôn ngữ mới.</span></div>
+                                <div class="gday-row gday-review"><span class="gday-num">25</span><span class="gday-text">Review 3 (Unit 6–8) — Ôn tập, củng cố.</span></div>
+                                <div class="gday-row gday-test"><span class="gday-num">26</span><span class="gday-text">Kiểm tra giữa kỳ II — Đánh giá.</span></div>
+                                <div class="gday-row"><span class="gday-num">27-28</span><span class="gday-text">Unit 9 – Protecting the Environment — Dạy ngôn ngữ mới.</span></div>
+                                <div class="gday-row"><span class="gday-num">29-30</span><span class="gday-text">Unit 10 – Ecotourism — Dạy ngôn ngữ mới.</span></div>
+                                <div class="gday-row gday-review"><span class="gday-num">31</span><span class="gday-text">Review 4 (Unit 9–10) — Ôn tập, củng cố.</span></div>
+                                <div class="gday-row"><span class="gday-num">32-33</span><span class="gday-text">Ôn luyện đề, củng cố kỹ năng nghe – nói – đọc – viết.</span></div>
+                                <div class="gday-row"><span class="gday-num">34</span><span class="gday-text">Ôn tập cuối kỳ II — Ôn tập tổng hợp.</span></div>
+                                <div class="gday-row gday-test"><span class="gday-num">35</span><span class="gday-text">Kiểm tra cuối kỳ II / dự phòng — Đánh giá.</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="roadmap-finish">
+                    <span class="roadmap-finish-icon">🏁</span>
+                    <div>
+                        <h4>Sẵn sàng triển khai!</h4>
+                        <p>Trọn bộ kế hoạch dạy học Tiếng Anh 10 (Global Success) — tích hợp Phiên âm, Ngữ pháp, Từ vựng theo đúng tiến trình SGK và phân phối chương trình 35 tuần, làm nền tảng cho hành trình 3 năm luyện thi tốt nghiệp THPT.</p>
+                    </div>
+                </div>
+
+            </div>
+            </div>
+            <!-- ===== KẾT THÚC TRANG 5: LỊCH TRÌNH 35 TUẦN ===== -->
+
+            </div>
+            </div>
+            <!-- ----- Chấm điều hướng (dots) ----- -->
+            <div class="roadmap-dots" id="g10-dots">
+                <span class="g10-dot active" data-dot="0"></span>
+                <span class="g10-dot" data-dot="1"></span>
+                <span class="g10-dot" data-dot="2"></span>
+                <span class="g10-dot" data-dot="3"></span>
+                <span class="g10-dot" data-dot="4"></span>
+            </div>
+
+        </div>
+        <!-- ===== KẾT THÚC KHỐI LỚP 10 ===== -->
+
+        <!-- ===== KHỐI LỚP 11 ===== -->
+        <div class="grade-panel" id="grade-panel-11" style="display:none;">
+
+            <!-- ----- Thanh chuyển đổi giữa Tổng quan / Phiên âm / Ngữ pháp / Từ vựng / Lịch trình ----- -->
+            <div class="roadmap-switcher">
+                <button type="button" class="roadmap-nav-btn" id="g11-prev-btn" aria-label="Trang trước">‹</button>
+                <div class="roadmap-switcher-tabs">
+                    <button type="button" class="g11-switcher-tab active" data-g11-page="0">📋 Tổng quan</button>
+                    <button type="button" class="g11-switcher-tab" data-g11-page="1">🔤 Phiên âm</button>
+                    <button type="button" class="g11-switcher-tab" data-g11-page="2">📐 Ngữ pháp</button>
+                    <button type="button" class="g11-switcher-tab" data-g11-page="3">📚 Từ vựng</button>
+                    <button type="button" class="g11-switcher-tab" data-g11-page="4">🗓️ Lịch 35 tuần</button>
+                </div>
+                <button type="button" class="roadmap-nav-btn" id="g11-next-btn" aria-label="Trang sau">›</button>
+            </div>
+
+            <div class="roadmap-pager" id="g11-pager">
+            <div class="roadmap-track" id="g11-track">
+
+            <!-- ===== TRANG 1: TỔNG QUAN ===== -->
+            <div class="roadmap-page" data-page="0">
+            <div class="roadmap-wrap">
+
+                <div class="roadmap-intro roadmap-intro-g11-overview">
+                    <span class="roadmap-intro-badge">📁 Lộ trình dạy học Lớp 11</span>
+                    <h3>Tiếng Anh 11 — Bộ sách Global Success</h3>
+                    <p>Lớp 11 là năm bản lề: chương trình gồm 10 unit chia thành 4 chủ điểm — Our Lives, Our Society, Our Environment và Our Future (chủ điểm 1 và 3 gồm 3 unit, chủ điểm 2 và 4 gồm 2 unit) — mỗi chủ điểm kết thúc bằng một buổi Review. Ngữ pháp bắt đầu xuất hiện nhiều cấu trúc câu phức (mệnh đề phân từ, câu chẻ, danh động từ hoàn thành) — nền tảng quan trọng cho các dạng bài đọc hiểu và viết luận ở kỳ thi tốt nghiệp THPT.</p>
+                    <div class="roadmap-stats">
+                        <div class="roadmap-stat"><strong>10</strong><span>units</span></div>
+                        <div class="roadmap-stat"><strong>4</strong><span>chủ điểm</span></div>
+                        <div class="roadmap-stat"><strong>4</strong><span>bài Review</span></div>
+                        <div class="roadmap-stat"><strong>35</strong><span>tuần</span></div>
+                    </div>
+                </div>
+
+                <p class="gstage-hint">👇 Cấu trúc năm học — 2 học kỳ, 4 chủ điểm</p>
+
+                <div class="gday-list">
+                    <div class="gday-row"><span class="gday-num">HK1</span><span class="gday-text"><strong>Our Lives</strong> — U1 A Long and Healthy Life, U2 The Generation Gap, U3 Cities of the Future → Review 1. <strong>Our Society</strong> — U4 ASEAN and Viet Nam, U5 Global Warming → Review 2. <em>(≈18 tuần)</em></span></div>
+                    <div class="gday-row"><span class="gday-num">HK2</span><span class="gday-text"><strong>Our Environment</strong> — U6 Preserving Our Heritage, U7 Education Options for School-leavers, U8 Becoming Independent → Review 3. <strong>Our Future</strong> — U9 Social Issues, U10 The Ecosystem → Review 4. <em>(≈17 tuần)</em></span></div>
+                </div>
+
+                <div class="grade-note-box">
+                    <h4>📌 Lưu ý khi triển khai</h4>
+                    <ul>
+                        <li>3 hợp phần Phiên âm – Ngữ pháp – Từ vựng nên dạy tích hợp trong cùng một unit, theo đúng tiến trình sách Global Success.</li>
+                        <li>Chuỗi cấu trúc câu phức (mệnh đề phân từ U5 → to-infinitive U6 → perfect gerund/participle U7 → câu chẻ U8) nên được dạy nối tiếp và ôn lại xuyên suốt học kỳ II vì đây là các điểm ngữ pháp nâng cao, hay xuất hiện trong đề đọc hiểu và viết luận.</li>
+                        <li>Điều chỉnh số tuần/tiết theo năng lực thực tế của học sinh và kế hoạch giáo dục nhà trường. Thời lượng trong lộ trình chỉ mang tính tham khảo.</li>
+                    </ul>
+                </div>
+
+            </div>
+            </div>
+            <!-- ===== KẾT THÚC TRANG 1: TỔNG QUAN ===== -->
+
+            <!-- ===== TRANG 2: PHIÊN ÂM ===== -->
+            <div class="roadmap-page" data-page="1">
+            <div class="roadmap-wrap">
+
+                <div class="roadmap-intro roadmap-intro-g11-phonetics">
+                    <span class="roadmap-intro-badge">🔤 Phần 1 · Phiên âm</span>
+                    <h3>Dạng mạnh/yếu, rút gọn, nối âm, lược âm và ngữ điệu trong câu</h3>
+                    <p>Ngữ âm lớp 11 rời hẳn khỏi cấp độ "âm đơn lẻ" của THCS, chuyển sang các hiện tượng chỉ xuất hiện trong chuỗi lời nói tự nhiên (connected speech): dạng mạnh/yếu của trợ động từ, rút gọn, nối âm, lược âm, và ngữ điệu theo từng loại câu — nền tảng để nghe hiểu người bản ngữ nói nhanh.</p>
+                    <div class="roadmap-stats">
+                        <div class="roadmap-stat"><strong>5</strong><span>unit connected speech</span></div>
+                        <div class="roadmap-stat"><strong>5</strong><span>unit ngữ điệu câu</span></div>
+                        <div class="roadmap-stat"><strong>4</strong><span>chủ điểm</span></div>
+                    </div>
+                </div>
+
+                <p class="gstage-hint">👇 Nhấn vào từng chủ điểm để xem trọng tâm ngữ âm từng unit</p>
+
+                <div class="gstage-accordion">
+
+                    <div class="gstage-block gstage-1">
+                        <button type="button" class="gstage-header" data-gstage-toggle>
+                            <span class="gstage-icon">🌱</span>
+                            <span class="gstage-header-text">
+                                <h4>Our Lives</h4>
+                                <span class="gstage-meta">Unit 1 – 3 · Review 1</span>
+                            </span>
+                            <span class="gstage-chevron">▾</span>
+                        </button>
+                        <div class="gstage-body">
+                            <div class="gday-list">
+                                <div class="gday-row"><span class="gday-num">U1</span><span class="gday-text"><strong>Dạng mạnh và dạng yếu của trợ động từ</strong> — "I CAN swim" (nhấn mạnh khả năng) vs. "I can /kən/ swim" (dạng yếu, tự nhiên). Kỹ thuật: nghe hội thoại tốc độ thật, đánh dấu chỗ trợ động từ bị giảm âm.</span></div>
+                                <div class="gday-row"><span class="gday-num">U2</span><span class="gday-text"><strong>Dạng rút gọn (contracted forms)</strong> — I'm, don't, isn't, they've. Kỹ thuật: luyện đọc hội thoại có rút gọn, so sánh trực tiếp với dạng đầy đủ để nghe sự khác biệt.</span></div>
+                                <div class="gday-row"><span class="gday-num">U3</span><span class="gday-text"><strong>Nối phụ âm cuối với nguyên âm đầu</strong> — "turn‿off", "look‿at". Kỹ thuật: gạch nối trong văn bản đọc mẫu, luyện đọc liền mạch không ngắt giữa 2 từ.</span></div>
+                                <div class="gday-row gday-review"><span class="gday-num">R1</span><span class="gday-text">Review 1 — ôn lại dạng mạnh/yếu, rút gọn và nối âm qua đoạn hội thoại ngắn.</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="gstage-block gstage-2">
+                        <button type="button" class="gstage-header" data-gstage-toggle>
+                            <span class="gstage-icon">🏛️</span>
+                            <span class="gstage-header-text">
+                                <h4>Our Society</h4>
+                                <span class="gstage-meta">Unit 4 – 5 · Review 2</span>
+                            </span>
+                            <span class="gstage-chevron">▾</span>
+                        </button>
+                        <div class="gstage-body">
+                            <div class="gday-list">
+                                <div class="gday-row"><span class="gday-num">U4</span><span class="gday-text"><strong>Lược âm nguyên âm (elision)</strong> — "comfortable" /ˈkʌmftəbl/, "different" /ˈdɪfrənt/. Kỹ thuật: nghe và đánh dấu âm bị lược trong từ, luyện nói lại ở tốc độ tự nhiên.</span></div>
+                                <div class="gday-row"><span class="gday-num">U5</span><span class="gday-text"><strong>Trọng âm câu và nhịp điệu</strong> — "The EARTH is getting WARMer." Kỹ thuật: vỗ tay/gõ nhịp theo các từ mang trọng âm câu.</span></div>
+                                <div class="gday-row gday-review"><span class="gday-num">R2</span><span class="gday-text">Review 2 — ôn lại lược âm và nhịp điệu câu qua bài đọc đoạn văn ngắn.</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="gstage-block gstage-3">
+                        <button type="button" class="gstage-header" data-gstage-toggle>
+                            <span class="gstage-icon">🌍</span>
+                            <span class="gstage-header-text">
+                                <h4>Our Environment</h4>
+                                <span class="gstage-meta">Unit 6 – 8 · Review 3</span>
+                            </span>
+                            <span class="gstage-chevron">▾</span>
+                        </button>
+                        <div class="gstage-body">
+                            <div class="gday-list">
+                                <div class="gday-row"><span class="gday-num">U6</span><span class="gday-text"><strong>Ngữ điệu câu trần thuật, mệnh lệnh và liệt kê</strong> — "Close the door. ↘ We need paper, glue, and scissors. ↗ ↗ ↘" Kỹ thuật: dùng tay vẽ đường lên/xuống trong không khí khi đọc mẫu câu.</span></div>
+                                <div class="gday-row"><span class="gday-num">U7</span><span class="gday-text"><strong>Ngữ điệu câu hỏi Wh- và Yes/No</strong> — "What will you do? ↘ Do you like it? ↗" Kỹ thuật: đóng vai phỏng vấn, chú ý lên/xuống giọng theo loại câu hỏi.</span></div>
+                                <div class="gday-row"><span class="gday-num">U8</span><span class="gday-text"><strong>Ngữ điệu lời mời, đề nghị và yêu cầu lịch sự</strong> — "Would you like some tea? ↗" Kỹ thuật: đóng vai tình huống giao tiếp lịch sự, luyện giọng nhẹ nhàng lên cuối câu.</span></div>
+                                <div class="gday-row gday-review"><span class="gday-num">R3</span><span class="gday-text">Review 3 — tổng ôn ngữ điệu qua các dạng câu trần thuật, câu hỏi và lời mời.</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="gstage-block gstage-4">
+                        <button type="button" class="gstage-header" data-gstage-toggle>
+                            <span class="gstage-icon">🚀</span>
+                            <span class="gstage-header-text">
+                                <h4>Our Future</h4>
+                                <span class="gstage-meta">Unit 9 – 10 · Review 4</span>
+                            </span>
+                            <span class="gstage-chevron">▾</span>
+                        </button>
+                        <div class="gstage-body">
+                            <div class="gday-list">
+                                <div class="gday-row"><span class="gday-num">U9</span><span class="gday-text"><strong>Ngữ điệu trong câu hỏi lựa chọn</strong> — "Do you want tea ↗ or coffee ↘?" Kỹ thuật: luyện mẫu câu lựa chọn theo cặp, lên giọng ở lựa chọn đầu và xuống ở lựa chọn cuối.</span></div>
+                                <div class="gday-row"><span class="gday-num">U10</span><span class="gday-text"><strong>Ngữ điệu trong câu hỏi đuôi (question tags)</strong> — "It's a nice day, isn't it? ↗/↘" Kỹ thuật: phân biệt ngữ điệu khi hỏi thật (lên giọng) và khi xác nhận điều đã biết (xuống giọng).</span></div>
+                                <div class="gday-row gday-review"><span class="gday-num">R4</span><span class="gday-text">Review 4 — tổng ôn toàn bộ ngữ điệu năm học qua các đoạn hội thoại tổng hợp.</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="grade-note-box">
+                    <h4>📌 Ghi chú sư phạm</h4>
+                    <ul>
+                        <li>Đây là năm đầu tiên học sinh tiếp cận sâu với connected speech — nên cho nghe nhiều mẫu hội thoại tốc độ thật, tránh chỉ luyện theo từ đơn lẻ như ở THCS.</li>
+                        <li>Ghi âm lại giọng đọc của học sinh và so sánh với bản mẫu audio SGK để tự phát hiện và sửa lỗi ngữ điệu.</li>
+                        <li>Ngữ điệu (U6–U10) nên luyện song song với kỹ năng Speaking, qua các tình huống hội thoại thực tế thay vì học lý thuyết đơn thuần.</li>
+                    </ul>
+                </div>
+
+            </div>
+            </div>
+            <!-- ===== KẾT THÚC TRANG 2: PHIÊN ÂM ===== -->
+
+            <!-- ===== TRANG 3: NGỮ PHÁP ===== -->
+            <div class="roadmap-page" data-page="2">
+            <div class="roadmap-wrap">
+
+                <div class="roadmap-intro roadmap-intro-g11-grammar">
+                    <span class="roadmap-intro-badge">📐 Phần 2 · Ngữ pháp</span>
+                    <h3>Từ đối chiếu thì cơ bản đến câu phức nâng cao</h3>
+                    <p>Học kỳ I ôn lại và mở rộng các thì, động từ khuyết thiếu và danh động từ. Học kỳ II tăng độ khó rõ rệt với chuỗi cấu trúc câu phức nối tiếp nhau: to-infinitive → perfect gerund/participle clauses → cleft sentences — đòi hỏi học sinh vận dụng linh hoạt trong bài đọc hiểu và viết luận.</p>
+                    <div class="roadmap-stats">
+                        <div class="roadmap-stat"><strong>4</strong><span>chủ điểm</span></div>
+                        <div class="roadmap-stat"><strong>4</strong><span>bài Review</span></div>
+                    </div>
+                </div>
+
+                <p class="gstage-hint">👇 Nhấn vào từng chủ điểm để xem cấu trúc ngữ pháp &amp; liên kết ôn tập xuyên suốt</p>
+
+                <div class="gstage-accordion">
+
+                    <div class="gstage-block gstage-1">
+                        <button type="button" class="gstage-header" data-gstage-toggle>
+                            <span class="gstage-icon">🌱</span>
+                            <span class="gstage-header-text">
+                                <h4>Our Lives</h4>
+                                <span class="gstage-meta">Unit 1 – 3 · Review 1</span>
+                            </span>
+                            <span class="gstage-chevron">▾</span>
+                        </button>
+                        <div class="gstage-body">
+                            <div class="gday-list">
+                                <div class="gday-row"><span class="gday-num">U1</span><span class="gday-text"><strong>Quá khứ đơn vs. Hiện tại hoàn thành</strong> — "She lived here for 5 years and moved away. She has lived here since 2015." Liên kết: nền tảng đối chiếu thì, mở rộng thành mệnh đề phân từ hoàn thành ở Unit 5.</span></div>
+                                <div class="gday-row"><span class="gday-num">U2</span><span class="gday-text"><strong>Động từ khuyết thiếu must, have to, should</strong> — "You must respect your grandparents. You should listen to new ideas." Liên kết: modal verbs sẽ được nhấn mạnh lại qua câu chẻ ở Unit 8.</span></div>
+                                <div class="gday-row"><span class="gday-num">U3</span><span class="gday-text"><strong>Động từ trạng thái ở dạng tiếp diễn</strong> — "I'm loving this new app" (nhấn mạnh cảm xúc nhất thời). Liên kết: nối tiếp thì tiếp diễn đã học, chuẩn bị nền cho perfect participle clauses ở Unit 7.</span></div>
+                                <div class="gday-row gday-review"><span class="gday-num">R1</span><span class="gday-text">Review 1 (Unit 1–3) — hệ thống lại thì và modal verbs; luyện đề dạng bài kiểm tra giữa kỳ 1.</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="gstage-block gstage-2">
+                        <button type="button" class="gstage-header" data-gstage-toggle>
+                            <span class="gstage-icon">🏛️</span>
+                            <span class="gstage-header-text">
+                                <h4>Our Society</h4>
+                                <span class="gstage-meta">Unit 4 – 5 · Review 2</span>
+                            </span>
+                            <span class="gstage-chevron">▾</span>
+                        </button>
+                        <div class="gstage-body">
+                            <div class="gday-list">
+                                <div class="gday-row"><span class="gday-num">U4</span><span class="gday-text"><strong>Danh động từ làm chủ ngữ và tân ngữ</strong> — "Recycling helps the environment. I enjoy volunteering." Liên kết: nền cho perfect gerund sẽ học ở Unit 7.</span></div>
+                                <div class="gday-row"><span class="gday-num">U5</span><span class="gday-text"><strong>Mệnh đề phân từ hiện tại và quá khứ</strong> — "Rising temperatures are affecting ecosystems. Affected by floods, farmers lost their crops." Liên kết: mở rộng trực tiếp từ hiện tại hoàn thành đã học ở Unit 1.</span></div>
+                                <div class="gday-row gday-review"><span class="gday-num">R2</span><span class="gday-text">Review 2 (Unit 4–5) — ôn tập tổng hợp danh động từ và mệnh đề phân từ, chuẩn bị kiểm tra cuối kỳ 1.</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="gstage-block gstage-3">
+                        <button type="button" class="gstage-header" data-gstage-toggle>
+                            <span class="gstage-icon">🌍</span>
+                            <span class="gstage-header-text">
+                                <h4>Our Environment</h4>
+                                <span class="gstage-meta">Unit 6 – 8 · Review 3</span>
+                            </span>
+                            <span class="gstage-chevron">▾</span>
+                        </button>
+                        <div class="gstage-body">
+                            <div class="gday-list">
+                                <div class="gday-row"><span class="gday-num">U6</span><span class="gday-text"><strong>Mệnh đề to-infinitive</strong> — "It's important to preserve our heritage." Liên kết: nối tiếp danh động từ/to-infinitive đã đối chiếu ở Unit 4.</span></div>
+                                <div class="gday-row"><span class="gday-num">U7</span><span class="gday-text"><strong>Danh động từ hoàn thành &amp; mệnh đề phân từ hoàn thành</strong> — "Having finished school, she started university. Having studied hard, he passed the exam." Liên kết: mở rộng trực tiếp từ mệnh đề phân từ (U5) và danh động từ (U4).</span></div>
+                                <div class="gday-row"><span class="gday-num">U8</span><span class="gday-text"><strong>Câu chẻ với It is/was ... that/who ...</strong> — "It was my parents who encouraged me to be independent." Liên kết: dùng để nhấn mạnh, thường kết hợp với modal verbs (U2) khi diễn đạt lời khuyên nhấn mạnh.</span></div>
+                                <div class="gday-row gday-review"><span class="gday-num">R3</span><span class="gday-text">Review 3 (Unit 6–8) — luyện đề dạng bài kiểm tra giữa kỳ 2, tập trung chuỗi cấu trúc câu phức.</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="gstage-block gstage-4">
+                        <button type="button" class="gstage-header" data-gstage-toggle>
+                            <span class="gstage-icon">🚀</span>
+                            <span class="gstage-header-text">
+                                <h4>Our Future</h4>
+                                <span class="gstage-meta">Unit 9 – 10 · Review 4</span>
+                            </span>
+                            <span class="gstage-chevron">▾</span>
+                        </button>
+                        <div class="gstage-body">
+                            <div class="gday-list">
+                                <div class="gday-row"><span class="gday-num">U9</span><span class="gday-text"><strong>Từ nối và cụm từ nối (linking words and phrases)</strong> — "Although unemployment is falling, poverty remains an issue." Liên kết: công cụ nối ý dùng xuyên suốt bài luận, hỗ trợ diễn đạt câu chẻ (U8) khi viết văn nghị luận.</span></div>
+                                <div class="gday-row"><span class="gday-num">U10</span><span class="gday-text"><strong>Danh từ ghép (compound nouns)</strong> — "ecosystem, food chain, rainforest." Liên kết: tổng hợp từ vựng và ngữ pháp cả năm, chuẩn bị nền tảng lên lớp 12.</span></div>
+                                <div class="gday-row gday-review"><span class="gday-num">R4</span><span class="gday-text">Review 4 (Unit 9–10) — ôn tập tổng hợp toàn bộ chuỗi câu phức, chuẩn bị kiểm tra cuối kỳ 2.</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="grade-note-box">
+                    <h4>📌 Ghi chú sư phạm</h4>
+                    <ul>
+                        <li>Chuỗi mệnh đề phân từ (U5) → to-infinitive (U6) → perfect gerund/participle (U7) → câu chẻ (U8) nên dạy nối tiếp và ôn so sánh với nhau vì đây là các cấu trúc dễ nhầm lẫn nhất trong năm.</li>
+                        <li>Cho học sinh luyện nhận diện cấu trúc trong bài đọc trước, sau đó mới luyện viết câu/đoạn văn để chủ động sử dụng.</li>
+                        <li>Đây là các điểm ngữ pháp nâng cao thường xuất hiện trong đề đọc hiểu và viết luận của kỳ thi tốt nghiệp THPT — nên dành thêm thời gian ôn tập ở các buổi Review.</li>
+                    </ul>
+                </div>
+
+            </div>
+            </div>
+            <!-- ===== KẾT THÚC TRANG 3: NGỮ PHÁP ===== -->
+
+            <!-- ===== TRANG 4: TỪ VỰNG ===== -->
+            <div class="roadmap-page" data-page="3">
+            <div class="roadmap-wrap">
+
+                <div class="roadmap-intro roadmap-intro-g11-vocab">
+                    <span class="roadmap-intro-badge">📚 Phần 3 · Từ vựng</span>
+                    <h3>Từ vựng học thuật &amp; xã hội theo 4 chủ điểm</h3>
+                    <p>Từ vựng lớp 11 mang tính học thuật/xã hội rõ rệt hơn lớp 10 — sức khỏe, thế hệ, đô thị thông minh, tổ chức quốc tế, môi trường, giáo dục, các vấn đề xã hội và hệ sinh thái. Nên ôn theo chủ điểm để thấy được mạch chủ đề xuyên suốt của SGK.</p>
+                    <div class="roadmap-stats">
+                        <div class="roadmap-stat"><strong>10</strong><span>unit</span></div>
+                        <div class="roadmap-stat"><strong>8-12</strong><span>từ mới/tiết</span></div>
+                        <div class="roadmap-stat"><strong>4</strong><span>chủ điểm</span></div>
+                    </div>
+                </div>
+
+                <p class="gstage-hint">👇 Nhấn vào từng chủ điểm để xem chủ đề từ vựng &amp; chiến lược dạy đề xuất</p>
+
+                <div class="gstage-accordion">
+
+                    <div class="gstage-block gstage-1">
+                        <button type="button" class="gstage-header" data-gstage-toggle>
+                            <span class="gstage-icon">🌱</span>
+                            <span class="gstage-header-text">
+                                <h4>Our Lives</h4>
+                                <span class="gstage-meta">Unit 1 – 3 · Review 1</span>
+                            </span>
+                            <span class="gstage-chevron">▾</span>
+                        </button>
+                        <div class="gstage-body">
+                            <div class="gday-list">
+                                <div class="gday-row"><span class="gday-num">U1</span><span class="gday-text"><strong>Sức khỏe và thể lực</strong> — balanced diet, stay fit, work out. Chiến lược: lập kế hoạch "1 tuần sống khoẻ" cá nhân, chia sẻ trước lớp.</span></div>
+                                <div class="gday-row"><span class="gday-num">U2</span><span class="gday-text"><strong>Sự khác biệt giữa các thế hệ</strong> — generation gap, traditional values, mindset. Chiến lược: phỏng vấn ông bà/cha mẹ, so sánh quan điểm giữa các thế hệ.</span></div>
+                                <div class="gday-row"><span class="gday-num">U3</span><span class="gday-text"><strong>Thành phố và cuộc sống thông minh</strong> — smart home, public transport, air quality. Chiến lược: thiết kế poster "thành phố thông minh mơ ước".</span></div>
+                                <div class="gday-row gday-review"><span class="gday-num">R1</span><span class="gday-text">Review 1 (Unit 1–3) — ôn từ vựng qua trò chơi ghép từ, đố vui chủ đề.</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="gstage-block gstage-2">
+                        <button type="button" class="gstage-header" data-gstage-toggle>
+                            <span class="gstage-icon">🏛️</span>
+                            <span class="gstage-header-text">
+                                <h4>Our Society</h4>
+                                <span class="gstage-meta">Unit 4 – 5 · Review 2</span>
+                            </span>
+                            <span class="gstage-chevron">▾</span>
+                        </button>
+                        <div class="gstage-body">
+                            <div class="gday-list">
+                                <div class="gday-row"><span class="gday-num">U4</span><span class="gday-text"><strong>ASEAN</strong> — member state, cooperation, cultural exchange. Chiến lược: tìm hiểu một nước ASEAN, thuyết trình văn hoá.</span></div>
+                                <div class="gday-row"><span class="gday-num">U5</span><span class="gday-text"><strong>Sự nóng lên toàn cầu</strong> — greenhouse gas, sea level rise, carbon emission. Chiến lược: xem infographic, viết cam kết giảm khí thải cá nhân.</span></div>
+                                <div class="gday-row gday-review"><span class="gday-num">R2</span><span class="gday-text">Review 2 (Unit 4–5) — ôn tập tổng hợp từ vựng chuẩn bị kiểm tra cuối kỳ 1.</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="gstage-block gstage-3">
+                        <button type="button" class="gstage-header" data-gstage-toggle>
+                            <span class="gstage-icon">🌍</span>
+                            <span class="gstage-header-text">
+                                <h4>Our Environment</h4>
+                                <span class="gstage-meta">Unit 6 – 8 · Review 3</span>
+                            </span>
+                            <span class="gstage-chevron">▾</span>
+                        </button>
+                        <div class="gstage-body">
+                            <div class="gday-list">
+                                <div class="gday-row"><span class="gday-num">U6</span><span class="gday-text"><strong>Bảo tồn di sản</strong> — heritage site, restoration, folk custom. Chiến lược: giới thiệu một di sản Việt Nam yêu thích.</span></div>
+                                <div class="gday-row"><span class="gday-num">U7</span><span class="gday-text"><strong>Giáo dục sau khi rời trường</strong> — vocational training, gap year, further education. Chiến lược: thảo luận nhóm về lựa chọn sau tốt nghiệp.</span></div>
+                                <div class="gday-row"><span class="gday-num">U8</span><span class="gday-text"><strong>Tính tự lập của tuổi teen</strong> — self-reliant, part-time job, decision-making. Chiến lược: chia sẻ trải nghiệm tự lập của bản thân.</span></div>
+                                <div class="gday-row gday-review"><span class="gday-num">R3</span><span class="gday-text">Review 3 (Unit 6–8) — ôn từ vựng qua trò chơi ghép từ, đố vui chủ đề.</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="gstage-block gstage-4">
+                        <button type="button" class="gstage-header" data-gstage-toggle>
+                            <span class="gstage-icon">🚀</span>
+                            <span class="gstage-header-text">
+                                <h4>Our Future</h4>
+                                <span class="gstage-meta">Unit 9 – 10 · Review 4</span>
+                            </span>
+                            <span class="gstage-chevron">▾</span>
+                        </button>
+                        <div class="gstage-body">
+                            <div class="gday-list">
+                                <div class="gday-row"><span class="gday-num">U9</span><span class="gday-text"><strong>Các vấn đề xã hội</strong> — inequality, unemployment, homelessness. Chiến lược: thảo luận giải pháp cho một vấn đề xã hội.</span></div>
+                                <div class="gday-row"><span class="gday-num">U10</span><span class="gday-text"><strong>Hệ sinh thái</strong> — food chain, biodiversity, habitat. Chiến lược: vẽ sơ đồ chuỗi thức ăn, thuyết trình nhóm.</span></div>
+                                <div class="gday-row gday-review"><span class="gday-num">R4</span><span class="gday-text">Review 4 (Unit 9–10) — ôn tập tổng hợp từ vựng chuẩn bị kiểm tra cuối kỳ 2.</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="grade-note-box">
+                    <h4>📌 Ghi chú sư phạm</h4>
+                    <ul>
+                        <li>Từ vựng lớp 11 mang tính học thuật/xã hội hơn lớp 10 — nên ôn lại bằng flashcard hoặc lặp lại ngắt quãng (spaced repetition), đặt câu với từ mới thay vì chỉ học nghĩa.</li>
+                        <li>Mỗi chủ điểm nên có 1 hoạt động đầu ra (thuyết trình, poster, thảo luận nhóm) để học sinh dùng từ vựng trong ngữ cảnh thực tế.</li>
+                        <li>Liên hệ chủ đề giữa các unit trong cùng chủ điểm (ví dụ Our Environment: di sản → giáo dục → tự lập) để học sinh thấy mạch nội dung xuyên suốt.</li>
+                    </ul>
+                </div>
+
+            </div>
+            </div>
+            <!-- ===== KẾT THÚC TRANG 4: TỪ VỰNG ===== -->
+
+            <!-- ===== TRANG 5: LỊCH TRÌNH 35 TUẦN ===== -->
+            <div class="roadmap-page" data-page="4">
+            <div class="roadmap-wrap">
+
+                <div class="roadmap-intro roadmap-intro-g11-schedule">
+                    <span class="roadmap-intro-badge">🗓️ Lịch trình gợi ý</span>
+                    <h3>Phân bổ 35 tuần cho 10 unit &amp; 4 bài Review</h3>
+                    <p>So với lớp 9 và lớp 10, mỗi unit lớp 11 dài hơn nên được phân bổ 2–3 tuần thay vì cố định 2 tuần. Đây là khung tham khảo; cần đối chiếu với PPCT chính thức và số tiết/tuần thực tế của nhà trường.</p>
+                    <div class="roadmap-stats">
+                        <div class="roadmap-stat"><strong>35</strong><span>tuần</span></div>
+                        <div class="roadmap-stat"><strong>2</strong><span>học kỳ</span></div>
+                        <div class="roadmap-stat"><strong>4</strong><span>bài Review</span></div>
+                        <div class="roadmap-stat"><strong>4</strong><span>bài kiểm tra</span></div>
+                    </div>
+                </div>
+
+                <p class="gstage-hint">👇 Nhấn vào từng học kỳ để xem lịch trình chi tiết theo tuần</p>
+
+                <div class="gstage-accordion">
+
+                    <div class="gstage-block gstage-1">
+                        <button type="button" class="gstage-header" data-gstage-toggle>
+                            <span class="gstage-icon">1️⃣</span>
+                            <span class="gstage-header-text">
+                                <h4>Học kỳ I</h4>
+                                <span class="gstage-meta">Tuần 1 – 18</span>
+                            </span>
+                            <span class="gstage-chevron">▾</span>
+                        </button>
+                        <div class="gstage-body">
+                            <div class="gday-list">
+                                <div class="gday-row"><span class="gday-num">1-2</span><span class="gday-text">Unit 1 – A Long and Healthy Life — Dạy ngôn ngữ mới.</span></div>
+                                <div class="gday-row"><span class="gday-num">3-4</span><span class="gday-text">Unit 2 – The Generation Gap — Dạy ngôn ngữ mới.</span></div>
+                                <div class="gday-row"><span class="gday-num">5-6</span><span class="gday-text">Unit 3 – Cities of the Future — Dạy ngôn ngữ mới.</span></div>
+                                <div class="gday-row gday-review"><span class="gday-num">7</span><span class="gday-text">Review 1 (Unit 1–3) — Ôn tập, củng cố.</span></div>
+                                <div class="gday-row gday-test"><span class="gday-num">8</span><span class="gday-text">Kiểm tra giữa kỳ I — Đánh giá.</span></div>
+                                <div class="gday-row"><span class="gday-num">9-11</span><span class="gday-text">Unit 4 – ASEAN and Viet Nam — Dạy ngôn ngữ mới.</span></div>
+                                <div class="gday-row"><span class="gday-num">12-14</span><span class="gday-text">Unit 5 – Global Warming — Dạy ngôn ngữ mới.</span></div>
+                                <div class="gday-row gday-review"><span class="gday-num">15</span><span class="gday-text">Review 2 (Unit 4–5) — Ôn tập, củng cố.</span></div>
+                                <div class="gday-row"><span class="gday-num">16</span><span class="gday-text">Ôn tập cuối kỳ I — Ôn tập tổng hợp.</span></div>
+                                <div class="gday-row gday-test"><span class="gday-num">17</span><span class="gday-text">Kiểm tra cuối kỳ I — Đánh giá.</span></div>
+                                <div class="gday-row"><span class="gday-num">18</span><span class="gday-text">Chữa bài kiểm tra / dự phòng.</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="gstage-block gstage-3">
+                        <button type="button" class="gstage-header" data-gstage-toggle>
+                            <span class="gstage-icon">2️⃣</span>
+                            <span class="gstage-header-text">
+                                <h4>Học kỳ II</h4>
+                                <span class="gstage-meta">Tuần 19 – 35</span>
+                            </span>
+                            <span class="gstage-chevron">▾</span>
+                        </button>
+                        <div class="gstage-body">
+                            <div class="gday-list">
+                                <div class="gday-row"><span class="gday-num">19-20</span><span class="gday-text">Unit 6 – Preserving Our Heritage — Dạy ngôn ngữ mới.</span></div>
+                                <div class="gday-row"><span class="gday-num">21-22</span><span class="gday-text">Unit 7 – Education Options for School-leavers — Dạy ngôn ngữ mới.</span></div>
+                                <div class="gday-row"><span class="gday-num">23-24</span><span class="gday-text">Unit 8 – Becoming Independent — Dạy ngôn ngữ mới.</span></div>
+                                <div class="gday-row gday-review"><span class="gday-num">25</span><span class="gday-text">Review 3 (Unit 6–8) — Ôn tập, củng cố.</span></div>
+                                <div class="gday-row gday-test"><span class="gday-num">26</span><span class="gday-text">Kiểm tra giữa kỳ II — Đánh giá.</span></div>
+                                <div class="gday-row"><span class="gday-num">27-29</span><span class="gday-text">Unit 9 – Social Issues — Dạy ngôn ngữ mới.</span></div>
+                                <div class="gday-row"><span class="gday-num">30-32</span><span class="gday-text">Unit 10 – The Ecosystem — Dạy ngôn ngữ mới.</span></div>
+                                <div class="gday-row gday-review"><span class="gday-num">33</span><span class="gday-text">Review 4 (Unit 9–10) — Ôn tập, củng cố.</span></div>
+                                <div class="gday-row"><span class="gday-num">34</span><span class="gday-text">Ôn tập cuối kỳ II — Ôn tập tổng hợp.</span></div>
+                                <div class="gday-row gday-test"><span class="gday-num">35</span><span class="gday-text">Kiểm tra cuối kỳ II / dự phòng — Đánh giá.</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="roadmap-finish">
+                    <span class="roadmap-finish-icon">🏁</span>
+                    <div>
+                        <h4>Sẵn sàng triển khai!</h4>
+                        <p>Trọn bộ kế hoạch dạy học Tiếng Anh 11 (Global Success) — tích hợp Phiên âm, Ngữ pháp, Từ vựng theo đúng tiến trình SGK, phân phối chương trình 35 tuần, nối tiếp lớp 10 và chuẩn bị nền tảng câu phức cho lớp 12.</p>
+                    </div>
+                </div>
+
+            </div>
+            </div>
+            <!-- ===== KẾT THÚC TRANG 5: LỊCH TRÌNH 35 TUẦN ===== -->
+
+            </div>
+            </div>
+            <!-- ----- Chấm điều hướng (dots) ----- -->
+            <div class="roadmap-dots" id="g11-dots">
+                <span class="g11-dot active" data-dot="0"></span>
+                <span class="g11-dot" data-dot="1"></span>
+                <span class="g11-dot" data-dot="2"></span>
+                <span class="g11-dot" data-dot="3"></span>
+                <span class="g11-dot" data-dot="4"></span>
+            </div>
+
+        </div>
+        <!-- ===== KẾT THÚC KHỐI LỚP 11 ===== -->
+
+        <!-- ===== KHỐI LỚP 12 ===== -->
+        <div class="grade-panel" id="grade-panel-12" style="display:none;">
+
+            <!-- ----- Thanh chuyển đổi giữa Tổng quan / Phiên âm / Ngữ pháp / Từ vựng / Lịch trình ----- -->
+            <div class="roadmap-switcher">
+                <button type="button" class="roadmap-nav-btn" id="g12-prev-btn" aria-label="Trang trước">‹</button>
+                <div class="roadmap-switcher-tabs">
+                    <button type="button" class="g12-switcher-tab active" data-g12-page="0">📋 Tổng quan</button>
+                    <button type="button" class="g12-switcher-tab" data-g12-page="1">🔤 Phiên âm</button>
+                    <button type="button" class="g12-switcher-tab" data-g12-page="2">📐 Ngữ pháp</button>
+                    <button type="button" class="g12-switcher-tab" data-g12-page="3">📚 Từ vựng</button>
+                    <button type="button" class="g12-switcher-tab" data-g12-page="4">🗓️ Lịch 35 tuần</button>
+                </div>
+                <button type="button" class="roadmap-nav-btn" id="g12-next-btn" aria-label="Trang sau">›</button>
+            </div>
+
+            <div class="roadmap-pager" id="g12-pager">
+            <div class="roadmap-track" id="g12-track">
+
+            <!-- ===== TRANG 1: TỔNG QUAN ===== -->
+            <div class="roadmap-page" data-page="0">
+            <div class="roadmap-wrap">
+
+                <div class="roadmap-intro roadmap-intro-g12-overview">
+                    <span class="roadmap-intro-badge">📁 Lộ trình dạy học Lớp 12</span>
+                    <h3>Tiếng Anh 12 — Bộ sách Global Success</h3>
+                    <p>Lớp 12 là năm cuối cấp, chuẩn bị trực tiếp cho kỳ thi tốt nghiệp THPT. Chương trình gồm 10 unit chia 2 học kỳ (Học kỳ 1: Unit 1–5; Học kỳ 2: Unit 6–10), xen kẽ 4 buổi Review. Ngữ pháp chủ yếu ôn tập và mở rộng các cấu trúc đã học ở lớp 10–11, đồng thời bổ sung các điểm mới hay gặp trong đề thi (causatives, mệnh đề trạng ngữ, câu tường thuật nâng cao). Tuần 32–35 dành riêng để ôn luyện tổng hợp và luyện đề.</p>
+                    <div class="roadmap-stats">
+                        <div class="roadmap-stat"><strong>10</strong><span>units</span></div>
+                        <div class="roadmap-stat"><strong>2</strong><span>học kỳ</span></div>
+                        <div class="roadmap-stat"><strong>4</strong><span>bài Review</span></div>
+                        <div class="roadmap-stat"><strong>35</strong><span>tuần</span></div>
+                    </div>
+                </div>
+
+                <p class="gstage-hint">👇 Cấu trúc năm học — 2 học kỳ</p>
+
+                <div class="gday-list">
+                    <div class="gday-row"><span class="gday-num">HK1</span><span class="gday-text"><strong>Unit 1</strong> Life Stories We Admire, <strong>Unit 2</strong> A Multicultural World, <strong>Unit 3</strong> Green Living → Review 1. <strong>Unit 4</strong> Urbanisation, <strong>Unit 5</strong> The World of Work → Review 2. <em>(≈16 tuần)</em></span></div>
+                    <div class="gday-row"><span class="gday-num">HK2</span><span class="gday-text"><strong>Unit 6</strong> Artificial Intelligence, <strong>Unit 7</strong> The World of Mass Media, <strong>Unit 8</strong> Wildlife Conservation → Review 3. <strong>Unit 9</strong> Career Paths, <strong>Unit 10</strong> Lifelong Learning → Review 4. Tuần 32–35: ôn luyện tổng hợp, luyện đề thi tốt nghiệp THPT. <em>(≈19 tuần)</em></span></div>
+                </div>
+
+                <div class="grade-note-box">
+                    <h4>📌 Lưu ý khi triển khai</h4>
+                    <ul>
+                        <li>3 hợp phần Phiên âm – Ngữ pháp – Từ vựng nên dạy tích hợp trong cùng một unit, theo đúng tiến trình sách Global Success.</li>
+                        <li>Phần lớn ngữ pháp lớp 12 là ôn tập và mở rộng — nên rà soát kiến thức cũ (lớp 10, 11) trước khi dạy phần mở rộng, đặc biệt các cấu trúc hay gặp trong đề thi: mệnh đề quan hệ, câu bị động, câu tường thuật, mệnh đề trạng ngữ.</li>
+                        <li>4 tuần cuối năm (32–35) nên dành hoàn toàn cho luyện đề tổng hợp 4 kỹ năng, không dạy nội dung mới.</li>
+                    </ul>
+                </div>
+
+            </div>
+            </div>
+            <!-- ===== KẾT THÚC TRANG 1: TỔNG QUAN ===== -->
+
+            <!-- ===== TRANG 2: PHIÊN ÂM ===== -->
+            <div class="roadmap-page" data-page="1">
+            <div class="roadmap-wrap">
+
+                <div class="roadmap-intro roadmap-intro-g12-phonetics">
+                    <span class="roadmap-intro-badge">🔤 Phần 1 · Phiên âm</span>
+                    <h3>Nguyên âm đôi, connected speech và ngữ điệu tổng ôn</h3>
+                    <p>Học kỳ I hoàn thiện toàn bộ hệ thống nguyên âm đôi tiếng Anh (8 nguyên âm đôi, chia làm 3 unit). Học kỳ II chuyển hẳn sang các hiện tượng trong chuỗi lời nói ở trình độ nâng cao — từ không trọng âm, đồng âm, nối âm /r/, đồng hóa âm — và khép lại bằng tổng ôn trọng âm, nhịp điệu, ngữ điệu câu hỏi cho kỳ thi tốt nghiệp.</p>
+                    <div class="roadmap-stats">
+                        <div class="roadmap-stat"><strong>3</strong><span>unit nguyên âm đôi</span></div>
+                        <div class="roadmap-stat"><strong>5</strong><span>unit connected speech</span></div>
+                        <div class="roadmap-stat"><strong>2</strong><span>unit tổng ôn</span></div>
+                    </div>
+                </div>
+
+                <p class="gstage-hint">👇 Nhấn vào từng học kỳ để xem trọng tâm ngữ âm từng unit</p>
+
+                <div class="gstage-accordion">
+
+                    <div class="gstage-block gstage-1">
+                        <button type="button" class="gstage-header" data-gstage-toggle>
+                            <span class="gstage-icon">1️⃣</span>
+                            <span class="gstage-header-text">
+                                <h4>Học kỳ I</h4>
+                                <span class="gstage-meta">Unit 1 – 5</span>
+                            </span>
+                            <span class="gstage-chevron">▾</span>
+                        </button>
+                        <div class="gstage-body">
+                            <div class="gday-list">
+                                <div class="gday-row"><span class="gday-num">U1</span><span class="gday-text"><strong>Nguyên âm đôi /eɪ/ và /əʊ/</strong> — stay, brave, day / go, home, know. Kỹ thuật: luyện minimal pairs theo cặp, chú ý độ trượt âm rõ ràng từ âm đầu sang âm sau.</span></div>
+                                <div class="gday-row"><span class="gday-num">U2</span><span class="gday-text"><strong>Nguyên âm đôi /ɔɪ/, /aɪ/ và /aʊ/</strong> — boy, choice / like, time / now, house. Kỹ thuật: so sánh độ mở miệng và hướng trượt âm của 3 nguyên âm đôi.</span></div>
+                                <div class="gday-row"><span class="gday-num">U3</span><span class="gday-text"><strong>Nguyên âm đôi /ɪə/, /eə/ và /ʊə/</strong> — here, idea / care, share / tour, sure. Kỹ thuật: luyện khẩu hình chuyển dần về âm /ə/ ở cuối mỗi nguyên âm đôi.</span></div>
+                                <div class="gday-row gday-review"><span class="gday-num">R1</span><span class="gday-text">Review 1 (Unit 1–3) — tổng ôn cả 8 nguyên âm đôi bằng bảng phân loại và trò chơi nghe đoán âm.</span></div>
+                                <div class="gday-row"><span class="gday-num">U4</span><span class="gday-text"><strong>Từ không trọng âm trong chuỗi lời nói</strong> — "a", "the", "and" thường bị giảm thành /ə/ khi nói nhanh. Kỹ thuật: nghe và gạch chân từ chức năng bị giảm âm trong hội thoại thật.</span></div>
+                                <div class="gday-row"><span class="gday-num">U5</span><span class="gday-text"><strong>Nhấn trọng âm ở trợ động từ và động từ khuyết thiếu</strong> — "I CAN do it" (nhấn mạnh khả năng) so với dạng yếu thông thường. Kỹ thuật: đọc cùng một câu có/không nhấn trợ động từ, so sánh sự thay đổi sắc thái nghĩa.</span></div>
+                                <div class="gday-row gday-review"><span class="gday-num">R2</span><span class="gday-text">Review 2 (Unit 4–5) — ôn lại hiện tượng giảm âm và nhấn trọng âm trong câu.</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="gstage-block gstage-2">
+                        <button type="button" class="gstage-header" data-gstage-toggle>
+                            <span class="gstage-icon">2️⃣</span>
+                            <span class="gstage-header-text">
+                                <h4>Học kỳ II</h4>
+                                <span class="gstage-meta">Unit 6 – 10</span>
+                            </span>
+                            <span class="gstage-chevron">▾</span>
+                        </button>
+                        <div class="gstage-body">
+                            <div class="gday-list">
+                                <div class="gday-row"><span class="gday-num">U6</span><span class="gday-text"><strong>Từ đồng âm khác nghĩa (homophones)</strong> — write/right, there/their/they're. Kỹ thuật: trò chơi ghép từ đồng âm với đúng nghĩa/ngữ cảnh trong câu.</span></div>
+                                <div class="gday-row"><span class="gday-num">U7</span><span class="gday-text"><strong>Nối âm /r/ giữa hai nguyên âm</strong> — "far away", "media effect". Kỹ thuật: luyện đọc nối liền câu khi từ trước kết thúc bằng "r" và từ sau bắt đầu bằng nguyên âm.</span></div>
+                                <div class="gday-row"><span class="gday-num">U8</span><span class="gday-text"><strong>Đồng hóa âm (assimilation)</strong> — "handbag" → /hæmbæg/, "ten cats". Kỹ thuật: nghe và so sánh cách phát âm ở tốc độ chậm và tốc độ tự nhiên.</span></div>
+                                <div class="gday-row gday-review"><span class="gday-num">R3</span><span class="gday-text">Review 3 (Unit 6–8) — ôn lại đồng âm, nối âm /r/ và đồng hóa âm qua đoạn hội thoại.</span></div>
+                                <div class="gday-row"><span class="gday-num">U9</span><span class="gday-text"><strong>Trọng âm và nhịp điệu trong câu</strong> — "I want to BUILD a CAreer in engiNEERing." Kỹ thuật: vỗ tay theo nhịp trọng âm câu dài, chú ý các từ nội dung mang trọng âm chính.</span></div>
+                                <div class="gday-row"><span class="gday-num">U10</span><span class="gday-text"><strong>Ngữ điệu trong câu hỏi (ôn tập)</strong> — Wh-question xuống giọng cuối câu, Yes/No question lên giọng cuối câu. Kỹ thuật: tổng ôn ngữ điệu qua các dạng câu hỏi phỏng vấn xin việc/học bổng.</span></div>
+                                <div class="gday-row gday-review"><span class="gday-num">R4</span><span class="gday-text">Review 4 (Unit 9–10) — tổng ôn toàn bộ ngữ âm năm học, chuẩn bị cho phần nghe/nói của kỳ thi tốt nghiệp.</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="grade-note-box">
+                    <h4>📌 Ghi chú sư phạm</h4>
+                    <ul>
+                        <li>Trọng tâm ngữ âm lớp 12 chuyển hẳn từ âm đơn lẻ sang các hiện tượng trong chuỗi lời nói — nên luyện nghe và nhại lại (shadowing) theo audio mẫu thay vì chỉ đọc từ đơn.</li>
+                        <li>Ghi âm lại giọng đọc của học sinh để so sánh và điều chỉnh, đặc biệt trước kỳ thi tốt nghiệp THPT có phần thi nói/nghe.</li>
+                        <li>Unit 9–10 nên được ôn lại kỹ vì tổng hợp toàn bộ trọng âm — nhịp điệu — ngữ điệu đã học suốt 3 năm THPT.</li>
+                    </ul>
+                </div>
+
+            </div>
+            </div>
+            <!-- ===== KẾT THÚC TRANG 2: PHIÊN ÂM ===== -->
+
+            <!-- ===== TRANG 3: NGỮ PHÁP ===== -->
+            <div class="roadmap-page" data-page="2">
+            <div class="roadmap-wrap">
+
+                <div class="roadmap-intro roadmap-intro-g12-grammar">
+                    <span class="roadmap-intro-badge">📐 Phần 2 · Ngữ pháp</span>
+                    <h3>Ôn tập, mở rộng và tổng hợp cho kỳ thi tốt nghiệp THPT</h3>
+                    <p>Phần lớn ngữ pháp lớp 12 là ôn tập và mở rộng các cấu trúc đã học ở lớp 10, 11 (thì động từ, mạo từ, câu đơn/ghép/phức, mệnh đề quan hệ), đồng thời bổ sung các cấu trúc mới thường gặp trong đề thi: causatives, mệnh đề trạng ngữ, cụm động từ ba thành phần và câu tường thuật nâng cao.</p>
+                    <div class="roadmap-stats">
+                        <div class="roadmap-stat"><strong>10</strong><span>unit</span></div>
+                        <div class="roadmap-stat"><strong>2</strong><span>học kỳ</span></div>
+                        <div class="roadmap-stat"><strong>4</strong><span>bài Review</span></div>
+                    </div>
+                </div>
+
+                <p class="gstage-hint">👇 Nhấn vào từng học kỳ để xem cấu trúc ngữ pháp &amp; liên kết ôn tập xuyên suốt</p>
+
+                <div class="gstage-accordion">
+
+                    <div class="gstage-block gstage-1">
+                        <button type="button" class="gstage-header" data-gstage-toggle>
+                            <span class="gstage-icon">1️⃣</span>
+                            <span class="gstage-header-text">
+                                <h4>Học kỳ I</h4>
+                                <span class="gstage-meta">Unit 1 – 5</span>
+                            </span>
+                            <span class="gstage-chevron">▾</span>
+                        </button>
+                        <div class="gstage-body">
+                            <div class="gday-list">
+                                <div class="gday-row"><span class="gday-num">U1</span><span class="gday-text"><strong>Quá khứ đơn vs. Quá khứ tiếp diễn</strong> — "She was studying abroad when she got the offer." Liên kết: ôn lại nền thì quá khứ trước khi vào các cấu trúc phức tạp hơn của lớp 12.</span></div>
+                                <div class="gday-row"><span class="gday-num">U2</span><span class="gday-text"><strong>Mạo từ (ôn tập, mở rộng)</strong> — "a multicultural society, the diversity of languages." Liên kết: củng cố kiến thức nền, hỗ trợ viết luận chính xác hơn ở Unit 3.</span></div>
+                                <div class="gday-row"><span class="gday-num">U3</span><span class="gday-text"><strong>Động từ đi với giới từ; mệnh đề quan hệ bổ nghĩa cả câu</strong> — "Plastic waste is reduced, which is great news for the ocean." Liên kết: mở rộng mệnh đề quan hệ đã học ở lớp 10 sang dạng bổ nghĩa cho cả câu.</span></div>
+                                <div class="gday-row gday-review"><span class="gday-num">R1</span><span class="gday-text">Review 1 (Unit 1–3) — hệ thống lại thì quá khứ, mạo từ và mệnh đề quan hệ; luyện đề dạng bài kiểm tra giữa kỳ 1.</span></div>
+                                <div class="gday-row"><span class="gday-num">U4</span><span class="gday-text"><strong>Hiện tại hoàn thành (ôn tập, mở rộng); so sánh kép</strong> — "The busier the city gets, the more crowded it becomes." Liên kết: ôn hiện tại hoàn thành từ lớp 10–11, mở rộng thêm cấu trúc so sánh kép mới.</span></div>
+                                <div class="gday-row"><span class="gday-num">U5</span><span class="gday-text"><strong>Câu đơn, câu ghép, câu phức (ôn tập, mở rộng)</strong> — tổng ôn 3 loại câu qua các đoạn văn mẫu. Liên kết: nền tảng trực tiếp cho kỹ năng viết luận thi tốt nghiệp.</span></div>
+                                <div class="gday-row gday-review"><span class="gday-num">R2</span><span class="gday-text">Review 2 (Unit 4–5) — ôn tập tổng hợp so sánh kép và các loại câu, chuẩn bị kiểm tra cuối kỳ 1.</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="gstage-block gstage-2">
+                        <button type="button" class="gstage-header" data-gstage-toggle>
+                            <span class="gstage-icon">2️⃣</span>
+                            <span class="gstage-header-text">
+                                <h4>Học kỳ II</h4>
+                                <span class="gstage-meta">Unit 6 – 10</span>
+                            </span>
+                            <span class="gstage-chevron">▾</span>
+                        </button>
+                        <div class="gstage-body">
+                            <div class="gday-list">
+                                <div class="gday-row"><span class="gday-num">U6</span><span class="gday-text"><strong>Thể chủ động &amp; bị động của causatives</strong> — "She had her thesis translated by an AI tool." Liên kết: mở rộng trực tiếp từ câu bị động cơ bản đã học ở lớp 10.</span></div>
+                                <div class="gday-row"><span class="gday-num">U7</span><span class="gday-text"><strong>Mệnh đề trạng ngữ chỉ cách thức và kết quả</strong> — "The news spread so fast that everyone knew within an hour." Liên kết: nối tiếp từ nối/cụm từ nối đã học ở lớp 11 (Unit 9).</span></div>
+                                <div class="gday-row"><span class="gday-num">U8</span><span class="gday-text"><strong>Mệnh đề trạng ngữ chỉ điều kiện và so sánh</strong> — "As long as habitats are protected, species will survive." Liên kết: hoàn thiện chuỗi câu điều kiện bắt đầu từ lớp 10 (Unit 10).</span></div>
+                                <div class="gday-row gday-review"><span class="gday-num">R3</span><span class="gday-text">Review 3 (Unit 6–8) — luyện đề dạng bài kiểm tra giữa kỳ 2, tập trung causatives và mệnh đề trạng ngữ.</span></div>
+                                <div class="gday-row"><span class="gday-num">U9</span><span class="gday-text"><strong>Cụm động từ ba thành phần</strong> — "look forward to, come up with, get away with." Liên kết: từ vựng học thuật quan trọng, thường xuất hiện trong đề đọc hiểu.</span></div>
+                                <div class="gday-row"><span class="gday-num">U10</span><span class="gday-text"><strong>Câu tường thuật: lệnh, yêu cầu, đề nghị, lời khuyên</strong> — "He told me to submit the report. She advised me to apply early." Liên kết: hoàn thiện chuỗi câu tường thuật bắt đầu từ lớp 10 (statements) và mở rộng ở lớp 11.</span></div>
+                                <div class="gday-row gday-review"><span class="gday-num">R4</span><span class="gday-text">Review 4 (Unit 9–10) — ôn tập tổng hợp toàn bộ ngữ pháp năm học, chuẩn bị luyện đề thi tốt nghiệp.</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="grade-note-box">
+                    <h4>📌 Ghi chú sư phạm</h4>
+                    <ul>
+                        <li>Vì phần lớn là ôn tập, nên rà soát nhanh kiến thức cũ (bằng bài test đầu unit) trước khi dạy phần mở rộng, tránh lặp lại toàn bộ lý thuyết đã học.</li>
+                        <li>Đặc biệt chú ý mệnh đề quan hệ (U3), câu bị động/causatives (U6), câu tường thuật (U10) và mệnh đề trạng ngữ (U7, U8) — đây là các cấu trúc trọng tâm hay xuất hiện trong đề thi tốt nghiệp THPT.</li>
+                        <li>Từ tuần 32, chuyển hẳn sang luyện đề tổng hợp thay vì học cấu trúc mới, ưu tiên các dạng bài quen thuộc trong đề tốt nghiệp (điền từ, đọc hiểu, tìm lỗi sai, viết lại câu).</li>
+                    </ul>
+                </div>
+
+            </div>
+            </div>
+            <!-- ===== KẾT THÚC TRANG 3: NGỮ PHÁP ===== -->
+
+            <!-- ===== TRANG 4: TỪ VỰNG ===== -->
+            <div class="roadmap-page" data-page="3">
+            <div class="roadmap-wrap">
+
+                <div class="roadmap-intro roadmap-intro-g12-vocab">
+                    <span class="roadmap-intro-badge">📚 Phần 3 · Từ vựng</span>
+                    <h3>Collocation học thuật chuẩn bị cho đề đọc hiểu &amp; viết</h3>
+                    <p>Từ vựng lớp 12 ưu tiên các cụm từ và collocation (thay vì từ đơn lẻ) vì đây là dạng hay gặp trong đề đọc hiểu và bài viết thi tốt nghiệp THPT — trải rộng từ tiểu sử, văn hóa, môi trường, đô thị hóa, công việc đến công nghệ, truyền thông, bảo tồn và định hướng nghề nghiệp.</p>
+                    <div class="roadmap-stats">
+                        <div class="roadmap-stat"><strong>10</strong><span>unit</span></div>
+                        <div class="roadmap-stat"><strong>8-12</strong><span>collocation/tiết</span></div>
+                        <div class="roadmap-stat"><strong>2</strong><span>học kỳ</span></div>
+                    </div>
+                </div>
+
+                <p class="gstage-hint">👇 Nhấn vào từng học kỳ để xem chủ đề từ vựng &amp; chiến lược dạy đề xuất</p>
+
+                <div class="gstage-accordion">
+
+                    <div class="gstage-block gstage-1">
+                        <button type="button" class="gstage-header" data-gstage-toggle>
+                            <span class="gstage-icon">1️⃣</span>
+                            <span class="gstage-header-text">
+                                <h4>Học kỳ I</h4>
+                                <span class="gstage-meta">Unit 1 – 5</span>
+                            </span>
+                            <span class="gstage-chevron">▾</span>
+                        </button>
+                        <div class="gstage-body">
+                            <div class="gday-list">
+                                <div class="gday-row"><span class="gday-num">U1</span><span class="gday-text"><strong>Câu chuyện cuộc đời</strong> — turning point, achievement, overcome challenges. Chiến lược: viết mini-biography về một người mình ngưỡng mộ.</span></div>
+                                <div class="gday-row"><span class="gday-num">U2</span><span class="gday-text"><strong>Sự đa dạng văn hóa</strong> — multicultural, integration, custom. Chiến lược: giới thiệu một nền văn hoá khác qua ảnh/video ngắn.</span></div>
+                                <div class="gday-row"><span class="gday-num">U3</span><span class="gday-text"><strong>Lối sống xanh</strong> — carbon footprint, sustainable, eco-friendly. Chiến lược: thử thách "7 ngày sống xanh" và ghi nhật ký bằng tiếng Anh.</span></div>
+                                <div class="gday-row gday-review"><span class="gday-num">R1</span><span class="gday-text">Review 1 (Unit 1–3) — ôn từ vựng qua trò chơi ghép collocation, đố vui chủ đề.</span></div>
+                                <div class="gday-row"><span class="gday-num">U4</span><span class="gday-text"><strong>Đô thị hóa</strong> — overcrowding, infrastructure, urban sprawl. Chiến lược: so sánh ảnh đô thị hoá xưa/nay, thảo luận nhóm.</span></div>
+                                <div class="gday-row"><span class="gday-num">U5</span><span class="gday-text"><strong>Công việc</strong> — career path, work-life balance, job satisfaction. Chiến lược: phỏng vấn giả định xin việc bằng tiếng Anh.</span></div>
+                                <div class="gday-row gday-review"><span class="gday-num">R2</span><span class="gday-text">Review 2 (Unit 4–5) — ôn tập tổng hợp từ vựng chuẩn bị kiểm tra cuối kỳ 1.</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="gstage-block gstage-2">
+                        <button type="button" class="gstage-header" data-gstage-toggle>
+                            <span class="gstage-icon">2️⃣</span>
+                            <span class="gstage-header-text">
+                                <h4>Học kỳ II</h4>
+                                <span class="gstage-meta">Unit 6 – 10</span>
+                            </span>
+                            <span class="gstage-chevron">▾</span>
+                        </button>
+                        <div class="gstage-body">
+                            <div class="gday-list">
+                                <div class="gday-row"><span class="gday-num">U6</span><span class="gday-text"><strong>Khoa học, công nghệ (AI)</strong> — automation, algorithm, machine learning. Chiến lược: thảo luận ưu/nhược điểm của AI trong đời sống.</span></div>
+                                <div class="gday-row"><span class="gday-num">U7</span><span class="gday-text"><strong>Truyền thông đại chúng</strong> — broadcast, misinformation, social media platform. Chiến lược: phân tích một tin tức trên mạng xã hội, đánh giá độ tin cậy.</span></div>
+                                <div class="gday-row"><span class="gday-num">U8</span><span class="gday-text"><strong>Bảo tồn động vật hoang dã</strong> — poaching, endangered species, sanctuary. Chiến lược: thiết kế một chiến dịch bảo vệ loài động vật yêu thích.</span></div>
+                                <div class="gday-row gday-review"><span class="gday-num">R3</span><span class="gday-text">Review 3 (Unit 6–8) — ôn từ vựng qua trò chơi ghép collocation, đố vui chủ đề.</span></div>
+                                <div class="gday-row"><span class="gday-num">U9</span><span class="gday-text"><strong>Con đường sự nghiệp</strong> — internship, qualification, career counselling. Chiến lược: lập một bản CV tiếng Anh đơn giản.</span></div>
+                                <div class="gday-row"><span class="gday-num">U10</span><span class="gday-text"><strong>Học tập suốt đời</strong> — self-study, upskill, online certificate. Chiến lược: lập kế hoạch học tập suốt đời của cá nhân.</span></div>
+                                <div class="gday-row gday-review"><span class="gday-num">R4</span><span class="gday-text">Review 4 (Unit 9–10) — ôn tập tổng hợp từ vựng chuẩn bị kiểm tra cuối kỳ 2 và luyện đề tốt nghiệp.</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="grade-note-box">
+                    <h4>📌 Ghi chú sư phạm</h4>
+                    <ul>
+                        <li>Ưu tiên tuyệt đối collocation và cụm từ học thuật (ví dụ "overcome challenges", "work-life balance") thay vì từ đơn lẻ — đúng dạng thường gặp trong đề đọc hiểu và viết lại câu.</li>
+                        <li>Ôn lại bằng flashcard hoặc lặp lại ngắt quãng (spaced repetition); khuyến khích đặt câu hoặc viết đoạn ngắn với từ mới để ghi nhớ trong ngữ cảnh.</li>
+                        <li>Trong 4 tuần luyện đề cuối năm, nên hệ thống lại toàn bộ collocation của cả 10 unit theo chủ đề để ôn tập hiệu quả hơn học rời rạc.</li>
+                    </ul>
+                </div>
+
+            </div>
+            </div>
+            <!-- ===== KẾT THÚC TRANG 4: TỪ VỰNG ===== -->
+
+            <!-- ===== TRANG 5: LỊCH TRÌNH 35 TUẦN ===== -->
+            <div class="roadmap-page" data-page="4">
+            <div class="roadmap-wrap">
+
+                <div class="roadmap-intro roadmap-intro-g12-schedule">
+                    <span class="roadmap-intro-badge">🗓️ Lịch trình gợi ý</span>
+                    <h3>Phân bổ 35 tuần — dành riêng tuần 32–35 luyện đề tốt nghiệp</h3>
+                    <p>Do lớp 12 là năm cuối cấp, các tuần 32–35 được dành để ôn luyện tổng hợp và luyện đề chuẩn bị cho kỳ thi tốt nghiệp THPT. Đây là khung tham khảo; cần đối chiếu với PPCT chính thức và lịch ôn thi của nhà trường/địa phương.</p>
+                    <div class="roadmap-stats">
+                        <div class="roadmap-stat"><strong>35</strong><span>tuần</span></div>
+                        <div class="roadmap-stat"><strong>2</strong><span>học kỳ</span></div>
+                        <div class="roadmap-stat"><strong>4</strong><span>bài Review</span></div>
+                        <div class="roadmap-stat"><strong>4</strong><span>tuần luyện đề tốt nghiệp</span></div>
+                    </div>
+                </div>
+
+                <p class="gstage-hint">👇 Nhấn vào từng học kỳ để xem lịch trình chi tiết theo tuần</p>
+
+                <div class="gstage-accordion">
+
+                    <div class="gstage-block gstage-1">
+                        <button type="button" class="gstage-header" data-gstage-toggle>
+                            <span class="gstage-icon">1️⃣</span>
+                            <span class="gstage-header-text">
+                                <h4>Học kỳ I</h4>
+                                <span class="gstage-meta">Tuần 1 – 16</span>
+                            </span>
+                            <span class="gstage-chevron">▾</span>
+                        </button>
+                        <div class="gstage-body">
+                            <div class="gday-list">
+                                <div class="gday-row"><span class="gday-num">1-2</span><span class="gday-text">Unit 1 – Life Stories We Admire — Dạy ngôn ngữ mới.</span></div>
+                                <div class="gday-row"><span class="gday-num">3-4</span><span class="gday-text">Unit 2 – A Multicultural World — Dạy ngôn ngữ mới.</span></div>
+                                <div class="gday-row"><span class="gday-num">5-6</span><span class="gday-text">Unit 3 – Green Living — Dạy ngôn ngữ mới.</span></div>
+                                <div class="gday-row gday-review"><span class="gday-num">7</span><span class="gday-text">Review 1 (Unit 1–3) — Ôn tập, củng cố.</span></div>
+                                <div class="gday-row gday-test"><span class="gday-num">8</span><span class="gday-text">Kiểm tra giữa kỳ I — Đánh giá.</span></div>
+                                <div class="gday-row"><span class="gday-num">9-10</span><span class="gday-text">Unit 4 – Urbanisation — Dạy ngôn ngữ mới.</span></div>
+                                <div class="gday-row"><span class="gday-num">11-12</span><span class="gday-text">Unit 5 – The World of Work — Dạy ngôn ngữ mới.</span></div>
+                                <div class="gday-row gday-review"><span class="gday-num">13</span><span class="gday-text">Review 2 (Unit 4–5) — Ôn tập, củng cố.</span></div>
+                                <div class="gday-row"><span class="gday-num">14</span><span class="gday-text">Ôn tập cuối kỳ I — Ôn tập tổng hợp.</span></div>
+                                <div class="gday-row gday-test"><span class="gday-num">15</span><span class="gday-text">Kiểm tra cuối kỳ I — Đánh giá.</span></div>
+                                <div class="gday-row"><span class="gday-num">16</span><span class="gday-text">Chữa bài kiểm tra / dự phòng.</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="gstage-block gstage-3">
+                        <button type="button" class="gstage-header" data-gstage-toggle>
+                            <span class="gstage-icon">2️⃣</span>
+                            <span class="gstage-header-text">
+                                <h4>Học kỳ II</h4>
+                                <span class="gstage-meta">Tuần 17 – 35</span>
+                            </span>
+                            <span class="gstage-chevron">▾</span>
+                        </button>
+                        <div class="gstage-body">
+                            <div class="gday-list">
+                                <div class="gday-row"><span class="gday-num">17-18</span><span class="gday-text">Unit 6 – Artificial Intelligence — Dạy ngôn ngữ mới.</span></div>
+                                <div class="gday-row"><span class="gday-num">19-20</span><span class="gday-text">Unit 7 – The World of Mass Media — Dạy ngôn ngữ mới.</span></div>
+                                <div class="gday-row"><span class="gday-num">21-22</span><span class="gday-text">Unit 8 – Wildlife Conservation — Dạy ngôn ngữ mới.</span></div>
+                                <div class="gday-row gday-review"><span class="gday-num">23</span><span class="gday-text">Review 3 (Unit 6–8) — Ôn tập, củng cố.</span></div>
+                                <div class="gday-row gday-test"><span class="gday-num">24</span><span class="gday-text">Kiểm tra giữa kỳ II — Đánh giá.</span></div>
+                                <div class="gday-row"><span class="gday-num">25-26</span><span class="gday-text">Unit 9 – Career Paths — Dạy ngôn ngữ mới.</span></div>
+                                <div class="gday-row"><span class="gday-num">27-28</span><span class="gday-text">Unit 10 – Lifelong Learning — Dạy ngôn ngữ mới.</span></div>
+                                <div class="gday-row gday-review"><span class="gday-num">29</span><span class="gday-text">Review 4 (Unit 9–10) — Ôn tập, củng cố.</span></div>
+                                <div class="gday-row"><span class="gday-num">30</span><span class="gday-text">Ôn tập cuối kỳ II — Ôn tập tổng hợp.</span></div>
+                                <div class="gday-row gday-test"><span class="gday-num">31</span><span class="gday-text">Kiểm tra cuối kỳ II — Đánh giá.</span></div>
+                                <div class="gday-row gday-test"><span class="gday-num">32-35</span><span class="gday-text">Ôn luyện tổng hợp ngữ pháp – từ vựng – kỹ năng / luyện đề thi tốt nghiệp THPT.</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="roadmap-finish">
+                    <span class="roadmap-finish-icon">🎓</span>
+                    <div>
+                        <h4>Sẵn sàng cho kỳ thi tốt nghiệp THPT!</h4>
+                        <p>Trọn bộ kế hoạch dạy học Tiếng Anh 12 (Global Success) — tích hợp Phiên âm, Ngữ pháp, Từ vựng theo đúng tiến trình SGK, khép lại hành trình 3 năm THPT bằng 4 tuần luyện đề tổng lực trước kỳ thi.</p>
+                    </div>
+                </div>
+
+            </div>
+            </div>
+            <!-- ===== KẾT THÚC TRANG 5: LỊCH TRÌNH 35 TUẦN ===== -->
+
+            </div>
+            </div>
+            <!-- ----- Chấm điều hướng (dots) ----- -->
+            <div class="roadmap-dots" id="g12-dots">
+                <span class="g12-dot active" data-dot="0"></span>
+                <span class="g12-dot" data-dot="1"></span>
+                <span class="g12-dot" data-dot="2"></span>
+                <span class="g12-dot" data-dot="3"></span>
+                <span class="g12-dot" data-dot="4"></span>
+            </div>
+
+        </div>
+        <!-- ===== KẾT THÚC KHỐI LỚP 12 ===== -->
     </div>
 
     <div id="tab-thi-thcs" class="main-tab-content">
