@@ -912,27 +912,298 @@ h3 { font-size:0.95rem; font-weight:600; color:var(--text); margin:0 0 8px; }
     .vstage-body .roadmap-topic-list li { font-size: 0.82rem; }
 }
 
-/* Nút đăng xuất trong header */
-#logout-btn {
+/* =====================================================
+   KHU VỰC TÀI KHOẢN (avatar + tên / burger + dropdown)
+   ===================================================== */
+.account-area {
     margin-left: auto;
     flex-shrink: 0;
-    padding: 7px 14px;
-    background: linear-gradient(135deg, var(--danger), var(--danger-dark));
-    color: #fff;
-    border: none;
-    border-radius: 20px;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+/* Avatar tròn dùng chung (trigger, menu, modal) */
+.account-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+    overflow: hidden;
+    border: 1.5px solid var(--border-strong);
+}
+.account-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.account-avatar.avatar-lg { width: 44px; height: 44px; font-size: 1.05rem; }
+
+/* Trigger: avatar + tên (mặc định ẩn trên mobile, hiện ≥600px) */
+.account-trigger {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 10px 5px 5px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 22px;
     cursor: pointer;
-    font-size: 0.75rem;
+    transition: background 0.15s, box-shadow 0.15s;
+    max-width: 170px;
+}
+.account-trigger:hover { background: var(--primary-light); }
+.account-name {
+    font-size: 0.8rem;
     font-weight: 700;
-    letter-spacing: 0.03em;
-    box-shadow: 0 2px 8px rgba(239,68,68,0.30);
-    transition: transform 0.15s, box-shadow 0.15s;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100px;
+}
+.account-caret { font-size: 0.6rem; color: var(--text-muted); flex-shrink: 0; }
+
+/* Burger: chỉ hiện trên mobile (<600px) */
+.account-burger {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    width: 36px;
+    height: 36px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+}
+.account-burger span {
+    display: block;
+    width: 18px;
+    height: 2px;
+    background: var(--text);
+    border-radius: 2px;
+}
+
+/* Dropdown menu tài khoản */
+.account-menu {
+    position: fixed;
+    display: none;
+    flex-direction: column;
+    min-width: 210px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    padding: 8px;
+    gap: 2px;
+    z-index: 950;
+}
+.account-menu.open { display: flex; }
+
+/* Hàng avatar+tên bên trong dropdown: chỉ cần thiết khi trigger đang ẩn (mobile) */
+.account-menu-identity {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 8px 12px;
+    margin-bottom: 4px;
+    border-bottom: 1px solid var(--border);
+}
+.account-menu-identity .account-name { max-width: 150px; font-size: 0.86rem; }
+
+.account-menu-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 10px 10px;
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: var(--text);
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.account-menu-item:hover { background: var(--surface-2); }
+.account-menu-item-danger { color: var(--danger-dark); }
+.account-menu-item-danger:hover { background: var(--danger-light, #fee2e2); }
+
+@media (min-width: 600px) {
+    .account-trigger { display: flex; }
+    .account-burger { display: none; }
+    .account-menu-identity { display: none; }
+}
+
+/* =====================================================
+   MODAL HỒ SƠ CÁ NHÂN & CẮT ẢNH
+   ===================================================== */
+.profile-modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(15,23,42,.6);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 16px;
+}
+.profile-modal-box {
+    position: relative;
+    background: #fff;
+    border-radius: 18px;
+    padding: 28px 24px 24px;
+    max-width: 420px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 16px 48px rgba(0,0,0,.35);
+}
+.profile-modal-close {
+    position: absolute;
+    top: 14px; right: 14px;
+    width: 30px; height: 30px;
+    border: none;
+    background: var(--surface-2);
+    border-radius: 50%;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    cursor: pointer;
+}
+.profile-modal-close:hover { background: var(--border); color: var(--text); }
+
+.profile-avatar-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+.profile-avatar-preview {
+    width: 92px; height: 92px;
+    border-radius: 50%;
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 2rem;
+    overflow: hidden;
+    border: 2px solid var(--border-strong);
+}
+.profile-avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
+.profile-hint { font-size: 0.72rem; color: var(--text-muted); margin: 2px 0 0; }
+
+.profile-field { margin-bottom: 16px; }
+.profile-field label {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+}
+.profile-field input[type="text"] {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 0.88rem;
+    font-family: inherit;
+}
+.profile-field input[type="text"]:focus { outline: none; border-color: var(--primary); }
+.profile-readonly {
+    padding: 9px 12px;
+    background: var(--surface-2);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 0.84rem;
+    color: var(--text-muted);
+}
+
+.profile-achievements { margin-bottom: 20px; }
+.profile-achievements h4 { font-size: 0.9rem; margin-bottom: 10px; }
+.profile-achievements-list { display: flex; flex-direction: column; gap: 8px; }
+.profile-ach-loading, .profile-ach-error { font-size: 0.8rem; color: var(--text-muted); }
+
+.ach-badge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+.ach-badge-special {
+    background: linear-gradient(135deg, var(--primary-light), #fff);
+    border-color: var(--primary);
+}
+.ach-badge-icon { font-size: 1.4rem; flex-shrink: 0; }
+.ach-badge-info { flex: 1; min-width: 0; }
+.ach-badge-title { font-size: 0.82rem; font-weight: 700; color: var(--text); }
+.ach-badge-desc { font-size: 0.74rem; color: var(--text-muted); margin: 1px 0 5px; }
+.ach-progress-track {
+    height: 5px;
+    background: var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+}
+.ach-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+    border-radius: 4px;
+    transition: width 0.3s;
+}
+
+.profile-modal-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.profile-btn-primary, .profile-btn-secondary {
+    padding: 9px 16px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
     white-space: nowrap;
 }
-#logout-btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 14px rgba(239,68,68,0.42);
+.profile-btn-primary {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    box-shadow: 0 2px 8px var(--primary-glow);
 }
+.profile-btn-secondary {
+    background: var(--surface-2);
+    color: var(--text);
+    border: 1.5px solid var(--border);
+}
+.profile-save-status { font-size: 0.76rem; color: var(--text-muted); }
+.profile-save-status.success { color: var(--success-dark); }
+.profile-save-status.error { color: var(--danger-dark); }
+
+/* Cắt ảnh đại diện */
+.avatar-crop-box { max-width: 340px; text-align: center; }
+.avatar-crop-viewport {
+    width: 280px;
+    height: 280px;
+    margin: 12px auto;
+    border-radius: 50%;
+    overflow: hidden;
+    background: var(--surface-2);
+    border: 2px solid var(--border-strong);
+}
+#avatar-crop-canvas { touch-action: none; cursor: grab; display: block; }
+#avatar-crop-canvas:active { cursor: grabbing; }
+.avatar-crop-zoom { width: 100%; margin: 6px 0 2px; }
 
 /* =====================================================
    FOOTER
@@ -1239,6 +1510,19 @@ h3 { font-size:0.95rem; font-weight:600; color:var(--text); margin:0 0 8px; }
     background: linear-gradient(90deg, var(--primary), var(--success));
 }
 
+/* [MỚI] SỬA LỖI: trên desktop (≥900px) #guide-display có chiều cao CỐ ĐỊNH +
+   overflow-y:auto để có thể cuộn khi nội dung dài. Nhưng khi 1 flex container có
+   overflow khác "visible", trình duyệt đổi kích thước tối thiểu mặc định của các
+   item con từ "auto" (theo nội dung) thành "0" — kết hợp với flex-shrink mặc định
+   là 1, hễ danh sách ghi âm bên dưới dài ra vượt quá chiều cao khung là TOÀN BỘ
+   các phần tử (kể cả video) bị co nhỏ lại cho vừa, thay vì chỉ phần danh sách
+   ghi âm được cuộn. Khai báo flex-shrink:0 cho các phần tử con để chúng luôn giữ
+   nguyên kích thước gốc; phần bị tràn sẽ được cuộn nhờ overflow-y:auto đã có sẵn.
+*/
+#guide-display > * {
+    flex-shrink: 0;
+}
+
 /* --- VIDEO TO HƠN --- */
 #video-custom-controls {
     display: flex;
@@ -1404,6 +1688,27 @@ h3 { font-size:0.95rem; font-weight:600; color:var(--text); margin:0 0 8px; }
     transition: border-color 0.2s;
 }
 .comment-item:hover { border-color: var(--border-strong); }
+.comment-header-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+.comment-header-row .comment-sender { margin-bottom: 0; }
+.comment-delete-btn {
+    flex-shrink: 0;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-light);
+    border-radius: 6px;
+    width: 26px;
+    height: 26px;
+    font-size: 0.8rem;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s, border-color 0.15s, transform 0.1s;
+}
+.comment-delete-btn:hover { background: #fee2e2; border-color: #ef4444; }
+.comment-delete-btn:active { transform: scale(0.92); }
+.comment-delete-btn:disabled { opacity: 0.5; cursor: default; }
 .comment-sender    { font-size: 0.8rem; font-weight: 700; color: var(--primary); margin-bottom: 4px; }
 .comment-item p    { margin: 0 0 6px; color: var(--text); font-size: 0.86rem; white-space: pre-wrap; line-height: 1.5; }
 .comment-item audio { width: 100%; height: 30px; border-radius: 4px; }
@@ -3166,6 +3471,22 @@ h3.news-editable:focus,
 .kid-hint{font-size:13px;opacity:.65;margin-bottom:12px;}
 
 /* Flashcard */
+.kid-flash-search-wrap{position:relative;display:flex;align-items:center;gap:8px;background:var(--surface,#fff);border:1.5px solid var(--border-strong,#d8d8dd);border-radius:30px;padding:8px 14px;margin:0 auto 12px;max-width:460px;transition:border-color .15s, box-shadow .15s;}
+.kid-flash-search-wrap:focus-within{border-color:var(--accent,#6d5bff);box-shadow:0 0 0 3px rgba(109,91,255,.15);}
+.kid-flash-search-icon{font-size:.9rem;opacity:.6;flex-shrink:0;}
+.kid-flash-search-input{flex:1;min-width:0;border:none;background:transparent;outline:none;font-size:14px;color:var(--text,#111);font-family:inherit;}
+.kid-flash-search-input::placeholder{color:var(--text-light,#999);}
+.kid-flash-search-clear{border:none;background:transparent;cursor:pointer;color:var(--text-muted,#888);font-size:.8rem;padding:0 2px;line-height:1;display:none;flex-shrink:0;}
+.kid-flash-search-clear.visible{display:block;}
+.kid-flash-search-clear:hover{color:var(--danger,#e5484d);}
+.kid-flash-search-results{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--surface,#fff);border:1px solid var(--border,#e2e2e6);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.14);max-height:280px;overflow-y:auto;z-index:20;display:none;}
+.kid-flash-search-results.visible{display:block;}
+.kid-flash-search-item{display:flex;align-items:baseline;gap:10px;padding:9px 14px;cursor:pointer;text-align:left;border-bottom:1px solid var(--border,#f0f0f2);}
+.kid-flash-search-item:last-child{border-bottom:none;}
+.kid-flash-search-item:hover{background:var(--surface-2,#f7f7f9);}
+.kid-flash-search-item .kfs-en{font-weight:700;font-size:14px;color:var(--text,#111);}
+.kid-flash-search-item .kfs-vi{font-size:12.5px;opacity:.65;}
+.kid-flash-search-empty{padding:14px;text-align:center;font-size:13px;opacity:.6;}
 .kid-flash-progress{text-align:center;font-size:13px;opacity:.6;margin-bottom:10px;}
 .kid-flashcard{max-width:460px;height:460px;margin:0 auto;perspective:1200px;cursor:pointer;}
 .kid-flashcard-inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d;}
@@ -3407,6 +3728,8 @@ h3.news-editable:focus,
 .thcs-story-frame-card{background:var(--surface-2,#f7f7f9);border-radius:16px;padding:14px;box-shadow:0 6px 18px rgba(0,0,0,.08);}
 .thcs-story-frame-img-wrap{position:relative;width:100%;aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:#ddd;}
 .thcs-story-frame-img{width:100%;height:100%;object-fit:cover;display:block;filter:blur(16px) brightness(.85);transform:scale(1.05);transition:filter .4s ease;}
+.thcs-story-frame-img-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-size:34px;background:linear-gradient(135deg,#dcdce6,#eef0fa);color:#9a9aa8;text-align:center;}
+.thcs-story-frame-img-placeholder span{font-size:12px;font-weight:600;opacity:.8;}
 .thcs-story-frame-card.unlocked .thcs-story-frame-img{filter:none;transform:none;}
 .thcs-story-frame-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#fff;text-align:center;font-size:13px;font-weight:600;padding:10px;text-shadow:0 1px 3px rgba(0,0,0,.5);transition:opacity .3s ease;}
 .thcs-story-frame-lock{font-size:26px;}
@@ -3929,13 +4252,43 @@ h3.news-editable:focus,
     justify-content: center;
 }
 .word-lookup-close:hover { background: var(--border); color: var(--text); }
+.word-lookup-header-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-right: 34px;
+}
 .word-lookup-word {
     font-size: 1.3rem;
     font-weight: 800;
     color: var(--primary-dark);
-    margin-bottom: 12px;
-    padding-right: 34px;
+    margin-bottom: 0;
 }
+.word-lookup-speak-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    border: 1.5px solid var(--primary);
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    font-size: 15px;
+    line-height: 1;
+    cursor: pointer;
+    transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+.word-lookup-speak-btn:hover { background: var(--primary); color: #fff; }
+.word-lookup-speak-btn:active { transform: scale(0.88); }
+.word-lookup-phonetic {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+}
+.word-lookup-phonetic:empty { display: none; margin-bottom: 0; }
 .word-lookup-loading,
 .word-lookup-error {
     font-size: 0.9rem;
@@ -3985,6 +4338,7 @@ h3.news-editable:focus,
     color: var(--success-dark);
     margin-top: 6px;
 }
+.word-lookup-save-status-error { color: var(--danger-dark); }
 
 /* Khi từ đã có sẵn trong "Từ vựng của tôi" — chỉ hiện lại, không tra/lưu thêm */
 .word-lookup-known-note {

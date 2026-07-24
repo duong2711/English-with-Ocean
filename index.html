@@ -34,7 +34,7 @@
 
             <div class="header-tab-dropdown" id="dropdown-chuyen-sau">
                 <button type="button" class="header-tab-btn main-tab-dropdown-btn">
-                    Chuyên sâu <span class="dropdown-arrow">▾</span>
+                    Lộ trình <span class="dropdown-arrow">▾</span>
                 </button>
                 <div class="header-tab-dropdown-menu">
                     <button class="header-tab-btn main-tab-btn" data-main-target="tab-mat-goc">Mất gốc</button>
@@ -46,13 +46,50 @@
                 </div>
             </div>
 
+            <div class="header-tab-dropdown" id="dropdown-luyen-ky-nang">
+                <button type="button" class="header-tab-btn main-tab-dropdown-btn">
+                    Luyện kỹ năng <span class="dropdown-arrow">▾</span>
+                </button>
+                <div class="header-tab-dropdown-menu">
+                    <button class="header-tab-btn main-tab-btn" data-main-target="tab-luyen-nghe">🎧 Nghe</button>
+                    <button class="header-tab-btn main-tab-btn" data-main-target="tab-luyen-noi">🗣️ Nói</button>
+                    <button class="header-tab-btn main-tab-btn" data-main-target="tab-luyen-doc">📖 Đọc</button>
+                    <button class="header-tab-btn main-tab-btn" data-main-target="tab-luyen-viet">✍️ Viết</button>
+                </div>
+            </div>
+
             <button class="header-tab-btn main-tab-btn" data-main-target="tab-kiem-tra">Kiểm tra</button>
             <button class="header-tab-btn main-tab-btn" data-main-target="tab-giai-tri">Giải trí</button>
-            <button class="header-tab-btn main-tab-btn" data-main-target="tab-lich-hoc">Lịch học</button>
-            <button class="header-tab-btn main-tab-btn" data-main-target="tab-huong-dan">Hướng dẫn</button>
         </nav>
 
-        <button id="logout-btn" style="display: none;">⏻ Đăng xuất</button>
+        <div id="account-area" class="account-area" style="display: none;">
+            <button type="button" id="account-trigger" class="account-trigger">
+                <span class="account-avatar">
+                    <img id="account-avatar-img" src="" alt="" style="display:none;">
+                    <span id="account-avatar-fallback">?</span>
+                </span>
+                <span id="account-display-name" class="account-name">Học viên</span>
+                <span class="dropdown-arrow account-caret">▾</span>
+            </button>
+
+            <button type="button" id="account-burger" class="account-burger" aria-label="Menu tài khoản">
+                <span></span><span></span><span></span>
+            </button>
+
+            <div id="account-menu" class="account-menu">
+                <div class="account-menu-identity">
+                    <span class="account-avatar avatar-lg">
+                        <img id="account-avatar-img-menu" src="" alt="" style="display:none;">
+                        <span id="account-avatar-fallback-menu">?</span>
+                    </span>
+                    <span id="account-display-name-menu" class="account-name"></span>
+                </div>
+                <button type="button" id="open-profile-btn" class="account-menu-item">👤 Hồ sơ</button>
+                <button type="button" class="account-menu-item main-tab-btn" data-main-target="tab-lich-hoc">🗓️ Lịch học</button>
+                <button type="button" class="account-menu-item main-tab-btn" data-main-target="tab-huong-dan">📖 Hướng dẫn</button>
+                <button type="button" id="logout-btn" class="account-menu-item account-menu-item-danger">⏻ Đăng xuất</button>
+            </div>
+        </div>
     </header>
 
     <h1></h1>
@@ -685,6 +722,12 @@
             <!-- 1. Flashcard -->
             <div class="kid-sub-content" id="kid-sub-flashcard">
                 <div class="kid-flash-lock-notice" id="kid-flash-lock-notice" style="display:none;"></div>
+                <div class="kid-flash-search-wrap">
+                    <span class="kid-flash-search-icon">🔎</span>
+                    <input type="text" id="kid-flash-search" class="kid-flash-search-input" placeholder="Tìm từ vựng trong chủ đề này..." autocomplete="off">
+                    <button type="button" id="kid-flash-search-clear" class="kid-flash-search-clear" title="Xóa">✕</button>
+                    <div class="kid-flash-search-results" id="kid-flash-search-results"></div>
+                </div>
                 <div class="kid-flash-progress" id="kid-flash-progress"></div>
                 <div class="kid-flashcard" id="kid-flashcard">
                     <div class="kid-flashcard-inner" id="kid-flashcard-inner">
@@ -1357,6 +1400,28 @@
         </div>
     </div>
     <!-- ===== KẾT THÚC TAB HƯỚNG DẪN ===== -->
+
+    <!-- ===== TAB MẸ "LUYỆN KỸ NĂNG" — Nghe/Nói/Đọc/Viết (nội dung sẽ cập nhật sau) ===== -->
+    <div id="tab-luyen-nghe" class="main-tab-content">
+        <h2>🎧 Luyện Nghe</h2>
+        <p class="kid-hint">Nội dung luyện Nghe đang được xây dựng — sẽ sớm cập nhật tại đây.</p>
+    </div>
+
+    <div id="tab-luyen-noi" class="main-tab-content">
+        <h2>🗣️ Luyện Nói</h2>
+        <p class="kid-hint">Nội dung luyện Nói đang được xây dựng — sẽ sớm cập nhật tại đây.</p>
+    </div>
+
+    <div id="tab-luyen-doc" class="main-tab-content">
+        <h2>📖 Luyện Đọc</h2>
+        <p class="kid-hint">Nội dung luyện Đọc đang được xây dựng — sẽ sớm cập nhật tại đây.</p>
+    </div>
+
+    <div id="tab-luyen-viet" class="main-tab-content">
+        <h2>✍️ Luyện Viết</h2>
+        <p class="kid-hint">Nội dung luyện Viết đang được xây dựng — sẽ sớm cập nhật tại đây.</p>
+    </div>
+    <!-- ===== KẾT THÚC TAB LUYỆN KỸ NĂNG ===== -->
 
     <!-- ===== TAB MẸ "CHUYÊN SÂU" — các lộ trình theo mục tiêu (nội dung sẽ cập nhật sau) ===== -->
     <div id="tab-mat-goc" class="main-tab-content">
@@ -5908,7 +5973,11 @@
     <div id="word-lookup-popup" class="word-lookup-popup" style="display:none;">
         <div class="word-lookup-inner">
             <button type="button" id="word-lookup-close" class="word-lookup-close" aria-label="Đóng">✕</button>
-            <div class="word-lookup-word" id="word-lookup-word"></div>
+            <div class="word-lookup-header-row">
+                <div class="word-lookup-word" id="word-lookup-word"></div>
+                <button type="button" id="word-lookup-speak-btn" class="word-lookup-speak-btn" aria-label="Nghe phát âm" title="Nghe phát âm">🔊</button>
+            </div>
+            <div class="word-lookup-phonetic" id="word-lookup-phonetic"></div>
             <div class="word-lookup-body" id="word-lookup-body"></div>
         </div>
     </div>
@@ -5935,6 +6004,62 @@
 
     <!-- ===== KHUNG TOAST THÔNG BÁO NHỎ (vd: "Đã thêm từ vào từ vựng của bạn") ===== -->
     <div id="app-toast-container" class="app-toast-container"></div>
+
+    <!-- ===== MODAL HỒ SƠ CÁ NHÂN ===== -->
+    <div id="profile-modal" class="profile-modal-overlay" style="display:none;">
+        <div class="profile-modal-box">
+            <button type="button" id="profile-modal-close" class="profile-modal-close" aria-label="Đóng">✕</button>
+            <h3>Hồ sơ của bạn</h3>
+
+            <div class="profile-avatar-section">
+                <div class="profile-avatar-preview">
+                    <img id="profile-avatar-img" src="" alt="Ảnh đại diện" style="display:none;">
+                    <span id="profile-avatar-fallback">?</span>
+                </div>
+                <input type="file" id="profile-avatar-input" accept="image/*" hidden>
+                <button type="button" id="profile-avatar-change-btn" class="profile-btn-secondary">Đổi ảnh đại diện</button>
+                <p class="profile-hint">Ảnh dưới 15MB. Có thể cắt/căn chỉnh sau khi chọn.</p>
+            </div>
+
+            <div class="profile-field">
+                <label for="profile-display-name-input">Tên hiển thị</label>
+                <input type="text" id="profile-display-name-input" maxlength="40" placeholder="Nhập tên hiển thị">
+            </div>
+
+            <div class="profile-field">
+                <label>Tài khoản đăng nhập</label>
+                <div id="profile-account-email-display" class="profile-readonly"></div>
+            </div>
+
+            <div class="profile-achievements">
+                <h4>Thành tựu</h4>
+                <div id="profile-achievements-list" class="profile-achievements-list">
+                    <p class="profile-ach-loading">Đang tải...</p>
+                </div>
+            </div>
+
+            <div class="profile-modal-actions">
+                <button type="button" id="profile-save-btn" class="profile-btn-primary">Lưu thay đổi</button>
+                <span id="profile-save-status" class="profile-save-status"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== MODAL CẮT ẢNH ĐẠI DIỆN ===== -->
+    <div id="avatar-crop-modal" class="profile-modal-overlay" style="display:none;">
+        <div class="profile-modal-box avatar-crop-box">
+            <h3>Cắt ảnh đại diện</h3>
+            <div id="avatar-crop-viewport" class="avatar-crop-viewport">
+                <canvas id="avatar-crop-canvas" width="280" height="280"></canvas>
+            </div>
+            <input type="range" id="avatar-crop-zoom" class="avatar-crop-zoom" min="1" max="3" step="0.01" value="1">
+            <p class="profile-hint">Kéo ảnh để di chuyển, dùng thanh trượt để phóng to.</p>
+            <div class="profile-modal-actions">
+                <button type="button" id="avatar-crop-cancel" class="profile-btn-secondary">Hủy</button>
+                <button type="button" id="avatar-crop-confirm" class="profile-btn-primary">Dùng ảnh này</button>
+            </div>
+        </div>
+    </div>
 
     <script src="topics-data.js"></script>
     <script src="grade6-data.js"></script>

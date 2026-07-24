@@ -4,6 +4,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const SUPABASE_URL = 'https://ywqbaksmmtvwbojcgsdd.supabase.co'; 
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl3cWJha3NtbXR2d2JvamNnc2RkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxNjc3NTAsImV4cCI6MjA5Nzc0Mzc1MH0.vhgt7cB6w2elm-MXY57U_wJtYkJQHDFAEsJwAArOjhQ'; 
     const AUDIO_BUCKET_NAME = 'audio_comments'; 
+    const AVATAR_BUCKET_NAME = 'avatars'; // Bucket lưu ảnh đại diện — cần tạo trong Supabase Storage (xem hướng dẫn)
+    const AVATAR_MAX_BYTES = 15 * 1024 * 1024; // Giới hạn 15MB cho ảnh đại diện gốc trước khi cắt
     const ADMIN_PASSWORD = 'admin'; 
     // Email của (các) giảng viên — được quyền xem mọi bài dịch và để lại nhận xét.
     // ⚠️ Sửa danh sách này thành email thật của giảng viên (đúng email dùng để đăng nhập).
@@ -45,9 +47,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const logoutBtn = document.getElementById('logout-btn');
     const ipaChart = document.querySelector('.ipa-chart'); 
     const guideDisplay = document.getElementById('guide-display'); 
-    
+
+    // --- [MỚI] Khu vực tài khoản (avatar + tên / burger + dropdown + modal hồ sơ) ---
+    const accountArea = document.getElementById('account-area');
+    const accountTrigger = document.getElementById('account-trigger');
+    const accountBurger = document.getElementById('account-burger');
+    const accountMenu = document.getElementById('account-menu');
+    const openProfileBtn = document.getElementById('open-profile-btn');
+    const profileModal = document.getElementById('profile-modal');
+    const profileModalClose = document.getElementById('profile-modal-close');
+    const profileDisplayNameInput = document.getElementById('profile-display-name-input');
+    const profileAccountEmailDisplay = document.getElementById('profile-account-email-display');
+    const profileSaveBtn = document.getElementById('profile-save-btn');
+    const profileSaveStatus = document.getElementById('profile-save-status');
+    const profileAvatarChangeBtn = document.getElementById('profile-avatar-change-btn');
+    const profileAvatarInput = document.getElementById('profile-avatar-input');
+
     let currentUserId = null; 
     let currentEmail = ''; 
+    let currentDisplayName = ''; // [MỚI] tên hiển thị tùy chỉnh (user_metadata.display_name)
+    let currentAvatarUrl = '';   // [MỚI] URL ảnh đại diện (user_metadata.avatar_url)
     let isTeacher = false; // true nếu email đăng nhập nằm trong TEACHER_EMAILS
     let holdTimer = null; // Thêm biến này
 
@@ -248,7 +267,11 @@ document.addEventListener('DOMContentLoaded', () => {
             isTeacher = TEACHER_EMAILS.includes((user.email || '').toLowerCase());
             authContainer.style.display = 'none';
             if (insideWrapper) insideWrapper.style.display = 'block';
-            logoutBtn.style.display = 'block';
+            // [MỚI] Nạp tên hiển thị + ảnh đại diện từ user_metadata, hiện khu vực tài khoản
+            currentDisplayName = (user.user_metadata && user.user_metadata.display_name) || '';
+            currentAvatarUrl = (user.user_metadata && user.user_metadata.avatar_url) || '';
+            if (accountArea) accountArea.style.display = 'flex';
+            applyAccountIdentityToUI();
             authStatus.textContent = `Đã đăng nhập: ${user.email} (ID: ${user.id.substring(0, 8)}...)`;
             
             // [CẬP NHẬT] Hiển thị Menu và xóa trạng thái ẩn của các Tab
@@ -274,10 +297,13 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             currentUserId = null;
             currentEmail = '';
+            currentDisplayName = '';
+            currentAvatarUrl = '';
             isTeacher = false;
             authContainer.style.display = 'block';
             if (insideWrapper) insideWrapper.style.display = 'none';
-            logoutBtn.style.display = 'none';
+            if (accountArea) accountArea.style.display = 'none';
+            if (accountMenu) accountMenu.classList.remove('open');
             authStatus.innerText = 'Tài khoản demo: hv2@gmail.com, Mật khẩu: hv2\n\nTài khoản demo: hv3@gmail.com, Mật khẩu: hv3';
 
             // [CẬP NHẬT] Ẩn Menu và TOÀN BỘ các Tab khi chưa đăng nhập
@@ -320,6 +346,379 @@ document.addEventListener('DOMContentLoaded', () => {
     logoutBtn.addEventListener('click', handleLogout);
 
     // --- KẾT THÚC LOGIC XÁC THỰC ---
+
+    // --- [MỚI] KHU VỰC TÀI KHOẢN: dropdown avatar/tên (desktop) hoặc burger (mobile) ---
+    function getInitial(nameOrEmail) {
+        if (!nameOrEmail) return '?';
+        const trimmed = String(nameOrEmail).trim();
+        return trimmed ? trimmed[0].toUpperCase() : '?';
+    }
+
+    // Cập nhật mọi nơi hiển thị avatar/tên (nút trigger, dropdown, modal hồ sơ) cùng lúc
+    function applyAccountIdentityToUI() {
+        const nameText = currentDisplayName || (currentEmail ? currentEmail.split('@')[0] : 'Học viên');
+        const nameEls = [
+            document.getElementById('account-display-name'),
+            document.getElementById('account-display-name-menu')
+        ];
+        nameEls.forEach(el => { if (el) el.textContent = nameText; });
+
+        const imgIds = ['account-avatar-img', 'account-avatar-img-menu', 'profile-avatar-img'];
+        const fallbackIds = ['account-avatar-fallback', 'account-avatar-fallback-menu', 'profile-avatar-fallback'];
+        const initial = getInitial(nameText);
+
+        imgIds.forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            if (currentAvatarUrl) {
+                el.src = currentAvatarUrl;
+                el.style.display = 'block';
+            } else {
+                el.removeAttribute('src');
+                el.style.display = 'none';
+            }
+        });
+        fallbackIds.forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.textContent = initial;
+            el.style.display = currentAvatarUrl ? 'none' : 'flex';
+        });
+    }
+
+    // Đóng menu dropdown tài khoản
+    function closeAccountMenu() {
+        if (accountMenu) accountMenu.classList.remove('open');
+    }
+
+    // [MỚI] "Lịch học" / "Hướng dẫn" giờ nằm chung trong menu tài khoản (vẫn giữ class
+    // "main-tab-btn" nên việc chuyển tab vẫn do listener chung ở dưới xử lý) — chỉ cần
+    // đóng menu lại ngay sau khi bấm, giống hành vi của "Hồ sơ"/"Đăng xuất".
+    if (accountMenu) {
+        accountMenu.querySelectorAll('.main-tab-btn').forEach(item => {
+            item.addEventListener('click', () => closeAccountMenu());
+        });
+    }
+
+    // Canh vị trí dropdown ngay dưới nút đang hiển thị (trigger trên desktop, burger trên mobile)
+    function positionAccountMenu() {
+        if (!accountMenu) return;
+        const isMobileTrigger = window.getComputedStyle(accountBurger).display !== 'none';
+        const triggerBtn = isMobileTrigger ? accountBurger : accountTrigger;
+        if (!triggerBtn) return;
+        const rect = triggerBtn.getBoundingClientRect();
+        accountMenu.style.top = (rect.bottom + 8) + 'px';
+        let left = rect.right - accountMenu.offsetWidth;
+        const minLeft = 8;
+        const maxLeft = window.innerWidth - accountMenu.offsetWidth - 8;
+        if (left < minLeft) left = minLeft;
+        if (left > maxLeft) left = maxLeft;
+        accountMenu.style.left = left + 'px';
+    }
+
+    function toggleAccountMenu(e) {
+        e.stopPropagation();
+        if (!accountMenu) return;
+        const isOpen = accountMenu.classList.contains('open');
+        closeAllHeaderTabDropdowns(); // đóng dropdown "Nền tảng/Chuyên sâu" nếu đang mở
+        if (isOpen) {
+            closeAccountMenu();
+        } else {
+            accountMenu.classList.add('open');
+            positionAccountMenu();
+        }
+    }
+
+    // Hook nhỏ để đóng dropdown tab-mẹ khi mở menu tài khoản (an toàn nếu hàm không tồn tại)
+    function closeAllHeaderTabDropdowns() {
+        document.querySelectorAll('.header-tab-dropdown.open').forEach(dd => {
+            dd.classList.remove('open');
+            const menu = dd.querySelector('.header-tab-dropdown-menu');
+            if (menu) menu.classList.remove('open');
+        });
+    }
+
+    if (accountTrigger) accountTrigger.addEventListener('click', toggleAccountMenu);
+    if (accountBurger) accountBurger.addEventListener('click', toggleAccountMenu);
+    document.addEventListener('click', (e) => {
+        if (!accountMenu) return;
+        const clickedInsideMenu = accountMenu.contains(e.target);
+        const clickedTrigger = (accountTrigger && accountTrigger.contains(e.target)) || (accountBurger && accountBurger.contains(e.target));
+        if (!clickedInsideMenu && !clickedTrigger) closeAccountMenu();
+    });
+    window.addEventListener('resize', () => { if (accountMenu && accountMenu.classList.contains('open')) positionAccountMenu(); });
+
+    // --- [MỚI] MODAL HỒ SƠ: hiển thị/đóng + nạp dữ liệu ---
+    function openProfileModal() {
+        closeAccountMenu();
+        if (profileDisplayNameInput) profileDisplayNameInput.value = currentDisplayName || '';
+        if (profileAccountEmailDisplay) profileAccountEmailDisplay.textContent = currentEmail || '';
+        if (profileSaveStatus) { profileSaveStatus.textContent = ''; profileSaveStatus.className = 'profile-save-status'; }
+        applyAccountIdentityToUI();
+        renderProfileAchievements();
+        if (profileModal) profileModal.style.display = 'flex';
+    }
+    function closeProfileModal() {
+        if (profileModal) profileModal.style.display = 'none';
+    }
+    if (openProfileBtn) openProfileBtn.addEventListener('click', openProfileModal);
+    if (profileModalClose) profileModalClose.addEventListener('click', closeProfileModal);
+    if (profileModal) profileModal.addEventListener('click', (e) => { if (e.target === profileModal) closeProfileModal(); });
+
+    // Lưu tên hiển thị (không ảnh hưởng đến email tài khoản đăng nhập)
+    if (profileSaveBtn) {
+        profileSaveBtn.addEventListener('click', async () => {
+            if (!currentUserId) return;
+            const newName = (profileDisplayNameInput.value || '').trim();
+            if (!newName) {
+                profileSaveStatus.textContent = 'Vui lòng nhập tên hiển thị.';
+                profileSaveStatus.className = 'profile-save-status error';
+                return;
+            }
+            if (newName.length > 40) {
+                profileSaveStatus.textContent = 'Tên hiển thị tối đa 40 ký tự.';
+                profileSaveStatus.className = 'profile-save-status error';
+                return;
+            }
+            profileSaveStatus.textContent = 'Đang lưu...';
+            profileSaveStatus.className = 'profile-save-status';
+            try {
+                const { error } = await sb.auth.updateUser({ data: { display_name: newName } });
+                if (error) throw error;
+                currentDisplayName = newName;
+                applyAccountIdentityToUI();
+                profileSaveStatus.textContent = 'Đã lưu ✓';
+                profileSaveStatus.className = 'profile-save-status success';
+            } catch (err) {
+                console.error('Lỗi khi lưu tên hiển thị:', err);
+                profileSaveStatus.textContent = 'Lỗi khi lưu, vui lòng thử lại.';
+                profileSaveStatus.className = 'profile-save-status error';
+            }
+        });
+    }
+
+    // --- [MỚI] THÀNH TỰU: tự động tính từ dữ liệu hoàn thành đã có (bảng phiên âm) ---
+    // Ghi chú: hiện chỉ tổng hợp dữ liệu có trong tệp này (ipa_completions + comments của
+    // phần Phiên âm). Nếu các phần khác (Từ vựng, Ngữ pháp, THCS/THPT...) có bảng hoàn thành
+    // riêng, có thể thêm badge tương ứng vào mảng `badges` bên dưới.
+    async function renderProfileAchievements() {
+        const listEl = document.getElementById('profile-achievements-list');
+        if (!listEl || !currentUserId) return;
+        listEl.innerHTML = '<p class="profile-ach-loading">Đang tải...</p>';
+
+        try {
+            const totalSymbols = symbols.length;
+
+            const { data: completions, error: e1 } = await sb
+                .from('ipa_completions')
+                .select('symbol')
+                .eq('user_id', currentUserId)
+                .eq('completed', true);
+            if (e1) throw e1;
+
+            const { data: recordings, error: e2 } = await sb
+                .from('comments')
+                .select('symbol')
+                .eq('user_id', currentUserId);
+            if (e2) throw e2;
+
+            const completedCount = completions.length;
+            const recordedCount = new Set(recordings.map(r => r.symbol)).size;
+            const completedPct = totalSymbols ? Math.round((completedCount / totalSymbols) * 100) : 0;
+            const recordedPct = totalSymbols ? Math.round((recordedCount / totalSymbols) * 100) : 0;
+
+            const badges = [];
+            badges.push({
+                icon: '🔤',
+                title: 'Bảng phiên âm',
+                desc: `${completedCount}/${totalSymbols} âm đã hoàn thành`,
+                progress: completedPct
+            });
+            badges.push({
+                icon: '🎙️',
+                title: 'Luyện phát âm',
+                desc: `${recordedCount}/${totalSymbols} âm đã gửi ghi âm`,
+                progress: recordedPct
+            });
+            if (totalSymbols > 0 && completedCount === totalSymbols) {
+                badges.unshift({
+                    icon: '🏆',
+                    title: 'Hoàn thành bảng phiên âm',
+                    desc: 'Đã tick hoàn thành toàn bộ ký tự IPA',
+                    progress: 100,
+                    special: true
+                });
+            }
+
+            listEl.innerHTML = badges.map(b => `
+                <div class="ach-badge${b.special ? ' ach-badge-special' : ''}">
+                    <div class="ach-badge-icon">${b.icon}</div>
+                    <div class="ach-badge-info">
+                        <div class="ach-badge-title">${b.title}</div>
+                        <div class="ach-badge-desc">${b.desc}</div>
+                        <div class="ach-progress-track"><div class="ach-progress-fill" style="width:${b.progress}%"></div></div>
+                    </div>
+                </div>
+            `).join('');
+        } catch (e) {
+            console.error('Lỗi khi tải thành tựu:', e);
+            listEl.innerHTML = '<p class="profile-ach-error">Không thể tải thành tựu lúc này.</p>';
+        }
+    }
+
+    // --- [MỚI] ĐỔI ẢNH ĐẠI DIỆN: chọn file -> cắt/căn chỉnh -> tải lên Supabase Storage ---
+    const cropModal = document.getElementById('avatar-crop-modal');
+    const cropCanvas = document.getElementById('avatar-crop-canvas');
+    const cropCtx = cropCanvas ? cropCanvas.getContext('2d') : null;
+    const cropZoomSlider = document.getElementById('avatar-crop-zoom');
+    const cropCancelBtn = document.getElementById('avatar-crop-cancel');
+    const cropConfirmBtn = document.getElementById('avatar-crop-confirm');
+    const CROP_VP = 280;      // kích thước khung xem trước (phải khớp canvas width/height trong HTML)
+    const CROP_OUTPUT = 512;  // kích thước ảnh xuất ra khi lưu
+
+    let cropImage = null;
+    let cropObjectUrl = null;
+    let cropState = { zoom: 1, offsetX: 0, offsetY: 0 };
+    let cropDragging = false;
+    let cropDragStart = null;
+
+    if (profileAvatarChangeBtn) profileAvatarChangeBtn.addEventListener('click', () => profileAvatarInput.click());
+
+    if (profileAvatarInput) {
+        profileAvatarInput.addEventListener('change', () => {
+            const file = profileAvatarInput.files && profileAvatarInput.files[0];
+            profileAvatarInput.value = ''; // cho phép chọn lại cùng 1 file lần sau
+            if (!file) return;
+            if (!file.type.startsWith('image/')) {
+                alert('Vui lòng chọn một tệp hình ảnh.');
+                return;
+            }
+            if (file.size > AVATAR_MAX_BYTES) {
+                alert('Ảnh vượt quá 15MB. Vui lòng chọn ảnh nhỏ hơn.');
+                return;
+            }
+            if (cropObjectUrl) URL.revokeObjectURL(cropObjectUrl);
+            cropObjectUrl = URL.createObjectURL(file);
+            const img = new Image();
+            img.onload = () => {
+                cropImage = img;
+                cropState = { zoom: 1, offsetX: 0, offsetY: 0 };
+                if (cropZoomSlider) cropZoomSlider.value = 1;
+                drawCropCanvas();
+                if (cropModal) cropModal.style.display = 'flex';
+            };
+            img.onerror = () => alert('Không thể đọc ảnh này. Vui lòng thử ảnh khác.');
+            img.src = cropObjectUrl;
+        });
+    }
+
+    // Tính vùng vẽ (dx, dy, dw, dh) của ảnh trên canvas kích thước `size`, dựa theo trạng thái pan/zoom
+    function getCropRect(size) {
+        const ratio = size / CROP_VP;
+        const baseScale = Math.max(size / cropImage.width, size / cropImage.height);
+        const scale = baseScale * cropState.zoom;
+        const dw = cropImage.width * scale;
+        const dh = cropImage.height * scale;
+        const dx = size / 2 - dw / 2 + cropState.offsetX * ratio;
+        const dy = size / 2 - dh / 2 + cropState.offsetY * ratio;
+        return { dx, dy, dw, dh };
+    }
+
+    // Giới hạn pan để ảnh luôn phủ kín khung tròn, không để lộ khoảng trống
+    function clampCropOffsets() {
+        const baseScale = Math.max(CROP_VP / cropImage.width, CROP_VP / cropImage.height);
+        const scale = baseScale * cropState.zoom;
+        const dw = cropImage.width * scale;
+        const dh = cropImage.height * scale;
+        const maxX = Math.max(0, (dw - CROP_VP) / 2);
+        const maxY = Math.max(0, (dh - CROP_VP) / 2);
+        cropState.offsetX = Math.min(maxX, Math.max(-maxX, cropState.offsetX));
+        cropState.offsetY = Math.min(maxY, Math.max(-maxY, cropState.offsetY));
+    }
+
+    function drawCropCanvas() {
+        if (!cropImage || !cropCtx) return;
+        clampCropOffsets();
+        const { dx, dy, dw, dh } = getCropRect(CROP_VP);
+        cropCtx.clearRect(0, 0, CROP_VP, CROP_VP);
+        cropCtx.drawImage(cropImage, dx, dy, dw, dh);
+    }
+
+    if (cropZoomSlider) {
+        cropZoomSlider.addEventListener('input', () => {
+            cropState.zoom = parseFloat(cropZoomSlider.value);
+            drawCropCanvas();
+        });
+    }
+
+    if (cropCanvas) {
+        cropCanvas.addEventListener('pointerdown', (e) => {
+            cropDragging = true;
+            cropDragStart = { x: e.clientX, y: e.clientY, offsetX: cropState.offsetX, offsetY: cropState.offsetY };
+            cropCanvas.setPointerCapture(e.pointerId);
+        });
+        cropCanvas.addEventListener('pointermove', (e) => {
+            if (!cropDragging) return;
+            cropState.offsetX = cropDragStart.offsetX + (e.clientX - cropDragStart.x);
+            cropState.offsetY = cropDragStart.offsetY + (e.clientY - cropDragStart.y);
+            drawCropCanvas();
+        });
+        const endCropDrag = () => { cropDragging = false; };
+        cropCanvas.addEventListener('pointerup', endCropDrag);
+        cropCanvas.addEventListener('pointercancel', endCropDrag);
+        cropCanvas.addEventListener('pointerleave', endCropDrag);
+    }
+
+    if (cropCancelBtn) {
+        cropCancelBtn.addEventListener('click', () => { if (cropModal) cropModal.style.display = 'none'; });
+    }
+
+    if (cropConfirmBtn) {
+        cropConfirmBtn.addEventListener('click', async () => {
+            if (!cropImage || !currentUserId) return;
+            cropConfirmBtn.disabled = true;
+            cropConfirmBtn.textContent = 'Đang lưu...';
+            try {
+                const outputCanvas = document.createElement('canvas');
+                outputCanvas.width = CROP_OUTPUT;
+                outputCanvas.height = CROP_OUTPUT;
+                const outCtx = outputCanvas.getContext('2d');
+                const { dx, dy, dw, dh } = getCropRect(CROP_OUTPUT);
+                outCtx.drawImage(cropImage, dx, dy, dw, dh);
+
+                const blob = await new Promise(resolve => outputCanvas.toBlob(resolve, 'image/jpeg', 0.9));
+                if (!blob) throw new Error('Không thể xử lý ảnh.');
+
+                const avatarPath = `${currentUserId}/avatar.jpg`;
+                const { error: uploadError } = await sb.storage
+                    .from(AVATAR_BUCKET_NAME)
+                    .upload(avatarPath, blob, { cacheControl: '3600', upsert: true, contentType: 'image/jpeg' });
+                if (uploadError) throw uploadError;
+
+                const supabaseRef = SUPABASE_URL.split('://')[1].split('.')[0];
+                const publicUrl = `https://${supabaseRef}.supabase.co/storage/v1/object/public/${AVATAR_BUCKET_NAME}/${avatarPath}?t=${Date.now()}`;
+
+                const { error: updateError } = await sb.auth.updateUser({ data: { avatar_url: publicUrl } });
+                if (updateError) throw updateError;
+
+                currentAvatarUrl = publicUrl;
+                applyAccountIdentityToUI();
+                if (cropModal) cropModal.style.display = 'none';
+
+                if (profileSaveStatus) {
+                    profileSaveStatus.textContent = 'Đã cập nhật ảnh đại diện ✓';
+                    profileSaveStatus.className = 'profile-save-status success';
+                }
+            } catch (err) {
+                console.error('Lỗi khi tải ảnh đại diện lên (kiểm tra bucket "avatars" và policy Storage):', err);
+                alert('Lỗi khi lưu ảnh đại diện. Vui lòng thử lại.');
+            } finally {
+                cropConfirmBtn.disabled = false;
+                cropConfirmBtn.textContent = 'Dùng ảnh này';
+            }
+        });
+    }
+    // --- KẾT THÚC KHU VỰC TÀI KHOẢN ---
 
 
     // [HÀM VIDEO CŨ] 
@@ -854,6 +1253,10 @@ function toggleCompletion(symbolElement) {
         const commentDiv = document.createElement('div');
         commentDiv.className = 'comment-item';
 
+        // [MỚI] Hàng đầu: tên người gửi + nút xóa (yêu cầu mật khẩu Admin)
+        const headerRow = document.createElement('div');
+        headerRow.className = 'comment-header-row';
+
         const senderInfo = document.createElement('div');
         senderInfo.className = 'comment-sender';
         
@@ -862,7 +1265,67 @@ function toggleCompletion(symbolElement) {
              senderDisplay = `Người dùng: ID ${data.user_id.substring(0, 8)}...`; 
         }
         senderInfo.textContent = senderDisplay;
-        commentDiv.appendChild(senderInfo);
+        headerRow.appendChild(senderInfo);
+
+        // [MỚI] Nút xóa ghi âm — chỉ xóa được khi nhập đúng mật khẩu Admin
+        const deleteBtn = document.createElement('button');
+        deleteBtn.type = 'button';
+        deleteBtn.className = 'comment-delete-btn';
+        deleteBtn.title = 'Xóa ghi âm này (cần mật khẩu Admin)';
+        deleteBtn.textContent = '🗑️';
+        deleteBtn.addEventListener('click', async () => {
+            const pass = prompt('Nhập mật khẩu Admin để xóa ghi âm này:');
+            if (pass === null) return; // bấm Cancel
+            if (pass !== ADMIN_PASSWORD) {
+                alert('Sai mật khẩu!');
+                return;
+            }
+            if (!confirm('Bạn có chắc muốn xóa ghi âm này? Hành động này không thể hoàn tác.')) return;
+
+            deleteBtn.disabled = true;
+            try {
+                if (data.id === undefined || data.id === null) {
+                    throw new Error('Không tìm thấy ID của ghi âm này trong dữ liệu trả về (kiểm tra bảng "comments" có cột "id" không).');
+                }
+
+                // [SỬA LỖI] Thêm .select() để biết CHÍNH XÁC có bao nhiêu dòng thực sự bị xóa.
+                // Nếu bảng "comments" chưa có policy RLS cho phép DELETE, Supabase sẽ KHÔNG
+                // báo lỗi — request vẫn trả về "thành công" nhưng không xóa được dòng nào cả
+                // (0 dòng khớp theo RLS). Đây chính là lý do ghi âm "xóa xong" vẫn hiện lại
+                // y nguyên sau khi tải lại trang: trước đây code không kiểm tra số dòng trả
+                // về nên vẫn xóa trên giao diện dù dữ liệu gốc trên Supabase chưa hề mất.
+                const { data: deletedRows, error: delError } = await sb
+                    .from('comments')
+                    .delete()
+                    .eq('id', data.id)
+                    .select();
+
+                if (delError) throw delError;
+
+                if (!deletedRows || deletedRows.length === 0) {
+                    throw new Error('Xóa không thành công do thiếu quyền (RLS): hãy thêm policy DELETE cho bảng "comments" trên Supabase, nếu không ghi âm sẽ tiếp tục hiện lại sau khi tải lại trang.');
+                }
+
+                // Xóa luôn file audio trong Storage (nếu có) để không tồn file rác
+                if (data.audio_url) {
+                    const marker = `/public/${AUDIO_BUCKET_NAME}/`;
+                    const idx = data.audio_url.indexOf(marker);
+                    if (idx !== -1) {
+                        const storagePath = data.audio_url.substring(idx + marker.length);
+                        sb.storage.from(AUDIO_BUCKET_NAME).remove([storagePath]);
+                    }
+                }
+
+                commentDiv.remove();
+            } catch (err) {
+                console.error('Lỗi khi xóa ghi âm (kiểm tra RLS DELETE trên bảng comments):', err.message);
+                alert(`Xóa thất bại: ${err.message}`);
+                deleteBtn.disabled = false;
+            }
+        });
+        headerRow.appendChild(deleteBtn);
+
+        commentDiv.appendChild(headerRow);
 
 
         if (data.text && data.text.trim() !== "") {
@@ -876,6 +1339,18 @@ function toggleCompletion(symbolElement) {
             const audioEl = document.createElement('audio');
             audioEl.controls = true;
             audioEl.src = data.audio_url; 
+            
+            // [MỚI] Khi bấm nghe ghi âm này, tự động phát luôn video hướng dẫn phát âm
+            // (nếu ký tự IPA đang chọn có sẵn video) để học viên vừa nghe vừa xem hướng dẫn.
+            audioEl.addEventListener('play', () => {
+                if (currentVideoSrc) {
+                    vimeoPlayerContainer.classList.remove('video-hidden');
+                    loadOrUpdateIframe(currentVideoSrc, '1');
+                    videoPlaceholder.style.display = 'none';
+                    videoPlayBtn.disabled = true;
+                    videoPauseBtn.disabled = false;
+                }
+            });
             
             // Kiểm tra URL có bị hỏng không (tùy chọn)
             if (data.audio_url.length > 5) {
@@ -1477,6 +1952,10 @@ function toggleCompletion(symbolElement) {
 
             // Tải trước danh sách từ vựng cá nhân để tô sáng những từ học viên đã lưu
             await ensureMyVocabLoaded();
+            // Đoạn tin đầy đủ ở phía trên (#news-article-text) đã được bọc tappable-word
+            // NGAY khi mở bài (trước khi tải xong từ vựng cá nhân ở trên) — tô lại màu
+            // "đã biết" cho đúng ngay khi vừa tải xong, không cần đợi bấm từ nào khác.
+            markKnownWordsInDom();
 
             const plainText = articleHtmlToPlainText(article.content);
             sentenceList = splitIntoSentences(plainText);
@@ -1904,9 +2383,19 @@ function toggleCompletion(symbolElement) {
             newsEditImageInput.value = article.thumb;
 
             // ----- Nội dung bài + thanh công cụ (In đậm) -----
-            newsArticleText.innerHTML = article.content;
+            // [MỚI] Với HỌC VIÊN: bọc từng từ tiếng Anh trong đoạn tin bằng "tappable-word"
+            // để bấm vào là tra nghĩa được, giống hệt phần "Luyện dịch từng câu" bên dưới.
+            // Với GIẢNG VIÊN: vẫn giữ nguyên content THÔ (không bọc span) vì khung này đang
+            // contentEditable — nếu bọc span vào sẽ làm rối lúc gõ/sửa bài và có nguy cơ lưu
+            // nhầm các thẻ <span class="tappable-word"> lẫn vào nội dung gốc trên Supabase.
+            newsArticleText.innerHTML = isTeacher ? article.content : wrapWordsForTapHtml(article.content);
             newsArticleText.contentEditable = isTeacher ? 'true' : 'false';
             newsArticleText.classList.toggle('news-editable', isTeacher);
+            // data-vocab-context/data-vocab-source: dùng chung cơ chế đang có sẵn trong
+            // handleWordTap() (xem "[data-vocab-context]" ở dưới) để AI tra nghĩa hiểu đúng
+            // ngữ cảnh cả bài, và để lưu vào "Từ vựng của tôi" kèm đúng tên nguồn bài đọc.
+            newsArticleText.dataset.vocabContext = articleHtmlToPlainText(article.content);
+            newsArticleText.dataset.vocabSource = article.title || '';
             newsEditToolbar.style.display = isTeacher ? 'flex' : 'none';
             newsEditContentStatus.textContent = '';
 
@@ -2005,13 +2494,30 @@ function toggleCompletion(symbolElement) {
                 usage_note: entry.usage || null,
                 example_en: entry.exampleEn || null,
                 example_vi: entry.exampleVi || null,
+                phonetic: entry.phonetic || null,
                 source_title: entry.sourceTitle || null
             };
-            const { data, error } = await sb
+            let { data, error } = await sb
                 .from('user_vocabulary')
                 .insert(payload)
                 .select()
                 .single();
+            // Nếu bảng user_vocabulary trên Supabase CHƯA có cột "phonetic", thử lưu lại
+            // KHÔNG kèm phiên âm để không làm hỏng tính năng lưu từ vựng hiện có.
+            // Lưu ý: Supabase/PostgREST thường trả mã lỗi "PGRST204" (không tìm thấy cột
+            // trong schema cache) cho trường hợp này — KHÔNG phải mã Postgres gốc "42703"
+            // như bản trước đã bắt nhầm — nên ở đây kiểm tra cả 2 mã, cộng thêm kiểm tra
+            // theo nội dung thông báo lỗi để chắc chắn bắt được, dù Supabase đổi mã lỗi.
+            const isMissingPhoneticColumn = error && (
+                error.code === 'PGRST204' ||
+                error.code === '42703' ||
+                /phonetic/i.test(error.message || '') ||
+                /schema cache/i.test(error.message || '')
+            );
+            if (isMissingPhoneticColumn) {
+                delete payload.phonetic;
+                ({ data, error } = await sb.from('user_vocabulary').insert(payload).select().single());
+            }
             if (error) {
                 if (error.code === '23505') return { added: false, reason: 'duplicate' }; // trùng do ràng buộc unique trên DB
                 throw error;
@@ -2075,6 +2581,7 @@ function toggleCompletion(symbolElement) {
                 'Học viên vừa chạm vào từ "' + safeWord + '" trong câu tiếng Anh sau: "' + safeContext + '". ' +
                 'Chỉ trả lời bằng JSON hợp lệ, không thêm chữ nào khác, đúng định dạng: ' +
                 '{"found": true, ' +
+                '"phonetic": "phiên âm IPA (Anh-Anh hoặc Anh-Mỹ đều được) của riêng từ \\"' + safeWord + '\\", không kèm dấu gạch chéo, ví dụ: ˈwɔːtər", ' +
                 '"wordType": "loại từ bằng tiếng Việt, ví dụ: danh từ / động từ / tính từ / trạng từ / giới từ / liên từ...", ' +
                 '"meaning": "nghĩa tiếng Việt ngắn gọn, đúng với ngữ cảnh của câu trên", ' +
                 '"usage": "một câu ngắn giải thích cách dùng từ này (khi nào dùng, hay đi kèm giới từ/cấu trúc gì)", ' +
@@ -2100,8 +2607,10 @@ function toggleCompletion(symbolElement) {
         }
 
         // --- Khung (popup) hiện nghĩa của từ khi chạm vào ---
-        const wordLookupPopup    = document.getElementById('word-lookup-popup');
-        const wordLookupWordEl   = document.getElementById('word-lookup-word');
+        const wordLookupPopup     = document.getElementById('word-lookup-popup');
+        const wordLookupWordEl    = document.getElementById('word-lookup-word');
+        const wordLookupPhoneticEl = document.getElementById('word-lookup-phonetic');
+        const wordLookupSpeakBtn  = document.getElementById('word-lookup-speak-btn');
         const wordLookupBody     = document.getElementById('word-lookup-body');
         const wordLookupCloseBtn = document.getElementById('word-lookup-close');
 
@@ -2144,6 +2653,21 @@ function toggleCompletion(symbolElement) {
             wordLookupWordEl.textContent = rawWord;
             wordLookupPopup.style.display = 'flex';
 
+            // Tự động phát âm ngay khi học viên chạm vào từ (gọi NGAY, đồng bộ, không
+            // chờ await nào cả — để Safari/iOS vẫn coi đây là hành động trực tiếp của
+            // người dùng và cho phép speechSynthesis.speak() chạy). Gọi qua window vì
+            // speakEnglishWord được khai báo ở một khối code khác trong file.
+            if (typeof window.speakEnglishWord === 'function') window.speakEnglishWord(rawWord);
+
+            // Nút loa 🔊 để học viên bấm nghe lại bất cứ lúc nào trong lúc xem giải thích
+            if (wordLookupSpeakBtn) {
+                wordLookupSpeakBtn.onclick = () => {
+                    if (typeof window.speakEnglishWord === 'function') window.speakEnglishWord(rawWord);
+                };
+            }
+            // Xoá phiên âm của từ tra trước đó trong lúc chờ kết quả mới
+            if (wordLookupPhoneticEl) wordLookupPhoneticEl.textContent = '';
+
             // QUAN TRỌNG: nếu từ này (không phân biệt hoa/thường) đã có sẵn trong
             // "Từ vựng của tôi" — dù đã lưu từ bài đọc nào, cũ hay mới, dù học viên
             // có thoát ra vào lại bao nhiêu lần — thì TUYỆT ĐỐI không gọi AI tra lại
@@ -2164,6 +2688,10 @@ function toggleCompletion(symbolElement) {
         // Có 1 nút phụ để chủ động tra lại, phòng trường hợp từ này thật sự mang nghĩa
         // khác trong câu đang đọc (vd: "book" là danh từ ở bài này nhưng là động từ ở bài khác).
         function renderKnownWordPopup(rawWord, entries, norm, contextSentence, sourceTitle) {
+            // Một số từ đã lưu trước khi có tính năng phiên âm sẽ không có sẵn — khi đó
+            // cứ để trống, không hiện dòng phiên âm (đã ẩn tự động qua CSS :empty).
+            const savedPhonetic = entries.map(e => e.phonetic).find(p => p);
+            if (wordLookupPhoneticEl) wordLookupPhoneticEl.textContent = savedPhonetic ? `/${savedPhonetic.replace(/^\/|\/$/g, '')}/` : '';
             wordLookupBody.innerHTML = `
                 <div class="word-lookup-known-note">📚 Bạn đã lưu từ này trước đó — không ghi nhận lại.</div>
                 ${entries.map(e => `
@@ -2207,6 +2735,11 @@ function toggleCompletion(symbolElement) {
                     return;
                 }
 
+                if (wordLookupPhoneticEl) {
+                    const cleanIpa = (info.phonetic || '').replace(/^\/|\/$/g, '').trim();
+                    wordLookupPhoneticEl.textContent = cleanIpa ? `/${cleanIpa}/` : '';
+                }
+
                 wordLookupBody.innerHTML = `
                     ${info.wordType ? `<div class="word-lookup-tag">${escapeHtmlNews(info.wordType)}</div>` : ''}
                     <div class="word-lookup-meaning">${escapeHtmlNews(info.meaning || '(chưa rõ nghĩa)')}</div>
@@ -2222,6 +2755,7 @@ function toggleCompletion(symbolElement) {
                 // meaning + word_type) làm lưới an toàn cuối cùng, phòng khi AI trả về
                 // đúng y hệt nghĩa cũ trong lần tra lại chủ động này.
                 let result = { added: false, reason: 'no-login' };
+                let saveThrew = false;
                 try {
                     result = await saveWordToVocab({
                         word: rawWord,
@@ -2231,9 +2765,11 @@ function toggleCompletion(symbolElement) {
                         usage: info.usage || '',
                         exampleEn: info.exampleEn || '',
                         exampleVi: info.exampleVi || '',
+                        phonetic: (info.phonetic || '').replace(/^\/|\/$/g, '').trim(),
                         sourceTitle
                     });
                 } catch (saveErr) {
+                    saveThrew = true;
                     console.error('Lỗi khi lưu từ vựng:', saveErr.message);
                 }
                 rebuildVocabNormSet();
@@ -2247,6 +2783,16 @@ function toggleCompletion(symbolElement) {
                 } else if (result.reason === 'duplicate') {
                     if (statusEl) statusEl.textContent = 'ℹ️ Nghĩa này của từ đã có trong danh sách của bạn.';
                     showVocabToast(`ℹ️ "${rawWord}" đã có trong từ vựng của bạn`, 'info');
+                } else if (saveThrew) {
+                    // Lưu thất bại vì lỗi thật sự (vd: lỗi kết nối Supabase, sai quyền RLS...)
+                    // -> hiện rõ cho học viên thấy, KHÔNG được âm thầm xoá đi như trước,
+                    // để giảng viên/học viên biết mà báo lại nếu việc lưu từ liên tục lỗi.
+                    if (statusEl) {
+                        statusEl.textContent = '⚠️ Có lỗi khi lưu từ vào kho từ vựng. Vui lòng thử lại.';
+                        statusEl.classList.add('word-lookup-save-status-error');
+                    }
+                } else if (result.reason === 'no-login' && statusEl) {
+                    statusEl.remove(); // chưa đăng nhập -> không lưu được, đây là hành vi có chủ đích
                 } else if (statusEl) {
                     statusEl.remove();
                 }
@@ -2261,6 +2807,19 @@ function toggleCompletion(symbolElement) {
         const newsTranslateSectionEl = document.getElementById('news-translate-section');
         if (newsTranslateSectionEl) {
             newsTranslateSectionEl.addEventListener('click', (e) => {
+                const wordEl = e.target.closest('.tappable-word');
+                if (!wordEl) return;
+                handleWordTap(wordEl);
+            });
+        }
+
+        // [MỚI] Bắt sự kiện chạm/bấm vào từ trong TOÀN BỘ đoạn tin (bài đọc đầy đủ ở phía
+        // trên, #news-article-text) — trước đây chỉ mục "Luyện dịch từng câu" bên dưới mới
+        // bấm từ được, còn đoạn tin gốc thì không. dataset.vocabContext/vocabSource được
+        // openArticle() gán sẵn (xem bên dưới) để handleWordTap() lấy đúng ngữ cảnh cả bài,
+        // dùng chung cơ chế "[data-vocab-context]" đang có sẵn trong handleWordTap.
+        if (newsArticleText) {
+            newsArticleText.addEventListener('click', (e) => {
                 const wordEl = e.target.closest('.tappable-word');
                 if (!wordEl) return;
                 handleWordTap(wordEl);
@@ -4877,6 +5436,12 @@ function toggleCompletion(symbolElement) {
                 .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
         }
+        // Lấy văn bản thuần (bỏ hết thẻ HTML) của 1 đoạn — dùng làm ngữ cảnh cho AI tra từ.
+        function kidPlainTextFromHtml(html) {
+            const tmp = document.createElement('div');
+            tmp.innerHTML = html || '';
+            return (tmp.textContent || '').replace(/\s+/g, ' ').trim();
+        }
 
         // Được gọi mỗi khi học viên hoàn thành 1 trong 4 phần (match/crossword/story/game) của 1 đợt.
         // Tự kiểm tra xem cả đợt đã xong chưa -> nếu xong thì mở khóa + vẽ lại toàn bộ các tab.
@@ -4974,11 +5539,20 @@ function toggleCompletion(symbolElement) {
                 : `✅ Đã đánh dấu HOÀN THÀNH toàn bộ chủ đề "${topic.title}".`);
         }
 
+        // Bỏ dấu tiếng Việt + viết thường để so khớp tìm kiếm không phân biệt dấu/hoa-thường
+        // [Dùng chung cho thanh tìm kiếm flashcard bên trong từng chủ đề - xem khối "FLASHCARD" bên dưới]
+        function kidNormalizeSearchText(s) {
+            return String(s || '').trim().toLowerCase()
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                .replace(/đ/g, 'd');
+        }
+
         // ---------- Danh sách chủ đề ----------
         // [MỚI] async: tải trước tiến độ TẤT CẢ chủ đề để biết chủ đề nào đã hoàn thành (tô xanh lá)
         async function renderTopicGrid() {
             await kidEnsureProgressMapLoaded();
             kidTopicGrid.innerHTML = '';
+
             KID_TOPICS.forEach(topic => {
                 const completed = kidIsTopicCompleted(topic);
                 const card = document.createElement('div');
@@ -4999,6 +5573,32 @@ function toggleCompletion(symbolElement) {
             kidPanel.style.display = 'block';
             kidTopicPanel.style.display = 'none';
             renderTopicGrid();
+            if (window.vocabTap && window.vocabTap.ensureLoaded) {
+                window.vocabTap.ensureLoaded().then(() => {
+                    if (window.vocabTap.markKnown) window.vocabTap.markKnown();
+                }).catch(err => console.error('Lỗi khi tải từ vựng cá nhân:', err.message));
+            }
+        });
+
+        // Bắt sự kiện chạm vào 1 từ tiếng Anh trong câu chuyện (tra nghĩa bằng AI + tự lưu
+        // vào "Từ vựng của tôi") — dùng chung logic tra từ với các khu vực khác trong app.
+        kidPanel.addEventListener('click', (e) => {
+            const wordEl = e.target.closest('.tappable-word');
+            if (!wordEl) return;
+            if (window.vocabTap && window.vocabTap.handleTap) window.vocabTap.handleTap(wordEl);
+        });
+
+        // [SỬA LỖI] Các từ "tappable-word" trong mục "Câu chuyện" (initStory ở dưới) được
+        // render bên trong #kid-topic-panel (màn hình chi tiết 1 chủ đề) — KHÔNG nằm bên
+        // trong #kid-panel (màn hình danh sách 20 chủ đề). Đây là 2 khung khác nhau (anh em,
+        // không lồng nhau) nên listener bên trên KHÔNG bắt được sự kiện bấm vào từ trong câu
+        // chuyện. Gắn thêm đúng cơ chế tương tự cho #kid-topic-panel để việc bấm vào từ trong
+        // câu chuyện cũng hiện popup tra nghĩa, đọc từ (qua nút loa trong popup) và tự lưu
+        // vào "Từ vựng của tôi" như các khu vực khác trong app.
+        kidTopicPanel.addEventListener('click', (e) => {
+            const wordEl = e.target.closest('.tappable-word');
+            if (!wordEl) return;
+            if (window.vocabTap && window.vocabTap.handleTap) window.vocabTap.handleTap(wordEl);
         });
 
         kidBackBtn.addEventListener('click', () => {
@@ -5170,6 +5770,11 @@ function toggleCompletion(symbolElement) {
                 setTimeout(() => window.speechSynthesis.speak(utter), 200);
             }
         }
+        // QUAN TRỌNG: hàm này nằm trong khối riêng của tính năng "Flashcard cho bé", nhưng
+        // cũng cần được gọi từ khối "tra từ khi chạm" (handleWordTap) ở một khối khác trong
+        // file. Gắn thêm vào window để mọi khối khác trong trang đều gọi được, tránh lỗi
+        // "speakEnglishWord is not defined".
+        window.speakEnglishWord = speakEnglishWord;
 
         // ----- [MỚI] Âm thanh hiệu ứng ĐÚNG / SAI khi chơi Nối từ -----
         // Tự tạo âm thanh bằng Web Audio API (không cần file mp3 nào cả).
@@ -5215,11 +5820,27 @@ function toggleCompletion(symbolElement) {
             speakEnglishWord(btn.dataset.speak);
         });
 
+        // [MỚI] Tráo ngẫu nhiên vị trí các thẻ (thuật toán Fisher-Yates) — không đụng tới
+        // mảng gốc topic.words (giữ nguyên để không ảnh hưởng tới Nối từ/Ô chữ/Câu chuyện/
+        // Trò chơi vốn dùng chỉ số cố định trong topic.words), chỉ tráo thứ tự HIỂN THỊ
+        // trên Flashcard.
+        function kidShuffleArray(arr) {
+            const shuffled = arr.slice();
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
         function initFlashcards(topic) {
             flashIndex = 0;
+            kidResetFlashSearch();
             const stage = kidGetStage(topic, kidTopicProgress);
             const visibleCount = (stage === 'batch1') ? Math.min(25, topic.words.length) : topic.words.length;
-            flashOrder = topic.words.slice(0, visibleCount);
+            // [MỚI] Tráo thứ tự 25 thẻ đầu (đợt 1) và áp dụng luôn khi mở khóa hết từ vựng
+            // còn lại, để mỗi lần vào chủ đề thẻ hiện theo thứ tự ngẫu nhiên thay vì cố định.
+            flashOrder = kidShuffleArray(topic.words.slice(0, visibleCount));
             renderFlashcard();
 
             const notice = document.getElementById('kid-flash-lock-notice');
@@ -5283,6 +5904,89 @@ function toggleCompletion(symbolElement) {
         kidFlashNext.addEventListener('click', () => {
             flashIndex = (flashIndex + 1) % flashOrder.length;
             renderFlashcard();
+        });
+
+        // ---------- [MỚI] Thanh tìm kiếm flashcard bên trong 1 chủ đề ----------
+        // Cho phép gõ (từ tiếng Anh hoặc nghĩa tiếng Việt) để nhảy thẳng tới thẻ mong muốn,
+        // thay vì phải bấm "Trước/Sau" thủ công từng thẻ một.
+        const kidFlashSearchInput   = document.getElementById('kid-flash-search');
+        const kidFlashSearchClear  = document.getElementById('kid-flash-search-clear');
+        const kidFlashSearchResults = document.getElementById('kid-flash-search-results');
+
+        function kidCloseFlashSearchResults() {
+            if (!kidFlashSearchResults) return;
+            kidFlashSearchResults.classList.remove('visible');
+            kidFlashSearchResults.innerHTML = '';
+        }
+
+        // Xóa trắng ô tìm kiếm + đóng danh sách gợi ý (gọi khi mở chủ đề mới, chọn 1 thẻ, hoặc bấm nút ✕)
+        function kidResetFlashSearch() {
+            if (kidFlashSearchInput) kidFlashSearchInput.value = '';
+            if (kidFlashSearchClear) kidFlashSearchClear.classList.remove('visible');
+            kidCloseFlashSearchResults();
+        }
+
+        function kidJumpToFlashcard(idx) {
+            flashIndex = idx;
+            renderFlashcard();
+            kidResetFlashSearch();
+            if (kidFlashSearchInput) kidFlashSearchInput.blur();
+        }
+
+        function kidRenderFlashSearchResults(rawTerm) {
+            if (!kidFlashSearchResults) return;
+            const term = kidNormalizeSearchText(rawTerm);
+            if (!term) { kidCloseFlashSearchResults(); return; }
+
+            const matches = [];
+            flashOrder.forEach((w, idx) => {
+                if (kidNormalizeSearchText(w.en).includes(term) || kidNormalizeSearchText(w.vi).includes(term)) {
+                    matches.push({ w, idx });
+                }
+            });
+
+            kidFlashSearchResults.innerHTML = '';
+            if (matches.length === 0) {
+                kidFlashSearchResults.innerHTML = '<div class="kid-flash-search-empty">Không tìm thấy từ vựng nào phù hợp.</div>';
+            } else {
+                matches.slice(0, 30).forEach(({ w, idx }) => {
+                    const item = document.createElement('div');
+                    item.className = 'kid-flash-search-item';
+                    item.innerHTML = `<span class="kfs-en">${w.en}</span><span class="kfs-vi">${w.vi}</span>`;
+                    item.addEventListener('click', () => kidJumpToFlashcard(idx));
+                    kidFlashSearchResults.appendChild(item);
+                });
+            }
+            kidFlashSearchResults.classList.add('visible');
+        }
+
+        if (kidFlashSearchInput) {
+            kidFlashSearchInput.addEventListener('input', () => {
+                const val = kidFlashSearchInput.value;
+                if (kidFlashSearchClear) kidFlashSearchClear.classList.toggle('visible', !!val);
+                kidRenderFlashSearchResults(val);
+            });
+            kidFlashSearchInput.addEventListener('focus', () => {
+                if (kidFlashSearchInput.value) kidRenderFlashSearchResults(kidFlashSearchInput.value);
+            });
+            // Enter -> nhảy thẳng tới kết quả đầu tiên cho nhanh
+            kidFlashSearchInput.addEventListener('keydown', (e) => {
+                if (e.key !== 'Enter') return;
+                const first = kidFlashSearchResults && kidFlashSearchResults.querySelector('.kid-flash-search-item');
+                if (first) first.click();
+            });
+        }
+        if (kidFlashSearchClear) {
+            kidFlashSearchClear.addEventListener('click', () => {
+                kidResetFlashSearch();
+                if (kidFlashSearchInput) kidFlashSearchInput.focus();
+            });
+        }
+        // Bấm ra ngoài ô tìm kiếm -> tự đóng danh sách gợi ý
+        document.addEventListener('click', (e) => {
+            if (!kidFlashSearchResults || !kidFlashSearchInput) return;
+            const wrap = kidFlashSearchInput.closest('.kid-flash-search-wrap');
+            if (wrap && !wrap.contains(e.target)) kidCloseFlashSearchResults();
         });
 
         // ---------- 2. NỐI TỪ ----------
@@ -5816,27 +6520,39 @@ function toggleCompletion(symbolElement) {
         const kidStoryFeedback = document.getElementById('kid-story-feedback');
         let kidCurrentStoryStage = 'free';
 
-        // Thay các từ khóa của dải (batch) hiện tại bằng ô trống + gợi ý nghĩa tiếng Việt.
-        // Ở giai đoạn luyện tự do (không có dải từ nào) thì giữ nguyên đoạn văn, chỉ bọc
-        // tappable-word để chạm tra nghĩa như bình thường (không có ô trống).
+        // Dựng lại đoạn văn cho HỌC VIÊN: từ khóa của dải (batch) hiện tại (chữ in đậm nằm
+        // trong rangeWords) -> ô trống + nghĩa tiếng Việt gợi ý; MỌI chữ còn lại (kể cả các
+        // từ in đậm KHÔNG thuộc dải này) đều được bọc "tappable-word" để chạm tra nghĩa bằng
+        // AI như bình thường — giống hệt cách "Câu chuyện" bên THCS/THPT đang làm.
         function kidBuildStoryBlankHtml(storyHtml, rangeWords) {
-            if (!rangeWords.length) {
-                const wrapFn = (window.vocabTap && window.vocabTap.wrapHtml) ? window.vocabTap.wrapHtml : (s => s);
-                return wrapFn(storyHtml);
+            const wrapFn = (window.vocabTap && window.vocabTap.wrap) ? window.vocabTap.wrap : (s => s);
+            const tmp = document.createElement('div');
+            tmp.innerHTML = String(storyHtml || '');
+            let out = '';
+            function walk(node) {
+                if (node.nodeType === Node.TEXT_NODE) {
+                    out += wrapFn(node.textContent);
+                    return;
+                }
+                if (node.nodeType !== Node.ELEMENT_NODE) return;
+                const tag = node.tagName.toLowerCase();
+                if (tag === 'b' || tag === 'strong') {
+                    const key = node.textContent.trim();
+                    const wordMeta = rangeWords.find(w => kidNormalize(w.en) === kidNormalize(key));
+                    if (wordMeta) {
+                        const widthCh = Math.max(key.length + 2, 3);
+                        out += `<span class="kid-story-blank-wrap"><input type="text" class="kid-story-blank-input" data-answer="${kidEscAttr(key)}" style="width:${widthCh}ch" autocomplete="off" autocapitalize="off" spellcheck="false"><span class="kid-story-blank-hint">(${kidEscHtml(wordMeta.vi)})</span></span>`;
+                    } else {
+                        out += '<b>' + wrapFn(key) + '</b>';
+                    }
+                } else if (tag === 'br') {
+                    out += '<br>';
+                } else {
+                    Array.from(node.childNodes).forEach(walk);
+                }
             }
-            let html = String(storyHtml || '');
-            rangeWords.forEach(w => {
-                const key = String(w.en || '').trim();
-                if (!key) return;
-                const re = new RegExp('\\b' + kidEscapeRegex(key) + '\\b', 'i');
-                const m = html.match(re);
-                if (!m) return;
-                const answer = m[0];
-                const widthCh = Math.max(answer.length + 2, 3);
-                const blank = `<span class="kid-story-blank-wrap"><input type="text" class="kid-story-blank-input" data-answer="${kidEscAttr(answer)}" style="width:${widthCh}ch" autocomplete="off" autocapitalize="off" spellcheck="false"><span class="kid-story-blank-hint">(${kidEscHtml(w.vi)})</span></span>`;
-                html = html.slice(0, m.index) + blank + html.slice(m.index + answer.length);
-            });
-            return html;
+            Array.from(tmp.childNodes).forEach(walk);
+            return out;
         }
 
         function initStory(topic) {
@@ -5863,7 +6579,12 @@ function toggleCompletion(symbolElement) {
             }
 
             document.getElementById('kid-story-title').textContent = storyData.title;
+            // data-vocab-context/data-vocab-source giúp AI tra từ hiểu đúng ngữ cảnh cả đoạn
+            // văn (thay vì chỉ mỗi từ đơn lẻ) — dùng chung cơ chế với các khu vực khác trong app.
+            storyTextEl.dataset.vocabContext = kidPlainTextFromHtml(storyData.text);
+            storyTextEl.dataset.vocabSource = `Chủ đề "${topic.title}" — câu chuyện: ${storyData.title}`;
             storyTextEl.innerHTML = kidBuildStoryBlankHtml(storyData.text, rangeWords);
+            if (window.vocabTap && window.vocabTap.markKnown) window.vocabTap.markKnown();
             kidStoryFeedback.className = 'kid-story-feedback';
             kidStoryFeedback.textContent = '';
             if (kidStoryCheckBtn) kidStoryCheckBtn.style.display = rangeWords.length ? '' : 'none';
@@ -6946,11 +7667,33 @@ function toggleCompletion(symbolElement) {
                     .eq('unit_id', unitId)
                     .order('frame_index', { ascending: true });
                 if (error) throw error;
-                return data || [];
+                if (data && data.length) return data;
             } catch (err) {
                 console.error('Lỗi khi tải khung truyện:', err.message);
-                return [];
             }
+            // [MỚI] Supabase chưa có khung truyện nào cho unit này (hoặc bị lỗi mạng) -> dùng bản
+            // nháp có sẵn trong file dữ liệu (thuộc tính "storyFrames" của từng unit trong file
+            // grade<N>-data.js) làm nội dung mặc định ban đầu, để học viên có bài ngay mà không cần
+            // đợi giảng viên soạn thủ công. Giảng viên vẫn có thể ghi đè bất kỳ khung nào qua khung
+            // soạn thảo bên dưới — một khi đã lưu qua Supabase, bản ghi đó sẽ được ưu tiên hơn bản
+            // nháp tĩnh này ở các lần tải sau (vì nhánh Supabase ở trên trả về sớm khi có dữ liệu).
+            return thcsStaticStoryFrames(gradeNum, unitId);
+        }
+
+        // Lấy bản nháp "storyFrames" tĩnh (viết sẵn trong grade<N>-data.js) của 1 unit, chuyển về
+        // đúng cấu trúc mà phần hiển thị/soạn thảo bên dưới đang mong đợi (giống 1 dòng trong bảng
+        // Supabase "thcs_story_frames"), kèm cờ is_static_draft để nơi khác biết đây là bản nháp.
+        function thcsStaticStoryFrames(gradeNum, unitId) {
+            const units = thcsGetGradeUnits(gradeNum);
+            const unit = units && units.find(u => u.id === unitId);
+            if (!unit || !Array.isArray(unit.storyFrames)) return [];
+            return unit.storyFrames.map((f, i) => ({
+                frame_index: i + 1,
+                image_url: f.image_url || '',
+                content_html: f.content_html || '',
+                keywords: Array.isArray(f.keywords) ? f.keywords : [],
+                is_static_draft: true
+            }));
         }
 
         async function saveStoryFrame(gradeNum, unitId, frameIndex, fields) {
@@ -7098,9 +7841,13 @@ function toggleCompletion(symbolElement) {
                 const card = document.createElement('div');
                 card.className = 'thcs-story-frame-card' + (unlocked ? ' unlocked' : '');
                 card.dataset.frameIndex = frame.frame_index;
+                const hasImg = !!(frame.image_url && frame.image_url.trim());
+                const imgHtml = hasImg
+                    ? `<img src="${thcsEscAttr(frame.image_url)}" class="thcs-story-frame-img" alt="Khung truyện ${frame.frame_index}">`
+                    : `<div class="thcs-story-frame-img thcs-story-frame-img-placeholder">🖼️<span>Ảnh đang được cập nhật</span></div>`;
                 card.innerHTML = `
                     <div class="thcs-story-frame-img-wrap">
-                        <img src="${thcsEscAttr(frame.image_url)}" class="thcs-story-frame-img" alt="Khung truyện ${frame.frame_index}">
+                        ${imgHtml}
                         <div class="thcs-story-frame-overlay">
                             <span class="thcs-story-frame-lock">🔒</span>
                             <span>Điền đúng câu bên dưới để mở ảnh</span>
@@ -7262,8 +8009,11 @@ function toggleCompletion(symbolElement) {
                 card.querySelector('.thcs-story-editor-save-btn').addEventListener('click', async () => {
                     const imageUrl = imageInput.value.trim();
                     const contentHtml = contentEl.innerHTML.trim();
-                    if (!imageUrl) { alert('Vui lòng dán link ảnh 16:9 trước khi lưu.'); return; }
                     if (!contentHtml) { alert('Vui lòng nhập đoạn văn tiếng Anh trước khi lưu.'); return; }
+                    // [MỚI] Cho phép lưu trước nội dung/từ khóa mà chưa cần có ảnh ngay — học viên sẽ
+                    // thấy ảnh placeholder "Ảnh đang được cập nhật" cho tới khi giảng viên dán link ảnh
+                    // và lưu lại. Chỉ nhắc nhở nhẹ chứ không chặn lưu.
+                    if (!imageUrl && !confirm('Khung này chưa có link ảnh — học viên sẽ tạm thời thấy ảnh "đang cập nhật". Vẫn lưu nội dung ngay bây giờ và bổ sung ảnh sau?')) return;
 
                     const keywords = Array.from(card.querySelectorAll('.thcs-story-editor-keyword-row')).map(row => ({
                         key: row.dataset.key,
