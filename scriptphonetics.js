@@ -70,6 +70,27 @@ document.addEventListener('DOMContentLoaded', () => {
     let isTeacher = false; // true nếu email đăng nhập nằm trong TEACHER_EMAILS
     let holdTimer = null; // Thêm biến này
 
+    // --- [MỚI] THEO DÕI THỜI GIAN TỰ HỌC: gửi nhịp lên Supabase mỗi khi tab đang mở & đang
+    // đăng nhập, để tính "thời gian học trung bình" hiển thị trong Thành tựu + bảng xếp hạng.
+    // Bảng "study_time_log" + hàm "increment_study_time" cần được tạo trên Supabase trước
+    // (xem file "profile_achievements_setup.sql" đi kèm).
+    let studyTimeHeartbeatId = null;
+    const STUDY_TIME_PING_SECONDS = 30; // mỗi 30 giây gửi 1 nhịp (chỉ khi tab đang hiển thị)
+    function startStudyTimeHeartbeat() {
+        if (studyTimeHeartbeatId) return; // đã chạy rồi, tránh chạy trùng
+        studyTimeHeartbeatId = setInterval(async () => {
+            if (!currentUserId || document.visibilityState !== 'visible') return; // chỉ tính khi đang thực sự xem trang
+            try {
+                await sb.rpc('increment_study_time', { p_seconds: STUDY_TIME_PING_SECONDS });
+            } catch (err) {
+                console.error('Lỗi khi ghi nhận thời gian học:', err.message);
+            }
+        }, STUDY_TIME_PING_SECONDS * 1000);
+    }
+    function stopStudyTimeHeartbeat() {
+        if (studyTimeHeartbeatId) { clearInterval(studyTimeHeartbeatId); studyTimeHeartbeatId = null; }
+    }
+
     // --- [MỚI] GHI NHỚ VỊ TRÍ ĐANG XEM + TỰ DỪNG AUDIO KHI CHUYỂN TAB ---
     const MAIN_TAB_STORAGE_KEY = 'ldd_active_main_tab';
     const IPA_SUBTAB_STORAGE_KEY = 'ldd_active_ipa_subtab';
@@ -289,6 +310,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // Tải trạng thái hoàn thành ngay lập tức
             loadCompletionStatus(user);
 
+            // [MỚI] Bắt đầu tính thời gian tự học trên web (dùng cho Thành tựu + xếp hạng)
+            startStudyTimeHeartbeat();
+
             // Làm sạch danh sách ghi âm khi mới vừa đăng nhập
             commentsList.innerHTML = '<p>Hãy chọn một ký tự IPA để bắt đầu học và gửi ghi âm.</p>';
             commentSymbolDisplay.textContent = '...';
@@ -300,6 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentDisplayName = '';
             currentAvatarUrl = '';
             isTeacher = false;
+            stopStudyTimeHeartbeat(); // [MỚI] ngừng tính thời gian tự học khi đăng xuất
             authContainer.style.display = 'block';
             if (insideWrapper) insideWrapper.style.display = 'none';
             if (accountArea) accountArea.style.display = 'none';
@@ -497,51 +522,127 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- [MỚI] THÀNH TỰU: tự động tính từ dữ liệu hoàn thành đã có (bảng phiên âm) ---
-    // Ghi chú: hiện chỉ tổng hợp dữ liệu có trong tệp này (ipa_completions + comments của
-    // phần Phiên âm). Nếu các phần khác (Từ vựng, Ngữ pháp, THCS/THPT...) có bảng hoàn thành
-    // riêng, có thể thêm badge tương ứng vào mảng `badges` bên dưới.
+    // --- [MỚI] THÀNH TỰU: tổng hợp tiến độ học tập từ mọi khu vực của web + tính "điểm
+    // chăm chỉ" tổng hợp để xếp hạng. Các mốc "100%" cho Kho từ vựng và Thời gian học (2
+    // phần vốn không có giới hạn trên tự nhiên) được đặt tạm ở VOCAB_TARGET / TIME_TARGET_MINUTES
+    // bên dưới — có thể chỉnh 2 con số này bất cứ lúc nào mà không ảnh hưởng chỗ khác.
+    const DILIGENCE_VOCAB_TARGET = 50;       // 50 từ đã lưu = 100% cho phần "kho từ vựng"
+    const DILIGENCE_TIME_TARGET_MINUTES = 30; // 30 phút/ngày = 100% cho phần "thời gian học"
+
+    function escapeHtmlForAchievements(str) {
+        const div = document.createElement('div');
+        div.textContent = String(str == null ? '' : str);
+        return div.innerHTML;
+    }
+
     async function renderProfileAchievements() {
         const listEl = document.getElementById('profile-achievements-list');
+        const boardEl = document.getElementById('profile-leaderboard-list');
         if (!listEl || !currentUserId) return;
         listEl.innerHTML = '<p class="profile-ach-loading">Đang tải...</p>';
+        if (boardEl) boardEl.innerHTML = '<p class="profile-ach-loading">Đang tải...</p>';
 
         try {
+            // ----- 1) Phiên âm: số ký tự IPA đã tick hoàn thành / tổng số -----
             const totalSymbols = symbols.length;
-
             const { data: completions, error: e1 } = await sb
                 .from('ipa_completions')
                 .select('symbol')
                 .eq('user_id', currentUserId)
                 .eq('completed', true);
             if (e1) throw e1;
-
-            const { data: recordings, error: e2 } = await sb
-                .from('comments')
-                .select('symbol')
-                .eq('user_id', currentUserId);
-            if (e2) throw e2;
-
             const completedCount = completions.length;
-            const recordedCount = new Set(recordings.map(r => r.symbol)).size;
-            const completedPct = totalSymbols ? Math.round((completedCount / totalSymbols) * 100) : 0;
-            const recordedPct = totalSymbols ? Math.round((recordedCount / totalSymbols) * 100) : 0;
+            const phoneticsPct = totalSymbols ? Math.round((completedCount / totalSymbols) * 100) : 0;
 
+            // ----- 2) Tin ngắn: tính là "đã xem" khi hoàn thành phần dịch -----
+            const { count: newsCompletedCountRaw, error: e2a } = await sb
+                .from('news_completions')
+                .select('article_id', { count: 'exact', head: true })
+                .eq('user_id', currentUserId);
+            if (e2a) throw e2a;
+            const newsCompletedCount = newsCompletedCountRaw || 0;
+            const { count: totalNewsArticlesRaw, error: e2b } = await sb
+                .from('news_articles')
+                .select('id', { count: 'exact', head: true });
+            if (e2b) throw e2b;
+            const totalNewsArticles = totalNewsArticlesRaw || 0;
+            const newsPct = totalNewsArticles ? Math.round((newsCompletedCount / totalNewsArticles) * 100) : 0;
+
+            // ----- 3) Chủ đề từ vựng (mục "Cho bé"): đã hoàn thành / 20 chủ đề -----
+            let totalTopics = 20;
+            let completedTopics = 0;
+            if (window.kidTopicsAPI) {
+                await window.kidTopicsAPI.ensureProgressMapLoaded();
+                const topics = window.kidTopicsAPI.getTopics() || [];
+                if (topics.length) totalTopics = topics.length;
+                completedTopics = topics.filter(t => window.kidTopicsAPI.isTopicCompleted(t)).length;
+            }
+            const topicsPct = totalTopics ? Math.round((completedTopics / totalTopics) * 100) : 0;
+
+            // ----- 4) Kho từ vựng của tôi: tổng số từ đã lưu -----
+            const { count: vocabCountRaw, error: e4 } = await sb
+                .from('user_vocabulary')
+                .select('id', { count: 'exact', head: true })
+                .eq('user_id', currentUserId);
+            if (e4) throw e4;
+            const vocabCount = vocabCountRaw || 0;
+            const vocabPct = Math.min(100, Math.round((vocabCount / DILIGENCE_VOCAB_TARGET) * 100));
+
+            // ----- 5) Điểm trung bình bài kiểm tra: CHỈ tính những bài đang giao (hiện) cho
+            // học viên này (status = published + có tên trong student_emails), và chỉ tính
+            // những bài đã nộp (status = submitted) trong số đó -----
+            let avgTestScorePct = null;
+            let testsTakenCount = 0;
+            const { data: visibleTests, error: e5a } = await sb
+                .from('custom_tests')
+                .select('id')
+                .eq('status', 'published')
+                .contains('student_emails', [currentEmail]);
+            if (e5a) throw e5a;
+            if (visibleTests && visibleTests.length) {
+                const testIds = visibleTests.map(t => t.id);
+                const { data: subs, error: e5b } = await sb
+                    .from('custom_test_submissions')
+                    .select('score_correct, score_total')
+                    .eq('student_email', currentEmail)
+                    .eq('status', 'submitted')
+                    .in('test_id', testIds);
+                if (e5b) throw e5b;
+                const scored = (subs || []).filter(s => s.score_total > 0);
+                if (scored.length) {
+                    const sumPct = scored.reduce((sum, s) => sum + (s.score_correct / s.score_total) * 100, 0);
+                    avgTestScorePct = Math.round(sumPct / scored.length);
+                    testsTakenCount = scored.length;
+                }
+            }
+
+            // ----- 6) Thời gian học trung bình trên web tự học (phút/ngày) -----
+            const { data: timeRows, error: e6 } = await sb
+                .from('study_time_log')
+                .select('seconds')
+                .eq('user_id', currentUserId);
+            if (e6) throw e6;
+            let avgMinutesPerDay = 0;
+            if (timeRows && timeRows.length) {
+                const totalSeconds = timeRows.reduce((sum, r) => sum + (r.seconds || 0), 0);
+                avgMinutesPerDay = Math.round((totalSeconds / timeRows.length) / 60);
+            }
+            const timePct = Math.min(100, Math.round((avgMinutesPerDay / DILIGENCE_TIME_TARGET_MINUTES) * 100));
+
+            // ----- Điểm chăm chỉ tổng hợp: 25% phiên âm, 20% tin ngắn, 20% chủ đề từ vựng,
+            // 10% kho từ vựng, 25% thời gian học -----
+            const diligenceScore = Math.round(
+                phoneticsPct * 0.25 +
+                newsPct * 0.20 +
+                topicsPct * 0.20 +
+                vocabPct * 0.10 +
+                timePct * 0.25
+            );
+
+            // ----- Vẽ danh sách Thành tựu -----
             const badges = [];
-            badges.push({
-                icon: '🔤',
-                title: 'Bảng phiên âm',
-                desc: `${completedCount}/${totalSymbols} âm đã hoàn thành`,
-                progress: completedPct
-            });
-            badges.push({
-                icon: '🎙️',
-                title: 'Luyện phát âm',
-                desc: `${recordedCount}/${totalSymbols} âm đã gửi ghi âm`,
-                progress: recordedPct
-            });
             if (totalSymbols > 0 && completedCount === totalSymbols) {
-                badges.unshift({
+                badges.push({
                     icon: '🏆',
                     title: 'Hoàn thành bảng phiên âm',
                     desc: 'Đã tick hoàn thành toàn bộ ký tự IPA',
@@ -549,6 +650,45 @@ document.addEventListener('DOMContentLoaded', () => {
                     special: true
                 });
             }
+            badges.push({
+                icon: '🔤',
+                title: 'Bảng phiên âm',
+                desc: `${completedCount}/${totalSymbols} âm đã hoàn thành`,
+                progress: phoneticsPct
+            });
+            badges.push({
+                icon: '📰',
+                title: 'Tin ngắn đã xem',
+                desc: `${newsCompletedCount} tin ngắn đã hoàn thành phần dịch`,
+                progress: newsPct
+            });
+            badges.push({
+                icon: '📚',
+                title: 'Chủ đề từ vựng',
+                desc: `${completedTopics}/${totalTopics} chủ đề đã hoàn thành`,
+                progress: topicsPct
+            });
+            badges.push({
+                icon: '📒',
+                title: 'Kho từ vựng của tôi',
+                desc: `${vocabCount} từ đã lưu`,
+                progress: vocabPct
+            });
+            badges.push({
+                icon: '🎯',
+                title: 'Điểm trung bình bài kiểm tra',
+                desc: avgTestScorePct != null
+                    ? `${avgTestScorePct}% (trung bình ${testsTakenCount} bài đã nộp)`
+                    : 'Chưa nộp bài kiểm tra nào',
+                progress: avgTestScorePct != null ? avgTestScorePct : 0,
+                special: true
+            });
+            badges.push({
+                icon: '⏱️',
+                title: 'Thời gian học trung bình',
+                desc: `${avgMinutesPerDay} phút/ngày trên web tự học`,
+                progress: timePct
+            });
 
             listEl.innerHTML = badges.map(b => `
                 <div class="ach-badge${b.special ? ' ach-badge-special' : ''}">
@@ -560,11 +700,76 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>
             `).join('');
+
+            // ----- Ghi điểm chăm chỉ của CHÍNH học viên này lên bảng dùng chung, để mọi
+            // người có thể xếp hạng lẫn nhau (mỗi người chỉ được ghi đúng dòng của mình —
+            // xem chính sách RLS trong "profile_achievements_setup.sql") -----
+            try {
+                const { error: eScore } = await sb.from('diligence_scores').upsert({
+                    user_id: currentUserId,
+                    display_name: currentDisplayName || (currentEmail ? currentEmail.split('@')[0] : 'Học viên'),
+                    avatar_url: currentAvatarUrl || null,
+                    phonetics_pct: phoneticsPct,
+                    news_pct: newsPct,
+                    topics_pct: topicsPct,
+                    vocab_pct: vocabPct,
+                    time_pct: timePct,
+                    diligence_score: diligenceScore,
+                    updated_at: new Date().toISOString()
+                }, { onConflict: 'user_id' });
+                if (eScore) console.error('Lỗi khi cập nhật điểm chăm chỉ:', eScore.message);
+            } catch (errScore) {
+                console.error('Lỗi ngoại lệ khi cập nhật điểm chăm chỉ:', errScore.message);
+            }
+
+            // ----- Tải & vẽ bảng xếp hạng học viên chăm chỉ -----
+            if (boardEl) await renderDiligenceLeaderboard(boardEl);
+
         } catch (e) {
             console.error('Lỗi khi tải thành tựu:', e);
             listEl.innerHTML = '<p class="profile-ach-error">Không thể tải thành tựu lúc này.</p>';
+            if (boardEl) boardEl.innerHTML = '<p class="profile-ach-error">Không thể tải bảng xếp hạng lúc này.</p>';
         }
     }
+
+    // --- [MỚI] BẢNG XẾP HẠNG HỌC VIÊN CHĂM CHỈ: đọc top 10 điểm cao nhất từ bảng dùng
+    // chung "diligence_scores" (bảng này ai đăng nhập cũng đọc được toàn bộ, nhưng chỉ
+    // ghi/sửa được đúng dòng của chính mình — xem RLS trong file SQL đi kèm) -----
+    async function renderDiligenceLeaderboard(boardEl) {
+        try {
+            const { data: rows, error } = await sb
+                .from('diligence_scores')
+                .select('user_id, display_name, avatar_url, diligence_score')
+                .order('diligence_score', { ascending: false })
+                .limit(10);
+            if (error) throw error;
+            if (!rows || !rows.length) {
+                boardEl.innerHTML = '<p class="profile-ach-loading">Chưa có dữ liệu xếp hạng.</p>';
+                return;
+            }
+            const medals = ['🥇', '🥈', '🥉'];
+            boardEl.innerHTML = rows.map((r, i) => {
+                const isMe = r.user_id === currentUserId;
+                const name = r.display_name || 'Học viên';
+                const initial = name.trim() ? name.trim()[0].toUpperCase() : '?';
+                const avatarHtml = r.avatar_url
+                    ? `<img src="${r.avatar_url}" class="leaderboard-avatar-img" alt="">`
+                    : `<span class="leaderboard-avatar-fallback">${initial}</span>`;
+                return `
+                    <div class="leaderboard-row${isMe ? ' is-me' : ''}">
+                        <div class="leaderboard-rank">${medals[i] || (i + 1)}</div>
+                        <div class="leaderboard-avatar">${avatarHtml}</div>
+                        <div class="leaderboard-name">${escapeHtmlForAchievements(name)}${isMe ? ' <span class="leaderboard-me-tag">(Bạn)</span>' : ''}</div>
+                        <div class="leaderboard-score">${Math.round(r.diligence_score || 0)} điểm</div>
+                    </div>
+                `;
+            }).join('');
+        } catch (err) {
+            console.error('Lỗi khi tải bảng xếp hạng:', err.message);
+            boardEl.innerHTML = '<p class="profile-ach-error">Không thể tải bảng xếp hạng lúc này.</p>';
+        }
+    }
+
 
     // --- [MỚI] ĐỔI ẢNH ĐẠI DIỆN: chọn file -> cắt/căn chỉnh -> tải lên Supabase Storage ---
     const cropModal = document.getElementById('avatar-crop-modal');
@@ -1652,6 +1857,26 @@ function toggleCompletion(symbolElement) {
             if (error) throw error;
         }
 
+        // [MỚI] Ghi nhận 1 bài tin đã được học viên hoàn thành phần luyện dịch (xong hết câu).
+        // Dùng upsert nên bấm lại nhiều lần / học lại bài cũ không tạo dòng trùng lặp.
+        // Bảng "news_completions" cần được tạo trên Supabase trước (xem file
+        // "profile_achievements_setup.sql" đi kèm).
+        async function markNewsArticleCompleted(articleId) {
+            if (!currentUserId || articleId === null || articleId === undefined) return;
+            try {
+                const { error } = await sb
+                    .from('news_completions')
+                    .upsert({
+                        user_id: currentUserId,
+                        article_id: articleId,
+                        completed_at: new Date().toISOString()
+                    }, { onConflict: 'user_id, article_id' });
+                if (error) throw error;
+            } catch (err) {
+                console.error('Lỗi khi ghi nhận hoàn thành tin ngắn:', err.message);
+            }
+        }
+
         const newsFolderCard  = document.getElementById('news-folder-card');
         const vocabFolderGrid = document.getElementById('vocab-folder-grid');
         const newsPanel       = document.getElementById('news-panel');
@@ -2027,6 +2252,9 @@ function toggleCompletion(symbolElement) {
                 } else {
                     newsSentenceQuestion.style.display = 'none';
                     newsSentenceDone.style.display = 'block';
+                    // [MỚI] Tin ngắn được tính là "đã xem" khi học viên hoàn thành phần dịch
+                    // (xong hết mọi câu) — ghi nhận lên Supabase để tính vào Thành tựu.
+                    markNewsArticleCompleted(currentArticleId);
                 }
 
                 // Đưa học viên đến đúng khúc vừa hiện ra: nhận xét → đáp án → fact → nút tiếp theo
@@ -7033,6 +7261,15 @@ function toggleCompletion(symbolElement) {
             const btn = e.target.closest('.kid-subtab-btn');
             if (btn && btn.dataset.sub !== 'game') pauseGame();
         });
+
+        // [MỚI] Xuất API dùng chung để khu vực "Hồ sơ / Thành tựu" đọc đúng số chủ đề từ
+        // vựng đã hoàn thành, mà không cần viết lại logic tính "hoàn thành" ở nơi khác
+        // (giống cách window.vocabTap đã làm ở phần Tin ngắn/Từ vựng cá nhân).
+        window.kidTopicsAPI = {
+            getTopics: () => (typeof KID_TOPICS !== 'undefined' ? KID_TOPICS : []),
+            isTopicCompleted: kidIsTopicCompleted,
+            ensureProgressMapLoaded: kidEnsureProgressMapLoaded
+        };
 
     })();
     // ===== KẾT THÚC: "CHO BÉ" — 50 CHỦ ĐỀ =====
