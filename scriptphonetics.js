@@ -725,6 +725,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 timePct * 0.25
             );
 
+            // ----- [MỚI] RESET ĐIỂM CHUYÊN CẦN HÀNG THÁNG -----
+            // "Thành tựu" bên trên vẫn luôn là tiến độ TRỌN ĐỜI (không bao giờ mất). Riêng điểm
+            // hiện trên "Bảng xếp hạng học viên chăm chỉ" thì tự động về 0 vào đầu mỗi tháng, để
+            // ai cũng có cơ hội cạnh tranh lại từ đầu — cách làm: lần đầu học viên mở hồ sơ trong
+            // 1 tháng mới, hệ thống "chốt mốc" (baseline_score) bằng đúng điểm trọn đời lúc đó;
+            // điểm hiển thị trên bảng xếp hạng = điểm trọn đời hiện tại trừ đi mốc đó, tức là chỉ
+            // tính phần tiến bộ MỚI làm được kể từ đầu tháng. Cần chạy 1 lần trên Supabase:
+            //   ALTER TABLE public.diligence_scores
+            //     ADD COLUMN IF NOT EXISTS baseline_score numeric DEFAULT 0,
+            //     ADD COLUMN IF NOT EXISTS reset_month text;
+            const currentMonthKey = new Date().toISOString().slice(0, 7); // vd "2026-07"
+            let baselineScore = diligenceScore;
+            try {
+                const { data: prevRow } = await sb.from('diligence_scores')
+                    .select('baseline_score, reset_month').eq('user_id', currentUserId).maybeSingle();
+                if (prevRow && prevRow.reset_month === currentMonthKey) {
+                    baselineScore = prevRow.baseline_score || 0; // vẫn trong cùng 1 tháng -> giữ nguyên mốc cũ
+                }
+                // Nếu chưa có dòng nào, hoặc reset_month khác tháng hiện tại (sang tháng mới)
+                // -> baselineScore giữ giá trị mặc định = diligenceScore (tức chốt mốc mới = 0 điểm)
+            } catch (errBaseline) {
+                console.error('Lỗi khi kiểm tra mốc reset điểm chuyên cần hàng tháng:', errBaseline.message);
+            }
+            const monthlyDiligenceScore = Math.max(0, diligenceScore - baselineScore);
+
             // ----- Vẽ danh sách Thành tựu -----
             const badges = [];
             if (totalSymbols > 0 && completedCount === totalSymbols) {
@@ -801,7 +826,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     topics_pct: topicsPct,
                     vocab_pct: vocabPct,
                     time_pct: timePct,
-                    diligence_score: diligenceScore,
+                    diligence_score: monthlyDiligenceScore,
+                    baseline_score: baselineScore,
+                    reset_month: currentMonthKey,
                     updated_at: new Date().toISOString()
                 }, { onConflict: 'user_id' });
                 if (eScore) console.error('Lỗi khi cập nhật điểm chăm chỉ:', eScore.message);
