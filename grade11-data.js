@@ -1,5 +1,10 @@
-// Dữ liệu từ vựng lớp 11 (THPT) — trích từ SGK Tiếng Anh 11 Global Success
-// Mỗi unit gồm: từ vựng (words), bài đọc (story). Dùng chung cho Flashcard / Dịch câu / Câu chuyện / Trò chơi hứng từ.
+// Dữ liệu từ vựng lớp 11 (THPT) — trích từ SGK Tiếng Anh 11 Global Success, tập 1 và tập 2
+// Mỗi unit gồm: từ vựng (words), bài đọc (story), và bản nháp "câu chuyện Dương & Dung" 4 khung (storyFrames).
+// storyFrames: nội dung mẫu ban đầu cho tính năng "Câu chuyện" (mục THCS/THPT trong tab Từ vựng) — từ khóa
+// (bọc trong <b>...</b>) sẽ bị ẩn thành ô trống cho học viên điền, ảnh minh họa (image_url) để trống, admin
+// (giangvien@gmail.com) tải ảnh lên sau qua khung soạn thảo. Giảng viên vẫn có thể ghi đè bất kỳ khung nào
+// qua khung soạn thảo đó — nội dung ghi đè sẽ được lưu trên Supabase và ưu tiên hơn bản nháp tĩnh này.
+// Dùng chung cho Flashcard / Dịch câu / Câu chuyện / Trò chơi hứng từ.
 const GRADE11_UNITS = [
   {
     "id": "u1",
@@ -144,7 +149,81 @@ const GRADE11_UNITS = [
         "Illness",
         "Germ"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "Dương wants to live a <b>balanced</b> and healthy life, so he visits a doctor to <b>examine</b> his general health.",
+        "keywords": [
+          {
+            "key": "balanced",
+            "meaningVi": "Cân đối, điều độ"
+          },
+          {
+            "key": "examine",
+            "meaningVi": "Khám, kiểm tra"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "The doctor checks his <b>fitness</b> level and looks for any sign of <b>illness</b> or <b>disease</b>.",
+        "keywords": [
+          {
+            "key": "fitness",
+            "meaningVi": "Sự khỏe khoắn, thể lực"
+          },
+          {
+            "key": "illness",
+            "meaningVi": "Sự ốm đau, bệnh tật"
+          },
+          {
+            "key": "disease",
+            "meaningVi": "Bệnh"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "She explains that <b>germs</b> can cause an <b>infection</b> if Dương doesn't wash his hands, so a proper <b>treatment</b> is important if he ever gets sick.",
+        "keywords": [
+          {
+            "key": "germs",
+            "meaningVi": "Vi trùng"
+          },
+          {
+            "key": "infection",
+            "meaningVi": "Sự lây nhiễm, nhiễm trùng"
+          },
+          {
+            "key": "treatment",
+            "meaningVi": "Cách điều trị"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "To build <b>strength</b> and stronger <b>muscles</b>, Dương should also eat food rich in <b>nutrients</b> and get plenty of <b>energy</b> from a good diet.",
+        "keywords": [
+          {
+            "key": "strength",
+            "meaningVi": "Sức mạnh"
+          },
+          {
+            "key": "muscles",
+            "meaningVi": "Cơ bắp"
+          },
+          {
+            "key": "nutrients",
+            "meaningVi": "Chất dinh dưỡng"
+          },
+          {
+            "key": "energy",
+            "meaningVi": "Năng lượng"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u2",
@@ -288,7 +367,81 @@ const GRADE11_UNITS = [
         "Freedom",
         "Adapt"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "At dinner, Dương and his parents talk about the <b>generation gap</b> between them. Sometimes it leads to a small <b>conflict</b> about screen time.",
+        "keywords": [
+          {
+            "key": "generation gap",
+            "meaningVi": "Khoảng cách giữa các thế hệ"
+          },
+          {
+            "key": "conflict",
+            "meaningVi": "Sự xung đột, va chạm"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "As a <b>digital native</b>, Dương is naturally <b>curious</b> about new apps, while his parents find it harder to <b>adapt</b> to new technology.",
+        "keywords": [
+          {
+            "key": "digital native",
+            "meaningVi": "Người sinh ra trong thời đại công nghệ"
+          },
+          {
+            "key": "curious",
+            "meaningVi": "Tò mò"
+          },
+          {
+            "key": "adapt",
+            "meaningVi": "Thích nghi"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "One <b>characteristic</b> of his generation is a strong sense of <b>individualism</b> and a desire for personal <b>freedom</b>, which is different from life in an <b>extended family</b> in the past.",
+        "keywords": [
+          {
+            "key": "characteristic",
+            "meaningVi": "Đặc điểm, đặc tính"
+          },
+          {
+            "key": "individualism",
+            "meaningVi": "Chủ nghĩa cá nhân"
+          },
+          {
+            "key": "freedom",
+            "meaningVi": "Sự tự do"
+          },
+          {
+            "key": "extended family",
+            "meaningVi": "Đại gia đình"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "His parents decide to <b>limit</b> his <b>screen time</b> a little, especially on <b>social media</b>, and Dương agrees it's a fair compromise.",
+        "keywords": [
+          {
+            "key": "limit",
+            "meaningVi": "Giới hạn, hạn chế"
+          },
+          {
+            "key": "screen time",
+            "meaningVi": "Thời gian sử dụng thiết bị"
+          },
+          {
+            "key": "social media",
+            "meaningVi": "Phương tiện truyền thông mạng xã hội"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u3",
@@ -436,7 +589,81 @@ const GRADE11_UNITS = [
         "City dweller",
         "Neighbourhood"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "Dương and Dung imagine living in a <b>smart city</b> of the future, full of tall <b>skyscrapers</b> and <b>high-rise</b> apartments.",
+        "keywords": [
+          {
+            "key": "smart city",
+            "meaningVi": "Thành phố thông minh"
+          },
+          {
+            "key": "skyscrapers",
+            "meaningVi": "Tòa nhà chọc trời"
+          },
+          {
+            "key": "high-rise",
+            "meaningVi": "Cao tầng"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "The <b>infrastructure</b> there uses smart <b>sensors</b> everywhere, making transport more <b>sustainable</b> and reducing the daily <b>traffic jam</b>.",
+        "keywords": [
+          {
+            "key": "infrastructure",
+            "meaningVi": "Cơ sở hạ tầng"
+          },
+          {
+            "key": "sensors",
+            "meaningVi": "Cảm biến"
+          },
+          {
+            "key": "sustainable",
+            "meaningVi": "Bền vững"
+          },
+          {
+            "key": "traffic jam",
+            "meaningVi": "Tắc nghẽn giao thông"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Every <b>neighbourhood</b> is designed to be safe for <b>pedestrians</b>, making the whole area far more <b>liveable</b> than today's cities.",
+        "keywords": [
+          {
+            "key": "neighbourhood",
+            "meaningVi": "Khu dân cư"
+          },
+          {
+            "key": "pedestrians",
+            "meaningVi": "Dành cho người đi bộ"
+          },
+          {
+            "key": "liveable",
+            "meaningVi": "Đáng sống"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "In this future city, every <b>city dweller</b> can easily <b>interact</b> with smart devices to make daily life simpler and more convenient.",
+        "keywords": [
+          {
+            "key": "city dweller",
+            "meaningVi": "Người dân thành phố"
+          },
+          {
+            "key": "interact",
+            "meaningVi": "Tương tác"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u4",
@@ -583,7 +810,81 @@ const GRADE11_UNITS = [
         "Strengthen",
         "Community"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "Dương and Dung join a <b>cultural exchange</b> programme organised by the ASEAN <b>community</b>.",
+        "keywords": [
+          {
+            "key": "cultural exchange",
+            "meaningVi": "Trao đổi văn hóa"
+          },
+          {
+            "key": "community",
+            "meaningVi": "Cộng đồng"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "At the <b>celebration</b>, students from different countries in the <b>region</b> meet and share their traditions.",
+        "keywords": [
+          {
+            "key": "celebration",
+            "meaningVi": "Lễ kỷ niệm"
+          },
+          {
+            "key": "region",
+            "meaningVi": "Khu vực, vùng"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "As <b>volunteers</b>, they proudly <b>represent</b> the <b>youth</b> of Viet Nam and <b>take part in</b> many fun activities.",
+        "keywords": [
+          {
+            "key": "volunteers",
+            "meaningVi": "Tình nguyện viên"
+          },
+          {
+            "key": "represent",
+            "meaningVi": "Đại diện"
+          },
+          {
+            "key": "youth",
+            "meaningVi": "Tuổi trẻ, giới trẻ"
+          },
+          {
+            "key": "take part in",
+            "meaningVi": "Tham gia"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dung uses her <b>leadership skills</b> to help organise events, hoping to <b>qualify</b> for a bigger youth summit and make a real <b>contribution</b> that helps <b>strengthen</b> friendship between countries.",
+        "keywords": [
+          {
+            "key": "leadership skills",
+            "meaningVi": "Kỹ năng lãnh đạo"
+          },
+          {
+            "key": "qualify",
+            "meaningVi": "Đủ điều kiện, đủ tiêu chuẩn"
+          },
+          {
+            "key": "contribution",
+            "meaningVi": "Sự đóng góp"
+          },
+          {
+            "key": "strengthen",
+            "meaningVi": "Tăng cường"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u5",
@@ -730,7 +1031,81 @@ const GRADE11_UNITS = [
         "Sea level",
         "Renewable"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "In class, Dương and Dung learn that <b>global warming</b> is changing our <b>atmosphere</b> more than ever before.",
+        "keywords": [
+          {
+            "key": "global warming",
+            "meaningVi": "Sự nóng lên toàn cầu"
+          },
+          {
+            "key": "atmosphere",
+            "meaningVi": "Khí quyển"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Burning <b>fossil fuels</b> releases a lot of <b>carbon dioxide</b> and <b>methane</b> into the air, warming up the planet.",
+        "keywords": [
+          {
+            "key": "fossil fuels",
+            "meaningVi": "Nhiên liệu hóa thạch"
+          },
+          {
+            "key": "carbon dioxide",
+            "meaningVi": "Khí carbonic"
+          },
+          {
+            "key": "methane",
+            "meaningVi": "Khí methane"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "As a result, the <b>sea level</b> is rising, and many <b>pollutants</b> from <b>human activity</b> are damaging the <b>environment</b>.",
+        "keywords": [
+          {
+            "key": "sea level",
+            "meaningVi": "Mực nước biển"
+          },
+          {
+            "key": "pollutants",
+            "meaningVi": "Chất gây ô nhiễm"
+          },
+          {
+            "key": "human activity",
+            "meaningVi": "Hoạt động của con người"
+          },
+          {
+            "key": "environment",
+            "meaningVi": "Môi trường"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dung worries about the serious <b>consequences</b>, so she suggests switching to <b>renewable</b> energy to reduce the <b>impact</b> on our planet.",
+        "keywords": [
+          {
+            "key": "consequences",
+            "meaningVi": "Hậu quả"
+          },
+          {
+            "key": "renewable",
+            "meaningVi": "Có thể tái tạo"
+          },
+          {
+            "key": "impact",
+            "meaningVi": "Tác động"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u6",
@@ -878,7 +1253,81 @@ const GRADE11_UNITS = [
         "Heritage",
         "Performing arts"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "Dương and Dung visit an old <b>citadel</b>, a valuable piece of their national <b>heritage</b>.",
+        "keywords": [
+          {
+            "key": "citadel",
+            "meaningVi": "Thành trì, thành cổ"
+          },
+          {
+            "key": "heritage",
+            "meaningVi": "Di sản"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "The guide explains how experts work to <b>preserve</b> and <b>restore</b> this <b>ancient</b> <b>monument</b> every year.",
+        "keywords": [
+          {
+            "key": "preserve",
+            "meaningVi": "Bảo tồn"
+          },
+          {
+            "key": "restore",
+            "meaningVi": "Hồi phục, sửa lại"
+          },
+          {
+            "key": "ancient",
+            "meaningVi": "Cổ kính, cổ xưa"
+          },
+          {
+            "key": "monument",
+            "meaningVi": "Đài kỷ niệm, di tích"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Nearby, there is a beautiful <b>temple</b> located in a peaceful <b>valley</b>, part of a larger historical <b>complex</b>.",
+        "keywords": [
+          {
+            "key": "temple",
+            "meaningVi": "Đền, miếu"
+          },
+          {
+            "key": "valley",
+            "meaningVi": "Thung lũng"
+          },
+          {
+            "key": "complex",
+            "meaningVi": "Quần thể, tổ hợp"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "The local community even uses <b>crowdfunding</b> to support <b>performing arts</b> shows there. Dung says she really <b>appreciates</b> these efforts to protect their culture.",
+        "keywords": [
+          {
+            "key": "crowdfunding",
+            "meaningVi": "Huy động vốn từ cộng đồng"
+          },
+          {
+            "key": "performing arts",
+            "meaningVi": "Nghệ thuật biểu diễn"
+          },
+          {
+            "key": "appreciates",
+            "meaningVi": "Hiểu rõ giá trị, đánh giá cao"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u7",
@@ -1025,7 +1474,81 @@ const GRADE11_UNITS = [
         "Qualification",
         "Academic"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "As a <b>school-leaver</b> soon, Dương thinks a lot about <b>higher education</b> and his future path.",
+        "keywords": [
+          {
+            "key": "school-leaver",
+            "meaningVi": "Học sinh vừa tốt nghiệp THPT"
+          },
+          {
+            "key": "higher education",
+            "meaningVi": "Giáo dục đại học"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dung suggests an <b>apprenticeship</b> might suit him better than university, but Dương wants to earn a <b>bachelor's degree</b> first.",
+        "keywords": [
+          {
+            "key": "apprenticeship",
+            "meaningVi": "Thời gian học nghề, học việc"
+          },
+          {
+            "key": "bachelor's degree",
+            "meaningVi": "Bằng cử nhân"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "He even dreams of one day getting a <b>master's degree</b>, or perhaps a <b>doctorate</b>, to gain more <b>professional</b> <b>qualifications</b>.",
+        "keywords": [
+          {
+            "key": "master's degree",
+            "meaningVi": "Bằng thạc sĩ"
+          },
+          {
+            "key": "doctorate",
+            "meaningVi": "Bằng tiến sĩ"
+          },
+          {
+            "key": "professional",
+            "meaningVi": "Chuyên nghiệp"
+          },
+          {
+            "key": "qualifications",
+            "meaningVi": "Bằng cấp, chuyên môn"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "First, though, he must pass the <b>entrance exam</b> to join a good <b>institution</b>, then celebrate his <b>graduation</b> after years of <b>academic</b> study.",
+        "keywords": [
+          {
+            "key": "entrance exam",
+            "meaningVi": "Kỳ thi tuyển sinh, thi đầu vào"
+          },
+          {
+            "key": "institution",
+            "meaningVi": "Cơ sở đào tạo"
+          },
+          {
+            "key": "graduation",
+            "meaningVi": "Lễ tốt nghiệp"
+          },
+          {
+            "key": "academic",
+            "meaningVi": "Có tính học thuật"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u8",
@@ -1170,7 +1693,81 @@ const GRADE11_UNITS = [
         "Confidence",
         "Motivate"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "This year, Dung wants to build more <b>independence</b>, starting with taking more <b>responsibility</b> at home.",
+        "keywords": [
+          {
+            "key": "independence",
+            "meaningVi": "Sự độc lập"
+          },
+          {
+            "key": "responsibility",
+            "meaningVi": "Trách nhiệm"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "She is very <b>self-motivated</b>, and practises her <b>time-management skills</b> to balance study and rest.",
+        "keywords": [
+          {
+            "key": "self-motivated",
+            "meaningVi": "Có động lực, chủ động"
+          },
+          {
+            "key": "time-management skills",
+            "meaningVi": "Kỹ năng quản lý thời gian"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "She also learns <b>money-management skills</b> and <b>decision-making skills</b>, which helps boost her <b>confidence</b> every day.",
+        "keywords": [
+          {
+            "key": "money-management skills",
+            "meaningVi": "Kỹ năng quản lý tiền bạc"
+          },
+          {
+            "key": "decision-making skills",
+            "meaningVi": "Kỹ năng ra quyết định"
+          },
+          {
+            "key": "confidence",
+            "meaningVi": "Sự tự tin"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "To <b>achieve</b> her goals, Dung tries to <b>carry out</b> a daily study plan, <b>deal with</b> problems calmly, and <b>motivate</b> herself through <b>self-study</b> every evening.",
+        "keywords": [
+          {
+            "key": "achieve",
+            "meaningVi": "Đạt được"
+          },
+          {
+            "key": "carry out",
+            "meaningVi": "Tiến hành, thực hiện"
+          },
+          {
+            "key": "deal with",
+            "meaningVi": "Giải quyết, đối phó với"
+          },
+          {
+            "key": "motivate",
+            "meaningVi": "Thúc đẩy, động viên"
+          },
+          {
+            "key": "self-study",
+            "meaningVi": "Sự tự học"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u9",
@@ -1317,7 +1914,81 @@ const GRADE11_UNITS = [
         "Awareness",
         "Peer pressure"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "In a class discussion about social issues, Dương and Dung talk about <b>peer pressure</b> among students their age.",
+        "keywords": [
+          {
+            "key": "peer pressure",
+            "meaningVi": "Áp lực từ bạn bè"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "They also learn about <b>cyberbullying</b>, where a <b>bully</b> hurts someone online, sometimes even through cruel <b>body shaming</b> comments.",
+        "keywords": [
+          {
+            "key": "cyberbullying",
+            "meaningVi": "Bắt nạt qua mạng"
+          },
+          {
+            "key": "bully",
+            "meaningVi": "Bắt nạt"
+          },
+          {
+            "key": "body shaming",
+            "meaningVi": "Sự chê bai ngoại hình"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dung says every <b>victim</b> deserves support, and building <b>self-confidence</b> can help someone <b>stand up to</b> unkind, <b>offensive</b> comments.",
+        "keywords": [
+          {
+            "key": "victim",
+            "meaningVi": "Nạn nhân"
+          },
+          {
+            "key": "self-confidence",
+            "meaningVi": "Sự tự tin vào bản thân"
+          },
+          {
+            "key": "stand up to",
+            "meaningVi": "Đứng lên chống lại"
+          },
+          {
+            "key": "offensive",
+            "meaningVi": "Gây xúc phạm"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Their class decides to start an <b>awareness</b> <b>campaign</b> at school, since these problems, along with issues like <b>poverty</b> or <b>depression</b>, need everyone's attention and kindness.",
+        "keywords": [
+          {
+            "key": "awareness",
+            "meaningVi": "Nhận thức"
+          },
+          {
+            "key": "campaign",
+            "meaningVi": "Chiến dịch"
+          },
+          {
+            "key": "poverty",
+            "meaningVi": "Sự nghèo đói"
+          },
+          {
+            "key": "depression",
+            "meaningVi": "Sự trầm cảm"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u10",
@@ -1466,6 +2137,80 @@ const GRADE11_UNITS = [
         "Natural resources",
         "Wildlife"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "Dương and Dung visit a <b>national park</b> to study the local <b>ecosystem</b> for their school project.",
+        "keywords": [
+          {
+            "key": "national park",
+            "meaningVi": "Vườn quốc gia"
+          },
+          {
+            "key": "ecosystem",
+            "meaningVi": "Hệ sinh thái"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "The park ranger explains the rich <b>biodiversity</b> there and shows them different animal <b>species</b> living safely in their natural <b>habitat</b>.",
+        "keywords": [
+          {
+            "key": "biodiversity",
+            "meaningVi": "Đa dạng sinh học"
+          },
+          {
+            "key": "species",
+            "meaningVi": "Loài"
+          },
+          {
+            "key": "habitat",
+            "meaningVi": "Môi trường sống, khu vực sống"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Sadly, some of the <b>wildlife</b> here is now <b>endangered</b>, so the park works hard on <b>conservation</b> projects to protect them.",
+        "keywords": [
+          {
+            "key": "wildlife",
+            "meaningVi": "Động vật hoang dã"
+          },
+          {
+            "key": "endangered",
+            "meaningVi": "Có nguy cơ tuyệt chủng"
+          },
+          {
+            "key": "conservation",
+            "meaningVi": "Sự bảo tồn"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "They also learn about a nearby <b>coral reef</b> and a <b>tropical forest</b>, both rich in <b>natural resources</b> and an important part of the local <b>food chain</b>.",
+        "keywords": [
+          {
+            "key": "coral reef",
+            "meaningVi": "Rạn san hô"
+          },
+          {
+            "key": "tropical forest",
+            "meaningVi": "Rừng nhiệt đới"
+          },
+          {
+            "key": "natural resources",
+            "meaningVi": "Tài nguyên thiên nhiên"
+          },
+          {
+            "key": "food chain",
+            "meaningVi": "Chuỗi thức ăn"
+          }
+        ]
+      }
+    ]
   }
 ];

@@ -1,5 +1,10 @@
 // Dữ liệu từ vựng lớp 6 (THCS/THPT) — trích từ SGK Tiếng Anh 6 Global Success, tập 1 và tập 2
-// Mỗi unit gồm: từ vựng (words), bài đọc (story). Dùng chung cho Flashcard / Dịch câu / Câu chuyện / Trò chơi hứng từ.
+// Mỗi unit gồm: từ vựng (words), bài đọc (story), và bản nháp "câu chuyện Dương & Dung" 4 khung (storyFrames).
+// storyFrames: nội dung mẫu ban đầu cho tính năng "Câu chuyện" (mục THCS/THPT trong tab Từ vựng) — từ khóa
+// (bọc trong <b>...</b>) sẽ bị ẩn thành ô trống cho học viên điền, ảnh minh họa (image_url) để trống, admin
+// (giangvien@gmail.com) tải ảnh lên sau qua khung soạn thảo. Giảng viên vẫn có thể ghi đè bất kỳ khung nào
+// qua khung soạn thảo đó — nội dung ghi đè sẽ được lưu trên Supabase và ưu tiên hơn bản nháp tĩnh này.
+// Dùng chung cho Flashcard / Dịch câu / Câu chuyện / Trò chơi hứng từ.
 const GRADE6_UNITS = [
   {
     "id": "u1",
@@ -137,7 +142,81 @@ const GRADE6_UNITS = [
       "used": [
         "Science"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "It's Dương's first day at his new school. He packs his books into his <b>school bag</b> and puts on his new <b>uniform</b>. At the gate, a friendly girl smiles at him. \"Hi, I'm Dung, your new <b>classmate</b>!\" she says.",
+        "keywords": [
+          {
+            "key": "school bag",
+            "meaningVi": "Cặp sách"
+          },
+          {
+            "key": "uniform",
+            "meaningVi": "Đồng phục"
+          },
+          {
+            "key": "classmate",
+            "meaningVi": "Bạn cùng lớp"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "In the first <b>lesson</b>, the teacher introduces the <b>subjects</b> for this year. Dương loves <b>history</b>, but Dung's favourite subject is <b>science</b>. They both can't wait to start learning.",
+        "keywords": [
+          {
+            "key": "lesson",
+            "meaningVi": "Tiết học"
+          },
+          {
+            "key": "subjects",
+            "meaningVi": "Môn học"
+          },
+          {
+            "key": "history",
+            "meaningVi": "Môn lịch sử"
+          },
+          {
+            "key": "science",
+            "meaningVi": "Môn khoa học"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "At break time, Dương and Dung play <b>football</b> in the yard. Their teacher says daily <b>exercise</b> keeps them healthy and strong, so they promise to play together every day.",
+        "keywords": [
+          {
+            "key": "football",
+            "meaningVi": "Bóng đá"
+          },
+          {
+            "key": "exercise",
+            "meaningVi": "Bài tập thể dục"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "After school, Dương and Dung sit together to do their <b>homework</b>. Dung lends him her <b>compass</b> to draw a circle, and Dương keeps his pencils safe in his new <b>pencil case</b>.",
+        "keywords": [
+          {
+            "key": "homework",
+            "meaningVi": "Bài tập về nhà"
+          },
+          {
+            "key": "compass",
+            "meaningVi": "Com-pa"
+          },
+          {
+            "key": "pencil case",
+            "meaningVi": "Hộp bút"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u2",
@@ -267,7 +346,77 @@ const GRADE6_UNITS = [
         "Wardrobe",
         "Bathroom"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "Dung invites Dương to see her new home. \"We used to live in a <b>flat</b>, but now we live in a <b>town house</b> with a garden!\" she says happily as they walk to the front door.",
+        "keywords": [
+          {
+            "key": "flat",
+            "meaningVi": "Căn hộ chung cư"
+          },
+          {
+            "key": "town house",
+            "meaningVi": "Nhà phố"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Inside, there is a cosy <b>living room</b> with a comfy <b>sofa</b> and a beautiful <b>picture</b> on the wall. \"I love reading here in the evening,\" says Dung, turning on the <b>lamp</b> beside the sofa.",
+        "keywords": [
+          {
+            "key": "living room",
+            "meaningVi": "Phòng khách"
+          },
+          {
+            "key": "sofa",
+            "meaningVi": "Ghế sofa"
+          },
+          {
+            "key": "picture",
+            "meaningVi": "Bức tranh"
+          },
+          {
+            "key": "lamp",
+            "meaningVi": "Đèn"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Next, Dung shows Dương the kitchen. There is a big <b>fridge</b> for food and a <b>cupboard</b> for plates and bowls. \"Would you like some cold juice?\" Dung asks, opening the fridge.",
+        "keywords": [
+          {
+            "key": "fridge",
+            "meaningVi": "Tủ lạnh"
+          },
+          {
+            "key": "cupboard",
+            "meaningVi": "Tủ đựng đồ"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Finally, they go upstairs to Dung's bedroom. She keeps her clothes in a big <b>wardrobe</b> and her books in a <b>chest of drawers</b>. Then they visit the clean, tidy <b>bathroom</b> before going back downstairs.",
+        "keywords": [
+          {
+            "key": "wardrobe",
+            "meaningVi": "Tủ quần áo"
+          },
+          {
+            "key": "chest of drawers",
+            "meaningVi": "Tủ ngăn kéo"
+          },
+          {
+            "key": "bathroom",
+            "meaningVi": "Phòng tắm"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u3",
@@ -399,7 +548,77 @@ const GRADE6_UNITS = [
         "Friendly",
         "Clever"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "In class, Dương describes his best friend Dung: she has long <b>curly</b> <b>hair</b> and bright brown <b>eyes</b>. She always carries her school bag over one <b>shoulder</b>.",
+        "keywords": [
+          {
+            "key": "curly",
+            "meaningVi": "Xoăn"
+          },
+          {
+            "key": "hair",
+            "meaningVi": "Tóc"
+          },
+          {
+            "key": "eyes",
+            "meaningVi": "Đôi mắt"
+          },
+          {
+            "key": "shoulder",
+            "meaningVi": "Vai"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dung is very <b>friendly</b> — she says hello to everyone and helps new students feel welcome. She is also <b>confident</b>, so she isn't afraid to answer questions in class.",
+        "keywords": [
+          {
+            "key": "friendly",
+            "meaningVi": "Thân thiện"
+          },
+          {
+            "key": "confident",
+            "meaningVi": "Tự tin"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dung is a <b>creative</b> artist who paints beautiful pictures, and she is very <b>clever</b> at maths too. Dương admires how she can do so many different things well.",
+        "keywords": [
+          {
+            "key": "creative",
+            "meaningVi": "Sáng tạo"
+          },
+          {
+            "key": "clever",
+            "meaningVi": "Thông minh"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dung is also <b>hard-working</b> — she always finishes her homework early — and very <b>careful</b> when she checks her answers. There is also a boy with short <b>blonde</b> hair in their class named Mark.",
+        "keywords": [
+          {
+            "key": "hard-working",
+            "meaningVi": "Chăm chỉ"
+          },
+          {
+            "key": "careful",
+            "meaningVi": "Cẩn thận"
+          },
+          {
+            "key": "blonde",
+            "meaningVi": "Tóc vàng hoe"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u4",
@@ -529,7 +748,77 @@ const GRADE6_UNITS = [
         "Modern",
         "Crowded"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "Dương lives near the city centre, so his neighbourhood is quite <b>crowded</b> and <b>noisy</b>. Dung lives in the <b>suburbs</b>, where it is much more <b>peaceful</b>.",
+        "keywords": [
+          {
+            "key": "crowded",
+            "meaningVi": "Đông đúc"
+          },
+          {
+            "key": "noisy",
+            "meaningVi": "Ồn ào"
+          },
+          {
+            "key": "suburbs",
+            "meaningVi": "Ngoại ô"
+          },
+          {
+            "key": "peaceful",
+            "meaningVi": "Yên bình"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dương takes Dung to the town <b>square</b>, where people meet and children play. Nearby, they visit an <b>art gallery</b> full of beautiful paintings.",
+        "keywords": [
+          {
+            "key": "square",
+            "meaningVi": "Quảng trường"
+          },
+          {
+            "key": "art gallery",
+            "meaningVi": "Phòng trưng bày nghệ thuật"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Then they walk past an old <b>cathedral</b> with tall towers and a small <b>temple</b> where people pray. Dung thinks the old buildings are very interesting.",
+        "keywords": [
+          {
+            "key": "cathedral",
+            "meaningVi": "Nhà thờ lớn"
+          },
+          {
+            "key": "temple",
+            "meaningVi": "Ngôi đền"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "On the way home, they pass the <b>railway station</b>. \"This area is so <b>convenient</b>,\" says Dung, \"with <b>modern</b> shops close to the station too!\" Dương agrees and smiles.",
+        "keywords": [
+          {
+            "key": "railway station",
+            "meaningVi": "Ga tàu hỏa"
+          },
+          {
+            "key": "convenient",
+            "meaningVi": "Tiện lợi"
+          },
+          {
+            "key": "modern",
+            "meaningVi": "Hiện đại"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u5",
@@ -660,7 +949,77 @@ const GRADE6_UNITS = [
         "Scenery",
         "Suncream"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "This summer, Dương and Dung plan a trip to explore Viet Nam's natural wonders. They pack their <b>backpacks</b> with a map, some snacks, and a bottle of <b>suncream</b>.",
+        "keywords": [
+          {
+            "key": "backpacks",
+            "meaningVi": "Ba lô"
+          },
+          {
+            "key": "suncream",
+            "meaningVi": "Kem chống nắng"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "First, they climb a tall <b>mountain</b> and walk beside a wide <b>river</b>. From the top, the <b>scenery</b> is amazing — green hills stretch as far as they can see.",
+        "keywords": [
+          {
+            "key": "mountain",
+            "meaningVi": "Núi"
+          },
+          {
+            "key": "river",
+            "meaningVi": "Dòng sông"
+          },
+          {
+            "key": "scenery",
+            "meaningVi": "Phong cảnh"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Next, they visit a beautiful <b>waterfall</b> hidden deep in the <b>forest</b>, then explore a dark, cool <b>cave</b> nearby. Dung takes lots of photos to remember the trip.",
+        "keywords": [
+          {
+            "key": "waterfall",
+            "meaningVi": "Thác nước"
+          },
+          {
+            "key": "forest",
+            "meaningVi": "Rừng"
+          },
+          {
+            "key": "cave",
+            "meaningVi": "Hang động"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "At night, they camp near the beach on a small <b>island</b>, unrolling their <b>sleeping bags</b> under the stars. On the last day they even see a sandy <b>desert</b> area close to the coast!",
+        "keywords": [
+          {
+            "key": "island",
+            "meaningVi": "Hòn đảo"
+          },
+          {
+            "key": "sleeping bags",
+            "meaningVi": "Túi ngủ"
+          },
+          {
+            "key": "desert",
+            "meaningVi": "Sa mạc"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u6",
@@ -779,7 +1138,73 @@ const GRADE6_UNITS = [
         "Fireworks",
         "Lucky money"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "It's Tet holiday! Dung invites Dương to help <b>decorate</b> her house with colourful <b>peach flowers</b>. The house looks bright and cheerful for the new year.",
+        "keywords": [
+          {
+            "key": "decorate",
+            "meaningVi": "Trang trí"
+          },
+          {
+            "key": "peach flowers",
+            "meaningVi": "Hoa đào"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "In the kitchen, Dung's grandmother is making <b>banh chung</b> and other <b>special food</b> for the family. The delicious smell fills the whole house.",
+        "keywords": [
+          {
+            "key": "banh chung",
+            "meaningVi": "Bánh chưng"
+          },
+          {
+            "key": "special food",
+            "meaningVi": "Món ăn đặc biệt"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "In the evening, all of Dung's <b>relatives</b> come home for a big <b>family gathering</b>. Everyone shares a warm <b>wish</b> for good luck in the new year.",
+        "keywords": [
+          {
+            "key": "relatives",
+            "meaningVi": "Họ hàng"
+          },
+          {
+            "key": "family gathering",
+            "meaningVi": "Sum họp gia đình"
+          },
+          {
+            "key": "wish",
+            "meaningVi": "Lời chúc"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "At midnight, everyone goes outside to <b>celebrate</b> as bright <b>fireworks</b> light up the sky. Before Dương goes home, Dung's grandmother gives him some <b>lucky money</b> in a red envelope.",
+        "keywords": [
+          {
+            "key": "celebrate",
+            "meaningVi": "Ăn mừng, đón"
+          },
+          {
+            "key": "fireworks",
+            "meaningVi": "Pháo hoa"
+          },
+          {
+            "key": "lucky money",
+            "meaningVi": "Tiền lì xì"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u7",
@@ -910,7 +1335,77 @@ const GRADE6_UNITS = [
         "Character",
         "Popular"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "On Sunday afternoon, Dương visits Dung's house to watch TV together. \"Let's watch a <b>talent show</b>,\" says Dung, \"it's very <b>popular</b> with <b>viewers</b> this year.\"",
+        "keywords": [
+          {
+            "key": "talent show",
+            "meaningVi": "Cuộc thi tài năng"
+          },
+          {
+            "key": "popular",
+            "meaningVi": "Phổ biến"
+          },
+          {
+            "key": "viewers",
+            "meaningVi": "Người xem"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "After that, they switch to another <b>channel</b> to watch a <b>game show</b>, cheering loudly for their favourite team to win the prize.",
+        "keywords": [
+          {
+            "key": "channel",
+            "meaningVi": "Kênh truyền hình"
+          },
+          {
+            "key": "game show",
+            "meaningVi": "Chương trình trò chơi"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Later, Dung wants to watch a funny <b>comedy</b>, but Dương prefers a <b>cartoon</b> with his favourite <b>character</b>, a brave little dragon.",
+        "keywords": [
+          {
+            "key": "comedy",
+            "meaningVi": "Phim hài"
+          },
+          {
+            "key": "cartoon",
+            "meaningVi": "Phim hoạt hình"
+          },
+          {
+            "key": "character",
+            "meaningVi": "Nhân vật"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Before dinner, they watch a short <b>educational programme</b> about animals, and then an <b>animated film</b>. Later that night, they even watch the news <b>live</b> on TV with Dung's parents.",
+        "keywords": [
+          {
+            "key": "educational programme",
+            "meaningVi": "Chương trình giáo dục"
+          },
+          {
+            "key": "animated film",
+            "meaningVi": "Phim hoạt hình"
+          },
+          {
+            "key": "live",
+            "meaningVi": "Trực tiếp"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u8",
@@ -1028,7 +1523,73 @@ const GRADE6_UNITS = [
       "used": [
         "Champion"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "Dung is very <b>sporty</b> — she loves playing many kinds of sports. This week, her school is holding a big <b>competition</b> for every class.",
+        "keywords": [
+          {
+            "key": "sporty",
+            "meaningVi": "Đam mê thể thao"
+          },
+          {
+            "key": "competition",
+            "meaningVi": "Cuộc thi"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "First, Dung plays <b>table tennis</b> with her <b>racket</b>, hitting the ball fast across the table. Dương cheers loudly for her from the side.",
+        "keywords": [
+          {
+            "key": "table tennis",
+            "meaningVi": "Bóng bàn"
+          },
+          {
+            "key": "racket",
+            "meaningVi": "Cây vợt"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Next, Dung puts on her <b>goggles</b> and jumps into the pool for a short swimming <b>marathon</b>. After that, she even wins a quick game of <b>chess</b> against her classmate.",
+        "keywords": [
+          {
+            "key": "goggles",
+            "meaningVi": "Kính bơi"
+          },
+          {
+            "key": "marathon",
+            "meaningVi": "Cuộc thi chạy marathon"
+          },
+          {
+            "key": "chess",
+            "meaningVi": "Cờ vua"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "In the afternoon, Dung shows off her <b>karate</b> skills and wins first prize! \"<b>Congratulations</b>, you're the <b>champion</b> of the day!\" Dương says proudly.",
+        "keywords": [
+          {
+            "key": "karate",
+            "meaningVi": "Võ karate"
+          },
+          {
+            "key": "congratulations",
+            "meaningVi": "Lời chúc mừng"
+          },
+          {
+            "key": "champion",
+            "meaningVi": "Nhà vô địch"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u9",
@@ -1147,7 +1708,73 @@ const GRADE6_UNITS = [
         "Palace",
         "Sunny"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "Dương and Dung are planning their next trip. \"I hope the weather is <b>sunny</b>, not <b>rainy</b>,\" says Dung, looking at the travel guide.",
+        "keywords": [
+          {
+            "key": "sunny",
+            "meaningVi": "Có nắng"
+          },
+          {
+            "key": "rainy",
+            "meaningVi": "Có mưa"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "They want to visit a famous <b>landmark</b>, a tall <b>tower</b> in the city centre, and take photos to send home on a <b>postcard</b>.",
+        "keywords": [
+          {
+            "key": "landmark",
+            "meaningVi": "Địa danh nổi tiếng"
+          },
+          {
+            "key": "tower",
+            "meaningVi": "Tòa tháp"
+          },
+          {
+            "key": "postcard",
+            "meaningVi": "Bưu thiếp"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dung also wants to visit an old royal <b>palace</b> and try some <b>delicious</b> <b>street food</b> at the local market.",
+        "keywords": [
+          {
+            "key": "palace",
+            "meaningVi": "Cung điện"
+          },
+          {
+            "key": "delicious",
+            "meaningVi": "Ngon"
+          },
+          {
+            "key": "street food",
+            "meaningVi": "Món ăn đường phố"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dương suggests visiting a <b>floating market</b> early in the morning too. \"The local people there are always so <b>helpful</b> to tourists,\" he adds.",
+        "keywords": [
+          {
+            "key": "floating market",
+            "meaningVi": "Chợ nổi"
+          },
+          {
+            "key": "helpful",
+            "meaningVi": "Tốt bụng, hay giúp đỡ"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u10",
@@ -1266,7 +1893,73 @@ const GRADE6_UNITS = [
         "Robot",
         "Helicopter"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "Dung and Dương are talking about their future homes. \"My house will have a home <b>robot</b> to help with the housework,\" says Dung excitedly.",
+        "keywords": [
+          {
+            "key": "robot",
+            "meaningVi": "Người máy"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "In the kitchen, there will be an <b>electric cooker</b> that cooks by itself, a <b>dishwasher</b> for the dishes, and a <b>washing machine</b> that folds the clothes too!",
+        "keywords": [
+          {
+            "key": "electric cooker",
+            "meaningVi": "Nồi cơm điện"
+          },
+          {
+            "key": "dishwasher",
+            "meaningVi": "Máy rửa bát"
+          },
+          {
+            "key": "washing machine",
+            "meaningVi": "Máy giặt"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Every <b>appliance</b> in the house will use clean <b>solar energy</b>. On the wall, there will be a <b>wireless TV</b> and a <b>smart clock</b> that wakes them up gently.",
+        "keywords": [
+          {
+            "key": "appliance",
+            "meaningVi": "Thiết bị gia dụng"
+          },
+          {
+            "key": "solar energy",
+            "meaningVi": "Năng lượng mặt trời"
+          },
+          {
+            "key": "wireless TV",
+            "meaningVi": "Ti vi không dây"
+          },
+          {
+            "key": "smart clock",
+            "meaningVi": "Đồng hồ thông minh"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dương laughs and says, \"Maybe we'll even travel to school in a flying <b>helicopter</b>, or see a real <b>UFO</b> in the sky one day!\"",
+        "keywords": [
+          {
+            "key": "helicopter",
+            "meaningVi": "Trực thăng"
+          },
+          {
+            "key": "UFO",
+            "meaningVi": "Vật thể bay không xác định"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u11",
@@ -1387,7 +2080,73 @@ const GRADE6_UNITS = [
         "Exchange",
         "Reusable"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "At school, Dung and Dương join a project to protect the <b>environment</b>. First, they pick up <b>rubbish</b> around the playground.",
+        "keywords": [
+          {
+            "key": "environment",
+            "meaningVi": "Môi trường"
+          },
+          {
+            "key": "rubbish",
+            "meaningVi": "Rác"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "They sort the waste carefully: <b>plastic bottles</b> and <b>plastic bags</b> go in one bin, and <b>glass</b> jars go in another, ready to <b>recycle</b>.",
+        "keywords": [
+          {
+            "key": "plastic bottles",
+            "meaningVi": "Chai nhựa"
+          },
+          {
+            "key": "plastic bags",
+            "meaningVi": "Túi ni lông"
+          },
+          {
+            "key": "glass",
+            "meaningVi": "Thủy tinh"
+          },
+          {
+            "key": "recycle",
+            "meaningVi": "Tái chế"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dung always brings a <b>reusable</b> water bottle to school to <b>reduce</b> plastic waste. Dương decides to do the same from now on.",
+        "keywords": [
+          {
+            "key": "reusable",
+            "meaningVi": "Có thể tái sử dụng"
+          },
+          {
+            "key": "reduce",
+            "meaningVi": "Giảm thiểu"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "At the weekend, they <b>exchange</b> old books and toys for new ones at a <b>charity</b> event, helping other children and the planet at the same time.",
+        "keywords": [
+          {
+            "key": "exchange",
+            "meaningVi": "Trao đổi"
+          },
+          {
+            "key": "charity",
+            "meaningVi": "Từ thiện"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u12",
@@ -1509,6 +2268,72 @@ const GRADE6_UNITS = [
         "Space robot",
         "Teacher robot"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "Dương and Dung visit a robot exhibition. The first robot they see is a <b>home robot</b> that can do all the <b>household chores</b>.",
+        "keywords": [
+          {
+            "key": "home robot",
+            "meaningVi": "Người máy gia đình"
+          },
+          {
+            "key": "household chores",
+            "meaningVi": "Việc nhà"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "It can even <b>iron</b> clothes and <b>repair</b> broken toys! Dung is amazed at how helpful it is.",
+        "keywords": [
+          {
+            "key": "iron",
+            "meaningVi": "Ủi (quần áo)"
+          },
+          {
+            "key": "repair",
+            "meaningVi": "Sửa chữa"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Next, they meet a <b>worker robot</b> that builds cars in a factory, and a <b>guard</b> robot that keeps the building safe at night.",
+        "keywords": [
+          {
+            "key": "worker robot",
+            "meaningVi": "Người máy công nhân"
+          },
+          {
+            "key": "guard",
+            "meaningVi": "Người bảo vệ"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Finally, they see a <b>doctor robot</b> that checks patients and a <b>teacher robot</b> that can <b>understand</b> and answer students' questions, and even a <b>space robot</b> used to explore other planets!",
+        "keywords": [
+          {
+            "key": "doctor robot",
+            "meaningVi": "Người máy bác sĩ"
+          },
+          {
+            "key": "teacher robot",
+            "meaningVi": "Người máy giáo viên"
+          },
+          {
+            "key": "understand",
+            "meaningVi": "Hiểu, thấu hiểu"
+          },
+          {
+            "key": "space robot",
+            "meaningVi": "Người máy vũ trụ"
+          }
+        ]
+      }
+    ]
   }
 ];

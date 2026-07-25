@@ -1,5 +1,10 @@
-// Dữ liệu từ vựng lớp 8 (THCS/THPT) — trích từ SGK Tiếng Anh 8 Global Success
-// Mỗi unit gồm: từ vựng (words), bài đọc (story). Dùng chung cho Flashcard / Dịch câu / Câu chuyện / Trò chơi hứng từ.
+// Dữ liệu từ vựng lớp 8 (THCS/THPT) — trích từ SGK Tiếng Anh 8 Global Success, tập 1 và tập 2
+// Mỗi unit gồm: từ vựng (words), bài đọc (story), và bản nháp "câu chuyện Dương & Dung" 4 khung (storyFrames).
+// storyFrames: nội dung mẫu ban đầu cho tính năng "Câu chuyện" (mục THCS/THPT trong tab Từ vựng) — từ khóa
+// (bọc trong <b>...</b>) sẽ bị ẩn thành ô trống cho học viên điền, ảnh minh họa (image_url) để trống, admin
+// (giangvien@gmail.com) tải ảnh lên sau qua khung soạn thảo. Giảng viên vẫn có thể ghi đè bất kỳ khung nào
+// qua khung soạn thảo đó — nội dung ghi đè sẽ được lưu trên Supabase và ưu tiên hơn bản nháp tĩnh này.
+// Dùng chung cho Flashcard / Dịch câu / Câu chuyện / Trò chơi hứng từ.
 const GRADE8_UNITS = [
   {
     "id": "u1",
@@ -125,7 +130,77 @@ const GRADE8_UNITS = [
       "text": "Some teenagers enjoy spending free time with their friends. Others prefer doing leisure activities with their family members. I love spending time with my family because it's a great way to connect with them.<br><br>At the weekend, we usually go for a bike ride. We cycle to some nearby villages to enjoy the fresh air. We take photos and look at them later. My big brother and I are also into cooking. My brother looks for easy recipes. After that, we prepare the ingredients and cook. Sometimes the food is good, but sometimes it isn't; nevertheless, we love whatever we cook. The leisure activity I like the most is doing DIY projects with my mum. She teaches me to make my own dresses and doll clothes. On special occasions, we make special dresses together. Once I won the first prize in a costume contest at my school.",
       "textVi": "Một số bạn thanh thiếu niên thích dành thời gian rảnh với bạn bè. Những bạn khác lại thích làm các hoạt động giải trí cùng người thân trong gia đình. Tôi thích dành thời gian với gia đình vì đó là một cách tuyệt vời để gắn kết với họ.<br><br>Vào cuối tuần, chúng tôi thường đi đạp xe. Chúng tôi đạp xe đến một vài ngôi làng gần đó để tận hưởng không khí trong lành. Chúng tôi chụp ảnh và xem lại sau đó. Anh trai tôi và tôi cũng rất thích nấu ăn. Anh tôi tìm những công thức nấu ăn đơn giản. Sau đó, chúng tôi chuẩn bị nguyên liệu và nấu. Đôi khi món ăn ngon, nhưng đôi khi lại không; dù vậy, chúng tôi vẫn thích bất cứ món gì mình nấu. Hoạt động giải trí tôi thích nhất là làm đồ thủ công (DIY) cùng mẹ. Mẹ dạy tôi cách tự may váy và quần áo cho búp bê. Vào những dịp đặc biệt, chúng tôi cùng nhau may những chiếc váy đặc biệt. Có lần tôi đã giành giải nhất trong một cuộc thi trang phục ở trường.",
       "used": []
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "At the weekend, Dương likes doing <b>DIY</b> projects at home, while Dung is <b>keen on</b> <b>knitting</b> warm scarves for winter.",
+        "keywords": [
+          {
+            "key": "DIY",
+            "meaningVi": "Tự làm, tự chế"
+          },
+          {
+            "key": "keen on",
+            "meaningVi": "Rất thích, đam mê"
+          },
+          {
+            "key": "knitting",
+            "meaningVi": "Đan len"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dung is also <b>crazy about</b> <b>surfing the net</b> to find new craft ideas, while Dương is <b>fond of</b> <b>doing puzzles</b> in his free time.",
+        "keywords": [
+          {
+            "key": "crazy about",
+            "meaningVi": "Rất mê, cuồng nhiệt"
+          },
+          {
+            "key": "surfing the net",
+            "meaningVi": "Lướt mạng"
+          },
+          {
+            "key": "fond of",
+            "meaningVi": "Thích, ưa thích"
+          },
+          {
+            "key": "doing puzzles",
+            "meaningVi": "Giải câu đố"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "This weekend, Dung is <b>building dollhouses</b> for her little sister, while Dương spends the afternoon <b>messaging friends</b> about their weekend plans.",
+        "keywords": [
+          {
+            "key": "building dollhouses",
+            "meaningVi": "Làm nhà búp bê"
+          },
+          {
+            "key": "messaging friends",
+            "meaningVi": "Nhắn tin cho bạn bè"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dương says he <b>detests</b> doing nothing at home all day. \"Me too!\" says Dung. \"Let's <b>hang out</b> at the park this afternoon instead.\"",
+        "keywords": [
+          {
+            "key": "detests",
+            "meaningVi": "Rất ghét, căm ghét"
+          },
+          {
+            "key": "hang out",
+            "meaningVi": "Đi chơi, giao lưu"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u2",
@@ -258,7 +333,77 @@ const GRADE8_UNITS = [
         "Surrounded",
         "Hospitable"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "Dung invites Dương to visit her grandparents' home in the countryside. \"It's <b>harvest time</b>, so the <b>paddy fields</b> are full of golden rice,\" she says.",
+        "keywords": [
+          {
+            "key": "harvest time",
+            "meaningVi": "Mùa thu hoạch"
+          },
+          {
+            "key": "paddy fields",
+            "meaningVi": "Ruộng lúa"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "They watch a <b>combine harvester</b> working in the field, and nearby, a farmer looks after his <b>herd</b> of buffaloes.",
+        "keywords": [
+          {
+            "key": "combine harvester",
+            "meaningVi": "Máy gặt đập liên hợp"
+          },
+          {
+            "key": "herd",
+            "meaningVi": "Chăn (gia súc)"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dung's grandmother is very <b>hospitable</b> — she invites Dương to stay for lunch. \"The view from here is so <b>picturesque</b>,\" Dương says, looking at the <b>vast</b> green fields.",
+        "keywords": [
+          {
+            "key": "hospitable",
+            "meaningVi": "Hiếu khách"
+          },
+          {
+            "key": "picturesque",
+            "meaningVi": "Nên thơ, đẹp như tranh"
+          },
+          {
+            "key": "vast",
+            "meaningVi": "Rộng lớn, bao la"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "After lunch, they walk through an <b>orchard</b> <b>surrounded</b> by fruit trees, where Dung's grandfather, a <b>well-trained</b> farmer, teaches them how to <b>cultivate</b> vegetables.",
+        "keywords": [
+          {
+            "key": "orchard",
+            "meaningVi": "Vườn cây ăn trái"
+          },
+          {
+            "key": "surrounded",
+            "meaningVi": "Được bao quanh"
+          },
+          {
+            "key": "well-trained",
+            "meaningVi": "Được đào tạo bài bản"
+          },
+          {
+            "key": "cultivate",
+            "meaningVi": "Trồng trọt, canh tác"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u3",
@@ -377,7 +522,73 @@ const GRADE8_UNITS = [
         "Concentrate",
         "Community"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "Dung spends a lot of time on an online <b>forum</b> for students. \"It's very <b>user-friendly</b>,\" she tells Dương, \"easy for anyone to use.\"",
+        "keywords": [
+          {
+            "key": "forum",
+            "meaningVi": "Diễn đàn"
+          },
+          {
+            "key": "user-friendly",
+            "meaningVi": "Dễ sử dụng"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "She likes to <b>upload</b> photos of her artwork there, but too many <b>notifications</b> can be <b>stressful</b> sometimes.",
+        "keywords": [
+          {
+            "key": "upload",
+            "meaningVi": "Tải lên"
+          },
+          {
+            "key": "notifications",
+            "meaningVi": "Thông báo"
+          },
+          {
+            "key": "stressful",
+            "meaningVi": "Căng thẳng"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dương feels the same <b>pressure</b> with his studies. \"I find it hard to <b>concentrate</b> with my phone nearby,\" he admits.",
+        "keywords": [
+          {
+            "key": "pressure",
+            "meaningVi": "Áp lực"
+          },
+          {
+            "key": "concentrate",
+            "meaningVi": "Tập trung"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Their sports <b>coach</b> suggests they <b>log on</b> to a study group in their school <b>community</b> instead, to help each other stay focused.",
+        "keywords": [
+          {
+            "key": "coach",
+            "meaningVi": "Huấn luyện viên, huấn luyện"
+          },
+          {
+            "key": "log on",
+            "meaningVi": "Đăng nhập"
+          },
+          {
+            "key": "community",
+            "meaningVi": "Cộng đồng"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u4",
@@ -497,7 +708,73 @@ const GRADE8_UNITS = [
         "Staircase",
         "Communal house"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "Dương and Dung visit a village of an <b>ethnic group</b> in the mountains. The villagers live in a traditional <b>stilt house</b> above the ground.",
+        "keywords": [
+          {
+            "key": "ethnic group",
+            "meaningVi": "Dân tộc"
+          },
+          {
+            "key": "stilt house",
+            "meaningVi": "Nhà sàn"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Around the village, there are beautiful <b>terraced fields</b> where farmers grow rice on the hillside.",
+        "keywords": [
+          {
+            "key": "terraced fields",
+            "meaningVi": "Ruộng bậc thang"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "In the big <b>communal house</b>, an old woman teaches young girls to <b>weave</b> colourful fabric, while a boy plays a traditional <b>musical instrument</b> by the wooden <b>staircase</b>.",
+        "keywords": [
+          {
+            "key": "communal house",
+            "meaningVi": "Nhà cộng đồng, nhà rông"
+          },
+          {
+            "key": "weave",
+            "meaningVi": "Dệt vải"
+          },
+          {
+            "key": "musical instrument",
+            "meaningVi": "Nhạc cụ"
+          },
+          {
+            "key": "staircase",
+            "meaningVi": "Cầu thang"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "For dinner, the family cooks <b>sticky rice</b>, and Dung learns that most households here also <b>raise livestock</b> for food and income. Many people from this <b>minority</b> group still keep these old traditions today.",
+        "keywords": [
+          {
+            "key": "sticky rice",
+            "meaningVi": "Xôi, gạo nếp"
+          },
+          {
+            "key": "raise livestock",
+            "meaningVi": "Chăn nuôi gia súc"
+          },
+          {
+            "key": "minority",
+            "meaningVi": "Dân tộc thiểu số"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u5",
@@ -615,7 +892,73 @@ const GRADE8_UNITS = [
       "used": [
         "Festival goers"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "During Tet, Dung's family follows many old <b>customs</b> and <b>traditions</b>. \"We always buy a beautiful <b>ornamental tree</b> for the living room,\" she tells Dương.",
+        "keywords": [
+          {
+            "key": "customs",
+            "meaningVi": "Phong tục"
+          },
+          {
+            "key": "traditions",
+            "meaningVi": "Truyền thống"
+          },
+          {
+            "key": "ornamental tree",
+            "meaningVi": "Cây cảnh"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Outside, the garden is full of <b>blooming flowers</b>, and relatives from far away come home for a warm <b>family reunion</b>.",
+        "keywords": [
+          {
+            "key": "blooming flowers",
+            "meaningVi": "Hoa nở rộ"
+          },
+          {
+            "key": "family reunion",
+            "meaningVi": "Đoàn tụ gia đình"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "On the altar, the family places an <b>offering</b> of fruit and food to <b>worship</b> their ancestors.",
+        "keywords": [
+          {
+            "key": "offering",
+            "meaningVi": "Đồ cúng, lễ vật"
+          },
+          {
+            "key": "worship",
+            "meaningVi": "Thờ cúng"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "In the village square, <b>festival goers</b> gather to watch a <b>martial arts</b> performance. Dung's grandmother, who wishes everyone <b>longevity</b> and good health, watches happily nearby.",
+        "keywords": [
+          {
+            "key": "festival goers",
+            "meaningVi": "Người tham dự lễ hội"
+          },
+          {
+            "key": "martial arts",
+            "meaningVi": "Võ thuật"
+          },
+          {
+            "key": "longevity",
+            "meaningVi": "Trường thọ"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u6",
@@ -735,7 +1078,73 @@ const GRADE8_UNITS = [
         "Population",
         "Maintain traditions"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "In class, Dương and Dung learn about different <b>lifestyles</b> around the world. \"In cold places, some people travel by <b>dogsled</b>!\" says Dung, amazed.",
+        "keywords": [
+          {
+            "key": "lifestyles",
+            "meaningVi": "Lối sống"
+          },
+          {
+            "key": "dogsled",
+            "meaningVi": "Xe trượt tuyết do chó kéo"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "They also learn about a small tribe that still uses traditional <b>means of transport</b> and enjoys a beautiful <b>tribal dance</b> during festivals.",
+        "keywords": [
+          {
+            "key": "means of transport",
+            "meaningVi": "Phương tiện di chuyển"
+          },
+          {
+            "key": "tribal dance",
+            "meaningVi": "Điệu múa của bộ tộc"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "In another village, people are skilled at <b>weaving</b> baskets and <b>making crafts</b> by hand — beautiful examples of <b>native art</b> passed down for generations.",
+        "keywords": [
+          {
+            "key": "weaving",
+            "meaningVi": "Dệt vải, đan lát"
+          },
+          {
+            "key": "making crafts",
+            "meaningVi": "Làm đồ thủ công"
+          },
+          {
+            "key": "native art",
+            "meaningVi": "Nghệ thuật bản địa"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Even though the village's <b>population</b> is small, they are <b>in the habit of</b> meeting every evening to sing and <b>maintain traditions</b> together.",
+        "keywords": [
+          {
+            "key": "population",
+            "meaningVi": "Dân số"
+          },
+          {
+            "key": "in the habit of",
+            "meaningVi": "Có thói quen"
+          },
+          {
+            "key": "maintain traditions",
+            "meaningVi": "Gìn giữ truyền thống"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u7",
@@ -855,7 +1264,73 @@ const GRADE8_UNITS = [
         "Marine life",
         "National park"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "Dương and Dung join a school trip to a <b>national park</b> to learn about <b>wildlife</b> protection.",
+        "keywords": [
+          {
+            "key": "national park",
+            "meaningVi": "Vườn quốc gia"
+          },
+          {
+            "key": "wildlife",
+            "meaningVi": "Động vật hoang dã"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "The park ranger explains how <b>global warming</b> and <b>pollution</b> are damaging the <b>ecosystem</b> and destroying animals' natural <b>habitat</b>.",
+        "keywords": [
+          {
+            "key": "global warming",
+            "meaningVi": "Sự nóng lên toàn cầu"
+          },
+          {
+            "key": "pollution",
+            "meaningVi": "Ô nhiễm"
+          },
+          {
+            "key": "ecosystem",
+            "meaningVi": "Hệ sinh thái"
+          },
+          {
+            "key": "habitat",
+            "meaningVi": "Môi trường sống"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "He also talks about <b>endangered species</b>, like sea turtles, that are dying because of plastic waste harming <b>marine life</b>.",
+        "keywords": [
+          {
+            "key": "endangered species",
+            "meaningVi": "Loài có nguy cơ tuyệt chủng"
+          },
+          {
+            "key": "marine life",
+            "meaningVi": "Sinh vật biển"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "To help, Dung decides to reduce her <b>carbon footprint</b> and stop using <b>single-use products</b> like plastic straws and bags.",
+        "keywords": [
+          {
+            "key": "carbon footprint",
+            "meaningVi": "Lượng khí thải carbon"
+          },
+          {
+            "key": "single-use products",
+            "meaningVi": "Sản phẩm dùng một lần"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u8",
@@ -975,7 +1450,73 @@ const GRADE8_UNITS = [
         "Shopping mall",
         "Well-lit"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "On Saturday, Dung takes Dương to an <b>open-air market</b> to buy some <b>home-made</b> jam from a local seller.",
+        "keywords": [
+          {
+            "key": "open-air market",
+            "meaningVi": "Chợ ngoài trời"
+          },
+          {
+            "key": "home-made",
+            "meaningVi": "Tự làm tại nhà"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dung loves to <b>bargain</b> for a better price, but Dương just checks the <b>price tag</b> and pays without asking.",
+        "keywords": [
+          {
+            "key": "bargain",
+            "meaningVi": "Mặc cả, trả giá"
+          },
+          {
+            "key": "price tag",
+            "meaningVi": "Nhãn giá"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Later, they stop by a <b>convenience store</b> near their house to buy some snacks and cold drinks.",
+        "keywords": [
+          {
+            "key": "convenience store",
+            "meaningVi": "Cửa hàng tiện lợi"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "In the afternoon, they visit a big <b>shopping mall</b> with a <b>wide range of products</b> and lots of <b>entertainment</b>. \"You're such a <b>shopaholic</b>!\" Dương laughs, as Dung admires the <b>well-lit</b> shop windows.",
+        "keywords": [
+          {
+            "key": "shopping mall",
+            "meaningVi": "Trung tâm mua sắm"
+          },
+          {
+            "key": "wide range of products",
+            "meaningVi": "Đa dạng sản phẩm"
+          },
+          {
+            "key": "entertainment",
+            "meaningVi": "Sự giải trí"
+          },
+          {
+            "key": "shopaholic",
+            "meaningVi": "Người nghiện mua sắm"
+          },
+          {
+            "key": "well-lit",
+            "meaningVi": "Đủ ánh sáng, sáng sủa"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u9",
@@ -1095,7 +1636,73 @@ const GRADE8_UNITS = [
         "Tsunami",
         "Trembling"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "In geography class, Dương and Dung learn about different natural disasters, like <b>earthquakes</b> and <b>tornadoes</b>, that can happen suddenly.",
+        "keywords": [
+          {
+            "key": "earthquakes",
+            "meaningVi": "Động đất"
+          },
+          {
+            "key": "tornadoes",
+            "meaningVi": "Lốc xoáy"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "They also learn about <b>floods</b> and <b>landslides</b> that often happen after heavy rain in the mountains.",
+        "keywords": [
+          {
+            "key": "floods",
+            "meaningVi": "Lũ lụt"
+          },
+          {
+            "key": "landslides",
+            "meaningVi": "Lở đất"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "The teacher shows a video of a <b>volcanic eruption</b> and a <b>tsunami</b> — Dung feels the ground was <b>trembling</b> just watching it!",
+        "keywords": [
+          {
+            "key": "volcanic eruption",
+            "meaningVi": "Núi lửa phun trào"
+          },
+          {
+            "key": "tsunami",
+            "meaningVi": "Sóng thần"
+          },
+          {
+            "key": "trembling",
+            "meaningVi": "Rung chuyển"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "After a disaster, brave <b>rescue workers</b> help every <b>victim</b> find safety and repair the <b>damage</b> to their homes.",
+        "keywords": [
+          {
+            "key": "rescue workers",
+            "meaningVi": "Nhân viên cứu hộ"
+          },
+          {
+            "key": "victim",
+            "meaningVi": "Nạn nhân"
+          },
+          {
+            "key": "damage",
+            "meaningVi": "Thiệt hại, gây thiệt hại"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u10",
@@ -1213,7 +1820,73 @@ const GRADE8_UNITS = [
       "used": [
         "Telepathy"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "Dương and Dung have a <b>video conference</b> with their cousin abroad, using a <b>webcam</b> and a <b>high-speed Internet connection</b>.",
+        "keywords": [
+          {
+            "key": "video conference",
+            "meaningVi": "Hội nghị truyền hình"
+          },
+          {
+            "key": "webcam",
+            "meaningVi": "Camera web"
+          },
+          {
+            "key": "high-speed Internet connection",
+            "meaningVi": "Kết nối Internet tốc độ cao"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Since her cousin doesn't speak Vietnamese well, they send a funny <b>emoji</b> and a <b>voice message</b> instead of typing.",
+        "keywords": [
+          {
+            "key": "emoji",
+            "meaningVi": "Biểu tượng cảm xúc"
+          },
+          {
+            "key": "voice message",
+            "meaningVi": "Tin nhắn thoại"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dung imagines that one day, a <b>translation machine</b> or even a <b>chatbot</b> could break the <b>language barrier</b> completely.",
+        "keywords": [
+          {
+            "key": "translation machine",
+            "meaningVi": "Máy phiên dịch"
+          },
+          {
+            "key": "chatbot",
+            "meaningVi": "Trợ lý ảo, chatbot"
+          },
+          {
+            "key": "language barrier",
+            "meaningVi": "Rào cản ngôn ngữ"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dương thinks even more amazing technology is coming, like <b>holography</b> for 3D video calls, or maybe even <b>telepathy</b> to share thoughts directly!",
+        "keywords": [
+          {
+            "key": "holography",
+            "meaningVi": "Công nghệ ảnh ba chiều"
+          },
+          {
+            "key": "telepathy",
+            "meaningVi": "Thần giao cách cảm"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u11",
@@ -1333,7 +2006,73 @@ const GRADE8_UNITS = [
         "Truancy",
         "Attendance"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "In science class, Dương and Dung learn how scientists <b>invent</b> new machines and <b>discover</b> new medicines, like the recent <b>vaccine</b> for a dangerous disease.",
+        "keywords": [
+          {
+            "key": "invent",
+            "meaningVi": "Phát minh, sáng chế"
+          },
+          {
+            "key": "discover",
+            "meaningVi": "Khám phá, phát hiện"
+          },
+          {
+            "key": "vaccine",
+            "meaningVi": "Vắc-xin"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Their school now uses a <b>fingerprint scanner</b> at the gate instead of ID cards, which makes checking <b>attendance</b> much easier.",
+        "keywords": [
+          {
+            "key": "fingerprint scanner",
+            "meaningVi": "Máy quét vân tay"
+          },
+          {
+            "key": "attendance",
+            "meaningVi": "Việc điểm danh"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Some schools even use <b>facial recognition</b> or <b>eye-tracking</b> technology to check who is really paying attention in class!",
+        "keywords": [
+          {
+            "key": "facial recognition",
+            "meaningVi": "Nhận diện khuôn mặt"
+          },
+          {
+            "key": "eye-tracking",
+            "meaningVi": "Theo dõi chuyển động mắt"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dung says these <b>biometric applications</b> make school life <b>effortless</b> — no more excuses for <b>truancy</b> since the system knows exactly who is absent!",
+        "keywords": [
+          {
+            "key": "biometric applications",
+            "meaningVi": "Ứng dụng sinh trắc học"
+          },
+          {
+            "key": "effortless",
+            "meaningVi": "Dễ dàng, không tốn sức"
+          },
+          {
+            "key": "truancy",
+            "meaningVi": "Trốn học"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u12",
@@ -1453,6 +2192,72 @@ const GRADE8_UNITS = [
         "Atmosphere",
         "Gravity"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "Dương and Dung look up at the night sky and wonder about <b>outer space</b>. \"Do you think there's a <b>habitable planet</b> out there?\" asks Dung.",
+        "keywords": [
+          {
+            "key": "outer space",
+            "meaningVi": "Không gian vũ trụ"
+          },
+          {
+            "key": "habitable planet",
+            "meaningVi": "Hành tinh có thể sinh sống được"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dương explains that every planet has different <b>gravity</b> and a different <b>atmosphere</b>, so humans can't live just anywhere.",
+        "keywords": [
+          {
+            "key": "gravity",
+            "meaningVi": "Trọng lực"
+          },
+          {
+            "key": "atmosphere",
+            "meaningVi": "Bầu khí quyển"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Using a powerful <b>telescope</b>, scientists can look deep into a distant <b>galaxy</b> to search for signs of life.",
+        "keywords": [
+          {
+            "key": "telescope",
+            "meaningVi": "Kính viễn vọng"
+          },
+          {
+            "key": "galaxy",
+            "meaningVi": "Thiên hà"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dung dreams of flying on a <b>rocket</b> to meet a friendly <b>creature</b>, maybe even a real <b>alien</b>! \"It's a fun <b>possibility</b> to imagine,\" Dương laughs.",
+        "keywords": [
+          {
+            "key": "rocket",
+            "meaningVi": "Tên lửa"
+          },
+          {
+            "key": "creature",
+            "meaningVi": "Sinh vật"
+          },
+          {
+            "key": "alien",
+            "meaningVi": "Người ngoài hành tinh"
+          },
+          {
+            "key": "possibility",
+            "meaningVi": "Khả năng, tính khả thi"
+          }
+        ]
+      }
+    ]
   }
 ];

@@ -1,5 +1,12 @@
 // Dữ liệu từ vựng lớp 12 (THPT) — trích từ SGK Tiếng Anh 12 Global Success, tập 1 và tập 2
-// Mỗi unit gồm: từ vựng (words), bài đọc (story). Dùng chung cho Flashcard / Dịch câu / Câu chuyện / Trò chơi hứng từ.
+// Mỗi unit gồm: từ vựng (words), bài đọc (story), và bản nháp "câu chuyện Dương & Dung" 4 khung (storyFrames).
+// Vì mỗi unit lớp 12 có rất nhiều từ vựng (15-30+ từ), storyFrames chỉ dùng một phần từ tiêu biểu, tự
+// nhiên trong câu chuyện thay vì nhồi nhét toàn bộ — phần Flashcard/Nối từ vẫn bao phủ đủ 100% từ vựng.
+// storyFrames: nội dung mẫu ban đầu cho tính năng "Câu chuyện" (mục THCS/THPT trong tab Từ vựng) — từ khóa
+// (bọc trong <b>...</b>) sẽ bị ẩn thành ô trống cho học viên điền, ảnh minh họa (image_url) để trống, admin
+// (giangvien@gmail.com) tải ảnh lên sau qua khung soạn thảo. Giảng viên vẫn có thể ghi đè bất kỳ khung nào
+// qua khung soạn thảo đó — nội dung ghi đè sẽ được lưu trên Supabase và ưu tiên hơn bản nháp tĩnh này.
+// Dùng chung cho Flashcard / Dịch câu / Câu chuyện / Trò chơi hứng từ.
 const GRADE12_UNITS = [
   {
     "id": "u1",
@@ -354,7 +361,101 @@ const GRADE12_UNITS = [
         "Admire",
         "Hero"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "For their literature project, Dương and Dung choose to write a <b>biography</b> about a national <b>hero</b> they truly <b>admire</b>.",
+        "keywords": [
+          {
+            "key": "biography",
+            "meaningVi": "Tiểu sử"
+          },
+          {
+            "key": "hero",
+            "meaningVi": "Anh hùng"
+          },
+          {
+            "key": "admire",
+            "meaningVi": "Ngưỡng mộ, chiêm ngưỡng"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "They read about his difficult <b>childhood</b>, and how even as a young <b>genius</b>, he had to <b>drop out</b> of school early to help his family.",
+        "keywords": [
+          {
+            "key": "childhood",
+            "meaningVi": "Tuổi thơ"
+          },
+          {
+            "key": "genius",
+            "meaningVi": "Thiên tài"
+          },
+          {
+            "key": "drop out",
+            "meaningVi": "Bỏ học"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Despite this, he still managed to <b>attend school</b> later on, and as a young man, he <b>devoted</b> his <b>youth</b> to fighting bravely in the <b>resistance war</b>, facing the <b>enemy</b> in every <b>battle</b>.",
+        "keywords": [
+          {
+            "key": "attend school",
+            "meaningVi": "Đi học (trường, đại học, cao đẳng)"
+          },
+          {
+            "key": "devoted",
+            "meaningVi": "Cống hiến cho"
+          },
+          {
+            "key": "youth",
+            "meaningVi": "Tuổi trẻ"
+          },
+          {
+            "key": "resistance war",
+            "meaningVi": "Cuộc kháng chiến"
+          },
+          {
+            "key": "enemy",
+            "meaningVi": "Kẻ thù"
+          },
+          {
+            "key": "battle",
+            "meaningVi": "Trận chiến"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "After finally leading his side to <b>defeat</b> the enemy, the whole village felt <b>on cloud nine</b>. Years later, when he <b>passed away</b>, people still remember his <b>achievements</b> and even wrote a beautiful <b>poem</b> in his honour.",
+        "keywords": [
+          {
+            "key": "defeat",
+            "meaningVi": "Đánh bại"
+          },
+          {
+            "key": "on cloud nine",
+            "meaningVi": "Rất vui sướng, hạnh phúc"
+          },
+          {
+            "key": "passed away",
+            "meaningVi": "Qua đời"
+          },
+          {
+            "key": "achievements",
+            "meaningVi": "Thành tích, thành tựu"
+          },
+          {
+            "key": "poem",
+            "meaningVi": "Bài thơ"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u2",
@@ -661,7 +762,93 @@ const GRADE12_UNITS = [
         "Globalisation",
         "Keep up with"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "Dương and Dung join an international festival at their school to celebrate a <b>multicultural</b> world full of <b>diversity</b>.",
+        "keywords": [
+          {
+            "key": "multicultural",
+            "meaningVi": "Có tính đa văn hóa"
+          },
+          {
+            "key": "diversity",
+            "meaningVi": "Sự đa dạng"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "At first, Dung feels a little <b>culture shock</b> trying foreign <b>customs</b>, but she quickly learns to <b>appreciate</b> every new <b>tradition</b> she sees.",
+        "keywords": [
+          {
+            "key": "culture shock",
+            "meaningVi": "Sốc văn hóa"
+          },
+          {
+            "key": "customs",
+            "meaningVi": "Phong tục"
+          },
+          {
+            "key": "appreciate",
+            "meaningVi": "Thưởng thức, trân trọng"
+          },
+          {
+            "key": "tradition",
+            "meaningVi": "Truyền thống"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "They try delicious <b>cuisine</b> from different countries — Dương says the food is incredibly <b>tasty</b> — and admire the colourful <b>costumes</b> worn for each country's <b>festivities</b>.",
+        "keywords": [
+          {
+            "key": "cuisine",
+            "meaningVi": "Ẩm thực"
+          },
+          {
+            "key": "tasty",
+            "meaningVi": "Ngon"
+          },
+          {
+            "key": "costumes",
+            "meaningVi": "Trang phục"
+          },
+          {
+            "key": "festivities",
+            "meaningVi": "Ngày hội"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "They also watch a graceful <b>bamboo dancing</b> performance and join a fun <b>tug of war</b> game. Dung says that despite <b>globalisation</b>, it's important to keep our own cultural <b>identity</b> and remember our <b>origin</b>.",
+        "keywords": [
+          {
+            "key": "bamboo dancing",
+            "meaningVi": "Nhảy sạp"
+          },
+          {
+            "key": "tug of war",
+            "meaningVi": "Trò chơi kéo co"
+          },
+          {
+            "key": "globalisation",
+            "meaningVi": "Sự toàn cầu hóa"
+          },
+          {
+            "key": "identity",
+            "meaningVi": "Bản sắc, đặc điểm nhận dạng"
+          },
+          {
+            "key": "origin",
+            "meaningVi": "Nguồn gốc"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u3",
@@ -901,7 +1088,97 @@ const GRADE12_UNITS = [
         "Eco-friendly",
         "In the long run"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "Dung wants to reduce her <b>carbon footprint</b>, so she starts sorting her family's <b>household waste</b> more carefully every day.",
+        "keywords": [
+          {
+            "key": "carbon footprint",
+            "meaningVi": "Tổng lượng phát thải khí nhà kính"
+          },
+          {
+            "key": "household waste",
+            "meaningVi": "Rác thải sinh hoạt"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "She turns <b>fruit peel</b> and other <b>leftovers</b> into <b>compost</b> for the garden, since organic waste can <b>decompose</b> naturally instead of going to a <b>landfill</b>.",
+        "keywords": [
+          {
+            "key": "fruit peel",
+            "meaningVi": "Vỏ hoa quả"
+          },
+          {
+            "key": "leftovers",
+            "meaningVi": "Thức ăn thừa"
+          },
+          {
+            "key": "compost",
+            "meaningVi": "Phân hữu cơ"
+          },
+          {
+            "key": "decompose",
+            "meaningVi": "Phân hủy"
+          },
+          {
+            "key": "landfill",
+            "meaningVi": "Bãi chôn rác"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dương decides to buy a <b>reusable</b> water bottle and <b>reuse</b> old jars as <b>containers</b>, instead of using <b>single-use</b> plastic <b>packaging</b>.",
+        "keywords": [
+          {
+            "key": "reusable",
+            "meaningVi": "Có thể tái sử dụng"
+          },
+          {
+            "key": "reuse",
+            "meaningVi": "Tái sử dụng"
+          },
+          {
+            "key": "containers",
+            "meaningVi": "Thùng, hộp, gói"
+          },
+          {
+            "key": "single-use",
+            "meaningVi": "Dùng một lần"
+          },
+          {
+            "key": "packaging",
+            "meaningVi": "Bao bì"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "He always <b>rinses out</b> his containers before recycling, and helps his neighbours <b>clean up</b> the street. \"<b>In the long run</b>, these small <b>eco-friendly</b> habits really do make a difference,\" he says.",
+        "keywords": [
+          {
+            "key": "rinses out",
+            "meaningVi": "Xối nước, rửa sạch"
+          },
+          {
+            "key": "clean up",
+            "meaningVi": "Dọn dẹp"
+          },
+          {
+            "key": "in the long run",
+            "meaningVi": "Về lâu dài"
+          },
+          {
+            "key": "eco-friendly",
+            "meaningVi": "Thân thiện với môi trường"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u4",
@@ -1092,7 +1369,97 @@ const GRADE12_UNITS = [
         "Decrease",
         "Unemployment"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "Dương and Dung study how their city becomes more <b>urban</b> each year, where more <b>residents</b> move in.",
+        "keywords": [
+          {
+            "key": "urban",
+            "meaningVi": "Thuộc về đô thị"
+          },
+          {
+            "key": "residents",
+            "meaningVi": "Người dân"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "The city is <b>expanding</b> <b>rapidly</b>, and its population is growing far faster than nearby towns, <b>gradually</b> changing the whole region.",
+        "keywords": [
+          {
+            "key": "expanding",
+            "meaningVi": "Mở rộng (về diện tích)"
+          },
+          {
+            "key": "rapidly",
+            "meaningVi": "Rất nhanh, với tốc độ cao"
+          },
+          {
+            "key": "gradually",
+            "meaningVi": "Dần dần, từ từ"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Many young people <b>seek</b> jobs downtown, hoping to find work with a <b>reliable</b> income, though the <b>proportion</b> of people who can't <b>afford</b> good <b>housing</b> is still a real <b>concern</b>.",
+        "keywords": [
+          {
+            "key": "seek",
+            "meaningVi": "Tìm kiếm"
+          },
+          {
+            "key": "reliable",
+            "meaningVi": "Đáng tin cậy"
+          },
+          {
+            "key": "proportion",
+            "meaningVi": "Tỉ lệ"
+          },
+          {
+            "key": "afford",
+            "meaningVi": "Có đủ tiền, có khả năng chi trả"
+          },
+          {
+            "key": "housing",
+            "meaningVi": "Nhà ở"
+          },
+          {
+            "key": "concern",
+            "meaningVi": "Sự lo lắng"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "During <b>rush hour</b>, the streets are extremely busy, though at least local <b>unemployment</b> has <b>decreased</b> — leaving people more time for <b>leisure</b> in the evening, in this once quiet <b>colonial</b> town.",
+        "keywords": [
+          {
+            "key": "rush hour",
+            "meaningVi": "Giờ cao điểm"
+          },
+          {
+            "key": "unemployment",
+            "meaningVi": "Tình trạng thất nghiệp"
+          },
+          {
+            "key": "decreased",
+            "meaningVi": "Giảm, hạ xuống"
+          },
+          {
+            "key": "leisure",
+            "meaningVi": "Sự giải trí, thư giãn"
+          },
+          {
+            "key": "colonial",
+            "meaningVi": "Thuộc địa, thuộc thời thuộc địa"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u5",
@@ -1324,7 +1691,93 @@ const GRADE12_UNITS = [
         "Part-time",
         "Nine-to-five"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "Dung sees a job <b>vacancy</b> at a local café and decides to write an <b>application letter</b> right away.",
+        "keywords": [
+          {
+            "key": "vacancy",
+            "meaningVi": "Vị trí công việc còn trống"
+          },
+          {
+            "key": "application letter",
+            "meaningVi": "Thư xin việc"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "The café owner decides to <b>employ</b> her for a <b>part-time</b> <b>shift</b> on weekends, paying a fair <b>wage</b> for her work.",
+        "keywords": [
+          {
+            "key": "employ",
+            "meaningVi": "Tuyển dụng"
+          },
+          {
+            "key": "part-time",
+            "meaningVi": "Bán thời gian"
+          },
+          {
+            "key": "shift",
+            "meaningVi": "Ca làm việc"
+          },
+          {
+            "key": "wage",
+            "meaningVi": "Tiền công"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Instead of a boring <b>nine-to-five</b> routine, Dung enjoys the <b>flexible</b> hours, even though <b>waiting on tables</b> can sometimes feel a little <b>stressful</b> and <b>repetitive</b>.",
+        "keywords": [
+          {
+            "key": "nine-to-five",
+            "meaningVi": "Giờ hành chính"
+          },
+          {
+            "key": "flexible",
+            "meaningVi": "Linh hoạt"
+          },
+          {
+            "key": "waiting on tables",
+            "meaningVi": "Phục vụ bàn ăn"
+          },
+          {
+            "key": "stressful",
+            "meaningVi": "Áp lực, căng thẳng"
+          },
+          {
+            "key": "repetitive",
+            "meaningVi": "Lặp đi lặp lại"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Sometimes she works <b>overtime</b>, and although the job isn't always <b>well-paid</b>, Dung still finds it truly <b>rewarding</b> and <b>challenging</b> in a good way.",
+        "keywords": [
+          {
+            "key": "overtime",
+            "meaningVi": "Ngoài giờ"
+          },
+          {
+            "key": "well-paid",
+            "meaningVi": "Được trả lương cao"
+          },
+          {
+            "key": "rewarding",
+            "meaningVi": "Xứng đáng"
+          },
+          {
+            "key": "challenging",
+            "meaningVi": "Thách thức"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u6",
@@ -1583,7 +2036,93 @@ const GRADE12_UNITS = [
         "Evolution",
         "Advanced"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "In technology class, Dương and Dung learn how <b>artificial intelligence</b> can <b>analyse</b> huge amounts of <b>data</b> in seconds.",
+        "keywords": [
+          {
+            "key": "artificial intelligence",
+            "meaningVi": "Trí thông minh nhân tạo"
+          },
+          {
+            "key": "analyse",
+            "meaningVi": "Phân tích"
+          },
+          {
+            "key": "data",
+            "meaningVi": "Dữ liệu"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Their new home assistant uses a <b>voice command</b> to <b>activate</b>, and even has <b>facial recognition</b> to know who is speaking.",
+        "keywords": [
+          {
+            "key": "voice command",
+            "meaningVi": "Ra lệnh bằng giọng nói"
+          },
+          {
+            "key": "activate",
+            "meaningVi": "Kích hoạt, khởi động"
+          },
+          {
+            "key": "facial recognition",
+            "meaningVi": "Khả năng nhận diện khuôn mặt"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dung is amazed that this <b>advanced</b> <b>chatbot</b> is so <b>capable</b> — it can <b>interact</b> with users in a surprisingly <b>human-like</b> way.",
+        "keywords": [
+          {
+            "key": "advanced",
+            "meaningVi": "Tiên tiến, trình độ cao"
+          },
+          {
+            "key": "chatbot",
+            "meaningVi": "Hộp trò chuyện"
+          },
+          {
+            "key": "capable",
+            "meaningVi": "Có khả năng"
+          },
+          {
+            "key": "interact",
+            "meaningVi": "Tương tác"
+          },
+          {
+            "key": "human-like",
+            "meaningVi": "Giống con người"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dương imagines a future where <b>virtual reality</b> and <b>digital</b> assistants are fully <b>personalised</b> for every student, and where every device can <b>upgrade</b> itself automatically.",
+        "keywords": [
+          {
+            "key": "virtual reality",
+            "meaningVi": "Thực tế ảo"
+          },
+          {
+            "key": "digital",
+            "meaningVi": "Thuộc kĩ thuật số"
+          },
+          {
+            "key": "personalised",
+            "meaningVi": "Được cá nhân hóa"
+          },
+          {
+            "key": "upgrade",
+            "meaningVi": "Nâng cấp"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u7",
@@ -1915,7 +2454,93 @@ const GRADE12_UNITS = [
         "Publicity",
         "Source"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "For their project on <b>mass media</b>, Dương and Dung study how TV channels <b>broadcast</b> the daily news.",
+        "keywords": [
+          {
+            "key": "mass media",
+            "meaningVi": "Phương tiện truyền thông đại chúng"
+          },
+          {
+            "key": "broadcast",
+            "meaningVi": "Chương trình phát sóng, phát sóng"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "They learn that <b>the press</b> must always <b>fact-check</b> a story, because <b>fake news</b> can <b>spread</b> very quickly online.",
+        "keywords": [
+          {
+            "key": "the press",
+            "meaningVi": "Báo chí"
+          },
+          {
+            "key": "fact-check",
+            "meaningVi": "Kiểm chứng thông tin"
+          },
+          {
+            "key": "fake news",
+            "meaningVi": "Tin giả, tin bịa đặt"
+          },
+          {
+            "key": "spread",
+            "meaningVi": "Lan truyền"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "A good <b>source</b> should be <b>credible</b> and <b>reliable</b>, not filled with <b>bias</b> that only tells one side of the story.",
+        "keywords": [
+          {
+            "key": "source",
+            "meaningVi": "Nguồn tin"
+          },
+          {
+            "key": "credible",
+            "meaningVi": "Đáng tin cậy"
+          },
+          {
+            "key": "reliable",
+            "meaningVi": "Đáng tin cậy"
+          },
+          {
+            "key": "bias",
+            "meaningVi": "Thiên kiến, thiên vị"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Nowadays, news is <b>instant</b>, with constant <b>updates</b> for every <b>viewer</b>, and mass media has become far more <b>accessible</b> than an old <b>advert</b> on a single channel.",
+        "keywords": [
+          {
+            "key": "instant",
+            "meaningVi": "Nhanh chóng, ngay lập tức"
+          },
+          {
+            "key": "updates",
+            "meaningVi": "Cập nhật"
+          },
+          {
+            "key": "viewer",
+            "meaningVi": "Người xem"
+          },
+          {
+            "key": "accessible",
+            "meaningVi": "Có thể tiếp cận được"
+          },
+          {
+            "key": "advert",
+            "meaningVi": "Quảng cáo"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u8",
@@ -2224,7 +2849,93 @@ const GRADE12_UNITS = [
         "Endangered",
         "Extinct"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "Dương and Dung volunteer at a <b>conservation</b> centre that helps <b>endangered</b> animals.",
+        "keywords": [
+          {
+            "key": "conservation",
+            "meaningVi": "Sự bảo vệ, sự bảo tồn"
+          },
+          {
+            "key": "endangered",
+            "meaningVi": "Bị đe dọa, gặp nguy hiểm"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Sadly, some species there are <b>critically endangered</b>, and a few have already become <b>extinct</b> because hunters continue to <b>poach</b> them illegally.",
+        "keywords": [
+          {
+            "key": "critically endangered",
+            "meaningVi": "Bị đe dọa nghiêm trọng"
+          },
+          {
+            "key": "extinct",
+            "meaningVi": "Tuyệt chủng"
+          },
+          {
+            "key": "poach",
+            "meaningVi": "Săn bắn bất hợp pháp"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "The centre works hard to <b>rescue</b> injured animals and <b>release</b> them back into the wild once they can <b>survive</b> on their own again.",
+        "keywords": [
+          {
+            "key": "rescue",
+            "meaningVi": "Giải cứu"
+          },
+          {
+            "key": "release",
+            "meaningVi": "Thả"
+          },
+          {
+            "key": "survive",
+            "meaningVi": "Tồn tại"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dung learns that many <b>vulnerable</b> and <b>rare</b> creatures, like the gentle <b>sea turtle</b> and other <b>marine</b> animals living near the <b>coral</b>, are kept safe for a while in a large <b>enclosure</b> before returning home — never in permanent <b>captivity</b>.",
+        "keywords": [
+          {
+            "key": "vulnerable",
+            "meaningVi": "Dễ bị tổn thương"
+          },
+          {
+            "key": "rare",
+            "meaningVi": "Hiếm, quý hiếm"
+          },
+          {
+            "key": "sea turtle",
+            "meaningVi": "Rùa biển"
+          },
+          {
+            "key": "marine",
+            "meaningVi": "Thuộc về biển"
+          },
+          {
+            "key": "coral",
+            "meaningVi": "San hô"
+          },
+          {
+            "key": "enclosure",
+            "meaningVi": "Chuồng thú"
+          },
+          {
+            "key": "captivity",
+            "meaningVi": "Sự nuôi nhốt"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u9",
@@ -2486,7 +3197,89 @@ const GRADE12_UNITS = [
         "Live up to",
         "In demand"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "Before applying for jobs, Dương updates his <b>CV</b> and gathers some <b>work experience</b> from a summer internship.",
+        "keywords": [
+          {
+            "key": "CV",
+            "meaningVi": "Sơ yếu lí lịch"
+          },
+          {
+            "key": "work experience",
+            "meaningVi": "Kinh nghiệm làm việc"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "He feels truly <b>passionate</b> about computers, so he decides to <b>pursue</b> his <b>passion</b> and study software engineering.",
+        "keywords": [
+          {
+            "key": "passionate",
+            "meaningVi": "Có niềm đam mê với/dành cho"
+          },
+          {
+            "key": "pursue",
+            "meaningVi": "Theo đuổi"
+          },
+          {
+            "key": "passion",
+            "meaningVi": "Niềm đam mê, say mê"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dung reminds him that jobs which can be <b>automated</b> may soon become <b>obsolete</b>, so skills that are still <b>in demand</b>, along with good <b>soft skills</b>, matter more than ever.",
+        "keywords": [
+          {
+            "key": "automated",
+            "meaningVi": "Tự động hóa"
+          },
+          {
+            "key": "obsolete",
+            "meaningVi": "Lỗi thời, không còn được sử dụng"
+          },
+          {
+            "key": "in demand",
+            "meaningVi": "Có nhu cầu, được mọi người mong muốn"
+          },
+          {
+            "key": "soft skills",
+            "meaningVi": "Các kĩ năng mềm"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dương finds a great <b>position</b> at a <b>fascinating</b> tech company, where he <b>gets on with</b> his new colleagues, and his manager, once his <b>tutor</b>, praises his growing <b>specialty</b> in coding.",
+        "keywords": [
+          {
+            "key": "position",
+            "meaningVi": "Vị trí việc làm"
+          },
+          {
+            "key": "fascinating",
+            "meaningVi": "Cực kì thú vị và hấp dẫn"
+          },
+          {
+            "key": "gets on with",
+            "meaningVi": "Hòa hợp với, có mối quan hệ tốt với"
+          },
+          {
+            "key": "tutor",
+            "meaningVi": "Gia sư, giáo viên dạy kèm"
+          },
+          {
+            "key": "specialty",
+            "meaningVi": "Chuyên ngành"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u10",
@@ -2754,6 +3547,88 @@ const GRADE12_UNITS = [
         "Broaden",
         "Well-rounded"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "Dung's grandmother decides to join <b>adult education</b> classes at a <b>night school</b> near her home.",
+        "keywords": [
+          {
+            "key": "adult education",
+            "meaningVi": "Giáo dục cho người lớn"
+          },
+          {
+            "key": "night school",
+            "meaningVi": "Lớp học buổi tối"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "She wants to <b>acquire</b> new skills and <b>broaden</b> her knowledge, even though some subjects feel quite <b>complex</b> at her age.",
+        "keywords": [
+          {
+            "key": "acquire",
+            "meaningVi": "Có được, đạt được"
+          },
+          {
+            "key": "broaden",
+            "meaningVi": "Mở mang, mở rộng"
+          },
+          {
+            "key": "complex",
+            "meaningVi": "Phức tạp"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "With great <b>determination</b>, she also joins <b>distance learning</b> courses online to <b>brush up</b> on her English and <b>widen</b> her understanding of the world.",
+        "keywords": [
+          {
+            "key": "determination",
+            "meaningVi": "Sự quyết tâm"
+          },
+          {
+            "key": "distance learning",
+            "meaningVi": "Học từ xa"
+          },
+          {
+            "key": "brush up",
+            "meaningVi": "Ôn lại, học lại"
+          },
+          {
+            "key": "widen",
+            "meaningVi": "Mở rộng, tăng thêm"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dung is inspired and joins a local <b>learning community</b> too, hoping it will <b>boost</b> her knowledge and help her become more <b>well-rounded</b>, since learning <b>relevant</b> new skills is important at any age, and she works hard to <b>maintain</b> this habit.",
+        "keywords": [
+          {
+            "key": "learning community",
+            "meaningVi": "Cộng đồng học tập"
+          },
+          {
+            "key": "boost",
+            "meaningVi": "Tăng cường, cải thiện"
+          },
+          {
+            "key": "well-rounded",
+            "meaningVi": "Được phát triển một cách toàn diện"
+          },
+          {
+            "key": "relevant",
+            "meaningVi": "Phù hợp, thích hợp"
+          },
+          {
+            "key": "maintain",
+            "meaningVi": "Duy trì, giữ được"
+          }
+        ]
+      }
+    ]
   }
 ];

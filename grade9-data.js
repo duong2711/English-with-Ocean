@@ -1,5 +1,10 @@
-// Dữ liệu từ vựng lớp 9 (THCS/THPT) — trích từ SGK Tiếng Anh 9 Global Success
-// Mỗi unit gồm: từ vựng (words), bài đọc (story). Dùng chung cho Flashcard / Dịch câu / Câu chuyện / Trò chơi hứng từ.
+// Dữ liệu từ vựng lớp 9 (THCS/THPT) — trích từ SGK Tiếng Anh 9 Global Success, tập 1 và tập 2
+// Mỗi unit gồm: từ vựng (words), bài đọc (story), và bản nháp "câu chuyện Dương & Dung" 4 khung (storyFrames).
+// storyFrames: nội dung mẫu ban đầu cho tính năng "Câu chuyện" (mục THCS/THPT trong tab Từ vựng) — từ khóa
+// (bọc trong <b>...</b>) sẽ bị ẩn thành ô trống cho học viên điền, ảnh minh họa (image_url) để trống, admin
+// (giangvien@gmail.com) tải ảnh lên sau qua khung soạn thảo. Giảng viên vẫn có thể ghi đè bất kỳ khung nào
+// qua khung soạn thảo đó — nội dung ghi đè sẽ được lưu trên Supabase và ưu tiên hơn bản nháp tĩnh này.
+// Dùng chung cho Flashcard / Dịch câu / Câu chuyện / Trò chơi hứng từ.
 const GRADE9_UNITS = [
   {
     "id": "u1",
@@ -143,7 +148,81 @@ const GRADE9_UNITS = [
         "Speciality",
         "Get on with"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "Dương and Dung live in the same <b>community</b>, though Dương lives downtown and Dung lives in the <b>suburb</b> nearby.",
+        "keywords": [
+          {
+            "key": "community",
+            "meaningVi": "Cộng đồng"
+          },
+          {
+            "key": "suburb",
+            "meaningVi": "Vùng ngoại ô"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Their neighbourhood has great <b>facilities</b>, and everyone tries to <b>get on with</b> each other like family.",
+        "keywords": [
+          {
+            "key": "facilities",
+            "meaningVi": "Cơ sở vật chất, tiện ích"
+          },
+          {
+            "key": "get on with",
+            "meaningVi": "Hòa thuận với"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Every morning, Dung waves to the <b>garbage collector</b>, and Dương often chats with the friendly <b>electrician</b> who fixes lights on their street, along with a brave <b>firefighter</b> who lives nearby.",
+        "keywords": [
+          {
+            "key": "garbage collector",
+            "meaningVi": "Người thu gom rác"
+          },
+          {
+            "key": "electrician",
+            "meaningVi": "Thợ điện"
+          },
+          {
+            "key": "firefighter",
+            "meaningVi": "Lính cứu hỏa"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "There is also a kind <b>delivery person</b> who brings packages every day, and a skilled <b>artisan</b> who makes beautiful <b>pottery</b> and other <b>handicraft</b>, a local <b>speciality</b> everyone is proud of.",
+        "keywords": [
+          {
+            "key": "delivery person",
+            "meaningVi": "Người giao hàng"
+          },
+          {
+            "key": "artisan",
+            "meaningVi": "Nghệ nhân"
+          },
+          {
+            "key": "pottery",
+            "meaningVi": "Đồ gốm"
+          },
+          {
+            "key": "handicraft",
+            "meaningVi": "Đồ thủ công"
+          },
+          {
+            "key": "speciality",
+            "meaningVi": "Đặc sản"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u2",
@@ -287,7 +366,81 @@ const GRADE9_UNITS = [
         "Convenient",
         "Bustling"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "Dung visits Dương in the <b>downtown</b> area. \"It feels like a <b>concrete jungle</b> here!\" she says, looking up at the tall buildings.",
+        "keywords": [
+          {
+            "key": "downtown",
+            "meaningVi": "Trung tâm thành phố"
+          },
+          {
+            "key": "concrete jungle",
+            "meaningVi": "Rừng bê tông"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dương shows her the <b>public amenities</b> nearby and they take the <b>metro</b> to avoid the <b>traffic jam</b> on the road.",
+        "keywords": [
+          {
+            "key": "public amenities",
+            "meaningVi": "Tiện ích công cộng"
+          },
+          {
+            "key": "metro",
+            "meaningVi": "Tàu điện ngầm"
+          },
+          {
+            "key": "traffic jam",
+            "meaningVi": "Kẹt xe"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "The streets are <b>packed</b> and <b>congested</b> at rush hour, but Dương still finds the city quite <b>convenient</b> for daily life.",
+        "keywords": [
+          {
+            "key": "packed",
+            "meaningVi": "Đông đúc, chật kín"
+          },
+          {
+            "key": "congested",
+            "meaningVi": "Tắc nghẽn"
+          },
+          {
+            "key": "convenient",
+            "meaningVi": "Thuận tiện"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "They walk along the busy <b>pavement</b> through the <b>bustling</b> streets, admiring a tall <b>skyscraper</b>. \"Do you think this city is really <b>liveable</b>?\" Dung asks.",
+        "keywords": [
+          {
+            "key": "pavement",
+            "meaningVi": "Vỉa hè"
+          },
+          {
+            "key": "bustling",
+            "meaningVi": "Nhộn nhịp"
+          },
+          {
+            "key": "skyscraper",
+            "meaningVi": "Tòa nhà chọc trời"
+          },
+          {
+            "key": "liveable",
+            "meaningVi": "Đáng sống"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u3",
@@ -431,7 +584,81 @@ const GRADE9_UNITS = [
         "Accomplish",
         "Well-balanced"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "Dung tells Dương that her top <b>priority</b> this year is to take care of both her <b>physical health</b> and her <b>mental health</b>.",
+        "keywords": [
+          {
+            "key": "priority",
+            "meaningVi": "Ưu tiên"
+          },
+          {
+            "key": "physical health",
+            "meaningVi": "Sức khỏe thể chất"
+          },
+          {
+            "key": "mental health",
+            "meaningVi": "Sức khỏe tinh thần"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "She tries to eat a <b>well-balanced</b> diet and <b>manage time</b> carefully between studying and resting.",
+        "keywords": [
+          {
+            "key": "well-balanced",
+            "meaningVi": "Cân bằng"
+          },
+          {
+            "key": "manage time",
+            "meaningVi": "Quản lý thời gian"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dương admits he often <b>procrastinates</b> and forgets the <b>due date</b> for his homework, feeling <b>exhausted</b> by the end of the week.",
+        "keywords": [
+          {
+            "key": "procrastinates",
+            "meaningVi": "Trì hoãn"
+          },
+          {
+            "key": "due date",
+            "meaningVi": "Hạn chót"
+          },
+          {
+            "key": "exhausted",
+            "meaningVi": "Kiệt sức"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dung reminds him to stay <b>optimistic</b>, avoid <b>distractions</b>, and <b>relax</b> a little every day to <b>accomplish</b> his goals.",
+        "keywords": [
+          {
+            "key": "optimistic",
+            "meaningVi": "Lạc quan"
+          },
+          {
+            "key": "distractions",
+            "meaningVi": "Sự sao nhãng"
+          },
+          {
+            "key": "relax",
+            "meaningVi": "Thư giãn"
+          },
+          {
+            "key": "accomplish",
+            "meaningVi": "Hoàn thành, đạt được"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u4",
@@ -578,7 +805,81 @@ const GRADE9_UNITS = [
         "Promote",
         "Ancient"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "Dương and Dung visit an old <b>heritage</b> site in their hometown, hoping to learn how people <b>preserve</b> it for future generations.",
+        "keywords": [
+          {
+            "key": "heritage",
+            "meaningVi": "Di sản"
+          },
+          {
+            "key": "preserve",
+            "meaningVi": "Bảo tồn"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "They see a <b>magnificent</b> <b>monument</b> built many <b>generations</b> ago by the local people.",
+        "keywords": [
+          {
+            "key": "magnificent",
+            "meaningVi": "Tráng lệ"
+          },
+          {
+            "key": "monument",
+            "meaningVi": "Di tích, tượng đài"
+          },
+          {
+            "key": "generations",
+            "meaningVi": "Thế hệ"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "The guide explains an old <b>custom</b> and <b>tradition</b> connected to the site, and how the <b>ancient</b> kings once <b>occupied</b> this land.",
+        "keywords": [
+          {
+            "key": "custom",
+            "meaningVi": "Phong tục"
+          },
+          {
+            "key": "tradition",
+            "meaningVi": "Truyền thống"
+          },
+          {
+            "key": "ancient",
+            "meaningVi": "Cổ xưa"
+          },
+          {
+            "key": "occupied",
+            "meaningVi": "Chiếm giữ, cư ngụ"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "UNESCO has <b>recognised</b> this <b>structure</b> as a World Heritage Site, and local people work hard to <b>promote</b> it to visitors from all over the world.",
+        "keywords": [
+          {
+            "key": "recognised",
+            "meaningVi": "Công nhận"
+          },
+          {
+            "key": "structure",
+            "meaningVi": "Công trình, kiến trúc"
+          },
+          {
+            "key": "promote",
+            "meaningVi": "Quảng bá, thúc đẩy"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u5",
@@ -722,7 +1023,81 @@ const GRADE9_UNITS = [
         "Give a performance",
         "Embarrassing"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "Last summer, Dương and Dung joined an <b>eco-tour</b> in the mountains. They had to <b>put up a tent</b> for the night.",
+        "keywords": [
+          {
+            "key": "eco-tour",
+            "meaningVi": "Tour du lịch sinh thái"
+          },
+          {
+            "key": "put up a tent",
+            "meaningVi": "Dựng lều"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Before the trip, they also got to <b>tour the campus</b> of a famous university, which Dung found truly <b>amazing</b>.",
+        "keywords": [
+          {
+            "key": "tour the campus",
+            "meaningVi": "Tham quan khuôn viên trường"
+          },
+          {
+            "key": "amazing",
+            "meaningVi": "Tuyệt vời"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "The next day, they went to <b>go snorkelling</b> in the sea, an <b>exhilarating</b> experience, although the cold water felt a bit <b>unpleasant</b> at first.",
+        "keywords": [
+          {
+            "key": "go snorkelling",
+            "meaningVi": "Đi lặn ống thở"
+          },
+          {
+            "key": "exhilarating",
+            "meaningVi": "Hào hứng, phấn khích"
+          },
+          {
+            "key": "unpleasant",
+            "meaningVi": "Khó chịu"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "That evening, Dương had to <b>give a performance</b> on stage and felt <b>helpless</b> and <b>embarrassing</b> when he forgot his lines — he realised <b>learning by rote</b> doesn't always work, so they cooked a <b>local speciality</b> together to cheer him up instead.",
+        "keywords": [
+          {
+            "key": "give a performance",
+            "meaningVi": "Biểu diễn"
+          },
+          {
+            "key": "helpless",
+            "meaningVi": "Bất lực"
+          },
+          {
+            "key": "embarrassing",
+            "meaningVi": "Xấu hổ"
+          },
+          {
+            "key": "learning by rote",
+            "meaningVi": "Học vẹt"
+          },
+          {
+            "key": "local speciality",
+            "meaningVi": "Đặc sản địa phương"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u6",
@@ -866,7 +1241,81 @@ const GRADE9_UNITS = [
         "Replace",
         "Generation gap"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "Dung's grandparents lived in a big <b>extended family</b>, while Dương's family today is smaller and more <b>independent</b>.",
+        "keywords": [
+          {
+            "key": "extended family",
+            "meaningVi": "Gia đình nhiều thế hệ"
+          },
+          {
+            "key": "independent",
+            "meaningVi": "Độc lập"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "In the past, families were very <b>family-oriented</b>, but young people today value <b>privacy</b> and a more <b>democratic</b> way of making decisions.",
+        "keywords": [
+          {
+            "key": "family-oriented",
+            "meaningVi": "Coi trọng gia đình"
+          },
+          {
+            "key": "privacy",
+            "meaningVi": "Sự riêng tư"
+          },
+          {
+            "key": "democratic",
+            "meaningVi": "Dân chủ"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "In class, students used to just <b>take notes</b> and <b>memorise</b> everything, but now there are <b>various</b> new ways to learn.",
+        "keywords": [
+          {
+            "key": "take notes",
+            "meaningVi": "Ghi chép"
+          },
+          {
+            "key": "memorise",
+            "meaningVi": "Ghi nhớ"
+          },
+          {
+            "key": "various",
+            "meaningVi": "Đa dạng"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dung wants to <b>pursue</b> a modern lifestyle, but she doesn't want technology to completely <b>replace</b> old values. \"Even though our ideas seem <b>old-fashioned</b> to some, we shouldn't let the <b>generation gap</b> divide us,\" she says.",
+        "keywords": [
+          {
+            "key": "pursue",
+            "meaningVi": "Theo đuổi"
+          },
+          {
+            "key": "replace",
+            "meaningVi": "Thay thế"
+          },
+          {
+            "key": "old-fashioned",
+            "meaningVi": "Lỗi thời, cổ điển"
+          },
+          {
+            "key": "generation gap",
+            "meaningVi": "Khoảng cách thế hệ"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u7",
@@ -1010,7 +1459,81 @@ const GRADE9_UNITS = [
         "Paradise",
         "Landscape"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "Dương and Dung are planning a trip to see a famous <b>natural wonder</b> <b>located</b> deep in the mountains.",
+        "keywords": [
+          {
+            "key": "natural wonder",
+            "meaningVi": "Kỳ quan thiên nhiên"
+          },
+          {
+            "key": "located",
+            "meaningVi": "Nằm ở, tọa lạc"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "They want to <b>explore</b> and <b>discover</b> the amazing <b>diversity</b> of plants and animals living there.",
+        "keywords": [
+          {
+            "key": "explore",
+            "meaningVi": "Khám phá, thám hiểm"
+          },
+          {
+            "key": "discover",
+            "meaningVi": "Khám phá"
+          },
+          {
+            "key": "diversity",
+            "meaningVi": "Sự đa dạng"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dung says the place <b>possesses</b> a beautiful <b>landscape</b>, just like a hidden <b>paradise</b>, and she can't wait to <b>admire</b> it in person.",
+        "keywords": [
+          {
+            "key": "possesses",
+            "meaningVi": "Sở hữu"
+          },
+          {
+            "key": "landscape",
+            "meaningVi": "Cảnh quan"
+          },
+          {
+            "key": "paradise",
+            "meaningVi": "Thiên đường"
+          },
+          {
+            "key": "admire",
+            "meaningVi": "Ngưỡng mộ"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Without any <b>hesitation</b>, they apply for a travel <b>permit</b>, since visiting during the <b>urgent</b> rainy season would be risky.",
+        "keywords": [
+          {
+            "key": "hesitation",
+            "meaningVi": "Sự do dự"
+          },
+          {
+            "key": "permit",
+            "meaningVi": "Giấy phép, cho phép"
+          },
+          {
+            "key": "urgent",
+            "meaningVi": "Khẩn cấp"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u8",
@@ -1154,7 +1677,81 @@ const GRADE9_UNITS = [
         "Ruinous",
         "Entrance ticket"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "Dung books a <b>package holiday</b> for their next trip, but Dương prefers a <b>self-guided tour</b> so they can explore freely.",
+        "keywords": [
+          {
+            "key": "package holiday",
+            "meaningVi": "Kỳ nghỉ trọn gói"
+          },
+          {
+            "key": "self-guided tour",
+            "meaningVi": "Tour tự khám phá"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "They plan a detailed <b>itinerary</b> together and decide to stay at a cosy <b>homestay</b> instead of a hotel.",
+        "keywords": [
+          {
+            "key": "itinerary",
+            "meaningVi": "Lịch trình"
+          },
+          {
+            "key": "homestay",
+            "meaningVi": "Ở nhà dân"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "At the <b>historic</b> old town, they buy an <b>entrance ticket</b> to see the <b>ruinous</b> ancient walls, which Dung finds fascinating rather than sad.",
+        "keywords": [
+          {
+            "key": "historic",
+            "meaningVi": "Có tính lịch sử"
+          },
+          {
+            "key": "entrance ticket",
+            "meaningVi": "Vé vào cửa"
+          },
+          {
+            "key": "ruinous",
+            "meaningVi": "Đổ nát, hư hại"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dương is quite <b>ambitious</b> about visiting a <b>luxurious</b> resort too, while <b>curious</b> Dung prefers asking a local <b>travel agency</b> about cheaper <b>domestic tourism</b> options.",
+        "keywords": [
+          {
+            "key": "ambitious",
+            "meaningVi": "Đầy tham vọng"
+          },
+          {
+            "key": "luxurious",
+            "meaningVi": "Sang trọng"
+          },
+          {
+            "key": "curious",
+            "meaningVi": "Tò mò"
+          },
+          {
+            "key": "travel agency",
+            "meaningVi": "Đại lý du lịch"
+          },
+          {
+            "key": "domestic tourism",
+            "meaningVi": "Du lịch nội địa"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u9",
@@ -1297,7 +1894,81 @@ const GRADE9_UNITS = [
         "Borrow",
         "Look up"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "Dung is proud that she is <b>bilingual</b> and speaks English quite <b>fluently</b> now. \"There are so many <b>varieties</b> of English around the world,\" she tells Dương.",
+        "keywords": [
+          {
+            "key": "bilingual",
+            "meaningVi": "Song ngữ"
+          },
+          {
+            "key": "fluently",
+            "meaningVi": "Trôi chảy, thành thạo"
+          },
+          {
+            "key": "varieties",
+            "meaningVi": "Sự đa dạng, biến thể"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "In Singapore, English is an <b>official language</b>, so Dương wonders how people <b>translate</b> ideas between languages so easily there.",
+        "keywords": [
+          {
+            "key": "official language",
+            "meaningVi": "Ngôn ngữ chính thức"
+          },
+          {
+            "key": "translate",
+            "meaningVi": "Dịch"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "When Dung doesn't understand a word, she likes to <b>look up</b> its meaning, and she often <b>picks up</b> new words just by watching English videos, or asks a <b>native speaker</b> for help.",
+        "keywords": [
+          {
+            "key": "look up",
+            "meaningVi": "Tra cứu"
+          },
+          {
+            "key": "picks up",
+            "meaningVi": "Học được (một cách tự nhiên)"
+          },
+          {
+            "key": "native speaker",
+            "meaningVi": "Người bản ngữ"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dương notices that every country has its own <b>accent</b>, and Vietnamese has even <b>borrowed</b> some English <b>vocabulary</b>. Before their test, they agree to do some <b>revision</b> together tonight.",
+        "keywords": [
+          {
+            "key": "accent",
+            "meaningVi": "Giọng nói, trọng âm"
+          },
+          {
+            "key": "borrowed",
+            "meaningVi": "Vay mượn"
+          },
+          {
+            "key": "vocabulary",
+            "meaningVi": "Vốn từ vựng"
+          },
+          {
+            "key": "revision",
+            "meaningVi": "Ôn tập"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u10",
@@ -1443,7 +2114,81 @@ const GRADE9_UNITS = [
         "Ecological balance",
         "Ecosystem"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "In biology class, Dương and Dung learn about different <b>habitats</b> on Earth, from icy <b>poles</b> to warm <b>grasslands</b>.",
+        "keywords": [
+          {
+            "key": "habitats",
+            "meaningVi": "Môi trường sống"
+          },
+          {
+            "key": "poles",
+            "meaningVi": "Địa cực"
+          },
+          {
+            "key": "grasslands",
+            "meaningVi": "Đồng cỏ"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "The teacher shows a video of a <b>nature reserve</b> that protects rich <b>flora and fauna</b> in a tropical <b>rainforest</b>.",
+        "keywords": [
+          {
+            "key": "nature reserve",
+            "meaningVi": "Khu bảo tồn thiên nhiên"
+          },
+          {
+            "key": "flora and fauna",
+            "meaningVi": "Hệ thực vật và động vật"
+          },
+          {
+            "key": "rainforest",
+            "meaningVi": "Rừng nhiệt đới mưa"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "She explains how the <b>food chain</b> keeps the <b>ecosystem</b> balanced, but <b>global warming</b> is now threatening this <b>ecological balance</b>.",
+        "keywords": [
+          {
+            "key": "food chain",
+            "meaningVi": "Chuỗi thức ăn"
+          },
+          {
+            "key": "ecosystem",
+            "meaningVi": "Hệ sinh thái"
+          },
+          {
+            "key": "global warming",
+            "meaningVi": "Nóng lên toàn cầu"
+          },
+          {
+            "key": "ecological balance",
+            "meaningVi": "Cân bằng sinh thái"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "As a result, more <b>endangered species</b> are suffering from <b>habitat loss</b> every year, which worries both Dương and Dung deeply.",
+        "keywords": [
+          {
+            "key": "endangered species",
+            "meaningVi": "Loài có nguy cơ tuyệt chủng"
+          },
+          {
+            "key": "habitat loss",
+            "meaningVi": "Mất môi trường sống"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u11",
@@ -1586,7 +2331,81 @@ const GRADE9_UNITS = [
         "Steel",
         "3D printer"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "For his birthday, Dương receives a new <b>smartwatch</b> and an <b>e-reader</b> to enjoy digital books.",
+        "keywords": [
+          {
+            "key": "smartwatch",
+            "meaningVi": "Đồng hồ thông minh"
+          },
+          {
+            "key": "e-reader",
+            "meaningVi": "Máy đọc sách điện tử"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dung's family just bought a <b>robotic vacuum cleaner</b> and a <b>3D printer</b> that can even make small toys at home.",
+        "keywords": [
+          {
+            "key": "robotic vacuum cleaner",
+            "meaningVi": "Máy hút bụi tự động"
+          },
+          {
+            "key": "3D printer",
+            "meaningVi": "Máy in 3D"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dương also has a <b>camcorder</b> and a <b>portable music player</b> he uses every time they go travelling together.",
+        "keywords": [
+          {
+            "key": "camcorder",
+            "meaningVi": "Máy quay phim"
+          },
+          {
+            "key": "portable music player",
+            "meaningVi": "Máy nghe nhạc di động"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "In technology class, they learn that every <b>device</b> is made from materials like <b>steel</b>, <b>plastic</b>, <b>copper</b>, <b>rubber</b>, and <b>cardboard</b>.",
+        "keywords": [
+          {
+            "key": "device",
+            "meaningVi": "Thiết bị"
+          },
+          {
+            "key": "steel",
+            "meaningVi": "Thép"
+          },
+          {
+            "key": "plastic",
+            "meaningVi": "Nhựa"
+          },
+          {
+            "key": "copper",
+            "meaningVi": "Đồng (kim loại)"
+          },
+          {
+            "key": "rubber",
+            "meaningVi": "Cao su"
+          },
+          {
+            "key": "cardboard",
+            "meaningVi": "Bìa các tông"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u12",
@@ -1730,6 +2549,80 @@ const GRADE9_UNITS = [
         "Rewarding",
         "Well-paid"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "Dương and Dung discuss future careers. \"I want to be a <b>software engineer</b>,\" says Dương, \"What about you?\" \"Maybe a <b>surgeon</b>,\" Dung replies.",
+        "keywords": [
+          {
+            "key": "software engineer",
+            "meaningVi": "Kỹ sư phần mềm"
+          },
+          {
+            "key": "surgeon",
+            "meaningVi": "Bác sĩ phẫu thuật"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "They also think about other jobs, like a <b>tailor</b>, an <b>assembly worker</b>, or a <b>cashier</b> at a shop.",
+        "keywords": [
+          {
+            "key": "tailor",
+            "meaningVi": "Thợ may"
+          },
+          {
+            "key": "assembly worker",
+            "meaningVi": "Công nhân lắp ráp"
+          },
+          {
+            "key": "cashier",
+            "meaningVi": "Thu ngân"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dung says some jobs are quite <b>demanding</b> and <b>repetitive</b>, but usually <b>well-paid</b>, so she wants a <b>career</b> that also makes her happy.",
+        "keywords": [
+          {
+            "key": "demanding",
+            "meaningVi": "Đòi hỏi cao, vất vả"
+          },
+          {
+            "key": "repetitive",
+            "meaningVi": "Lặp đi lặp lại"
+          },
+          {
+            "key": "well-paid",
+            "meaningVi": "Được trả lương cao"
+          },
+          {
+            "key": "career",
+            "meaningVi": "Sự nghiệp, nghề nghiệp"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dương decides to take a <b>vocational</b> course after school, believing it will be more <b>rewarding</b>. Dung plans to <b>apply for</b> a scholarship first.",
+        "keywords": [
+          {
+            "key": "vocational",
+            "meaningVi": "Thuộc về dạy nghề"
+          },
+          {
+            "key": "rewarding",
+            "meaningVi": "Xứng đáng, bổ ích"
+          },
+          {
+            "key": "apply for",
+            "meaningVi": "Xin (việc)"
+          }
+        ]
+      }
+    ]
   }
 ];

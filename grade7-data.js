@@ -1,5 +1,10 @@
-// Dữ liệu từ vựng lớp 7 (THCS/THPT) — trích từ SGK Tiếng Anh 7 Global Success
-// Mỗi unit gồm: từ vựng (words), bài đọc (story). Dùng chung cho Flashcard / Dịch câu / Câu chuyện / Trò chơi hứng từ.
+// Dữ liệu từ vựng lớp 7 (THCS/THPT) — trích từ SGK Tiếng Anh 7 Global Success, tập 1 và tập 2
+// Mỗi unit gồm: từ vựng (words), bài đọc (story), và bản nháp "câu chuyện Dương & Dung" 4 khung (storyFrames).
+// storyFrames: nội dung mẫu ban đầu cho tính năng "Câu chuyện" (mục THCS/THPT trong tab Từ vựng) — từ khóa
+// (bọc trong <b>...</b>) sẽ bị ẩn thành ô trống cho học viên điền, ảnh minh họa (image_url) để trống, admin
+// (giangvien@gmail.com) tải ảnh lên sau qua khung soạn thảo. Giảng viên vẫn có thể ghi đè bất kỳ khung nào
+// qua khung soạn thảo đó — nội dung ghi đè sẽ được lưu trên Supabase và ưu tiên hơn bản nháp tĩnh này.
+// Dùng chung cho Flashcard / Dịch câu / Câu chuyện / Trò chơi hứng từ.
 const GRADE7_UNITS = [
   {
     "id": "u1",
@@ -139,7 +144,81 @@ const GRADE7_UNITS = [
         "Patient",
         "Responsibility"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "At school, Dương tells Dung about his hobby. \"My hobby is <b>collecting</b> old coins,\" he says. \"What about you?\" Dung smiles. \"I love <b>gardening</b> in my <b>free time</b>.\"",
+        "keywords": [
+          {
+            "key": "collecting",
+            "meaningVi": "Sưu tầm"
+          },
+          {
+            "key": "gardening",
+            "meaningVi": "Làm vườn"
+          },
+          {
+            "key": "free time",
+            "meaningVi": "Thời gian rảnh"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dung also enjoys <b>horse riding</b> at the weekend, while Dương likes <b>making models</b> of aeroplanes. They both agree that having a <b>hobby</b> makes life more fun.",
+        "keywords": [
+          {
+            "key": "horse riding",
+            "meaningVi": "Cưỡi ngựa"
+          },
+          {
+            "key": "making models",
+            "meaningVi": "Làm mô hình"
+          },
+          {
+            "key": "hobby",
+            "meaningVi": "Sở thích"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dương really <b>enjoys</b> practising <b>judo</b> twice a week, but he <b>hates</b> waking up early for morning training! Dung laughs and says he needs to be more <b>patient</b>.",
+        "keywords": [
+          {
+            "key": "enjoys",
+            "meaningVi": "Thích, tận hưởng"
+          },
+          {
+            "key": "judo",
+            "meaningVi": "Võ judo"
+          },
+          {
+            "key": "hates",
+            "meaningVi": "Ghét"
+          },
+          {
+            "key": "patient",
+            "meaningVi": "Kiên nhẫn"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "A hobby also teaches useful skills, like <b>responsibility</b> and <b>creativity</b>. \"Taking care of my plants every day teaches me responsibility,\" says Dung, \"and painting them teaches me creativity!\"",
+        "keywords": [
+          {
+            "key": "responsibility",
+            "meaningVi": "Trách nhiệm"
+          },
+          {
+            "key": "creativity",
+            "meaningVi": "Sự sáng tạo"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u2",
@@ -268,7 +347,77 @@ const GRADE7_UNITS = [
         "Acne",
         "Skin condition"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "Dương and Dung go <b>boating</b> on the lake this weekend. Before they leave, Dung reminds him, \"Don't forget your <b>suncream</b>, or you'll get <b>sunburn</b>!\"",
+        "keywords": [
+          {
+            "key": "boating",
+            "meaningVi": "Chèo thuyền"
+          },
+          {
+            "key": "suncream",
+            "meaningVi": "Kem chống nắng"
+          },
+          {
+            "key": "sunburn",
+            "meaningVi": "Cháy nắng"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "After a long day in the sun and wind, Dương gets <b>chapped lips</b>, and Dung notices some <b>acne</b> on her chin. \"We should take better care of our <b>skin condition</b>,\" she says.",
+        "keywords": [
+          {
+            "key": "chapped lips",
+            "meaningVi": "Môi nứt nẻ"
+          },
+          {
+            "key": "acne",
+            "meaningVi": "Mụn trứng cá"
+          },
+          {
+            "key": "skin condition",
+            "meaningVi": "Tình trạng da"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "To stay <b>fit</b>, Dung decides to <b>avoid</b> <b>soft drinks</b> from now on. \"I'll drink more water instead,\" she says.",
+        "keywords": [
+          {
+            "key": "fit",
+            "meaningVi": "Khỏe mạnh, cân đối"
+          },
+          {
+            "key": "avoid",
+            "meaningVi": "Tránh"
+          },
+          {
+            "key": "soft drinks",
+            "meaningVi": "Nước ngọt có ga"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "For dinner, Dung's mother cooks <b>tofu</b> with lots of <b>coloured vegetables</b>. \"This is much healthier than fast food,\" says Dương, trying a bite happily.",
+        "keywords": [
+          {
+            "key": "tofu",
+            "meaningVi": "Đậu phụ"
+          },
+          {
+            "key": "coloured vegetables",
+            "meaningVi": "Rau củ nhiều màu sắc"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u3",
@@ -388,7 +537,73 @@ const GRADE7_UNITS = [
         "Nursing home",
         "Donate"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "This weekend, Dương and Dung decide to do some <b>community service</b> together. \"Let's <b>volunteer</b> at the local park first,\" suggests Dung.",
+        "keywords": [
+          {
+            "key": "community service",
+            "meaningVi": "Hoạt động cộng đồng"
+          },
+          {
+            "key": "volunteer",
+            "meaningVi": "Tình nguyện"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "They spend the morning helping to <b>pick up litter</b> around the park, making it clean and beautiful again for everyone to enjoy.",
+        "keywords": [
+          {
+            "key": "pick up litter",
+            "meaningVi": "Nhặt rác"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "In the afternoon, they visit a <b>nursing home</b> to talk with the <b>elderly</b>, and later, an <b>orphanage</b> to play games with <b>homeless children</b> who live there.",
+        "keywords": [
+          {
+            "key": "nursing home",
+            "meaningVi": "Viện dưỡng lão"
+          },
+          {
+            "key": "elderly",
+            "meaningVi": "Người cao tuổi"
+          },
+          {
+            "key": "orphanage",
+            "meaningVi": "Trại trẻ mồ côi"
+          },
+          {
+            "key": "homeless children",
+            "meaningVi": "Trẻ em vô gia cư"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Before going home, Dung decides to <b>donate</b> her old books, and Dương offers to <b>tutor</b> some of the younger children for free. They also <b>exchange</b> phone numbers with a volunteer group to help again next month.",
+        "keywords": [
+          {
+            "key": "donate",
+            "meaningVi": "Quyên góp"
+          },
+          {
+            "key": "tutor",
+            "meaningVi": "Dạy kèm"
+          },
+          {
+            "key": "exchange",
+            "meaningVi": "Trao đổi"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u4",
@@ -504,7 +719,73 @@ const GRADE7_UNITS = [
       "text": "How are things with you? I arrived in Viet Nam three days ago, and everything is perfect.<br><br>Yesterday I went to see a puppet show at a theatre in the centre of Ha Noi. The show was fascinating. The artists performed the show in a pool. They stood behind a screen. They used strings under the water to control the puppets and make them move on the water! The show was about rice farming and a festival in a village. People say that these shows are normally about everyday life in the countryside of Viet Nam. Water puppetry is a special traditional art form. People love it, and most tourists coming to Viet Nam love to see it.<br><br>I wish you were here with me. See you next week.",
       "textVi": "Mọi thứ với bạn thế nào rồi? Mình đã đến Việt Nam ba ngày trước, và mọi thứ thật hoàn hảo.<br><br>Hôm qua mình đã đi xem một buổi biểu diễn múa rối tại một nhà hát ở trung tâm Hà Nội. Buổi biểu diễn thật hấp dẫn. Các nghệ sĩ biểu diễn trong một bể nước. Họ đứng phía sau một tấm màn. Họ dùng dây dưới nước để điều khiển những con rối và làm chúng di chuyển trên mặt nước! Buổi diễn kể về việc trồng lúa và một lễ hội trong một ngôi làng. Người ta nói rằng những buổi diễn này thường kể về cuộc sống thường ngày ở vùng nông thôn Việt Nam. Múa rối nước là một loại hình nghệ thuật truyền thống đặc biệt. Mọi người đều yêu thích nó, và hầu hết khách du lịch đến Việt Nam đều muốn xem nó.<br><br>Mình ước gì bạn ở đây cùng mình. Hẹn gặp lại vào tuần sau.",
       "used": []
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "Dương invites Dung to visit an <b>art gallery</b> in the city. There, they see a beautiful <b>exhibition</b> of paintings from local artists.",
+        "keywords": [
+          {
+            "key": "art gallery",
+            "meaningVi": "Phòng trưng bày nghệ thuật"
+          },
+          {
+            "key": "exhibition",
+            "meaningVi": "Buổi triển lãm"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dung's favourite painting is a <b>portrait</b> of an old fisherman, while Dương prefers a peaceful <b>landscape</b> of the mountains.",
+        "keywords": [
+          {
+            "key": "portrait",
+            "meaningVi": "Tranh chân dung"
+          },
+          {
+            "key": "landscape",
+            "meaningVi": "Tranh phong cảnh"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "In the evening, they go to the <b>concert hall</b> to watch a talented young <b>musician</b> <b>perform</b> on the violin.",
+        "keywords": [
+          {
+            "key": "concert hall",
+            "meaningVi": "Phòng hòa nhạc"
+          },
+          {
+            "key": "musician",
+            "meaningVi": "Nhạc công"
+          },
+          {
+            "key": "perform",
+            "meaningVi": "Biểu diễn"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "The next day, they visit a <b>puppet theatre</b> to watch a traditional show. Dung says she dreams of becoming a <b>composer</b> one day, and hopes to <b>compose</b> her own music soon.",
+        "keywords": [
+          {
+            "key": "puppet theatre",
+            "meaningVi": "Nhà hát múa rối"
+          },
+          {
+            "key": "composer",
+            "meaningVi": "Nhạc sĩ sáng tác"
+          },
+          {
+            "key": "compose",
+            "meaningVi": "Sáng tác nhạc"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u5",
@@ -624,7 +905,73 @@ const GRADE7_UNITS = [
         "Rice noodles",
         "Boneless"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "Dung teaches Dương how to cook a <b>traditional dish</b>: crispy <b>spring rolls</b>. \"The most important <b>ingredient</b> is fresh vegetables,\" she explains.",
+        "keywords": [
+          {
+            "key": "traditional dish",
+            "meaningVi": "Món ăn truyền thống"
+          },
+          {
+            "key": "spring rolls",
+            "meaningVi": "Nem cuốn"
+          },
+          {
+            "key": "ingredient",
+            "meaningVi": "Nguyên liệu"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "To dip the spring rolls, Dung mixes a bowl of sweet <b>fish sauce</b>. \"This <b>recipe</b> was taught to me by my grandmother,\" she smiles.",
+        "keywords": [
+          {
+            "key": "fish sauce",
+            "meaningVi": "Nước mắm"
+          },
+          {
+            "key": "recipe",
+            "meaningVi": "Công thức nấu ăn"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Next, they cook a warm bowl of <b>rice noodles</b> in a tasty <b>broth</b>, with slices of <b>boneless</b> chicken on top.",
+        "keywords": [
+          {
+            "key": "rice noodles",
+            "meaningVi": "Bánh phở"
+          },
+          {
+            "key": "broth",
+            "meaningVi": "Nước dùng"
+          },
+          {
+            "key": "boneless",
+            "meaningVi": "Lọc xương"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "After the meal, Dung offers Dương a small <b>snack</b> of fresh fruit and a bottle of cool <b>mineral water</b>. \"What a delicious afternoon!\" says Dương happily.",
+        "keywords": [
+          {
+            "key": "snack",
+            "meaningVi": "Bữa ăn nhẹ"
+          },
+          {
+            "key": "mineral water",
+            "meaningVi": "Nước khoáng"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u6",
@@ -745,7 +1092,73 @@ const GRADE7_UNITS = [
         "Swimming pool",
         "Library"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "Dương and Dung visit a famous school to see its <b>facilities</b> before taking the <b>entrance exam</b> next year.",
+        "keywords": [
+          {
+            "key": "facilities",
+            "meaningVi": "Cơ sở vật chất"
+          },
+          {
+            "key": "entrance exam",
+            "meaningVi": "Kỳ thi tuyển sinh"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "First, they visit the <b>computer room</b>, full of modern machines, and then the school <b>library</b>, filled with thousands of books.",
+        "keywords": [
+          {
+            "key": "computer room",
+            "meaningVi": "Phòng máy tính"
+          },
+          {
+            "key": "library",
+            "meaningVi": "Thư viện"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Outside, they see a big <b>gym</b> for indoor sports and a clean <b>swimming pool</b> for summer lessons. There is also a lovely <b>school garden</b> where students grow vegetables.",
+        "keywords": [
+          {
+            "key": "gym",
+            "meaningVi": "Phòng tập thể dục"
+          },
+          {
+            "key": "swimming pool",
+            "meaningVi": "Hồ bơi"
+          },
+          {
+            "key": "school garden",
+            "meaningVi": "Vườn trường"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "A teacher shows them the weekly <b>timetable</b>, full of exciting <b>outdoor activities</b>. \"This school even has a special class for <b>gifted students</b>,\" she adds proudly.",
+        "keywords": [
+          {
+            "key": "timetable",
+            "meaningVi": "Thời khóa biểu"
+          },
+          {
+            "key": "outdoor activities",
+            "meaningVi": "Hoạt động ngoài trời"
+          },
+          {
+            "key": "gifted students",
+            "meaningVi": "Học sinh năng khiếu"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u7",
@@ -866,7 +1279,73 @@ const GRADE7_UNITS = [
         "Passenger",
         "Seatbelt"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "On the way to school, Dương and Dung are stuck in a long <b>traffic jam</b>. \"We should have left earlier,\" says Dung, checking her watch.",
+        "keywords": [
+          {
+            "key": "traffic jam",
+            "meaningVi": "Tắc đường"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "As a <b>cyclist</b>, Dương always wears a <b>helmet</b>, while Dung, as a <b>pedestrian</b>, always walks carefully on the <b>pavement</b>.",
+        "keywords": [
+          {
+            "key": "cyclist",
+            "meaningVi": "Người đi xe đạp"
+          },
+          {
+            "key": "helmet",
+            "meaningVi": "Mũ bảo hiểm"
+          },
+          {
+            "key": "pedestrian",
+            "meaningVi": "Người đi bộ"
+          },
+          {
+            "key": "pavement",
+            "meaningVi": "Vỉa hè"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "To cross the busy street safely, they use the <b>zebra crossing</b> and always check the <b>road sign</b> for directions first.",
+        "keywords": [
+          {
+            "key": "zebra crossing",
+            "meaningVi": "Vạch qua đường"
+          },
+          {
+            "key": "road sign",
+            "meaningVi": "Biển báo giao thông"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Later, as a <b>passenger</b> in his father's car, Dương always wears his <b>seatbelt</b>. \"Following <b>traffic rules</b> keeps everyone safe,\" his father reminds him.",
+        "keywords": [
+          {
+            "key": "passenger",
+            "meaningVi": "Hành khách"
+          },
+          {
+            "key": "seatbelt",
+            "meaningVi": "Dây an toàn"
+          },
+          {
+            "key": "traffic rules",
+            "meaningVi": "Luật giao thông"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u8",
@@ -984,7 +1463,73 @@ const GRADE7_UNITS = [
       "used": [
         "Director"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "This weekend, Dương and Dung decide to watch a movie together. \"Let's watch a <b>comedy</b>,\" suggests Dung, \"I don't want anything <b>boring</b>.\"",
+        "keywords": [
+          {
+            "key": "comedy",
+            "meaningVi": "Phim hài"
+          },
+          {
+            "key": "boring",
+            "meaningVi": "Nhàm chán"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dương wants to watch a <b>science fiction film</b> about robots, but Dung prefers a magical <b>fantasy</b> movie instead.",
+        "keywords": [
+          {
+            "key": "science fiction film",
+            "meaningVi": "Phim khoa học viễn tưởng"
+          },
+          {
+            "key": "fantasy",
+            "meaningVi": "Phim giả tưởng"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "In the end, they choose a <b>horror film</b>. It is so <b>frightening</b> that Dung covers her eyes during the scary scenes!",
+        "keywords": [
+          {
+            "key": "horror film",
+            "meaningVi": "Phim kinh dị"
+          },
+          {
+            "key": "frightening",
+            "meaningVi": "Đáng sợ"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Afterwards, they watch a <b>moving</b> <b>documentary</b> about a famous <b>director</b> and the <b>star</b> of an old classic film. Dung says it's her favourite movie of the year.",
+        "keywords": [
+          {
+            "key": "moving",
+            "meaningVi": "Cảm động"
+          },
+          {
+            "key": "documentary",
+            "meaningVi": "Phim tài liệu"
+          },
+          {
+            "key": "director",
+            "meaningVi": "Đạo diễn"
+          },
+          {
+            "key": "star",
+            "meaningVi": "Đóng vai chính"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u9",
@@ -1104,7 +1649,73 @@ const GRADE7_UNITS = [
         "Parade",
         "Talent show"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "During the Mid-Autumn Festival, Dung and Dương watch an exciting <b>lion dance</b> in the street, then share some sweet <b>moon cakes</b> together.",
+        "keywords": [
+          {
+            "key": "lion dance",
+            "meaningVi": "Múa lân"
+          },
+          {
+            "key": "moon cakes",
+            "meaningVi": "Bánh trung thu"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Later, they join a colourful <b>parade</b> with a giant <b>float</b> rolling through the town. Everyone wears a fun <b>costume</b> for the occasion.",
+        "keywords": [
+          {
+            "key": "parade",
+            "meaningVi": "Cuộc diễu hành"
+          },
+          {
+            "key": "float",
+            "meaningVi": "Xe hoa diễu hành"
+          },
+          {
+            "key": "costume",
+            "meaningVi": "Trang phục"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "In the evening, there is a big family <b>gathering</b>, followed by an amazing <b>fireworks display</b> that lights up the whole sky.",
+        "keywords": [
+          {
+            "key": "gathering",
+            "meaningVi": "Buổi tụ họp"
+          },
+          {
+            "key": "fireworks display",
+            "meaningVi": "Màn trình diễn pháo hoa"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "At the festival, there is even a <b>talent show</b> for children. The lantern is a <b>symbol</b> of the festival, though Dung finds one of the singing performances a bit <b>disappointing</b>.",
+        "keywords": [
+          {
+            "key": "talent show",
+            "meaningVi": "Buổi biểu diễn tài năng"
+          },
+          {
+            "key": "symbol",
+            "meaningVi": "Biểu tượng"
+          },
+          {
+            "key": "disappointing",
+            "meaningVi": "Đáng thất vọng"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u10",
@@ -1226,7 +1837,73 @@ const GRADE7_UNITS = [
         "Wind energy",
         "Hydro energy"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "In science class, the teacher explains <b>renewable sources</b> and <b>non-renewable sources</b> of energy. Dương raises his hand. \"Coal and <b>natural gas</b> are non-renewable, right?\"",
+        "keywords": [
+          {
+            "key": "renewable sources",
+            "meaningVi": "Nguồn năng lượng tái tạo"
+          },
+          {
+            "key": "non-renewable sources",
+            "meaningVi": "Nguồn năng lượng không tái tạo"
+          },
+          {
+            "key": "natural gas",
+            "meaningVi": "Khí tự nhiên"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dung adds that <b>solar energy</b>, <b>wind energy</b> and <b>hydro energy</b> are all renewable, because they never run out.",
+        "keywords": [
+          {
+            "key": "solar energy",
+            "meaningVi": "Năng lượng mặt trời"
+          },
+          {
+            "key": "wind energy",
+            "meaningVi": "Năng lượng gió"
+          },
+          {
+            "key": "hydro energy",
+            "meaningVi": "Năng lượng thủy điện"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "The teacher also mentions <b>nuclear energy</b>, which is powerful but must be used very carefully and safely.",
+        "keywords": [
+          {
+            "key": "nuclear energy",
+            "meaningVi": "Năng lượng hạt nhân"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "At home, Dương's family now uses a <b>solar panel</b> on the roof and <b>low energy light bulbs</b> in every room to <b>save energy</b> every day.",
+        "keywords": [
+          {
+            "key": "solar panel",
+            "meaningVi": "Tấm pin năng lượng mặt trời"
+          },
+          {
+            "key": "low energy light bulbs",
+            "meaningVi": "Bóng đèn tiết kiệm năng lượng"
+          },
+          {
+            "key": "save energy",
+            "meaningVi": "Tiết kiệm năng lượng"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u11",
@@ -1345,7 +2022,73 @@ const GRADE7_UNITS = [
         "Autopilot",
         "Charge the battery"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "Dương and Dung imagine travelling in the future. \"I think we'll travel by <b>hyperloop</b>, a super-fast tube train!\" says Dương excitedly.",
+        "keywords": [
+          {
+            "key": "hyperloop",
+            "meaningVi": "Hệ thống tàu siêu tốc"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dung imagines something even faster: a <b>teleporter</b> that can send you anywhere instantly! \"Or maybe we'll just take a <b>bullet train</b>,\" she laughs.",
+        "keywords": [
+          {
+            "key": "teleporter",
+            "meaningVi": "Máy dịch chuyển tức thời"
+          },
+          {
+            "key": "bullet train",
+            "meaningVi": "Tàu cao tốc"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "For daily trips, they think everyone will use a <b>driverless car</b> with <b>autopilot</b>, or an <b>eco-friendly</b> <b>flying car</b> that doesn't pollute the air.",
+        "keywords": [
+          {
+            "key": "driverless car",
+            "meaningVi": "Xe tự lái"
+          },
+          {
+            "key": "autopilot",
+            "meaningVi": "Chế độ lái tự động"
+          },
+          {
+            "key": "eco-friendly",
+            "meaningVi": "Thân thiện với môi trường"
+          },
+          {
+            "key": "flying car",
+            "meaningVi": "Ô tô bay"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "For longer journeys, people might travel on a <b>solar-powered ship</b>, or ride a <b>self-balancing</b> scooter around town after they <b>charge the battery</b> at home.",
+        "keywords": [
+          {
+            "key": "solar-powered ship",
+            "meaningVi": "Tàu chạy bằng năng lượng mặt trời"
+          },
+          {
+            "key": "self-balancing",
+            "meaningVi": "Tự cân bằng"
+          },
+          {
+            "key": "charge the battery",
+            "meaningVi": "Sạc pin"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u12",
@@ -1465,6 +2208,72 @@ const GRADE7_UNITS = [
         "Unique",
         "Landscape"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "Dương and Dung are learning about English-speaking countries. \"London is the <b>capital</b> of England,\" says Dung, pointing at the map.",
+        "keywords": [
+          {
+            "key": "capital",
+            "meaningVi": "Thủ đô"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Their <b>tour guide</b> shows them pictures of Scotland's <b>ancient</b> castles and its beautiful green <b>landscape</b>.",
+        "keywords": [
+          {
+            "key": "tour guide",
+            "meaningVi": "Hướng dẫn viên du lịch"
+          },
+          {
+            "key": "ancient",
+            "meaningVi": "Cổ xưa"
+          },
+          {
+            "key": "landscape",
+            "meaningVi": "Phong cảnh"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "In Scotland, men sometimes wear a traditional <b>kilt</b>, which Dung finds very <b>unique</b> and interesting.",
+        "keywords": [
+          {
+            "key": "kilt",
+            "meaningVi": "Váy truyền thống Scotland"
+          },
+          {
+            "key": "unique",
+            "meaningVi": "Độc đáo"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "In New Zealand, the <b>native</b> Māori people perform a powerful <b>haka dance</b>, and tourists love the country's long, beautiful <b>coastline</b> — it's a popular tourist <b>attraction</b>.",
+        "keywords": [
+          {
+            "key": "native",
+            "meaningVi": "Bản địa"
+          },
+          {
+            "key": "haka dance",
+            "meaningVi": "Điệu múa haka"
+          },
+          {
+            "key": "coastline",
+            "meaningVi": "Đường bờ biển"
+          },
+          {
+            "key": "attraction",
+            "meaningVi": "Điểm tham quan"
+          }
+        ]
+      }
+    ]
   }
 ];

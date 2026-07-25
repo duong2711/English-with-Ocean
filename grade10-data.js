@@ -1,5 +1,9 @@
-// Dữ liệu từ vựng lớp 10 (THPT) — biên soạn theo chủ đề của SGK Tiếng Anh 10 Global Success (10 units)
-// Mỗi unit gồm: từ vựng (words), bài đọc (story) do soạn mới theo chủ đề bài học (không sao chép nguyên văn sách giáo khoa).
+// Dữ liệu từ vựng lớp 10 (THPT) — trích từ SGK Tiếng Anh 10 Global Success, tập 1 và tập 2
+// Mỗi unit gồm: từ vựng (words), bài đọc (story), và bản nháp "câu chuyện Dương & Dung" 4 khung (storyFrames).
+// storyFrames: nội dung mẫu ban đầu cho tính năng "Câu chuyện" (mục THCS/THPT trong tab Từ vựng) — từ khóa
+// (bọc trong <b>...</b>) sẽ bị ẩn thành ô trống cho học viên điền, ảnh minh họa (image_url) để trống, admin
+// (giangvien@gmail.com) tải ảnh lên sau qua khung soạn thảo. Giảng viên vẫn có thể ghi đè bất kỳ khung nào
+// qua khung soạn thảo đó — nội dung ghi đè sẽ được lưu trên Supabase và ưu tiên hơn bản nháp tĩnh này.
 // Dùng chung cho Flashcard / Dịch câu / Câu chuyện / Trò chơi hứng từ.
 const GRADE10_UNITS = [
   {
@@ -149,7 +153,81 @@ const GRADE10_UNITS = [
         "Character",
         "Value"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "Dung says her father is the family's <b>breadwinner</b>, while her mother is a caring <b>homemaker</b> who manages the house.",
+        "keywords": [
+          {
+            "key": "breadwinner",
+            "meaningVi": "Người trụ cột kiếm tiền trong gia đình"
+          },
+          {
+            "key": "homemaker",
+            "meaningVi": "Người nội trợ"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Every weekend, Dương helps his parents buy <b>groceries</b> and do some <b>heavy lifting</b> around the house.",
+        "keywords": [
+          {
+            "key": "groceries",
+            "meaningVi": "Thực phẩm, hàng tạp hóa"
+          },
+          {
+            "key": "heavy lifting",
+            "meaningVi": "Việc mang vác nặng"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "At home, Dung shares the <b>household chores</b> with her siblings — she does the <b>laundry</b>, while her brother handles the <b>washing-up</b>.",
+        "keywords": [
+          {
+            "key": "household chores",
+            "meaningVi": "Việc nhà"
+          },
+          {
+            "key": "laundry",
+            "meaningVi": "Quần áo cần giặt, việc giặt giũ"
+          },
+          {
+            "key": "washing-up",
+            "meaningVi": "Việc rửa bát đĩa"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Doing chores teaches Dương <b>responsibility</b> and <b>gratitude</b> for his parents. \"It really helps <b>strengthen</b> good <b>character</b> and family <b>values</b>,\" his mother says.",
+        "keywords": [
+          {
+            "key": "responsibility",
+            "meaningVi": "Trách nhiệm"
+          },
+          {
+            "key": "gratitude",
+            "meaningVi": "Lòng biết ơn"
+          },
+          {
+            "key": "strengthen",
+            "meaningVi": "Củng cố, làm bền chặt hơn"
+          },
+          {
+            "key": "character",
+            "meaningVi": "Tính cách"
+          },
+          {
+            "key": "values",
+            "meaningVi": "Giá trị"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u2",
@@ -298,7 +376,81 @@ const GRADE10_UNITS = [
         "Awareness",
         "Lifestyle"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "Dung tries to reduce her <b>carbon footprint</b> by walking to school instead of asking for a ride.",
+        "keywords": [
+          {
+            "key": "carbon footprint",
+            "meaningVi": "Dấu chân carbon (lượng khí thải carbon)"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "At home, her family only uses <b>eco-friendly</b> <b>household appliances</b> to save <b>energy</b>.",
+        "keywords": [
+          {
+            "key": "eco-friendly",
+            "meaningVi": "Thân thiện với môi trường"
+          },
+          {
+            "key": "household appliances",
+            "meaningVi": "Thiết bị gia dụng"
+          },
+          {
+            "key": "energy",
+            "meaningVi": "Năng lượng"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dương decides to <b>adopt</b> a greener <b>lifestyle</b> too — he never drops <b>litter</b> and always buys <b>organic</b> food.",
+        "keywords": [
+          {
+            "key": "adopt",
+            "meaningVi": "Áp dụng, làm theo"
+          },
+          {
+            "key": "lifestyle",
+            "meaningVi": "Lối sống"
+          },
+          {
+            "key": "litter",
+            "meaningVi": "Rác thải"
+          },
+          {
+            "key": "organic",
+            "meaningVi": "Hữu cơ"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "They both agree that using <b>recyclable</b> materials and protecting natural <b>resources</b> is key to a <b>sustainable</b> future, and raising public <b>awareness</b> is just as important.",
+        "keywords": [
+          {
+            "key": "recyclable",
+            "meaningVi": "Có thể tái chế"
+          },
+          {
+            "key": "resources",
+            "meaningVi": "Tài nguyên"
+          },
+          {
+            "key": "sustainable",
+            "meaningVi": "Bền vững"
+          },
+          {
+            "key": "awareness",
+            "meaningVi": "Nhận thức"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u3",
@@ -447,7 +599,81 @@ const GRADE10_UNITS = [
         "Single",
         "Instrument"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "Dung is a <b>talented</b> singer, and this year, she decides to join a singing competition on TV.",
+        "keywords": [
+          {
+            "key": "talented",
+            "meaningVi": "Tài năng"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "The <b>judge</b> is impressed by her voice, and the <b>audience</b> claps loudly for her performance.",
+        "keywords": [
+          {
+            "key": "judge",
+            "meaningVi": "Giám khảo"
+          },
+          {
+            "key": "audience",
+            "meaningVi": "Khán giả"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dung's new <b>single</b> helps her <b>attract</b> more fans, and she practises hard with her favourite <b>instrument</b>, the guitar, to <b>perform</b> even better.",
+        "keywords": [
+          {
+            "key": "single",
+            "meaningVi": "Đĩa đơn"
+          },
+          {
+            "key": "attract",
+            "meaningVi": "Thu hút"
+          },
+          {
+            "key": "instrument",
+            "meaningVi": "Nhạc cụ"
+          },
+          {
+            "key": "perform",
+            "meaningVi": "Biểu diễn"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "At the music <b>festival</b>, many talented <b>participants</b> compete, but only the best ones survive — others are <b>eliminated</b> each week. Dung <b>uploads</b> her performance online and hopes to <b>reach</b> thousands of viewers.",
+        "keywords": [
+          {
+            "key": "festival",
+            "meaningVi": "Lễ hội, liên hoan"
+          },
+          {
+            "key": "participants",
+            "meaningVi": "Người tham dự, thí sinh"
+          },
+          {
+            "key": "eliminated",
+            "meaningVi": "Loại (khỏi cuộc thi)"
+          },
+          {
+            "key": "uploads",
+            "meaningVi": "Tải lên"
+          },
+          {
+            "key": "reach",
+            "meaningVi": "Đạt được (số lượng, thành tựu)"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u4",
@@ -595,7 +821,81 @@ const GRADE10_UNITS = [
         "Confidence",
         "Community"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "Dương decides to <b>volunteer</b> for a local charity project this summer, because he wants to help <b>raise</b> money for his <b>community</b>.",
+        "keywords": [
+          {
+            "key": "volunteer",
+            "meaningVi": "Tình nguyện viên; làm tình nguyện"
+          },
+          {
+            "key": "raise",
+            "meaningVi": "Quyên góp, gây quỹ"
+          },
+          {
+            "key": "community",
+            "meaningVi": "Cộng đồng"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "He is very <b>generous</b> and always tries to <b>donate</b> money or clothes whenever he can.",
+        "keywords": [
+          {
+            "key": "generous",
+            "meaningVi": "Hào phóng"
+          },
+          {
+            "key": "donate",
+            "meaningVi": "Quyên góp, hiến tặng"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "This time, they travel to a <b>remote</b> village to <b>deliver</b> <b>donations</b> to families in need, which really <b>benefits</b> the local children.",
+        "keywords": [
+          {
+            "key": "remote",
+            "meaningVi": "Xa xôi, hẻo lánh"
+          },
+          {
+            "key": "deliver",
+            "meaningVi": "Phân phát, giao"
+          },
+          {
+            "key": "donations",
+            "meaningVi": "Đồ quyên góp, sự quyên góp"
+          },
+          {
+            "key": "benefits",
+            "meaningVi": "Lợi ích; mang lại lợi ích"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dung joins many <b>various</b> activities too, and every time she <b>participates</b>, her <b>confidence</b> grows a little more.",
+        "keywords": [
+          {
+            "key": "various",
+            "meaningVi": "Khác nhau, đa dạng"
+          },
+          {
+            "key": "participates",
+            "meaningVi": "Tham gia"
+          },
+          {
+            "key": "confidence",
+            "meaningVi": "Sự tự tin"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u5",
@@ -744,7 +1044,81 @@ const GRADE10_UNITS = [
         "Suitable",
         "Software"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "In science class, Dương and Dung learn about famous <b>inventions</b> that changed the world, like the light bulb.",
+        "keywords": [
+          {
+            "key": "inventions",
+            "meaningVi": "Phát minh"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Their teacher shows them a modern <b>device</b> with powerful <b>hardware</b> and smart <b>software</b> inside.",
+        "keywords": [
+          {
+            "key": "device",
+            "meaningVi": "Thiết bị"
+          },
+          {
+            "key": "hardware",
+            "meaningVi": "Phần cứng (máy tính)"
+          },
+          {
+            "key": "software",
+            "meaningVi": "Phần mềm"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "In the school <b>laboratory</b>, they do a small <b>experiment</b> to test how a computer <b>processor</b> works.",
+        "keywords": [
+          {
+            "key": "laboratory",
+            "meaningVi": "Phòng thí nghiệm"
+          },
+          {
+            "key": "experiment",
+            "meaningVi": "Thí nghiệm"
+          },
+          {
+            "key": "processor",
+            "meaningVi": "Bộ xử lý"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dung is fascinated by <b>artificial intelligence</b>, and decides to <b>install</b> a useful <b>application</b> on her phone. \"It's so <b>valuable</b> and <b>suitable</b> for students like us,\" she says.",
+        "keywords": [
+          {
+            "key": "artificial intelligence",
+            "meaningVi": "Trí tuệ nhân tạo"
+          },
+          {
+            "key": "install",
+            "meaningVi": "Cài đặt"
+          },
+          {
+            "key": "application",
+            "meaningVi": "Ứng dụng"
+          },
+          {
+            "key": "valuable",
+            "meaningVi": "Có giá trị"
+          },
+          {
+            "key": "suitable",
+            "meaningVi": "Phù hợp"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u6",
@@ -892,7 +1266,81 @@ const GRADE10_UNITS = [
         "Victim",
         "Career"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "In class, Dương and Dung discuss gender <b>equality</b>. \"Everyone should be treated <b>equally</b>, no matter their gender,\" Dung says.",
+        "keywords": [
+          {
+            "key": "equality",
+            "meaningVi": "Sự bình đẳng"
+          },
+          {
+            "key": "equally",
+            "meaningVi": "Bình đẳng, ngang nhau"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "She gives an example: a woman can be a <b>surgeon</b> or a <b>pilot</b>, and a man can happily work at a <b>kindergarten</b> too.",
+        "keywords": [
+          {
+            "key": "surgeon",
+            "meaningVi": "Bác sĩ phẫu thuật"
+          },
+          {
+            "key": "pilot",
+            "meaningVi": "Phi công"
+          },
+          {
+            "key": "kindergarten",
+            "meaningVi": "Trường mẫu giáo"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Sadly, some <b>uneducated</b> communities still allow <b>domestic violence</b>, and the <b>victim</b> is often too afraid to ask for help.",
+        "keywords": [
+          {
+            "key": "uneducated",
+            "meaningVi": "Ít được học hành"
+          },
+          {
+            "key": "domestic violence",
+            "meaningVi": "Bạo lực gia đình"
+          },
+          {
+            "key": "victim",
+            "meaningVi": "Nạn nhân"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dương believes that both <b>physical</b> strength and <b>mental</b> strength matter, and that being <b>skilful</b> at any <b>career</b> has nothing to do with gender.",
+        "keywords": [
+          {
+            "key": "physical",
+            "meaningVi": "(thuộc) thể chất"
+          },
+          {
+            "key": "mental",
+            "meaningVi": "(thuộc) tinh thần"
+          },
+          {
+            "key": "skilful",
+            "meaningVi": "Khéo léo, lành nghề"
+          },
+          {
+            "key": "career",
+            "meaningVi": "Sự nghiệp, nghề nghiệp"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u7",
@@ -1041,7 +1489,81 @@ const GRADE10_UNITS = [
         "Promote",
         "Essential"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "In social studies class, Dương and Dung learn that Viet Nam has an <b>aim</b> to reduce <b>poverty</b> across the country.",
+        "keywords": [
+          {
+            "key": "aim",
+            "meaningVi": "Mục tiêu; đặt mục tiêu"
+          },
+          {
+            "key": "poverty",
+            "meaningVi": "Sự nghèo đói"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Viet Nam has <b>committed</b> to helping <b>disadvantaged</b> communities and providing <b>technical</b> support to farmers.",
+        "keywords": [
+          {
+            "key": "committed",
+            "meaningVi": "Cam kết"
+          },
+          {
+            "key": "disadvantaged",
+            "meaningVi": "Thiệt thòi, kém may mắn"
+          },
+          {
+            "key": "technical",
+            "meaningVi": "Thuộc về kỹ thuật"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "The government also works to <b>export</b> goods, <b>invest</b> in new factories, and boost the <b>economic</b> growth of the country.",
+        "keywords": [
+          {
+            "key": "export",
+            "meaningVi": "Xuất khẩu"
+          },
+          {
+            "key": "invest",
+            "meaningVi": "Đầu tư"
+          },
+          {
+            "key": "economic",
+            "meaningVi": "Thuộc về kinh tế"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Viet Nam also joins <b>peacekeeping</b> missions abroad, showing <b>respect</b> for other nations. Dung says this kind of cooperation is <b>essential</b> for world peace, and Viet Nam continues to <b>promote</b> it internationally.",
+        "keywords": [
+          {
+            "key": "peacekeeping",
+            "meaningVi": "Gìn giữ hòa bình"
+          },
+          {
+            "key": "respect",
+            "meaningVi": "Tôn trọng"
+          },
+          {
+            "key": "essential",
+            "meaningVi": "Cần thiết, thiết yếu"
+          },
+          {
+            "key": "promote",
+            "meaningVi": "Quảng bá, thúc đẩy"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u8",
@@ -1190,7 +1712,81 @@ const GRADE10_UNITS = [
         "Exchange",
         "Original"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "This year, Dương and Dung's school introduces <b>blended learning</b>, mixing <b>face-to-face</b> classes with <b>online learning</b>.",
+        "keywords": [
+          {
+            "key": "blended learning",
+            "meaningVi": "Học tập kết hợp"
+          },
+          {
+            "key": "face-to-face",
+            "meaningVi": "Trực tiếp"
+          },
+          {
+            "key": "online learning",
+            "meaningVi": "Học trực tuyến"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "At first, Dương finds it hard to <b>focus</b> because of constant <b>distractions</b> from his phone.",
+        "keywords": [
+          {
+            "key": "focus",
+            "meaningVi": "Tập trung"
+          },
+          {
+            "key": "distractions",
+            "meaningVi": "Sự xao nhãng"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dung shares her <b>strategy</b>: she makes a clear <b>schedule</b> and always keeps a good <b>digital</b> <b>connection</b> for her online classes.",
+        "keywords": [
+          {
+            "key": "strategy",
+            "meaningVi": "Chiến lược"
+          },
+          {
+            "key": "schedule",
+            "meaningVi": "Lịch trình"
+          },
+          {
+            "key": "digital",
+            "meaningVi": "Kỹ thuật số"
+          },
+          {
+            "key": "connection",
+            "meaningVi": "Kết nối"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "They also enjoy <b>teamwork</b> projects, where they <b>exchange</b> ideas and come up with <b>original</b> solutions together.",
+        "keywords": [
+          {
+            "key": "teamwork",
+            "meaningVi": "Hoạt động nhóm, làm việc nhóm"
+          },
+          {
+            "key": "exchange",
+            "meaningVi": "Trao đổi"
+          },
+          {
+            "key": "original",
+            "meaningVi": "Sáng tạo, độc đáo"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u9",
@@ -1339,7 +1935,81 @@ const GRADE10_UNITS = [
         "Balance",
         "Environmental protection"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "In biology class, Dương and Dung learn about <b>biodiversity</b> and how every animal needs a safe <b>habitat</b> to survive.",
+        "keywords": [
+          {
+            "key": "biodiversity",
+            "meaningVi": "Đa dạng sinh học"
+          },
+          {
+            "key": "habitat",
+            "meaningVi": "Môi trường sống"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Their teacher explains that <b>climate change</b> is disturbing the <b>ecosystem</b>, and <b>deforestation</b> is destroying many forests.",
+        "keywords": [
+          {
+            "key": "climate change",
+            "meaningVi": "Sự thay đổi khí hậu, biến đổi khí hậu"
+          },
+          {
+            "key": "ecosystem",
+            "meaningVi": "Hệ sinh thái"
+          },
+          {
+            "key": "deforestation",
+            "meaningVi": "Nạn phá rừng"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "As a result, more <b>wildlife</b> species become <b>endangered</b> every year, which upsets the natural <b>balance</b> of nature.",
+        "keywords": [
+          {
+            "key": "wildlife",
+            "meaningVi": "Động vật hoang dã"
+          },
+          {
+            "key": "endangered",
+            "meaningVi": "Có nguy cơ tuyệt chủng"
+          },
+          {
+            "key": "balance",
+            "meaningVi": "Sự cân bằng"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Dung says the <b>consequence</b> of <b>global warming</b> and <b>pollution</b> is very serious, so <b>environmental protection</b> must start with small actions from everyone.",
+        "keywords": [
+          {
+            "key": "consequence",
+            "meaningVi": "Hậu quả"
+          },
+          {
+            "key": "global warming",
+            "meaningVi": "Sự nóng lên toàn cầu"
+          },
+          {
+            "key": "pollution",
+            "meaningVi": "Sự ô nhiễm"
+          },
+          {
+            "key": "environmental protection",
+            "meaningVi": "Bảo vệ môi trường"
+          }
+        ]
+      }
+    ]
   },
   {
     "id": "u10",
@@ -1488,6 +2158,80 @@ const GRADE10_UNITS = [
         "Sustainable tourism",
         "Profit"
       ]
-    }
+    },
+    "storyFrames": [
+      {
+        "image_url": "",
+        "content_html": "Dương and Dung plan a trip focused on <b>ecotourism</b>, hoping to <b>explore</b> nature responsibly.",
+        "keywords": [
+          {
+            "key": "ecotourism",
+            "meaningVi": "Du lịch sinh thái"
+          },
+          {
+            "key": "explore",
+            "meaningVi": "Khám phá"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "They choose a <b>responsible</b> tour company that promises to <b>protect</b> the local environment and respect <b>local</b> <b>culture</b>.",
+        "keywords": [
+          {
+            "key": "responsible",
+            "meaningVi": "Có trách nhiệm"
+          },
+          {
+            "key": "protect",
+            "meaningVi": "Bảo vệ"
+          },
+          {
+            "key": "local",
+            "meaningVi": "Tại địa phương"
+          },
+          {
+            "key": "culture",
+            "meaningVi": "Văn hóa"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "During the trip, they never <b>litter</b> on the <b>trail</b> and always follow the rules of <b>sustainable tourism</b>.",
+        "keywords": [
+          {
+            "key": "litter",
+            "meaningVi": "Xả rác"
+          },
+          {
+            "key": "trail",
+            "meaningVi": "Đường mòn"
+          },
+          {
+            "key": "sustainable tourism",
+            "meaningVi": "Du lịch bền vững"
+          }
+        ]
+      },
+      {
+        "image_url": "",
+        "content_html": "Before leaving, Dung buys a small <b>souvenir</b> from a local artisan, since the small <b>profit</b> helps the village directly, leaving a positive <b>impact</b> instead of harm.",
+        "keywords": [
+          {
+            "key": "souvenir",
+            "meaningVi": "Quà lưu niệm"
+          },
+          {
+            "key": "profit",
+            "meaningVi": "Lợi nhuận"
+          },
+          {
+            "key": "impact",
+            "meaningVi": "Tác động"
+          }
+        ]
+      }
+    ]
   }
 ];
