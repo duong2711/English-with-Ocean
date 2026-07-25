@@ -51,9 +51,14 @@
     /* Header height để tính offset */
     --header-h:       58px;   /* hàng 1: logo + logout */
     --tabbar-h:       42px;   /* hàng 2: tabs (mobile/tablet) */
-    --total-top:      calc(var(--header-h) + var(--tabbar-h)); /* tổng offset trên mobile */
+    --banner-h:       0px;    /* [MỚI] chiều cao thanh cảnh báo "đang xem tài khoản học viên" (giảng viên) — 0 khi không hiện */
+    --total-top:      calc(var(--header-h) + var(--tabbar-h) + var(--banner-h)); /* tổng offset trên mobile */
     --footer-h:       52px;
 }
+
+/* [MỚI] Khi giảng viên đang "xem như học viên", đẩy toàn bộ header + nội dung xuống
+   để nhường chỗ cho thanh cảnh báo cố định trên cùng */
+body.has-impersonation-banner { --banner-h: 40px; }
 
 /* =====================================================
    BASE
@@ -82,7 +87,7 @@ h3 { font-size:0.95rem; font-weight:600; color:var(--text); margin:0 0 8px; }
    ===================================================== */
 #site-header {
     position: fixed;
-    top: 0; left: 0; right: 0;
+    top: var(--banner-h); left: 0; right: 0;
     height: var(--header-h);
     background: var(--surface);
     border-bottom: 1px solid var(--border);
@@ -138,7 +143,7 @@ h3 { font-size:0.95rem; font-weight:600; color:var(--text); margin:0 0 8px; }
 /* Tab nav — mobile/tablet: hàng riêng ngay dưới header, scroll ngang */
 .header-tabs {
     position: fixed;
-    top: var(--header-h);
+    top: calc(var(--banner-h) + var(--header-h));
     left: 0; right: 0;
     height: var(--tabbar-h);
     background: var(--surface);
@@ -1033,6 +1038,51 @@ h3 { font-size:0.95rem; font-weight:600; color:var(--text); margin:0 0 8px; }
 .account-menu-item:hover { background: var(--surface-2); }
 .account-menu-item-danger { color: var(--danger-dark); }
 .account-menu-item-danger:hover { background: var(--danger-light, #fee2e2); }
+.account-menu-item-teacher { color: var(--primary-dark); }
+.account-menu-item-teacher:hover { background: var(--primary-light); }
+
+/* [MỚI] Thanh cảnh báo cố định trên cùng khi giảng viên đang "xem như học viên" */
+.impersonation-banner {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 40px;
+    z-index: 1000;
+    background: linear-gradient(135deg, var(--warning), #d97706);
+    color: #fff;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 0 12px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+    flex-wrap: nowrap;
+    text-align: center;
+}
+.impersonation-banner span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.impersonation-banner strong { font-weight: 800; }
+.impersonation-return-btn {
+    flex-shrink: 0;
+    padding: 6px 12px;
+    border-radius: 16px;
+    border: none;
+    background: rgba(255,255,255,0.92);
+    color: #92400e;
+    font-size: 0.76rem;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.impersonation-return-btn:hover { background: #fff; }
+@media (max-width: 599px) {
+    .impersonation-banner { font-size: 0.7rem; gap: 6px; }
+    .impersonation-banner span { max-width: 55vw; }
+}
 
 @media (min-width: 600px) {
     .account-trigger { display: flex; }
@@ -1911,11 +1961,36 @@ h3 { font-size:0.95rem; font-weight:600; color:var(--text); margin:0 0 8px; }
 }
 .folder-card:hover::after { transform: scaleX(1); }
 
+/* [MỚI] Badge số lượng bài kiểm tra chưa làm — hiện trên tab "Kiểm tra" và thẻ
+   "Bài kiểm tra riêng" khi giảng viên vừa giao bài mới cho học viên */
+.tab-badge-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 17px;
+    height: 17px;
+    padding: 0 4px;
+    margin-left: 6px;
+    border-radius: 999px;
+    background: var(--danger);
+    color: #fff;
+    font-size: 0.68rem;
+    font-weight: 800;
+    line-height: 1;
+    vertical-align: middle;
+}
+.tab-badge-count-corner {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    margin-left: 0;
+}
+
 /* =====================================================
    TABLET (≥ 600px)
    ===================================================== */
 @media (min-width: 600px) {
-    :root { --header-h: 62px; --tabbar-h: 44px; --total-top: calc(var(--header-h) + var(--tabbar-h)); }
+    :root { --header-h: 62px; --tabbar-h: 44px; --total-top: calc(var(--header-h) + var(--tabbar-h) + var(--banner-h)); }
     html { font-size: 15px; }
     body { padding: calc(var(--total-top) + 14px) 22px calc(var(--footer-h) + 18px); }
 
@@ -1938,7 +2013,7 @@ h3 { font-size:0.95rem; font-weight:600; color:var(--text); margin:0 0 8px; }
    LAPTOP / PC (≥ 900px) — 2 cột tab phiên âm
    ===================================================== */
 @media (min-width: 900px) {
-    :root { --header-h: 64px; --tabbar-h: 0px; --total-top: var(--header-h); }
+    :root { --header-h: 64px; --tabbar-h: 0px; --total-top: calc(var(--header-h) + var(--banner-h)); }
     html { font-size: 15.5px; }
     body { padding: calc(var(--total-top) + 18px) 30px calc(var(--footer-h) + 20px); }
 
@@ -1964,7 +2039,7 @@ h3 { font-size:0.95rem; font-weight:600; color:var(--text); margin:0 0 8px; }
         grid-template-areas: "chart-area guide-area";
         align-items: start;
         gap: 20px;
-        height: calc(100vh - var(--header-h) - var(--footer-h) - 36px);
+        height: calc(100vh - var(--header-h) - var(--footer-h) - var(--banner-h) - 36px);
     }
     .ipa-chart     { grid-area: chart-area; overflow-y: auto; height: 100%; }
     #guide-display { grid-area: guide-area; overflow-y: auto; height: 100%; padding: 20px; }

@@ -11,6 +11,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // ⚠️ Sửa danh sách này thành email thật của giảng viên (đúng email dùng để đăng nhập).
     // Nhớ cập nhật CÙNG danh sách này trong policy RLS ở Supabase (xem hướng dẫn SQL).
     const TEACHER_EMAILS = ['giangvien@gmail.com'];
+    // [MỚI] Edge Function xử lý việc giảng viên "xem như học viên" — cần triển khai trên
+    // Supabase (xem file "impersonate-student-edge-function.ts" + hướng dẫn đi kèm).
+    const IMPERSONATE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/impersonate-student`;
     const { createClient } = supabase;
     const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     // ------------------------------------------
@@ -58,10 +61,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const profileModalClose = document.getElementById('profile-modal-close');
     const profileDisplayNameInput = document.getElementById('profile-display-name-input');
     const profileAccountEmailDisplay = document.getElementById('profile-account-email-display');
-    const profileSaveBtn = document.getElementById('profile-save-btn');
     const profileSaveStatus = document.getElementById('profile-save-status');
     const profileAvatarChangeBtn = document.getElementById('profile-avatar-change-btn');
     const profileAvatarInput = document.getElementById('profile-avatar-input');
+
+    // [MỚI] Giảng viên "xem như học viên" — nút mở, banner cảnh báo cố định trên cùng
+    const teacherImpersonateBtn = document.getElementById('teacher-impersonate-btn');
+    const impersonationBanner = document.getElementById('impersonation-banner');
+    const impersonationTargetEmailEl = document.getElementById('impersonation-target-email');
+    const impersonationReturnBtn = document.getElementById('impersonation-return-btn');
 
     let currentUserId = null; 
     let currentEmail = ''; 
@@ -70,16 +78,38 @@ document.addEventListener('DOMContentLoaded', () => {
     let isTeacher = false; // true nếu email đăng nhập nằm trong TEACHER_EMAILS
     let holdTimer = null; // Thêm biến này
 
+    // [MỚI] true khi giảng viên đang "xem như học viên" (đã chuyển phiên đăng nhập sang tài
+    // khoản học viên) — dùng để: (1) hiện banner cảnh báo, (2) KHÔNG tính thời gian tự học
+    // cho học viên trong lúc này (xem startStudyTimeHeartbeat bên dưới).
+    let isImpersonating = false;
+    let impersonationTargetEmail = '';
+
     // --- [MỚI] THEO DÕI THỜI GIAN TỰ HỌC: gửi nhịp lên Supabase mỗi khi tab đang mở & đang
     // đăng nhập, để tính "thời gian học trung bình" hiển thị trong Thành tựu + bảng xếp hạng.
     // Bảng "study_time_log" + hàm "increment_study_time" cần được tạo trên Supabase trước
     // (xem file "profile_achievements_setup.sql" đi kèm).
     let studyTimeHeartbeatId = null;
     const STUDY_TIME_PING_SECONDS = 30; // mỗi 30 giây gửi 1 nhịp (chỉ khi tab đang hiển thị)
+
+    // [MỚI] THEO DÕI THAO TÁC CỦA HỌC VIÊN: nếu để màn hình quá 30 phút mà không di
+    // chuyển chuột / lướt / bấm thì tạm dừng tính thời gian học, cho tới khi có thao tác
+    // trở lại (ping tiếp theo sẽ tự tính lại bình thường, không cần làm gì thêm).
+    const STUDY_TIME_IDLE_LIMIT_MS = 30 * 60 * 1000; // 30 phút không thao tác = tạm dừng
+    let lastActivityAt = Date.now();
+    function markUserActivity() { lastActivityAt = Date.now(); }
+    ['mousemove', 'mousedown', 'keydown', 'wheel', 'scroll', 'touchstart', 'click'].forEach(evt => {
+        document.addEventListener(evt, markUserActivity, { passive: true });
+    });
+
     function startStudyTimeHeartbeat() {
+        lastActivityAt = Date.now(); // reset mốc hoạt động ngay khi bắt đầu phiên học mới
         if (studyTimeHeartbeatId) return; // đã chạy rồi, tránh chạy trùng
         studyTimeHeartbeatId = setInterval(async () => {
             if (!currentUserId || document.visibilityState !== 'visible') return; // chỉ tính khi đang thực sự xem trang
+            // [MỚI] Giảng viên đang xem như học viên -> không ghi nhận vào thời gian học của học viên
+            if (isImpersonating) return;
+            // [MỚI] Quá 30 phút không có thao tác gì (chuột/lướt/bấm) -> tạm dừng tính giờ
+            if (Date.now() - lastActivityAt > STUDY_TIME_IDLE_LIMIT_MS) return;
             try {
                 await sb.rpc('increment_study_time', { p_seconds: STUDY_TIME_PING_SECONDS });
             } catch (err) {
@@ -286,6 +316,12 @@ document.addEventListener('DOMContentLoaded', () => {
             currentUserId = user.id;
             currentEmail = user.email;
             isTeacher = TEACHER_EMAILS.includes((user.email || '').toLowerCase());
+            // [MỚI] Giảng viên không tham gia bảng xếp hạng — dọn luôn điểm cũ (nếu trót có
+            // từ trước) ngay khi đăng nhập, không cần đợi họ mở hồ sơ mới dọn.
+            if (isTeacher) {
+                sb.from('diligence_scores').delete().eq('user_id', user.id)
+                    .then(({ error }) => { if (error) console.error('Lỗi khi gỡ điểm chăm chỉ của giảng viên:', error.message); });
+            }
             authContainer.style.display = 'none';
             if (insideWrapper) insideWrapper.style.display = 'block';
             // [MỚI] Nạp tên hiển thị + ảnh đại diện từ user_metadata, hiện khu vực tài khoản
@@ -294,6 +330,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (accountArea) accountArea.style.display = 'flex';
             applyAccountIdentityToUI();
             authStatus.textContent = `Đã đăng nhập: ${user.email} (ID: ${user.id.substring(0, 8)}...)`;
+            // [MỚI] Chỉ giảng viên mới thấy mục "Xem tài khoản học viên" (và không thấy khi
+            // đang tự mình bị "xem" — trường hợp này không xảy ra vì isTeacher sẽ là false
+            // ngay khi phiên đăng nhập là của học viên đang bị xem).
+            if (teacherImpersonateBtn) teacherImpersonateBtn.style.display = isTeacher ? 'block' : 'none';
+            // [MỚI] Kiểm tra ngay xem có bài kiểm tra riêng nào chưa làm để hiện badge + thông báo
+            lastKnownUnfinishedCtestCount = null; // mỗi lần đăng nhập mới, tính lại từ đầu
+            refreshCtestBadge();
             
             // [CẬP NHẬT] Hiển thị Menu và xóa trạng thái ẩn của các Tab
             if (mainMenu) mainMenu.style.display = 'flex';
@@ -324,7 +367,16 @@ document.addEventListener('DOMContentLoaded', () => {
             currentDisplayName = '';
             currentAvatarUrl = '';
             isTeacher = false;
+            if (teacherImpersonateBtn) teacherImpersonateBtn.style.display = 'none';
+            // [MỚI] Không còn phiên đăng nhập nào -> chắc chắn không còn đang "xem như học viên"
+            isImpersonating = false;
+            impersonationTargetEmail = '';
+            clearImpersonationState();
+            hideImpersonationBanner();
             stopStudyTimeHeartbeat(); // [MỚI] ngừng tính thời gian tự học khi đăng xuất
+            // [MỚI] Không còn đăng nhập -> ẩn badge bài kiểm tra chưa làm, tính lại từ đầu lần sau
+            lastKnownUnfinishedCtestCount = null;
+            setCtestBadgeCount(0);
             authContainer.style.display = 'block';
             if (insideWrapper) insideWrapper.style.display = 'none';
             if (accountArea) accountArea.style.display = 'none';
@@ -490,35 +542,52 @@ document.addEventListener('DOMContentLoaded', () => {
     if (profileModalClose) profileModalClose.addEventListener('click', closeProfileModal);
     if (profileModal) profileModal.addEventListener('click', (e) => { if (e.target === profileModal) closeProfileModal(); });
 
-    // Lưu tên hiển thị (không ảnh hưởng đến email tài khoản đăng nhập)
-    if (profileSaveBtn) {
-        profileSaveBtn.addEventListener('click', async () => {
-            if (!currentUserId) return;
-            const newName = (profileDisplayNameInput.value || '').trim();
-            if (!newName) {
-                profileSaveStatus.textContent = 'Vui lòng nhập tên hiển thị.';
-                profileSaveStatus.className = 'profile-save-status error';
-                return;
-            }
-            if (newName.length > 40) {
-                profileSaveStatus.textContent = 'Tên hiển thị tối đa 40 ký tự.';
-                profileSaveStatus.className = 'profile-save-status error';
-                return;
-            }
-            profileSaveStatus.textContent = 'Đang lưu...';
+    // [MỚI] Tự động lưu tên hiển thị (không ảnh hưởng đến email tài khoản đăng nhập) — không
+    // còn nút "Lưu thay đổi" thủ công: lưu ngay sau khi học viên ngừng gõ khoảng 700ms, và
+    // lưu ngay lập tức nếu họ rời khỏi ô nhập (blur) trước khi hết thời gian chờ đó.
+    let profileNameAutosaveTimer = null;
+
+    async function saveProfileDisplayName(newName) {
+        if (!currentUserId) return;
+        if (!newName) {
+            profileSaveStatus.textContent = 'Vui lòng nhập tên hiển thị.';
+            profileSaveStatus.className = 'profile-save-status error';
+            return;
+        }
+        if (newName.length > 40) {
+            profileSaveStatus.textContent = 'Tên hiển thị tối đa 40 ký tự.';
+            profileSaveStatus.className = 'profile-save-status error';
+            return;
+        }
+        if (newName === currentDisplayName) return; // không có gì thay đổi thì thôi, khỏi gọi API
+        profileSaveStatus.textContent = 'Đang lưu...';
+        profileSaveStatus.className = 'profile-save-status';
+        try {
+            const { error } = await sb.auth.updateUser({ data: { display_name: newName } });
+            if (error) throw error;
+            currentDisplayName = newName;
+            applyAccountIdentityToUI();
+            profileSaveStatus.textContent = 'Đã lưu ✓';
+            profileSaveStatus.className = 'profile-save-status success';
+        } catch (err) {
+            console.error('Lỗi khi lưu tên hiển thị:', err);
+            profileSaveStatus.textContent = 'Lỗi khi lưu, vui lòng thử lại.';
+            profileSaveStatus.className = 'profile-save-status error';
+        }
+    }
+
+    if (profileDisplayNameInput) {
+        profileDisplayNameInput.addEventListener('input', () => {
+            profileSaveStatus.textContent = 'Đang gõ...';
             profileSaveStatus.className = 'profile-save-status';
-            try {
-                const { error } = await sb.auth.updateUser({ data: { display_name: newName } });
-                if (error) throw error;
-                currentDisplayName = newName;
-                applyAccountIdentityToUI();
-                profileSaveStatus.textContent = 'Đã lưu ✓';
-                profileSaveStatus.className = 'profile-save-status success';
-            } catch (err) {
-                console.error('Lỗi khi lưu tên hiển thị:', err);
-                profileSaveStatus.textContent = 'Lỗi khi lưu, vui lòng thử lại.';
-                profileSaveStatus.className = 'profile-save-status error';
-            }
+            clearTimeout(profileNameAutosaveTimer);
+            profileNameAutosaveTimer = setTimeout(() => {
+                saveProfileDisplayName((profileDisplayNameInput.value || '').trim());
+            }, 700);
+        });
+        profileDisplayNameInput.addEventListener('blur', () => {
+            clearTimeout(profileNameAutosaveTimer);
+            saveProfileDisplayName((profileDisplayNameInput.value || '').trim());
         });
     }
 
@@ -538,7 +607,24 @@ document.addEventListener('DOMContentLoaded', () => {
     async function renderProfileAchievements() {
         const listEl = document.getElementById('profile-achievements-list');
         const boardEl = document.getElementById('profile-leaderboard-list');
+        const achievementsSectionEl = document.getElementById('profile-achievements-section');
+        const leaderboardSectionEl = document.getElementById('profile-leaderboard-section');
         if (!listEl || !currentUserId) return;
+
+        // [MỚI] Giảng viên không cần "Thành tựu" hay tham gia "Bảng xếp hạng" — ẩn hẳn 2 khối
+        // này khi họ mở hồ sơ của chính mình (2 phần này chỉ dành cho học viên).
+        if (isTeacher) {
+            if (achievementsSectionEl) achievementsSectionEl.style.display = 'none';
+            if (leaderboardSectionEl) leaderboardSectionEl.style.display = 'none';
+            // Dọn luôn điểm cũ (nếu trót có từ trước, vd: tài khoản giảng viên từng học thử)
+            // để chắc chắn không còn xuất hiện ở bảng xếp hạng của học viên khác.
+            sb.from('diligence_scores').delete().eq('user_id', currentUserId)
+                .then(({ error }) => { if (error) console.error('Lỗi khi gỡ điểm chăm chỉ của giảng viên:', error.message); });
+            return;
+        }
+        if (achievementsSectionEl) achievementsSectionEl.style.display = '';
+        if (leaderboardSectionEl) leaderboardSectionEl.style.display = '';
+
         listEl.innerHTML = '<p class="profile-ach-loading">Đang tải...</p>';
         if (boardEl) boardEl.innerHTML = '<p class="profile-ach-loading">Đang tải...</p>';
 
@@ -703,7 +789,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // ----- Ghi điểm chăm chỉ của CHÍNH học viên này lên bảng dùng chung, để mọi
             // người có thể xếp hạng lẫn nhau (mỗi người chỉ được ghi đúng dòng của mình —
-            // xem chính sách RLS trong "profile_achievements_setup.sql") -----
+            // xem chính sách RLS trong "profile_achievements_setup.sql"). Giảng viên không
+            // bao giờ chạy tới đoạn này vì đã return sớm ở đầu hàm (xem phía trên). -----
             try {
                 const { error: eScore } = await sb.from('diligence_scores').upsert({
                     user_id: currentUserId,
@@ -924,6 +1011,192 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     // --- KẾT THÚC KHU VỰC TÀI KHOẢN ---
+
+    // --- [MỚI] GIẢNG VIÊN "XEM NHƯ HỌC VIÊN": chuyển hẳn phiên đăng nhập của trình duyệt
+    // sang tài khoản học viên (để xem đúng y hệt những gì học viên thấy, kể cả RLS), nhưng
+    // KHÔNG tính vào thời gian tự học của học viên đó (xem cờ isImpersonating ở heartbeat).
+    // Cần 1 Edge Function trên Supabase để cấp phiên đăng nhập học viên một cách an toàn
+    // (giữ service role key ở phía server, không lộ ra trình duyệt) — xem file
+    // "impersonate-student-edge-function.ts" + hướng dẫn triển khai đi kèm.
+    const IMPERSONATION_STORAGE_KEY = 'ldd_teacher_impersonation';
+
+    function saveImpersonationState(teacherSession, targetEmail) {
+        try {
+            sessionStorage.setItem(IMPERSONATION_STORAGE_KEY, JSON.stringify({ teacherSession, targetEmail }));
+        } catch (e) { /* sessionStorage có thể bị chặn - bỏ qua, mất khả năng "quay lại" tự động */ }
+    }
+    function loadImpersonationState() {
+        try {
+            const raw = sessionStorage.getItem(IMPERSONATION_STORAGE_KEY);
+            return raw ? JSON.parse(raw) : null;
+        } catch (e) { return null; }
+    }
+    function clearImpersonationState() {
+        try { sessionStorage.removeItem(IMPERSONATION_STORAGE_KEY); } catch (e) { /* bỏ qua */ }
+    }
+    function showImpersonationBanner(email) {
+        if (impersonationTargetEmailEl) impersonationTargetEmailEl.textContent = email;
+        if (impersonationBanner) impersonationBanner.style.display = 'flex';
+        document.body.classList.add('has-impersonation-banner');
+    }
+    function hideImpersonationBanner() {
+        if (impersonationBanner) impersonationBanner.style.display = 'none';
+        document.body.classList.remove('has-impersonation-banner');
+    }
+
+    async function startImpersonation(rawEmail) {
+        const targetEmail = (rawEmail || '').trim().toLowerCase();
+        if (!targetEmail) return;
+        if (!isTeacher) { alert('Chỉ giảng viên mới dùng được chức năng này.'); return; }
+        if (targetEmail === (currentEmail || '').toLowerCase()) { alert('Đây đã là tài khoản đang đăng nhập.'); return; }
+        try {
+            const { data: sessionData } = await sb.auth.getSession();
+            const session = sessionData && sessionData.session;
+            if (!session) { alert('Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.'); return; }
+
+            const resp = await fetch(IMPERSONATE_FUNCTION_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`,
+                    'apikey': SUPABASE_ANON_KEY
+                },
+                body: JSON.stringify({ targetEmail })
+            });
+            const result = await resp.json().catch(() => ({}));
+            if (!resp.ok) {
+                alert('Không thể chuyển sang tài khoản này: ' + (result.error || 'Vui lòng kiểm tra lại email học viên.'));
+                return;
+            }
+
+            // Lưu lại phiên của giảng viên TRƯỚC khi đổi, để còn đường quay lại
+            const teacherSessionBackup = {
+                access_token: session.access_token,
+                refresh_token: session.refresh_token
+            };
+
+            // [SỬA] hashed_token từ generateLink phải xác thực bằng "token_hash", KHÔNG phải
+            // cặp "email"+"token" (cặp đó chỉ dùng cho mã OTP 6 số) — dùng sai sẽ luôn báo
+            // "Token has expired or is invalid" dù token còn mới nguyên.
+            const { error: otpErr } = await sb.auth.verifyOtp({ token_hash: result.token, type: 'magiclink' });
+            if (otpErr) { alert('Không thể đăng nhập vào tài khoản học viên: ' + otpErr.message); return; }
+
+            isImpersonating = true;
+            impersonationTargetEmail = result.email;
+            saveImpersonationState(teacherSessionBackup, result.email);
+            showImpersonationBanner(result.email);
+        } catch (err) {
+            console.error('Lỗi khi chuyển sang tài khoản học viên:', err);
+            alert('Có lỗi xảy ra, vui lòng thử lại. (' + (err.message || '') + ')');
+        }
+    }
+
+    async function returnFromImpersonation() {
+        const state = loadImpersonationState();
+        if (!state || !state.teacherSession) {
+            // Không còn thông tin phiên giảng viên (vd: mở tab mới) -> chỉ còn cách đăng xuất
+            isImpersonating = false;
+            impersonationTargetEmail = '';
+            clearImpersonationState();
+            hideImpersonationBanner();
+            await sb.auth.signOut();
+            return;
+        }
+        try {
+            const { error } = await sb.auth.setSession({
+                access_token: state.teacherSession.access_token,
+                refresh_token: state.teacherSession.refresh_token
+            });
+            if (error) throw error;
+        } catch (err) {
+            console.error('Lỗi khi khôi phục phiên giảng viên, cần đăng nhập lại:', err);
+            alert('Không thể tự động khôi phục phiên giảng viên (có thể đã hết hạn). Vui lòng đăng nhập lại.');
+            await sb.auth.signOut();
+        } finally {
+            isImpersonating = false;
+            impersonationTargetEmail = '';
+            clearImpersonationState();
+            hideImpersonationBanner();
+        }
+    }
+
+    if (teacherImpersonateBtn) {
+        teacherImpersonateBtn.addEventListener('click', () => {
+            closeAccountMenu();
+            const email = prompt('Nhập email học viên muốn xem (tài khoản phải đã tồn tại trên hệ thống):');
+            if (email) startImpersonation(email);
+        });
+    }
+    if (impersonationReturnBtn) impersonationReturnBtn.addEventListener('click', returnFromImpersonation);
+
+    // Nếu trang được tải lại trong lúc đang "xem như học viên" (sessionStorage vẫn còn),
+    // khôi phục lại banner ngay lập tức (phiên đăng nhập học viên tự Supabase khôi phục qua
+    // onAuthStateChange như bình thường, chỉ cần khôi phục cờ + banner ở đây).
+    (function restoreImpersonationOnLoad() {
+        const state = loadImpersonationState();
+        if (state && state.targetEmail) {
+            isImpersonating = true;
+            impersonationTargetEmail = state.targetEmail;
+            showImpersonationBanner(state.targetEmail);
+        }
+    })();
+    // --- KẾT THÚC PHẦN "XEM NHƯ HỌC VIÊN" ---
+
+    // --- [MỚI] BADGE + THÔNG BÁO "BÀI KIỂM TRA CHƯA LÀM" ---
+    // Khi giảng viên giao (publish) 1 bài kiểm tra riêng cho học viên, học viên sẽ thấy:
+    // 1) Số bài chưa làm hiện thành 1 chấm đỏ trên tab "Kiểm tra" và thẻ "Bài kiểm tra riêng".
+    // 2) 1 thông báo (toast) nếu đây là lần đầu tính trong phiên này mà có bài chưa làm,
+    //    hoặc nếu số bài chưa làm tăng lên so với lần kiểm tra gần nhất (tức vừa có bài mới).
+    const kiemtraTabBadgeEl  = document.getElementById('kiemtra-tab-badge');
+    const ctestFolderBadgeEl = document.getElementById('ctest-folder-badge');
+    let lastKnownUnfinishedCtestCount = null; // null = chưa tính lần nào trong phiên này
+
+    function setCtestBadgeCount(n) {
+        [kiemtraTabBadgeEl, ctestFolderBadgeEl].forEach(el => {
+            if (!el) return;
+            if (n > 0) { el.textContent = n > 99 ? '99+' : String(n); el.style.display = 'inline-flex'; }
+            else { el.style.display = 'none'; }
+        });
+    }
+
+    async function refreshCtestBadge(opts) {
+        const notify = !opts || opts.notify !== false;
+        if (!currentUserId || isTeacher || isImpersonating) { setCtestBadgeCount(0); return; }
+        try {
+            const { data: tests, error } = await sb.from('custom_tests')
+                .select('id').eq('status', 'published').contains('student_emails', [currentEmail]);
+            if (error) throw error;
+            let unfinished = 0;
+            if (tests && tests.length) {
+                const testIds = tests.map(t => t.id);
+                const { data: subs, error: e2 } = await sb.from('custom_test_submissions')
+                    .select('test_id, status').eq('student_email', currentEmail).in('test_id', testIds);
+                if (e2) throw e2;
+                const submittedIds = new Set((subs || []).filter(s => s.status === 'submitted').map(s => s.test_id));
+                unfinished = testIds.filter(id => !submittedIds.has(id)).length;
+            }
+            setCtestBadgeCount(unfinished);
+            if (notify && window.vocabTap && window.vocabTap.toast) {
+                if (lastKnownUnfinishedCtestCount === null && unfinished > 0) {
+                    window.vocabTap.toast('📝 Bạn có ' + unfinished + ' bài kiểm tra chưa làm.', 'info');
+                } else if (lastKnownUnfinishedCtestCount !== null && unfinished > lastKnownUnfinishedCtestCount) {
+                    window.vocabTap.toast('📝 Bạn vừa được giao bài kiểm tra mới!', 'info');
+                }
+            }
+            lastKnownUnfinishedCtestCount = unfinished;
+        } catch (err) {
+            console.error('Lỗi khi kiểm tra số bài kiểm tra chưa làm:', err.message);
+        }
+    }
+    window.refreshCtestBadge = refreshCtestBadge; // để module "Bài kiểm tra riêng" gọi lại sau khi nộp bài / mở danh sách
+
+    // Kiểm tra định kỳ (mỗi 90 giây) để phát hiện bài mới được giao trong lúc đang dùng web,
+    // không cần tải lại trang hay bấm vào tab Kiểm tra.
+    setInterval(() => {
+        if (currentUserId && !isTeacher && !isImpersonating && document.visibilityState === 'visible') {
+            refreshCtestBadge();
+        }
+    }, 90 * 1000);
 
 
     // [HÀM VIDEO CŨ] 
@@ -10366,6 +10639,10 @@ function toggleCompletion(symbolElement) {
             });
         } catch (err) {
             listContainer.innerHTML = '<p class="ctest-empty-msg">❌ Lỗi tải danh sách: ' + ctestEscape(err.message) + '</p>';
+        } finally {
+            // [MỚI] Học viên vừa xem qua danh sách -> đồng bộ lại badge số bài chưa làm
+            // (không cần toast thông báo vì họ đang nhìn thấy danh sách ngay trước mắt)
+            refreshCtestBadge({ notify: false });
         }
     }
 
@@ -11143,6 +11420,7 @@ function toggleCompletion(symbolElement) {
             if (!auto) { alert('Nộp bài thất bại: ' + err.message); return; }
         }
         ctestTeardownAntiCheat();
+        refreshCtestBadge({ notify: false }); // [MỚI] vừa nộp xong -> cập nhật lại số bài chưa làm
         openResultView(currentTest, currentSubmission);
     }
 

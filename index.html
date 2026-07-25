@@ -10,6 +10,12 @@
     </head>
     <body>
 
+    <!-- ===== BANNER: GIẢNG VIÊN ĐANG XEM TÀI KHOẢN HỌC VIÊN (không tính thời gian học) ===== -->
+    <div id="impersonation-banner" class="impersonation-banner">
+        <span>🔎 Đang xem như học viên: <strong id="impersonation-target-email"></strong> — không tính vào thời gian học của học viên</span>
+        <button type="button" id="impersonation-return-btn" class="impersonation-return-btn">↩ Quay lại tài khoản giảng viên</button>
+    </div>
+
     <!-- ===== HEADER CỐ ĐỊNH ===== -->
     <header id="site-header">
         <a class="header-logo" href="https://duong2711.github.io/Duong-s-portfolio/">
@@ -58,7 +64,7 @@
                 </div>
             </div>
 
-            <button class="header-tab-btn main-tab-btn" data-main-target="tab-kiem-tra">Kiểm tra</button>
+            <button class="header-tab-btn main-tab-btn" data-main-target="tab-kiem-tra">Kiểm tra<span id="kiemtra-tab-badge" class="tab-badge-count" style="display:none;">0</span></button>
             <button class="header-tab-btn main-tab-btn" data-main-target="tab-giai-tri">Giải trí</button>
         </nav>
 
@@ -85,6 +91,7 @@
                     <span id="account-display-name-menu" class="account-name"></span>
                 </div>
                 <button type="button" id="open-profile-btn" class="account-menu-item">👤 Hồ sơ</button>
+                <button type="button" id="teacher-impersonate-btn" class="account-menu-item account-menu-item-teacher" style="display:none;">🔎 Xem tài khoản học viên</button>
                 <button type="button" class="account-menu-item main-tab-btn" data-main-target="tab-lich-hoc">🗓️ Lịch học</button>
                 <button type="button" class="account-menu-item main-tab-btn" data-main-target="tab-huong-dan">📖 Hướng dẫn</button>
                 <button type="button" id="logout-btn" class="account-menu-item account-menu-item-danger">⏻ Đăng xuất</button>
@@ -576,7 +583,7 @@
             <div class="folder-card">📁 đề thi lớp 6->12</div>
             <div class="folder-card">📁 đề thi chuyển cấp THCS/THPT</div>
             <div class="folder-card">📁 đề minh họa IELTS</div>
-            <div class="folder-card" id="ctest-folder-card">📝 Bài kiểm tra riêng</div>
+            <div class="folder-card" id="ctest-folder-card">📝 Bài kiểm tra riêng<span id="ctest-folder-badge" class="tab-badge-count tab-badge-count-corner" style="display:none;">0</span></div>
         </div>
 
         <!-- ============================================================
@@ -6031,14 +6038,14 @@
                 <div id="profile-account-email-display" class="profile-readonly"></div>
             </div>
 
-            <div class="profile-achievements">
+            <div class="profile-achievements" id="profile-achievements-section">
                 <h4>Thành tựu</h4>
                 <div id="profile-achievements-list" class="profile-achievements-list">
                     <p class="profile-ach-loading">Đang tải...</p>
                 </div>
             </div>
 
-            <div class="profile-leaderboard">
+            <div class="profile-leaderboard" id="profile-leaderboard-section">
                 <h4>🔥 Bảng xếp hạng học viên chăm chỉ</h4>
                 <div id="profile-leaderboard-list" class="profile-leaderboard-list">
                     <p class="profile-ach-loading">Đang tải...</p>
@@ -6046,7 +6053,6 @@
             </div>
 
             <div class="profile-modal-actions">
-                <button type="button" id="profile-save-btn" class="profile-btn-primary">Lưu thay đổi</button>
                 <span id="profile-save-status" class="profile-save-status"></span>
             </div>
         </div>
