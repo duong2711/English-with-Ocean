@@ -1433,6 +1433,10 @@ document.addEventListener('DOMContentLoaded', () => {
             // [MỚI] Dừng mọi audio/video (ghi âm, YouTube, Vimeo) trước khi chuyển sang tab khác
             pauseAllMedia();
 
+            // [MỚI] Đang làm dở phần "Dịch câu" (THCS/THPT) mà chuyển sang tab chính khác của
+            // trang -> coi như bỏ dở, phải làm lại từ câu đầu tiên khi quay lại.
+            if (typeof window.thcsResetTranslateIfMidProgress === 'function') window.thcsResetTranslateIfMidProgress();
+
             // Xóa class active của tất cả các nút và nội dung
             mainTabBtns.forEach(b => b.classList.remove('active'));
             mainTabContents.forEach(c => c.classList.remove('active'));
@@ -1457,6 +1461,32 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
     // --- KẾT THÚC LOGIC CHUYỂN MAIN TABS ---
+
+    // [MỚI] Học viên chuyển sang TAB TRÌNH DUYỆT KHÁC (hoặc thu nhỏ cửa sổ, chuyển sang ứng
+    // dụng khác) trong lúc đang làm dở phần "Dịch câu" (THCS/THPT) — cũng coi như bỏ dở giữa
+    // chừng, phải làm lại từ câu đầu tiên khi quay lại, giống hệt khi chuyển tab/subtab trong
+    // chính trang này. Dùng Page Visibility API (document.hidden) vì đây là cách chuẩn và đáng
+    // tin cậy nhất để phát hiện việc rời khỏi tab trình duyệt hiện tại.
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden && typeof window.thcsResetTranslateIfMidProgress === 'function') {
+            window.thcsResetTranslateIfMidProgress();
+        }
+    });
+
+    // [SỬA LỖI] Chỉ dùng "visibilitychange" là CHƯA ĐỦ để chống gian lận: document.hidden chỉ
+    // chuyển sang true khi học viên chuyển TAB khác hoặc THU NHỎ cửa sổ. Nếu học viên mở một
+    // CỬA SỔ TRÌNH DUYỆT KHÁC (vd: mở Google Dịch ở cửa sổ riêng, đặt cạnh nhau hoặc đè lên
+    // cửa sổ đang làm bài) thì trang web của mình vẫn đang hiển thị trên màn hình (không
+    // "hidden"), nên visibilitychange sẽ KHÔNG bắt được — học viên gian lận mà phần Dịch câu
+    // không bị reset. Bắt thêm sự kiện "blur" của window (cửa sổ mất focus) để bao quát đúng
+    // trường hợp này; window blur xảy ra bất kể cửa sổ có còn hiển thị hay không, miễn là
+    // không còn là cửa sổ đang được thao tác.
+    window.addEventListener('blur', () => {
+        if (typeof window.thcsResetTranslateIfMidProgress === 'function') {
+            window.thcsResetTranslateIfMidProgress();
+        }
+    });
+
     // --- LOGIC HOÀN THÀNH KÝ TỰ ---
     
 async function loadCompletionStatus(user) {
@@ -7737,12 +7767,15 @@ function toggleCompletion(symbolElement) {
         // ----- TIẾN ĐỘ HOÀN THÀNH UNIT (lưu trên Supabase, bảng "thcs_unit_progress") -----
         // Một Unit được coi là HOÀN THÀNH khi học viên đã:
         //   1) Xem qua hết toàn bộ Flashcard của Unit đó, VÀ
-        //   2) Làm đúng hết tất cả các câu ở mục "Dịch câu" theo đúng thứ tự (không sai câu nào).
+        //   2) Làm đúng hết tất cả các câu ở mục "Dịch câu" theo đúng thứ tự (không sai câu nào), VÀ
+        //   3) Mở hết toàn bộ các khung ở mục "Câu chuyện" (điền đúng từ khóa để mở hết ảnh).
         // Khi hoàn thành 1 Unit: folder Unit đó chuyển nền sang xanh lá, và Unit kế tiếp
         // được mở khóa. Mặc định chỉ Unit 1 của mỗi khối lớp được mở khóa sẵn.
-        // (Xem file "thcs_progress_setup.sql" đi kèm để tạo bảng trên Supabase.)
+        // (Xem file "thcs_progress_setup.sql" đi kèm để tạo bảng trên Supabase — cần bổ sung
+        // thêm cột "story_done boolean default false" vào bảng "thcs_unit_progress" nếu bảng
+        // đã được tạo từ trước khi có điều kiện thứ 3 này.)
         // ===================================================================
-        let thcsProgressMap = {};             // "grade::unitId" -> {flashcard_done, translate_done, completed}
+        let thcsProgressMap = {};             // "grade::unitId" -> {flashcard_done, translate_done, story_done, completed}
         let thcsProgressLoadedForUser = null; // userId đã tải xong — tránh gọi Supabase lặp lại
 
         function thcsProgressKey(gradeNum, unitId) {
@@ -7754,7 +7787,7 @@ function toggleCompletion(symbolElement) {
             try {
                 const { data, error } = await sb
                     .from('thcs_unit_progress')
-                    .select('grade, unit_id, flashcard_done, translate_done, completed')
+                    .select('grade, unit_id, flashcard_done, translate_done, story_done, completed')
                     .eq('user_id', currentUserId);
                 if (error) throw error;
                 thcsProgressMap = {};
@@ -7776,7 +7809,7 @@ function toggleCompletion(symbolElement) {
         }
 
         function thcsGetProgress(gradeNum, unitId) {
-            return thcsProgressMap[thcsProgressKey(gradeNum, unitId)] || { flashcard_done: false, translate_done: false, completed: false };
+            return thcsProgressMap[thcsProgressKey(gradeNum, unitId)] || { flashcard_done: false, translate_done: false, story_done: false, completed: false };
         }
 
         // Lưu (upsert) tiến độ của 1 Unit — patch chỉ chứa các cờ cần cập nhật.
@@ -7784,9 +7817,9 @@ function toggleCompletion(symbolElement) {
         async function thcsSaveProgress(gradeNum, unitId, patch) {
             if (!gradeNum || !unitId) return null;
             const key = thcsProgressKey(gradeNum, unitId);
-            const existing = thcsProgressMap[key] || { flashcard_done: false, translate_done: false, completed: false };
+            const existing = thcsProgressMap[key] || { flashcard_done: false, translate_done: false, story_done: false, completed: false };
             const merged = Object.assign({}, existing, patch);
-            merged.completed = !!(merged.flashcard_done && merged.translate_done);
+            merged.completed = !!(merged.flashcard_done && merged.translate_done && merged.story_done);
             thcsProgressMap[key] = merged; // cập nhật cache ngay để UI phản hồi tức thì
 
             if (!currentUserId) return merged; // chưa đăng nhập: chỉ giữ tạm trong phiên này
@@ -7798,6 +7831,7 @@ function toggleCompletion(symbolElement) {
                     unit_id: unitId,
                     flashcard_done: merged.flashcard_done,
                     translate_done: merged.translate_done,
+                    story_done: merged.story_done,
                     completed: merged.completed,
                     updated_at: new Date().toISOString()
                 };
@@ -7830,6 +7864,23 @@ function toggleCompletion(symbolElement) {
             if (window.vocabTap && window.vocabTap.toast) {
                 window.vocabTap.toast('⚠️ Đăng nhập để lưu tiến độ hoàn thành Unit của bạn.', 'info');
             }
+        }
+
+        // Tô nền xanh lá (class "phase-completed", dùng chung CSS với phần "Cho bé") cho từng
+        // nút subtab (Flashcard / Dịch câu / Câu chuyện) ngay khi phần đó được hoàn thành —
+        // không cần đợi hoàn thành cả Unit mới thấy dấu hiệu trực quan.
+        function thcsUpdateSubtabIndicators(unit) {
+            if (!thcsSubtabs || !unit) return;
+            const progress = thcsGetProgress(currentGradeNum, unit.id);
+            const doneMap = {
+                flashcard: progress.flashcard_done,
+                translate: progress.translate_done,
+                story: progress.story_done
+            };
+            Object.keys(doneMap).forEach(sub => {
+                const btn = thcsSubtabs.querySelector(`[data-sub="${sub}"]`);
+                if (btn) btn.classList.toggle('phase-completed', !!doneMap[sub]);
+            });
         }
 
         // ---------- Tiện ích dùng chung ----------
@@ -7971,6 +8022,7 @@ function toggleCompletion(symbolElement) {
 
         thcsUnitBackBtn.addEventListener('click', () => {
             thcsPauseGame();
+            thcsResetTranslateIfMidProgress(); // rời cả Unit giữa chừng khi đang dịch câu -> làm lại từ đầu
             thcsUnitPanel.style.display = 'none';
             thcsGrade6Panel.style.display = 'block';
             renderUnitGrid(); // làm mới trạng thái khóa/hoàn thành sau khi có thể vừa hoàn thành 1 Unit
@@ -8009,6 +8061,7 @@ function toggleCompletion(symbolElement) {
             }
 
             await thcsEnsureProgressLoaded();
+            thcsUpdateSubtabIndicators(unit);
             if (window.vocabTap && window.vocabTap.ensureLoaded) {
                 try { await window.vocabTap.ensureLoaded(); } catch (e) { console.error('Lỗi khi tải từ vựng cá nhân:', e.message); }
             }
@@ -8031,6 +8084,14 @@ function toggleCompletion(symbolElement) {
             const btn = e.target.closest('.kid-subtab-btn');
             if (!btn) return;
             if (btn.dataset.sub !== 'game') thcsPauseGame();
+
+            // Đang ở subtab "Dịch câu" mà chuyển sang subtab khác -> làm dở thì phải làm lại từ đầu
+            const prevActiveBtn = thcsSubtabs.querySelector('.kid-subtab-btn.active');
+            const prevSub = prevActiveBtn ? prevActiveBtn.dataset.sub : null;
+            if (prevSub === 'translate' && btn.dataset.sub !== 'translate') {
+                thcsResetTranslateIfMidProgress();
+            }
+
             thcsSubtabs.querySelectorAll('.kid-subtab-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             thcsUnitPanel.querySelectorAll('.kid-sub-content').forEach(el => el.style.display = 'none');
@@ -8106,6 +8167,7 @@ function toggleCompletion(symbolElement) {
             const already = thcsGetProgress(currentGradeNum, currentUnit.id).flashcard_done;
             if (already) return; // đã ghi nhận rồi, không cần lưu lại
             const merged = await thcsSaveProgress(currentGradeNum, currentUnit.id, { flashcard_done: true });
+            thcsUpdateSubtabIndicators(currentUnit);
             if (merged && merged.completed) {
                 thcsNotifyUnitCompleted();
             } else if (!currentUserId) {
@@ -8142,6 +8204,29 @@ function toggleCompletion(symbolElement) {
             thcsTranslateBusy = false;
             thcsRenderTranslate();
         }
+
+        // Nếu học viên đang làm dở phần Dịch câu (đã qua khỏi câu đầu tiên nhưng chưa làm
+        // xong hết) mà chuyển sang subtab khác (Flashcard/Câu chuyện/Trò chơi), chuyển Unit
+        // khác, hoặc chuyển sang tab chính khác của trang — coi như bỏ dở giữa chừng, phải
+        // làm lại từ câu đầu tiên (giống hệt như khi trả lời sai 1 câu), kèm thông báo cho
+        // học viên biết vì sao tiến độ bị đặt lại.
+        function thcsResetTranslateIfMidProgress() {
+            if (trIndex <= 0 || !trWords.length) return; // chưa bắt đầu hoặc đang ở câu đầu -> không cần reset
+            trIndex = 0;
+            thcsTranslateBusy = false;
+            thcsRenderTranslate();
+            if (window.vocabTap && window.vocabTap.toast) {
+                window.vocabTap.toast('↩️ Bạn đã rời khỏi phần Dịch câu giữa chừng nên phải làm lại từ câu đầu tiên.', 'info');
+            }
+        }
+        // [SỬA LỖI] Hàm này được khai báo private bên trong IIFE của module THCS/THPT, nên các
+        // đoạn code nằm NGOÀI IIFE này (vd: listener bắt "đổi tab trình duyệt"/"đổi cửa sổ" đặt
+        // ở phần đầu file, xem gần dòng document.addEventListener('visibilitychange'...) và
+        // window.addEventListener('blur'...)) không thể nhìn thấy/gọi được hàm — dù có kiểm tra
+        // "typeof thcsResetTranslateIfMidProgress === 'function'" thì vẫn luôn ra false một
+        // cách âm thầm (không báo lỗi gì), nên tính năng reset khi mở tab/cửa sổ khác bị vô
+        // hiệu hoàn toàn dù code trông như đã viết đúng. Gắn ra window để dùng chung được.
+        window.thcsResetTranslateIfMidProgress = thcsResetTranslateIfMidProgress;
 
         function thcsNormalize(s) {
             return String(s || '')
@@ -8287,6 +8372,7 @@ function toggleCompletion(symbolElement) {
         async function thcsHandleTranslateCompleted() {
             if (!currentUnit) return;
             const merged = await thcsSaveProgress(currentGradeNum, currentUnit.id, { translate_done: true });
+            thcsUpdateSubtabIndicators(currentUnit);
             if (merged && merged.completed) {
                 thcsNotifyUnitCompleted();
             } else if (!currentUserId) {
@@ -8309,6 +8395,12 @@ function toggleCompletion(symbolElement) {
         const thcsStoryFramesEl       = document.getElementById('thcs-story-frames');
         const thcsStoryEditorEl       = document.getElementById('thcs-story-editor');
         const thcsStoryEditorFramesEl = document.getElementById('thcs-story-editor-frames');
+        const thcsStoryEditorSaveAllBtn    = document.getElementById('thcs-story-editor-save-all-btn');
+        const thcsStoryEditorSaveAllStatus = document.getElementById('thcs-story-editor-save-all-status');
+
+        // Unit đang mở + dữ liệu khung truyện đã tải (dùng bởi nút "Lưu tất cả khung truyện" gộp chung)
+        let thcsStoryEditorUnit       = null;
+        let thcsStoryEditorFramesData = [];
 
         // ----- CRUD nội dung khung truyện (chỉ giảng viên được ghi, chặn cả UI lẫn RLS) -----
         async function loadStoryFrames(gradeNum, unitId) {
@@ -8378,6 +8470,7 @@ function toggleCompletion(symbolElement) {
 
         // ----- Tiến độ MỞ khung ảnh của từng học viên -----
         let thcsFrameProgressMap = {}; // "grade::unitId::frameIndex" -> true/false
+        let thcsCurrentStoryFrameIndexes = []; // frame_index của tất cả khung truyện thuộc Unit đang mở
 
         function thcsFrameProgressKey(gradeNum, unitId, frameIndex) {
             return gradeNum + '::' + unitId + '::' + frameIndex;
@@ -8546,9 +8639,39 @@ function toggleCompletion(symbolElement) {
                 if (checkBtn) checkBtn.style.display = 'none';
                 if (feedback) { feedback.className = 'thcs-story-frame-feedback is-correct'; feedback.innerHTML = '✅ Chính xác! Ảnh đã được mở.'; }
                 thcsSaveFrameProgress(currentGradeNum, currentUnit.id, frameIndex);
+                thcsCheckStoryAllFramesCompleted(); // vừa mở xong 1 khung -> kiểm tra xem đã mở hết cả Unit chưa
             } else {
                 thcsPlayWrongSound();
                 if (feedback) { feedback.className = 'thcs-story-frame-feedback is-wrong'; feedback.innerHTML = '❌ Còn chỗ trống chưa đúng (đang tô đỏ), thử lại nhé!'; }
+            }
+        }
+
+        // Được gọi khi học viên vừa mở đúng 1 khung truyện, và cả khi mới mở lại tab Câu chuyện
+        // (để ghi nhận cho những học viên đã mở hết khung từ trước). Nếu Unit hoàn toàn chưa có
+        // khung truyện nào (giảng viên chưa soạn), coi như điều kiện này tạm được miễn để không
+        // chặn học viên hoàn thành Unit.
+        async function thcsCheckStoryAllFramesCompleted() {
+            if (!currentUnit) return;
+            if (!thcsCurrentStoryFrameIndexes.length) {
+                await thcsHandleStoryCompleted();
+                return;
+            }
+            const allUnlocked = thcsCurrentStoryFrameIndexes.every(
+                idx => thcsIsFrameUnlocked(currentGradeNum, currentUnit.id, idx)
+            );
+            if (allUnlocked) await thcsHandleStoryCompleted();
+        }
+
+        async function thcsHandleStoryCompleted() {
+            if (!currentUnit) return;
+            const already = thcsGetProgress(currentGradeNum, currentUnit.id).story_done;
+            if (already) return; // đã ghi nhận rồi, không cần lưu lại
+            const merged = await thcsSaveProgress(currentGradeNum, currentUnit.id, { story_done: true });
+            thcsUpdateSubtabIndicators(currentUnit);
+            if (merged && merged.completed) {
+                thcsNotifyUnitCompleted();
+            } else if (!currentUserId) {
+                thcsNotifyLoginToSave();
             }
         }
 
@@ -8610,9 +8733,15 @@ function toggleCompletion(symbolElement) {
             if (!isTeacher) { thcsStoryEditorEl.style.display = 'none'; return; }
             thcsStoryEditorEl.style.display = 'block';
             thcsStoryEditorFramesEl.innerHTML = '';
+            if (thcsStoryEditorSaveAllStatus) thcsStoryEditorSaveAllStatus.textContent = '';
 
             const frameByIndex = {};
             frames.forEach(f => { frameByIndex[f.frame_index] = f; });
+
+            // Ghi nhớ unit + dữ liệu khung hiện tại để nút "Lưu tất cả khung truyện" (gộp chung,
+            // đăng ký sự kiện 1 lần bên dưới) luôn thao tác đúng trên Unit đang mở.
+            thcsStoryEditorUnit = unit;
+            thcsStoryEditorFramesData = frames;
 
             for (let i = 1; i <= 4; i++) {
                 const frame = frameByIndex[i] || null;
@@ -8632,7 +8761,6 @@ function toggleCompletion(symbolElement) {
                     <div class="thcs-story-editor-content news-editable" contenteditable="true" data-placeholder="Nhập đoạn văn tiếng Anh, bôi đen từ khóa rồi bấm 'In đậm'...">${frame ? frame.content_html : ''}</div>
                     <div class="thcs-story-editor-keywords"></div>
                     <div class="thcs-story-editor-actions">
-                        <button type="button" class="kid-btn kid-btn-primary thcs-story-editor-save-btn">💾 Lưu Khung ${i}</button>
                         ${frame ? `<button type="button" class="kid-btn thcs-story-editor-delete-btn">🗑️ Xóa Khung ${i}</button>` : ''}
                         <span class="thcs-story-editor-status"></span>
                     </div>
@@ -8642,7 +8770,6 @@ function toggleCompletion(symbolElement) {
                 const contentEl = card.querySelector('.thcs-story-editor-content');
                 const imageInput = card.querySelector('.thcs-story-editor-image-input');
                 const preview = card.querySelector('.thcs-story-editor-preview');
-                const statusEl = card.querySelector('.thcs-story-editor-status');
 
                 thcsRenderKeywordInputs(card, contentEl, frame ? frame.keywords : []);
 
@@ -8657,37 +8784,6 @@ function toggleCompletion(symbolElement) {
                     contentEl.focus();
                     document.execCommand('bold');
                     contentEl.dispatchEvent(new Event('input'));
-                });
-
-                card.querySelector('.thcs-story-editor-save-btn').addEventListener('click', async () => {
-                    const imageUrl = imageInput.value.trim();
-                    const contentHtml = contentEl.innerHTML.trim();
-                    if (!contentHtml) { alert('Vui lòng nhập đoạn văn tiếng Anh trước khi lưu.'); return; }
-                    // [MỚI] Cho phép lưu trước nội dung/từ khóa mà chưa cần có ảnh ngay — học viên sẽ
-                    // thấy ảnh placeholder "Ảnh đang được cập nhật" cho tới khi giảng viên dán link ảnh
-                    // và lưu lại. Chỉ nhắc nhở nhẹ chứ không chặn lưu.
-                    if (!imageUrl && !confirm('Khung này chưa có link ảnh — học viên sẽ tạm thời thấy ảnh "đang cập nhật". Vẫn lưu nội dung ngay bây giờ và bổ sung ảnh sau?')) return;
-
-                    const keywords = Array.from(card.querySelectorAll('.thcs-story-editor-keyword-row')).map(row => ({
-                        key: row.dataset.key,
-                        meaningVi: row.querySelector('input').value.trim()
-                    }));
-                    const missing = keywords.find(k => !k.meaningVi);
-                    if (missing && !confirm(`Từ khóa "${missing.key}" chưa có nghĩa tiếng Việt. Vẫn lưu?`)) return;
-
-                    statusEl.textContent = 'Đang lưu...';
-                    try {
-                        await saveStoryFrame(currentGradeNum, unit.id, i, {
-                            image_url: imageUrl,
-                            content_html: contentHtml,
-                            keywords,
-                            created_by: frame ? frame.created_by : currentEmail
-                        });
-                        statusEl.textContent = '💾 Đã lưu Khung ' + i + '.';
-                        await thcsInitStory(unit); // tải + vẽ lại cả 2 phía (học viên + soạn thảo)
-                    } catch (err) {
-                        statusEl.textContent = '❌ Lưu thất bại: ' + err.message;
-                    }
                 });
 
                 const deleteBtn = card.querySelector('.thcs-story-editor-delete-btn');
@@ -8705,6 +8801,95 @@ function toggleCompletion(symbolElement) {
             }
         }
 
+        // ----- Nút "Lưu tất cả khung truyện" (gộp chung, đăng ký sự kiện đúng 1 lần) -----
+        // Với mỗi khung trong 4 khung: nếu có link ảnh thì lưu ảnh, nếu có đoạn văn thì lưu đoạn
+        // văn (+ từ khóa), nếu có cả hai thì lưu cả hai — khung nào không nhập gì (và trước đó
+        // cũng chưa có dữ liệu) thì bỏ qua, không tạo bản ghi rỗng. Trường nào bỏ trống trên 1
+        // khung đã có sẵn dữ liệu thì vẫn giữ nguyên giá trị cũ (không bị xóa mất).
+        if (thcsStoryEditorSaveAllBtn) {
+            thcsStoryEditorSaveAllBtn.addEventListener('click', async () => {
+                const unit = thcsStoryEditorUnit;
+                if (!unit) return;
+
+                const frameByIndex = {};
+                (thcsStoryEditorFramesData || []).forEach(f => { frameByIndex[f.frame_index] = f; });
+
+                const cards = Array.from(thcsStoryEditorFramesEl.querySelectorAll('.thcs-story-editor-card'));
+                thcsStoryEditorSaveAllBtn.disabled = true;
+                thcsStoryEditorSaveAllStatus.textContent = 'Đang lưu...';
+
+                let savedCount = 0;
+                const errorMsgs = [];
+
+                for (const card of cards) {
+                    const i = Number(card.dataset.frameIndex);
+                    const frame = frameByIndex[i] || null;
+                    const statusEl = card.querySelector('.thcs-story-editor-status');
+                    const contentEl = card.querySelector('.thcs-story-editor-content');
+                    const imageInput = card.querySelector('.thcs-story-editor-image-input');
+
+                    const imageUrl = imageInput.value.trim();
+                    const contentHtml = contentEl.innerHTML.trim();
+
+                    // Khung này chưa từng có dữ liệu và cũng không nhập gì mới -> bỏ qua hoàn toàn.
+                    if (!imageUrl && !contentHtml && !frame) {
+                        if (statusEl) statusEl.textContent = '';
+                        continue;
+                    }
+                    // Không có gì mới để cập nhật so với dữ liệu đã lưu -> không cần gọi lại API.
+                    if (!imageUrl && !contentHtml) {
+                        if (statusEl) statusEl.textContent = '';
+                        continue;
+                    }
+
+                    const fields = {
+                        // Có ảnh mới thì lưu ảnh mới; không thì giữ nguyên ảnh cũ (nếu có).
+                        image_url: imageUrl || (frame ? frame.image_url : '')
+                    };
+
+                    if (contentHtml) {
+                        // Có nội dung mới thì lưu nội dung mới kèm từ khóa vừa nhập.
+                        const keywords = Array.from(card.querySelectorAll('.thcs-story-editor-keyword-row')).map(row => ({
+                            key: row.dataset.key,
+                            meaningVi: row.querySelector('input').value.trim()
+                        }));
+                        const missing = keywords.find(k => !k.meaningVi);
+                        if (missing && !confirm(`Khung ${i}: từ khóa "${missing.key}" chưa có nghĩa tiếng Việt. Vẫn lưu?`)) {
+                            if (statusEl) statusEl.textContent = '⏭️ Đã bỏ qua.';
+                            continue;
+                        }
+                        fields.content_html = contentHtml;
+                        fields.keywords = keywords;
+                    } else if (frame) {
+                        // Không nhập nội dung mới nhưng khung đã có sẵn nội dung -> giữ nguyên.
+                        fields.content_html = frame.content_html;
+                        fields.keywords = Array.isArray(frame.keywords) ? frame.keywords : [];
+                    } else {
+                        fields.content_html = '';
+                        fields.keywords = [];
+                    }
+                    fields.created_by = frame ? frame.created_by : currentEmail;
+
+                    if (statusEl) statusEl.textContent = 'Đang lưu...';
+                    try {
+                        await saveStoryFrame(currentGradeNum, unit.id, i, fields);
+                        if (statusEl) statusEl.textContent = '💾 Đã lưu.';
+                        savedCount++;
+                    } catch (err) {
+                        if (statusEl) statusEl.textContent = '❌ Lỗi: ' + err.message;
+                        errorMsgs.push(`Khung ${i}: ${err.message}`);
+                    }
+                }
+
+                thcsStoryEditorSaveAllBtn.disabled = false;
+                thcsStoryEditorSaveAllStatus.textContent = errorMsgs.length
+                    ? `⚠️ Đã lưu ${savedCount} khung, có lỗi — ${errorMsgs.join('; ')}`
+                    : (savedCount ? `✅ Đã lưu ${savedCount} khung truyện.` : 'Không có khung nào có nội dung mới để lưu.');
+
+                await thcsInitStory(unit); // tải + vẽ lại cả 2 phía (học viên + soạn thảo)
+            });
+        }
+
         // ----- Khởi tạo tab Câu chuyện khi mở 1 Unit -----
         async function thcsInitStory(unit) {
             thcsStoryFramesEl.innerHTML = '<p class="kid-hint">Đang tải khung truyện...</p>';
@@ -8713,9 +8898,12 @@ function toggleCompletion(symbolElement) {
             const frames = await loadStoryFrames(currentGradeNum, unit.id);
             thcsFrameProgressMap = {};
             await thcsLoadFrameProgress(currentGradeNum, unit.id);
+            thcsCurrentStoryFrameIndexes = frames.map(f => f.frame_index);
 
             thcsRenderStoryFramesGrid(unit, frames);
             thcsRenderStoryEditor(unit, frames);
+
+            thcsCheckStoryAllFramesCompleted(); // ghi nhận hoàn thành nếu học viên đã mở hết khung từ trước
         }
 
         // ---------- 4. TRÒ CHƠI HỨNG TỪ ----------
