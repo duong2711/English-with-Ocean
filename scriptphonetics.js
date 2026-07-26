@@ -337,6 +337,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // [MỚI] Kiểm tra ngay xem có bài kiểm tra riêng nào chưa làm để hiện badge + thông báo
             lastKnownUnfinishedCtestCount = null; // mỗi lần đăng nhập mới, tính lại từ đầu
             refreshCtestBadge();
+            // [MỚI] Tự động cập nhật điểm chuyên cần ngay khi đăng nhập — không cần đợi học
+            // viên mở hồ sơ của mình mới tính (hàm này tự bỏ qua nếu là tài khoản giảng viên).
+            renderProfileAchievements();
             
             // [CẬP NHẬT] Hiển thị Menu và xóa trạng thái ẩn của các Tab
             if (mainMenu) mainMenu.style.display = 'flex';
@@ -665,6 +668,21 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             const topicsPct = totalTopics ? Math.round((completedTopics / totalTopics) * 100) : 0;
 
+            // ----- 3b) [MỚI] Ngữ pháp: 1 folder được tính "đã hoàn thành" khi học viên đã bấm
+            // PHÁT video bài học VÀ đã bấm nút "Làm bài kiểm tra" của folder đó -----
+            const { count: totalGrammarFoldersRaw, error: eGa } = await sb
+                .from('grammar_folders')
+                .select('id', { count: 'exact', head: true });
+            if (eGa) throw eGa;
+            const totalGrammarFolders = totalGrammarFoldersRaw || 0;
+            const { data: grammarProgressRows, error: eGb } = await sb
+                .from('grammar_completions')
+                .select('folder_id, quiz_opened, quiz_engaged')
+                .eq('user_id', currentUserId);
+            if (eGb) throw eGb;
+            const completedGrammarFolders = (grammarProgressRows || []).filter(r => r.quiz_opened && r.quiz_engaged).length;
+            const grammarPct = totalGrammarFolders ? Math.round((completedGrammarFolders / totalGrammarFolders) * 100) : 0;
+
             // ----- 4) Kho từ vựng của tôi: tổng số từ đã lưu -----
             const { count: vocabCountRaw, error: e4 } = await sb
                 .from('user_vocabulary')
@@ -778,6 +796,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 title: 'Chủ đề từ vựng',
                 desc: `${completedTopics}/${totalTopics} chủ đề đã hoàn thành`,
                 progress: topicsPct
+            });
+            badges.push({
+                icon: '📖',
+                title: 'Ngữ pháp đã hoàn thành',
+                desc: `${completedGrammarFolders}/${totalGrammarFolders} bài đã làm bài kiểm tra`,
+                progress: grammarPct
             });
             badges.push({
                 icon: '📒',
@@ -1225,6 +1249,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }, 90 * 1000);
 
+    // [MỚI] Tự động cập nhật điểm chuyên cần định kỳ (mỗi 5 phút) trong lúc học viên đang
+    // dùng web — không cần họ tự mở hồ sơ thì điểm & bảng xếp hạng mới cập nhật.
+    setInterval(() => {
+        if (currentUserId && document.visibilityState === 'visible') {
+            renderProfileAchievements();
+        }
+    }, 5 * 60 * 1000);
+
 
     // [HÀM VIDEO CŨ] 
     function buildVimeoUrl(src, autoplay = '1') {
@@ -1505,6 +1537,8 @@ async function loadCompletionStatus(user) {
 
             if (error) {
                 console.error('Lỗi khi lưu trạng thái hoàn thành vào Supabase (Kiểm tra chính sách RLS UPDATE/INSERT trên ipa_completions):', error);
+            } else {
+                renderProfileAchievements(); // [MỚI] cập nhật ngay điểm chuyên cần, không cần đợi mở hồ sơ
             }
         } catch (e) {
             console.error('Lỗi ngoại lệ khi lưu trạng thái hoàn thành:', e);
@@ -2172,6 +2206,7 @@ function toggleCompletion(symbolElement) {
                         completed_at: new Date().toISOString()
                     }, { onConflict: 'user_id, article_id' });
                 if (error) throw error;
+                renderProfileAchievements(); // [MỚI] cập nhật ngay điểm chuyên cần, không cần đợi mở hồ sơ
             } catch (err) {
                 console.error('Lỗi khi ghi nhận hoàn thành tin ngắn:', err.message);
             }
@@ -3051,6 +3086,7 @@ function toggleCompletion(symbolElement) {
                 throw error;
             }
             myVocabList.unshift(data);
+            renderProfileAchievements(); // [MỚI] cập nhật ngay điểm chuyên cần, không cần đợi mở hồ sơ
             return { added: true, entry: data };
         }
 
@@ -3477,6 +3513,46 @@ function toggleCompletion(symbolElement) {
         // thêm / sửa / xóa — quyền này được chặn ở CẢ giao diện lẫn RLS trên Supabase.
         let GRAMMAR_DATA = [];
         let currentFolderId = null;
+        let grammarCompletedFolderIds = new Set(); // [MỚI] các folder_id (dạng chuỗi) học viên đã hoàn thành
+
+        // ----- [MỚI] THEO DÕI TIẾN ĐỘ NGỮ PHÁP -----
+        // 1 folder ngữ pháp được tính là "đã hoàn thành" khi học viên: đã bấm nút "Làm bài
+        // kiểm tra" VÀ ở lại làm bài ít nhất 20 giây trước khi đóng lại (đo bằng thời gian
+        // giữa lúc mở và lúc đóng modal bài kiểm tra — xem closeGrammarQuiz() bên dưới).
+        // Lưu vào bảng "grammar_completions" (xem file SQL "grammar_completions_setup.sql").
+        const grammarProgressSentThisSession = {}; // `${folder_id}:${field}` -> đã gửi trong phiên này chưa
+        async function markGrammarProgress(folderId, patch) {
+            if (!folderId || !currentUserId || isTeacher) return;
+            // [QUAN TRỌNG] Mỗi lần gọi chỉ gửi ĐÚNG 1 trường (quiz_opened HOẶC quiz_engaged),
+            // không gộp chung 2 trường — nhờ vậy khi upsert, Postgres chỉ cập nhật đúng trường
+            // được gửi và TỰ GIỮ NGUYÊN trường còn lại (tránh ghi đè nhầm tiến độ đã lưu từ
+            // phiên trước).
+            const field = Object.keys(patch)[0];
+            const cacheKey = folderId + ':' + field;
+            if (grammarProgressSentThisSession[cacheKey]) return; // đã gửi rồi trong phiên này
+            grammarProgressSentThisSession[cacheKey] = true;
+            try {
+                const { error } = await sb.from('grammar_completions').upsert(Object.assign({
+                    user_id: currentUserId,
+                    folder_id: folderId,
+                    updated_at: new Date().toISOString()
+                }, patch), { onConflict: 'user_id, folder_id' });
+                if (error) {
+                    console.error('Lỗi khi lưu tiến độ ngữ pháp:', error.message);
+                    grammarProgressSentThisSession[cacheKey] = false; // cho phép thử lại
+                } else {
+                    renderProfileAchievements(); // cập nhật ngay điểm chuyên cần, không cần đợi mở hồ sơ
+                }
+            } catch (err) {
+                console.error('Lỗi ngoại lệ khi lưu tiến độ ngữ pháp:', err.message);
+                grammarProgressSentThisSession[cacheKey] = false;
+            }
+        }
+
+        // [SỬA] Tiêu chí "đã phát video" (cần YouTube IFrame API) đổi thành đơn giản và chắc
+        // chắn hơn: đã bấm mở bài kiểm tra VÀ ở lại làm bài ít nhất 20 giây trước khi đóng lại.
+        let grammarQuizOpenedAt = null; // thời điểm bấm mở modal bài kiểm tra (Date.now())
+        const GRAMMAR_QUIZ_MIN_ENGAGE_MS = 20 * 1000;
 
         function escapeHtmlGrammar(str) {
             return String(str == null ? '' : str).replace(/[&<>"']/g, ch => ({
@@ -3580,11 +3656,32 @@ function toggleCompletion(symbolElement) {
         }
 
         // Render danh sách thẻ folder (tải danh sách từ Supabase trước khi vẽ)
+        function grammarCardInnerHtml(folder, isDone) {
+            return `
+                📁 ${escapeHtmlGrammar(folder.title)}${isDone ? ' ✅' : ''}
+                ${isTeacher ? `<button type="button" class="grammar-card-delete-btn" data-folder-id="${folder.id}" title="Xóa folder này">🗑️</button>` : ''}
+            `;
+        }
+
         async function renderGrammarFolders() {
             if (grammarAdminBar) grammarAdminBar.style.display = isTeacher ? 'flex' : 'none';
             grammarFolderGrid.innerHTML = '<p class="grammar-loading-msg">Đang tải danh sách folder...</p>';
 
             await loadGrammarFoldersFromDB();
+
+            // [MỚI] Tải danh sách folder ngữ pháp học viên đã hoàn thành (để tô nền xanh lá)
+            if (currentUserId && !isTeacher) {
+                try {
+                    const { data: rows, error } = await sb.from('grammar_completions')
+                        .select('folder_id, quiz_opened, quiz_engaged').eq('user_id', currentUserId);
+                    if (error) throw error;
+                    grammarCompletedFolderIds = new Set(
+                        (rows || []).filter(r => r.quiz_opened && r.quiz_engaged).map(r => String(r.folder_id))
+                    );
+                } catch (err) {
+                    console.error('Lỗi khi tải tiến độ ngữ pháp:', err.message);
+                }
+            }
 
             grammarFolderGrid.innerHTML = '';
             if (GRAMMAR_DATA.length === 0) {
@@ -3592,12 +3689,10 @@ function toggleCompletion(symbolElement) {
             } else {
                 GRAMMAR_DATA.forEach(folder => {
                     const card = document.createElement('div');
-                    card.className = 'folder-card grammar-folder-card';
+                    const isDone = grammarCompletedFolderIds.has(String(folder.id));
+                    card.className = 'folder-card grammar-folder-card' + (isDone ? ' grammar-folder-done' : '');
                     card.dataset.folderId = folder.id;
-                    card.innerHTML = `
-                        📁 ${escapeHtmlGrammar(folder.title)}
-                        ${isTeacher ? `<button type="button" class="grammar-card-delete-btn" data-folder-id="${folder.id}" title="Xóa folder này">🗑️</button>` : ''}
-                    `;
+                    card.innerHTML = grammarCardInnerHtml(folder, isDone);
                     card.addEventListener('click', (e) => {
                         if (e.target.closest('.grammar-card-delete-btn')) return; // nút xóa xử lý riêng
                         openFolder(folder);
@@ -3801,21 +3896,39 @@ function toggleCompletion(symbolElement) {
                 quizModal.style.display = 'flex';
                 quizModal.querySelector('span').textContent = '✏️ Bài kiểm tra ngữ pháp';
             }
+            grammarQuizOpenedAt = Date.now(); // [MỚI] để tính thời gian ở lại khi đóng
+            markGrammarProgress(currentFolderId, { quiz_opened: true });
         });
 
+        // [MỚI] Đóng modal bài kiểm tra — nếu đã ở lại đủ 20 giây trở lên thì tính là đã
+        // "làm bài kiểm tra" đủ điều kiện hoàn thành (gộp cùng quiz_opened ở trên để ra
+        // tiêu chí hoàn thành ngữ pháp: đã mở bài kiểm tra + ở lại làm ít nhất 20 giây).
+        function closeGrammarQuiz() {
+            quizModal.style.display = 'none';
+            quizIframe.src = 'about:blank';
+            if (grammarQuizOpenedAt && currentFolderId) {
+                const elapsedMs = Date.now() - grammarQuizOpenedAt;
+                if (elapsedMs >= GRAMMAR_QUIZ_MIN_ENGAGE_MS && currentUserId && !isTeacher) {
+                    markGrammarProgress(currentFolderId, { quiz_engaged: true });
+                    // [MỚI] Tô ngay nền xanh lá cho thẻ folder này (khỏi chờ tải lại danh sách)
+                    grammarCompletedFolderIds.add(String(currentFolderId));
+                    const card = grammarFolderGrid.querySelector(`.grammar-folder-card[data-folder-id="${currentFolderId}"]`);
+                    const folder = GRAMMAR_DATA.find(f => String(f.id) === String(currentFolderId));
+                    if (card && folder && !card.classList.contains('grammar-folder-done')) {
+                        card.classList.add('grammar-folder-done');
+                        card.innerHTML = grammarCardInnerHtml(folder, true);
+                    }
+                }
+            }
+            grammarQuizOpenedAt = null;
+        }
         // Đóng modal kiểm tra
         if (quizClose) {
-            quizClose.addEventListener('click', () => {
-                quizModal.style.display = 'none';
-                quizIframe.src = 'about:blank';
-            });
+            quizClose.addEventListener('click', closeGrammarQuiz);
         }
         if (quizModal) {
             quizModal.addEventListener('click', (e) => {
-                if (e.target === quizModal) {
-                    quizModal.style.display = 'none';
-                    quizIframe.src = 'about:blank';
-                }
+                if (e.target === quizModal) closeGrammarQuiz();
             });
         }
 
@@ -5795,7 +5908,10 @@ function toggleCompletion(symbolElement) {
                     .from('kid_topic_progress')
                     .upsert(payload, { onConflict: 'user_id, topic_key' });
                 if (error) console.error('Lỗi khi lưu tiến độ chủ đề (kiểm tra RLS trên bảng kid_topic_progress):', error);
-                else kidProgressMap[key] = payload; // [MỚI] cập nhật luôn cache danh sách chủ đề, khỏi cần tải lại từ Supabase
+                else {
+                    kidProgressMap[key] = payload; // [MỚI] cập nhật luôn cache danh sách chủ đề, khỏi cần tải lại từ Supabase
+                    renderProfileAchievements(); // [MỚI] cập nhật ngay điểm chuyên cần, không cần đợi mở hồ sơ
+                }
             } catch (err) {
                 console.error('Lỗi ngoại lệ khi lưu tiến độ chủ đề:', err.message);
             }
@@ -9797,9 +9913,8 @@ function toggleCompletion(symbolElement) {
         listening: 'Bài nghe',
         essay: 'Tự luận'
     };
-    // Các dạng hiện ra làm nút "+ Thêm câu hỏi" cấp PHẦN (không gồm "essay" vì
-    // dạng đó chỉ dùng làm 1 phần bên trong câu hỏi hỗn hợp, không đứng riêng).
-    const CTEST_TOP_LEVEL_TYPES = ['mcq', 'fill_blank', 'reorder', 'reading', 'mixed', 'matching', 'wordbank', 'listening'];
+    // Các dạng hiện ra làm nút "+ Thêm câu hỏi" cấp PHẦN.
+    const CTEST_TOP_LEVEL_TYPES = ['mcq', 'fill_blank', 'reorder', 'reading', 'mixed', 'matching', 'wordbank', 'listening', 'essay'];
 
     function ctestQcardShell(type, removeLabel) {
         const card = document.createElement('div');
@@ -9816,6 +9931,10 @@ function toggleCompletion(symbolElement) {
     function ctestOptionsEditor(options, correctIndex) {
         const box = document.createElement('div');
         box.className = 'ctest-options-editor';
+        // [SỬA] Tạo 1 tên nhóm DUY NHẤT cho cả câu hỏi này (không phải mỗi dòng 1 tên riêng
+        // như trước — lỗi đó khiến các nút chọn "đáp án đúng" không loại trừ lẫn nhau, có thể
+        // vô tình chọn được nhiều đáp án cùng lúc).
+        const groupName = 'ctest-correct-' + ctestUid('');
         (options && options.length ? options : ['', '']).forEach((opt, i) => {
             box.appendChild(ctestOptionRow(opt, i === correctIndex));
         });
@@ -9836,10 +9955,20 @@ function toggleCompletion(symbolElement) {
             row.className = 'ctest-option-row';
             const radio = document.createElement('input');
             radio.type = 'radio';
-            radio.name = 'ctest-correct-' + ctestUid('');
+            radio.name = groupName;
             radio.className = 'ctest-option-correct-radio';
             radio.checked = !!isCorrect;
-            radio.title = 'Đáp án đúng';
+            radio.title = 'Đáp án đúng — bấm lại để bỏ chọn';
+            // [MỚI] Cho phép bấm lại vào đáp án ĐANG được chọn để BỎ CHỌN hoàn toàn (mặc định
+            // radio không cho phép việc này) — còn bấm sang đáp án khác thì vẫn CHỌN LẠI được
+            // bình thường như cũ (radio cùng nhóm tự loại trừ lẫn nhau).
+            radio.addEventListener('mousedown', () => {
+                radio.dataset.wasChecked = radio.checked ? '1' : '';
+            });
+            radio.addEventListener('click', () => {
+                if (radio.dataset.wasChecked === '1') radio.checked = false;
+                box.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
+            });
             const richWrap = ctestCreateRichEditor(text || '', 'Nhập đáp án...', '', true);
             const rm = document.createElement('button');
             rm.type = 'button';
@@ -9862,7 +9991,9 @@ function toggleCompletion(symbolElement) {
     function ctestCollectOptions(box) {
         const rows = Array.from(box.querySelectorAll(':scope > .ctest-option-row'));
         const options = rows.map(r => ctestRichHtml(r.querySelector('.ctest-rich-wrap')));
-        let correct = 0;
+        // [SỬA] Không còn mặc định về đáp án đầu tiên (0) nếu giảng viên chưa/không chọn đáp án
+        // nào — trả về -1 để phản ánh đúng "chưa có đáp án đúng nào được chọn".
+        let correct = -1;
         rows.forEach((r, i) => { if (r.querySelector('.ctest-option-correct-radio').checked) correct = i; });
         return { options, correct };
     }
@@ -9895,10 +10026,16 @@ function toggleCompletion(symbolElement) {
         const editor = ctestCreateRichEditor(q.html || '', 'Nhập câu đầy đủ...', 'Bôi đen từ cần ẩn rồi bấm <b>B</b> để biến thành chỗ trống.');
         editor.classList.add('ctest-fillblank-editor');
         card.appendChild(editor);
+        const imgField = ctestImageField(q.image_url);
+        card.appendChild(imgField);
         return card;
     }
     function collectFillBlank(card) {
-        return { type: 'fill_blank', html: ctestRichHtml(card.querySelector(':scope > .ctest-fillblank-editor')) };
+        return {
+            type: 'fill_blank',
+            html: ctestRichHtml(card.querySelector(':scope > .ctest-fillblank-editor')),
+            image_url: ctestImageUrl(card.querySelector(':scope > .ctest-image-field'))
+        };
     }
 
     // ---- 3) Sắp xếp câu ----
@@ -10018,7 +10155,7 @@ function toggleCompletion(symbolElement) {
         return { type: 'mixed', parts };
     }
 
-    // ---- Phần "Tự luận" — chỉ dùng làm 1 phần bên trong câu hỏi hỗn hợp ----
+    // ---- Phần "Tự luận" — dùng độc lập được, hoặc làm 1 phần bên trong câu hỏi hỗn hợp ----
     function buildEssayEditor(q) {
         const card = ctestQcardShell('essay');
         const label1 = document.createElement('label');
@@ -10028,6 +10165,8 @@ function toggleCompletion(symbolElement) {
         const promptWrap = ctestCreateRichEditor(q.prompt || '', 'Nhập câu hỏi tự luận...', '');
         promptWrap.classList.add('ctest-essay-prompt-editor');
         card.appendChild(promptWrap);
+        const imgField = ctestImageField(q.image_url);
+        card.appendChild(imgField);
 
         const label2 = document.createElement('label');
         label2.className = 'news-quiz-edit-label';
@@ -10047,6 +10186,7 @@ function toggleCompletion(symbolElement) {
         return {
             type: 'essay',
             prompt: ctestRichHtml(card.querySelector(':scope > .ctest-essay-prompt-editor')),
+            image_url: ctestImageUrl(card.querySelector(':scope > .ctest-image-field')),
             answer: card.querySelector(':scope > .ctest-essay-answer-input').value.trim()
         };
     }
@@ -10273,14 +10413,14 @@ function toggleCompletion(symbolElement) {
     };
     const CTEST_DEFAULTS = {
         mcq: () => ({ prompt: '', options: ['', ''], correct: 0 }),
-        fill_blank: () => ({ html: '' }),
+        fill_blank: () => ({ html: '', image_url: '' }),
         reorder: () => ({ sentence: '' }),
         reading: () => ({ passage: '', sub_questions: [{ prompt: '', options: ['', ''], correct: 0 }] }),
-        mixed: () => ({ parts: [{ type: 'fill_blank', html: '' }, { type: 'essay', prompt: '', answer: '' }] }),
+        mixed: () => ({ parts: [{ type: 'fill_blank', html: '', image_url: '' }, { type: 'essay', prompt: '', answer: '', image_url: '' }] }),
         matching: () => ({ left: ['', ''], right: ['', ''] }),
         wordbank: () => ({ html: '' }),
         listening: () => ({ audio_url: '', sub_questions: [{ type: 'mcq', prompt: '', options: ['', ''], correct: 0 }] }),
-        essay: () => ({ prompt: '', answer: '' })
+        essay: () => ({ prompt: '', answer: '', image_url: '' })
     };
 
     function buildQuestionCard(type, question) {
@@ -10764,6 +10904,12 @@ function toggleCompletion(symbolElement) {
         numEl.className = 'ctest-take-qprompt';
         numEl.innerHTML = '<span class="ctest-take-qnum">' + labelPrefix + '</span>Điền từ còn thiếu vào chỗ trống:';
         block.appendChild(numEl);
+        if (q.image_url) {
+            const img = document.createElement('img');
+            img.className = 'ctest-take-image';
+            img.src = q.image_url;
+            block.appendChild(img);
+        }
         const { el } = renderTakeFillBlank(q.html, keyBase);
         block.appendChild(el);
         return block;
@@ -10855,6 +11001,12 @@ function toggleCompletion(symbolElement) {
         numEl.className = 'ctest-take-qprompt';
         numEl.innerHTML = '<span class="ctest-take-qnum">' + labelPrefix + '</span>' + (part.prompt || '');
         block.appendChild(numEl);
+        if (part.image_url) {
+            const img = document.createElement('img');
+            img.className = 'ctest-take-image';
+            img.src = part.image_url;
+            block.appendChild(img);
+        }
         const textarea = document.createElement('textarea');
         textarea.className = 'news-edit-input';
         textarea.rows = 3;
@@ -11280,6 +11432,12 @@ function toggleCompletion(symbolElement) {
 
     function ctestResultFillBlank(q, keyBase, answers, labelPrefix) {
         const block = ctestResultQBlock(labelPrefix, 'Điền vào chỗ trống:');
+        if (q.image_url) {
+            const img = document.createElement('img');
+            img.className = 'ctest-take-image';
+            img.src = q.image_url;
+            block.appendChild(img);
+        }
         const { el, correct, total } = ctestBlankResultNode(q.html, keyBase, answers);
         block.appendChild(el);
         return { el: block, correct, total };
@@ -11324,6 +11482,12 @@ function toggleCompletion(symbolElement) {
 
     function ctestResultEssay(part, keyBase, answers, labelPrefix) {
         const block = ctestResultQBlock(labelPrefix, part.prompt);
+        if (part.image_url) {
+            const img = document.createElement('img');
+            img.className = 'ctest-take-image';
+            img.src = part.image_url;
+            block.appendChild(img);
+        }
         const given = answers[keyBase] || '';
         const ok = ctestNormalize(given) === ctestNormalize(part.answer);
         const el = document.createElement('div');

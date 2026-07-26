@@ -2210,6 +2210,12 @@ h3 { font-size:0.95rem; font-weight:600; color:var(--text); margin:0 0 8px; }
 /* Highlight kết quả tìm kiếm */
 .grammar-folder-card.search-hidden { display: none; }
 .grammar-folder-card.search-match { border-color: var(--primary); background: var(--primary-light); }
+/* [MỚI] Folder ngữ pháp học viên đã hoàn thành (đã mở bài kiểm tra + làm ít nhất 20 giây) */
+.grammar-folder-card.grammar-folder-done {
+    background: var(--success-light, #dcfce7);
+    border-color: var(--success);
+}
+.grammar-folder-card.grammar-folder-done:hover { background: var(--success-light, #dcfce7); }
 #grammar-no-results {
     text-align: center;
     color: var(--text-muted);
