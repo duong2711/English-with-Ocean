@@ -3496,7 +3496,10 @@ function toggleCompletion(symbolElement) {
             markKnown: markKnownWordsInDom,  // tô lại các từ đã biết sau khi lưu/xóa từ vựng
             ensureLoaded: ensureMyVocabLoaded,// tải từ vựng cá nhân (chỉ tải lại khi đổi tài khoản)
             normalize: normalizeWord,
-            toast: showVocabToast
+            toast: showVocabToast,
+            // [MỚI] Trả về toàn bộ danh sách từ vựng cá nhân — dùng cho mục "Luyện nghe" (tab
+            // Luyện kỹ năng) để gộp vào kho từ vựng luyện nghe. Nhớ gọi ensureLoaded() trước.
+            getList: () => myVocabList
         };
         // ===== KẾT THÚC TRA TỪ NHANH + TỪ VỰNG CÁ NHÂN =====
     })();
@@ -9226,6 +9229,22 @@ function toggleCompletion(symbolElement) {
         if (thcsBackBtn) thcsBackBtn.addEventListener('click', thcsPauseGame);
         if (thcsGrade6BackBtn) thcsGrade6BackBtn.addEventListener('click', thcsPauseGame);
 
+        // [MỚI] Xuất API dùng chung để mục "Luyện nghe" (tab Luyện kỹ năng) lấy được từ vựng
+        // của tất cả Unit THCS/THPT (mọi khối lớp 6-12) mà học viên đã hoàn thành, dùng làm
+        // kho từ vựng luyện nghe — theo đúng cách window.kidTopicsAPI đã làm cho "Cho bé".
+        window.thcsUnitsAPI = {
+            getAllUnits: () => {
+                const list = [];
+                for (let g = 6; g <= 12; g++) {
+                    const units = thcsGetGradeUnits(g);
+                    if (units) units.forEach(unit => list.push({ gradeNum: g, unit }));
+                }
+                return list;
+            },
+            ensureProgressLoaded: thcsEnsureProgressLoaded,
+            isUnitCompleted: (gradeNum, unit) => !!thcsGetProgress(gradeNum, unit.id).completed
+        };
+
     })();
     // ===== KẾT THÚC: "THCS/THPT" — LỚP 6 =====
 
@@ -11840,5 +11859,458 @@ function toggleCompletion(symbolElement) {
     });
 
 })();
+
+// ===================================================================
+// ===== BẮT ĐẦU: TAB "LUYỆN KỸ NĂNG" > "🎧 NGHE" — LUYỆN NGHE GIAI ĐOẠN 1 (NGHE LV1) =====
+// Kho từ vựng luyện nghe = gộp 3 nguồn: (1) Từ vựng cá nhân (window.vocabTap), (2) Từ vựng
+// các chủ đề "Cho bé" đã hoàn thành (window.kidTopicsAPI), (3) Từ vựng các Unit THCS/THPT
+// đã hoàn thành (window.thcsUnitsAPI). Mỗi lần luyện, 15 câu hỏi được random lại hoàn toàn.
+// ===================================================================
+(() => {
+    const lnStage1FolderCard = document.getElementById('ln-stage1-folder-card');
+    if (!lnStage1FolderCard) return;
+
+    const lnStageFolderGrid = document.getElementById('ln-stage-folder-grid');
+    const lnStage1Panel   = document.getElementById('ln-stage1-panel');
+    const lnStage1BackBtn = document.getElementById('ln-stage1-back-btn');
+    const lnLv1Card       = document.getElementById('ln-lv1-card');
+    const lnLv1Panel      = document.getElementById('ln-lv1-panel');
+    const lnLv1BackBtn    = document.getElementById('ln-lv1-back-btn');
+    const lnDiffGrid      = document.getElementById('ln-diff-grid');
+    const lnQuizPanel     = document.getElementById('ln-quiz-panel');
+    const lnQuizBackBtn   = document.getElementById('ln-quiz-back-btn');
+    const lnQuizTitle     = document.getElementById('ln-quiz-title');
+    const lnQuizPlayArea  = document.getElementById('ln-quiz-play-area');
+    const lnQuizProgress  = document.getElementById('ln-quiz-progress');
+    const lnQuizBody      = document.getElementById('ln-quiz-body');
+    const lnQuizControls  = document.getElementById('ln-quiz-controls');
+    const lnQuizFeedback  = document.getElementById('ln-quiz-feedback');
+    const lnResultArea    = document.getElementById('ln-quiz-result-area');
+    const lnResultBox     = document.getElementById('ln-result-box');
+
+    const LN_TOTAL_QUESTIONS = 15;
+    const LN_DIFF_META = {
+        de:  { label: 'Dễ',         icon: '🟢' },
+        tb:  { label: 'Trung bình', icon: '🟡' },
+        kha: { label: 'Khá',        icon: '🟠' },
+        kho: { label: 'Khó',        icon: '🔴' },
+        dn:  { label: 'Địa ngục',   icon: '💀' }
+    };
+
+    // ---------- Điều hướng 3 cấp: Giai đoạn 1 -> Nghe lv1 -> Chọn độ khó -> Làm bài ----------
+    lnStage1FolderCard.addEventListener('click', () => {
+        lnStageFolderGrid.style.display = 'none';
+        lnStage1Panel.style.display = 'block';
+    });
+    lnStage1BackBtn.addEventListener('click', () => {
+        lnStage1Panel.style.display = 'none';
+        lnStageFolderGrid.style.display = '';
+    });
+    lnLv1Card.addEventListener('click', () => {
+        lnStage1Panel.style.display = 'none';
+        lnLv1Panel.style.display = 'block';
+    });
+    lnLv1BackBtn.addEventListener('click', () => {
+        lnLv1Panel.style.display = 'none';
+        lnStage1Panel.style.display = 'block';
+    });
+    lnDiffGrid.addEventListener('click', (e) => {
+        const card = e.target.closest('[data-ln-diff]');
+        if (!card) return;
+        lnStartQuiz(card.dataset.lnDiff);
+    });
+    lnQuizBackBtn.addEventListener('click', () => {
+        lnStopAudio();
+        lnQuizPanel.style.display = 'none';
+        lnLv1Panel.style.display = 'block';
+    });
+
+    // Rời khỏi trang/đổi tab trong lúc đang có audio phát dở -> dừng lại ngay, tránh còn
+    // tiếng đọc phát ra khi học viên đã rời màn hình luyện nghe.
+    document.querySelectorAll('.main-tab-btn').forEach(btn => btn.addEventListener('click', lnStopAudio));
+    document.addEventListener('visibilitychange', () => { if (document.hidden) lnStopAudio(); });
+    window.addEventListener('blur', lnStopAudio);
+
+    function lnStopAudio() {
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    }
+
+    // ----- Âm thanh hiệu ứng ĐÚNG / SAI (tự tạo bằng Web Audio API, không cần file mp3) -----
+    let lnSfxCtx = null;
+    function getLnSfxCtx() {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return null;
+        if (!lnSfxCtx) lnSfxCtx = new AC();
+        if (lnSfxCtx.state === 'suspended') lnSfxCtx.resume();
+        return lnSfxCtx;
+    }
+    function lnPlayTone(freq, startTime, duration, type, peakGain) {
+        const ctx = getLnSfxCtx();
+        if (!ctx) return;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type || 'sine';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + startTime);
+        gain.gain.setValueAtTime(0.0001, ctx.currentTime + startTime);
+        gain.gain.linearRampToValueAtTime(peakGain || 0.22, ctx.currentTime + startTime + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + startTime + duration);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(ctx.currentTime + startTime);
+        osc.stop(ctx.currentTime + startTime + duration + 0.05);
+    }
+    // Chuỗi 3 nốt đi lên vui tai (Đô-Mi-Sol) báo hiệu TRẢ LỜI ĐÚNG
+    function lnPlayCorrectSound() {
+        lnPlayTone(523.25, 0,    0.16, 'sine', 0.22); // C5
+        lnPlayTone(659.25, 0.12, 0.16, 'sine', 0.22); // E5
+        lnPlayTone(783.99, 0.24, 0.22, 'sine', 0.22); // G5
+    }
+    // 2 tiếng buzz trầm ngắn báo hiệu TRẢ LỜI SAI
+    function lnPlayWrongSound() {
+        lnPlayTone(180, 0,    0.18, 'square', 0.16);
+        lnPlayTone(140, 0.15, 0.22, 'square', 0.16);
+    }
+
+    function lnEsc(s) {
+        return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+    function lnNormalize(s) {
+        return String(s || '').toLowerCase().replace(/[^a-z]/g, '');
+    }
+    function lnShuffle(arr) {
+        const copy = arr.slice();
+        for (let i = copy.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [copy[i], copy[j]] = [copy[j], copy[i]];
+        }
+        return copy;
+    }
+    function lnPickRandom(arr, n) { return lnShuffle(arr).slice(0, Math.max(0, Math.min(n, arr.length))); }
+
+    // ---------- Gom kho từ vựng: cá nhân + chủ đề "Cho bé" đã hoàn thành + Unit THCS/THPT đã hoàn thành ----------
+    async function lnBuildVocabPool() {
+        const pool = [];
+        const seen = new Set();
+        function addWord(w) {
+            if (!w || !w.en) return;
+            const norm = lnNormalize(w.en);
+            if (!norm || seen.has(norm)) return;
+            seen.add(norm);
+            pool.push({ en: String(w.en).trim(), vi: w.vi || '' });
+        }
+
+        if (window.vocabTap && typeof window.vocabTap.ensureLoaded === 'function') {
+            try { await window.vocabTap.ensureLoaded(); } catch (e) { /* bỏ qua, không có mạng/chưa đăng nhập */ }
+        }
+        if (window.vocabTap && typeof window.vocabTap.getList === 'function') {
+            (window.vocabTap.getList() || []).forEach(v => addWord({ en: v.word, vi: v.meaning }));
+        }
+
+        if (window.kidTopicsAPI) {
+            try { await window.kidTopicsAPI.ensureProgressMapLoaded(); } catch (e) { /* bỏ qua */ }
+            (window.kidTopicsAPI.getTopics() || []).forEach(topic => {
+                if (window.kidTopicsAPI.isTopicCompleted(topic)) (topic.words || []).forEach(addWord);
+            });
+        }
+
+        if (window.thcsUnitsAPI) {
+            try { await window.thcsUnitsAPI.ensureProgressLoaded(); } catch (e) { /* bỏ qua */ }
+            (window.thcsUnitsAPI.getAllUnits() || []).forEach(({ gradeNum, unit }) => {
+                if (window.thcsUnitsAPI.isUnitCompleted(gradeNum, unit)) (unit.words || []).forEach(addWord);
+            });
+        }
+        return pool;
+    }
+
+    // ---------- Phát âm (Web Speech API) ----------
+    // Đọc lần lượt nhiều từ, mỗi từ 1 utterance riêng nối tiếp nhau (không dùng chung
+    // window.speakEnglishWord vì hàm đó hủy audio đang đọc dở -> không phát được liên tiếp).
+    function lnSpeakSequential(texts, gapMs, onDone) {
+        if (!('speechSynthesis' in window) || !texts.length) { if (onDone) onDone(); return; }
+        window.speechSynthesis.cancel();
+        let i = 0;
+        function playNext() {
+            if (i >= texts.length) { if (onDone) onDone(); return; }
+            const utter = new SpeechSynthesisUtterance(texts[i]);
+            utter.lang = 'en-US';
+            utter.rate = 0.85;
+            utter.onend = () => { i++; setTimeout(playNext, gapMs); };
+            utter.onerror = () => { i++; setTimeout(playNext, gapMs); };
+            window.speechSynthesis.speak(utter);
+        }
+        playNext();
+    }
+
+    // Đánh vần từng chữ cái một (dùng cho độ khó "Dễ"). Với từ ghép có khoảng trắng, chèn
+    // 1 quãng nghỉ dài hơn tại vị trí khoảng trắng thay vì đọc gì đó, để gợi ý ranh giới
+    // giữa 2 từ mà không lộ luôn đáp án.
+    function lnSpeakSpelling(word) {
+        if (!('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel();
+        const chars = String(word).toUpperCase().split('').filter(c => /[A-Z ]/.test(c));
+        let i = 0;
+        function playNext() {
+            if (i >= chars.length) return;
+            const ch = chars[i];
+            if (ch === ' ') { i++; setTimeout(playNext, 650); return; }
+            const utter = new SpeechSynthesisUtterance(ch);
+            utter.lang = 'en-US';
+            utter.rate = 0.8;
+            utter.onend = () => { i++; setTimeout(playNext, 320); };
+            utter.onerror = () => { i++; setTimeout(playNext, 320); };
+            window.speechSynthesis.speak(utter);
+        }
+        playNext();
+    }
+
+    // ---------- Trạng thái 1 lượt làm bài ----------
+    let lnState = null;
+
+    async function lnStartQuiz(diff) {
+        lnQuizPanel.style.display = 'block';
+        lnLv1Panel.style.display = 'none';
+        lnResultArea.style.display = 'none';
+        lnQuizPlayArea.style.display = 'block';
+        lnQuizTitle.textContent = `${LN_DIFF_META[diff].icon} Nghe lv1 — ${LN_DIFF_META[diff].label}`;
+        lnQuizProgress.textContent = '';
+        lnQuizBody.innerHTML = '<p class="kid-hint">Đang chuẩn bị câu hỏi...</p>';
+        lnQuizControls.innerHTML = '';
+        lnQuizFeedback.innerHTML = '';
+        lnQuizFeedback.className = 'thcs-translate-feedback';
+
+        const pool = await lnBuildVocabPool();
+        const minNeeded = (diff === 'de' || diff === 'dn') ? 1 : 2;
+        if (pool.length < minNeeded) {
+            lnQuizBody.innerHTML = `<p class="kid-hint">⚠️ Kho từ vựng của bạn chưa đủ để luyện phần này (cần ít nhất ${minNeeded} từ). Hãy hoàn thành thêm một số chủ đề "Cho bé", Unit THCS/THPT, hoặc lưu thêm từ vựng cá nhân (chạm vào từ khi luyện dịch "Tin ngắn") rồi quay lại nhé!</p>`;
+            return;
+        }
+
+        lnState = { diff, pool, questions: lnGenerateQuestions(diff, pool), index: 0, score: 0, busy: false };
+        lnRenderQuestion();
+    }
+
+    function lnGenerateQuestions(diff, pool) {
+        const qs = [];
+        for (let i = 0; i < LN_TOTAL_QUESTIONS; i++) {
+            if (diff === 'de' || diff === 'dn') {
+                qs.push({ target: pool[Math.floor(Math.random() * pool.length)] });
+            } else if (diff === 'tb') {
+                const groupSize = Math.min(4, pool.length);
+                qs.push({ sequence: lnPickRandom(pool, groupSize) });
+            } else if (diff === 'kha') {
+                const groupSize = Math.min(4, pool.length);
+                const sequence = lnPickRandom(pool, groupSize);
+                const askPos = 1 + Math.floor(Math.random() * sequence.length);
+                qs.push({ sequence, askPos, display: lnShuffle(sequence) });
+            } else if (diff === 'kho') {
+                const heardCount = Math.min(4, Math.max(1, pool.length - 1));
+                const heard = lnPickRandom(pool, heardCount);
+                const heardNorms = new Set(heard.map(w => lnNormalize(w.en)));
+                const decoyPool = pool.filter(w => !heardNorms.has(lnNormalize(w.en)));
+                const decoyCount = Math.min(3, decoyPool.length);
+                const decoys = lnPickRandom(decoyPool, decoyCount);
+                qs.push({ heard, decoys, display: lnShuffle(heard.concat(decoys)) });
+            }
+        }
+        return qs;
+    }
+
+    function lnRenderQuestion() {
+        if (!lnState) return;
+        lnState.busy = false;
+        lnStopAudio();
+        lnQuizFeedback.innerHTML = '';
+        lnQuizFeedback.className = 'thcs-translate-feedback';
+        lnQuizProgress.textContent = `Câu ${lnState.index + 1} / ${LN_TOTAL_QUESTIONS} — Điểm: ${lnState.score}`;
+
+        const q = lnState.questions[lnState.index];
+        const diff = lnState.diff;
+
+        if (diff === 'de' || diff === 'dn') {
+            lnQuizBody.innerHTML = `
+                <div class="ln-play-row">
+                    <button type="button" class="kid-btn kid-btn-primary" id="ln-play-btn">${diff === 'de' ? '🔊 Nghe đánh vần' : '🔊 Nghe từ'}</button>
+                </div>
+                <input type="text" id="ln-answer-input" class="ln-answer-input" placeholder="Nhập từ bạn nghe được..." autocomplete="off" autocapitalize="off" spellcheck="false">
+            `;
+            document.getElementById('ln-play-btn').addEventListener('click', () => {
+                if (diff === 'de') lnSpeakSpelling(q.target.en);
+                else if (typeof window.speakEnglishWord === 'function') window.speakEnglishWord(q.target.en);
+            });
+            lnQuizControls.innerHTML = `<button type="button" class="kid-btn kid-btn-primary" id="ln-check-btn">✔️ Kiểm tra</button>`;
+            const input = document.getElementById('ln-answer-input');
+            input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); lnCheckAnswer(); } });
+            document.getElementById('ln-check-btn').addEventListener('click', lnCheckAnswer);
+            input.focus();
+        } else if (diff === 'tb') {
+            lnState.tbAnswer = [];
+            lnQuizBody.innerHTML = `
+                <div class="ln-play-row">
+                    <button type="button" class="kid-btn kid-btn-primary" id="ln-play-btn">🔊 Nghe thứ tự (${q.sequence.length} từ)</button>
+                </div>
+                <p class="kid-hint">Bấm lần lượt các từ theo đúng thứ tự bạn đã nghe được.</p>
+                <div class="ln-answer-slots" id="ln-answer-slots"></div>
+                <div class="ln-chip-row" id="ln-chip-row"></div>
+            `;
+            document.getElementById('ln-play-btn').addEventListener('click', () => {
+                lnSpeakSequential(q.sequence.map(w => w.en), 700);
+            });
+            const chipRow = document.getElementById('ln-chip-row');
+            lnShuffle(q.sequence).forEach((w) => {
+                const chip = document.createElement('button');
+                chip.type = 'button';
+                chip.className = 'ln-chip';
+                chip.textContent = w.en;
+                chip.dataset.norm = lnNormalize(w.en);
+                chip.addEventListener('click', () => {
+                    if (lnState.busy || chip.classList.contains('is-picked')) return;
+                    chip.classList.add('is-picked');
+                    lnState.tbAnswer.push(w);
+                    lnRenderTbSlots(q);
+                });
+                chipRow.appendChild(chip);
+            });
+            lnRenderTbSlots(q);
+            lnQuizControls.innerHTML = `
+                <button type="button" class="kid-btn" id="ln-undo-btn">↩️ Bỏ từ cuối</button>
+                <button type="button" class="kid-btn kid-btn-primary" id="ln-check-btn">✔️ Kiểm tra</button>
+            `;
+            document.getElementById('ln-undo-btn').addEventListener('click', () => {
+                if (lnState.busy || !lnState.tbAnswer.length) return;
+                const removed = lnState.tbAnswer.pop();
+                const chip = Array.from(chipRow.children).find(c => c.dataset.norm === lnNormalize(removed.en));
+                if (chip) chip.classList.remove('is-picked');
+                lnRenderTbSlots(q);
+            });
+            document.getElementById('ln-check-btn').addEventListener('click', lnCheckAnswer);
+        } else if (diff === 'kha') {
+            lnQuizBody.innerHTML = `
+                <div class="ln-play-row">
+                    <button type="button" class="kid-btn kid-btn-primary" id="ln-play-btn">🔊 Nghe thứ tự (${q.sequence.length} từ)</button>
+                </div>
+                <div class="ln-display-box">${q.display.map(w => `<span class="ln-display-chip">${lnEsc(w.en)}</span>`).join('')}</div>
+                <p class="ln-ask-line">Từ số <b>${q.askPos}</b> (theo thứ tự nghe được) là từ nào?</p>
+                <input type="text" id="ln-answer-input" class="ln-answer-input" placeholder="Nhập từ..." autocomplete="off" autocapitalize="off" spellcheck="false">
+            `;
+            document.getElementById('ln-play-btn').addEventListener('click', () => {
+                lnSpeakSequential(q.sequence.map(w => w.en), 700);
+            });
+            lnQuizControls.innerHTML = `<button type="button" class="kid-btn kid-btn-primary" id="ln-check-btn">✔️ Kiểm tra</button>`;
+            const input = document.getElementById('ln-answer-input');
+            input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); lnCheckAnswer(); } });
+            document.getElementById('ln-check-btn').addEventListener('click', lnCheckAnswer);
+            input.focus();
+        } else if (diff === 'kho') {
+            lnState.khoSelected = new Set();
+            lnQuizBody.innerHTML = `
+                <div class="ln-play-row">
+                    <button type="button" class="kid-btn kid-btn-primary" id="ln-play-btn">🔊 Nghe danh sách từ (${q.heard.length} từ)</button>
+                </div>
+                <p class="kid-hint">Tick chọn đúng những từ bạn đã nghe được trong danh sách bên dưới.</p>
+                <div class="ln-tick-list" id="ln-tick-list"></div>
+            `;
+            document.getElementById('ln-play-btn').addEventListener('click', () => {
+                lnSpeakSequential(q.heard.map(w => w.en), 700);
+            });
+            const tickList = document.getElementById('ln-tick-list');
+            q.display.forEach(w => {
+                const norm = lnNormalize(w.en);
+                const item = document.createElement('button');
+                item.type = 'button';
+                item.className = 'ln-tick-item';
+                item.innerHTML = `<span class="ln-tick-box"></span><span>${lnEsc(w.en)}</span>`;
+                item.addEventListener('click', () => {
+                    if (lnState.busy) return;
+                    if (lnState.khoSelected.has(norm)) { lnState.khoSelected.delete(norm); item.classList.remove('is-ticked'); }
+                    else { lnState.khoSelected.add(norm); item.classList.add('is-ticked'); }
+                });
+                tickList.appendChild(item);
+            });
+            lnQuizControls.innerHTML = `<button type="button" class="kid-btn kid-btn-primary" id="ln-check-btn">✔️ Kiểm tra</button>`;
+            document.getElementById('ln-check-btn').addEventListener('click', lnCheckAnswer);
+        }
+    }
+
+    function lnRenderTbSlots(q) {
+        const slotsEl = document.getElementById('ln-answer-slots');
+        if (!slotsEl) return;
+        const answer = lnState.tbAnswer;
+        slotsEl.innerHTML = q.sequence.map((_, i) => {
+            const w = answer[i];
+            return `<span class="ln-slot ${w ? 'is-filled' : ''}">${w ? lnEsc(w.en) : (i + 1)}</span>`;
+        }).join('');
+    }
+
+    function lnCheckAnswer() {
+        if (!lnState || lnState.busy) return;
+        const q = lnState.questions[lnState.index];
+        const diff = lnState.diff;
+        let isCorrect = false;
+        let correctText = '';
+
+        if (diff === 'de' || diff === 'dn') {
+            const input = document.getElementById('ln-answer-input');
+            const userVal = lnNormalize(input.value);
+            if (!userVal) { input.focus(); return; }
+            correctText = q.target.en;
+            isCorrect = userVal === lnNormalize(q.target.en);
+            input.disabled = true;
+            if (!isCorrect) input.classList.add('is-wrong');
+        } else if (diff === 'tb') {
+            if (lnState.tbAnswer.length < q.sequence.length) return; // chưa xếp đủ từ
+            correctText = q.sequence.map(w => w.en).join(' → ');
+            isCorrect = lnState.tbAnswer.every((w, i) => lnNormalize(w.en) === lnNormalize(q.sequence[i].en));
+        } else if (diff === 'kha') {
+            const input = document.getElementById('ln-answer-input');
+            const userVal = lnNormalize(input.value);
+            if (!userVal) { input.focus(); return; }
+            const target = q.sequence[q.askPos - 1];
+            correctText = target.en;
+            isCorrect = userVal === lnNormalize(target.en);
+            input.disabled = true;
+            if (!isCorrect) input.classList.add('is-wrong');
+        } else if (diff === 'kho') {
+            const heardNorms = new Set(q.heard.map(w => lnNormalize(w.en)));
+            const selected = lnState.khoSelected;
+            isCorrect = heardNorms.size === selected.size && Array.from(heardNorms).every(n => selected.has(n));
+            correctText = q.heard.map(w => w.en).join(', ');
+        }
+
+        lnState.busy = true;
+        if (isCorrect) lnState.score++;
+        if (isCorrect) lnPlayCorrectSound(); else lnPlayWrongSound();
+        lnQuizFeedback.className = 'thcs-translate-feedback ' + (isCorrect ? 'is-correct' : 'is-wrong');
+        lnQuizFeedback.innerHTML = isCorrect
+            ? '✅ Chính xác!'
+            : `❌ Chưa đúng. Đáp án đúng: <span class="tf-answer"><b>${lnEsc(correctText)}</b></span>`;
+
+        setTimeout(() => {
+            lnState.index++;
+            if (lnState.index >= LN_TOTAL_QUESTIONS) lnFinishQuiz();
+            else lnRenderQuestion();
+        }, isCorrect ? 1000 : 1800);
+    }
+
+    function lnFinishQuiz() {
+        lnStopAudio();
+        lnQuizPlayArea.style.display = 'none';
+        lnResultArea.style.display = 'block';
+        const pct = Math.round((lnState.score / LN_TOTAL_QUESTIONS) * 100);
+        lnResultBox.innerHTML = `
+            <div class="ln-result-emoji">${pct >= 80 ? '🏆' : (pct >= 50 ? '👍' : '💪')}</div>
+            <h3>Kết quả: ${lnState.score} / ${LN_TOTAL_QUESTIONS} câu đúng (${pct}%)</h3>
+            <div class="thcs-translate-actions">
+                <button type="button" class="kid-btn kid-btn-primary" id="ln-retry-btn">🔄 Làm lại (từ vựng mới)</button>
+                <button type="button" class="kid-btn" id="ln-back-diff-btn">← Chọn độ khó khác</button>
+            </div>
+        `;
+        document.getElementById('ln-retry-btn').addEventListener('click', () => lnStartQuiz(lnState.diff));
+        document.getElementById('ln-back-diff-btn').addEventListener('click', () => {
+            lnResultArea.style.display = 'none';
+            lnQuizPanel.style.display = 'none';
+            lnLv1Panel.style.display = 'block';
+        });
+    }
+})();
+// ===== KẾT THÚC: TAB "LUYỆN KỸ NĂNG" > "🎧 NGHE" — LUYỆN NGHE GIAI ĐOẠN 1 =====
 
 });

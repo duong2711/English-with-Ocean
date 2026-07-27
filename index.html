@@ -1416,8 +1416,87 @@
     <!-- ===== TAB MẸ "LUYỆN KỸ NĂNG" — Nghe/Nói/Đọc/Viết (nội dung sẽ cập nhật sau) ===== -->
     <div id="tab-luyen-nghe" class="main-tab-content">
         <h2>🎧 Luyện Nghe</h2>
-        <p class="kid-hint">Nội dung luyện Nghe đang được xây dựng — sẽ sớm cập nhật tại đây.</p>
+
+        <!-- ===== Danh sách giai đoạn luyện nghe (hiện tại mới có Giai đoạn 1) ===== -->
+        <div class="folder-grid" id="ln-stage-folder-grid">
+            <div class="folder-card" id="ln-stage1-folder-card">🎯 Luyện nghe giai đoạn 1</div>
+        </div>
+
+        <!-- ===== Panel Giai đoạn 1: chọn cấp độ (hiện tại mới có Nghe lv1) ===== -->
+        <div id="ln-stage1-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <button class="grammar-back-btn" id="ln-stage1-back-btn">← Quay lại</button>
+                    <h3 style="margin:0;">🎯 Luyện nghe giai đoạn 1</h3>
+                </div>
+            </div>
+            <div class="kid-topic-grid" id="ln-stage1-level-grid">
+                <div class="kid-topic-card" id="ln-lv1-card">
+                    <span class="kid-icon">🎧</span>
+                    <div class="kid-title">Nghe lv1</div>
+                    <div class="kid-count">Nghe từ đơn &amp; từ ghép, nghe đánh vần</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Panel Nghe lv1: chọn độ khó ===== -->
+        <div id="ln-lv1-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border);">
+                <button class="grammar-back-btn" id="ln-lv1-back-btn">← Quay lại</button>
+                <h3 style="margin:0;">🎧 Nghe lv1</h3>
+            </div>
+            <p class="kid-hint">Mục tiêu: nghe được từ đơn và từ ghép, nghe được đánh vần. Mỗi độ khó có 15 câu — từ vựng lấy từ kho từ vựng của bạn (từ vựng cá nhân + chủ đề "Cho bé" đã hoàn thành + Unit THCS/THPT đã hoàn thành) và sẽ đổi ngẫu nhiên mỗi lần luyện tập.</p>
+            <div class="kid-topic-grid" id="ln-diff-grid">
+                <div class="kid-topic-card" data-ln-diff="de">
+                    <span class="kid-icon">🟢</span>
+                    <div class="kid-title">Dễ</div>
+                    <div class="kid-count">Nghe 1 từ được đánh vần và điền từ đó</div>
+                </div>
+                <div class="kid-topic-card" data-ln-diff="tb">
+                    <span class="kid-icon">🟡</span>
+                    <div class="kid-title">Trung bình</div>
+                    <div class="kid-count">Nghe một loạt từ rồi xếp đúng thứ tự</div>
+                </div>
+                <div class="kid-topic-card" data-ln-diff="kha">
+                    <span class="kid-icon">🟠</span>
+                    <div class="kid-title">Khá</div>
+                    <div class="kid-count">Nghe một loạt từ (đã hiện sẵn) và điền đúng từ theo số thứ tự</div>
+                </div>
+                <div class="kid-topic-card" data-ln-diff="kho">
+                    <span class="kid-icon">🔴</span>
+                    <div class="kid-title">Khó</div>
+                    <div class="kid-count">Nghe một loạt từ và tick đúng những từ đã nghe</div>
+                </div>
+                <div class="kid-topic-card" data-ln-diff="dn">
+                    <span class="kid-icon">💀</span>
+                    <div class="kid-title">Địa ngục</div>
+                    <div class="kid-count">Nghe 1 từ (tốc độ thường) và điền vào chỗ trống</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Panel làm bài (dùng chung cho cả 5 độ khó) ===== -->
+        <div id="ln-quiz-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border);">
+                <button class="grammar-back-btn" id="ln-quiz-back-btn">← Quay lại</button>
+                <h3 id="ln-quiz-title" style="margin:0;"></h3>
+            </div>
+
+            <div id="ln-quiz-play-area">
+                <div class="thcs-translate-progress" id="ln-quiz-progress"></div>
+                <div class="thcs-translate-card ln-quiz-card">
+                    <div id="ln-quiz-body"></div>
+                    <div class="thcs-translate-actions" id="ln-quiz-controls"></div>
+                    <div class="thcs-translate-feedback" id="ln-quiz-feedback"></div>
+                </div>
+            </div>
+
+            <div id="ln-quiz-result-area" style="display:none;">
+                <div class="ln-result-box" id="ln-result-box"></div>
+            </div>
+        </div>
     </div>
+
 
     <div id="tab-luyen-noi" class="main-tab-content">
         <h2>🗣️ Luyện Nói</h2>

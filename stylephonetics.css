@@ -5511,3 +5511,38 @@ h3.news-editable:focus,
     .ctest-match-cols-editor, .ctest-match-take-wrap { flex-direction: column; }
     .ctest-test-row-main { flex-direction: column; align-items: flex-start; }
 }
+
+/* ===================================================================
+   ===== LUYỆN NGHE — GIAI ĐOẠN 1 — NGHE LV1 (tab "Luyện kỹ năng" > "Nghe") =====
+   =================================================================== */
+.ln-quiz-card { max-width: 560px; margin: 0 auto; background: var(--surface-2,#f7f7f9); border-radius: 18px; padding: 22px; box-shadow: 0 8px 24px rgba(0,0,0,.08); }
+
+.ln-play-row { display: flex; justify-content: center; margin-bottom: 14px; }
+
+.ln-answer-input { display: block; width: 100%; max-width: 320px; margin: 14px auto 0; padding: 10px 14px; border: 2px solid var(--border,#e2e2e6); border-radius: 10px; font-size: 16px; text-align: center; font-family: inherit; }
+.ln-answer-input:focus { outline: none; border-color: var(--accent,#6d5bff); }
+.ln-answer-input.is-wrong { border-color: #ff5d5d; animation: thcsShakeInput .35s; }
+.ln-answer-input:disabled { opacity: .7; }
+
+.ln-chip-row { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 14px; }
+.ln-chip { padding: 9px 16px; border-radius: 10px; border: 1px solid var(--border,#e2e2e6); background: var(--surface,#fff); cursor: pointer; font-size: 14.5px; font-weight: 600; transition: .15s; }
+.ln-chip:hover { border-color: var(--accent,#6d5bff); }
+.ln-chip.is-picked { opacity: .35; cursor: default; pointer-events: none; }
+
+.ln-answer-slots { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 6px; }
+.ln-slot { min-width: 64px; padding: 9px 12px; border-radius: 10px; border: 2px dashed var(--border,#e2e2e6); text-align: center; font-size: 14px; opacity: .6; }
+.ln-slot.is-filled { border-style: solid; border-color: var(--accent,#6d5bff); opacity: 1; font-weight: 700; color: var(--accent,#6d5bff); }
+
+.ln-display-box { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; background: var(--surface,#fff); border: 1px solid var(--border,#e2e2e6); border-radius: 12px; padding: 12px; margin-bottom: 14px; }
+.ln-display-chip { padding: 6px 12px; border-radius: 8px; background: var(--surface-2,#f7f7f9); font-size: 13.5px; font-weight: 600; }
+.ln-ask-line { text-align: center; font-size: 15px; margin-bottom: 6px; }
+
+.ln-tick-list { display: flex; flex-direction: column; gap: 8px; max-width: 360px; margin: 0 auto; }
+.ln-tick-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border: 1px solid var(--border,#e2e2e6); border-radius: 10px; background: var(--surface,#fff); cursor: pointer; font-size: 14.5px; text-align: left; width: 100%; font-family: inherit; }
+.ln-tick-box { width: 18px; height: 18px; border-radius: 5px; border: 2px solid var(--border,#c9c9d6); flex: 0 0 auto; position: relative; }
+.ln-tick-item.is-ticked { border-color: var(--accent,#6d5bff); background: var(--surface-2,#f7f7f9); }
+.ln-tick-item.is-ticked .ln-tick-box { background: var(--accent,#6d5bff); border-color: var(--accent,#6d5bff); }
+.ln-tick-item.is-ticked .ln-tick-box::after { content: "✓"; position: absolute; inset: 0; color: #fff; font-size: 13px; display: flex; align-items: center; justify-content: center; }
+
+.ln-result-box { max-width: 480px; margin: 24px auto; text-align: center; background: var(--surface-2,#f7f7f9); border-radius: 18px; padding: 28px 22px; box-shadow: 0 8px 24px rgba(0,0,0,.08); }
+.ln-result-emoji { font-size: 44px; margin-bottom: 10px; }
