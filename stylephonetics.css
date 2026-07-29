@@ -1182,6 +1182,52 @@ h3 { font-size:0.95rem; font-weight:600; color:var(--text); margin:0 0 8px; }
 .profile-achievements-list { display: flex; flex-direction: column; gap: 8px; }
 .profile-ach-loading, .profile-ach-error { font-size: 0.8rem; color: var(--text-muted); }
 
+/* [MỚI] "Thời gian đồng hành" - thời gian học viên bắt đầu học trên web cho đến nay */
+.profile-enrollment { margin-bottom: 20px; }
+.profile-enrollment h4 { font-size: 0.9rem; margin-bottom: 10px; }
+.enrollment-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+.enrollment-icon { font-size: 1.4rem; flex-shrink: 0; }
+.enrollment-info { flex: 1; min-width: 0; }
+.enrollment-main { font-size: 0.82rem; font-weight: 700; color: var(--text); }
+.enrollment-sub { font-size: 0.74rem; color: var(--text-muted); margin-top: 2px; }
+.enrollment-edit-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+}
+.enrollment-edit-row input[type="date"] {
+    flex: 1;
+    min-width: 130px;
+    padding: 5px 8px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-family: inherit;
+}
+.enrollment-save-btn {
+    padding: 5px 10px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 6px;
+    background: var(--primary);
+    color: #fff;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.enrollment-save-btn:hover { background: var(--primary-dark); }
+.enrollment-save-btn:disabled { opacity: 0.6; cursor: default; }
+
 .ach-badge {
     display: flex;
     align-items: center;
@@ -1272,6 +1318,56 @@ h3 { font-size:0.95rem; font-weight:600; color:var(--text); margin:0 0 8px; }
     font-weight: 700;
     color: var(--primary-dark);
 }
+
+/* [MỚI] Giảng viên loại/khôi phục học viên khỏi bảng xếp hạng chăm chỉ */
+.leaderboard-exclude-btn {
+    flex-shrink: 0;
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    cursor: pointer;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.7;
+}
+.leaderboard-exclude-btn:hover {
+    opacity: 1;
+    border-color: var(--danger);
+    background: var(--danger);
+    filter: none;
+}
+.leaderboard-excluded-section {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--border);
+}
+.leaderboard-excluded-section h5 {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    margin: 0 0 8px;
+}
+.leaderboard-row-excluded {
+    background: var(--surface);
+    opacity: 0.85;
+}
+.leaderboard-restore-btn {
+    flex-shrink: 0;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--primary-dark);
+    background: var(--surface-2);
+    border: 1px solid var(--primary);
+    border-radius: var(--radius-sm);
+    padding: 4px 10px;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.leaderboard-restore-btn:hover { background: var(--primary-light); }
 
 .profile-modal-actions {
     display: flex;
@@ -5546,3 +5642,178 @@ h3.news-editable:focus,
 
 .ln-result-box { max-width: 480px; margin: 24px auto; text-align: center; background: var(--surface-2,#f7f7f9); border-radius: 18px; padding: 28px 22px; box-shadow: 0 8px 24px rgba(0,0,0,.08); }
 .ln-result-emoji { font-size: 44px; margin-bottom: 10px; }
+
+/* ===================================================================
+   ===== NGHE LV2 (nghe hiểu 1 câu — ngân hàng câu do giảng viên soạn) =====
+   =================================================================== */
+
+/* ----- Khung soạn câu hỏi (giảng viên) ----- */
+.ln2-admin-box {
+    max-width: 620px;
+    margin: 0 auto 20px;
+    background: var(--surface-2);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+}
+.ln2-admin-type-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+.ln2-type-tab {
+    padding: 8px 14px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+.ln2-type-tab.active { border-color: var(--primary); color: var(--primary-dark); background: var(--primary-light); }
+.ln2-admin-type-tabs.is-locked { opacity: .55; pointer-events: none; }
+
+.ln2-admin-form { display: flex; flex-direction: column; gap: 12px; }
+.ln2-field { display: flex; flex-direction: column; gap: 5px; }
+.ln2-field label { font-size: 0.78rem; font-weight: 700; color: var(--primary-dark); }
+.ln2-field .news-edit-input { width: 100%; }
+
+.ln2-mc-edit-options { display: flex; flex-direction: column; gap: 8px; }
+.ln2-mc-remove-btn {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--danger);
+    cursor: pointer;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.ln2-mc-remove-btn:hover { border-color: var(--danger); background: var(--danger); color: #fff; }
+.ln2-mc-add-btn {
+    margin-top: 10px;
+    align-self: flex-start;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--primary-dark);
+    background: var(--primary-light);
+    border: none;
+    border-radius: 999px;
+    padding: 6px 14px;
+    cursor: pointer;
+}
+.ln2-mc-add-btn:hover { filter: brightness(0.97); }
+.ln2-mc-question {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text);
+    text-align: center;
+    margin: 4px 0 14px;
+}
+
+.ln2-admin-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--border);
+}
+.ln2-admin-status { font-size: 0.8rem; color: var(--success-dark); flex: 1; min-width: 120px; }
+.ln2-admin-status.is-error { color: var(--danger-dark); }
+
+/* ----- Danh sách câu hỏi đã soạn (giảng viên) ----- */
+.ln2-item-list { max-width: 620px; margin: 0 auto; display: flex; flex-direction: column; gap: 8px; }
+.ln2-item-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+}
+.ln2-item-type-badge {
+    flex: 0 0 auto;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--primary-dark);
+    background: var(--primary-light);
+    border-radius: 999px;
+    padding: 4px 10px;
+    white-space: nowrap;
+}
+.ln2-item-audio-badge {
+    flex: 0 0 auto;
+    font-size: 0.8rem;
+}
+.ln2-item-preview {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.85rem;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.ln2-item-actions { flex: 0 0 auto; display: flex; gap: 6px; }
+.ln2-item-edit-btn, .ln2-item-delete-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    cursor: pointer;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.ln2-item-edit-btn:hover { border-color: var(--primary); }
+.ln2-item-delete-btn:hover { border-color: var(--danger); background: var(--danger); filter: none; }
+.ln2-item-delete-btn:hover { color: #fff; }
+
+/* ----- Câu hỏi trắc nghiệm (học viên làm bài) ----- */
+.ln2-mc-grid { display: flex; flex-direction: column; gap: 10px; max-width: 420px; margin: 0 auto; }
+.ln2-mc-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.9rem;
+    text-align: left;
+    transition: .15s;
+}
+.ln2-mc-option:hover { border-color: var(--primary); }
+.ln2-mc-letter {
+    flex: 0 0 auto;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.78rem;
+}
+.ln2-mc-text { flex: 1; }
+.ln2-mc-option.is-disabled { cursor: default; pointer-events: none; }
+.ln2-mc-option.is-correct { border-color: var(--success); background: var(--success-light); }
+.ln2-mc-option.is-correct .ln2-mc-letter { background: var(--success); border-color: var(--success); color: #fff; }
+.ln2-mc-option.is-wrong { border-color: var(--danger); background: #fee2e2; }
+.ln2-mc-option.is-wrong .ln2-mc-letter { background: var(--danger); border-color: var(--danger); color: #fff; }

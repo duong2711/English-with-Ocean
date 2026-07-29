@@ -1436,6 +1436,11 @@
                     <div class="kid-title">Nghe lv1</div>
                     <div class="kid-count">Nghe từ đơn &amp; từ ghép, nghe đánh vần</div>
                 </div>
+                <div class="kid-topic-card" id="ln-lv2-card">
+                    <span class="kid-icon">🎧</span>
+                    <div class="kid-title">Nghe lv2</div>
+                    <div class="kid-count">Nghe hiểu 1 câu hoàn chỉnh</div>
+                </div>
             </div>
         </div>
 
@@ -1493,6 +1498,75 @@
 
             <div id="ln-quiz-result-area" style="display:none;">
                 <div class="ln-result-box" id="ln-result-box"></div>
+            </div>
+        </div>
+
+        <!-- ===== Panel Nghe lv2: giới thiệu + bắt đầu luyện tập + (giảng viên) soạn câu hỏi ===== -->
+        <div id="ln2-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <button class="grammar-back-btn" id="ln2-back-btn">← Quay lại</button>
+                    <h3 style="margin:0;">🎧 Nghe lv2</h3>
+                </div>
+                <button type="button" class="kid-btn" id="ln2-manage-btn" style="display:none;">🛠️ Soạn câu hỏi (<span id="ln2-item-count">0</span>)</button>
+            </div>
+            <p class="kid-hint">Mục tiêu: nghe hiểu một câu hoàn chỉnh. Mỗi lượt luyện tập gồm tối đa 20 câu được chọn ngẫu nhiên từ kho câu hỏi do giảng viên soạn (nghe &amp; điền từ, nghe &amp; sắp xếp câu, nghe &amp; sắp xếp chữ cái, nghe &amp; chọn trắc nghiệm).</p>
+            <div class="kid-topic-grid" id="ln2-start-grid">
+                <div class="kid-topic-card" id="ln2-start-card">
+                    <span class="kid-icon">▶️</span>
+                    <div class="kid-title">Bắt đầu luyện tập</div>
+                    <div class="kid-count" id="ln2-start-count">Đang tải kho câu hỏi...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Panel giảng viên soạn câu hỏi Nghe lv2 ===== -->
+        <div id="ln2-manage-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border);">
+                <button class="grammar-back-btn" id="ln2-manage-back-btn">← Quay lại</button>
+                <h3 style="margin:0;">🛠️ Soạn câu hỏi Nghe lv2</h3>
+            </div>
+
+            <div class="ln2-admin-box">
+                <div class="ln2-admin-type-tabs" id="ln2-admin-type-tabs">
+                    <button type="button" class="ln2-type-tab active" data-ln2-type="dien">📝 Điền từ</button>
+                    <button type="button" class="ln2-type-tab" data-ln2-type="sap_cau">🔤 Sắp xếp câu</button>
+                    <button type="button" class="ln2-type-tab" data-ln2-type="sap_chu">🔡 Sắp xếp chữ cái</button>
+                    <button type="button" class="ln2-type-tab" data-ln2-type="trac_nghiem">☑️ Trắc nghiệm</button>
+                </div>
+
+                <div class="ln2-admin-form" id="ln2-admin-form"></div>
+
+                <div class="ln2-admin-actions">
+                    <span class="ln2-admin-status" id="ln2-admin-status"></span>
+                    <button type="button" class="kid-btn" id="ln2-admin-cancel-btn" style="display:none;">Hủy sửa</button>
+                    <button type="button" class="kid-btn kid-btn-primary" id="ln2-admin-save-btn">➕ Thêm câu hỏi</button>
+                </div>
+            </div>
+
+            <div class="ln2-item-list" id="ln2-item-list">
+                <p class="kid-hint">Đang tải danh sách câu hỏi...</p>
+            </div>
+        </div>
+
+        <!-- ===== Panel làm bài Nghe lv2 ===== -->
+        <div id="ln2-quiz-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border);">
+                <button class="grammar-back-btn" id="ln2-quiz-back-btn">← Quay lại</button>
+                <h3 style="margin:0;">🎧 Nghe lv2</h3>
+            </div>
+
+            <div id="ln2-quiz-play-area">
+                <div class="thcs-translate-progress" id="ln2-quiz-progress"></div>
+                <div class="thcs-translate-card ln-quiz-card">
+                    <div id="ln2-quiz-body"></div>
+                    <div class="thcs-translate-actions" id="ln2-quiz-controls"></div>
+                    <div class="thcs-translate-feedback" id="ln2-quiz-feedback"></div>
+                </div>
+            </div>
+
+            <div id="ln2-quiz-result-area" style="display:none;">
+                <div class="ln-result-box" id="ln2-result-box"></div>
             </div>
         </div>
     </div>
@@ -1737,18 +1811,18 @@
             <div class="roadmap-intro roadmap-intro-grammar">
                 <span class="roadmap-intro-badge">📖 Lộ trình ngữ pháp</span>
                 <h3>Ngữ pháp mất gốc — Chinh phục trong hơn 2 tháng</h3>
-                <p>65 ngày học cô đọng, chia thành 4 giai đoạn từ nền tảng từ loại đến ngữ pháp chuyên sâu — mỗi giai đoạn đều có buổi ôn tập và bài kiểm tra để chắc kiến thức trước khi học tiếp.</p>
+                <p>67 ngày học cô đọng, chia thành 4 giai đoạn: bắt đầu từ khung câu &amp; từ loại nền tảng, tiến dần đến ngữ pháp chuyên sâu — mỗi giai đoạn đều có buổi ôn tập và bài kiểm tra để chắc kiến thức trước khi học tiếp.</p>
                 <div class="roadmap-stats">
-                    <div class="roadmap-stat"><strong>65</strong><span>ngày học</span></div>
+                    <div class="roadmap-stat"><strong>67</strong><span>ngày học</span></div>
                     <div class="roadmap-stat"><strong>4</strong><span>giai đoạn</span></div>
                     <div class="roadmap-stat"><strong>4</strong><span>bài test</span></div>
-                    <div class="roadmap-stat"><strong>~9</strong><span>tuần</span></div>
+                    <div class="roadmap-stat"><strong>~10</strong><span>tuần</span></div>
                 </div>
             </div>
 
             <!-- ----- Dải tổng quan 4 giai đoạn ----- -->
             <div class="roadmap-stages">
-                <span class="roadmap-stage-pill gstage-pill-1"><span>🟢</span>Từ loại &amp; cấu trúc vi mô</span>
+                <span class="roadmap-stage-pill gstage-pill-1"><span>🟢</span>Khung câu &amp; Từ loại</span>
                 <span class="roadmap-stage-arrow">→</span>
                 <span class="roadmap-stage-pill gstage-pill-2"><span>🟡</span>Thì &amp; động từ</span>
                 <span class="roadmap-stage-arrow">→</span>
@@ -1767,31 +1841,34 @@
                     <button type="button" class="gstage-header" data-gstage-toggle>
                         <span class="gstage-icon">🟢</span>
                         <span class="gstage-header-text">
-                            <h4>Giai đoạn 1: Từ loại &amp; Cấu trúc vi mô</h4>
-                            <span class="gstage-meta">Ngày 1 – 17 · 17 ngày</span>
+                            <h4>Giai đoạn 1: Khung câu &amp; Từ loại</h4>
+                            <span class="gstage-meta">Ngày 1 – 20 · 20 ngày</span>
                         </span>
                         <span class="gstage-chevron">▾</span>
                     </button>
                     <div class="gstage-body">
-                        <p class="gstage-desc">Giai đoạn này xử lý toàn bộ các thành phần tạo nên một cụm từ, rà soát từng lỗi sai nhỏ nhất.</p>
+                        <p class="gstage-desc">Bắt đầu bằng khung câu cơ bản để hình dung toàn cảnh, sau đó đi vào từng thành phần tạo nên một cụm từ, rà soát từng lỗi sai nhỏ nhất.</p>
                         <div class="gday-list">
-                            <div class="gday-row"><span class="gday-num">1</span><span class="gday-text">Danh từ (1) - Danh từ đếm được, không đếm được &amp; Quy tắc thêm s/es.</span></div>
-                            <div class="gday-row"><span class="gday-num">2</span><span class="gday-text">Danh từ (2) - Danh từ ghép, Danh từ tập hợp &amp; Sở hữu cách (N's vs Of).</span></div>
-                            <div class="gday-row"><span class="gday-num">3</span><span class="gday-text">Đại từ (1) - Đại từ nhân xưng (Chủ ngữ/Tân ngữ), Tính từ sở hữu &amp; Đại từ sở hữu.</span></div>
-                            <div class="gday-row"><span class="gday-num">4</span><span class="gday-text">Đại từ (2) - Đại từ phản thân (myself, yourself), Đại từ tương hỗ (each other, one another).</span></div>
-                            <div class="gday-row"><span class="gday-num">5</span><span class="gday-text">Đại từ (3) - Đại từ bất định (someone, anything...) &amp; Chủ ngữ giả (Dummy It/There).</span></div>
-                            <div class="gday-row gday-review"><span class="gday-num">6</span><span class="gday-text">Review &amp; Thực hành (Ngày 1 - 5)</span></div>
-                            <div class="gday-row"><span class="gday-num">7</span><span class="gday-text">Mạo từ (A/An/The) - Quy tắc sử dụng cơ bản.</span></div>
-                            <div class="gday-row"><span class="gday-num">8</span><span class="gday-text">Mạo từ rỗng (Zero Article) - Các trường hợp tuyệt đối không dùng mạo từ.</span></div>
-                            <div class="gday-row"><span class="gday-num">9</span><span class="gday-text">Lượng từ (1) - Some/Any, Much/Many, A lot of/Lots of.</span></div>
-                            <div class="gday-row"><span class="gday-num">10</span><span class="gday-text">Lượng từ (2) - Phân biệt vi mô: A few/Few, A little/Little, All/Both, Each/Every, Either/Neither.</span></div>
-                            <div class="gday-row"><span class="gday-num">11</span><span class="gday-text">Tính từ (1) - Vị trí, chức năng &amp; Phân biệt tính từ đuôi -ed / -ing.</span></div>
-                            <div class="gday-row"><span class="gday-num">12</span><span class="gday-text">Tính từ (2) - Trật tự sắp xếp tính từ (OSASCOMP: Ý kiến - Kích cỡ - Tuổi - Hình dáng - Màu sắc...).</span></div>
-                            <div class="gday-row"><span class="gday-num">13</span><span class="gday-text">Trạng từ (1) - Vị trí, phân loại (Tần suất, Mức độ, Cách thức, Nơi chốn, Thời gian).</span></div>
-                            <div class="gday-row"><span class="gday-num">14</span><span class="gday-text">Trạng từ (2) - Quy tắc tạo đuôi -ly &amp; Các tính/trạng từ dễ nhầm (hard/hardly, late/lately, fast).</span></div>
-                            <div class="gday-row"><span class="gday-num">15</span><span class="gday-text">🆕 Cách thành lập từ (Word Formations) - Tiền tố/hậu tố biến đổi Danh từ ⇄ Động từ ⇄ Tính từ ⇄ Trạng từ (-tion, -ment, -er/-or, -ity, -ness, -ful, -less, un-/in-/dis-...).</span></div>
-                            <div class="gday-row"><span class="gday-num">16</span><span class="gday-text">🆕 Nhận diện từ loại theo vị trí (Word Forms) - Mẹo xác định danh từ/tính từ/động từ/trạng từ còn thiếu trong câu dựa vào vị trí xung quanh (sau mạo từ, sau giới từ, trước danh từ...) - áp dụng cho dạng bài điền từ loại.</span></div>
-                            <div class="gday-row gday-test"><span class="gday-num">17</span><span class="gday-text">Mini-test 1 &amp; Tổng ôn Giai đoạn 1</span></div>
+                            <div class="gday-row"><span class="gday-num">1</span><span class="gday-text">🆕 Câu &amp; Mẫu câu cơ bản (Sentences &amp; Sentence Patterns) - 4 loại câu theo mục đích nói (trần thuật, nghi vấn, cảm thán, mệnh lệnh) &amp; khung câu S-V, S-V-C, S-V-O, S-V-O-O, S-V-O-C, S-V-A - làm quen "bộ khung" của câu tiếng Anh trước khi đi vào chi tiết từng loại từ.</span></div>
+                            <div class="gday-row"><span class="gday-num">2</span><span class="gday-text">Danh từ (1) - Danh từ đếm được, không đếm được &amp; Quy tắc thêm s/es.</span></div>
+                            <div class="gday-row"><span class="gday-num">3</span><span class="gday-text">Danh từ (2) - Danh từ ghép, Danh từ tập hợp &amp; Sở hữu cách (N's vs Of).</span></div>
+                            <div class="gday-row"><span class="gday-num">4</span><span class="gday-text">Đại từ (1) - Đại từ nhân xưng (Chủ ngữ/Tân ngữ), Tính từ sở hữu &amp; Đại từ sở hữu.</span></div>
+                            <div class="gday-row"><span class="gday-num">5</span><span class="gday-text">Đại từ (2) - Đại từ phản thân (myself, yourself), Đại từ tương hỗ (each other, one another).</span></div>
+                            <div class="gday-row"><span class="gday-num">6</span><span class="gday-text">Đại từ (3) - Đại từ bất định (someone, anything...) &amp; Chủ ngữ giả (Dummy It/There).</span></div>
+                            <div class="gday-row gday-review"><span class="gday-num">7</span><span class="gday-text">Review &amp; Thực hành (Ngày 2 - 6)</span></div>
+                            <div class="gday-row"><span class="gday-num">8</span><span class="gday-text">Mạo từ (A/An/The) - Quy tắc sử dụng cơ bản.</span></div>
+                            <div class="gday-row"><span class="gday-num">9</span><span class="gday-text">Mạo từ rỗng (Zero Article) - Các trường hợp tuyệt đối không dùng mạo từ.</span></div>
+                            <div class="gday-row"><span class="gday-num">10</span><span class="gday-text">Lượng từ (1) - Some/Any, Much/Many, A lot of/Lots of.</span></div>
+                            <div class="gday-row"><span class="gday-num">11</span><span class="gday-text">Lượng từ (2) - Phân biệt vi mô: A few/Few, A little/Little, All/Both, Each/Every, Either/Neither.</span></div>
+                            <div class="gday-row"><span class="gday-num">12</span><span class="gday-text">🆕 Động từ (1) - Phân loại theo ý nghĩa: Động từ hành động (Action verbs: run, eat, write...) &amp; Động từ nối (Linking verbs: be, seem, become, look, feel, taste...) đi kèm Tính từ bổ nghĩa.</span></div>
+                            <div class="gday-row"><span class="gday-num">13</span><span class="gday-text">🆕 Động từ (2) - Trợ động từ (Auxiliary verbs: be/do/have hỗ trợ chia thì, câu hỏi, câu phủ định) &amp; Nội động từ - Ngoại động từ (Intransitive vs Transitive Verbs).</span></div>
+                            <div class="gday-row"><span class="gday-num">14</span><span class="gday-text">Tính từ (1) - Vị trí, chức năng &amp; Phân biệt tính từ đuôi -ed / -ing.</span></div>
+                            <div class="gday-row"><span class="gday-num">15</span><span class="gday-text">Tính từ (2) - Trật tự sắp xếp tính từ (OSASCOMP: Ý kiến - Kích cỡ - Tuổi - Hình dáng - Màu sắc...).</span></div>
+                            <div class="gday-row"><span class="gday-num">16</span><span class="gday-text">Trạng từ (1) - Vị trí, phân loại (Tần suất, Mức độ, Cách thức, Nơi chốn, Thời gian).</span></div>
+                            <div class="gday-row"><span class="gday-num">17</span><span class="gday-text">Trạng từ (2) - Quy tắc tạo đuôi -ly &amp; Các tính/trạng từ dễ nhầm (hard/hardly, late/lately, fast).</span></div>
+                            <div class="gday-row"><span class="gday-num">18</span><span class="gday-text">🆕 Cách thành lập từ (Word Formations) - Tiền tố/hậu tố biến đổi Danh từ ⇄ Động từ ⇄ Tính từ ⇄ Trạng từ (-tion, -ment, -er/-or, -ity, -ness, -ful, -less, un-/in-/dis-...).</span></div>
+                            <div class="gday-row"><span class="gday-num">19</span><span class="gday-text">🆕 Nhận diện từ loại theo vị trí (Word Forms) - Mẹo xác định danh từ/tính từ/động từ/trạng từ còn thiếu trong câu dựa vào vị trí xung quanh (sau mạo từ, sau giới từ, trước danh từ...) - áp dụng cho dạng bài điền từ loại.</span></div>
+                            <div class="gday-row gday-test"><span class="gday-num">20</span><span class="gday-text">Mini-test 1 &amp; Tổng ôn Giai đoạn 1</span></div>
                         </div>
                     </div>
                 </div>
@@ -1802,32 +1879,32 @@
                         <span class="gstage-icon">🟡</span>
                         <span class="gstage-header-text">
                             <h4>Giai đoạn 2: Thì &amp; Các dạng động từ</h4>
-                            <span class="gstage-meta">Ngày 18 – 36 · 19 ngày</span>
+                            <span class="gstage-meta">Ngày 21 – 39 · 19 ngày</span>
                         </span>
                         <span class="gstage-chevron">▾</span>
                     </button>
                     <div class="gstage-body">
                         <p class="gstage-desc">Giai đoạn này làm chủ hoàn toàn thời gian và sắc thái của hành động.</p>
                         <div class="gday-list">
-                            <div class="gday-row"><span class="gday-num">18</span><span class="gday-text">Động từ cơ bản - Động từ To be, Động từ thường &amp; Động từ liên kết (Linking verbs).</span></div>
-                            <div class="gday-row"><span class="gday-num">19</span><span class="gday-text">Thì Hiện tại đơn (Bao gồm cả cách dùng diễn tả lịch trình tương lai).</span></div>
-                            <div class="gday-row"><span class="gday-num">20</span><span class="gday-text">Thì Hiện tại tiếp diễn (Bao gồm cách dùng diễn tả kế hoạch tương lai &amp; Phàn nàn với "always").</span></div>
-                            <div class="gday-row"><span class="gday-num">21</span><span class="gday-text">Động từ trạng thái (Stative verbs) - Các từ không bao giờ dùng ở dạng V-ing (know, believe, like...).</span></div>
-                            <div class="gday-row"><span class="gday-num">22</span><span class="gday-text">Thì Quá khứ đơn &amp; Cấu trúc Used to / Be used to / Get used to.</span></div>
-                            <div class="gday-row"><span class="gday-num">23</span><span class="gday-text">Thì Quá khứ tiếp diễn &amp; Sự kết hợp với Quá khứ đơn (When/While).</span></div>
-                            <div class="gday-row gday-review"><span class="gday-num">24</span><span class="gday-text">Review &amp; Thực hành (Ngày 18 - 23)</span></div>
-                            <div class="gday-row"><span class="gday-num">25</span><span class="gday-text">Thì Tương lai đơn (Will) &amp; Tương lai gần (Be going to) - Phân biệt ý định và suy đoán.</span></div>
-                            <div class="gday-row"><span class="gday-num">26</span><span class="gday-text">Thì Hiện tại hoàn thành - Dấu hiệu (Since, For, Yet, Already, Just).</span></div>
-                            <div class="gday-row"><span class="gday-num">27</span><span class="gday-text">Phân biệt Hiện tại hoàn thành &amp; Quá khứ đơn (Lỗi sai kinh điển).</span></div>
-                            <div class="gday-row"><span class="gday-num">28</span><span class="gday-text">Thì Hiện tại hoàn thành tiếp diễn &amp; So sánh với Hiện tại hoàn thành.</span></div>
-                            <div class="gday-row"><span class="gday-num">29</span><span class="gday-text">Thì Quá khứ hoàn thành &amp; Quá khứ hoàn thành tiếp diễn.</span></div>
-                            <div class="gday-row"><span class="gday-num">30</span><span class="gday-text">Thì Tương lai tiếp diễn &amp; Tương lai hoàn thành.</span></div>
-                            <div class="gday-row gday-review"><span class="gday-num">31</span><span class="gday-text">Review 12 Thì &amp; Bài tập chia động từ tổng hợp</span></div>
-                            <div class="gday-row"><span class="gday-num">32</span><span class="gday-text">🆕 Sự phối hợp các thì (Sequence of Tenses) - Quy tắc chia thì giữa mệnh đề chính &amp; mệnh đề phụ, mệnh đề trạng ngữ chỉ thời gian (khi, trước khi, ngay khi...) - nền tảng bắt buộc để tường thuật câu chính xác.</span></div>
-                            <div class="gday-row"><span class="gday-num">33</span><span class="gday-text">Động từ khiếm khuyết (Modal verbs) - Can/Could, May/Might, Must/Have to, Should/Ought to.</span></div>
-                            <div class="gday-row"><span class="gday-num">34</span><span class="gday-text">Sự suy luận trong quá khứ (Modals + Have + V3/ed: Must have, Should have, Could have...).</span></div>
-                            <div class="gday-row"><span class="gday-num">35</span><span class="gday-text">Danh động từ (Gerunds: V-ing) &amp; Động từ nguyên mẫu (To V / V-bare) - Bảng các động từ đi kèm.</span></div>
-                            <div class="gday-row gday-test"><span class="gday-num">36</span><span class="gday-text">Mini-test 2 &amp; Tổng ôn Giai đoạn 2</span></div>
+                            <div class="gday-row"><span class="gday-num">21</span><span class="gday-text">Động từ cơ bản - Động từ To be, Động từ thường &amp; Động từ liên kết (Linking verbs).</span></div>
+                            <div class="gday-row"><span class="gday-num">22</span><span class="gday-text">Thì Hiện tại đơn (Bao gồm cả cách dùng diễn tả lịch trình tương lai).</span></div>
+                            <div class="gday-row"><span class="gday-num">23</span><span class="gday-text">Thì Hiện tại tiếp diễn (Bao gồm cách dùng diễn tả kế hoạch tương lai &amp; Phàn nàn với "always").</span></div>
+                            <div class="gday-row"><span class="gday-num">24</span><span class="gday-text">Động từ trạng thái (Stative verbs) - Các từ không bao giờ dùng ở dạng V-ing (know, believe, like...).</span></div>
+                            <div class="gday-row"><span class="gday-num">25</span><span class="gday-text">Thì Quá khứ đơn &amp; Cấu trúc Used to / Be used to / Get used to.</span></div>
+                            <div class="gday-row"><span class="gday-num">26</span><span class="gday-text">Thì Quá khứ tiếp diễn &amp; Sự kết hợp với Quá khứ đơn (When/While).</span></div>
+                            <div class="gday-row gday-review"><span class="gday-num">27</span><span class="gday-text">Review &amp; Thực hành (Ngày 21 - 26)</span></div>
+                            <div class="gday-row"><span class="gday-num">28</span><span class="gday-text">Thì Tương lai đơn (Will) &amp; Tương lai gần (Be going to) - Phân biệt ý định và suy đoán.</span></div>
+                            <div class="gday-row"><span class="gday-num">29</span><span class="gday-text">Thì Hiện tại hoàn thành - Dấu hiệu (Since, For, Yet, Already, Just).</span></div>
+                            <div class="gday-row"><span class="gday-num">30</span><span class="gday-text">Phân biệt Hiện tại hoàn thành &amp; Quá khứ đơn (Lỗi sai kinh điển).</span></div>
+                            <div class="gday-row"><span class="gday-num">31</span><span class="gday-text">Thì Hiện tại hoàn thành tiếp diễn &amp; So sánh với Hiện tại hoàn thành.</span></div>
+                            <div class="gday-row"><span class="gday-num">32</span><span class="gday-text">Thì Quá khứ hoàn thành &amp; Quá khứ hoàn thành tiếp diễn.</span></div>
+                            <div class="gday-row"><span class="gday-num">33</span><span class="gday-text">Thì Tương lai tiếp diễn &amp; Tương lai hoàn thành.</span></div>
+                            <div class="gday-row gday-review"><span class="gday-num">34</span><span class="gday-text">Review 12 Thì &amp; Bài tập chia động từ tổng hợp</span></div>
+                            <div class="gday-row"><span class="gday-num">35</span><span class="gday-text">🆕 Sự phối hợp các thì (Sequence of Tenses) - Quy tắc chia thì giữa mệnh đề chính &amp; mệnh đề phụ, mệnh đề trạng ngữ chỉ thời gian (khi, trước khi, ngay khi...) - nền tảng bắt buộc để tường thuật câu chính xác.</span></div>
+                            <div class="gday-row"><span class="gday-num">36</span><span class="gday-text">Động từ khiếm khuyết (Modal verbs) - Can/Could, May/Might, Must/Have to, Should/Ought to.</span></div>
+                            <div class="gday-row"><span class="gday-num">37</span><span class="gday-text">Sự suy luận trong quá khứ (Modals + Have + V3/ed: Must have, Should have, Could have...).</span></div>
+                            <div class="gday-row"><span class="gday-num">38</span><span class="gday-text">Danh động từ (Gerunds: V-ing) &amp; Động từ nguyên mẫu (To V / V-bare) - Bảng các động từ đi kèm.</span></div>
+                            <div class="gday-row gday-test"><span class="gday-num">39</span><span class="gday-text">Mini-test 2 &amp; Tổng ôn Giai đoạn 2</span></div>
                         </div>
                     </div>
                 </div>
@@ -1838,25 +1915,25 @@
                         <span class="gstage-icon">🟠</span>
                         <span class="gstage-header-text">
                             <h4>Giai đoạn 3: Cấu trúc câu, mệnh đề &amp; từ nối</h4>
-                            <span class="gstage-meta">Ngày 37 – 48 · 12 ngày</span>
+                            <span class="gstage-meta">Ngày 40 – 51 · 12 ngày</span>
                         </span>
                         <span class="gstage-chevron">▾</span>
                     </button>
                     <div class="gstage-body">
                         <p class="gstage-desc">Nâng cấp từ cụm từ đơn giản lên các câu ghép, câu phức có tính liên kết logic cao.</p>
                         <div class="gday-list">
-                            <div class="gday-row"><span class="gday-num">37</span><span class="gday-text">Giới từ (In/On/At) &amp; Giới từ đi kèm danh từ/tính từ/động từ cố định (Dependent prepositions).</span></div>
-                            <div class="gday-row"><span class="gday-num">38</span><span class="gday-text">Cụm động từ (Phrasal Verbs) - Tách biệt cụm có thể chia tách và không thể chia tách.</span></div>
-                            <div class="gday-row"><span class="gday-num">39</span><span class="gday-text">Liên từ (1) - Liên từ kết hợp (FANBOYS: For, And, Nor, But, Or, Yet, So).</span></div>
-                            <div class="gday-row"><span class="gday-num">40</span><span class="gday-text">Liên từ (2) - Liên từ tương quan (Both...and, Not only...but also, Either...or, Neither...nor).</span></div>
-                            <div class="gday-row"><span class="gday-num">41</span><span class="gday-text">Câu hỏi đuôi (Tag questions) - Bao gồm các trường hợp đặc biệt (Let's, I am, Câu mệnh lệnh).</span></div>
-                            <div class="gday-row"><span class="gday-num">42</span><span class="gday-text">Câu đồng tình (So/Too, Either/Neither) &amp; Câu cảm thán (What a/How).</span></div>
-                            <div class="gday-row gday-review"><span class="gday-num">43</span><span class="gday-text">Review &amp; Thực hành (Ngày 37 - 42)</span></div>
-                            <div class="gday-row"><span class="gday-num">44</span><span class="gday-text">Cấu trúc So sánh (Bằng, Hơn, Nhất) &amp; Cách nhấn mạnh so sánh (much/far better).</span></div>
-                            <div class="gday-row"><span class="gday-num">45</span><span class="gday-text">So sánh kép (The comparative..., the comparative... / comparative and comparative).</span></div>
-                            <div class="gday-row"><span class="gday-num">46</span><span class="gday-text">Mệnh đề quan hệ (Xác định &amp; Không xác định) với Who, Whom, Which, That, Whose.</span></div>
-                            <div class="gday-row"><span class="gday-num">47</span><span class="gday-text">Mệnh đề quan hệ rút gọn (V-ing, V3/ed, To V).</span></div>
-                            <div class="gday-row gday-test"><span class="gday-num">48</span><span class="gday-text">Mini-test 3 &amp; Tổng ôn Giai đoạn 3</span></div>
+                            <div class="gday-row"><span class="gday-num">40</span><span class="gday-text">Giới từ (In/On/At) &amp; Giới từ đi kèm danh từ/tính từ/động từ cố định (Dependent prepositions).</span></div>
+                            <div class="gday-row"><span class="gday-num">41</span><span class="gday-text">Cụm động từ (Phrasal Verbs) - Tách biệt cụm có thể chia tách và không thể chia tách.</span></div>
+                            <div class="gday-row"><span class="gday-num">42</span><span class="gday-text">Liên từ (1) - Liên từ kết hợp (FANBOYS: For, And, Nor, But, Or, Yet, So).</span></div>
+                            <div class="gday-row"><span class="gday-num">43</span><span class="gday-text">Liên từ (2) - Liên từ tương quan (Both...and, Not only...but also, Either...or, Neither...nor).</span></div>
+                            <div class="gday-row"><span class="gday-num">44</span><span class="gday-text">Câu hỏi đuôi (Tag questions) - Bao gồm các trường hợp đặc biệt (Let's, I am, Câu mệnh lệnh).</span></div>
+                            <div class="gday-row"><span class="gday-num">45</span><span class="gday-text">Câu đồng tình (So/Too, Either/Neither) &amp; Câu cảm thán (What a/How).</span></div>
+                            <div class="gday-row gday-review"><span class="gday-num">46</span><span class="gday-text">Review &amp; Thực hành (Ngày 40 - 45)</span></div>
+                            <div class="gday-row"><span class="gday-num">47</span><span class="gday-text">Cấu trúc So sánh (Bằng, Hơn, Nhất) &amp; Cách nhấn mạnh so sánh (much/far better).</span></div>
+                            <div class="gday-row"><span class="gday-num">48</span><span class="gday-text">So sánh kép (The comparative..., the comparative... / comparative and comparative).</span></div>
+                            <div class="gday-row"><span class="gday-num">49</span><span class="gday-text">Mệnh đề quan hệ (Xác định &amp; Không xác định) với Who, Whom, Which, That, Whose.</span></div>
+                            <div class="gday-row"><span class="gday-num">50</span><span class="gday-text">Mệnh đề quan hệ rút gọn (V-ing, V3/ed, To V).</span></div>
+                            <div class="gday-row gday-test"><span class="gday-num">51</span><span class="gday-text">Mini-test 3 &amp; Tổng ôn Giai đoạn 3</span></div>
                         </div>
                     </div>
                 </div>
@@ -1867,30 +1944,29 @@
                         <span class="gstage-icon">🔴</span>
                         <span class="gstage-header-text">
                             <h4>Giai đoạn 4: Ngữ pháp chuyên sâu &amp; nâng cao</h4>
-                            <span class="gstage-meta">Ngày 49 – 65 · 17 ngày</span>
+                            <span class="gstage-meta">Ngày 52 – 67 · 16 ngày</span>
                         </span>
                         <span class="gstage-chevron">▾</span>
                     </button>
                     <div class="gstage-body">
                         <p class="gstage-desc">Chinh phục các chủ điểm khó nhất, thường xuất hiện trong các bài thi phân loại.</p>
                         <div class="gday-list">
-                            <div class="gday-row"><span class="gday-num">49</span><span class="gday-text">Mệnh đề trạng ngữ (1) - Nhượng bộ (Although/Even though vs Despite/In spite of).</span></div>
-                            <div class="gday-row"><span class="gday-num">50</span><span class="gday-text">Mệnh đề trạng ngữ (2) - Kết quả/Mức độ (So...that, Such...that, Too...to, Enough).</span></div>
-                            <div class="gday-row"><span class="gday-num">51</span><span class="gday-text">Mệnh đề danh từ (Noun clauses) - Mệnh đề đóng vai trò làm chủ ngữ hoặc tân ngữ (Cực kỳ hay quên).</span></div>
-                            <div class="gday-row"><span class="gday-num">52</span><span class="gday-text">Câu điều kiện Loại 0, Loại 1 &amp; Loại 2.</span></div>
-                            <div class="gday-row"><span class="gday-num">53</span><span class="gday-text">Câu điều kiện Loại 3, Loại hỗn hợp &amp; Các từ thay thế If (Unless, As long as, Provided that).</span></div>
-                            <div class="gday-row gday-review"><span class="gday-num">54</span><span class="gday-text">Review &amp; Thực hành (Ngày 49 - 53)</span></div>
-                            <div class="gday-row"><span class="gday-num">55</span><span class="gday-text">Cấu trúc mong ước (Wish / If only) &amp; Would rather / It's time.</span></div>
-                            <div class="gday-row"><span class="gday-num">56</span><span class="gday-text">Câu bị động (1) - Cấu trúc cơ bản ở 12 thì.</span></div>
-                            <div class="gday-row"><span class="gday-num">57</span><span class="gday-text">Câu bị động (2) - Bị động khách quan (It is said that...), Bị động với động từ tri giác, Bị động kép.</span></div>
-                            <div class="gday-row"><span class="gday-num">58</span><span class="gday-text">🆕 Văn phong (Styles) - Diễn đạt lại 1 câu bằng nhiều cách: đổi qua lại giữa Danh từ ⇄ Động từ ⇄ Tính từ ⇄ Trạng từ &amp; chủ động ⇄ bị động - kỹ năng nền cho dạng bài viết lại câu.</span></div>
-                            <div class="gday-row"><span class="gday-num">59</span><span class="gday-text">Thể sai khiến (Causative Form) - Chủ động &amp; Bị động với Have/Get/Make/Let/Help.</span></div>
-                            <div class="gday-row"><span class="gday-num">60</span><span class="gday-text">Câu tường thuật (1) - Tường thuật câu kể, câu hỏi Yes/No &amp; Wh-questions.</span></div>
-                            <div class="gday-row"><span class="gday-num">61</span><span class="gday-text">Câu tường thuật (2) - Tường thuật bằng các động từ đặc biệt (advise, suggest, accuse, deny...).</span></div>
-                            <div class="gday-row"><span class="gday-num">62</span><span class="gday-text">Đảo ngữ (Inversion) - Với trạng từ phủ định, Only, Not only, Điều kiện; &amp; các dạng nhấn mạnh khác (emphatic do, đại từ phản thân himself/herself để nhấn mạnh).</span></div>
-                            <div class="gday-row"><span class="gday-num">63</span><span class="gday-text">Câu chẻ (Cleft sentences: It is/was... that...) &amp; Sự hòa hợp Chủ ngữ - Động từ (Subject-Verb Agreement).</span></div>
-                            <div class="gday-row"><span class="gday-num">64</span><span class="gday-text">🆕 Câu &amp; Mẫu câu cơ bản (Sentences &amp; Sentence Patterns) - 4 loại câu theo mục đích nói (trần thuật, nghi vấn, cảm thán, mệnh lệnh) &amp; các mẫu câu S-V, S-V-C, S-V-O, S-V-O-O, S-V-O-C, S-V-A - tổng hợp lại toàn bộ ngữ pháp đã học thành khung câu hoàn chỉnh.</span></div>
-                            <div class="gday-row gday-test"><span class="gday-num">65</span><span class="gday-text">FINAL TEST TỔNG HỢP (Đánh giá toàn diện 65 ngày, gồm cả dạng bài viết lại câu đồng nghĩa - sentence transformation).</span></div>
+                            <div class="gday-row"><span class="gday-num">52</span><span class="gday-text">Mệnh đề trạng ngữ (1) - Nhượng bộ (Although/Even though vs Despite/In spite of).</span></div>
+                            <div class="gday-row"><span class="gday-num">53</span><span class="gday-text">Mệnh đề trạng ngữ (2) - Kết quả/Mức độ (So...that, Such...that, Too...to, Enough).</span></div>
+                            <div class="gday-row"><span class="gday-num">54</span><span class="gday-text">Mệnh đề danh từ (Noun clauses) - Mệnh đề đóng vai trò làm chủ ngữ hoặc tân ngữ (Cực kỳ hay quên).</span></div>
+                            <div class="gday-row"><span class="gday-num">55</span><span class="gday-text">Câu điều kiện Loại 0, Loại 1 &amp; Loại 2.</span></div>
+                            <div class="gday-row"><span class="gday-num">56</span><span class="gday-text">Câu điều kiện Loại 3, Loại hỗn hợp &amp; Các từ thay thế If (Unless, As long as, Provided that).</span></div>
+                            <div class="gday-row gday-review"><span class="gday-num">57</span><span class="gday-text">Review &amp; Thực hành (Ngày 52 - 56)</span></div>
+                            <div class="gday-row"><span class="gday-num">58</span><span class="gday-text">Cấu trúc mong ước (Wish / If only) &amp; Would rather / It's time.</span></div>
+                            <div class="gday-row"><span class="gday-num">59</span><span class="gday-text">Câu bị động (1) - Cấu trúc cơ bản ở 12 thì.</span></div>
+                            <div class="gday-row"><span class="gday-num">60</span><span class="gday-text">Câu bị động (2) - Bị động khách quan (It is said that...), Bị động với động từ tri giác, Bị động kép.</span></div>
+                            <div class="gday-row"><span class="gday-num">61</span><span class="gday-text">🆕 Văn phong (Styles) - Diễn đạt lại 1 câu bằng nhiều cách: đổi qua lại giữa Danh từ ⇄ Động từ ⇄ Tính từ ⇄ Trạng từ &amp; chủ động ⇄ bị động - kỹ năng nền cho dạng bài viết lại câu.</span></div>
+                            <div class="gday-row"><span class="gday-num">62</span><span class="gday-text">Thể sai khiến (Causative Form) - Chủ động &amp; Bị động với Have/Get/Make/Let/Help.</span></div>
+                            <div class="gday-row"><span class="gday-num">63</span><span class="gday-text">Câu tường thuật (1) - Tường thuật câu kể, câu hỏi Yes/No &amp; Wh-questions.</span></div>
+                            <div class="gday-row"><span class="gday-num">64</span><span class="gday-text">Câu tường thuật (2) - Tường thuật bằng các động từ đặc biệt (advise, suggest, accuse, deny...).</span></div>
+                            <div class="gday-row"><span class="gday-num">65</span><span class="gday-text">Đảo ngữ (Inversion) - Với trạng từ phủ định, Only, Not only, Điều kiện; &amp; các dạng nhấn mạnh khác (emphatic do, đại từ phản thân himself/herself để nhấn mạnh).</span></div>
+                            <div class="gday-row"><span class="gday-num">66</span><span class="gday-text">Câu chẻ (Cleft sentences: It is/was... that...) &amp; Sự hòa hợp Chủ ngữ - Động từ (Subject-Verb Agreement).</span></div>
+                            <div class="gday-row gday-test"><span class="gday-num">67</span><span class="gday-text">FINAL TEST TỔNG HỢP (Đánh giá toàn diện 67 ngày, gồm cả dạng bài viết lại câu đồng nghĩa - sentence transformation).</span></div>
                         </div>
                     </div>
                 </div>
@@ -6120,6 +6196,13 @@
             <div class="profile-field">
                 <label>Tài khoản đăng nhập</label>
                 <div id="profile-account-email-display" class="profile-readonly"></div>
+            </div>
+
+            <div class="profile-enrollment" id="profile-enrollment-section">
+                <h4>⏳ Thời gian đồng hành cùng web</h4>
+                <div id="profile-enrollment-content" class="profile-enrollment-content">
+                    <p class="profile-ach-loading">Đang tải...</p>
+                </div>
             </div>
 
             <div class="profile-achievements" id="profile-achievements-section">

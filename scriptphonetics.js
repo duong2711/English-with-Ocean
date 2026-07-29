@@ -18,6 +18,125 @@ document.addEventListener('DOMContentLoaded', () => {
     const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     // ------------------------------------------
 
+    // ================== [MỚI] Chọn giọng đọc tiếng Anh tự nhiên (kiểu Cambridge) ==================
+    // Web Speech API chỉ dùng được giọng máy có sẵn trên máy người dùng (không phải file ghi âm
+    // thật như Cambridge Dictionary), nên không thể ra ĐÚNG giọng đó. Nhưng ta có thể chủ động
+    // chọn giọng "Natural/Online" chất lượng cao nhất đang có, ưu tiên giọng Anh-Anh (gần với
+    // chất giọng chuẩn mực mà Cambridge hay dùng), thay vì để trình duyệt tự chọn giọng mặc định
+    // (thường là giọng robot, chất lượng thấp). Hàm này được khai báo ở scope ngoài cùng nên mọi
+    // khối code khác trong file (kể cả nằm trong IIFE riêng) đều gọi được bình thường.
+    let phoneticsVoicesCache = [];
+    function phoneticsRefreshVoices() {
+        if (!('speechSynthesis' in window)) return;
+        const list = window.speechSynthesis.getVoices();
+        if (list && list.length) phoneticsVoicesCache = list;
+    }
+    if ('speechSynthesis' in window) {
+        phoneticsRefreshVoices();
+        // Một số trình duyệt (đặc biệt Chrome) nạp xong danh sách giọng đọc SAU khi trang đã chạy
+        // xong, nên phải lắng nghe sự kiện này để cập nhật lại danh sách khi nó nạp xong.
+        window.speechSynthesis.onvoiceschanged = phoneticsRefreshVoices;
+    }
+    // Thứ tự ưu tiên: tên các giọng "Natural/Online" chất lượng cao thường thấy trên Chrome/Edge/
+    // Windows 11/macOS. Anh-Anh được ưu tiên trước vì gần với giọng chuẩn Cambridge hay dùng nhất,
+    // sau đó mới tới Anh-Mỹ, cuối cùng là giọng tiếng Anh bất kỳ có sẵn.
+    const PHONETICS_VOICE_PRIORITY = [
+        'Microsoft Sonia Online (Natural) - English (United Kingdom)',
+        'Microsoft Libby Online (Natural) - English (United Kingdom)',
+        'Microsoft Ryan Online (Natural) - English (United Kingdom)',
+        'Google UK English Female',
+        'Google UK English Male',
+        'Microsoft Hazel - English (United Kingdom)',
+        'Daniel', // giọng Anh-Anh trên macOS/iOS
+        'Microsoft Jenny Online (Natural) - English (United States)',
+        'Microsoft Aria Online (Natural) - English (United States)',
+        'Microsoft Guy Online (Natural) - English (United States)',
+        'Google US English',
+        'Samantha' // giọng Anh-Mỹ trên macOS/iOS
+    ];
+    function phoneticsPickVoice() {
+        if (!('speechSynthesis' in window)) return null;
+        const voices = phoneticsVoicesCache.length ? phoneticsVoicesCache : window.speechSynthesis.getVoices();
+        if (!voices || !voices.length) return null;
+        for (const name of PHONETICS_VOICE_PRIORITY) {
+            const found = voices.find(v => v.name === name);
+            if (found) return found;
+        }
+        // Không có giọng nào trong danh sách ưu tiên -> tìm giọng Anh-Anh bất kỳ, rồi Anh-Mỹ bất kỳ,
+        // cuối cùng là giọng tiếng Anh bất kỳ, để vẫn tốt hơn là để trình duyệt tự chọn.
+        return voices.find(v => v.lang === 'en-GB')
+            || voices.find(v => v.lang === 'en-US')
+            || voices.find(v => v.lang && v.lang.startsWith('en'))
+            || null;
+    }
+    // Gán sẵn giọng + lang phù hợp cho 1 utterance. Gọi hàm này ngay sau khi tạo
+    // `new SpeechSynthesisUtterance(...)`, trước khi speak().
+    function phoneticsApplyVoice(utter) {
+        const voice = phoneticsPickVoice();
+        if (voice) {
+            utter.voice = voice;
+            utter.lang = voice.lang;
+        } else {
+            utter.lang = 'en-US'; // không tìm được giọng nào phù hợp -> để trình duyệt tự lo như trước
+        }
+        utter.pitch = 1;
+    }
+
+    // ================== [MỚI] Phát âm bằng giọng Google Dịch (nghe tự nhiên & đồng nhất hơn) ==================
+    // Giọng của Google Dịch (translate_tts) nghe tự nhiên hơn giọng máy hệ thống, và quan trọng là
+    // GIỐNG NHAU trên mọi máy/trình duyệt, không phụ thuộc máy đó có cài giọng tiếng Anh tốt hay
+    // không. Đây là địa chỉ KHÔNG CHÍNH THỨC (không phải API công khai có tài liệu của Google Dịch,
+    // chỉ là URL mà chính trang translate.google.com dùng để phát âm) nên có thể bị Google giới hạn
+    // số lần gọi hoặc ngừng hoạt động bất kỳ lúc nào -> vẫn giữ Web Speech API (giọng đã chọn ở hàm
+    // phoneticsApplyVoice phía trên) làm phương án dự phòng khi gọi Google Dịch thất bại.
+    let phoneticsCurrentAudio = null;
+    // Dừng hẳn âm thanh (Google Dịch hoặc Web Speech) đang phát dở, dùng khi bấm phát âm 1 từ khác.
+    function phoneticsStop() {
+        if (phoneticsCurrentAudio) {
+            try { phoneticsCurrentAudio.pause(); } catch (e) { /* bỏ qua */ }
+            phoneticsCurrentAudio = null;
+        }
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    }
+    function phoneticsSpeakWebSpeechFallback(text, rate, onEnd) {
+        if (!('speechSynthesis' in window)) { if (onEnd) onEnd(); return; }
+        const utter = new SpeechSynthesisUtterance(text);
+        phoneticsApplyVoice(utter);
+        utter.rate = rate || 0.9;
+        utter.onend = () => { if (onEnd) onEnd(); };
+        utter.onerror = () => { if (onEnd) onEnd(); };
+        window.speechSynthesis.speak(utter);
+    }
+    // Phát âm 1 từ/cụm từ tiếng Anh bằng giọng Google Dịch; tự động lùi về Web Speech API (giọng
+    // máy) nếu gọi Google Dịch thất bại (mất mạng, bị chặn CORS, bị giới hạn số lần gọi, v.v.).
+    // `rate`: tốc độ đọc (1 = bình thường). `onEnd`: gọi khi đọc xong (để nối tiếp từ kế tiếp).
+    // Lưu ý: KHÔNG dùng cho đoạn text quá dài (giới hạn theo Google Dịch là dưới ~200 ký tự) —
+    // với 1 từ/cụm từ ngắn như trong web này thì luôn nằm trong giới hạn.
+    function phoneticsSpeak(text, rate, onEnd) {
+        if (!text) { if (onEnd) onEnd(); return; }
+        phoneticsStop(); // dừng âm thanh trước đó đang đọc dở (nếu có), giống hành vi cũ
+        const url = 'https://translate.google.com/translate_tts?ie=UTF-8&tl=en&client=tw-ob&q=' + encodeURIComponent(text);
+        const audio = new Audio(url);
+        audio.playbackRate = rate || 1;
+        phoneticsCurrentAudio = audio;
+        let settled = false;
+        const useFallback = () => {
+            if (settled) return;
+            settled = true;
+            if (phoneticsCurrentAudio === audio) phoneticsCurrentAudio = null;
+            phoneticsSpeakWebSpeechFallback(text, rate, onEnd); // Google Dịch lỗi -> đọc bằng giọng máy thay thế
+        };
+        audio.addEventListener('ended', () => {
+            if (settled) return;
+            settled = true;
+            if (phoneticsCurrentAudio === audio) phoneticsCurrentAudio = null;
+            if (onEnd) onEnd();
+        });
+        audio.addEventListener('error', useFallback);
+        audio.play().catch(useFallback); // vd: trình duyệt chặn autoplay, mất mạng, bị Google từ chối...
+    }
+    // ===============================================================================================
+
     const symbols = document.querySelectorAll('.ipa-symbol');
     const completionIcons = document.querySelectorAll('.completion-container'); 
     
@@ -75,6 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentEmail = ''; 
     let currentDisplayName = ''; // [MỚI] tên hiển thị tùy chỉnh (user_metadata.display_name)
     let currentAvatarUrl = '';   // [MỚI] URL ảnh đại diện (user_metadata.avatar_url)
+    let currentAccountCreatedAt = null; // [MỚI] ngày tạo tài khoản (auth.users.created_at) - dùng làm mốc "bắt đầu học" mặc định khi giảng viên chưa set riêng
     let isTeacher = false; // true nếu email đăng nhập nằm trong TEACHER_EMAILS
     let holdTimer = null; // Thêm biến này
 
@@ -327,6 +447,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // [MỚI] Nạp tên hiển thị + ảnh đại diện từ user_metadata, hiện khu vực tài khoản
             currentDisplayName = (user.user_metadata && user.user_metadata.display_name) || '';
             currentAvatarUrl = (user.user_metadata && user.user_metadata.avatar_url) || '';
+            currentAccountCreatedAt = user.created_at || null; // [MỚI] mốc tạo tài khoản, dùng cho "thời gian đồng hành" khi chưa có ngày do giảng viên đặt
             if (accountArea) accountArea.style.display = 'flex';
             applyAccountIdentityToUI();
             authStatus.textContent = `Đã đăng nhập: ${user.email} (ID: ${user.id.substring(0, 8)}...)`;
@@ -369,6 +490,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentEmail = '';
             currentDisplayName = '';
             currentAvatarUrl = '';
+            currentAccountCreatedAt = null;
             isTeacher = false;
             if (teacherImpersonateBtn) teacherImpersonateBtn.style.display = 'none';
             // [MỚI] Không còn phiên đăng nhập nào -> chắc chắn không còn đang "xem như học viên"
@@ -599,12 +721,141 @@ document.addEventListener('DOMContentLoaded', () => {
     // phần vốn không có giới hạn trên tự nhiên) được đặt tạm ở VOCAB_TARGET / TIME_TARGET_MINUTES
     // bên dưới — có thể chỉnh 2 con số này bất cứ lúc nào mà không ảnh hưởng chỗ khác.
     const DILIGENCE_VOCAB_TARGET = 50;       // 50 từ đã lưu = 100% cho phần "kho từ vựng"
-    const DILIGENCE_TIME_TARGET_MINUTES = 30; // 30 phút/ngày = 100% cho phần "thời gian học"
+    // [SỬA] Trước đây tính "phút/ngày" (chia trung bình theo số ngày có log) — nay đổi thành
+    // TỔNG số phút học cộng dồn từ trước đến nay (không chia theo ngày nữa). 1200 phút = 20
+    // giờ tổng cộng = 100%; chỉnh số này bất cứ lúc nào cho phù hợp.
+    const DILIGENCE_TOTAL_TIME_TARGET_MINUTES = 1200;
 
     function escapeHtmlForAchievements(str) {
         const div = document.createElement('div');
         div.textContent = String(str == null ? '' : str);
         return div.innerHTML;
+    }
+
+    // [MỚI] Đổi tổng số phút học thành chuỗi dễ đọc, vd: "12 giờ 30 phút" / "45 phút"
+    function formatStudyMinutesForAchievements(totalMinutes) {
+        const h = Math.floor(totalMinutes / 60);
+        const m = totalMinutes % 60;
+        if (h > 0 && m > 0) return `${h} giờ ${m} phút`;
+        if (h > 0) return `${h} giờ`;
+        return `${m} phút`;
+    }
+
+    // [MỚI] Đổi số ngày thành chuỗi dễ đọc, vd: "1 năm 2 tháng 5 ngày" / "18 ngày"
+    function formatEnrollmentDuration(totalDays) {
+        if (totalDays <= 0) return 'Hôm nay';
+        const years = Math.floor(totalDays / 365);
+        const afterYears = totalDays % 365;
+        const months = Math.floor(afterYears / 30);
+        const days = afterYears % 30;
+        const parts = [];
+        if (years > 0) parts.push(`${years} năm`);
+        if (months > 0) parts.push(`${months} tháng`);
+        if (days > 0 || parts.length === 0) parts.push(`${days} ngày`);
+        return parts.join(' ');
+    }
+
+    // --- [MỚI] THỜI GIAN ĐỒNG HÀNH: hiển thị học viên đã học trên web bao lâu, tính từ
+    // 1 "ngày bắt đầu" cho tới nay. Ngày bắt đầu ưu tiên lấy từ bảng "student_start_dates"
+    // nếu giảng viên đã set riêng cho học viên này; nếu chưa có thì tự động dùng ngày tạo
+    // tài khoản (auth.users.created_at). Bảng "student_start_dates" cần được tạo trên
+    // Supabase trước (xem file "student_start_dates_setup.sql" đi kèm).
+    // Giảng viên CHỈ chỉnh được ngày này khi đang "xem như học viên" (isImpersonating) —
+    // vì lúc đó phiên đăng nhập trình duyệt đã CHUYỂN HẲN sang tài khoản học viên (xem phần
+    // "XEM NHƯ HỌC VIÊN" phía dưới), nên ghi vào đúng dòng của chính học viên đó là hợp lệ
+    // theo RLS (mỗi người chỉ ghi được dòng của mình).
+    async function renderStudentEnrollmentInfo() {
+        const sectionEl = document.getElementById('profile-enrollment-section');
+        const contentEl = document.getElementById('profile-enrollment-content');
+        if (!contentEl || !currentUserId) return;
+
+        // Giảng viên xem HỒ SƠ CỦA CHÍNH MÌNH (không phải đang "xem như học viên") thì ẩn hẳn,
+        // vì khái niệm "ngày bắt đầu học" không áp dụng cho tài khoản giảng viên.
+        if (isTeacher && !isImpersonating) {
+            if (sectionEl) sectionEl.style.display = 'none';
+            return;
+        }
+        if (sectionEl) sectionEl.style.display = '';
+        contentEl.innerHTML = '<p class="profile-ach-loading">Đang tải...</p>';
+
+        try {
+            const { data: overrideRow, error: eOverride } = await sb
+                .from('student_start_dates')
+                .select('start_date')
+                .eq('user_id', currentUserId)
+                .maybeSingle();
+            if (eOverride) throw eOverride;
+
+            let startDate = null;
+            let isOverride = false;
+            if (overrideRow && overrideRow.start_date) {
+                startDate = new Date(overrideRow.start_date + 'T00:00:00');
+                isOverride = true;
+            } else if (currentAccountCreatedAt) {
+                startDate = new Date(currentAccountCreatedAt);
+            }
+
+            let mainText = 'Chưa xác định được ngày bắt đầu học.';
+            let subText = 'Giảng viên có thể đặt ngày bắt đầu riêng cho học viên này ở bên dưới.';
+            if (startDate) {
+                const now = new Date();
+                const diffDays = Math.max(0, Math.floor((now - startDate) / (1000 * 60 * 60 * 24)));
+                mainText = `Đã đồng hành cùng web: ${formatEnrollmentDuration(diffDays)}`;
+                const startDateStr = startDate.toLocaleDateString('vi-VN');
+                subText = isOverride
+                    ? `Bắt đầu từ ${startDateStr} (do giảng viên đặt)`
+                    : `Bắt đầu từ ${startDateStr} (tính theo ngày tạo tài khoản)`;
+            }
+
+            const dateInputValue = startDate ? startDate.toISOString().slice(0, 10) : '';
+            const editableRowHtml = isImpersonating ? `
+                <div class="enrollment-edit-row">
+                    <input type="date" id="enrollment-start-date-input" value="${dateInputValue}">
+                    <button type="button" id="enrollment-save-btn" class="enrollment-save-btn">Lưu ngày bắt đầu</button>
+                </div>
+            ` : '';
+
+            contentEl.innerHTML = `
+                <div class="enrollment-card">
+                    <div class="enrollment-icon">⏳</div>
+                    <div class="enrollment-info">
+                        <div class="enrollment-main">${escapeHtmlForAchievements(mainText)}</div>
+                        <div class="enrollment-sub">${escapeHtmlForAchievements(subText)}</div>
+                        ${editableRowHtml}
+                    </div>
+                </div>
+            `;
+
+            if (isImpersonating) {
+                const saveBtn = document.getElementById('enrollment-save-btn');
+                const dateInput = document.getElementById('enrollment-start-date-input');
+                if (saveBtn && dateInput) {
+                    saveBtn.addEventListener('click', async () => {
+                        const newDate = dateInput.value;
+                        if (!newDate) { alert('Vui lòng chọn ngày.'); return; }
+                        saveBtn.disabled = true;
+                        saveBtn.textContent = 'Đang lưu...';
+                        try {
+                            const { error } = await sb.from('student_start_dates').upsert({
+                                user_id: currentUserId,
+                                start_date: newDate,
+                                updated_at: new Date().toISOString()
+                            }, { onConflict: 'user_id' });
+                            if (error) throw error;
+                            await renderStudentEnrollmentInfo();
+                        } catch (err) {
+                            console.error('Lỗi khi lưu ngày bắt đầu học:', err.message);
+                            alert('Không thể lưu ngày bắt đầu (kiểm tra bảng "student_start_dates" đã được tạo trên Supabase chưa). ' + err.message);
+                            saveBtn.disabled = false;
+                            saveBtn.textContent = 'Lưu ngày bắt đầu';
+                        }
+                    });
+                }
+            }
+        } catch (e) {
+            console.error('Lỗi khi tải thời gian đồng hành:', e.message);
+            contentEl.innerHTML = '<p class="profile-ach-error">Không thể tải thông tin thời gian học (kiểm tra bảng "student_start_dates" đã được tạo trên Supabase chưa).</p>';
+        }
     }
 
     async function renderProfileAchievements() {
@@ -613,16 +864,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const achievementsSectionEl = document.getElementById('profile-achievements-section');
         const leaderboardSectionEl = document.getElementById('profile-leaderboard-section');
         if (!listEl || !currentUserId) return;
+        renderStudentEnrollmentInfo(); // [MỚI] "Thời gian đồng hành" - chạy song song, tự ẩn/hiện tùy vai trò bên trong hàm
 
-        // [MỚI] Giảng viên không cần "Thành tựu" hay tham gia "Bảng xếp hạng" — ẩn hẳn 2 khối
-        // này khi họ mở hồ sơ của chính mình (2 phần này chỉ dành cho học viên).
+        // [MỚI] Giảng viên không cần "Thành tựu" (phần này chỉ dành cho học viên) nhưng VẪN
+        // được xem "Bảng xếp hạng" — để có thể loại/khôi phục học viên khỏi bảng xếp hạng
+        // (xem renderDiligenceLeaderboard bên dưới, phần nút 🚫/↩️ chỉ hiện khi isTeacher).
         if (isTeacher) {
             if (achievementsSectionEl) achievementsSectionEl.style.display = 'none';
-            if (leaderboardSectionEl) leaderboardSectionEl.style.display = 'none';
+            if (leaderboardSectionEl) leaderboardSectionEl.style.display = '';
             // Dọn luôn điểm cũ (nếu trót có từ trước, vd: tài khoản giảng viên từng học thử)
             // để chắc chắn không còn xuất hiện ở bảng xếp hạng của học viên khác.
             sb.from('diligence_scores').delete().eq('user_id', currentUserId)
                 .then(({ error }) => { if (error) console.error('Lỗi khi gỡ điểm chăm chỉ của giảng viên:', error.message); });
+            if (boardEl) {
+                boardEl.innerHTML = '<p class="profile-ach-loading">Đang tải...</p>';
+                await renderDiligenceLeaderboard(boardEl);
+            }
             return;
         }
         if (achievementsSectionEl) achievementsSectionEl.style.display = '';
@@ -720,18 +977,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            // ----- 6) Thời gian học trung bình trên web tự học (phút/ngày) -----
+            // ----- 6) [SỬA] TỔNG thời gian học trên web tự học (không chia theo ngày nữa,
+            // chỉ cộng dồn toàn bộ các dòng "seconds" của học viên này từ trước đến nay) -----
             const { data: timeRows, error: e6 } = await sb
                 .from('study_time_log')
                 .select('seconds')
                 .eq('user_id', currentUserId);
             if (e6) throw e6;
-            let avgMinutesPerDay = 0;
+            let totalStudySeconds = 0;
             if (timeRows && timeRows.length) {
-                const totalSeconds = timeRows.reduce((sum, r) => sum + (r.seconds || 0), 0);
-                avgMinutesPerDay = Math.round((totalSeconds / timeRows.length) / 60);
+                totalStudySeconds = timeRows.reduce((sum, r) => sum + (r.seconds || 0), 0);
             }
-            const timePct = Math.min(100, Math.round((avgMinutesPerDay / DILIGENCE_TIME_TARGET_MINUTES) * 100));
+            const totalStudyMinutes = Math.round(totalStudySeconds / 60);
+            const timePct = Math.min(100, Math.round((totalStudyMinutes / DILIGENCE_TOTAL_TIME_TARGET_MINUTES) * 100));
 
             // ----- Điểm chăm chỉ tổng hợp: 25% phiên âm, 20% tin ngắn, 20% chủ đề từ vựng,
             // 10% kho từ vựng, 25% thời gian học -----
@@ -820,8 +1078,8 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             badges.push({
                 icon: '⏱️',
-                title: 'Thời gian học trung bình',
-                desc: `${avgMinutesPerDay} phút/ngày trên web tự học`,
+                title: 'Tổng thời gian học',
+                desc: `${formatStudyMinutesForAchievements(totalStudyMinutes)} trên web tự học (tính từ trước đến nay)`,
                 progress: timePct
             });
 
@@ -873,39 +1131,135 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- [MỚI] BẢNG XẾP HẠNG HỌC VIÊN CHĂM CHỈ: đọc top 10 điểm cao nhất từ bảng dùng
     // chung "diligence_scores" (bảng này ai đăng nhập cũng đọc được toàn bộ, nhưng chỉ
     // ghi/sửa được đúng dòng của chính mình — xem RLS trong file SQL đi kèm) -----
+    //
+    // [MỚI] GIẢNG VIÊN CÓ QUYỀN LOẠI HỌC VIÊN KHỎI BẢNG XẾP HẠNG: mỗi dòng học viên trong
+    // "diligence_scores" có thêm cột "excluded" (boolean, mặc định false — xem file SQL đi
+    // kèm "diligence_scores_exclude_setup.sql"). Học viên bị loại (excluded = true) sẽ:
+    //   - KHÔNG hiển thị trên bảng xếp hạng (bị lọc ngay từ câu truy vấn bên dưới)
+    //   - Điểm chăm chỉ của họ vẫn được tính ở phần "Thành tựu" của chính họ như bình thường,
+    //     nhưng KHÔNG còn được cập nhật/hiển thị trên bảng xếp hạng dùng chung nữa, tức là
+    //     không được "ghi nhận" vào cuộc đua xếp hạng cho tới khi giảng viên khôi phục lại.
+    // Để tránh loại nhầm, giảng viên PHẢI nhập đúng mật khẩu Admin (biến ADMIN_PASSWORD ở đầu
+    // file) trước khi thao tác loại/khôi phục — theo đúng mẫu đã dùng ở các nút Admin khác.
     async function renderDiligenceLeaderboard(boardEl) {
         try {
             const { data: rows, error } = await sb
                 .from('diligence_scores')
-                .select('user_id, display_name, avatar_url, diligence_score')
+                .select('user_id, display_name, avatar_url, diligence_score, excluded')
+                .eq('excluded', false)
                 .order('diligence_score', { ascending: false })
                 .limit(10);
             if (error) throw error;
-            if (!rows || !rows.length) {
-                boardEl.innerHTML = '<p class="profile-ach-loading">Chưa có dữ liệu xếp hạng.</p>';
-                return;
+
+            // Giảng viên mới cần thấy thêm danh sách học viên đã bị loại (để khôi phục nếu lỡ
+            // loại nhầm) — học viên bình thường không cần và cũng không nên thấy danh sách này.
+            let excludedRows = [];
+            if (isTeacher) {
+                const { data: exRows, error: exErr } = await sb
+                    .from('diligence_scores')
+                    .select('user_id, display_name, avatar_url, diligence_score')
+                    .eq('excluded', true)
+                    .order('display_name', { ascending: true });
+                if (exErr) console.error('Lỗi khi tải danh sách học viên đã bị loại:', exErr.message);
+                excludedRows = exRows || [];
             }
+
             const medals = ['🥇', '🥈', '🥉'];
-            boardEl.innerHTML = rows.map((r, i) => {
-                const isMe = r.user_id === currentUserId;
-                const name = r.display_name || 'Học viên';
-                const initial = name.trim() ? name.trim()[0].toUpperCase() : '?';
-                const avatarHtml = r.avatar_url
-                    ? `<img src="${r.avatar_url}" class="leaderboard-avatar-img" alt="">`
-                    : `<span class="leaderboard-avatar-fallback">${initial}</span>`;
-                return `
-                    <div class="leaderboard-row${isMe ? ' is-me' : ''}">
-                        <div class="leaderboard-rank">${medals[i] || (i + 1)}</div>
-                        <div class="leaderboard-avatar">${avatarHtml}</div>
-                        <div class="leaderboard-name">${escapeHtmlForAchievements(name)}${isMe ? ' <span class="leaderboard-me-tag">(Bạn)</span>' : ''}</div>
-                        <div class="leaderboard-score">${Math.round(r.diligence_score || 0)} điểm</div>
+            let mainHtml;
+            if (!rows || !rows.length) {
+                mainHtml = '<p class="profile-ach-loading">Chưa có dữ liệu xếp hạng.</p>';
+            } else {
+                mainHtml = rows.map((r, i) => {
+                    const isMe = r.user_id === currentUserId;
+                    const name = r.display_name || 'Học viên';
+                    const initial = name.trim() ? name.trim()[0].toUpperCase() : '?';
+                    const avatarHtml = r.avatar_url
+                        ? `<img src="${r.avatar_url}" class="leaderboard-avatar-img" alt="">`
+                        : `<span class="leaderboard-avatar-fallback">${initial}</span>`;
+                    const excludeBtnHtml = isTeacher
+                        ? `<button type="button" class="leaderboard-exclude-btn" data-user-id="${r.user_id}" data-name="${escapeHtmlForAchievements(name)}" title="Loại học viên này khỏi bảng xếp hạng (cần mật khẩu Admin)">🚫</button>`
+                        : '';
+                    return `
+                        <div class="leaderboard-row${isMe ? ' is-me' : ''}">
+                            <div class="leaderboard-rank">${medals[i] || (i + 1)}</div>
+                            <div class="leaderboard-avatar">${avatarHtml}</div>
+                            <div class="leaderboard-name">${escapeHtmlForAchievements(name)}${isMe ? ' <span class="leaderboard-me-tag">(Bạn)</span>' : ''}</div>
+                            <div class="leaderboard-score">${Math.round(r.diligence_score || 0)} điểm</div>
+                            ${excludeBtnHtml}
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            let excludedSectionHtml = '';
+            if (isTeacher) {
+                const excludedListHtml = excludedRows.length
+                    ? excludedRows.map(r => {
+                        const name = r.display_name || 'Học viên';
+                        return `
+                            <div class="leaderboard-row leaderboard-row-excluded">
+                                <div class="leaderboard-name">${escapeHtmlForAchievements(name)}</div>
+                                <button type="button" class="leaderboard-restore-btn" data-user-id="${r.user_id}" data-name="${escapeHtmlForAchievements(name)}" title="Khôi phục học viên này vào bảng xếp hạng (cần mật khẩu Admin)">↩️ Khôi phục</button>
+                            </div>
+                        `;
+                    }).join('')
+                    : '<p class="profile-ach-loading">Không có học viên nào bị loại.</p>';
+                excludedSectionHtml = `
+                    <div class="leaderboard-excluded-section">
+                        <h5>🚫 Học viên đã bị loại khỏi bảng xếp hạng</h5>
+                        ${excludedListHtml}
                     </div>
                 `;
-            }).join('');
+            }
+
+            boardEl.innerHTML = mainHtml + excludedSectionHtml;
+            wireLeaderboardAdminEvents(boardEl);
         } catch (err) {
             console.error('Lỗi khi tải bảng xếp hạng:', err.message);
             boardEl.innerHTML = '<p class="profile-ach-error">Không thể tải bảng xếp hạng lúc này.</p>';
         }
+    }
+
+    // [MỚI] Gắn (một lần) sự kiện click cho nút "🚫 loại" / "↩️ khôi phục" trên bảng xếp
+    // hạng — dùng event delegation trên chính boardEl để không phải gắn lại mỗi lần render,
+    // tránh tình trạng bấm 1 lần mà hộp thoại mật khẩu hiện ra nhiều lần chồng nhau.
+    const leaderboardAdminWiredEls = new WeakSet();
+    function wireLeaderboardAdminEvents(boardEl) {
+        if (!boardEl || leaderboardAdminWiredEls.has(boardEl)) return;
+        leaderboardAdminWiredEls.add(boardEl);
+        boardEl.addEventListener('click', async (e) => {
+            const exBtn = e.target.closest('.leaderboard-exclude-btn');
+            const resBtn = e.target.closest('.leaderboard-restore-btn');
+            if (!exBtn && !resBtn) return;
+
+            const userId = (exBtn || resBtn).dataset.userId;
+            const name = (exBtn || resBtn).dataset.name || 'học viên này';
+
+            const pass = prompt(
+                exBtn
+                    ? `Nhập mật khẩu Admin để loại "${name}" khỏi bảng xếp hạng chăm chỉ:`
+                    : `Nhập mật khẩu Admin để khôi phục "${name}" vào bảng xếp hạng chăm chỉ:`
+            );
+            if (pass === null) return; // bấm Cancel
+            if (pass !== ADMIN_PASSWORD) {
+                alert('Sai mật khẩu!');
+                return;
+            }
+            if (exBtn && !confirm(`Xác nhận loại "${name}" khỏi bảng xếp hạng chăm chỉ?\n\nHọc viên này sẽ không còn hiển thị hay được ghi nhận trên bảng xếp hạng cho tới khi được khôi phục.`)) {
+                return;
+            }
+
+            try {
+                const { error } = await sb
+                    .from('diligence_scores')
+                    .update({ excluded: !!exBtn })
+                    .eq('user_id', userId);
+                if (error) throw error;
+                await renderDiligenceLeaderboard(boardEl);
+            } catch (err) {
+                alert((exBtn ? 'Loại học viên thất bại: ' : 'Khôi phục thất bại: ') + err.message);
+            }
+        });
     }
 
 
@@ -6420,32 +6774,10 @@ function toggleCompletion(symbolElement) {
         const kidFlashNext   = document.getElementById('kid-flash-next');
         const kidFlashFlip   = document.getElementById('kid-flash-flip');
 
-        // ----- Phát âm từ vựng bằng loa 🔊 (Web Speech API) -----
-        // [MỚI] Bỏ alert chặn màn hình vì hàm này giờ còn được gọi TỰ ĐỘNG mỗi khi đổi thẻ/bấm từ.
-        // [SỬA LỖI] "Làm nóng" danh sách giọng đọc (voices) ngay khi script chạy: ở lần đọc ĐẦU
-        // TIÊN sau khi tải trang, một số trình duyệt (đặc biệt Chrome) vẫn chưa nạp xong danh
-        // sách giọng đọc nên gọi speak() sẽ bị bỏ qua trong im lặng (không đọc, không báo lỗi).
-        // Từ lần thứ 2 trở đi thì danh sách đã có sẵn nên vẫn đọc bình thường như trước giờ.
-        let kidSpeechVoicesReady = ('speechSynthesis' in window) && window.speechSynthesis.getVoices().length > 0;
-        if ('speechSynthesis' in window && !kidSpeechVoicesReady) {
-            window.speechSynthesis.getVoices(); // một số trình duyệt cần gọi 1 lần để bắt đầu nạp
-            window.speechSynthesis.onvoiceschanged = () => { kidSpeechVoicesReady = true; };
-        }
+        // ----- Phát âm từ vựng bằng loa 🔊 (ưu tiên audio thật, lùi về Google Dịch/giọng máy) -----
         function speakEnglishWord(text) {
             if (!text) return;
-            if (!('speechSynthesis' in window)) return; // trình duyệt không hỗ trợ -> bỏ qua trong im lặng
-            window.speechSynthesis.cancel(); // dừng câu đang đọc dở (nếu có)
-            const utter = new SpeechSynthesisUtterance(text);
-            utter.lang = 'en-US';
-            utter.rate = 0.85;
-            if (kidSpeechVoicesReady || window.speechSynthesis.getVoices().length > 0) {
-                kidSpeechVoicesReady = true;
-                window.speechSynthesis.speak(utter);
-            } else {
-                // Giọng đọc chưa kịp nạp xong (thường chỉ xảy ra đúng lần đọc đầu tiên) -> đợi
-                // một nhịp ngắn rồi đọc, thay vì để trình duyệt âm thầm bỏ qua câu này.
-                setTimeout(() => window.speechSynthesis.speak(utter), 200);
-            }
+            phoneticsSpeak(text, 0.9);
         }
         // QUAN TRỌNG: hàm này nằm trong khối riêng của tính năng "Flashcard cho bé", nhưng
         // cũng cần được gọi từ khối "tra từ khi chạm" (handleWordTap) ở một khối khác trong
@@ -7906,12 +8238,7 @@ function toggleCompletion(symbolElement) {
 
         function thcsSpeak(text) {
             if (!text) return;
-            if (!('speechSynthesis' in window)) return;
-            window.speechSynthesis.cancel();
-            const utter = new SpeechSynthesisUtterance(text);
-            utter.lang = 'en-US';
-            utter.rate = 0.85;
-            window.speechSynthesis.speak(utter);
+            phoneticsSpeak(text, 0.9);
         }
 
         // ----- Âm thanh hiệu ứng (tự tạo bằng Web Audio API, không cần file mp3) -----
@@ -12021,43 +12348,37 @@ function toggleCompletion(symbolElement) {
         return pool;
     }
 
-    // ---------- Phát âm (Web Speech API) ----------
-    // Đọc lần lượt nhiều từ, mỗi từ 1 utterance riêng nối tiếp nhau (không dùng chung
+    // ---------- Phát âm (giọng Google Dịch, lùi về giọng máy nếu lỗi) ----------
+    // Đọc lần lượt nhiều từ, mỗi từ 1 lượt phát riêng nối tiếp nhau (không dùng chung
     // window.speakEnglishWord vì hàm đó hủy audio đang đọc dở -> không phát được liên tiếp).
     function lnSpeakSequential(texts, gapMs, onDone) {
-        if (!('speechSynthesis' in window) || !texts.length) { if (onDone) onDone(); return; }
-        window.speechSynthesis.cancel();
+        if (!texts.length) { if (onDone) onDone(); return; }
         let i = 0;
         function playNext() {
             if (i >= texts.length) { if (onDone) onDone(); return; }
-            const utter = new SpeechSynthesisUtterance(texts[i]);
-            utter.lang = 'en-US';
-            utter.rate = 0.85;
-            utter.onend = () => { i++; setTimeout(playNext, gapMs); };
-            utter.onerror = () => { i++; setTimeout(playNext, gapMs); };
-            window.speechSynthesis.speak(utter);
+            phoneticsSpeak(texts[i], 0.9, () => { i++; setTimeout(playNext, gapMs); });
         }
         playNext();
     }
 
+    // Tên đọc đầy đủ CHỈ cho chữ I và O — đây là 2 chữ cái duy nhất bị máy đọc lướt qua quá ngắn/nhanh
+    // (vì cũng là từ tiếng Anh có nghĩa riêng: "I" = tôi, "O" = ôi). Các chữ khác vẫn gửi thẳng ký tự
+    // gốc cho máy đọc như trước (không đổi), vì chỉ I và O bị báo là có vấn đề.
+    const LN_LETTER_NAMES = {
+        I: 'eye', O: 'oh'
+    };
     // Đánh vần từng chữ cái một (dùng cho độ khó "Dễ"). Với từ ghép có khoảng trắng, chèn
     // 1 quãng nghỉ dài hơn tại vị trí khoảng trắng thay vì đọc gì đó, để gợi ý ranh giới
     // giữa 2 từ mà không lộ luôn đáp án.
     function lnSpeakSpelling(word) {
-        if (!('speechSynthesis' in window)) return;
-        window.speechSynthesis.cancel();
         const chars = String(word).toUpperCase().split('').filter(c => /[A-Z ]/.test(c));
         let i = 0;
         function playNext() {
             if (i >= chars.length) return;
             const ch = chars[i];
             if (ch === ' ') { i++; setTimeout(playNext, 650); return; }
-            const utter = new SpeechSynthesisUtterance(ch);
-            utter.lang = 'en-US';
-            utter.rate = 0.8;
-            utter.onend = () => { i++; setTimeout(playNext, 320); };
-            utter.onerror = () => { i++; setTimeout(playNext, 320); };
-            window.speechSynthesis.speak(utter);
+            const speakText = LN_LETTER_NAMES[ch] || ch;
+            phoneticsSpeak(speakText, 0.5, () => { i++; setTimeout(playNext, 500); });
         }
         playNext();
     }
@@ -12090,9 +12411,15 @@ function toggleCompletion(symbolElement) {
 
     function lnGenerateQuestions(diff, pool) {
         const qs = [];
+        // Với "Dễ - Đánh vần", chỉ lấy TỪ ĐƠN (không có khoảng trắng), bỏ qua từ ghép/cụm từ vì
+        // đánh vần cụm nhiều từ nghe rất rối. Nếu kho từ không có từ đơn nào thì đành dùng tạm
+        // cả kho (để không bị lỗi thiếu từ) — nhưng bình thường kho từ luôn có từ đơn.
+        const spellingPool = pool.filter(w => !/\s/.test(String(w.en).trim()));
+        const dePool = spellingPool.length ? spellingPool : pool;
         for (let i = 0; i < LN_TOTAL_QUESTIONS; i++) {
             if (diff === 'de' || diff === 'dn') {
-                qs.push({ target: pool[Math.floor(Math.random() * pool.length)] });
+                const sourcePool = diff === 'de' ? dePool : pool;
+                qs.push({ target: sourcePool[Math.floor(Math.random() * sourcePool.length)] });
             } else if (diff === 'tb') {
                 const groupSize = Math.min(4, pool.length);
                 qs.push({ sequence: lnPickRandom(pool, groupSize) });
@@ -12283,11 +12610,17 @@ function toggleCompletion(symbolElement) {
             ? '✅ Chính xác!'
             : `❌ Chưa đúng. Đáp án đúng: <span class="tf-answer"><b>${lnEsc(correctText)}</b></span>`;
 
-        setTimeout(() => {
+        // [SỬA] Không tự động chuyển câu nữa — giữ nguyên kết quả trên màn hình, chỉ chuyển
+        // sang câu tiếp theo khi học viên chủ động bấm nút xác nhận bên dưới.
+        const isLastQuestion = lnState.index + 1 >= LN_TOTAL_QUESTIONS;
+        lnQuizControls.innerHTML = `<button type="button" class="kid-btn kid-btn-primary" id="ln-next-btn">${isLastQuestion ? '🏁 Xem kết quả' : '➡️ Câu tiếp theo'}</button>`;
+        const nextBtn = document.getElementById('ln-next-btn');
+        nextBtn.addEventListener('click', () => {
             lnState.index++;
             if (lnState.index >= LN_TOTAL_QUESTIONS) lnFinishQuiz();
             else lnRenderQuestion();
-        }, isCorrect ? 1000 : 1800);
+        });
+        nextBtn.focus();
     }
 
     function lnFinishQuiz() {
@@ -12312,5 +12645,836 @@ function toggleCompletion(symbolElement) {
     }
 })();
 // ===== KẾT THÚC: TAB "LUYỆN KỸ NĂNG" > "🎧 NGHE" — LUYỆN NGHE GIAI ĐOẠN 1 =====
+
+// ===================================================================
+// ===== BẮT ĐẦU: TAB "LUYỆN KỸ NĂNG" > "🎧 NGHE" — NGHE LV2 (NGHE HIỂU 1 CÂU) =====
+// Khác với Nghe lv1 (tự sinh câu hỏi từ kho từ vựng học viên), Nghe lv2 dùng một NGÂN
+// HÀNG CÂU do giảng viên tự soạn, lưu ở bảng "listening_lv2_items" trên Supabase (xem file
+// "listening_lv2_setup.sql" để tạo bảng + policy RLS). Có 4 dạng bài:
+//   - dien        : nghe 1 câu, điền từ/cụm từ còn thiếu vào chỗ trống
+//   - sap_cau     : nghe 1 câu, sắp xếp lại các từ theo đúng thứ tự đã nghe
+//   - sap_chu     : nghe 1 từ, sắp xếp lại các chữ cái theo đúng thứ tự đã nghe
+//   - trac_nghiem : nghe 1 câu, chọn đáp án đúng (tối thiểu 2 đáp án, giảng viên tự thêm/bớt)
+// Giảng viên soạn tự do số lượng câu; mỗi lượt luyện tập hệ thống lấy random tối đa 20 câu
+// (trộn đều 4 dạng) trong toàn bộ ngân hàng để học viên luyện tập.
+// ===================================================================
+(() => {
+    const ln2Card = document.getElementById('ln-lv2-card');
+    if (!ln2Card) return;
+
+    // ---------- Tham chiếu DOM ----------
+    const ln2Panel        = document.getElementById('ln2-panel');
+    const ln2BackBtn      = document.getElementById('ln2-back-btn');
+    const ln2ManageBtn    = document.getElementById('ln2-manage-btn');
+    const ln2ItemCountEl  = document.getElementById('ln2-item-count');
+    const ln2StartCard    = document.getElementById('ln2-start-card');
+    const ln2StartCountEl = document.getElementById('ln2-start-count');
+
+    const ln2ManagePanel    = document.getElementById('ln2-manage-panel');
+    const ln2ManageBackBtn  = document.getElementById('ln2-manage-back-btn');
+    const ln2TypeTabs       = document.getElementById('ln2-admin-type-tabs');
+    const ln2AdminForm      = document.getElementById('ln2-admin-form');
+    const ln2AdminStatus    = document.getElementById('ln2-admin-status');
+    const ln2AdminSaveBtn   = document.getElementById('ln2-admin-save-btn');
+    const ln2AdminCancelBtn = document.getElementById('ln2-admin-cancel-btn');
+    const ln2ItemListEl     = document.getElementById('ln2-item-list');
+
+    const ln2QuizPanel    = document.getElementById('ln2-quiz-panel');
+    const ln2QuizBackBtn  = document.getElementById('ln2-quiz-back-btn');
+    const ln2QuizPlayArea = document.getElementById('ln2-quiz-play-area');
+    const ln2QuizProgress = document.getElementById('ln2-quiz-progress');
+    const ln2QuizBody     = document.getElementById('ln2-quiz-body');
+    const ln2QuizControls = document.getElementById('ln2-quiz-controls');
+    const ln2QuizFeedback = document.getElementById('ln2-quiz-feedback');
+    const ln2ResultArea   = document.getElementById('ln2-quiz-result-area');
+    const ln2ResultBox    = document.getElementById('ln2-result-box');
+
+    const LN2_TABLE = 'listening_lv2_items';
+    const LN2_TOTAL_QUESTIONS = 20;
+    const LN2_MIN_ITEMS = 4; // số câu tối thiểu trong ngân hàng để cho phép bắt đầu luyện tập
+    const LN2_TYPE_META = {
+        dien:        { label: 'Nghe & điền từ',         icon: '📝' },
+        sap_cau:     { label: 'Nghe & sắp xếp câu',      icon: '🔤' },
+        sap_chu:     { label: 'Nghe & sắp xếp chữ cái',  icon: '🔡' },
+        trac_nghiem: { label: 'Nghe & chọn trắc nghiệm', icon: '☑️' }
+    };
+
+    // ---------- Tiện ích dùng chung (tách riêng, không phụ thuộc khối Nghe lv1) ----------
+    function ln2Esc(s) {
+        return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+    function ln2Normalize(s) {
+        return String(s || '').toLowerCase().replace(/[^a-z]/g, '');
+    }
+    function ln2Shuffle(arr) {
+        const copy = arr.slice();
+        for (let i = copy.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [copy[i], copy[j]] = [copy[j], copy[i]];
+        }
+        return copy;
+    }
+    function ln2EscapeRegex(s) { return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+    function ln2SplitWords(sentence) { return String(sentence || '').trim().split(/\s+/).filter(Boolean); }
+    function ln2SplitLetters(word) { return String(word || '').split(''); }
+
+    // Tìm vị trí (start, end) của "key" trong "sentence" — hỗ trợ khớp gần đúng (số nhiều, thì
+    // động từ...) để câu vẫn tạo được chỗ trống ngay cả khi giảng viên gõ "go" nhưng câu chứa "goes".
+    function ln2FindKeySpan(sentence, key) {
+        const s = String(sentence || '');
+        const k = String(key || '').trim();
+        if (!k) return null;
+        const lowerS = s.toLowerCase();
+        const lowerK = k.toLowerCase();
+        const idx = lowerS.indexOf(lowerK);
+        if (idx !== -1) {
+            const end = idx + lowerK.length;
+            const beforeOk = idx === 0 || !/[a-zA-Z]/.test(lowerS[idx - 1]);
+            const afterOk = end === lowerS.length || !/[a-zA-Z]/.test(lowerS[end]);
+            if (beforeOk && afterOk) return { start: idx, end };
+        }
+        const words = lowerK.split(/\s+/).filter(Boolean);
+        const wordPatterns = words.map(w => {
+            if (w.length > 2 && /[^aeiou]y$/.test(w)) return ln2EscapeRegex(w.slice(0, -1)) + '(?:y|ies)';
+            return ln2EscapeRegex(w) + '(?:e?s|ing|ed|d)?';
+        });
+        try {
+            const re = new RegExp('\\b' + wordPatterns.join('\\s+') + '\\b', 'i');
+            const m = s.match(re);
+            if (m) return { start: m.index, end: m.index + m[0].length };
+        } catch (e) { /* bỏ qua nếu regex lỗi */ }
+        return null;
+    }
+
+    // ----- Âm thanh hiệu ứng ĐÚNG / SAI (Web Audio API, không cần file mp3) -----
+    let ln2SfxCtx = null;
+    function getLn2SfxCtx() {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return null;
+        if (!ln2SfxCtx) ln2SfxCtx = new AC();
+        if (ln2SfxCtx.state === 'suspended') ln2SfxCtx.resume();
+        return ln2SfxCtx;
+    }
+    function ln2PlayTone(freq, startTime, duration, type, peakGain) {
+        const ctx = getLn2SfxCtx();
+        if (!ctx) return;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type || 'sine';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + startTime);
+        gain.gain.setValueAtTime(0.0001, ctx.currentTime + startTime);
+        gain.gain.linearRampToValueAtTime(peakGain || 0.22, ctx.currentTime + startTime + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + startTime + duration);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(ctx.currentTime + startTime);
+        osc.stop(ctx.currentTime + startTime + duration + 0.05);
+    }
+    function ln2PlayCorrectSound() {
+        ln2PlayTone(523.25, 0,    0.16, 'sine', 0.22); // C5
+        ln2PlayTone(659.25, 0.12, 0.16, 'sine', 0.22); // E5
+        ln2PlayTone(783.99, 0.24, 0.22, 'sine', 0.22); // G5
+    }
+    function ln2PlayWrongSound() {
+        ln2PlayTone(180, 0,    0.18, 'square', 0.16);
+        ln2PlayTone(140, 0.15, 0.22, 'square', 0.16);
+    }
+
+    // [MỚI] Phát file .mp3 do giảng viên gắn link (nếu có) thay cho giọng đọc tự động.
+    // Dùng chung 1 thẻ <audio> để dễ dừng khi chuyển câu / chuyển tab.
+    let ln2AudioEl = null;
+    function ln2GetAudioEl() {
+        if (!ln2AudioEl) {
+            ln2AudioEl = new Audio();
+            ln2AudioEl.preload = 'auto';
+        }
+        return ln2AudioEl;
+    }
+    // Nếu câu hỏi có "audio_url" (giảng viên đã gắn link .mp3) thì phát file đó; nếu không,
+    // vẫn dùng giọng đọc tự động (Web Speech API) như trước đây — không ảnh hưởng các câu cũ.
+    function ln2PlayItemAudio(item) {
+        const url = ((item && item.audio_url) || '').trim();
+        if (url) {
+            const audio = ln2GetAudioEl();
+            if (audio.src !== url) audio.src = url;
+            audio.currentTime = 0;
+            audio.play().catch(err => console.error('Lỗi khi phát file mp3 Nghe lv2:', err.message));
+        } else {
+            ln2Speak(item ? item.content : '');
+        }
+    }
+
+    function ln2StopAudio() {
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        if (ln2AudioEl) ln2AudioEl.pause();
+    }
+    // Rời khỏi trang/đổi tab trong lúc đang có audio phát dở -> dừng ngay.
+    document.querySelectorAll('.main-tab-btn').forEach(btn => btn.addEventListener('click', ln2StopAudio));
+    document.addEventListener('visibilitychange', () => { if (document.hidden) ln2StopAudio(); });
+    window.addEventListener('blur', ln2StopAudio);
+
+    function ln2Speak(text) {
+        if (typeof window.speakEnglishWord === 'function') window.speakEnglishWord(text);
+    }
+
+    // ---------- Tải / lưu ngân hàng câu hỏi trên Supabase ----------
+    let ln2Items = [];
+    let ln2ItemsLoaded = false;
+
+    async function ln2LoadItems(force) {
+        if (ln2ItemsLoaded && !force) return ln2Items;
+        try {
+            const { data, error } = await sb
+                .from(LN2_TABLE)
+                .select('*')
+                .order('created_at', { ascending: false });
+            if (error) throw error;
+            ln2Items = data || [];
+            ln2ItemsLoaded = true;
+        } catch (err) {
+            console.error('Lỗi khi tải ngân hàng câu Nghe lv2:', err.message);
+            ln2Items = [];
+        }
+        return ln2Items;
+    }
+
+    async function ln2CreateItemDB(payload) {
+        const insertPayload = Object.assign({}, payload, { created_by: currentEmail });
+        const { data, error } = await sb.from(LN2_TABLE).insert(insertPayload).select().single();
+        if (error) throw error;
+        return data;
+    }
+    async function ln2UpdateItemDB(id, payload) {
+        const updatePayload = Object.assign({}, payload, { updated_at: new Date().toISOString(), updated_by: currentEmail });
+        const { data, error } = await sb.from(LN2_TABLE).update(updatePayload).eq('id', id).select().single();
+        if (error) throw error;
+        return data;
+    }
+    async function ln2DeleteItemDB(id) {
+        const { error } = await sb.from(LN2_TABLE).delete().eq('id', id);
+        if (error) throw error;
+    }
+
+    // ---------- Điều hướng 3 cấp: Nghe lv2 -> (Soạn câu hỏi | Bắt đầu luyện tập) ----------
+    ln2Card.addEventListener('click', () => {
+        const stage1Panel = document.getElementById('ln-stage1-panel');
+        if (stage1Panel) stage1Panel.style.display = 'none';
+        ln2Panel.style.display = 'block';
+        ln2RefreshIntro();
+    });
+    ln2BackBtn.addEventListener('click', () => {
+        ln2Panel.style.display = 'none';
+        const stage1Panel = document.getElementById('ln-stage1-panel');
+        if (stage1Panel) stage1Panel.style.display = 'block';
+    });
+
+    async function ln2RefreshIntro() {
+        ln2ManageBtn.style.display = isTeacher ? 'inline-block' : 'none';
+        await ln2LoadItems();
+        if (ln2ItemCountEl) ln2ItemCountEl.textContent = String(ln2Items.length);
+        if (ln2StartCountEl) {
+            ln2StartCountEl.textContent = ln2Items.length >= LN2_MIN_ITEMS
+                ? `Ngẫu nhiên ${Math.min(LN2_TOTAL_QUESTIONS, ln2Items.length)} / ${ln2Items.length} câu đã soạn`
+                : `Chưa đủ câu hỏi (${ln2Items.length}/${LN2_MIN_ITEMS} tối thiểu) — hãy quay lại sau`;
+        }
+    }
+
+    ln2StartCard.addEventListener('click', ln2StartQuiz);
+
+    // ---------- Khu vực giảng viên soạn câu hỏi ----------
+    let ln2CurrentType = 'dien';
+    let ln2EditingId = null;
+
+    ln2ManageBtn.addEventListener('click', async () => {
+        if (!isTeacher) { alert('Chỉ giảng viên mới dùng được chức năng này.'); return; }
+        ln2Panel.style.display = 'none';
+        ln2ManagePanel.style.display = 'block';
+        ln2ResetForm();
+        ln2ItemListEl.innerHTML = '<p class="kid-hint">Đang tải danh sách câu hỏi...</p>';
+        await ln2LoadItems(true);
+        ln2RenderItemList();
+    });
+    ln2ManageBackBtn.addEventListener('click', () => {
+        ln2ManagePanel.style.display = 'none';
+        ln2Panel.style.display = 'block';
+        ln2RefreshIntro();
+    });
+
+    ln2TypeTabs.addEventListener('click', (e) => {
+        if (ln2EditingId !== null) return; // đang sửa 1 câu -> khoá đổi loại giữa chừng
+        const tab = e.target.closest('.ln2-type-tab');
+        if (!tab) return;
+        ln2TypeTabs.querySelectorAll('.ln2-type-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        ln2CurrentType = tab.dataset.ln2Type;
+        ln2RenderAdminForm();
+    });
+
+    // [MỚI] Ô nhập link file .mp3 (tuỳ chọn) — dùng chung cho cả 4 dạng bài. Nếu để trống,
+    // hệ thống vẫn dùng giọng đọc tự động (Web Speech API) như trước đây.
+    const LN2_AUDIO_FIELD_HTML = `
+        <div class="ln2-field">
+            <label>Link file .mp3 (tuỳ chọn — tải lên Backblaze B2 hoặc nguồn công khai khác). Để trống nếu muốn dùng giọng đọc tự động.</label>
+            <input type="text" id="ln2-f-audio-url" class="news-edit-input" placeholder="VD: https://.../cau-1.mp3">
+        </div>
+    `;
+
+    // [MỚI] Đáp án trắc nghiệm: cho phép giảng viên thêm/bớt đáp án (tối thiểu 2, tối đa 8)
+    // thay vì cố định đúng 4 đáp án như trước đây.
+    const LN2_MC_MIN_OPTIONS = 2;
+    const LN2_MC_MAX_OPTIONS = 8;
+
+    // Dựng khối HTML các dòng đáp án (dùng chung cho render lần đầu và mỗi lần thêm/xoá).
+    function ln2BuildMcOptionRowsHtml(values, answerIndex) {
+        return values.map((val, i) => `
+            <div class="news-quiz-edit-option-row" data-idx="${i}">
+                <input type="radio" name="ln2-f-answer" value="${i}" id="ln2-f-answer-${i}" ${i === answerIndex ? 'checked' : ''}>
+                <input type="text" id="ln2-f-opt-${i}" class="news-edit-input" placeholder="Đáp án ${String.fromCharCode(65 + i)}..." value="${ln2Esc(val)}">
+                ${values.length > LN2_MC_MIN_OPTIONS ? `<button type="button" class="ln2-mc-remove-btn" data-remove-idx="${i}" title="Xoá đáp án này">✕</button>` : ''}
+            </div>
+        `).join('');
+    }
+
+    // Đọc lại các giá trị đáp án + đáp án đúng hiện có trên form (dùng trước khi thêm/xoá
+    // một dòng, để không mất nội dung giảng viên đã gõ ở các dòng khác).
+    function ln2ReadMcOptionsFromDom() {
+        const rows = Array.from(document.querySelectorAll('#ln2-mc-edit-options [data-idx]'));
+        const values = rows.map(row => {
+            const inp = row.querySelector('input[type="text"]');
+            return inp ? inp.value : '';
+        });
+        const checked = document.querySelector('input[name="ln2-f-answer"]:checked');
+        const answerIndex = checked ? parseInt(checked.value, 10) : 0;
+        return { values, answerIndex };
+    }
+
+    // Vẽ lại toàn bộ khối đáp án với danh sách giá trị mới (sau khi thêm/xoá 1 dòng) và
+    // gắn lại sự kiện cho các nút xoá vừa tạo.
+    function ln2RerenderMcOptions(values, answerIndex) {
+        const wrap = document.getElementById('ln2-mc-edit-options');
+        if (!wrap) return;
+        const safeAnswerIndex = Math.min(Math.max(answerIndex, 0), values.length - 1);
+        wrap.innerHTML = ln2BuildMcOptionRowsHtml(values, safeAnswerIndex);
+        const addBtn = document.getElementById('ln2-mc-add-btn');
+        if (addBtn) addBtn.style.display = values.length >= LN2_MC_MAX_OPTIONS ? 'none' : '';
+        ln2WireMcRemoveButtons();
+    }
+
+    function ln2WireMcRemoveButtons() {
+        document.querySelectorAll('#ln2-mc-edit-options .ln2-mc-remove-btn').forEach(btn => {
+            btn.onclick = () => {
+                const { values, answerIndex } = ln2ReadMcOptionsFromDom();
+                if (values.length <= LN2_MC_MIN_OPTIONS) return;
+                const removeIdx = parseInt(btn.dataset.removeIdx, 10);
+                values.splice(removeIdx, 1);
+                let newAnswerIndex = answerIndex;
+                if (removeIdx === answerIndex) newAnswerIndex = 0;
+                else if (removeIdx < answerIndex) newAnswerIndex = answerIndex - 1;
+                ln2RerenderMcOptions(values, newAnswerIndex);
+            };
+        });
+    }
+
+    // Gắn sự kiện cho nút "+ Thêm đáp án" — chỉ cần gắn 1 lần mỗi khi form trắc nghiệm được
+    // vẽ lại (nút này không bị vẽ lại khi thêm/xoá từng dòng đáp án).
+    function ln2WireMcAddButton() {
+        const addBtn = document.getElementById('ln2-mc-add-btn');
+        if (!addBtn) return;
+        addBtn.onclick = () => {
+            const { values, answerIndex } = ln2ReadMcOptionsFromDom();
+            if (values.length >= LN2_MC_MAX_OPTIONS) return;
+            values.push('');
+            ln2RerenderMcOptions(values, answerIndex);
+        };
+    }
+
+    function ln2RenderAdminForm() {
+        const t = ln2CurrentType;
+        if (t === 'dien') {
+            ln2AdminForm.innerHTML = `
+                <div class="ln2-field">
+                    <label>Câu tiếng Anh đầy đủ (sẽ được đọc to cho học viên nghe)</label>
+                    <input type="text" id="ln2-f-sentence" class="news-edit-input" placeholder="VD: She goes to school by bike every morning.">
+                </div>
+                <div class="ln2-field">
+                    <label>Từ / cụm từ cần điền (phải xuất hiện đúng trong câu trên)</label>
+                    <input type="text" id="ln2-f-key" class="news-edit-input" placeholder="VD: goes">
+                </div>
+                <div class="ln2-field">
+                    <label>Nghĩa tiếng Việt (tuỳ chọn)</label>
+                    <input type="text" id="ln2-f-vi" class="news-edit-input" placeholder="VD: Cô ấy đi học bằng xe đạp mỗi sáng.">
+                </div>
+                ${LN2_AUDIO_FIELD_HTML}
+            `;
+        } else if (t === 'sap_cau') {
+            ln2AdminForm.innerHTML = `
+                <div class="ln2-field">
+                    <label>Câu tiếng Anh đầy đủ (học viên nghe rồi sắp xếp lại các từ)</label>
+                    <input type="text" id="ln2-f-sentence" class="news-edit-input" placeholder="VD: I usually get up at six.">
+                </div>
+                <div class="ln2-field">
+                    <label>Nghĩa tiếng Việt (tuỳ chọn)</label>
+                    <input type="text" id="ln2-f-vi" class="news-edit-input" placeholder="VD: Tôi thường thức dậy lúc 6 giờ.">
+                </div>
+                ${LN2_AUDIO_FIELD_HTML}
+            `;
+        } else if (t === 'sap_chu') {
+            ln2AdminForm.innerHTML = `
+                <div class="ln2-field">
+                    <label>Một từ tiếng Anh (không dấu cách — học viên nghe rồi sắp xếp lại chữ cái)</label>
+                    <input type="text" id="ln2-f-word" class="news-edit-input" placeholder="VD: beautiful">
+                </div>
+                <div class="ln2-field">
+                    <label>Nghĩa tiếng Việt (tuỳ chọn)</label>
+                    <input type="text" id="ln2-f-vi" class="news-edit-input" placeholder="VD: xinh đẹp">
+                </div>
+                ${LN2_AUDIO_FIELD_HTML}
+            `;
+        } else if (t === 'trac_nghiem') {
+            ln2AdminForm.innerHTML = `
+                <div class="ln2-field">
+                    <label>Câu tiếng Anh (sẽ được đọc to cho học viên nghe)</label>
+                    <input type="text" id="ln2-f-sentence" class="news-edit-input" placeholder="VD: What time does the movie start?">
+                </div>
+                <div class="ln2-field">
+                    <label>Câu hỏi hiển thị cho học viên (tuỳ chọn — VD: "What time does the movie start?" hoặc câu hỏi tiếng Việt tương ứng). Để trống nếu chỉ muốn học viên nghe rồi chọn đúng câu đã nghe, không cần hiện câu hỏi riêng.</label>
+                    <input type="text" id="ln2-f-question" class="news-edit-input" placeholder="VD: Mấy giờ phim bắt đầu?">
+                </div>
+                <div class="ln2-field">
+                    <label>Đáp án (tối thiểu 2 — tick chọn đáp án đúng)</label>
+                    <div class="ln2-mc-edit-options news-quiz-edit-options" id="ln2-mc-edit-options">
+                        ${ln2BuildMcOptionRowsHtml(['', '', '', ''], 0)}
+                    </div>
+                    <button type="button" id="ln2-mc-add-btn" class="ln2-mc-add-btn">+ Thêm đáp án</button>
+                </div>
+                <div class="ln2-field">
+                    <label>Nghĩa tiếng Việt (tuỳ chọn)</label>
+                    <input type="text" id="ln2-f-vi" class="news-edit-input" placeholder="VD: Mấy giờ phim bắt đầu?">
+                </div>
+                ${LN2_AUDIO_FIELD_HTML}
+            `;
+            ln2WireMcRemoveButtons();
+            ln2WireMcAddButton();
+        }
+    }
+
+    // preserveStatus=true: giữ nguyên thông báo trạng thái hiện có thay vì xoá ngay — dùng
+    // ngay sau khi lưu thành công để giảng viên vẫn kịp thấy thông báo "Đã lưu...".
+    function ln2ResetForm(preserveStatus) {
+        ln2EditingId = null;
+        ln2TypeTabs.classList.remove('is-locked');
+        ln2AdminSaveBtn.textContent = '➕ Thêm câu hỏi';
+        ln2AdminCancelBtn.style.display = 'none';
+        if (!preserveStatus) {
+            ln2AdminStatus.textContent = '';
+            ln2AdminStatus.className = 'ln2-admin-status';
+        }
+        ln2RenderAdminForm();
+    }
+    ln2AdminCancelBtn.addEventListener('click', () => ln2ResetForm());
+
+    function ln2PopulateFormForEdit(item) {
+        ln2CurrentType = item.type;
+        ln2TypeTabs.querySelectorAll('.ln2-type-tab').forEach(t => t.classList.toggle('active', t.dataset.ln2Type === item.type));
+        ln2RenderAdminForm();
+        if (item.type === 'dien') {
+            document.getElementById('ln2-f-sentence').value = item.content || '';
+            document.getElementById('ln2-f-key').value = item.blank_key || '';
+        } else if (item.type === 'sap_cau') {
+            document.getElementById('ln2-f-sentence').value = item.content || '';
+        } else if (item.type === 'sap_chu') {
+            document.getElementById('ln2-f-word').value = item.content || '';
+        } else if (item.type === 'trac_nghiem') {
+            document.getElementById('ln2-f-sentence').value = item.content || '';
+            const questionEl = document.getElementById('ln2-f-question');
+            if (questionEl) questionEl.value = item.question_text || '';
+            // Số đáp án của câu này có thể khác 4 (giảng viên có thể thêm/bớt) — vẽ lại đúng
+            // số lượng + giá trị đã lưu, thay vì chỉ điền vào 4 ô mặc định.
+            const savedOptions = (item.options && item.options.length >= LN2_MC_MIN_OPTIONS)
+                ? item.options.slice()
+                : ['', ''];
+            ln2RerenderMcOptions(savedOptions, item.answer_index || 0);
+        }
+        const viEl = document.getElementById('ln2-f-vi');
+        if (viEl) viEl.value = item.vi || '';
+        const audioUrlEl = document.getElementById('ln2-f-audio-url');
+        if (audioUrlEl) audioUrlEl.value = item.audio_url || '';
+
+        ln2EditingId = item.id;
+        ln2TypeTabs.classList.add('is-locked');
+        ln2AdminSaveBtn.textContent = '💾 Lưu thay đổi';
+        ln2AdminCancelBtn.style.display = 'inline-block';
+        ln2AdminStatus.textContent = '';
+        ln2AdminStatus.className = 'ln2-admin-status';
+        if (typeof ln2AdminForm.scrollIntoView === 'function') ln2AdminForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function ln2CollectFormPayload() {
+        const t = ln2CurrentType;
+        const viEl = document.getElementById('ln2-f-vi');
+        const vi = viEl ? viEl.value.trim() : '';
+        // [MỚI] Link file .mp3 (tuỳ chọn) — để trống thì hệ thống dùng giọng đọc tự động.
+        const audioUrlEl = document.getElementById('ln2-f-audio-url');
+        const audioUrl = audioUrlEl ? audioUrlEl.value.trim() : '';
+
+        if (t === 'dien') {
+            const sentence = (document.getElementById('ln2-f-sentence').value || '').trim();
+            const key = (document.getElementById('ln2-f-key').value || '').trim();
+            if (!sentence || !key) throw new Error('Vui lòng nhập đủ câu tiếng Anh và từ cần điền.');
+            if (!ln2FindKeySpan(sentence, key)) throw new Error('Không tìm thấy từ/cụm từ cần điền trong câu — hãy kiểm tra lại chính tả.');
+            return { type: t, content: sentence, blank_key: key, vi, options: null, answer_index: null, audio_url: audioUrl || null };
+        }
+        if (t === 'sap_cau') {
+            const sentence = (document.getElementById('ln2-f-sentence').value || '').trim();
+            if (ln2SplitWords(sentence).length < 2) throw new Error('Câu cần có ít nhất 2 từ để sắp xếp.');
+            return { type: t, content: sentence, blank_key: null, vi, options: null, answer_index: null, audio_url: audioUrl || null };
+        }
+        if (t === 'sap_chu') {
+            const word = (document.getElementById('ln2-f-word').value || '').trim();
+            if (!word) throw new Error('Vui lòng nhập từ tiếng Anh.');
+            if (/\s/.test(word)) throw new Error('Chỉ nhập MỘT từ, không chứa dấu cách.');
+            if (word.replace(/[^a-zA-Z]/g, '').length < 2) throw new Error('Từ cần có ít nhất 2 chữ cái.');
+            return { type: t, content: word, blank_key: null, vi, options: null, answer_index: null, audio_url: audioUrl || null };
+        }
+        if (t === 'trac_nghiem') {
+            const sentence = (document.getElementById('ln2-f-sentence').value || '').trim();
+            const questionEl = document.getElementById('ln2-f-question');
+            const questionText = questionEl ? questionEl.value.trim() : '';
+            const { values: options } = ln2ReadMcOptionsFromDom();
+            const trimmedOptions = options.map(o => o.trim());
+            if (!sentence) throw new Error('Vui lòng nhập câu tiếng Anh.');
+            if (trimmedOptions.length < LN2_MC_MIN_OPTIONS) throw new Error(`Cần tối thiểu ${LN2_MC_MIN_OPTIONS} đáp án.`);
+            if (trimmedOptions.some(o => !o)) throw new Error('Vui lòng nhập đủ nội dung cho tất cả các đáp án.');
+            const checked = document.querySelector('input[name="ln2-f-answer"]:checked');
+            const answerIndex = checked ? parseInt(checked.value, 10) : 0;
+            return { type: t, content: sentence, blank_key: null, vi, options: trimmedOptions, answer_index: answerIndex, audio_url: audioUrl || null, question_text: questionText || null };
+        }
+        throw new Error('Loại câu hỏi không hợp lệ.');
+    }
+
+    ln2AdminSaveBtn.addEventListener('click', async () => {
+        if (!isTeacher) return;
+        let payload;
+        try {
+            payload = ln2CollectFormPayload();
+        } catch (err) {
+            ln2AdminStatus.textContent = '⚠️ ' + err.message;
+            ln2AdminStatus.className = 'ln2-admin-status is-error';
+            return;
+        }
+        ln2AdminSaveBtn.disabled = true;
+        ln2AdminStatus.textContent = 'Đang lưu...';
+        ln2AdminStatus.className = 'ln2-admin-status';
+        try {
+            if (ln2EditingId !== null) {
+                const updated = await ln2UpdateItemDB(ln2EditingId, payload);
+                const idx = ln2Items.findIndex(it => it.id === ln2EditingId);
+                if (idx !== -1) ln2Items[idx] = updated;
+                ln2AdminStatus.textContent = '✅ Đã lưu thay đổi.';
+            } else {
+                const created = await ln2CreateItemDB(payload);
+                ln2Items.unshift(created);
+                ln2AdminStatus.textContent = '✅ Đã thêm câu hỏi mới.';
+            }
+            ln2ResetForm(true);
+            ln2RenderItemList();
+        } catch (err) {
+            ln2AdminStatus.textContent = '❌ Lưu thất bại: ' + err.message;
+            ln2AdminStatus.className = 'ln2-admin-status is-error';
+        } finally {
+            ln2AdminSaveBtn.disabled = false;
+        }
+    });
+
+    function ln2RenderItemList() {
+        if (!ln2Items.length) {
+            ln2ItemListEl.innerHTML = '<p class="kid-hint">Chưa có câu hỏi nào — hãy soạn câu đầu tiên ở khung bên trên.</p>';
+            return;
+        }
+        ln2ItemListEl.innerHTML = ln2Items.map(item => {
+            const meta = LN2_TYPE_META[item.type] || { label: item.type, icon: '' };
+            return `
+                <div class="ln2-item-row" data-item-id="${item.id}">
+                    <span class="ln2-item-type-badge">${meta.icon} ${ln2Esc(meta.label)}</span>
+                    ${item.audio_url ? '<span class="ln2-item-audio-badge" title="Đã gắn link .mp3">🎵</span>' : ''}
+                    <span class="ln2-item-preview">${ln2Esc(item.content)}</span>
+                    <div class="ln2-item-actions">
+                        <button type="button" class="ln2-item-edit-btn" data-id="${item.id}" title="Sửa">✏️</button>
+                        <button type="button" class="ln2-item-delete-btn" data-id="${item.id}" title="Xóa">🗑️</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    ln2ItemListEl.addEventListener('click', async (e) => {
+        const editBtn = e.target.closest('.ln2-item-edit-btn');
+        const delBtn = e.target.closest('.ln2-item-delete-btn');
+        if (editBtn) {
+            const item = ln2Items.find(it => String(it.id) === editBtn.dataset.id);
+            if (item) ln2PopulateFormForEdit(item);
+            return;
+        }
+        if (delBtn) {
+            const item = ln2Items.find(it => String(it.id) === delBtn.dataset.id);
+            if (!item) return;
+            if (!confirm(`Xóa câu hỏi "${item.content}"? Hành động này không thể hoàn tác.`)) return;
+            try {
+                await ln2DeleteItemDB(item.id);
+                ln2Items = ln2Items.filter(it => it.id !== item.id);
+                ln2RenderItemList();
+                if (ln2EditingId === item.id) ln2ResetForm();
+            } catch (err) {
+                alert('Xóa thất bại: ' + err.message);
+            }
+        }
+    });
+
+    // ---------- Làm bài luyện tập (học viên) ----------
+    let ln2State = null;
+
+    async function ln2StartQuiz() {
+        ln2QuizPanel.style.display = 'block';
+        ln2Panel.style.display = 'none';
+        ln2ResultArea.style.display = 'none';
+        ln2QuizPlayArea.style.display = 'block';
+        ln2QuizProgress.textContent = '';
+        ln2QuizBody.innerHTML = '<p class="kid-hint">Đang chuẩn bị câu hỏi...</p>';
+        ln2QuizControls.innerHTML = '';
+        ln2QuizFeedback.innerHTML = '';
+        ln2QuizFeedback.className = 'thcs-translate-feedback';
+
+        await ln2LoadItems();
+        if (ln2Items.length < LN2_MIN_ITEMS) {
+            ln2QuizBody.innerHTML = `<p class="kid-hint">⚠️ Kho câu hỏi Nghe lv2 chưa đủ để luyện tập (cần ít nhất ${LN2_MIN_ITEMS} câu). Hãy quay lại sau khi giảng viên soạn thêm câu hỏi nhé!</p>`;
+            return;
+        }
+
+        const picked = ln2Shuffle(ln2Items).slice(0, Math.min(LN2_TOTAL_QUESTIONS, ln2Items.length));
+        ln2State = { questions: picked, index: 0, score: 0, busy: false };
+        ln2RenderQuestion();
+    }
+
+    function ln2RenderQuestion() {
+        if (!ln2State) return;
+        ln2State.busy = false;
+        ln2StopAudio();
+        ln2QuizFeedback.innerHTML = '';
+        ln2QuizFeedback.className = 'thcs-translate-feedback';
+        ln2QuizProgress.textContent = `Câu ${ln2State.index + 1} / ${ln2State.questions.length} — Điểm: ${ln2State.score}`;
+
+        const q = ln2State.questions[ln2State.index];
+
+        if (q.type === 'dien') {
+            const span = ln2FindKeySpan(q.content, q.blank_key);
+            let sentenceHtml;
+            if (span) {
+                const before = q.content.slice(0, span.start);
+                const answerPart = q.content.slice(span.start, span.end);
+                const after = q.content.slice(span.end);
+                const widthCh = Math.max(answerPart.length + 2, 4);
+                sentenceHtml = ln2Esc(before) +
+                    `<input type="text" id="ln2-blank-input" class="thcs-translate-blank-input" style="width:${widthCh}ch" autocomplete="off" autocapitalize="off" spellcheck="false">` +
+                    ln2Esc(after);
+                ln2State.blankAnswer = answerPart;
+            } else {
+                sentenceHtml = ln2Esc(q.content);
+                ln2State.blankAnswer = q.blank_key || '';
+            }
+            ln2QuizBody.innerHTML = `
+                <div class="ln-play-row">
+                    <button type="button" class="kid-btn kid-btn-primary" id="ln2-play-btn">🔊 Nghe câu</button>
+                </div>
+                <div class="thcs-translate-sentence">${sentenceHtml}</div>
+            `;
+            document.getElementById('ln2-play-btn').addEventListener('click', () => ln2PlayItemAudio(q));
+            ln2QuizControls.innerHTML = `<button type="button" class="kid-btn kid-btn-primary" id="ln2-check-btn">✔️ Kiểm tra</button>`;
+            const input = document.getElementById('ln2-blank-input');
+            input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); ln2CheckAnswer(); } });
+            document.getElementById('ln2-check-btn').addEventListener('click', ln2CheckAnswer);
+            input.focus();
+        } else if (q.type === 'sap_cau') {
+            ln2RenderArrangeQuestion(ln2SplitWords(q.content), {
+                playLabel: '🔊 Nghe câu',
+                instructionText: 'Bấm lần lượt các từ theo đúng thứ tự bạn đã nghe được.',
+                onPlay: () => ln2PlayItemAudio(q)
+            });
+        } else if (q.type === 'sap_chu') {
+            ln2RenderArrangeQuestion(ln2SplitLetters(q.content), {
+                playLabel: '🔊 Nghe từ',
+                instructionText: 'Bấm lần lượt các chữ cái theo đúng thứ tự bạn đã nghe được.',
+                onPlay: () => ln2PlayItemAudio(q)
+            });
+        } else if (q.type === 'trac_nghiem') {
+            const options = q.options || [];
+            const optOrder = ln2Shuffle(options.map((_, i) => i));
+            const questionHtml = q.question_text
+                ? `<p class="ln2-mc-question">${ln2Esc(q.question_text)}</p>`
+                : '';
+            ln2QuizBody.innerHTML = `
+                <div class="ln-play-row">
+                    <button type="button" class="kid-btn kid-btn-primary" id="ln2-play-btn">🔊 Nghe câu</button>
+                </div>
+                ${questionHtml}
+                <div class="ln2-mc-grid" id="ln2-mc-grid">
+                    ${optOrder.map((origIdx, pos) => `
+                        <button type="button" class="ln2-mc-option" data-oi="${origIdx}">
+                            <span class="ln2-mc-letter">${String.fromCharCode(65 + pos)}</span>
+                            <span class="ln2-mc-text">${ln2Esc(options[origIdx])}</span>
+                        </button>
+                    `).join('')}
+                </div>
+            `;
+            document.getElementById('ln2-play-btn').addEventListener('click', () => ln2PlayItemAudio(q));
+            ln2QuizControls.innerHTML = '';
+            ln2State.mcSelected = null;
+            document.getElementById('ln2-mc-grid').addEventListener('click', (e) => {
+                const btn = e.target.closest('.ln2-mc-option');
+                if (!btn || ln2State.busy) return;
+                ln2State.mcSelected = parseInt(btn.dataset.oi, 10);
+                ln2CheckAnswer();
+            });
+        }
+    }
+
+    // Dùng chung cho "sap_cau" (đơn vị = từ) và "sap_chu" (đơn vị = chữ cái). Khoá theo VỊ TRÍ
+    // gốc (không phải theo giá trị chữ/từ) để xử lý đúng cả khi có ký tự/từ trùng lặp.
+    function ln2RenderArrangeQuestion(units, opts) {
+        ln2State.arrangeUnits = units;
+        ln2State.arrangeAnswer = [];
+        ln2QuizBody.innerHTML = `
+            <div class="ln-play-row">
+                <button type="button" class="kid-btn kid-btn-primary" id="ln2-play-btn">${opts.playLabel}</button>
+            </div>
+            <p class="kid-hint">${opts.instructionText}</p>
+            <div class="ln-answer-slots" id="ln2-answer-slots"></div>
+            <div class="ln-chip-row" id="ln2-chip-row"></div>
+        `;
+        document.getElementById('ln2-play-btn').addEventListener('click', opts.onPlay);
+
+        const chipRow = document.getElementById('ln2-chip-row');
+        ln2Shuffle(units.map((_, i) => i)).forEach((i) => {
+            const chip = document.createElement('button');
+            chip.type = 'button';
+            chip.className = 'ln-chip';
+            chip.textContent = units[i];
+            chip.dataset.key = String(i);
+            chip.addEventListener('click', () => {
+                if (ln2State.busy || chip.classList.contains('is-picked')) return;
+                chip.classList.add('is-picked');
+                ln2State.arrangeAnswer.push(i);
+                ln2RenderArrangeSlots();
+            });
+            chipRow.appendChild(chip);
+        });
+        ln2RenderArrangeSlots();
+
+        ln2QuizControls.innerHTML = `
+            <button type="button" class="kid-btn" id="ln2-undo-btn">↩️ Bỏ mục cuối</button>
+            <button type="button" class="kid-btn kid-btn-primary" id="ln2-check-btn">✔️ Kiểm tra</button>
+        `;
+        document.getElementById('ln2-undo-btn').addEventListener('click', () => {
+            if (ln2State.busy || !ln2State.arrangeAnswer.length) return;
+            const removedIdx = ln2State.arrangeAnswer.pop();
+            const chip = chipRow.querySelector(`[data-key="${removedIdx}"]`);
+            if (chip) chip.classList.remove('is-picked');
+            ln2RenderArrangeSlots();
+        });
+        document.getElementById('ln2-check-btn').addEventListener('click', ln2CheckAnswer);
+    }
+
+    function ln2RenderArrangeSlots() {
+        const slotsEl = document.getElementById('ln2-answer-slots');
+        if (!slotsEl) return;
+        const units = ln2State.arrangeUnits;
+        const answer = ln2State.arrangeAnswer;
+        slotsEl.innerHTML = units.map((_, i) => {
+            const idx = answer[i];
+            return `<span class="ln-slot ${idx !== undefined ? 'is-filled' : ''}">${idx !== undefined ? ln2Esc(units[idx]) : (i + 1)}</span>`;
+        }).join('');
+    }
+
+    function ln2CheckAnswer() {
+        if (!ln2State || ln2State.busy) return;
+        const q = ln2State.questions[ln2State.index];
+        let isCorrect = false;
+        let correctText = '';
+
+        if (q.type === 'dien') {
+            const input = document.getElementById('ln2-blank-input');
+            const userVal = ln2Normalize(input.value);
+            if (!userVal) { input.focus(); return; }
+            correctText = q.content;
+            isCorrect = userVal === ln2Normalize(ln2State.blankAnswer);
+            input.disabled = true;
+            if (!isCorrect) input.classList.add('is-wrong');
+        } else if (q.type === 'sap_cau' || q.type === 'sap_chu') {
+            const units = ln2State.arrangeUnits;
+            if (ln2State.arrangeAnswer.length < units.length) return; // chưa sắp xếp đủ
+            correctText = q.content;
+            isCorrect = ln2State.arrangeAnswer.every((idx, i) => idx === i);
+        } else if (q.type === 'trac_nghiem') {
+            if (ln2State.mcSelected === null || ln2State.mcSelected === undefined) return;
+            correctText = q.options[q.answer_index];
+            isCorrect = ln2State.mcSelected === q.answer_index;
+            document.querySelectorAll('#ln2-mc-grid .ln2-mc-option').forEach(btn => {
+                const oi = parseInt(btn.dataset.oi, 10);
+                btn.classList.add('is-disabled');
+                if (oi === q.answer_index) btn.classList.add('is-correct');
+                else if (oi === ln2State.mcSelected) btn.classList.add('is-wrong');
+            });
+        }
+
+        ln2State.busy = true;
+        if (isCorrect) ln2State.score++;
+        if (isCorrect) ln2PlayCorrectSound(); else ln2PlayWrongSound();
+        ln2QuizFeedback.className = 'thcs-translate-feedback ' + (isCorrect ? 'is-correct' : 'is-wrong');
+        ln2QuizFeedback.innerHTML = isCorrect
+            ? '✅ Chính xác!'
+            : `❌ Chưa đúng. Đáp án đúng: <span class="tf-answer"><b>${ln2Esc(correctText)}</b></span>${q.vi ? `<br><span class="tf-answer">${ln2Esc(q.vi)}</span>` : ''}`;
+
+        // [SỬA] Không tự động chuyển câu nữa — giữ nguyên kết quả trên màn hình, chỉ chuyển
+        // sang câu tiếp theo khi học viên chủ động bấm nút xác nhận bên dưới.
+        const isLastQuestion = ln2State.index + 1 >= ln2State.questions.length;
+        ln2QuizControls.innerHTML = `<button type="button" class="kid-btn kid-btn-primary" id="ln2-next-btn">${isLastQuestion ? '🏁 Xem kết quả' : '➡️ Câu tiếp theo'}</button>`;
+        const ln2NextBtn = document.getElementById('ln2-next-btn');
+        ln2NextBtn.addEventListener('click', () => {
+            ln2State.index++;
+            if (ln2State.index >= ln2State.questions.length) ln2FinishQuiz();
+            else ln2RenderQuestion();
+        });
+        ln2NextBtn.focus();
+    }
+
+    function ln2FinishQuiz() {
+        ln2StopAudio();
+        ln2QuizPlayArea.style.display = 'none';
+        ln2ResultArea.style.display = 'block';
+        const total = ln2State.questions.length;
+        const pct = Math.round((ln2State.score / total) * 100);
+        ln2ResultBox.innerHTML = `
+            <div class="ln-result-emoji">${pct >= 80 ? '🏆' : (pct >= 50 ? '👍' : '💪')}</div>
+            <h3>Kết quả: ${ln2State.score} / ${total} câu đúng (${pct}%)</h3>
+            <div class="thcs-translate-actions">
+                <button type="button" class="kid-btn kid-btn-primary" id="ln2-retry-btn">🔄 Làm lại (20 câu mới)</button>
+                <button type="button" class="kid-btn" id="ln2-back-result-btn">← Quay lại</button>
+            </div>
+        `;
+        document.getElementById('ln2-retry-btn').addEventListener('click', () => ln2StartQuiz());
+        document.getElementById('ln2-back-result-btn').addEventListener('click', () => {
+            ln2ResultArea.style.display = 'none';
+            ln2QuizPanel.style.display = 'none';
+            ln2Panel.style.display = 'block';
+            ln2RefreshIntro();
+        });
+    }
+
+    ln2QuizBackBtn.addEventListener('click', () => {
+        ln2StopAudio();
+        ln2QuizPanel.style.display = 'none';
+        ln2Panel.style.display = 'block';
+        ln2RefreshIntro();
+    });
+})();
+// ===== KẾT THÚC: TAB "LUYỆN KỸ NĂNG" > "🎧 NGHE" — NGHE LV2 =====
 
 });
