@@ -1441,6 +1441,11 @@
                     <div class="kid-title">Nghe lv2</div>
                     <div class="kid-count">Nghe hiểu 1 câu hoàn chỉnh</div>
                 </div>
+                <div class="kid-topic-card" id="ln-lv3-card">
+                    <span class="kid-icon">🎧</span>
+                    <div class="kid-title">Nghe lv3</div>
+                    <div class="kid-count">Nghe hiểu 1 đoạn hội thoại</div>
+                </div>
             </div>
         </div>
 
@@ -1472,15 +1477,15 @@
                     <div class="kid-title">Khó</div>
                     <div class="kid-count">Nghe một loạt từ và tick đúng những từ đã nghe</div>
                 </div>
-                <div class="kid-topic-card" data-ln-diff="dn">
+                <div class="kid-topic-card" data-ln-diff="nguc">
                     <span class="kid-icon">💀</span>
                     <div class="kid-title">Địa ngục</div>
-                    <div class="kid-count">Nghe 1 từ (tốc độ thường) và điền vào chỗ trống</div>
+                    <div class="kid-count">Nghe nguyên cả từ (không đánh vần) và điền đúng từ đó</div>
                 </div>
             </div>
         </div>
 
-        <!-- ===== Panel làm bài (dùng chung cho cả 5 độ khó) ===== -->
+        <!-- ===== Panel làm bài (dùng chung cho cả 4 độ khó) ===== -->
         <div id="ln-quiz-panel" style="display:none;">
             <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border);">
                 <button class="grammar-back-btn" id="ln-quiz-back-btn">← Quay lại</button>
@@ -1567,6 +1572,78 @@
 
             <div id="ln2-quiz-result-area" style="display:none;">
                 <div class="ln-result-box" id="ln2-result-box"></div>
+            </div>
+        </div>
+
+        <!-- ===== Panel Nghe lv3: giới thiệu + bắt đầu luyện tập + (giảng viên) soạn hội thoại ===== -->
+        <div id="ln3-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <button class="grammar-back-btn" id="ln3-back-btn">← Quay lại</button>
+                    <h3 style="margin:0;">🎧 Nghe lv3</h3>
+                </div>
+                <button type="button" class="kid-btn" id="ln3-manage-btn" style="display:none;">🛠️ Soạn hội thoại (<span id="ln3-item-count">0</span>)</button>
+            </div>
+            <p class="kid-hint">Mục tiêu: nghe hiểu trọn 1 đoạn hội thoại. Mỗi đoạn hội thoại do giảng viên gắn sẵn link file .mp3 và có thể kèm nhiều dạng câu hỏi (trắc nghiệm, điền từ, tự luận). Mỗi lượt luyện tập chọn ngẫu nhiên tối đa 10 đoạn hội thoại trong kho.</p>
+            <div class="kid-topic-grid" id="ln3-start-grid">
+                <div class="kid-topic-card" id="ln3-start-card">
+                    <span class="kid-icon">▶️</span>
+                    <div class="kid-title">Bắt đầu luyện tập</div>
+                    <div class="kid-count" id="ln3-start-count">Đang tải kho hội thoại...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Panel giảng viên soạn đoạn hội thoại Nghe lv3 ===== -->
+        <div id="ln3-manage-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border);">
+                <button class="grammar-back-btn" id="ln3-manage-back-btn">← Quay lại</button>
+                <h3 style="margin:0;">🛠️ Soạn đoạn hội thoại Nghe lv3</h3>
+            </div>
+
+            <div class="ln2-admin-box">
+                <div class="ln2-field">
+                    <label>Link file .mp3 đoạn hội thoại (bắt buộc)</label>
+                    <input type="text" id="ln3-f-audio-url" class="news-edit-input" placeholder="VD: https://.../dialogue-1.mp3">
+                </div>
+                <div class="ln2-field">
+                    <label>Tiêu đề / bối cảnh đoạn hội thoại (tuỳ chọn — hiện phía trên cho học viên)</label>
+                    <input type="text" id="ln3-f-title" class="news-edit-input" placeholder="VD: Đặt bàn tại nhà hàng">
+                </div>
+
+                <div class="ln3-subq-list" id="ln3-subq-list"></div>
+                <button type="button" class="ln2-mc-add-btn" id="ln3-add-subq-btn">+ Thêm câu hỏi</button>
+
+                <div class="ln2-admin-actions">
+                    <span class="ln2-admin-status" id="ln3-admin-status"></span>
+                    <button type="button" class="kid-btn" id="ln3-admin-cancel-btn" style="display:none;">Hủy sửa</button>
+                    <button type="button" class="kid-btn kid-btn-primary" id="ln3-admin-save-btn">➕ Thêm đoạn hội thoại</button>
+                </div>
+            </div>
+
+            <div class="ln2-item-list" id="ln3-item-list">
+                <p class="kid-hint">Đang tải danh sách đoạn hội thoại...</p>
+            </div>
+        </div>
+
+        <!-- ===== Panel làm bài Nghe lv3 ===== -->
+        <div id="ln3-quiz-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border);">
+                <button class="grammar-back-btn" id="ln3-quiz-back-btn">← Quay lại</button>
+                <h3 style="margin:0;">🎧 Nghe lv3</h3>
+            </div>
+
+            <div id="ln3-quiz-play-area">
+                <div class="thcs-translate-progress" id="ln3-quiz-progress"></div>
+                <div class="thcs-translate-card ln-quiz-card">
+                    <div id="ln3-quiz-body"></div>
+                    <div class="thcs-translate-actions" id="ln3-quiz-controls"></div>
+                    <div class="thcs-translate-feedback" id="ln3-quiz-feedback"></div>
+                </div>
+            </div>
+
+            <div id="ln3-quiz-result-area" style="display:none;">
+                <div class="ln-result-box" id="ln3-result-box"></div>
             </div>
         </div>
     </div>
