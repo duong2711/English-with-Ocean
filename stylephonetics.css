@@ -527,6 +527,7 @@ h3 { font-size:0.95rem; font-weight:600; color:var(--text); margin:0 0 8px; }
 .roadmap-switcher-tabs::-webkit-scrollbar { display: none; }
 .roadmap-switcher-tab,
 .worklife-switcher-tab,
+.ielts-switcher-tab,
 .grade-tab-btn,
 .thpt-grade-tab-btn,
 .g6-switcher-tab,
@@ -550,6 +551,7 @@ h3 { font-size:0.95rem; font-weight:600; color:var(--text); margin:0 0 8px; }
 }
 .roadmap-switcher-tab.active,
 .worklife-switcher-tab.active,
+.ielts-switcher-tab.active,
 .grade-tab-btn.active,
 .thpt-grade-tab-btn.active,
 .g6-switcher-tab.active,
@@ -586,6 +588,7 @@ h3 { font-size:0.95rem; font-weight:600; color:var(--text); margin:0 0 8px; }
 }
 .roadmap-dot,
 .worklife-dot,
+.ielts-dot,
 .g6-dot,
 .g7-dot,
 .g8-dot,
@@ -602,6 +605,7 @@ h3 { font-size:0.95rem; font-weight:600; color:var(--text); margin:0 0 8px; }
 }
 .roadmap-dot.active,
 .worklife-dot.active,
+.ielts-dot.active,
 .g6-dot.active,
 .g7-dot.active,
 .g8-dot.active,
@@ -5909,3 +5913,180 @@ h3.news-editable:focus,
 .ln3-take-feedback-line { font-size: 0.82rem; margin-top: 8px; padding: 6px 10px; border-radius: 8px; }
 .ln3-take-feedback-line.is-correct { color: var(--success-dark); background: var(--success-light); }
 .ln3-take-feedback-line.is-wrong { color: var(--danger-dark); background: #fee2e2; }
+
+/* =====================================================
+   [MỚI] LỘ TRÌNH IELTS — 4 CHẶNG (Nền tảng/Khởi động/Tăng tốc/Về đích)
+   ===================================================== */
+.roadmap-intro-ielts-1 { background: linear-gradient(135deg, #0ea5b7 0%, #0b7285 100%); }
+.roadmap-intro-ielts-2 { background: linear-gradient(135deg, #f97316 0%, #c2410c 100%); }
+.roadmap-intro-ielts-3 { background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); }
+.roadmap-intro-ielts-4 { background: linear-gradient(135deg, #e11d48 0%, #9f1239 100%); }
+
+.ielts-phase-label {
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--primary-dark);
+    margin: 20px 0 10px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid var(--border);
+}
+.ielts-phase-label:first-of-type { margin-top: 4px; }
+
+/* --- Khối nội dung theo kỹ năng (giống vstage nhưng dùng riêng cho IELTS) --- */
+.ielts-block {
+    --ielts-bg: var(--surface-2);
+    --ielts-text: var(--text-muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-xs);
+    margin-bottom: 14px;
+}
+.ielts-block:last-of-type { margin-bottom: 0; }
+.ielts-skill-1 { --ielts-bg: var(--primary-light); --ielts-text: var(--primary-dark); }
+.ielts-skill-2 { --ielts-bg: var(--diphthong-bg); --ielts-text: #17794f; }
+.ielts-skill-3 { --ielts-bg: var(--vowel-bg);     --ielts-text: #92660a; }
+.ielts-skill-4 { --ielts-bg: #e0f2fe;             --ielts-text: #075985; }
+.ielts-skill-5 { --ielts-bg: var(--consonant-bg); --ielts-text: #b5324a; }
+.ielts-skill-6 { --ielts-bg: #f3e8ff;             --ielts-text: #7e22ce; }
+
+.ielts-block-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: var(--ielts-bg);
+}
+.ielts-icon { font-size: 1.3rem; flex-shrink: 0; }
+.ielts-header-text h4 { font-size: 0.9rem; font-weight: 800; color: var(--text); margin-bottom: 2px; letter-spacing: -0.005em; }
+.ielts-header-text span { font-size: 0.71rem; font-weight: 700; color: var(--ielts-text); }
+.ielts-block-body { padding: 14px 16px 16px; font-size: 0.82rem; color: var(--text-muted); line-height: 1.6; }
+.ielts-block-body p { margin: 0 0 10px; }
+.ielts-block-body p:last-child { margin-bottom: 0; }
+.ielts-block-body strong { color: var(--text); font-weight: 700; }
+
+/* --- Ví dụ hội thoại / câu mẫu --- */
+.ielts-example {
+    background: var(--primary-light);
+    border-radius: 10px;
+    padding: 13px 15px;
+    margin: 10px 0;
+}
+.ielts-example-q { font-size: 0.79rem; font-weight: 800; color: var(--primary-dark); margin-bottom: 6px; }
+.ielts-example-a { font-size: 0.8rem; color: var(--text); line-height: 1.65; }
+.ielts-example-a strong { color: var(--primary-dark); border-bottom: 2px solid var(--primary); }
+
+/* --- Công thức A.R.E.A --- */
+.ielts-formula {
+    background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+    border: 1.5px solid #fb923c;
+    border-radius: 12px;
+    padding: 15px 16px;
+    margin: 12px 0;
+}
+.ielts-formula h5 {
+    font-size: 0.82rem;
+    font-weight: 800;
+    color: #b45309;
+    margin-bottom: 10px;
+    text-align: center;
+}
+.ielts-formula-list { display: flex; flex-direction: column; gap: 7px; }
+.ielts-formula-item {
+    font-size: 0.79rem;
+    color: #7c2d12;
+    line-height: 1.5;
+}
+.ielts-formula-item strong {
+    display: inline-block;
+    min-width: 82px;
+    color: #b45309;
+    font-weight: 800;
+}
+
+/* --- So sánh Less Common / Idiomatic --- */
+.ielts-compare {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin: 12px 0;
+}
+.ielts-compare-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+}
+.ielts-compare-card h5 { font-size: 0.78rem; font-weight: 800; margin-bottom: 6px; }
+.ielts-compare-card p { font-size: 0.78rem; color: var(--text-muted); line-height: 1.55; margin: 0; }
+.ielts-compare-card.compare-common h5 { color: var(--danger-dark); }
+.ielts-compare-card.compare-idiom h5  { color: var(--success-dark); }
+.ielts-compare-card.compare-common { border-left: 3px solid var(--danger); }
+.ielts-compare-card.compare-idiom  { border-left: 3px solid var(--success); }
+
+/* --- Tag chủ đề / dạng bài --- */
+.ielts-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+.ielts-tag {
+    background: var(--surface-2);
+    border: 1px solid var(--border-strong);
+    border-radius: 999px;
+    padding: 5px 12px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--text-muted);
+}
+
+/* --- Thẻ sách / tài liệu tham khảo --- */
+.ielts-books { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+.ielts-book {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+}
+.ielts-book-title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.82rem;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 4px;
+}
+.ielts-book-level {
+    font-size: 0.62rem;
+    font-weight: 800;
+    padding: 2px 9px;
+    border-radius: 999px;
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    white-space: nowrap;
+}
+.ielts-book p { font-size: 0.78rem; color: var(--text-muted); line-height: 1.55; margin: 0; }
+
+/* --- Lưới thẻ dạng bài / chủ đề (Writing Task 2, Speaking Part 2) --- */
+.ielts-type-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin: 12px 0;
+}
+.ielts-type-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+}
+.ielts-type-card h5 { font-size: 0.8rem; font-weight: 800; color: var(--primary-dark); margin-bottom: 5px; }
+.ielts-type-card p { font-size: 0.77rem; color: var(--text-muted); line-height: 1.5; font-style: italic; margin: 0; }
+
+@media (min-width: 600px) {
+    .ielts-compare { grid-template-columns: 1fr 1fr; }
+    .ielts-type-grid { grid-template-columns: 1fr 1fr; }
+    .ielts-header-text h4 { font-size: 0.98rem; }
+    .ielts-block-body { font-size: 0.85rem; }
+}

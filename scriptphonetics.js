@@ -590,7 +590,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (insideWrapper) insideWrapper.style.display = 'none';
             if (accountArea) accountArea.style.display = 'none';
             if (accountMenu) accountMenu.classList.remove('open');
-            authStatus.innerText = 'Tài khoản demo: hv2@gmail.com, Mật khẩu: hv2\n\nTài khoản demo: hv3@gmail.com, Mật khẩu: hv3';
+            authStatus.innerText = 'Tài khoản demo (thử nghiệm): host@admin.com, Mật khẩu: admin';
 
             // [CẬP NHẬT] Ẩn Menu và TOÀN BỘ các Tab khi chưa đăng nhập
             if (mainMenu) mainMenu.style.display = 'none';
@@ -1075,14 +1075,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const totalStudyMinutes = Math.round(totalStudySeconds / 60);
             const timePct = Math.min(100, Math.round((totalStudyMinutes / DILIGENCE_TOTAL_TIME_TARGET_MINUTES) * 100));
 
-            // ----- Điểm chăm chỉ tổng hợp: 25% phiên âm, 20% tin ngắn, 20% chủ đề từ vựng,
-            // 10% kho từ vựng, 25% thời gian học -----
+            // ----- [SỬA] Điểm chăm chỉ tổng hợp: chia ĐỀU cho 7 yếu tố (mỗi yếu tố ~14.29%,
+            // tức 100%/7) — Phiên âm, Tin ngắn, Chủ đề từ vựng, Ngữ pháp, Kho từ vựng, Điểm TB
+            // bài kiểm tra, Thời gian học. Trước đây chỉ tính 5/7 yếu tố (bỏ sót Ngữ pháp và
+            // Điểm TB kiểm tra dù đã có sẵn dữ liệu) và trọng số không đều. Nếu học viên CHƯA
+            // nộp bài kiểm tra nào (avgTestScorePct == null) thì phần này tính là 0% — vẫn giữ
+            // nguyên yếu tố trong công thức (chia cho 7) thay vì loại hẳn ra, để không làm lệch
+            // tỷ trọng của các yếu tố còn lại. -----
+            const testPctForScore = avgTestScorePct != null ? avgTestScorePct : 0;
             const diligenceScore = Math.round(
-                phoneticsPct * 0.25 +
-                newsPct * 0.20 +
-                topicsPct * 0.20 +
-                vocabPct * 0.10 +
-                timePct * 0.25
+                (phoneticsPct + newsPct + topicsPct + grammarPct + vocabPct + testPctForScore + timePct) / 7
             );
 
             // ----- [SỬA] KHÔNG RESET ĐIỂM CHUYÊN CẦN THEO THÁNG NỮA -----
@@ -1175,7 +1177,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     phonetics_pct: phoneticsPct,
                     news_pct: newsPct,
                     topics_pct: topicsPct,
+                    grammar_pct: grammarPct,
                     vocab_pct: vocabPct,
+                    test_pct: testPctForScore,
                     time_pct: timePct,
                     diligence_score: monthlyDiligenceScore,
                     updated_at: new Date().toISOString()
@@ -9980,6 +9984,68 @@ function toggleCompletion(symbolElement) {
         renderWorklifePage(0);
     })();
     // ===== KẾT THÚC TAB "ĐI LÀM" =====
+
+    // ===== TAB "IELTS" — chuyển đổi 4 chặng lộ trình =====
+    (function() {
+        const track = document.getElementById('ielts-track');
+        if (!track) return; // Tab chưa render hoặc không tồn tại trên trang này
+
+        const prevBtn = document.getElementById('ielts-prev-btn');
+        const nextBtn = document.getElementById('ielts-next-btn');
+        const tabs = Array.from(document.querySelectorAll('.ielts-switcher-tab'));
+        const dots = Array.from(document.querySelectorAll('#ielts-dots .ielts-dot'));
+        const pageCount = track.querySelectorAll('.roadmap-page').length;
+        let currentPage = 0;
+
+        function renderIeltsPage(index) {
+            currentPage = Math.max(0, Math.min(index, pageCount - 1));
+            track.style.transform = `translateX(-${currentPage * 100}%)`;
+
+            tabs.forEach(tab => {
+                tab.classList.toggle('active', Number(tab.dataset.ieltsPage) === currentPage);
+            });
+            dots.forEach(dot => {
+                dot.classList.toggle('active', Number(dot.dataset.dot) === currentPage);
+            });
+            if (prevBtn) prevBtn.disabled = currentPage === 0;
+            if (nextBtn) nextBtn.disabled = currentPage === pageCount - 1;
+        }
+
+        if (prevBtn) prevBtn.addEventListener('click', () => renderIeltsPage(currentPage - 1));
+        if (nextBtn) nextBtn.addEventListener('click', () => renderIeltsPage(currentPage + 1));
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => renderIeltsPage(Number(tab.dataset.ieltsPage)));
+        });
+        dots.forEach(dot => {
+            dot.addEventListener('click', () => renderIeltsPage(Number(dot.dataset.dot)));
+        });
+
+        // Vuốt (swipe) trái/phải trên di động
+        let touchStartX = null;
+        let touchStartY = null;
+        const pagerEl = document.getElementById('ielts-pager');
+        if (pagerEl) {
+            pagerEl.addEventListener('touchstart', (e) => {
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+            }, { passive: true });
+
+            pagerEl.addEventListener('touchend', (e) => {
+                if (touchStartX === null) return;
+                const deltaX = e.changedTouches[0].clientX - touchStartX;
+                const deltaY = e.changedTouches[0].clientY - touchStartY;
+                touchStartX = null;
+                touchStartY = null;
+                if (Math.abs(deltaX) > 45 && Math.abs(deltaX) > Math.abs(deltaY)) {
+                    if (deltaX < 0) renderIeltsPage(currentPage + 1);
+                    else renderIeltsPage(currentPage - 1);
+                }
+            }, { passive: true });
+        }
+
+        renderIeltsPage(0);
+    })();
+    // ===== KẾT THÚC TAB "IELTS" =====
 
     // ===== TAB "THI THCS" — chọn khối lớp (Lớp 6/7/8/9) =====
     (function() {

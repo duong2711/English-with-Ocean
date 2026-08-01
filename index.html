@@ -48,7 +48,7 @@
                     <button class="header-tab-btn main-tab-btn" data-main-target="tab-thi-thpt">THPT</button>
                     <button class="header-tab-btn main-tab-btn" data-main-target="tab-di-lam">Đi làm</button>
                     <button class="header-tab-btn main-tab-btn" data-main-target="tab-ielts">IELTS</button>
-                    <button class="header-tab-btn main-tab-btn" data-main-target="tab-toeic">TOEIC</button>
+                 <!--   <button class="header-tab-btn main-tab-btn" data-main-target="tab-toeic">TOEIC</button> -->
                 </div>
             </div>
 
@@ -2715,10 +2715,465 @@
 
     <div id="tab-ielts" class="main-tab-content">
         <h2>IELTS</h2>
-        <div class="wip-panel">
-            <span class="wip-icon">🚧</span>
-            <h3>Nội dung đang được xây dựng</h3>
-            <p>Lộ trình luyện thi IELTS sẽ sớm được cập nhật tại đây. Cảm ơn bạn đã kiên nhẫn chờ đợi!</p>
+
+        <!-- ----- Thanh chuyển đổi giữa 4 chặng lộ trình IELTS ----- -->
+        <div class="roadmap-switcher">
+            <button type="button" class="roadmap-nav-btn" id="ielts-prev-btn" aria-label="Chặng trước">‹</button>
+            <div class="roadmap-switcher-tabs">
+                <button type="button" class="ielts-switcher-tab active" data-ielts-page="0">🎯 Nền tảng · 3.0</button>
+                <button type="button" class="ielts-switcher-tab" data-ielts-page="1">🚀 Khởi động · 5.0</button>
+                <button type="button" class="ielts-switcher-tab" data-ielts-page="2">⚡ Tăng tốc · 6.0-6.5</button>
+                <button type="button" class="ielts-switcher-tab" data-ielts-page="3">🏁 Về đích · 7.0-7.5</button>
+            </div>
+            <button type="button" class="roadmap-nav-btn" id="ielts-next-btn" aria-label="Chặng sau">›</button>
+        </div>
+
+        <div class="roadmap-pager" id="ielts-pager">
+        <div class="roadmap-track" id="ielts-track">
+
+        <!-- ===== TRANG 1: CHẶNG 1 - NỀN TẢNG ===== -->
+        <div class="roadmap-page" data-page="0">
+        <div class="roadmap-wrap">
+
+            <div class="roadmap-intro roadmap-intro-ielts-1">
+                <span class="roadmap-intro-badge">🎯 Chặng 1 · Nền tảng</span>
+                <h3>Xây nền tảng Ngữ pháp – Từ vựng – Phát âm</h3>
+                <p>Đây là giai đoạn quan trọng nhất: xây dựng kiến thức nền tảng tiếng Anh trước khi bước vào các dạng bài IELTS. Một khi đã nắm vững nền tảng, bạn sẽ bứt phá rất nhanh ở những chặng tiếp theo.</p>
+                <div class="roadmap-stats">
+                    <div class="roadmap-stat"><strong>3.0</strong><span>mục tiêu IELTS</span></div>
+                    <div class="roadmap-stat"><strong>3</strong><span>mảng kiến thức nền</span></div>
+                </div>
+            </div>
+
+            <div class="ielts-block ielts-skill-1">
+                <div class="ielts-block-header">
+                    <span class="ielts-icon">📐</span>
+                    <div class="ielts-header-text"><h4>✪ Ngữ pháp</h4><span>Chọn lọc trọng điểm thay vì học dàn trải</span></div>
+                </div>
+                <div class="ielts-block-body">
+                    <p>"Sử dụng ngữ pháp đa dạng và chính xác" (grammatical range and accuracy) là một tiêu chí chấm điểm của IELTS Speaking &amp; Writing, đồng thời cũng rất quan trọng khi làm Reading và Listening. Bạn không cần học hết mọi cấu trúc ngữ pháp mà nên biết chọn lọc các phần trọng điểm.</p>
+                    <div class="ielts-example">
+                        <div class="ielts-example-q">IELTS Speaking Part 1: Do you live in a house or an apartment?</div>
+                        <div class="ielts-example-a">Sample: I'<strong>m living</strong> in Hanoi, in a studio apartment right now. I'<strong>ve lived</strong> here for more than 2 years. It's quite spacious compared to the last room that I <strong>lived in</strong>.</div>
+                    </div>
+                    <p>Từ ví dụ trên có thể rút ra 5 chủ điểm thì được dùng nhiều nhất trong IELTS — nắm vững sẽ giúp rút ngắn thời gian học mà vẫn đạt hiệu quả cao:</p>
+                    <div class="ielts-tags">
+                        <span class="ielts-tag">Hiện tại đơn</span>
+                        <span class="ielts-tag">Hiện tại tiếp diễn</span>
+                        <span class="ielts-tag">Hiện tại hoàn thành</span>
+                        <span class="ielts-tag">Quá khứ đơn</span>
+                        <span class="ielts-tag">Tương lai đơn</span>
+                    </div>
+                    <p>Ngoài tenses, nên tập trung sâu vào chức năng &amp; vị trí của danh – động – tính – trạng từ, giới từ, mệnh đề quan hệ (relative clause), câu bị động (passive voice) và các cấu trúc so sánh.</p>
+                    <div class="ielts-books">
+                        <div class="ielts-book">
+                            <div class="ielts-book-title">📘 Các thì trong tiếng Anh – trọn bộ 12 thì <span class="ielts-book-level">Mất gốc</span></div>
+                            <p>Củng cố lại 12 thì cơ bản, kèm đáp án chi tiết — ôn trước khi bước vào Cambridge Grammar for IELTS.</p>
+                        </div>
+                        <div class="ielts-book">
+                            <div class="ielts-book-title">📗 30 ngày phủ xanh IELTS <span class="ielts-book-level">Mất gốc</span></div>
+                            <p>20 chủ điểm ngữ pháp quan trọng nhất + 11 chủ điểm từ vựng hay gặp, viết hoàn toàn bằng tiếng Việt, phù hợp người mới bắt đầu.</p>
+                        </div>
+                        <div class="ielts-book">
+                            <div class="ielts-book-title">📕 Cambridge – Grammar for IELTS <span class="ielts-book-level">Khuyên dùng</span></div>
+                            <p>25 bài, mỗi bài gồm 4 phần: Context Listening, Grammar, Grammar Exercise, Test Practice. Chỉ cần tập trung 2 phần Grammar (lý thuyết) và Grammar Exercise (bài tập) — bài tập bám sát format IELTS, giúp làm quen dần với đề thi thật.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ielts-block ielts-skill-2">
+                <div class="ielts-block-header">
+                    <span class="ielts-icon">📚</span>
+                    <div class="ielts-header-text"><h4>✪ Từ vựng</h4><span>Less common &amp; idiomatic — chìa khoá lên band 7+</span></div>
+                </div>
+                <div class="ielts-block-body">
+                    <p>Để đạt tối thiểu band 7.0 Speaking, thí sinh cần đảm bảo tiêu chí "use some less common and idiomatic vocabulary".</p>
+                    <div class="ielts-compare">
+                        <div class="ielts-compare-card compare-common">
+                            <h5>Less Common</h5>
+                            <p>Q: Where do you live? — A: I live in an apartment which is quite <strong>big</strong> (A1 – Basic) → nên thay bằng <strong>spacious</strong> (C1 – Proficient), nghĩa tương đương nhưng gây ấn tượng hơn với giám khảo.</p>
+                        </div>
+                        <div class="ielts-compare-card compare-idiom">
+                            <h5>Idiomatic (Collocation)</h5>
+                            <p>Từ nào ghép được với "a speech"? → <strong>Deliver a speech</strong> (phát biểu), không phải "transfer". Collocation là cách kết hợp từ theo thói quen của người bản ngữ (vd: "strong wind" chứ không phải "heavy wind").</p>
+                        </div>
+                    </div>
+                    <p>Nên chuẩn bị một sổ tay ghi từ vựng và ôn lại thường xuyên. Với người mới bắt đầu, học theo các chủ đề sau:</p>
+                    <div class="ielts-tags">
+                        <span class="ielts-tag">People</span>
+                        <span class="ielts-tag">The World</span>
+                        <span class="ielts-tag">At Home</span>
+                        <span class="ielts-tag">School &amp; Workplace</span>
+                        <span class="ielts-tag">Leisure</span>
+                        <span class="ielts-tag">Social Issues</span>
+                        <span class="ielts-tag">Technology</span>
+                    </div>
+                    <div class="ielts-books">
+                        <div class="ielts-book">
+                            <div class="ielts-book-title">📘 Oxford Word Skills Basic <span class="ielts-book-level">Mới bắt đầu</span></div>
+                            <p>Từ vựng theo chủ đề quen thuộc, phân tích kỹ để hiểu và ứng dụng thường xuyên; kèm ngữ pháp, bài tập, luyện đọc – nói.</p>
+                        </div>
+                        <div class="ielts-book">
+                            <div class="ielts-book-title">📕 Vocabulary for IELTS <span class="ielts-book-level">Đã có nền tảng</span></div>
+                            <p>Tổng hợp từ vựng less common &amp; idiomatic theo chủ đề hay gặp trong IELTS, kèm hệ thống bài tập rút gọn theo format đề thi thật.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ielts-block ielts-skill-3">
+                <div class="ielts-block-header">
+                    <span class="ielts-icon">🔤</span>
+                    <div class="ielts-header-text"><h4>✪ Phát âm</h4><span>Học cùng lúc với Listening qua phương pháp Shadowing</span></div>
+                </div>
+                <div class="ielts-block-body">
+                    <p>Xem trước bảng phiên âm IPA để hiểu cách đọc từng âm cho đúng. Nên học Pronunciation và Listening cùng lúc — khi nghe băng, hãy nói nhại lại theo (phương pháp <strong>Shadowing</strong>) để cải thiện phát âm, trọng âm và ngữ điệu.</p>
+                    <p><strong>Học như thế nào?</strong> Áp dụng Shadowing với mỗi từ vựng mới, tra phát âm chuẩn bằng 2 từ điển — mỗi khi tra từ, bấm vào nút loa nhỏ để nghe cách phát âm của người bản xứ:</p>
+                    <div class="ielts-tags">
+                        <span class="ielts-tag">Oxford Learner's Dictionary</span>
+                        <span class="ielts-tag">Cambridge Dictionary</span>
+                    </div>
+                    <p>Song song đó, bắt đầu luyện Nghe cơ bản:</p>
+                    <div class="ielts-books">
+                        <div class="ielts-book">
+                            <div class="ielts-book-title">📗 Listen Carefully <span class="ielts-book-level">Mới bắt đầu</span></div>
+                            <p>15 chủ điểm hay gặp nhất trong đời sống hàng ngày — tiền đề cho Listening Part 1 &amp; Part 2.</p>
+                        </div>
+                        <div class="ielts-book">
+                            <div class="ielts-book-title">📘 Basic IELTS Listening <span class="ielts-book-level">Đã có nền tảng</span></div>
+                            <p>5 chủ đề văn hoá – xã hội, thiết kế theo format IELTS. Học từ Unit 1 – 3: Names &amp; Places, Numbers, Survival English.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        </div>
+        <!-- ===== KẾT THÚC TRANG 1 ===== -->
+
+        <!-- ===== TRANG 2: CHẶNG 2 - KHỞI ĐỘNG ===== -->
+        <div class="roadmap-page" data-page="1">
+        <div class="roadmap-wrap">
+
+            <div class="roadmap-intro roadmap-intro-ielts-2">
+                <span class="roadmap-intro-badge">🚀 Chặng 2 · Khởi động</span>
+                <h3>Làm quen dạng bài cơ bản của cả 4 kỹ năng</h3>
+                <p>Chặng này chia thành 2 giai đoạn: Giai đoạn 1 tập trung Listening &amp; Reading (kỹ năng tiếp nhận ngôn ngữ, tạo tiền đề); Giai đoạn 2 tập trung Speaking &amp; Writing (kỹ năng sản xuất ngôn ngữ, truyền tải ý).</p>
+                <div class="roadmap-stats">
+                    <div class="roadmap-stat"><strong>5.0</strong><span>mục tiêu IELTS</span></div>
+                    <div class="roadmap-stat"><strong>2</strong><span>giai đoạn</span></div>
+                </div>
+            </div>
+
+            <div class="ielts-phase-label">Giai đoạn 1 · Listening &amp; Reading</div>
+
+            <div class="ielts-block ielts-skill-4">
+                <div class="ielts-block-header">
+                    <span class="ielts-icon">🎧</span>
+                    <div class="ielts-header-text"><h4>Listening</h4><span>Các dạng bài cơ bản, hay xuất hiện nhất</span></div>
+                </div>
+                <div class="ielts-block-body">
+                    <p>Tiếp tục với những chủ điểm nghe đời sống hàng ngày đã làm quen ở chặng trước (Listening Part 1 &amp; 2), đồng thời nắm chiến lược làm bài của các dạng cơ bản và hay xuất hiện nhất trong đề thi:</p>
+                    <div class="ielts-tags">
+                        <span class="ielts-tag">Form / Table completion</span>
+                        <span class="ielts-tag">Multiple choice question</span>
+                        <span class="ielts-tag">Labelling Map</span>
+                    </div>
+                    <div class="ielts-books">
+                        <div class="ielts-book">
+                            <div class="ielts-book-title">📘 Basic IELTS Listening <span class="ielts-book-level">Tiếp tục</span></div>
+                            <p>Hoàn thành nốt 2 unit: Unit 4 – Popular Science, Unit 5 – Academic English.</p>
+                        </div>
+                        <div class="ielts-book">
+                            <div class="ielts-book-title">📗 Get ready for IELTS Listening <span class="ielts-book-level">Mới bắt đầu với IELTS</span></div>
+                            <p>Bài học logic, dễ hiểu, đơn giản. Cứ 3 bài học xen kẽ 1 bài ôn tập tổng hợp giúp nhớ lâu hơn. Hết 12 units là phần Practice Test đúng chuẩn format — hãy đặt giờ và tự luyện thi để kiểm tra trình độ.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ielts-block ielts-skill-5">
+                <div class="ielts-block-header">
+                    <span class="ielts-icon">📖</span>
+                    <div class="ielts-header-text"><h4>Reading</h4><span>Làm quen chiến lược làm bài kết hợp học từ vựng</span></div>
+                </div>
+                <div class="ielts-block-body">
+                    <p>Tương tự Listening, hãy làm quen với các dạng bài cơ bản và thường xuất hiện:</p>
+                    <div class="ielts-tags">
+                        <span class="ielts-tag">Note / Summary / Sentence Completion</span>
+                        <span class="ielts-tag">Multiple choice</span>
+                        <span class="ielts-tag">Flowchart / Diagram Completion</span>
+                    </div>
+                    <p>Vì Reading mang tính học thuật cao và nhiều từ chuyên ngành, nên học chiến lược làm bài song song với việc học từ vựng thường xuyên để nâng cao vốn từ.</p>
+                    <div class="ielts-books">
+                        <div class="ielts-book">
+                            <div class="ielts-book-title">📘 Get ready for IELTS Reading</div>
+                            <p>Cùng format với "Get ready for IELTS Listening".</p>
+                        </div>
+                        <div class="ielts-book">
+                            <div class="ielts-book-title">📗 Com IELTS <span class="ielts-book-level">Band 4.0 – 5.0</span></div>
+                            <p>10 chủ đề, mỗi chủ đề có bài tập ở dạng ngắn, rút gọn rồi nâng cao dần, trải đều 4 kỹ năng cùng các cấu trúc ngữ pháp và từ vựng liên quan đến IELTS.</p>
+                        </div>
+                        <div class="ielts-book">
+                            <div class="ielts-book-title">📕 Khoá học IELTS Reading &amp; Listening Online</div>
+                            <p>Phù hợp bạn đã có nền tảng ngữ pháp, từ vựng nhất định nhưng chưa biết đặc thù từng dạng bài, tips và các bước làm bài; kèm tài liệu tóm tắt + bài tập thực hành sau mỗi bài học.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ielts-phase-label">Giai đoạn 2 · Speaking &amp; Writing</div>
+
+            <div class="ielts-block ielts-skill-1">
+                <div class="ielts-block-header">
+                    <span class="ielts-icon">🗣️</span>
+                    <div class="ielts-header-text"><h4>Speaking Part 1</h4><span>Phần thi đơn giản nhất — thông tin cá nhân</span></div>
+                </div>
+                <div class="ielts-block-body">
+                    <p>Tập trung vào IELTS Speaking Part 1, xoay quanh chủ đề thông tin cá nhân:</p>
+                    <div class="ielts-tags">
+                        <span class="ielts-tag">Work</span><span class="ielts-tag">Study</span><span class="ielts-tag">Hometown</span>
+                        <span class="ielts-tag">Hobbies</span><span class="ielts-tag">Family</span><span class="ielts-tag">Friends</span>
+                    </div>
+                    <div class="ielts-example">
+                        <div class="ielts-example-q">Do you like music?</div>
+                        <div class="ielts-example-a">1. Yes, I do.<br>2. Yes, I'm a big fan of music because it helps to put me in a better mood. I love listening to pop music and my favorite artist is Selena Gomez.<br><em>→ Câu 2 gây ấn tượng hơn với giám khảo vì vừa đủ thông tin, vừa có ý kiến và ví dụ bổ trợ.</em></div>
+                    </div>
+                    <div class="ielts-formula">
+                        <h5>Công thức A.R.E.A — "giải bí" mọi câu hỏi Speaking Part 1</h5>
+                        <div class="ielts-formula-list">
+                            <div class="ielts-formula-item"><strong>Answer</strong> Đưa ra câu trả lời trực tiếp cho câu hỏi</div>
+                            <div class="ielts-formula-item"><strong>Reason</strong> Đưa ra lý do cho câu trả lời của mình</div>
+                            <div class="ielts-formula-item"><strong>Example</strong> Đưa ra ví dụ để củng cố thêm ý</div>
+                            <div class="ielts-formula-item"><strong>Alternative</strong> Đưa ý kiến trái chiều/phản bác hoặc mở rộng ý liên quan</div>
+                        </div>
+                    </div>
+                    <div class="ielts-books">
+                        <div class="ielts-book">
+                            <div class="ielts-book-title">📘 Trọn bộ từ vựng IELTS Speaking Band 7.0</div>
+                            <p>15 chủ đề phổ biến (Education, Children, Travelling…), mỗi chủ đề chia thành các subtopic. Mỗi topic có câu hỏi gợi ý cho cả 3 phần thi, từ vựng đặc biệt liên quan, bảng thống kê từ vựng cuối bài và bài tập nhỏ. Mỗi câu trả lời mẫu đi theo Công thức A.R.E.A.</p>
+                        </div>
+                        <div class="ielts-book">
+                            <div class="ielts-book-title">📗 Get ready for IELTS Speaking</div>
+                            <p>12 unit tương ứng 12 topic thường gặp (Family, Freetime, Hometown…). Sau mỗi 3 units có 1 bài Review Unit; cuối sách có bài kiểm tra thực hành kèm Answer key và gợi ý trả lời câu hỏi mở cho Part 3.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ielts-block ielts-skill-6">
+                <div class="ielts-block-header">
+                    <span class="ielts-icon">✍️</span>
+                    <div class="ielts-header-text"><h4>Writing Task 1</h4><span>Phân tích &amp; tóm tắt số liệu biểu đồ</span></div>
+                </div>
+                <div class="ielts-block-body">
+                    <p>Tập trung học Task 1 trong giai đoạn này vì đơn giản hơn Task 2. Đề bài yêu cầu phân tích số liệu và tóm tắt số liệu của một biểu đồ bất kỳ.</p>
+                    <div class="ielts-example">
+                        <div class="ielts-example-q">The graph shows the percentage of single men in America, Vietnam, China from 2000 to 2020.</div>
+                        <div class="ielts-example-a">Cấu trúc mẫu: "The graph compares <em>[đối tượng]</em> in terms of <em>[Oy]</em> over <em>[Ox]</em>"<br>→ The given line graph compares <strong>three different countries</strong> in terms of the <strong>proportion</strong> of single men <strong>over a 20-year period, starting from 2000</strong>.</div>
+                    </div>
+                    <p>Nên học cách phân tích biểu đồ, lựa chọn số liệu nổi bật, kết hợp học các mẫu câu dẫn dắt số liệu.</p>
+                    <div class="ielts-books">
+                        <div class="ielts-book">
+                            <div class="ielts-book-title">📘 IELTS Language Practice</div>
+                            <p>Gồm các phần Grammar và Vocabulary, hệ thống logic, đầy đủ, chi tiết, chuẩn format đề thi IELTS. Chú ý làm kỹ dạng bài Re-write vì giúp luyện kỹ năng paraphrase — kỹ năng vô cùng cần thiết cho Writing.</p>
+                        </div>
+                        <div class="ielts-book">
+                            <div class="ielts-book-title">📗 Get ready for IELTS Writing</div>
+                            <p>Cùng format với các sách "Get ready" khác.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        </div>
+        <!-- ===== KẾT THÚC TRANG 2 ===== -->
+
+        <!-- ===== TRANG 3: CHẶNG 3 - TĂNG TỐC ===== -->
+        <div class="roadmap-page" data-page="2">
+        <div class="roadmap-wrap">
+
+            <div class="roadmap-intro roadmap-intro-ielts-3">
+                <span class="roadmap-intro-badge">⚡ Chặng 3 · Tăng tốc</span>
+                <h3>Luyện nhuần nhuyễn toàn bộ dạng bài còn lại</h3>
+                <p>Sau khi đã làm quen dạng bài cơ bản, ở chặng này bạn sẽ đi sâu vào các dạng bài còn lại của cả 4 kỹ năng, tập trung luyện tập nhuần nhuyễn chiến lược làm bài cho từng dạng.</p>
+                <div class="roadmap-stats">
+                    <div class="roadmap-stat"><strong>6.0-6.5</strong><span>mục tiêu IELTS</span></div>
+                </div>
+            </div>
+
+            <div class="ielts-block ielts-skill-4">
+                <div class="ielts-block-header">
+                    <span class="ielts-icon">🎧</span>
+                    <div class="ielts-header-text"><h4>Listening &amp; Reading</h4><span>Học nốt các dạng bài còn lại</span></div>
+                </div>
+                <div class="ielts-block-body">
+                    <div class="ielts-type-grid">
+                        <div class="ielts-type-card">
+                            <h5>🎧 Listening</h5>
+                            <p>Matching/Classifying Information · Short Answer · Diagram/Flowchart completion</p>
+                        </div>
+                        <div class="ielts-type-card">
+                            <h5>📖 Reading</h5>
+                            <p>True/False/Not given hoặc Yes/No/Not given (dạng dễ nhưng hay gây nhầm lẫn) · Matching Headings · Matching Information · Matching Sentence Endings</p>
+                        </div>
+                    </div>
+                    <div class="ielts-books">
+                        <div class="ielts-book">
+                            <div class="ielts-book-title">📘 Listening for IELTS &amp; Reading for IELTS</div>
+                            <p>Chia thành 12 units, mỗi unit khai thác 1 topic dễ gặp trong đề thi (Holiday, Travel, Youth…) giúp xây ngân hàng từ vựng và ý tưởng cho các topic đa dạng. Từ Unit 1 – 11 sẽ dễ dàng bắt gặp các loại câu hỏi trong đề Listening; mỗi unit liệt kê rõ mục tiêu kỹ năng, kỹ thuật và ngôn ngữ chính ở đầu bài.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ielts-block ielts-skill-1">
+                <div class="ielts-block-header">
+                    <span class="ielts-icon">🗣️</span>
+                    <div class="ielts-header-text"><h4>Speaking Part 2 &amp; 3</h4><span>Chuyển từ phỏng vấn sang độc thoại</span></div>
+                </div>
+                <div class="ielts-block-body">
+                    <p>Bước sang Part 2, giám khảo nhấn mạnh yếu tố "fluency" &amp; "ability to speak at length" — khả năng nói dài, trôi chảy về một chủ đề (phần thi độc thoại, khác với Part 1 là phỏng vấn). Vẫn áp dụng Công thức A.R.E.A để bài nói mạch lạc và có liên kết.</p>
+                    <p>Các câu hỏi Part 2 chia thành 4 nhóm chủ đề chính:</p>
+                    <div class="ielts-type-grid">
+                        <div class="ielts-type-card"><h5>1. People</h5><p>Describe a teenager that you know. / Describe a friend that you remember from childhood.</p></div>
+                        <div class="ielts-type-card"><h5>2. Things</h5><p>Describe an important plant in your country. / Describe a magazine that you like to read.</p></div>
+                        <div class="ielts-type-card"><h5>3. Events</h5><p>Describe a time when you received horrible service. / Describe a party that you went to.</p></div>
+                        <div class="ielts-type-card"><h5>4. Places</h5><p>Describe a part of your country that you find interesting. / Describe a quiet place that you like.</p></div>
+                    </div>
+                    <p>Sau khi nắm được Part 2, tiếp tục làm quen Part 3 — phần thi khó nhất vì phải thảo luận các câu hỏi mang tính học thuật cao hơn, có chủ đề liên quan đến Part 2.</p>
+                    <div class="ielts-books">
+                        <div class="ielts-book">
+                            <div class="ielts-book-title">📕 Giáo trình tự học IELTS Speaking</div>
+                            <p>45 bài mẫu Speaking Part 2 ở band điểm 8.0, tập trung 5 mảng: Things – People – Events – Activities – Places (các đề ra nhiều nhất và dự đoán còn xuất hiện). Mỗi bài có Bí kíp A.R.E.A xuyên suốt, chia 3 phần: Skill-developing exercises, Sample Answer, Useful Expressions.</p>
+                        </div>
+                        <div class="ielts-book">
+                            <div class="ielts-book-title">🌐 Website: ielts-simon.com &amp; ielts-liz.com</div>
+                            <p>2 website của 2 cựu giám khảo IELTS nổi tiếng — cung cấp rất nhiều kiến thức và bài mẫu, văn phong đơn giản nhưng hiệu quả.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ielts-block ielts-skill-6">
+                <div class="ielts-block-header">
+                    <span class="ielts-icon">✍️</span>
+                    <div class="ielts-header-text"><h4>Writing Task 2</h4><span>Chiếm 2/3 tổng điểm — phần khó nhất</span></div>
+                </div>
+                <div class="ielts-block-body">
+                    <p>Task 2 yêu cầu viết một bài luận ngắn, tối thiểu 250 từ trong 40 phút, đưa ra phân tích, đánh giá và quan điểm về một vấn đề theo yêu cầu đề bài. Cần học cách làm bài của 5 dạng sau:</p>
+                    <div class="ielts-type-grid">
+                        <div class="ielts-type-card"><h5>1. Argumentative / Agree or Disagree</h5><p>Some people claim museums and art galleries are not needed today because everyone can see historical objects by computer. To what extent do you agree or disagree?</p></div>
+                        <div class="ielts-type-card"><h5>2. Discussion (Discuss both views)</h5><p>Some think strict punishments for driving offences are key to reducing accidents. Others believe other measures would be more effective. Discuss both views and give your opinion.</p></div>
+                        <div class="ielts-type-card"><h5>3. Problem &amp; Solution</h5><p>Many children play computer games. What are the negative impacts of playing computer games and what can be done to minimize the bad effects?</p></div>
+                        <div class="ielts-type-card"><h5>4. Advantage &amp; Disadvantage</h5><p>The internet has made knowledge immediately available and much of it is free. Discuss the advantages and disadvantages of this trend.</p></div>
+                        <div class="ielts-type-card"><h5>5. 2-part Question</h5><p>Money is important in most people's lives. What do you feel are the right uses of money? What other factors are important for a good life?</p></div>
+                    </div>
+                    <p><strong>Lưu ý:</strong></p>
+                    <ul class="roadmap-topic-list">
+                        <li>Tập lập dàn ý trước khi viết để bài có logic, mạch lạc, ăn điểm tiêu chí <em>cohesion &amp; coherence</em>.</li>
+                        <li>Nắm được các bước làm bài ở từng dạng bài khác nhau.</li>
+                        <li>Đọc nhiều bài mẫu, báo/tin tức thời sự để cải thiện ý tưởng và từ vựng học thuật, chuẩn bị sổ để take note.</li>
+                    </ul>
+                    <div class="ielts-books">
+                        <div class="ielts-book">
+                            <div class="ielts-book-title">📘 Khoá học IELTS Speaking &amp; Writing Online</div>
+                            <p>13 buổi bài giảng video Speaking và Writing, hướng dẫn triển khai ý cho các dạng bài cơ bản nhất, nắm vững cách làm bài, cấu trúc và cách phân bổ thời gian hợp lý.</p>
+                        </div>
+                        <div class="ielts-book">
+                            <div class="ielts-book-title">📗 IELTS Writing Target Band 7.0 — Task 1 + Task 2</div>
+                            <p>Giúp hiểu rõ cấu trúc bài viết, xây dựng &amp; phát triển ý tưởng logic đúng yêu cầu đề; hướng dẫn chi tiết cách làm từng dạng Task 1 &amp; 2, tổng hợp cấu trúc hay giúp ăn điểm.</p>
+                        </div>
+                        <div class="ielts-book">
+                            <div class="ielts-book-title">📕 IELTS Write Right</div>
+                            <p>Hướng dẫn viết theo sườn bài, bố cục chuẩn rõ ràng; cung cấp nhiều từ vựng ăn điểm và bài tập củng cố; kèm bài mẫu ở 2 band điểm 5.0 và 7.0+ để dễ thấy sự khác biệt và cải thiện nhanh chóng.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        </div>
+        <!-- ===== KẾT THÚC TRANG 3 ===== -->
+
+        <!-- ===== TRANG 4: CHẶNG 4 - VỀ ĐÍCH ===== -->
+        <div class="roadmap-page" data-page="3">
+        <div class="roadmap-wrap">
+
+            <div class="roadmap-intro roadmap-intro-ielts-4">
+                <span class="roadmap-intro-badge">🏁 Chặng 4 · Về đích</span>
+                <h3>Luyện đề toàn diện — về đích với band điểm mục tiêu</h3>
+                <p>Sau khi đã nắm được cách làm bài của tất cả các dạng bài, đây là giai đoạn luyện đề để làm quen áp lực phòng thi thật và tối ưu hoá điểm số.</p>
+                <div class="roadmap-stats">
+                    <div class="roadmap-stat"><strong>7.0-7.5</strong><span>mục tiêu IELTS</span></div>
+                </div>
+            </div>
+
+            <div class="ielts-block ielts-skill-4">
+                <div class="ielts-block-header">
+                    <span class="ielts-icon">🎧</span>
+                    <div class="ielts-header-text"><h4>Listening &amp; Reading</h4><span>Luyện đề — note lại lỗi sai sau mỗi lần làm</span></div>
+                </div>
+                <div class="ielts-block-body">
+                    <p>Tiếp tục luyện đề và tổng quát hoá các lỗi sai bằng cách note lại sau mỗi lần làm đề. Khi luyện đề trong cuốn <strong>Cambridge Practice Test for IELTS</strong>, nên làm đi làm lại các đề nghe và đọc. Với Listening, mỗi lần nghe lại nên tập trung vào một yếu tố khác nhau:</p>
+                    <div class="ielts-tags">
+                        <span class="ielts-tag">★ Nghĩa của cả đoạn văn</span>
+                        <span class="ielts-tag">★ Tìm đáp án</span>
+                        <span class="ielts-tag">★ Thì của động từ</span>
+                        <span class="ielts-tag">★ Phát âm</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ielts-block ielts-skill-6">
+                <div class="ielts-block-header">
+                    <span class="ielts-icon">✍️</span>
+                    <div class="ielts-header-text"><h4>Writing</h4><span>Đào sâu ý tưởng — mở rộng vốn từ</span></div>
+                </div>
+                <div class="ielts-block-body">
+                    <p>Tiếp tục luyện thật nhiều đề để viết, tham khảo bài mẫu để cải thiện bài viết của mình. Đặc biệt với Task 2, để đạt band điểm cao, cần phát triển càng nhiều ý tưởng càng tốt, nội dung viết sâu và "chất" hơn, vốn từ vựng cũng phải đủ rộng và phong phú.</p>
+                    <div class="ielts-books">
+                        <div class="ielts-book">
+                            <div class="ielts-book-title">📕 IELTS Write Right</div>
+                            <p>Cuốn sách hữu ích giúp tăng band điểm nhanh chóng: hướng dẫn viết theo sườn bài, bố cục chuẩn rõ ràng; nhiều từ vựng ăn điểm, bài tập củng cố kiến thức; kèm bài mẫu ở 2 band điểm 5.0 và 7.0+ để dễ thấy sự khác biệt.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ielts-block ielts-skill-1">
+                <div class="ielts-block-header">
+                    <span class="ielts-icon">🗣️</span>
+                    <div class="ielts-header-text"><h4>Speaking Part 3</h4><span>Hoàn thiện phần thi khó nhất</span></div>
+                </div>
+                <div class="ielts-block-body">
+                    <p>Sau khi nắm được Part 1 và Part 2, ở giai đoạn cuối này hãy hoàn thiện Part 3. Các câu hỏi Part 3 liên quan tới chủ đề trong Part 2, mỗi câu trả lời nên gồm từ 3–5 câu. Vẫn nên áp dụng format A.R.E.A để trả lời:</p>
+                    <div class="ielts-formula">
+                        <h5>Công thức A.R.E.A cho Speaking Part 3</h5>
+                        <div class="ielts-formula-list">
+                            <div class="ielts-formula-item"><strong>Answer</strong> Trả lời trực tiếp câu hỏi</div>
+                            <div class="ielts-formula-item"><strong>Reason</strong> Nêu lý do cho câu trả lời</div>
+                            <div class="ielts-formula-item"><strong>Example</strong> Đưa ví dụ củng cố ý</div>
+                            <div class="ielts-formula-item"><strong>Alternative</strong> Mở rộng hoặc nêu ý kiến trái chiều</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        </div>
+        <!-- ===== KẾT THÚC TRANG 4 ===== -->
+
+        </div>
+        </div>
+        <!-- ----- Chấm điều hướng (dots) ----- -->
+        <div class="roadmap-dots" id="ielts-dots">
+            <span class="ielts-dot active" data-dot="0"></span>
+            <span class="ielts-dot" data-dot="1"></span>
+            <span class="ielts-dot" data-dot="2"></span>
+            <span class="ielts-dot" data-dot="3"></span>
         </div>
     </div>
 
