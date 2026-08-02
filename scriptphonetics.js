@@ -5,6 +5,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl3cWJha3NtbXR2d2JvamNnc2RkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxNjc3NTAsImV4cCI6MjA5Nzc0Mzc1MH0.vhgt7cB6w2elm-MXY57U_wJtYkJQHDFAEsJwAArOjhQ'; 
     const AUDIO_BUCKET_NAME = 'audio_comments'; 
     const AVATAR_BUCKET_NAME = 'avatars'; // Bucket lưu ảnh đại diện — cần tạo trong Supabase Storage (xem hướng dẫn)
+    // [MỚI] 2 bucket phục vụ module "IELTS Listening Test" (tab Kiểm tra) — cần tạo trong
+    // Supabase Storage, xem file "ielts_listening_setup.sql" đi kèm để tạo tự động.
+    const ILT_AUDIO_BUCKET = 'ielts_listening_audio'; // Bucket lưu file mp3 bài nghe
+    const ILT_IMAGE_BUCKET = 'ielts_listening_images'; // Bucket lưu hình minh hoạ chèn trong bài nghe
     const AVATAR_MAX_BYTES = 15 * 1024 * 1024; // Giới hạn 15MB cho ảnh đại diện gốc trước khi cắt
     const ADMIN_PASSWORD = 'admin'; 
     // Email của (các) giảng viên — được quyền xem mọi bài dịch và để lại nhận xét.
@@ -12321,6 +12325,1379 @@ function toggleCompletion(symbolElement) {
 })();
 
 // ===================================================================
+// ===== BẮT ĐẦU: TAB "KIỂM TRA" > "🎧 IELTS LISTENING TEST" ==========
+// Module luyện nghe IELTS: giảng viên soạn nhiều bài nghe, mỗi bài
+// gồm 1 file mp3 + 40 câu hỏi chia 4 Part (1-10 / 11-20 / 21-30 /
+// 31-40 — tuỳ giảng viên bố trí, không bắt buộc cứng). Nội dung mỗi
+// Part được ghép tự do từ các khối: đoạn văn điền từ (bôi đen từ cần
+// ẩn), đoạn văn đóng khung, bảng, hình ảnh, câu trắc nghiệm — và có
+// thể chia thêm phần nhỏ kiểu "Questions 21-25" bên trong 1 Part.
+// Số thứ tự câu hỏi được đánh TỰ ĐỘNG, liên tục theo đúng thứ tự xuất
+// hiện trên trang, đặt ngay TRƯỚC mỗi chỗ trống / câu trắc nghiệm —
+// y hệt cách trình bày của đề thi IELTS Listening thật.
+// Dữ liệu lưu ở bảng "ielts_listening_tests" / "ielts_listening_submissions"
+// trên Supabase (xem file "ielts_listening_setup.sql" đi kèm để tạo
+// bảng + policy RLS + 2 storage bucket cần thiết).
+// ===================================================================
+(function initIeltsListeningModule() {
+
+    const iltFolderCard     = document.getElementById('ielts-listening-folder-card');
+    const kiemtraFolderGrid = document.getElementById('kiemtra-folder-grid');
+    const iltPanel          = document.getElementById('ilt-panel');
+    if (!iltFolderCard || !iltPanel) return;
+
+    const listView   = document.getElementById('ilt-list-view');
+    const editorView = document.getElementById('ilt-editor-view');
+    const takeView   = document.getElementById('ilt-take-view');
+    const resultView = document.getElementById('ilt-result-view');
+
+    const listContainer = document.getElementById('ilt-list-container');
+    const adminBar       = document.getElementById('ilt-admin-bar');
+    const createBtn      = document.getElementById('ilt-create-btn');
+
+    const titleInput     = document.getElementById('ilt-title-input');
+    const audioField     = document.getElementById('ilt-audio-field');
+    const summaryBar     = document.getElementById('ilt-summary-bar');
+    const partsContainer = document.getElementById('ilt-parts-container');
+    const saveStatusEl   = document.getElementById('ilt-save-status');
+    const previewBtn     = document.getElementById('ilt-preview-btn');
+    const publishBtn     = document.getElementById('ilt-publish-btn');
+    const deleteBtn      = document.getElementById('ilt-delete-btn');
+
+    const takeTitleEl  = document.getElementById('ilt-take-title');
+    const takeAudioBar = document.getElementById('ilt-take-audio-bar');
+    const takeBodyEl   = document.getElementById('ilt-take-body');
+    const submitBtn    = document.getElementById('ilt-submit-btn');
+
+    const resultTitleEl = document.getElementById('ilt-result-title');
+    const resultScoreEl = document.getElementById('ilt-result-score');
+    const resultBodyEl  = document.getElementById('ilt-result-body');
+
+    let currentAudioUrl      = '';
+    let currentEditingTestId = null;
+    let myTestsCache         = [];
+    let currentAnswers       = {};
+    let currentMode          = 'take'; // 'take' | 'preview' | 'result'
+    let currentTakeTest      = null;
+
+    const PART_LABELS = ['PART 1', 'PART 2', 'PART 3', 'PART 4'];
+
+    // =========================== TIỆN ÍCH CHUNG ===========================
+    function iltUid(prefix) { return (prefix || 'x') + '_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8); }
+    function iltEscape(str) { const d = document.createElement('div'); d.textContent = String(str == null ? '' : str); return d.innerHTML; }
+    function iltNormalize(s) { return String(s || '').trim().toLowerCase().replace(/\s+/g, ' '); }
+
+    // Trình soạn thảo mini dùng chung cho mọi ô nhập văn bản có định dạng
+    // (đoạn văn, hướng dẫn, câu hỏi trắc nghiệm...). Bôi đen rồi bấm U (gạch
+    // chân) để tạo "chỗ trống" — có thể gõ nhiều đáp án đúng cách nhau bằng
+    // dấu "|" trước khi bôi đen (vd: colour|color) để chấp nhận nhiều cách viết.
+    function iltCreateRichEditor(initialHtml, placeholder, hint, small) {
+        const wrap = document.createElement('div');
+        wrap.className = 'ctest-rich-wrap';
+        wrap.innerHTML =
+            '<div class="ctest-rich-toolbar">' +
+                '<button type="button" class="ctest-rich-btn" data-cmd="bold" title="In đậm"><b>B</b></button>' +
+                '<button type="button" class="ctest-rich-btn" data-cmd="underline" title="Gạch chân = tạo chỗ trống"><u>U</u></button>' +
+                '<button type="button" class="ctest-rich-btn" data-cmd="italic" title="In nghiêng"><i>I</i></button>' +
+                (hint ? '<span class="ctest-rich-hint">' + hint + '</span>' : '') +
+            '</div>' +
+            '<div class="ctest-rich-editable' + (small ? ' ctest-rich-small' : '') + '" contenteditable="true" data-placeholder="' + iltEscape(placeholder || '') + '"></div>';
+        const editable = wrap.querySelector('.ctest-rich-editable');
+        editable.innerHTML = initialHtml || '';
+        wrap.querySelectorAll('.ctest-rich-btn').forEach(btn => {
+            btn.addEventListener('mousedown', e => e.preventDefault());
+            btn.addEventListener('click', () => {
+                editable.focus();
+                document.execCommand(btn.dataset.cmd, false, null);
+                editable.dispatchEvent(new Event('input', { bubbles: true }));
+            });
+        });
+        return wrap;
+    }
+    function iltRichHtml(wrap) {
+        const ed = wrap && wrap.querySelector ? wrap.querySelector('.ctest-rich-editable') : null;
+        return ed ? ed.innerHTML.trim() : '';
+    }
+
+    // Đếm nhanh số chỗ trống (<u> gạch chân) trong 1 đoạn HTML nguồn — dùng để
+    // hiển thị số câu ước tính ngay trong khung soạn.
+    function iltCountBlanksInHtml(html) {
+        const d = document.createElement('div');
+        d.innerHTML = html || '';
+        return d.querySelectorAll('u').length;
+    }
+
+    // Tách <u> (gạch chân) trong 1 đoạn HTML thành các "chỗ trống" — mỗi chỗ
+    // trống có thể chấp nhận NHIỀU đáp án đúng, phân cách bằng dấu "|".
+    function iltParseBlanks(html) {
+        const container = document.createElement('div');
+        container.innerHTML = html || '';
+        const blanks = [];
+        Array.from(container.querySelectorAll('u')).forEach((elm) => {
+            const raw = elm.textContent.trim();
+            const accepted = raw.split('|').map(s => s.trim()).filter(Boolean);
+            const marker = document.createElement('span');
+            marker.className = 'ilt-blank-slot';
+            marker.setAttribute('data-blank-idx', String(blanks.length));
+            blanks.push({ accepted: accepted.length ? accepted : [raw], display: raw });
+            elm.replaceWith(marker);
+        });
+        return { displayHtml: container.innerHTML, blanks };
+    }
+
+    // Trường chèn hình: dán URL hoặc tải ảnh trực tiếp lên Supabase Storage.
+    function iltImageField(initialUrl) {
+        const wrap = document.createElement('div');
+        wrap.className = 'ctest-image-field ilt-image-field';
+        wrap.innerHTML =
+            '<label class="news-quiz-edit-label">Hình minh hoạ (tuỳ chọn)</label>' +
+            '<div class="ilt-image-row">' +
+                '<input type="text" class="news-edit-input ctest-image-url-input" placeholder="Dán link ảnh, hoặc tải ảnh lên ở nút bên cạnh...">' +
+                '<label class="grammar-admin-btn ilt-upload-btn">📤 Tải ảnh lên<input type="file" accept="image/*" class="ilt-image-file-input" style="display:none;"></label>' +
+            '</div>' +
+            '<span class="ilt-upload-status"></span>' +
+            '<img class="ctest-image-preview" style="display:none;">';
+        const input    = wrap.querySelector('.ctest-image-url-input');
+        const preview  = wrap.querySelector('.ctest-image-preview');
+        const fileIn   = wrap.querySelector('.ilt-image-file-input');
+        const statusEl = wrap.querySelector('.ilt-upload-status');
+        input.value = initialUrl || '';
+        function refreshPreview() {
+            const url = input.value.trim();
+            if (url) { preview.src = url; preview.style.display = 'block'; }
+            else { preview.style.display = 'none'; }
+        }
+        input.addEventListener('input', refreshPreview);
+        input.addEventListener('input', () => wrap.dispatchEvent(new Event('ctest-changed', { bubbles: true })));
+        fileIn.addEventListener('change', async () => {
+            const file = fileIn.files && fileIn.files[0];
+            if (!file) return;
+            if (file.size > 5 * 1024 * 1024) { alert('Ảnh tối đa 5MB.'); fileIn.value = ''; return; }
+            statusEl.textContent = 'Đang tải ảnh lên...';
+            try {
+                const path = (currentEmail || 'gv').split('@')[0] + '/' + Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+                const { error: upErr } = await sb.storage.from(ILT_IMAGE_BUCKET).upload(path, file, { cacheControl: '3600', upsert: false });
+                if (upErr) throw upErr;
+                const ref = SUPABASE_URL.split('://')[1].split('.')[0];
+                input.value = `https://${ref}.supabase.co/storage/v1/object/public/${ILT_IMAGE_BUCKET}/${path}`;
+                refreshPreview();
+                statusEl.textContent = '✅ Đã tải ảnh lên.';
+                wrap.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
+            } catch (err) {
+                statusEl.textContent = '❌ Tải ảnh thất bại: ' + err.message;
+            }
+            fileIn.value = '';
+        });
+        refreshPreview();
+        return wrap;
+    }
+    function iltImageUrl(wrap) {
+        const input = wrap && wrap.querySelector ? wrap.querySelector('.ctest-image-url-input') : null;
+        return input ? input.value.trim() : '';
+    }
+
+    // =====================================================================
+    // ===== KHUNG SOẠN TỪNG LOẠI KHỐI NỘI DUNG (giảng viên) ===============
+    // =====================================================================
+    function iltBlockShell(type, label) {
+        const el = document.createElement('div');
+        el.className = 'ilt-block ilt-block-' + type;
+        el.dataset.blockType = type;
+        el.dataset.blockId = iltUid('blk');
+        el.innerHTML =
+            '<div class="ilt-block-header">' +
+                '<span class="ilt-block-label">' + label + '</span>' +
+                '<span class="ilt-block-actions">' +
+                    '<button type="button" class="ilt-block-move-btn" data-dir="up" title="Chuyển lên">↑</button>' +
+                    '<button type="button" class="ilt-block-move-btn" data-dir="down" title="Chuyển xuống">↓</button>' +
+                    '<button type="button" class="ilt-block-remove-btn" title="Xoá khối này">🗑️</button>' +
+                '</span>' +
+            '</div>';
+        return el;
+    }
+    function wireBlockChrome(el, body) {
+        body.classList.add('ilt-block-body');
+        el.appendChild(body);
+        el.querySelector('.ilt-block-remove-btn').addEventListener('click', () => {
+            if (!confirm('Xoá khối nội dung này?')) return;
+            const list = el.parentElement;
+            el.remove();
+            list.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
+        });
+        el.querySelectorAll('.ilt-block-move-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const dir = btn.dataset.dir;
+                if (dir === 'up' && el.previousElementSibling) el.parentElement.insertBefore(el, el.previousElementSibling);
+                else if (dir === 'down' && el.nextElementSibling) el.parentElement.insertBefore(el.nextElementSibling, el);
+                el.parentElement.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
+            });
+        });
+        return el;
+    }
+
+    // ---- Khối: Đoạn văn (điền từ) / Đóng khung ----
+    function buildParagraphBlock(data, framed) {
+        const el = iltBlockShell(framed ? 'framed' : 'paragraph', framed ? '📦 Đoạn văn đóng khung' : '📝 Đoạn văn (điền từ)');
+        const body = document.createElement('div');
+        const editor = iltCreateRichEditor(
+            data.html || '',
+            'Nhập đoạn văn... Bôi đen từ/cụm từ cần ẩn rồi bấm U (gạch chân) để biến thành chỗ trống.',
+            'Bôi đen rồi bấm <u>U</u> (gạch chân) để tạo chỗ trống. Có thể gõ nhiều đáp án đúng, cách nhau bằng "|".'
+        );
+        editor.classList.add('ilt-paragraph-editor');
+        body.appendChild(editor);
+        const countEl = document.createElement('div');
+        countEl.className = 'ilt-block-count-hint';
+        body.appendChild(countEl);
+        function refreshCount() {
+            const n = iltCountBlanksInHtml(iltRichHtml(editor));
+            countEl.textContent = n ? ('→ ' + n + ' chỗ trống trong đoạn này') : '→ đoạn văn này chưa có chỗ trống nào (chỉ là nội dung hiển thị)';
+        }
+        editor.addEventListener('input', refreshCount);
+        refreshCount();
+        return wireBlockChrome(el, body);
+    }
+    function collectParagraphBlock(el, framed) {
+        return { id: el.dataset.blockId, type: framed ? 'framed' : 'paragraph', html: iltRichHtml(el.querySelector('.ilt-paragraph-editor')) };
+    }
+
+    // ---- Khối: Bảng — tiện ích dùng chung để GHÉP Ô (merge cells) --------
+    // Thuật toán "occupancy grid" chuẩn: duyệt các <tr>/<td> thật trong DOM,
+    // suy ra vị trí (hàng, cột) thật của từng ô kể cả khi đã có ô bị ghép
+    // (colspan/rowspan) từ trước — dùng để kiểm tra vùng chọn có phải là
+    // 1 hình chữ nhật liền khối hay không, và để dựng lại bảng sau khi ghép/bỏ ghép.
+    function iltTableOccupancy(tableEl) {
+        const rows = Array.from(tableEl.querySelectorAll(':scope > tr'));
+        const grid = [];
+        const cellPos = new Map();
+        rows.forEach((tr, rIdx) => {
+            if (!grid[rIdx]) grid[rIdx] = [];
+            let colPtr = 0;
+            Array.from(tr.children).forEach(td => {
+                while (grid[rIdx][colPtr]) colPtr++;
+                const rowspan = td.rowSpan || 1;
+                const colspan = td.colSpan || 1;
+                for (let rr = 0; rr < rowspan; rr++) {
+                    if (!grid[rIdx + rr]) grid[rIdx + rr] = [];
+                    for (let cc = 0; cc < colspan; cc++) grid[rIdx + rr][colPtr + cc] = td;
+                }
+                cellPos.set(td, { row: rIdx, col: colPtr, rowspan, colspan });
+                colPtr += colspan;
+            });
+        });
+        const numRows = grid.length;
+        let numCols = 0;
+        grid.forEach(r => { numCols = Math.max(numCols, r.length); });
+        return { grid, cellPos, numRows, numCols };
+    }
+    function iltRebuildTable(tableEl, grid, cellPos, numRows, numCols, makeCellFn) {
+        tableEl.innerHTML = '';
+        for (let r = 0; r < numRows; r++) {
+            const tr = document.createElement('tr');
+            for (let c = 0; c < numCols; c++) {
+                const td = grid[r] && grid[r][c];
+                if (!td) continue;
+                const pos = cellPos.get(td);
+                if (!pos || pos.row !== r || pos.col !== c) continue; // chỉ vẽ tại đúng ô góc trên-trái
+                const cellDiv = td.querySelector('.ilt-table-cell');
+                const newTd = makeCellFn(cellDiv ? cellDiv.innerHTML : '');
+                if (pos.colspan > 1) newTd.colSpan = pos.colspan;
+                if (pos.rowspan > 1) newTd.rowSpan = pos.rowspan;
+                tr.appendChild(newTd);
+            }
+            tableEl.appendChild(tr);
+        }
+    }
+    function iltRefreshMergeUI(tableEl, onUnmerge) {
+        Array.from(tableEl.querySelectorAll(':scope > tr > td')).forEach(td => {
+            const isMerged = (td.colSpan > 1 || td.rowSpan > 1);
+            td.classList.toggle('ilt-cell-merged', isMerged);
+            let btn = td.querySelector('.ilt-unmerge-btn');
+            if (isMerged && !btn) {
+                btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'ilt-unmerge-btn';
+                btn.title = 'Bỏ ghép ô này';
+                btn.textContent = '✂️';
+                btn.addEventListener('mousedown', e => { e.preventDefault(); e.stopPropagation(); });
+                btn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); onUnmerge(td); });
+                td.appendChild(btn);
+            } else if (!isMerged && btn) {
+                btn.remove();
+            }
+        });
+    }
+    function iltMergeSelectedCells(tableEl, makeCellFn) {
+        const selected = Array.from(tableEl.querySelectorAll('td.ilt-cell-selected'));
+        if (selected.length < 2) { alert('Giữ phím Ctrl (⌘ trên Mac) rồi bấm chọn ít nhất 2 ô cần ghép, sau đó bấm "Ghép ô".'); return; }
+        const { grid, cellPos, numRows, numCols } = iltTableOccupancy(tableEl);
+        let minR = Infinity, maxR = -Infinity, minC = Infinity, maxC = -Infinity;
+        selected.forEach(td => {
+            const p = cellPos.get(td);
+            if (!p) return;
+            minR = Math.min(minR, p.row); maxR = Math.max(maxR, p.row + p.rowspan - 1);
+            minC = Math.min(minC, p.col); maxC = Math.max(maxC, p.col + p.colspan - 1);
+        });
+        const selectedSet = new Set(selected);
+        for (let r = minR; r <= maxR; r++) {
+            for (let c = minC; c <= maxC; c++) {
+                const td = grid[r] && grid[r][c];
+                if (!td || !selectedSet.has(td)) { alert('Vùng chọn phải tạo thành 1 khối hình chữ nhật liền nhau thì mới ghép được.'); return; }
+            }
+        }
+        const uniqueTds = Array.from(selectedSet).sort((a, b) => {
+            const pa = cellPos.get(a), pb = cellPos.get(b);
+            return (pa.row - pb.row) || (pa.col - pb.col);
+        });
+        const master = uniqueTds[0];
+        const combinedHtml = uniqueTds
+            .map(td => { const cd = td.querySelector('.ilt-table-cell'); return cd ? cd.innerHTML.trim() : ''; })
+            .filter(Boolean)
+            .join('<br>');
+        const masterCellDiv = master.querySelector('.ilt-table-cell');
+        if (masterCellDiv) masterCellDiv.innerHTML = combinedHtml;
+        const newCellPos = new Map(cellPos);
+        newCellPos.set(master, { row: minR, col: minC, rowspan: maxR - minR + 1, colspan: maxC - minC + 1 });
+        uniqueTds.slice(1).forEach(td => newCellPos.delete(td));
+        const newGrid = [];
+        for (let r = 0; r < numRows; r++) {
+            newGrid[r] = [];
+            for (let c = 0; c < numCols; c++) {
+                newGrid[r][c] = (r >= minR && r <= maxR && c >= minC && c <= maxC) ? master : (grid[r] ? grid[r][c] : null);
+            }
+        }
+        iltRebuildTable(tableEl, newGrid, newCellPos, numRows, numCols, makeCellFn);
+    }
+    function iltUnmergeCell(tableEl, td, makeCellFn) {
+        const { grid, cellPos, numRows, numCols } = iltTableOccupancy(tableEl);
+        const p = cellPos.get(td);
+        if (!p || (p.rowspan <= 1 && p.colspan <= 1)) return;
+        const newCellPos = new Map(cellPos);
+        newCellPos.set(td, { row: p.row, col: p.col, rowspan: 1, colspan: 1 });
+        const newGrid = [];
+        for (let r = 0; r < numRows; r++) newGrid[r] = (grid[r] || []).slice();
+        for (let r = p.row; r < p.row + p.rowspan; r++) {
+            for (let c = p.col; c < p.col + p.colspan; c++) {
+                if (r === p.row && c === p.col) continue;
+                const emptyTd = makeCellFn('');
+                newGrid[r][c] = emptyTd;
+                newCellPos.set(emptyTd, { row: r, col: c, rowspan: 1, colspan: 1 });
+            }
+        }
+        iltRebuildTable(tableEl, newGrid, newCellPos, numRows, numCols, makeCellFn);
+    }
+
+    // ---- Khối: Bảng ----
+    function buildTableBlock(data) {
+        const el = iltBlockShell('table', '📊 Bảng');
+        const body = document.createElement('div');
+        body.classList.add('ilt-table-block-body');
+
+        const toolbar = document.createElement('div');
+        toolbar.className = 'ctest-rich-toolbar ilt-table-toolbar';
+        toolbar.innerHTML =
+            '<button type="button" class="ctest-rich-btn" data-cmd="bold" title="In đậm"><b>B</b></button>' +
+            '<button type="button" class="ctest-rich-btn" data-cmd="underline" title="Gạch chân = tạo chỗ trống"><u>U</u></button>' +
+            '<button type="button" class="ctest-rich-btn" data-cmd="italic" title="In nghiêng"><i>I</i></button>' +
+            '<span class="ctest-rich-hint">Bấm vào 1 ô rồi bôi đen từ cần ẩn, bấm <u>U</u> (gạch chân) để tạo chỗ trống trong ô đó. Giữ <b>Ctrl</b> (⌘ trên Mac) rồi bấm chọn nhiều ô liền khối để ghép lại; bấm ✂️ trên ô đã ghép để tách ra lại.</span>';
+        body.appendChild(toolbar);
+
+        let lastFocusedCell = null;
+        toolbar.querySelectorAll('.ctest-rich-btn').forEach(btn => {
+            btn.addEventListener('mousedown', e => e.preventDefault());
+            btn.addEventListener('click', () => {
+                if (!lastFocusedCell) return;
+                lastFocusedCell.focus();
+                document.execCommand(btn.dataset.cmd, false, null);
+                lastFocusedCell.dispatchEvent(new Event('input', { bubbles: true }));
+            });
+        });
+
+        const tableWrap = document.createElement('div');
+        tableWrap.className = 'ilt-table-editor-wrap';
+        const table = document.createElement('table');
+        table.className = 'ilt-table-editor';
+        tableWrap.appendChild(table);
+        body.appendChild(tableWrap);
+
+        function makeCell(html) {
+            const td = document.createElement('td');
+            const cell = document.createElement('div');
+            cell.className = 'ilt-table-cell';
+            cell.contentEditable = 'true';
+            cell.innerHTML = html || '';
+            cell.addEventListener('focus', () => { lastFocusedCell = cell; });
+            td.appendChild(cell);
+            return td;
+        }
+        function currentColCount() {
+            const occ = iltTableOccupancy(table);
+            return occ.numCols || 2;
+        }
+        function addRow(cellsHtml) {
+            const tr = document.createElement('tr');
+            const cols = cellsHtml || new Array(currentColCount()).fill('');
+            cols.forEach(h => tr.appendChild(makeCell(h)));
+            table.appendChild(tr);
+            refreshMerge();
+        }
+        // Giữ Ctrl/Cmd rồi bấm vào 1 ô để CHỌN (không vào chế độ gõ chữ) — dùng để chọn nhiều ô cần ghép.
+        table.addEventListener('mousedown', (e) => {
+            if (!(e.ctrlKey || e.metaKey)) return;
+            const cellDiv = e.target.closest('.ilt-table-cell');
+            if (!cellDiv) return;
+            e.preventDefault();
+            const td = cellDiv.closest('td');
+            if (td) td.classList.toggle('ilt-cell-selected');
+        });
+        function refreshMerge() {
+            iltRefreshMergeUI(table, (td) => {
+                iltUnmergeCell(table, td, makeCell);
+                refreshMerge();
+                body.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
+            });
+        }
+        function loadInitialRows(rows) {
+            table.innerHTML = '';
+            rows.forEach(rowArr => {
+                const tr = document.createElement('tr');
+                rowArr.forEach(c => {
+                    const isObj = c && typeof c === 'object';
+                    const td = makeCell(isObj ? c.html : c);
+                    if (isObj && c.colspan > 1) td.colSpan = c.colspan;
+                    if (isObj && c.rowspan > 1) td.rowSpan = c.rowspan;
+                    tr.appendChild(td);
+                });
+                table.appendChild(tr);
+            });
+        }
+        const initRows = (data.rows && data.rows.length) ? data.rows : [['', ''], ['', '']];
+        loadInitialRows(initRows);
+        refreshMerge();
+
+        const ctrlRow = document.createElement('div');
+        ctrlRow.className = 'ilt-table-controls';
+        ctrlRow.innerHTML =
+            '<button type="button" class="ctest-add-row-btn" data-act="add-row">+ Thêm dòng</button>' +
+            '<button type="button" class="ctest-add-row-btn" data-act="add-col">+ Thêm cột</button>' +
+            '<button type="button" class="ctest-add-row-btn" data-act="del-row">- Xoá dòng cuối</button>' +
+            '<button type="button" class="ctest-add-row-btn" data-act="del-col">- Xoá cột cuối</button>' +
+            '<button type="button" class="ctest-add-row-btn ilt-merge-btn" data-act="merge">🔀 Ghép ô đã chọn</button>';
+        body.appendChild(ctrlRow);
+        ctrlRow.addEventListener('click', (e) => {
+            const btn = e.target.closest('button[data-act]');
+            if (!btn) return;
+            const act = btn.dataset.act;
+            if (act === 'add-row') { addRow(); }
+            else if (act === 'add-col') { Array.from(table.querySelectorAll(':scope > tr')).forEach(tr => tr.appendChild(makeCell(''))); refreshMerge(); }
+            else if (act === 'del-row') {
+                const occ = iltTableOccupancy(table);
+                if (occ.numRows <= 1) return;
+                const lastRow = occ.numRows - 1;
+                let blocked = false;
+                occ.cellPos.forEach(pos => { if (pos.rowspan > 1 && pos.row < lastRow && pos.row + pos.rowspan - 1 >= lastRow) blocked = true; });
+                if (blocked) { alert('Không thể xoá dòng cuối vì có ô đã ghép trải xuống dòng này. Hãy bấm ✂️ để bỏ ghép ô đó trước.'); return; }
+                if (table.children.length > 1) table.lastElementChild.remove();
+                refreshMerge();
+            }
+            else if (act === 'del-col') {
+                const occ = iltTableOccupancy(table);
+                if (occ.numCols <= 1) return;
+                const lastCol = occ.numCols - 1;
+                let blocked = false;
+                occ.cellPos.forEach(pos => { if (pos.colspan > 1 && pos.col < lastCol && pos.col + pos.colspan - 1 >= lastCol) blocked = true; });
+                if (blocked) { alert('Không thể xoá cột cuối vì có ô đã ghép trải qua cột này. Hãy bấm ✂️ để bỏ ghép ô đó trước.'); return; }
+                Array.from(table.querySelectorAll(':scope > tr')).forEach(tr => { if (tr.lastElementChild) tr.lastElementChild.remove(); });
+                refreshMerge();
+            }
+            else if (act === 'merge') {
+                iltMergeSelectedCells(table, makeCell);
+                refreshMerge();
+            }
+            body.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
+        });
+
+        return wireBlockChrome(el, body);
+    }
+    function collectTableBlock(el) {
+        const rows = Array.from(el.querySelectorAll('.ilt-table-editor > tr')).map(tr =>
+            Array.from(tr.children).map(td => {
+                const cellDiv = td.querySelector('.ilt-table-cell');
+                const html = cellDiv ? cellDiv.innerHTML.trim() : '';
+                const colspan = td.colSpan > 1 ? td.colSpan : 1;
+                const rowspan = td.rowSpan > 1 ? td.rowSpan : 1;
+                return (colspan > 1 || rowspan > 1) ? { html, colspan, rowspan } : html;
+            })
+        );
+        return { id: el.dataset.blockId, type: 'table', rows };
+    }
+
+    // ---- Khối: Hình ảnh ----
+    function buildImageBlock(data) {
+        const el = iltBlockShell('image', '🖼️ Hình ảnh');
+        const body = document.createElement('div');
+        body.appendChild(iltImageField(data.url));
+        const capInput = document.createElement('input');
+        capInput.type = 'text';
+        capInput.className = 'news-edit-input ilt-image-caption-input';
+        capInput.placeholder = 'Chú thích ảnh (tuỳ chọn)';
+        capInput.value = data.caption || '';
+        body.appendChild(capInput);
+        return wireBlockChrome(el, body);
+    }
+    function collectImageBlock(el) {
+        return {
+            id: el.dataset.blockId, type: 'image',
+            url: iltImageUrl(el.querySelector('.ilt-image-field')),
+            caption: el.querySelector('.ilt-image-caption-input').value.trim()
+        };
+    }
+
+    // ---- Khối: Trắc nghiệm ----
+    function iltOptionsEditor(options, correctIndex) {
+        const box = document.createElement('div');
+        box.className = 'ctest-options-editor';
+        const groupName = iltUid('opt');
+        const opts = (options && options.length ? options : ['', '']);
+        opts.forEach((text, i) => box.appendChild(optionRow(text, i === correctIndex)));
+        const addBtn = document.createElement('button');
+        addBtn.type = 'button';
+        addBtn.className = 'ctest-add-option-btn';
+        addBtn.textContent = '+ Thêm đáp án';
+        addBtn.addEventListener('click', () => {
+            box.insertBefore(optionRow('', false), addBtn);
+            box.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
+        });
+        box.appendChild(addBtn);
+        return box;
+
+        function optionRow(text, isCorrect) {
+            const row = document.createElement('div');
+            row.className = 'ctest-option-row';
+            const radio = document.createElement('input');
+            radio.type = 'radio';
+            radio.name = groupName;
+            radio.className = 'ctest-option-correct-radio';
+            radio.checked = !!isCorrect;
+            const richWrap = iltCreateRichEditor(text, 'Nhập đáp án...', '', true);
+            const rm = document.createElement('button');
+            rm.type = 'button';
+            rm.className = 'ctest-row-remove-btn';
+            rm.textContent = '✕';
+            rm.addEventListener('click', () => {
+                if (box.querySelectorAll('.ctest-option-row').length <= 2) { alert('Cần ít nhất 2 đáp án.'); return; }
+                row.remove();
+                box.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
+            });
+            row.appendChild(radio); row.appendChild(richWrap); row.appendChild(rm);
+            return row;
+        }
+    }
+    function iltCollectOptions(box) {
+        const rows = Array.from(box.querySelectorAll(':scope > .ctest-option-row'));
+        const options = rows.map(r => iltRichHtml(r.querySelector('.ctest-rich-wrap')));
+        let correct = -1;
+        rows.forEach((r, i) => { if (r.querySelector('.ctest-option-correct-radio').checked) correct = i; });
+        return { options, correct };
+    }
+    function buildMcqBlock(data) {
+        const el = iltBlockShell('mcq', '✅ Câu trắc nghiệm');
+        const body = document.createElement('div');
+        const promptWrap = iltCreateRichEditor(data.prompt_html || '', 'Nhập câu hỏi trắc nghiệm...', '');
+        promptWrap.classList.add('ilt-mcq-prompt-editor');
+        body.appendChild(promptWrap);
+        body.appendChild(iltImageField(data.image_url));
+        body.appendChild(iltOptionsEditor(data.options, data.correct));
+        return wireBlockChrome(el, body);
+    }
+    function collectMcqBlock(el) {
+        const { options, correct } = iltCollectOptions(el.querySelector('.ilt-block-body > .ctest-options-editor'));
+        return {
+            id: el.dataset.blockId, type: 'mcq',
+            prompt_html: iltRichHtml(el.querySelector('.ilt-mcq-prompt-editor')),
+            image_url: iltImageUrl(el.querySelector('.ilt-image-field')),
+            options, correct
+        };
+    }
+
+    const ILT_BLOCK_BUILDERS = {
+        paragraph: (d) => buildParagraphBlock(d, false),
+        framed:    (d) => buildParagraphBlock(d, true),
+        table:     buildTableBlock,
+        image:     buildImageBlock,
+        mcq:       buildMcqBlock
+    };
+    const ILT_BLOCK_COLLECTORS = {
+        paragraph: (el) => collectParagraphBlock(el, false),
+        framed:    (el) => collectParagraphBlock(el, true),
+        table:     collectTableBlock,
+        image:     collectImageBlock,
+        mcq:       collectMcqBlock
+    };
+    function buildBlock(type, data) {
+        const fn = ILT_BLOCK_BUILDERS[type];
+        return fn ? fn(data || {}) : null;
+    }
+    function collectBlock(el) {
+        const fn = ILT_BLOCK_COLLECTORS[el.dataset.blockType];
+        return fn ? fn(el) : null;
+    }
+
+    // =====================================================================
+    // ===== KHUNG SOẠN PHẦN NHỎ (section) & PART ==========================
+    // =====================================================================
+    function buildSectionEditor(section) {
+        const wrap = document.createElement('div');
+        wrap.className = 'ilt-section-editor';
+        wrap.dataset.sectionId = section.id || iltUid('sec');
+
+        const headerRow = document.createElement('div');
+        headerRow.className = 'ilt-section-header-row';
+        headerRow.innerHTML =
+            '<input type="text" class="news-edit-input ilt-section-heading-input" placeholder="Tiêu đề phần nhỏ (tuỳ chọn) — VD: Questions 21-25, hoặc Booking Form">' +
+            '<button type="button" class="ctest-section-remove-btn ilt-section-remove-btn" title="Xoá phần nhỏ này">🗑️</button>';
+        headerRow.querySelector('.ilt-section-heading-input').value = section.heading || '';
+        wrap.appendChild(headerRow);
+
+        const instrEditor = iltCreateRichEditor(section.instruction_html || '', 'Hướng dẫn làm bài (tuỳ chọn) — VD: Write NO MORE THAN TWO WORDS AND/OR A NUMBER.', '', true);
+        instrEditor.classList.add('ilt-section-instruction-editor');
+        wrap.appendChild(instrEditor);
+
+        const blocksList = document.createElement('div');
+        blocksList.className = 'ilt-blocks-list';
+        (section.blocks || []).forEach(b => { const nb = buildBlock(b.type, b); if (nb) blocksList.appendChild(nb); });
+        wrap.appendChild(blocksList);
+
+        const addBar = document.createElement('div');
+        addBar.className = 'ilt-add-block-bar';
+        addBar.innerHTML =
+            '<button type="button" class="ctest-type-btn" data-type="paragraph">📝 Đoạn văn (điền từ)</button>' +
+            '<button type="button" class="ctest-type-btn" data-type="framed">📦 Đóng khung</button>' +
+            '<button type="button" class="ctest-type-btn" data-type="table">📊 Bảng</button>' +
+            '<button type="button" class="ctest-type-btn" data-type="image">🖼️ Hình ảnh</button>' +
+            '<button type="button" class="ctest-type-btn" data-type="mcq">✅ Trắc nghiệm</button>';
+        addBar.addEventListener('click', (e) => {
+            const btn = e.target.closest('.ctest-type-btn');
+            if (!btn) return;
+            const nb = buildBlock(btn.dataset.type, {});
+            if (nb) blocksList.appendChild(nb);
+            blocksList.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
+        });
+        wrap.appendChild(addBar);
+
+        wrap.querySelector('.ilt-section-remove-btn').addEventListener('click', () => {
+            const list = wrap.parentElement;
+            if (list.querySelectorAll(':scope > .ilt-section-editor').length <= 1) { alert('Mỗi Part cần ít nhất 1 phần.'); return; }
+            if (!confirm('Xoá phần nhỏ này (kèm toàn bộ nội dung bên trong)?')) return;
+            wrap.remove();
+            list.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
+        });
+
+        return wrap;
+    }
+    function collectSectionEditor(wrap) {
+        const blocksList = wrap.querySelector(':scope > .ilt-blocks-list');
+        const blocks = Array.from(blocksList.children).map(collectBlock).filter(Boolean);
+        return {
+            id: wrap.dataset.sectionId,
+            heading: wrap.querySelector('.ilt-section-heading-input').value.trim(),
+            instruction_html: iltRichHtml(wrap.querySelector('.ilt-section-instruction-editor')),
+            blocks
+        };
+    }
+
+    function buildPartEditor(part, idx) {
+        const wrap = document.createElement('div');
+        wrap.className = 'ilt-part-editor';
+        wrap.dataset.partIdx = String(idx);
+
+        const header = document.createElement('div');
+        header.className = 'ilt-part-editor-header';
+        header.innerHTML = '<h4>' + PART_LABELS[idx] + '</h4><span class="ilt-part-count-badge"></span>';
+        wrap.appendChild(header);
+
+        const introEditor = iltCreateRichEditor(part.intro_html || '', 'Giới thiệu / hướng dẫn chung cho cả Part này (tuỳ chọn)...', '', true);
+        introEditor.classList.add('ilt-part-intro-editor');
+        wrap.appendChild(introEditor);
+
+        const sectionsList = document.createElement('div');
+        sectionsList.className = 'ilt-sections-list';
+        (part.sections && part.sections.length ? part.sections : [{ id: iltUid('sec'), heading: '', instruction_html: '', blocks: [] }])
+            .forEach(sec => sectionsList.appendChild(buildSectionEditor(sec)));
+        wrap.appendChild(sectionsList);
+
+        const addSecBtn = document.createElement('button');
+        addSecBtn.type = 'button';
+        addSecBtn.className = 'ctest-add-row-btn ilt-add-section-btn';
+        addSecBtn.textContent = '+ Thêm phần nhỏ trong Part này';
+        addSecBtn.addEventListener('click', () => {
+            sectionsList.appendChild(buildSectionEditor({ id: iltUid('sec'), heading: '', instruction_html: '', blocks: [] }));
+            sectionsList.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
+        });
+        wrap.appendChild(addSecBtn);
+
+        // Script thoại (transcript) do giảng viên cung cấp cho Part này — chỉ hiện
+        // ra cho học viên SAU KHI nộp bài, ở màn hình xem kết quả (không hiện lúc làm bài).
+        const transcriptLabel = document.createElement('label');
+        transcriptLabel.className = 'news-quiz-edit-label ilt-part-transcript-label';
+        transcriptLabel.textContent = '📜 Script thoại (Transcript) của ' + PART_LABELS[idx] + ' — chỉ hiện cho học viên sau khi nộp bài';
+        wrap.appendChild(transcriptLabel);
+        const transcriptEditor = iltCreateRichEditor(
+            part.transcript_html || '',
+            'Dán / nhập script thoại (transcript) gốc của Part này...',
+            'Học viên sẽ thấy nội dung này ở phần "Kết quả" ngay sau khi nộp bài, cùng với đáp án và band điểm.',
+            true
+        );
+        transcriptEditor.classList.add('ilt-part-transcript-editor');
+        wrap.appendChild(transcriptEditor);
+
+        return wrap;
+    }
+    function collectPartEditor(wrap, idx) {
+        const sectionsList = wrap.querySelector(':scope > .ilt-sections-list');
+        const sections = Array.from(sectionsList.children).map(collectSectionEditor);
+        return {
+            part_number: idx + 1,
+            intro_html: iltRichHtml(wrap.querySelector('.ilt-part-intro-editor')),
+            transcript_html: iltRichHtml(wrap.querySelector('.ilt-part-transcript-editor')),
+            sections
+        };
+    }
+
+    function emptyPart(n) { return { part_number: n, intro_html: '', transcript_html: '', sections: [{ id: iltUid('sec'), heading: '', instruction_html: '', blocks: [] }] }; }
+
+    function renderPartsEditor(parts) {
+        partsContainer.innerHTML = '';
+        const list = (parts && parts.length === 4) ? parts : [1, 2, 3, 4].map(emptyPart);
+        list.forEach((p, i) => partsContainer.appendChild(buildPartEditor(p, i)));
+        refreshSummary();
+    }
+    function collectAllParts() {
+        return Array.from(partsContainer.querySelectorAll(':scope > .ilt-part-editor')).map(collectPartEditor);
+    }
+
+    function countBlockQuestionsLive(el) {
+        const type = el.dataset.blockType;
+        if (type === 'mcq') return 1;
+        if (type === 'paragraph' || type === 'framed') return iltCountBlanksInHtml(iltRichHtml(el.querySelector('.ilt-paragraph-editor')));
+        if (type === 'table') {
+            let n = 0;
+            el.querySelectorAll('.ilt-table-cell').forEach(c => { n += iltCountBlanksInHtml(c.innerHTML); });
+            return n;
+        }
+        return 0;
+    }
+    function refreshSummary() {
+        let total = 0;
+        Array.from(partsContainer.querySelectorAll(':scope > .ilt-part-editor')).forEach(partEl => {
+            let count = 0;
+            partEl.querySelectorAll('.ilt-blocks-list > .ilt-block').forEach(b => { count += countBlockQuestionsLive(b); });
+            total += count;
+            const badge = partEl.querySelector('.ilt-part-count-badge');
+            if (badge) {
+                badge.textContent = count + ' câu';
+                badge.className = 'ilt-part-count-badge' + (count === 10 ? ' ilt-count-ok' : ' ilt-count-warn');
+            }
+        });
+        if (summaryBar) {
+            summaryBar.innerHTML = '🔢 Tổng số câu hỏi hiện tại: <b>' + total + '</b> / 40' +
+                (total === 40
+                    ? ' <span class="ilt-count-ok">✅ Đủ 40 câu, đúng chuẩn IELTS</span>'
+                    : ' <span class="ilt-count-warn">(đề IELTS thật có đúng 40 câu, mỗi Part 10 câu — bạn có thể canh cho khớp, hoặc để khác nếu chỉ luyện tập riêng lẻ)</span>');
+        }
+    }
+    if (partsContainer) {
+        partsContainer.addEventListener('input', refreshSummary);
+        partsContainer.addEventListener('ctest-changed', refreshSummary);
+    }
+
+    // =====================================================================
+    // ===== FILE ÂM THANH (mp3) ============================================
+    // =====================================================================
+    function buildAudioField(url) {
+        currentAudioUrl = url || '';
+        audioField.innerHTML = '';
+        const row = document.createElement('div');
+        row.className = 'ilt-audio-row';
+        row.innerHTML =
+            '<input type="text" class="news-edit-input ilt-audio-url-input" placeholder="Dán link file mp3 (URL)...">' +
+            '<label class="grammar-admin-btn ilt-upload-btn">🎙️ Hoặc tải file mp3 lên<input type="file" accept="audio/*,.mp3" class="ilt-audio-file-input" style="display:none;"></label>';
+        audioField.appendChild(row);
+        const statusEl = document.createElement('span');
+        statusEl.className = 'ilt-upload-status';
+        statusEl.id = 'ilt-audio-status';
+        audioField.appendChild(statusEl);
+        const player = document.createElement('audio');
+        player.controls = true;
+        player.className = 'ilt-audio-preview';
+        player.style.display = currentAudioUrl ? 'block' : 'none';
+        if (currentAudioUrl) player.src = currentAudioUrl;
+        audioField.appendChild(player);
+
+        const urlInput  = row.querySelector('.ilt-audio-url-input');
+        const fileInput = row.querySelector('.ilt-audio-file-input');
+        urlInput.value = currentAudioUrl;
+        urlInput.addEventListener('input', () => {
+            currentAudioUrl = urlInput.value.trim();
+            if (currentAudioUrl) { player.src = currentAudioUrl; player.style.display = 'block'; }
+            else { player.style.display = 'none'; }
+            statusEl.textContent = '';
+            scheduleAutosave();
+        });
+        fileInput.addEventListener('change', async () => {
+            const file = fileInput.files && fileInput.files[0];
+            if (!file) return;
+            if (file.size > 60 * 1024 * 1024) { alert('File âm thanh tối đa 60MB.'); fileInput.value = ''; return; }
+            statusEl.textContent = 'Đang tải file lên, vui lòng chờ...';
+            try {
+                const path = (currentEmail || 'gv').split('@')[0] + '/' + Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+                const { error: upErr } = await sb.storage.from(ILT_AUDIO_BUCKET).upload(path, file, { cacheControl: '3600', upsert: false });
+                if (upErr) throw upErr;
+                const ref = SUPABASE_URL.split('://')[1].split('.')[0];
+                currentAudioUrl = `https://${ref}.supabase.co/storage/v1/object/public/${ILT_AUDIO_BUCKET}/${path}`;
+                urlInput.value = currentAudioUrl;
+                player.src = currentAudioUrl;
+                player.style.display = 'block';
+                statusEl.textContent = '✅ Đã tải file lên.';
+                scheduleAutosave();
+            } catch (err) {
+                statusEl.textContent = '❌ Tải file thất bại: ' + err.message;
+            }
+            fileInput.value = '';
+        });
+    }
+
+    // =====================================================================
+    // ===== TẢI / LƯU / XUẤT BẢN BÀI NGHE (giảng viên) ====================
+    // =====================================================================
+    let autosaveTimer = null;
+
+    function collectEditorPayload() {
+        return { title: titleInput.value.trim(), audio_url: currentAudioUrl, parts: collectAllParts() };
+    }
+    function countTotalQuestions(test) {
+        return (test.parts || []).reduce((sum, p) => sum + (p.sections || []).reduce((s2, sec) =>
+            s2 + (sec.blocks || []).reduce((s3, b) => {
+                if (b.type === 'mcq') return s3 + 1;
+                if (b.type === 'paragraph' || b.type === 'framed') return s3 + iltParseBlanks(b.html).blanks.length;
+                if (b.type === 'table') return s3 + (b.rows || []).reduce((s4, row) => s4 + row.reduce((s5, cell) => s5 + iltParseBlanks(cell && typeof cell === 'object' ? cell.html : cell).blanks.length, 0), 0);
+                return s3;
+            }, 0), 0), 0);
+    }
+    function scheduleAutosave() {
+        if (!currentEditingTestId) return;
+        saveStatusEl.textContent = 'Đang gõ...';
+        clearTimeout(autosaveTimer);
+        autosaveTimer = setTimeout(async () => {
+            try {
+                const payload = collectEditorPayload();
+                const { error } = await sb.from('ielts_listening_tests').update(payload).eq('id', currentEditingTestId);
+                if (error) throw error;
+                saveStatusEl.textContent = '💾 Đã lưu lúc ' + new Date().toLocaleTimeString('vi-VN');
+                const cached = myTestsCache.find(t => t.id === currentEditingTestId);
+                if (cached) Object.assign(cached, payload);
+            } catch (err) {
+                saveStatusEl.textContent = '❌ Lưu thất bại: ' + err.message;
+            }
+        }, 800);
+    }
+    if (partsContainer) {
+        partsContainer.addEventListener('input', scheduleAutosave);
+        partsContainer.addEventListener('change', scheduleAutosave);
+        partsContainer.addEventListener('ctest-changed', scheduleAutosave);
+    }
+    if (titleInput) titleInput.addEventListener('input', scheduleAutosave);
+
+    async function createNewTest() {
+        try {
+            const payload = { title: 'Bài nghe IELTS mới', audio_url: '', created_by: currentEmail, parts: [1, 2, 3, 4].map(emptyPart) };
+            const { data, error } = await sb.from('ielts_listening_tests').insert(payload).select().single();
+            if (error) throw error;
+            myTestsCache.unshift(data);
+            openEditorForTest(data);
+        } catch (err) {
+            alert('Không thể tạo bài nghe mới: ' + err.message);
+        }
+    }
+    if (createBtn) createBtn.addEventListener('click', createNewTest);
+
+    function openEditorForTest(row) {
+        currentEditingTestId = row.id;
+        titleInput.value = row.title || '';
+        buildAudioField(row.audio_url || '');
+        renderPartsEditor(row.parts);
+        deleteBtn.style.display = 'inline-block';
+        saveStatusEl.textContent = '';
+        showView('editor');
+    }
+
+    if (publishBtn) {
+        publishBtn.addEventListener('click', async () => {
+            if (!currentEditingTestId) return;
+            clearTimeout(autosaveTimer);
+            const payload = collectEditorPayload();
+            if (!payload.title) { alert('Hãy nhập tiêu đề bài nghe.'); return; }
+            if (!payload.audio_url) { alert('Hãy tải file mp3 lên trước khi lưu.'); return; }
+            try {
+                const { error } = await sb.from('ielts_listening_tests').update(payload).eq('id', currentEditingTestId);
+                if (error) throw error;
+                const cached = myTestsCache.find(t => t.id === currentEditingTestId);
+                if (cached) Object.assign(cached, payload);
+                saveStatusEl.textContent = '✅ Đã lưu bài nghe (' + countTotalQuestions(payload) + ' câu hỏi).';
+            } catch (err) {
+                alert('Lưu thất bại: ' + err.message);
+            }
+        });
+    }
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', async () => {
+            if (!currentEditingTestId) return;
+            if (!confirm('Xoá vĩnh viễn bài nghe này (kèm mọi bài nộp của học viên)?')) return;
+            try {
+                const { error } = await sb.from('ielts_listening_tests').delete().eq('id', currentEditingTestId);
+                if (error) throw error;
+                myTestsCache = myTestsCache.filter(t => t.id !== currentEditingTestId);
+                currentEditingTestId = null;
+                showView('list');
+                loadTests();
+            } catch (err) {
+                alert('Xoá thất bại: ' + err.message);
+            }
+        });
+    }
+    if (previewBtn) {
+        previewBtn.addEventListener('click', () => {
+            const payload = collectEditorPayload();
+            if (!payload.audio_url) { alert('Hãy tải file mp3 lên trước khi xem thử.'); return; }
+            openTakeView({ id: currentEditingTestId, title: payload.title, audio_url: payload.audio_url, parts: payload.parts }, 'preview');
+        });
+    }
+
+    // =====================================================================
+    // ===== KHUNG HIỂN THỊ DÙNG CHUNG: xem thử / làm bài / xem kết quả ====
+    // Số thứ tự câu hỏi (chỗ trống + trắc nghiệm) được đánh 1 LẦN, đi qua
+    // toàn bộ nội dung theo đúng thứ tự xuất hiện trên trang (Part 1→4,
+    // trên xuống dưới, trái sang phải trong bảng) — luôn khớp với cách
+    // trình bày thật của đề IELTS Listening.
+    // =====================================================================
+    function makeBlankNode(accepted, display, keyBase, mode) {
+        const span = document.createElement('span');
+        span.className = 'ilt-numbered ilt-blank';
+        const badge = document.createElement('span');
+        badge.className = 'ilt-num-badge';
+        span.appendChild(badge);
+        span.appendChild(document.createTextNode('.\u00A0'));
+        if (mode === 'result') {
+            const given = currentAnswers[keyBase] || '';
+            const ok = accepted.some(a => iltNormalize(a) === iltNormalize(given));
+            span.dataset.isCorrect = ok ? '1' : '0';
+            const out = document.createElement('span');
+            out.className = 'ilt-blank-result ' + (ok ? 'ilt-ok' : 'ilt-wrong');
+            out.textContent = ok ? (given || display) : (given ? given : '(bỏ trống)') + ' → ' + accepted.join(' / ');
+            span.appendChild(out);
+        } else {
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'ilt-blank-input';
+            input.autocomplete = 'off';
+            input.autocapitalize = 'off';
+            input.spellcheck = false;
+            input.disabled = (mode === 'preview');
+            input.value = currentAnswers[keyBase] || '';
+            input.addEventListener('input', () => { currentAnswers[keyBase] = input.value; });
+            span.appendChild(input);
+        }
+        return span;
+    }
+
+    function renderParagraphBlockView(block, pIdx, secId, mode) {
+        const wrap = document.createElement('div');
+        wrap.className = 'ilt-view-paragraph' + (block.type === 'framed' ? ' ilt-view-framed' : '');
+        const { displayHtml, blanks } = iltParseBlanks(block.html || '');
+        wrap.innerHTML = displayHtml;
+        wrap.querySelectorAll('.ilt-blank-slot').forEach(slot => {
+            const idx = Number(slot.getAttribute('data-blank-idx'));
+            const b = blanks[idx];
+            const keyBase = pIdx + ':' + secId + ':' + block.id + ':' + idx;
+            slot.replaceWith(makeBlankNode(b.accepted, b.display, keyBase, mode));
+        });
+        return wrap;
+    }
+    function renderTableBlockView(block, pIdx, secId, mode) {
+        const wrap = document.createElement('div');
+        wrap.className = 'ilt-view-table-wrap';
+        const table = document.createElement('table');
+        table.className = 'ilt-view-table';
+        (block.rows || []).forEach((row, rIdx) => {
+            const tr = document.createElement('tr');
+            row.forEach((cell, cIdx) => {
+                const isObj = cell && typeof cell === 'object';
+                const cellHtml = isObj ? cell.html : cell;
+                const td = document.createElement('td');
+                if (isObj && cell.colspan > 1) td.colSpan = cell.colspan;
+                if (isObj && cell.rowspan > 1) td.rowSpan = cell.rowspan;
+                const { displayHtml, blanks } = iltParseBlanks(cellHtml || '');
+                td.innerHTML = displayHtml;
+                td.querySelectorAll('.ilt-blank-slot').forEach(slot => {
+                    const idx = Number(slot.getAttribute('data-blank-idx'));
+                    const b = blanks[idx];
+                    const keyBase = pIdx + ':' + secId + ':' + block.id + ':cell' + rIdx + '_' + cIdx + ':' + idx;
+                    slot.replaceWith(makeBlankNode(b.accepted, b.display, keyBase, mode));
+                });
+                tr.appendChild(td);
+            });
+            table.appendChild(tr);
+        });
+        wrap.appendChild(table);
+        return wrap;
+    }
+    function renderImageBlockView(block) {
+        const wrap = document.createElement('div');
+        wrap.className = 'ilt-view-image-wrap';
+        if (block.url) {
+            const img = document.createElement('img');
+            img.src = block.url;
+            img.className = 'ilt-view-image';
+            wrap.appendChild(img);
+        }
+        if (block.caption) {
+            const cap = document.createElement('div');
+            cap.className = 'ilt-view-image-caption';
+            cap.textContent = block.caption;
+            wrap.appendChild(cap);
+        }
+        return wrap;
+    }
+    function renderMcqBlockView(block, pIdx, secId, mode) {
+        const wrap = document.createElement('div');
+        wrap.className = 'ilt-numbered ilt-view-mcq';
+        const head = document.createElement('div');
+        head.className = 'ilt-mcq-head';
+        const badge = document.createElement('span');
+        badge.className = 'ilt-num-badge';
+        head.appendChild(badge);
+        head.appendChild(document.createTextNode('.\u00A0'));
+        const promptEl = document.createElement('span');
+        promptEl.className = 'ilt-mcq-prompt';
+        promptEl.innerHTML = block.prompt_html || '';
+        head.appendChild(promptEl);
+        wrap.appendChild(head);
+        if (block.image_url) {
+            const img = document.createElement('img');
+            img.src = block.image_url;
+            img.className = 'ilt-view-image ilt-mcq-image';
+            wrap.appendChild(img);
+        }
+        const keyBase = pIdx + ':' + secId + ':' + block.id;
+        const optWrap = document.createElement('div');
+        optWrap.className = 'ilt-mcq-options';
+        (block.options || []).forEach((opt, i) => {
+            const label = document.createElement('label');
+            label.className = 'ilt-mcq-option';
+            if (mode === 'result') {
+                const given = currentAnswers[keyBase];
+                if (i === block.correct) label.classList.add('ilt-ok');
+                else if (given === i) label.classList.add('ilt-wrong');
+            }
+            const radio = document.createElement('input');
+            radio.type = 'radio';
+            radio.name = 'mcq_' + keyBase;
+            radio.disabled = (mode !== 'take');
+            radio.checked = (currentAnswers[keyBase] === i);
+            radio.addEventListener('change', () => { currentAnswers[keyBase] = i; });
+            label.appendChild(radio);
+            const letterEl = document.createElement('span');
+            letterEl.className = 'ilt-mcq-option-letter';
+            letterEl.textContent = String.fromCharCode(65 + i) + '. ';
+            label.appendChild(letterEl);
+            const optContent = document.createElement('span');
+            optContent.innerHTML = opt;
+            label.appendChild(optContent);
+            optWrap.appendChild(label);
+        });
+        wrap.appendChild(optWrap);
+        if (mode === 'result') wrap.dataset.isCorrect = (currentAnswers[keyBase] === block.correct) ? '1' : '0';
+        return wrap;
+    }
+    function renderBlockView(block, pIdx, secId, mode) {
+        if (block.type === 'paragraph' || block.type === 'framed') return renderParagraphBlockView(block, pIdx, secId, mode);
+        if (block.type === 'table') return renderTableBlockView(block, pIdx, secId, mode);
+        if (block.type === 'image') return renderImageBlockView(block);
+        if (block.type === 'mcq') return renderMcqBlockView(block, pIdx, secId, mode);
+        return document.createElement('div');
+    }
+
+    function renderTestBody(test, mode) {
+        const root = document.createElement('div');
+        root.className = 'ilt-render-root';
+        (test.parts || []).forEach((part, pIdx) => {
+            const partEl = document.createElement('div');
+            partEl.className = 'ilt-render-part';
+            const h = document.createElement('div');
+            h.className = 'ilt-render-part-title';
+            h.textContent = PART_LABELS[pIdx] || ('PART ' + (pIdx + 1));
+            partEl.appendChild(h);
+            if (part.intro_html) {
+                const intro = document.createElement('div');
+                intro.className = 'ilt-render-part-intro';
+                intro.innerHTML = part.intro_html;
+                partEl.appendChild(intro);
+            }
+            (part.sections || []).forEach(sec => {
+                const secEl = document.createElement('div');
+                secEl.className = 'ilt-render-section';
+                if (sec.heading) {
+                    const hh = document.createElement('div');
+                    hh.className = 'ilt-render-section-heading';
+                    hh.textContent = sec.heading;
+                    secEl.appendChild(hh);
+                }
+                if (sec.instruction_html) {
+                    const inst = document.createElement('div');
+                    inst.className = 'ilt-render-section-instruction';
+                    inst.innerHTML = sec.instruction_html;
+                    secEl.appendChild(inst);
+                }
+                (sec.blocks || []).forEach(block => { secEl.appendChild(renderBlockView(block, pIdx, sec.id, mode)); });
+                partEl.appendChild(secEl);
+            });
+
+            // Script thoại (transcript) do giảng viên cung cấp — chỉ hiện ra ở
+            // màn hình xem KẾT QUẢ (sau khi học viên đã nộp bài), không hiện lúc làm bài.
+            if (mode === 'result' && part.transcript_html) {
+                const details = document.createElement('details');
+                details.className = 'ilt-part-transcript';
+                const summary = document.createElement('summary');
+                summary.textContent = '📜 Xem script thoại (Transcript) — ' + (PART_LABELS[pIdx] || ('PART ' + (pIdx + 1)));
+                details.appendChild(summary);
+                const tBody = document.createElement('div');
+                tBody.className = 'ilt-part-transcript-body';
+                tBody.innerHTML = part.transcript_html;
+                details.appendChild(tBody);
+                partEl.appendChild(details);
+            }
+
+            root.appendChild(partEl);
+        });
+
+        // ---- Đánh số toàn bộ, đi theo đúng thứ tự tài liệu (document order) ----
+        const numbered = Array.from(root.querySelectorAll('.ilt-numbered'));
+        let correctCount = 0;
+        numbered.forEach((elm, i) => {
+            const num = i + 1;
+            const badge = elm.querySelector('.ilt-num-badge');
+            if (badge) badge.textContent = num;
+            if (mode === 'result' && elm.dataset.isCorrect === '1') correctCount++;
+        });
+        return { el: root, total: numbered.length, correctCount };
+    }
+
+    // =====================================================================
+    // ===== DANH SÁCH BÀI NGHE ============================================
+    // =====================================================================
+    async function loadTests() {
+        listContainer.innerHTML = '<p class="ctest-loading-msg">Đang tải danh sách bài nghe...</p>';
+        try {
+            const { data, error } = await sb.from('ielts_listening_tests').select('*').order('created_at', { ascending: false });
+            if (error) throw error;
+            myTestsCache = data || [];
+            await renderList();
+        } catch (err) {
+            listContainer.innerHTML = '<p class="ctest-empty-msg">❌ Không tải được danh sách: ' + iltEscape(err.message) + '</p>';
+        }
+    }
+    async function renderList() {
+        adminBar.style.display = isTeacher ? 'flex' : 'none';
+        if (!myTestsCache.length) {
+            listContainer.innerHTML = '<p class="ctest-empty-msg">' + (isTeacher ? 'Chưa có bài nghe nào — bấm "➕ Tạo bài nghe mới" để bắt đầu.' : 'Hiện chưa có bài nghe IELTS nào.') + '</p>';
+            return;
+        }
+        let mySubs = {};
+        if (!isTeacher && currentUserId) {
+            try {
+                const ids = myTestsCache.map(t => t.id);
+                const { data: subs } = await sb.from('ielts_listening_submissions').select('*').eq('user_id', currentUserId).in('test_id', ids);
+                (subs || []).forEach(s => { mySubs[s.test_id] = s; });
+            } catch (e) { /* bảng có thể chưa tồn tại — bỏ qua, vẫn hiển thị danh sách bình thường */ }
+        }
+        listContainer.innerHTML = '';
+        myTestsCache.forEach(test => {
+            const row = document.createElement('div');
+            row.className = 'ctest-test-row';
+            const total = countTotalQuestions(test);
+            const sub = mySubs[test.id];
+            row.innerHTML =
+                '<div class="ctest-test-row-main">' +
+                    '<div class="ctest-test-title">🎧 ' + iltEscape(test.title || '(Chưa đặt tên)') + '</div>' +
+                    '<div class="ctest-test-meta">' + total + ' câu hỏi · 4 Parts' + (sub ? ' · Điểm gần nhất: ' + sub.score + '/' + sub.total : '') + '</div>' +
+                '</div>' +
+                '<div class="ctest-test-row-actions"></div>';
+            const actions = row.querySelector('.ctest-test-row-actions');
+            if (isTeacher) {
+                const editBtn = document.createElement('button');
+                editBtn.className = 'grammar-admin-btn';
+                editBtn.textContent = '✏️ Soạn bài';
+                editBtn.addEventListener('click', (e) => { e.stopPropagation(); openEditorForTest(test); });
+                actions.appendChild(editBtn);
+            } else {
+                const startBtn = document.createElement('button');
+                startBtn.className = 'grammar-admin-btn grammar-admin-btn-primary';
+                startBtn.textContent = sub ? '🔁 Làm lại' : '▶️ Bắt đầu làm bài';
+                startBtn.addEventListener('click', (e) => { e.stopPropagation(); openTakeView(test, 'take'); });
+                actions.appendChild(startBtn);
+                if (sub) {
+                    const resBtn = document.createElement('button');
+                    resBtn.className = 'grammar-admin-btn';
+                    resBtn.textContent = '📊 Kết quả gần nhất';
+                    resBtn.addEventListener('click', (e) => { e.stopPropagation(); openResultView(test, sub); });
+                    actions.appendChild(resBtn);
+                }
+            }
+            row.addEventListener('click', () => { if (isTeacher) openEditorForTest(test); else openTakeView(test, 'take'); });
+            listContainer.appendChild(row);
+        });
+    }
+
+    // =====================================================================
+    // ===== LÀM BÀI / XEM THỬ / NỘP BÀI ===================================
+    // =====================================================================
+    function openTakeView(test, mode) {
+        currentTakeTest = test;
+        currentMode = mode;
+        currentAnswers = {};
+        takeTitleEl.textContent = (mode === 'preview' ? '👁️ Xem thử: ' : '🎧 ') + (test.title || '');
+        takeAudioBar.innerHTML = '';
+        if (test.audio_url) {
+            const audio = document.createElement('audio');
+            audio.controls = true;
+            audio.className = 'ilt-audio-preview ilt-take-audio';
+            audio.src = test.audio_url;
+            takeAudioBar.appendChild(audio);
+        }
+        takeBodyEl.innerHTML = '';
+        const { el } = renderTestBody(test, mode === 'preview' ? 'preview' : 'take');
+        takeBodyEl.appendChild(el);
+        submitBtn.style.display = (mode === 'preview') ? 'none' : 'inline-block';
+        showView('take');
+    }
+    function computeScore(test, answers) {
+        currentAnswers = answers;
+        const { total, correctCount } = renderTestBody(test, 'result');
+        return { total, correctCount };
+    }
+    if (submitBtn) {
+        submitBtn.addEventListener('click', async () => {
+            if (!currentTakeTest) return;
+            if (!confirm('Nộp bài ngay bây giờ?')) return;
+            const answersSnapshot = Object.assign({}, currentAnswers);
+            const { total, correctCount } = computeScore(currentTakeTest, answersSnapshot);
+            let savedOk = false;
+            try {
+                if (currentUserId) {
+                    const payload = {
+                        test_id: currentTakeTest.id, user_id: currentUserId, user_email: currentEmail,
+                        answers: answersSnapshot, score: correctCount, total: total, submitted_at: new Date().toISOString()
+                    };
+                    const { error } = await sb.from('ielts_listening_submissions').upsert(payload, { onConflict: 'test_id,user_id' });
+                    if (error) throw error;
+                    savedOk = true;
+                }
+            } catch (err) {
+                alert('Không lưu được kết quả (vẫn xem được điểm): ' + err.message);
+            }
+            openResultView(currentTakeTest, { answers: answersSnapshot, score: correctCount, total: total }, !savedOk);
+        });
+    }
+    // Bảng quy đổi điểm thô (raw score / 40 câu) sang Band điểm IELTS Listening
+    // trên thang 9.0 — theo mức quy đổi phổ biến vẫn dùng trong các đề luyện thi
+    // IELTS (chỉ mang tính tham khảo, không phải điểm số chính thức của IELTS).
+    const ILT_BAND_TABLE = [
+        [39, 9.0], [37, 8.5], [35, 8.0], [32, 7.5], [30, 7.0],
+        [26, 6.5], [23, 6.0], [18, 5.5], [16, 5.0], [13, 4.5],
+        [10, 4.0], [8, 3.5], [6, 3.0], [4, 2.5], [3, 2.0], [2, 1.5], [1, 1.0]
+    ];
+    function iltRawScoreToBand(rawOn40) {
+        for (const [minRaw, band] of ILT_BAND_TABLE) { if (rawOn40 >= minRaw) return band; }
+        return 0;
+    }
+    function openResultView(test, submissionLike, notSavedNote) {
+        currentAnswers = submissionLike.answers || {};
+        resultTitleEl.textContent = test.title || '';
+        const { el, total, correctCount } = renderTestBody(test, 'result');
+        const score = (submissionLike.score !== undefined) ? submissionLike.score : correctCount;
+        const tot = (submissionLike.total !== undefined) ? submissionLike.total : total;
+        // Quy điểm về thang 40 câu chuẩn IELTS trước khi tra Band (nếu đề không đủ 40 câu).
+        const rawOn40 = (tot === 40) ? score : Math.round((score / (tot || 1)) * 40);
+        const band = iltRawScoreToBand(rawOn40);
+        resultScoreEl.innerHTML = '🎯 Điểm: ' + score + ' / ' + tot +
+            '<div class="ilt-band-score">📊 Band điểm ước tính: <b>' + band.toFixed(1) + '</b> / 9.0' +
+            (tot !== 40 ? ' <span class="ilt-note">(đã quy đổi tương đương thang 40 câu)</span>' : '') +
+            '</div>' +
+            '<div class="ilt-note">*Mức quy đổi Band điểm chỉ mang tính tham khảo theo thang phổ biến của IELTS Listening, không phải điểm số chính thức.</div>' +
+            (notSavedNote ? '<div class="ilt-note">Đăng nhập để lưu lại điểm số của bạn cho lần sau.</div>' : '');
+        resultBodyEl.innerHTML = '';
+        resultBodyEl.appendChild(el);
+        showView('result');
+    }
+
+    // =====================================================================
+    // ===== CHUYỂN ĐỔI MÀN HÌNH / MỞ - ĐÓNG FOLDER ========================
+    // =====================================================================
+    function showView(name) {
+        listView.style.display   = name === 'list'   ? 'block' : 'none';
+        editorView.style.display = name === 'editor' ? 'block' : 'none';
+        takeView.style.display   = name === 'take'   ? 'block' : 'none';
+        resultView.style.display = name === 'result' ? 'block' : 'none';
+    }
+    const ieltsSampleFolderCard = document.getElementById('ielts-sample-folder-card');
+    const ieltsSamplePanel      = document.getElementById('ielts-sample-panel');
+    const ieltsSampleBackBtn    = document.getElementById('ielts-sample-back-btn');
+
+    // "đề minh họa IELTS" là thư mục cha — bấm vào để mở ra các dạng đề
+    // minh hoạ bên trong (hiện có IELTS Listening Test).
+    if (ieltsSampleFolderCard && ieltsSamplePanel) {
+        ieltsSampleFolderCard.addEventListener('click', () => {
+            kiemtraFolderGrid.style.display = 'none';
+            ieltsSamplePanel.style.display = 'block';
+        });
+    }
+    if (ieltsSampleBackBtn && ieltsSamplePanel) {
+        ieltsSampleBackBtn.addEventListener('click', () => {
+            ieltsSamplePanel.style.display = 'none';
+            kiemtraFolderGrid.style.display = '';
+        });
+    }
+
+    iltFolderCard.addEventListener('click', () => {
+        if (ieltsSamplePanel) ieltsSamplePanel.style.display = 'none';
+        iltPanel.style.display = 'block';
+        showView('list');
+        loadTests();
+    });
+    function backToFolders() {
+        iltPanel.style.display = 'none';
+        // Quay lại thư mục cha "đề minh họa IELTS" (không phải quay thẳng
+        // ra danh sách thư mục gốc của tab Kiểm tra).
+        if (ieltsSamplePanel) ieltsSamplePanel.style.display = 'block';
+        else kiemtraFolderGrid.style.display = '';
+    }
+    const listBackBtn = document.getElementById('ilt-list-back-btn');
+    if (listBackBtn) listBackBtn.addEventListener('click', backToFolders);
+    const editorBackBtn = document.getElementById('ilt-editor-back-btn');
+    if (editorBackBtn) editorBackBtn.addEventListener('click', () => { showView('list'); loadTests(); });
+    const takeBackBtn = document.getElementById('ilt-take-back-btn');
+    if (takeBackBtn) takeBackBtn.addEventListener('click', () => {
+        if (currentMode === 'preview') showView('editor');
+        else { showView('list'); loadTests(); }
+    });
+    const resultBackBtn = document.getElementById('ilt-result-back-btn');
+    if (resultBackBtn) resultBackBtn.addEventListener('click', () => { showView('list'); loadTests(); });
+
+})();
+// ===== KẾT THÚC: TAB "KIỂM TRA" > "🎧 IELTS LISTENING TEST" =========
+
+
+// ===================================================================
 // ===== BẮT ĐẦU: TAB "LUYỆN KỸ NĂNG" > "🎧 NGHE" — LUYỆN NGHE GIAI ĐOẠN 1 (NGHE LV1) =====
 // Kho từ vựng luyện nghe = gộp 3 nguồn: (1) Từ vựng cá nhân (window.vocabTap), (2) Từ vựng
 // các chủ đề "Cho bé" đã hoàn thành (window.kidTopicsAPI), (3) Từ vựng các Unit THCS/THPT
@@ -13703,19 +15080,16 @@ function toggleCompletion(symbolElement) {
 
 // ===================================================================
 // ===== BẮT ĐẦU: TAB "LUYỆN KỸ NĂNG" > "🎧 NGHE" — NGHE LV3 (NGHE HIỂU ĐOẠN HỘI THOẠI) =====
-// Khác với Nghe lv2 (mỗi câu chỉ 1 dạng bài, nghe 1 câu ngắn), Nghe lv3 dùng 1 NGÂN HÀNG
-// ĐOẠN HỘI THOẠI do giảng viên tự soạn, lưu ở bảng "listening_lv3_items" trên Supabase (xem
-// file "listening_lv3_setup.sql" để tạo bảng + policy RLS). Mỗi đoạn hội thoại gồm:
-//   - audio_url : link file .mp3 đoạn hội thoại (giảng viên tự paste vào, BẮT BUỘC)
+// Nghe lv3 dùng 1 NGÂN HÀNG ĐOẠN HỘI THOẠI do giảng viên tự soạn, lưu ở bảng
+// "listening_lv3_items" trên Supabase. Mỗi đoạn hội thoại gồm:
+//   - audio_url : link file .mp3 (BẮT BUỘC)
 //   - title     : tiêu đề/bối cảnh (tuỳ chọn)
-//   - questions : một MẢNG câu hỏi con đi kèm, mỗi câu thuộc 1 trong 3 dạng:
-//       + mcq        : trắc nghiệm (nhiều đáp án, 1 đáp án đúng)
-//       + fill_blank : điền từ/cụm từ (so khớp gần đúng, không phân biệt hoa thường/dấu câu)
-//       + essay      : tự luận (so khớp MỀM theo từ khoá với "đáp án mẫu" giảng viên nhập; nếu
-//                      để trống đáp án mẫu thì KHÔNG chấm điểm — chỉ cần học viên có viết gì đó
-//                      là được coi là hoàn thành, phù hợp câu hỏi mở không có đáp án cố định)
-// Học viên nghe 1 đoạn hội thoại rồi trả lời hết các câu hỏi con của đoạn đó, bấm "Kiểm tra"
-// 1 lần để chấm tất cả cùng lúc. Mỗi lượt luyện tập lấy random tối đa 10 đoạn hội thoại.
+//   - questions : mảng câu hỏi con, mỗi câu thuộc 1 trong 3 dạng:
+//       + mcq         : trắc nghiệm
+//       + rich_blocks : đoạn văn điền từ — giảng viên paste đoạn văn, bôi đen từ rồi bấm U
+//                       (gạch chân) để tạo chỗ trống. Hỗ trợ đoạn văn thường, đoạn đóng khung,
+//                       bảng, hình ảnh — xen kẽ tuỳ ý (y hệt cơ chế IELTS Listening Test).
+//       + essay       : tự luận (so khớp MỀM theo từ khoá)
 // ===================================================================
 (() => {
     const ln3Card = document.getElementById('ln-lv3-card');
@@ -13751,28 +15125,20 @@ function toggleCompletion(symbolElement) {
     const ln3ResultBox    = document.getElementById('ln3-result-box');
 
     const LN3_TABLE = 'listening_lv3_items';
-    const LN3_TOTAL_ITEMS = 10; // số đoạn hội thoại tối đa mỗi lượt luyện tập
-    const LN3_MIN_ITEMS = 3;    // số đoạn hội thoại tối thiểu trong ngân hàng để cho phép bắt đầu
+    const LN3_TOTAL_ITEMS = 10;
+    const LN3_MIN_ITEMS = 3;
     const LN3_SUBQ_MIN = 1;
     const LN3_SUBQ_MAX = 8;
     const LN3_MC_MIN_OPTIONS = 2;
     const LN3_MC_MAX_OPTIONS = 6;
-    const LN3_SUBQ_TYPE_META = {
-        mcq:        { label: 'Trắc nghiệm', icon: '☑️' },
-        fill_blank: { label: 'Điền từ',     icon: '📝' },
-        essay:      { label: 'Tự luận',     icon: '✍️' }
-    };
 
-    // ---------- Tiện ích dùng chung (tách riêng, không phụ thuộc các khối Nghe khác) ----------
+    // ---------- Tiện ích ----------
     function ln3Esc(s) {
         return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
-    // So khớp CHẶT (dùng cho trắc nghiệm/điền từ): bỏ hoa-thường, bỏ mọi ký tự không phải
-    // chữ/số, so sánh tuyệt đối — khớp đúng cách "dien" của Nghe lv2 để hành vi nhất quán.
     function ln3NormalizeStrict(s) {
         return String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
     }
-    // So khớp MỀM theo từ khoá (dùng cho tự luận): giữ khoảng trắng để tách được từng từ.
     function ln3NormalizeLoose(s) {
         return String(s || '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
     }
@@ -13784,16 +15150,10 @@ function toggleCompletion(symbolElement) {
         }
         return copy;
     }
-    // Chấm "tự luận" theo kiểu so khớp MỀM: nếu giảng viên không nhập đáp án mẫu -> không chấm,
-    // chỉ cần học viên có viết nội dung là được (phù hợp câu hỏi mở, không có đáp án cố định).
-    // Nếu có đáp án mẫu -> coi là đúng khi phần lớn (>=60%) các từ khoá (>=3 ký tự) trong đáp án
-    // mẫu xuất hiện trong câu trả lời của học viên — không yêu cầu đúng từng chữ như điền từ, vì
-    // tự luận thường được diễn đạt theo nhiều cách khác nhau. Đây là cách chấm GẦN ĐÚNG (heuristic),
-    // không thể thay thế việc giảng viên tự đọc và chấm bằng tay cho các câu tự luận phức tạp.
     function ln3EssayIsCorrect(sampleAnswer, userText) {
         const key = ln3NormalizeLoose(sampleAnswer);
         const userNorm = ln3NormalizeLoose(userText);
-        if (!key) return !!userNorm; // không có đáp án mẫu -> chỉ cần có viết gì đó là được
+        if (!key) return !!userNorm;
         if (!userNorm) return false;
         const keyWords = key.split(' ').filter(w => w.length >= 3);
         if (!keyWords.length) return userNorm.includes(key);
@@ -13801,7 +15161,7 @@ function toggleCompletion(symbolElement) {
         return (matched / keyWords.length) >= 0.6;
     }
 
-    // ----- Âm thanh hiệu ứng ĐÚNG / SAI (Web Audio API, không cần file mp3) -----
+    // ----- Âm thanh hiệu ứng -----
     let ln3SfxCtx = null;
     function getLn3SfxCtx() {
         const AC = window.AudioContext || window.webkitAudioContext;
@@ -13834,13 +15194,10 @@ function toggleCompletion(symbolElement) {
         ln3PlayTone(140, 0.15, 0.22, 'square', 0.16);
     }
 
-    // ----- Phát file .mp3 đoạn hội thoại (LUÔN có link, do giảng viên bắt buộc phải gắn) -----
+    // ----- Audio mp3 -----
     let ln3AudioEl = null;
     function ln3GetAudioEl() {
-        if (!ln3AudioEl) {
-            ln3AudioEl = new Audio();
-            ln3AudioEl.preload = 'auto';
-        }
+        if (!ln3AudioEl) { ln3AudioEl = new Audio(); ln3AudioEl.preload = 'auto'; }
         return ln3AudioEl;
     }
     function ln3PlayItemAudio(item) {
@@ -13851,24 +15208,321 @@ function toggleCompletion(symbolElement) {
         audio.currentTime = 0;
         audio.play().catch(err => console.error('Lỗi khi phát file mp3 Nghe lv3:', err.message));
     }
-    function ln3StopAudio() {
-        if (ln3AudioEl) ln3AudioEl.pause();
-    }
+    function ln3StopAudio() { if (ln3AudioEl) ln3AudioEl.pause(); }
     document.querySelectorAll('.main-tab-btn').forEach(btn => btn.addEventListener('click', ln3StopAudio));
     document.addEventListener('visibilitychange', () => { if (document.hidden) ln3StopAudio(); });
     window.addEventListener('blur', ln3StopAudio);
 
-    // ---------- Tải / lưu ngân hàng đoạn hội thoại trên Supabase ----------
+    // =====================================================================
+    // ===== KHỐI NỘI DUNG RICH (dùng cho dạng "rich_blocks" = điền từ) ====
+    // ===== Cơ chế y hệt IELTS Listening Test: bôi đen từ, bấm U (gạch  ====
+    // ===== chân) để tạo chỗ trống. Hỗ trợ đoạn văn, đóng khung, bảng, ====
+    // ===== hình ảnh — nhiều khối xen kẽ trong 1 câu hỏi.              ====
+    // =====================================================================
+
+    // --- Tiện ích block (nội bộ ln3, tách khỏi ILT) ---
+    function ln3uid(prefix) { return (prefix || 'x') + '_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8); }
+
+    // Rich text editor mini (toolbar B/U/I; bấm U gạch chân = tạo chỗ trống)
+    function ln3CreateRichEditor(initialHtml, placeholder, hint, small) {
+        const wrap = document.createElement('div');
+        wrap.className = 'ctest-rich-wrap';
+        wrap.innerHTML =
+            '<div class="ctest-rich-toolbar">' +
+                '<button type="button" class="ctest-rich-btn" data-cmd="bold" title="In đậm"><b>B</b></button>' +
+                '<button type="button" class="ctest-rich-btn" data-cmd="underline" title="Gạch chân = tạo chỗ trống"><u>U</u></button>' +
+                '<button type="button" class="ctest-rich-btn" data-cmd="italic" title="In nghiêng"><i>I</i></button>' +
+                (hint ? '<span class="ctest-rich-hint">' + hint + '</span>' : '') +
+            '</div>' +
+            '<div class="ctest-rich-editable' + (small ? ' ctest-rich-small' : '') + '" contenteditable="true" data-placeholder="' + ln3Esc(placeholder || '') + '"></div>';
+        const editable = wrap.querySelector('.ctest-rich-editable');
+        editable.innerHTML = initialHtml || '';
+        wrap.querySelectorAll('.ctest-rich-btn').forEach(btn => {
+            btn.addEventListener('mousedown', e => e.preventDefault());
+            btn.addEventListener('click', () => {
+                editable.focus();
+                document.execCommand(btn.dataset.cmd, false, null);
+                editable.dispatchEvent(new Event('input', { bubbles: true }));
+            });
+        });
+        return wrap;
+    }
+    function ln3RichHtml(wrap) {
+        const ed = wrap && wrap.querySelector ? wrap.querySelector('.ctest-rich-editable') : null;
+        return ed ? ed.innerHTML.trim() : '';
+    }
+    function ln3CountBlanks(html) {
+        const d = document.createElement('div');
+        d.innerHTML = html || '';
+        return d.querySelectorAll('u').length;
+    }
+    // Tách <u> thành mảng blanks; hỗ trợ nhiều đáp án đúng cách nhau bằng "|"
+    function ln3ParseBlanks(html) {
+        const container = document.createElement('div');
+        container.innerHTML = html || '';
+        const blanks = [];
+        Array.from(container.querySelectorAll('u')).forEach(elm => {
+            const raw = elm.textContent.trim();
+            const accepted = raw.split('|').map(s => s.trim()).filter(Boolean);
+            const marker = document.createElement('span');
+            marker.className = 'ilt-blank-slot';
+            marker.setAttribute('data-blank-idx', String(blanks.length));
+            blanks.push({ accepted: accepted.length ? accepted : [raw], display: raw });
+            elm.replaceWith(marker);
+        });
+        return { displayHtml: container.innerHTML, blanks };
+    }
+
+    // --- Khung chèn ảnh (URL hoặc upload Supabase) ---
+    const LN3_IMAGE_BUCKET = 'ielts_listening_images'; // dùng chung bucket với ILT
+    function ln3ImageField(initialUrl) {
+        const wrap = document.createElement('div');
+        wrap.className = 'ctest-image-field ilt-image-field';
+        wrap.innerHTML =
+            '<label class="news-quiz-edit-label">Hình minh hoạ (tuỳ chọn)</label>' +
+            '<div class="ilt-image-row">' +
+                '<input type="text" class="news-edit-input ctest-image-url-input" placeholder="Dán link ảnh, hoặc tải ảnh lên ở nút bên cạnh...">' +
+                '<label class="grammar-admin-btn ilt-upload-btn">📤 Tải ảnh lên<input type="file" accept="image/*" class="ilt-image-file-input" style="display:none;"></label>' +
+            '</div>' +
+            '<span class="ilt-upload-status"></span>' +
+            '<img class="ctest-image-preview" style="display:none;">';
+        const input    = wrap.querySelector('.ctest-image-url-input');
+        const preview  = wrap.querySelector('.ctest-image-preview');
+        const fileIn   = wrap.querySelector('.ilt-image-file-input');
+        const statusEl = wrap.querySelector('.ilt-upload-status');
+        input.value = initialUrl || '';
+        function refreshPreview() {
+            const url = input.value.trim();
+            if (url) { preview.src = url; preview.style.display = 'block'; }
+            else { preview.style.display = 'none'; }
+        }
+        input.addEventListener('input', refreshPreview);
+        fileIn.addEventListener('change', async () => {
+            const file = fileIn.files && fileIn.files[0];
+            if (!file) return;
+            if (file.size > 5 * 1024 * 1024) { alert('Ảnh tối đa 5MB.'); fileIn.value = ''; return; }
+            statusEl.textContent = 'Đang tải ảnh lên...';
+            try {
+                const path = (currentEmail || 'gv').split('@')[0] + '/' + Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+                const { error: upErr } = await sb.storage.from(LN3_IMAGE_BUCKET).upload(path, file, { cacheControl: '3600', upsert: false });
+                if (upErr) throw upErr;
+                const ref = SUPABASE_URL.split('://')[1].split('.')[0];
+                input.value = `https://${ref}.supabase.co/storage/v1/object/public/${LN3_IMAGE_BUCKET}/${path}`;
+                refreshPreview();
+                statusEl.textContent = '✅ Đã tải ảnh lên.';
+            } catch (err) {
+                statusEl.textContent = '❌ Tải ảnh thất bại: ' + err.message;
+            }
+            fileIn.value = '';
+        });
+        refreshPreview();
+        return wrap;
+    }
+    function ln3ImageUrl(wrap) {
+        const input = wrap && wrap.querySelector ? wrap.querySelector('.ctest-image-url-input') : null;
+        return input ? input.value.trim() : '';
+    }
+
+    // --- Block shell chung (header + move/remove) ---
+    function ln3BlockShell(type, label) {
+        const el = document.createElement('div');
+        el.className = 'ilt-block ilt-block-' + type;
+        el.dataset.blockType = type;
+        el.dataset.blockId = ln3uid('blk');
+        el.innerHTML =
+            '<div class="ilt-block-header">' +
+                '<span class="ilt-block-label">' + label + '</span>' +
+                '<span class="ilt-block-actions">' +
+                    '<button type="button" class="ilt-block-move-btn" data-dir="up" title="Chuyển lên">↑</button>' +
+                    '<button type="button" class="ilt-block-move-btn" data-dir="down" title="Chuyển xuống">↓</button>' +
+                    '<button type="button" class="ilt-block-remove-btn" title="Xoá khối này">🗑️</button>' +
+                '</span>' +
+            '</div>';
+        return el;
+    }
+    function ln3WireBlockChrome(el, body) {
+        body.classList.add('ilt-block-body');
+        el.appendChild(body);
+        el.querySelector('.ilt-block-remove-btn').addEventListener('click', () => {
+            if (!confirm('Xoá khối nội dung này?')) return;
+            el.remove();
+        });
+        el.querySelectorAll('.ilt-block-move-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const dir = btn.dataset.dir;
+                if (dir === 'up' && el.previousElementSibling) el.parentElement.insertBefore(el, el.previousElementSibling);
+                else if (dir === 'down' && el.nextElementSibling) el.parentElement.insertBefore(el.nextElementSibling, el);
+            });
+        });
+        return el;
+    }
+
+    // --- Khối: Đoạn văn (điền từ) / Đóng khung ---
+    function ln3BuildParagraphBlock(data, framed) {
+        const el = ln3BlockShell(framed ? 'framed' : 'paragraph', framed ? '📦 Đoạn văn đóng khung' : '📝 Đoạn văn (điền từ)');
+        const body = document.createElement('div');
+        const editor = ln3CreateRichEditor(
+            data.html || '',
+            'Nhập đoạn văn... Bôi đen từ/cụm từ cần ẩn rồi bấm U (gạch chân) để tạo chỗ trống.',
+            'Bôi đen rồi bấm <u>U</u> để tạo chỗ trống. Nhiều đáp án đúng cách nhau bằng "|".'
+        );
+        editor.classList.add('ilt-paragraph-editor');
+        body.appendChild(editor);
+        const countEl = document.createElement('div');
+        countEl.className = 'ilt-block-count-hint';
+        body.appendChild(countEl);
+        function refreshCount() {
+            const n = ln3CountBlanks(ln3RichHtml(editor));
+            countEl.textContent = n ? ('→ ' + n + ' chỗ trống trong đoạn này') : '→ đoạn văn này chưa có chỗ trống nào';
+        }
+        editor.addEventListener('input', refreshCount);
+        refreshCount();
+        return ln3WireBlockChrome(el, body);
+    }
+    function ln3CollectParagraphBlock(el, framed) {
+        return { id: el.dataset.blockId, type: framed ? 'framed' : 'paragraph', html: ln3RichHtml(el.querySelector('.ilt-paragraph-editor')) };
+    }
+
+    // --- Khối: Bảng ---
+    // Rút gọn: không cần merge cells, chỉ cần rich editor trong mỗi ô
+    function ln3BuildTableBlock(data) {
+        const el = ln3BlockShell('table', '📊 Bảng');
+        const body = document.createElement('div');
+        body.classList.add('ilt-table-block-body');
+
+        const rows = (data.rows && data.rows.length) ? data.rows.length : 2;
+        const cols = (data.rows && data.rows[0] && data.rows[0].length) ? data.rows[0].length : 2;
+
+        // Controls: thêm/xóa hàng/cột
+        const ctrl = document.createElement('div');
+        ctrl.className = 'ilt-table-ctrl-bar';
+        ctrl.innerHTML =
+            '<button type="button" class="ctest-type-btn ln3-tbl-btn" data-act="addrow">+ Hàng</button>' +
+            '<button type="button" class="ctest-type-btn ln3-tbl-btn" data-act="delrow">- Hàng</button>' +
+            '<button type="button" class="ctest-type-btn ln3-tbl-btn" data-act="addcol">+ Cột</button>' +
+            '<button type="button" class="ctest-type-btn ln3-tbl-btn" data-act="delcol">- Cột</button>';
+        body.appendChild(ctrl);
+
+        const tableWrap = document.createElement('div');
+        tableWrap.className = 'ilt-table-editor-wrap';
+        const table = document.createElement('table');
+        table.className = 'ilt-table-editor';
+        tableWrap.appendChild(table);
+        body.appendChild(tableWrap);
+
+        function makeCellEditor(html) {
+            const td = document.createElement('td');
+            td.className = 'ilt-table-cell-editor-td';
+            const ed = ln3CreateRichEditor(html || '', '', '', true);
+            ed.classList.add('ilt-table-cell');
+            td.appendChild(ed);
+            return td;
+        }
+        function buildTableRows(initData) {
+            table.innerHTML = '';
+            initData.forEach(row => {
+                const tr = document.createElement('tr');
+                row.forEach(cell => {
+                    const cellHtml = cell && typeof cell === 'object' ? cell.html : (cell || '');
+                    tr.appendChild(makeCellEditor(cellHtml));
+                });
+                table.appendChild(tr);
+            });
+        }
+        // Khởi tạo
+        let initRows;
+        if (data.rows && data.rows.length) {
+            initRows = data.rows;
+        } else {
+            initRows = Array.from({ length: rows }, () => Array.from({ length: cols }, () => ''));
+        }
+        buildTableRows(initRows);
+
+        ctrl.addEventListener('click', e => {
+            const btn = e.target.closest('[data-act]');
+            if (!btn) return;
+            const act = btn.dataset.act;
+            const trList = Array.from(table.querySelectorAll(':scope > tr'));
+            const colCount = trList.length ? trList[0].querySelectorAll('td').length : 2;
+            if (act === 'addrow') {
+                const tr = document.createElement('tr');
+                for (let c = 0; c < colCount; c++) tr.appendChild(makeCellEditor(''));
+                table.appendChild(tr);
+            } else if (act === 'delrow') {
+                if (table.rows.length > 1) table.deleteRow(table.rows.length - 1);
+            } else if (act === 'addcol') {
+                Array.from(table.querySelectorAll(':scope > tr')).forEach(tr => tr.appendChild(makeCellEditor('')));
+            } else if (act === 'delcol') {
+                Array.from(table.querySelectorAll(':scope > tr')).forEach(tr => {
+                    if (tr.cells.length > 1) tr.deleteCell(tr.cells.length - 1);
+                });
+            }
+        });
+
+        return ln3WireBlockChrome(el, body);
+    }
+    function ln3CollectTableBlock(el) {
+        const rows = [];
+        el.querySelectorAll(':scope table tr').forEach(tr => {
+            const row = [];
+            tr.querySelectorAll('td').forEach(td => {
+                const ed = td.querySelector('.ilt-table-cell');
+                row.push({ html: ed ? ln3RichHtml(ed) : '' });
+            });
+            rows.push(row);
+        });
+        return { id: el.dataset.blockId, type: 'table', rows };
+    }
+
+    // --- Khối: Hình ảnh ---
+    function ln3BuildImageBlock(data) {
+        const el = ln3BlockShell('image', '🖼️ Hình ảnh');
+        const body = document.createElement('div');
+        const imgField = ln3ImageField(data.url || '');
+        body.appendChild(imgField);
+        const capInput = document.createElement('input');
+        capInput.type = 'text';
+        capInput.className = 'news-edit-input';
+        capInput.placeholder = 'Chú thích ảnh (tuỳ chọn)';
+        capInput.value = data.caption || '';
+        body.appendChild(capInput);
+        el._ln3CaptionInput = capInput;
+        el._ln3ImageField = imgField;
+        return ln3WireBlockChrome(el, body);
+    }
+    function ln3CollectImageBlock(el) {
+        return {
+            id: el.dataset.blockId,
+            type: 'image',
+            url: ln3ImageUrl(el._ln3ImageField || el.querySelector('.ilt-image-field')),
+            caption: (el._ln3CaptionInput || el.querySelector('input[placeholder*="thích"]') || { value: '' }).value.trim()
+        };
+    }
+
+    // --- Collectors map ---
+    const LN3_BLOCK_COLLECTORS = {
+        paragraph: (el) => ln3CollectParagraphBlock(el, false),
+        framed:    (el) => ln3CollectParagraphBlock(el, true),
+        table:     ln3CollectTableBlock,
+        image:     ln3CollectImageBlock
+    };
+    const LN3_BLOCK_BUILDERS = {
+        paragraph: (data) => ln3BuildParagraphBlock(data, false),
+        framed:    (data) => ln3BuildParagraphBlock(data, true),
+        table:     ln3BuildTableBlock,
+        image:     ln3BuildImageBlock
+    };
+    function ln3BuildBlock(type, data) { const fn = LN3_BLOCK_BUILDERS[type]; return fn ? fn(data || {}) : null; }
+    function ln3CollectBlock(el) { const fn = LN3_BLOCK_COLLECTORS[el.dataset.blockType]; return fn ? fn(el) : null; }
+
+    // ---------- Tải / lưu ngân hàng đoạn hội thoại ----------
     let ln3Items = [];
     let ln3ItemsLoaded = false;
 
     async function ln3LoadItems(force) {
         if (ln3ItemsLoaded && !force) return ln3Items;
         try {
-            const { data, error } = await sb
-                .from(LN3_TABLE)
-                .select('*')
-                .order('created_at', { ascending: false });
+            const { data, error } = await sb.from(LN3_TABLE).select('*').order('created_at', { ascending: false });
             if (error) throw error;
             ln3Items = data || [];
             ln3ItemsLoaded = true;
@@ -13879,14 +15533,12 @@ function toggleCompletion(symbolElement) {
         return ln3Items;
     }
     async function ln3CreateItemDB(payload) {
-        const insertPayload = Object.assign({}, payload, { created_by: currentEmail });
-        const { data, error } = await sb.from(LN3_TABLE).insert(insertPayload).select().single();
+        const { data, error } = await sb.from(LN3_TABLE).insert(Object.assign({}, payload, { created_by: currentEmail })).select().single();
         if (error) throw error;
         return data;
     }
     async function ln3UpdateItemDB(id, payload) {
-        const updatePayload = Object.assign({}, payload, { updated_at: new Date().toISOString(), updated_by: currentEmail });
-        const { data, error } = await sb.from(LN3_TABLE).update(updatePayload).eq('id', id).select().single();
+        const { data, error } = await sb.from(LN3_TABLE).update(Object.assign({}, payload, { updated_at: new Date().toISOString(), updated_by: currentEmail })).eq('id', id).select().single();
         if (error) throw error;
         return data;
     }
@@ -13895,7 +15547,7 @@ function toggleCompletion(symbolElement) {
         if (error) throw error;
     }
 
-    // ---------- Điều hướng: Nghe lv3 -> (Soạn hội thoại | Bắt đầu luyện tập) ----------
+    // ---------- Điều hướng ----------
     ln3Card.addEventListener('click', () => {
         const stage1Panel = document.getElementById('ln-stage1-panel');
         if (stage1Panel) stage1Panel.style.display = 'none';
@@ -13923,7 +15575,7 @@ function toggleCompletion(symbolElement) {
     // ================= Khu vực giảng viên soạn hội thoại =================
     let ln3EditingId = null;
     let ln3DraftIdSeq = 0;
-    let ln3Draft = []; // mảng câu hỏi con đang soạn dở trên form
+    let ln3Draft = []; // mảng câu hỏi con đang soạn dở
 
     function ln3NewSubQuestion(type) {
         ln3DraftIdSeq++;
@@ -13933,13 +15585,12 @@ function toggleCompletion(symbolElement) {
             prompt: '',
             options: ['', ''],
             answerIndex: 0,
-            answer: ''
+            answer: '',
+            blocks: []  // dùng cho rich_blocks
         };
     }
 
-    // Đọc lại TOÀN BỘ giá trị đang có trên form vào ln3Draft — gọi TRƯỚC mỗi lần thay đổi cấu
-    // trúc (thêm/xoá câu hỏi, đổi dạng câu hỏi, thêm/xoá đáp án) để không mất nội dung giảng
-    // viên đã gõ ở những câu/đáp án khác.
+    // Đọc lại giá trị từ DOM vào ln3Draft (chỉ cho mcq/essay; rich_blocks dùng DOM blocks trực tiếp khi lưu)
     function ln3ReadDraftFromDom() {
         document.querySelectorAll('#ln3-subq-list .ln3-subq-card').forEach(card => {
             const q = ln3Draft.find(x => x.localId === card.dataset.localId);
@@ -13951,7 +15602,7 @@ function toggleCompletion(symbolElement) {
                 if (optionInputs.length) q.options = optionInputs.map(inp => inp.value);
                 const checked = card.querySelector('input[type="radio"]:checked');
                 if (checked) q.answerIndex = parseInt(checked.value, 10);
-            } else {
+            } else if (q.type !== 'rich_blocks') {
                 const ansEl = card.querySelector('.ln3-subq-answer');
                 if (ansEl) q.answer = ansEl.value;
             }
@@ -13968,6 +15619,7 @@ function toggleCompletion(symbolElement) {
         `).join('');
     }
 
+    // Build card cho MCQ và Essay bằng innerHTML; rich_blocks dùng DOM riêng
     function ln3BuildSubqCardHtml(q, idx) {
         let bodyHtml = '';
         if (q.type === 'mcq') {
@@ -13975,36 +15627,69 @@ function toggleCompletion(symbolElement) {
                 <div class="ln2-mc-edit-options" data-mc-options>${ln3BuildMcOptionRowsHtml(q)}</div>
                 ${q.options.length < LN3_MC_MAX_OPTIONS ? `<button type="button" class="ln2-mc-add-btn ln3-mc-opt-add-btn">+ Thêm đáp án</button>` : ''}
             `;
-        } else if (q.type === 'fill_blank') {
-            bodyHtml = `
-                <input type="text" class="news-edit-input ln3-subq-answer" placeholder="Đáp án đúng (từ/cụm từ cần điền)..." value="${ln3Esc(q.answer)}">
-                <div class="ln3-subq-answer-hint">So khớp không phân biệt hoa/thường, dấu câu, khoảng trắng.</div>
-            `;
         } else if (q.type === 'essay') {
             bodyHtml = `
-                <input type="text" class="news-edit-input ln3-subq-answer" placeholder="Đáp án mẫu (tuỳ chọn, dùng để chấm gần đúng)..." value="${ln3Esc(q.answer)}">
-                <div class="ln3-subq-answer-hint">Để trống nếu là câu hỏi mở, không có đáp án cố định — hệ thống sẽ không chấm đúng/sai, chỉ cần học viên viết câu trả lời.</div>
+                <input type="text" class="news-edit-input ln3-subq-answer" placeholder="Đáp án mẫu (tuỳ chọn)..." value="${ln3Esc(q.answer)}">
+                <div class="ln3-subq-answer-hint">Để trống nếu là câu hỏi mở — hệ thống chấm gần đúng theo từ khoá.</div>
             `;
         }
+        // rich_blocks không có bodyHtml — được nối thêm sau bằng DOM
         return `
             <div class="ln3-subq-card" data-local-id="${q.localId}">
                 <div class="ln3-subq-head">
                     <span class="ln3-subq-num">Câu ${idx + 1}</span>
                     <select class="ln3-subq-type-select">
                         <option value="mcq" ${q.type === 'mcq' ? 'selected' : ''}>☑️ Trắc nghiệm</option>
-                        <option value="fill_blank" ${q.type === 'fill_blank' ? 'selected' : ''}>📝 Điền từ</option>
+                        <option value="rich_blocks" ${q.type === 'rich_blocks' ? 'selected' : ''}>📝 Điền từ (đoạn văn)</option>
                         <option value="essay" ${q.type === 'essay' ? 'selected' : ''}>✍️ Tự luận</option>
                     </select>
                     ${ln3Draft.length > LN3_SUBQ_MIN ? `<button type="button" class="ln3-subq-remove-btn ln3-subq-remove-whole-btn" title="Xoá câu hỏi này">🗑️</button>` : ''}
                 </div>
-                <textarea class="ln3-subq-prompt" placeholder="Nhập câu hỏi...">${ln3Esc(q.prompt)}</textarea>
+                <textarea class="ln3-subq-prompt" placeholder="Hướng dẫn / câu hỏi (tuỳ chọn — có thể để trống với dạng điền từ)...">${ln3Esc(q.prompt)}</textarea>
                 ${bodyHtml}
+                ${q.type === 'rich_blocks' ? '<div class="ln3-blocks-area"></div>' : ''}
             </div>
         `;
     }
 
+    // Dựng blocks DOM cho 1 card rich_blocks
+    function ln3BuildRichBlocksArea(card, q) {
+        const area = card.querySelector('.ln3-blocks-area');
+        if (!area) return;
+        area.innerHTML = '';
+
+        const blocksList = document.createElement('div');
+        blocksList.className = 'ilt-blocks-list';
+        (q.blocks || []).forEach(b => {
+            const nb = ln3BuildBlock(b.type, b);
+            if (nb) blocksList.appendChild(nb);
+        });
+        area.appendChild(blocksList);
+
+        const addBar = document.createElement('div');
+        addBar.className = 'ilt-add-block-bar';
+        addBar.innerHTML =
+            '<button type="button" class="ctest-type-btn" data-type="paragraph">📝 Đoạn văn (điền từ)</button>' +
+            '<button type="button" class="ctest-type-btn" data-type="framed">📦 Đóng khung</button>' +
+            '<button type="button" class="ctest-type-btn" data-type="table">📊 Bảng</button>' +
+            '<button type="button" class="ctest-type-btn" data-type="image">🖼️ Hình ảnh</button>';
+        addBar.addEventListener('click', e => {
+            const btn = e.target.closest('.ctest-type-btn');
+            if (!btn) return;
+            const nb = ln3BuildBlock(btn.dataset.type, {});
+            if (nb) blocksList.appendChild(nb);
+        });
+        area.appendChild(addBar);
+    }
+
     function ln3RenderSubqForm() {
         ln3SubqListEl.innerHTML = ln3Draft.map((q, i) => ln3BuildSubqCardHtml(q, i)).join('');
+        // Sau khi dựng HTML, nối thêm blocks DOM cho rich_blocks và wire events
+        ln3Draft.forEach(q => {
+            const card = ln3SubqListEl.querySelector(`.ln3-subq-card[data-local-id="${q.localId}"]`);
+            if (!card) return;
+            if (q.type === 'rich_blocks') ln3BuildRichBlocksArea(card, q);
+        });
         ln3WireSubqEvents();
     }
 
@@ -14018,6 +15703,7 @@ function toggleCompletion(symbolElement) {
                 if (!q) return;
                 q.type = typeSelect.value;
                 if (q.type === 'mcq' && (!q.options || q.options.length < LN3_MC_MIN_OPTIONS)) q.options = ['', ''];
+                if (q.type === 'rich_blocks') q.blocks = [];
                 ln3RenderSubqForm();
             });
             const removeWholeBtn = card.querySelector('.ln3-subq-remove-whole-btn');
@@ -14100,19 +15786,34 @@ function toggleCompletion(symbolElement) {
             if (sq.type === 'mcq') {
                 draft.options = (Array.isArray(sq.options) && sq.options.length >= LN3_MC_MIN_OPTIONS) ? sq.options.slice() : ['', ''];
                 draft.answerIndex = Number.isInteger(sq.answer_index) ? sq.answer_index : 0;
+            } else if (sq.type === 'rich_blocks') {
+                draft.blocks = Array.isArray(sq.blocks) ? sq.blocks : [];
             } else {
                 draft.answer = sq.answer || '';
+            }
+            // Backward compat: old fill_blank → promote to rich_blocks with 1 paragraph block
+            if (sq.type === 'fill_blank') {
+                draft.type = 'rich_blocks';
+                draft.blocks = sq.answer
+                    ? [{ id: ln3uid('blk'), type: 'paragraph', html: ln3Esc(sq.prompt || sq.answer) }]
+                    : [];
             }
             return draft;
         });
         ln3RenderSubqForm();
-
         ln3EditingId = item.id;
         ln3AdminSaveBtn.textContent = '💾 Lưu thay đổi';
         ln3AdminCancelBtn.style.display = 'inline-block';
         ln3AdminStatus.textContent = '';
         ln3AdminStatus.className = 'ln2-admin-status';
         if (typeof ln3AudioUrlInput.scrollIntoView === 'function') ln3AudioUrlInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    // Thu thập blocks từ DOM của card rich_blocks
+    function ln3CollectRichBlocksFromCard(card) {
+        const blocksList = card.querySelector('.ln3-blocks-area .ilt-blocks-list');
+        if (!blocksList) return [];
+        return Array.from(blocksList.children).map(ln3CollectBlock).filter(Boolean);
     }
 
     function ln3CollectFormPayload() {
@@ -14124,19 +15825,31 @@ function toggleCompletion(symbolElement) {
 
         const questions = ln3Draft.map((q, i) => {
             const prompt = (q.prompt || '').trim();
-            if (!prompt) throw new Error(`Câu ${i + 1}: vui lòng nhập nội dung câu hỏi.`);
             if (q.type === 'mcq') {
                 const trimmedOptions = (q.options || []).map(o => (o || '').trim());
                 if (trimmedOptions.length < LN3_MC_MIN_OPTIONS) throw new Error(`Câu ${i + 1}: cần tối thiểu ${LN3_MC_MIN_OPTIONS} đáp án.`);
                 if (trimmedOptions.some(o => !o)) throw new Error(`Câu ${i + 1}: vui lòng nhập đủ nội dung cho tất cả các đáp án.`);
+                if (!prompt) throw new Error(`Câu ${i + 1}: vui lòng nhập câu hỏi.`);
                 return { type: 'mcq', prompt, options: trimmedOptions, answer_index: q.answerIndex || 0 };
             }
-            if (q.type === 'fill_blank') {
-                const answer = (q.answer || '').trim();
-                if (!answer) throw new Error(`Câu ${i + 1}: vui lòng nhập đáp án đúng.`);
-                return { type: 'fill_blank', prompt, answer };
+            if (q.type === 'rich_blocks') {
+                const card = ln3SubqListEl.querySelector(`.ln3-subq-card[data-local-id="${q.localId}"]`);
+                const blocks = ln3CollectRichBlocksFromCard(card);
+                // Đếm tổng số blank
+                let totalBlanks = 0;
+                blocks.forEach(b => {
+                    if (b.type === 'paragraph' || b.type === 'framed') totalBlanks += ln3CountBlanks(b.html || '');
+                    if (b.type === 'table') {
+                        (b.rows || []).forEach(row => row.forEach(cell => {
+                            totalBlanks += ln3CountBlanks(cell && cell.html ? cell.html : '');
+                        }));
+                    }
+                });
+                if (!blocks.length) throw new Error(`Câu ${i + 1} (Điền từ): cần ít nhất 1 khối nội dung.`);
+                if (!totalBlanks) throw new Error(`Câu ${i + 1} (Điền từ): chưa có chỗ trống nào — bôi đen từ rồi bấm U (gạch chân) để tạo chỗ trống.`);
+                return { type: 'rich_blocks', prompt, blocks };
             }
-            // essay: đáp án mẫu được phép để trống (câu hỏi mở, không chấm điểm)
+            // essay
             return { type: 'essay', prompt, answer: (q.answer || '').trim() };
         });
 
@@ -14146,9 +15859,8 @@ function toggleCompletion(symbolElement) {
     ln3AdminSaveBtn.addEventListener('click', async () => {
         if (!isTeacher) return;
         let payload;
-        try {
-            payload = ln3CollectFormPayload();
-        } catch (err) {
+        try { payload = ln3CollectFormPayload(); }
+        catch (err) {
             ln3AdminStatus.textContent = '⚠️ ' + err.message;
             ln3AdminStatus.className = 'ln2-admin-status is-error';
             return;
@@ -14184,7 +15896,7 @@ function toggleCompletion(symbolElement) {
         }
         ln3ItemListEl.innerHTML = ln3Items.map(item => {
             const qCount = Array.isArray(item.questions) ? item.questions.length : 0;
-            const preview = item.title || (Array.isArray(item.questions) && item.questions[0] ? item.questions[0].prompt : '') || '(chưa có tiêu đề)';
+            const preview = item.title || (Array.isArray(item.questions) && item.questions[0] ? (item.questions[0].prompt || `Câu hỏi dạng ${item.questions[0].type}`) : '') || '(chưa có tiêu đề)';
             return `
                 <div class="ln2-item-row" data-item-id="${item.id}">
                     <span class="ln3-item-subcount-badge">🎵 ${qCount} câu hỏi</span>
@@ -14224,6 +15936,8 @@ function toggleCompletion(symbolElement) {
 
     // ================= Làm bài luyện tập (học viên) =================
     let ln3State = null;
+    // Lưu câu trả lời cho rich_blocks: key = "subqIdx:blockId:blankIdx" hoặc "subqIdx:blockId:cellR_C:blankIdx"
+    let ln3BlankAnswers = {};
 
     async function ln3StartQuiz() {
         ln3QuizPanel.style.display = 'block';
@@ -14244,31 +15958,162 @@ function toggleCompletion(symbolElement) {
 
         const picked = ln3Shuffle(ln3Items).slice(0, Math.min(LN3_TOTAL_ITEMS, ln3Items.length));
         ln3State = { items: picked, index: 0, score: 0, busy: false, subAnswers: [] };
+        ln3BlankAnswers = {};
         ln3RenderItem();
     }
 
-    function ln3BuildTakeSubqHtml(q, i) {
-        const promptHtml = `<div class="ln3-take-subq-prompt"><span class="ln3-take-subq-num">Câu ${i + 1}.</span>${ln3Esc(q.prompt)}</div>`;
-        let bodyHtml = '';
+    // Render 1 block (đoạn văn / bảng / ảnh) cho học viên — tạo ô nhập tại chỗ blank
+    function ln3RenderBlockTake(block, subqIdx) {
+        if (block.type === 'paragraph' || block.type === 'framed') {
+            const wrap = document.createElement('div');
+            wrap.className = 'ilt-view-paragraph' + (block.type === 'framed' ? ' ilt-view-framed' : '');
+            const { displayHtml, blanks } = ln3ParseBlanks(block.html || '');
+            wrap.innerHTML = displayHtml;
+            wrap.querySelectorAll('.ilt-blank-slot').forEach(slot => {
+                const idx = Number(slot.getAttribute('data-blank-idx'));
+                const b = blanks[idx];
+                const key = subqIdx + ':' + block.id + ':' + idx;
+                slot.replaceWith(ln3MakeBlankInput(b, key));
+            });
+            return wrap;
+        }
+        if (block.type === 'table') {
+            const wrap = document.createElement('div');
+            wrap.className = 'ilt-view-table-wrap';
+            const table = document.createElement('table');
+            table.className = 'ilt-view-table';
+            (block.rows || []).forEach((row, rIdx) => {
+                const tr = document.createElement('tr');
+                row.forEach((cell, cIdx) => {
+                    const isObj = cell && typeof cell === 'object';
+                    const cellHtml = isObj ? cell.html : (cell || '');
+                    const td = document.createElement('td');
+                    if (isObj && cell.colspan > 1) td.colSpan = cell.colspan;
+                    if (isObj && cell.rowspan > 1) td.rowSpan = cell.rowspan;
+                    const { displayHtml, blanks } = ln3ParseBlanks(cellHtml);
+                    td.innerHTML = displayHtml;
+                    td.querySelectorAll('.ilt-blank-slot').forEach(slot => {
+                        const idx = Number(slot.getAttribute('data-blank-idx'));
+                        const b = blanks[idx];
+                        const key = subqIdx + ':' + block.id + ':cell' + rIdx + '_' + cIdx + ':' + idx;
+                        slot.replaceWith(ln3MakeBlankInput(b, key));
+                    });
+                    tr.appendChild(td);
+                });
+                table.appendChild(tr);
+            });
+            wrap.appendChild(table);
+            return wrap;
+        }
+        if (block.type === 'image') {
+            const wrap = document.createElement('div');
+            wrap.className = 'ilt-view-image-wrap';
+            if (block.url) {
+                const img = document.createElement('img');
+                img.src = block.url;
+                img.className = 'ilt-view-image';
+                wrap.appendChild(img);
+            }
+            if (block.caption) {
+                const cap = document.createElement('div');
+                cap.className = 'ilt-view-image-caption';
+                cap.textContent = block.caption;
+                wrap.appendChild(cap);
+            }
+            return wrap;
+        }
+        return document.createElement('div');
+    }
+
+    function ln3MakeBlankInput(blank, key) {
+        const span = document.createElement('span');
+        span.className = 'ilt-blank-wrap';
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'ilt-blank-input';
+        input.autocomplete = 'off';
+        input.autocapitalize = 'off';
+        input.spellcheck = false;
+        input.value = ln3BlankAnswers[key] || '';
+        input.addEventListener('input', () => { ln3BlankAnswers[key] = input.value; });
+        span.appendChild(input);
+        span.dataset.key = key;
+        span.dataset.accepted = JSON.stringify(blank.accepted || []);
+        return span;
+    }
+
+    function ln3BuildTakeSubqEl(q, i) {
+        const wrap = document.createElement('div');
+        wrap.className = 'ln3-take-subq';
+        wrap.dataset.subqIndex = String(i);
+
+        if (q.prompt) {
+            const promptEl = document.createElement('div');
+            promptEl.className = 'ln3-take-subq-prompt';
+            const numSpan = document.createElement('span');
+            numSpan.className = 'ln3-take-subq-num';
+            numSpan.textContent = `Câu ${i + 1}. `;
+            promptEl.appendChild(numSpan);
+            promptEl.appendChild(document.createTextNode(q.prompt));
+            wrap.appendChild(promptEl);
+        } else if (q.type !== 'rich_blocks') {
+            // mcq/essay luôn cần câu hỏi, nhưng rich_blocks có thể không có
+            const promptEl = document.createElement('div');
+            promptEl.className = 'ln3-take-subq-prompt';
+            const numSpan = document.createElement('span');
+            numSpan.className = 'ln3-take-subq-num';
+            numSpan.textContent = `Câu ${i + 1}. `;
+            promptEl.appendChild(numSpan);
+            wrap.appendChild(promptEl);
+        }
+
         if (q.type === 'mcq') {
             const options = q.options || [];
             const optOrder = ln3Shuffle(options.map((_, idx) => idx));
-            bodyHtml = `
-                <div class="ln2-mc-grid" id="ln3-mc-grid-${i}">
-                    ${optOrder.map((origIdx, pos) => `
-                        <button type="button" class="ln2-mc-option" data-oi="${origIdx}">
-                            <span class="ln2-mc-letter">${String.fromCharCode(65 + pos)}</span>
-                            <span class="ln2-mc-text">${ln3Esc(options[origIdx])}</span>
-                        </button>
-                    `).join('')}
-                </div>
-            `;
-        } else if (q.type === 'fill_blank') {
-            bodyHtml = `<input type="text" id="ln3-take-input-${i}" class="thcs-translate-blank-input" style="width:90%" placeholder="Nhập câu trả lời..." autocomplete="off" autocapitalize="off" spellcheck="false">`;
+            const grid = document.createElement('div');
+            grid.className = 'ln2-mc-grid';
+            grid.id = 'ln3-mc-grid-' + i;
+            optOrder.forEach((origIdx, pos) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'ln2-mc-option';
+                btn.dataset.oi = String(origIdx);
+                btn.innerHTML = `<span class="ln2-mc-letter">${String.fromCharCode(65 + pos)}</span><span class="ln2-mc-text">${ln3Esc(options[origIdx])}</span>`;
+                grid.appendChild(btn);
+            });
+            wrap.appendChild(grid);
+        } else if (q.type === 'rich_blocks') {
+            // Render mỗi block (đoạn văn, bảng, ảnh, đóng khung)
+            (q.blocks || []).forEach(block => {
+                wrap.appendChild(ln3RenderBlockTake(block, i));
+            });
         } else if (q.type === 'essay') {
-            bodyHtml = `<textarea id="ln3-take-input-${i}" class="ln3-take-essay-input" placeholder="Viết câu trả lời của bạn..."></textarea>`;
+            const ta = document.createElement('textarea');
+            ta.id = 'ln3-take-input-' + i;
+            ta.className = 'ln3-take-essay-input';
+            ta.placeholder = 'Viết câu trả lời của bạn...';
+            wrap.appendChild(ta);
+        } else if (q.type === 'fill_blank') {
+            // backward compat for old data
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.id = 'ln3-take-input-' + i;
+            input.className = 'thcs-translate-blank-input';
+            input.style.width = '90%';
+            input.placeholder = 'Nhập câu trả lời...';
+            input.autocomplete = 'off';
+            input.autocapitalize = 'off';
+            input.spellcheck = false;
+            wrap.appendChild(input);
         }
-        return `<div class="ln3-take-subq" data-subq-index="${i}">${promptHtml}${bodyHtml}<div class="ln3-take-feedback-line" id="ln3-take-feedback-${i}" style="display:none;"></div></div>`;
+
+        const fbLine = document.createElement('div');
+        fbLine.className = 'ln3-take-feedback-line';
+        fbLine.id = 'ln3-take-feedback-' + i;
+        fbLine.style.display = 'none';
+        wrap.appendChild(fbLine);
+
+        return wrap;
     }
 
     function ln3RenderItem() {
@@ -14283,23 +16128,31 @@ function toggleCompletion(symbolElement) {
         const questions = Array.isArray(item.questions) ? item.questions : [];
         ln3State.subAnswers = questions.map(() => null);
 
-        const titleHtml = item.title ? `<p class="ln3-dialogue-title">${ln3Esc(item.title)}</p>` : '';
-        const subqHtml = questions.map((q, i) => ln3BuildTakeSubqHtml(q, i)).join('');
+        ln3QuizBody.innerHTML = '';
 
-        ln3QuizBody.innerHTML = `
-            ${titleHtml}
-            <div class="ln-play-row">
-                <button type="button" class="kid-btn kid-btn-primary" id="ln3-play-btn">🔊 Nghe đoạn hội thoại</button>
-            </div>
-            ${subqHtml}
-        `;
+        if (item.title) {
+            const titleEl = document.createElement('p');
+            titleEl.className = 'ln3-dialogue-title';
+            titleEl.textContent = item.title;
+            ln3QuizBody.appendChild(titleEl);
+        }
+
+        const playRow = document.createElement('div');
+        playRow.className = 'ln-play-row';
+        playRow.innerHTML = '<button type="button" class="kid-btn kid-btn-primary" id="ln3-play-btn">🔊 Nghe đoạn hội thoại</button>';
+        ln3QuizBody.appendChild(playRow);
         document.getElementById('ln3-play-btn').addEventListener('click', () => ln3PlayItemAudio(item));
 
         questions.forEach((q, i) => {
+            ln3QuizBody.appendChild(ln3BuildTakeSubqEl(q, i));
+        });
+
+        // Wire interactions
+        questions.forEach((q, i) => {
             if (q.type === 'mcq') {
-                const grid = document.getElementById(`ln3-mc-grid-${i}`);
+                const grid = document.getElementById('ln3-mc-grid-' + i);
                 if (grid) {
-                    grid.addEventListener('click', (e) => {
+                    grid.addEventListener('click', e => {
                         const btn = e.target.closest('.ln2-mc-option');
                         if (!btn || ln3State.busy) return;
                         grid.querySelectorAll('.ln2-mc-option').forEach(b => b.classList.remove('is-selected-draft'));
@@ -14307,15 +16160,16 @@ function toggleCompletion(symbolElement) {
                         ln3State.subAnswers[i] = parseInt(btn.dataset.oi, 10);
                     });
                 }
+            } else if (q.type === 'rich_blocks') {
+                // blank inputs listen through ln3BlankAnswers (already wired in ln3MakeBlankInput)
+                ln3State.subAnswers[i] = 'rich_blocks'; // sentinel
             } else {
-                const input = document.getElementById(`ln3-take-input-${i}`);
-                if (input) {
-                    input.addEventListener('input', () => { ln3State.subAnswers[i] = input.value; });
-                }
+                const input = document.getElementById('ln3-take-input-' + i);
+                if (input) input.addEventListener('input', () => { ln3State.subAnswers[i] = input.value; });
             }
         });
 
-        ln3QuizControls.innerHTML = `<button type="button" class="kid-btn kid-btn-primary" id="ln3-check-btn">✔️ Kiểm tra</button>`;
+        ln3QuizControls.innerHTML = '<button type="button" class="kid-btn kid-btn-primary" id="ln3-check-btn">✔️ Kiểm tra</button>';
         document.getElementById('ln3-check-btn').addEventListener('click', ln3CheckAnswer);
     }
 
@@ -14324,59 +16178,103 @@ function toggleCompletion(symbolElement) {
         const item = ln3State.items[ln3State.index];
         const questions = Array.isArray(item.questions) ? item.questions : [];
 
-        // Bắt buộc trả lời hết các câu hỏi con trước khi chấm (giống cách các dạng "sắp xếp" ở
-        // Nghe lv1/lv2 yêu cầu xếp đủ trước khi cho kiểm tra).
+        // Kiểm tra học viên đã trả lời chưa
         const allAnswered = questions.every((q, i) => {
             const ans = ln3State.subAnswers[i];
             if (q.type === 'mcq') return ans !== null && ans !== undefined;
-            return typeof ans === 'string' && ans.trim().length > 0;
+            if (q.type === 'rich_blocks') {
+                // Kiểm tra tất cả ô blank trong câu này đã điền chưa
+                const subqEl = ln3QuizBody.querySelector(`.ln3-take-subq[data-subq-index="${i}"]`);
+                if (!subqEl) return true;
+                const inputs = Array.from(subqEl.querySelectorAll('.ilt-blank-input'));
+                return inputs.every(inp => inp.value.trim().length > 0);
+            }
+            if (q.type === 'fill_blank' || q.type === 'essay') return typeof ans === 'string' && ans.trim().length > 0;
+            return true;
         });
-        if (!allAnswered) return;
+        if (!allAnswered) {
+            ln3QuizFeedback.className = 'thcs-translate-feedback is-warn';
+            ln3QuizFeedback.textContent = '⚠️ Vui lòng điền vào tất cả các chỗ trống trước khi kiểm tra.';
+            return;
+        }
 
         let allCorrect = true;
         questions.forEach((q, i) => {
             const ans = ln3State.subAnswers[i];
             let isCorrect = false;
-            let correctText = '';
+            let fbText = '';
+            const fbEl = document.getElementById('ln3-take-feedback-' + i);
+
             if (q.type === 'mcq') {
                 isCorrect = ans === q.answer_index;
-                correctText = q.options[q.answer_index];
-                const grid = document.getElementById(`ln3-mc-grid-${i}`);
+                const grid = document.getElementById('ln3-mc-grid-' + i);
                 if (grid) {
                     grid.querySelectorAll('.ln2-mc-option').forEach(btn => {
-                        btn.classList.remove('is-selected-draft'); // bỏ highlight tạm, nhường chỗ cho is-correct/is-wrong
+                        btn.classList.remove('is-selected-draft');
                         const oi = parseInt(btn.dataset.oi, 10);
                         btn.classList.add('is-disabled');
                         if (oi === q.answer_index) btn.classList.add('is-correct');
                         else if (oi === ans) btn.classList.add('is-wrong');
                     });
                 }
+                if (!isCorrect) fbText = `❌ Chưa đúng. Đáp án đúng: ${ln3Esc(q.options[q.answer_index])}`;
+
+            } else if (q.type === 'rich_blocks') {
+                // Chấm từng ô blank trong câu này
+                const subqEl = ln3QuizBody.querySelector(`.ln3-take-subq[data-subq-index="${i}"]`);
+                let allBlanksCorrect = true;
+                let wrongBlanks = [];
+                if (subqEl) {
+                    Array.from(subqEl.querySelectorAll('.ilt-blank-wrap')).forEach(span => {
+                        const key = span.dataset.key;
+                        const accepted = JSON.parse(span.dataset.accepted || '[]');
+                        const inp = span.querySelector('.ilt-blank-input');
+                        if (!inp) return;
+                        const userVal = ln3NormalizeStrict(inp.value);
+                        const correct = accepted.some(a => ln3NormalizeStrict(a) === userVal);
+                        inp.disabled = true;
+                        if (!correct) {
+                            allBlanksCorrect = false;
+                            inp.classList.add('is-wrong');
+                            // Highlight đáp án đúng bên cạnh
+                            const hint = document.createElement('span');
+                            hint.className = 'ln3-blank-correct-hint';
+                            hint.textContent = ' → ' + accepted[0];
+                            span.appendChild(hint);
+                        } else {
+                            inp.classList.add('is-correct');
+                        }
+                    });
+                }
+                isCorrect = allBlanksCorrect;
+                if (!isCorrect) fbText = '❌ Có chỗ trống chưa đúng — xem đáp án đúng bên cạnh ô trống.';
+
             } else if (q.type === 'fill_blank') {
+                // backward compat
                 isCorrect = ln3NormalizeStrict(ans) === ln3NormalizeStrict(q.answer);
-                correctText = q.answer;
-                const input = document.getElementById(`ln3-take-input-${i}`);
+                const input = document.getElementById('ln3-take-input-' + i);
                 if (input) { input.disabled = true; if (!isCorrect) input.classList.add('is-wrong'); }
+                if (!isCorrect) fbText = `❌ Chưa đúng. Đáp án đúng: ${ln3Esc(q.answer)}`;
+
             } else if (q.type === 'essay') {
                 isCorrect = ln3EssayIsCorrect(q.answer, ans);
-                correctText = q.answer;
-                const input = document.getElementById(`ln3-take-input-${i}`);
-                if (input) { input.disabled = true; if (!isCorrect) input.classList.add('is-wrong'); }
+                const input = document.getElementById('ln3-take-input-' + i);
+                if (input) { input.disabled = true; }
+                if (!isCorrect && q.answer) fbText = `❌ Chưa khớp. Đáp án tham khảo: ${ln3Esc(q.answer)}`;
+                else if (!isCorrect && !q.answer) { isCorrect = true; } // câu mở, có gì đó là đúng
             }
+
             if (!isCorrect) allCorrect = false;
 
-            const fbEl = document.getElementById(`ln3-take-feedback-${i}`);
             if (fbEl) {
-                fbEl.style.display = 'block';
-                if (isCorrect) {
+                fbEl.style.display = isCorrect ? 'none' : 'block';
+                if (!isCorrect) {
+                    fbEl.className = 'ln3-take-feedback-line is-wrong';
+                    fbEl.textContent = fbText;
+                } else {
                     fbEl.className = 'ln3-take-feedback-line is-correct';
                     fbEl.textContent = '✅ Chính xác!';
-                } else if (q.type === 'essay' && !q.answer) {
-                    // Không có đáp án mẫu -> không có gì để hiện là "đáp án đúng", chỉ ghi nhận
-                    fbEl.className = 'ln3-take-feedback-line is-correct';
-                    fbEl.textContent = '✅ Đã ghi nhận câu trả lời.';
-                } else {
-                    fbEl.className = 'ln3-take-feedback-line is-wrong';
-                    fbEl.textContent = `❌ Chưa đúng. Đáp án đúng: ${ln3Esc(correctText)}`;
+                    fbEl.style.display = 'block';
                 }
             }
         });
@@ -14391,6 +16289,7 @@ function toggleCompletion(symbolElement) {
 
         const isLastItem = ln3State.index + 1 >= ln3State.items.length;
         const ln3GoNext = () => {
+            ln3BlankAnswers = {};
             ln3State.index++;
             if (ln3State.index >= ln3State.items.length) ln3FinishQuiz();
             else ln3RenderItem();
@@ -14426,7 +16325,7 @@ function toggleCompletion(symbolElement) {
                 <button type="button" class="kid-btn" id="ln3-back-result-btn">← Quay lại</button>
             </div>
         `;
-        document.getElementById('ln3-retry-btn').addEventListener('click', () => ln3StartQuiz());
+        document.getElementById('ln3-retry-btn').addEventListener('click', () => { ln3BlankAnswers = {}; ln3StartQuiz(); });
         document.getElementById('ln3-back-result-btn').addEventListener('click', () => {
             ln3ResultArea.style.display = 'none';
             ln3QuizPanel.style.display = 'none';
@@ -14438,11 +16337,13 @@ function toggleCompletion(symbolElement) {
     ln3QuizBackBtn.addEventListener('click', () => {
         ln3StopAudio();
         if (ln3State && ln3State.autoNextTimer) { clearTimeout(ln3State.autoNextTimer); ln3State.autoNextTimer = null; }
+        ln3BlankAnswers = {};
         ln3QuizPanel.style.display = 'none';
         ln3Panel.style.display = 'block';
         ln3RefreshIntro();
     });
 })();
 // ===== KẾT THÚC: TAB "LUYỆN KỸ NĂNG" > "🎧 NGHE" — NGHE LV3 =====
+
 
 });

@@ -18,7 +18,7 @@
 
     <!-- ===== HEADER CỐ ĐỊNH ===== -->
     <header id="site-header">
-        <a class="header-logo" href="https://duong2711.github.io/Duong-s-portfolio/">
+        <a class="header-logo" href="">
             <div class="logo-badge">LDD</div>
             <div class="logo-text">
                 <strong>LDD English</strong>
@@ -582,8 +582,23 @@
             <div id="vocab-test-folder" class="folder-card">📁 từ vựng</div>
             <div class="folder-card">📁 đề thi lớp 6->12</div>
             <div class="folder-card">📁 đề thi chuyển cấp THCS/THPT</div>
-            <div class="folder-card">📁 đề minh họa IELTS</div>
+            <div class="folder-card" id="ielts-sample-folder-card">📁 đề minh họa IELTS</div>
             <div class="folder-card" id="ctest-folder-card">📝 Bài kiểm tra riêng<span id="ctest-folder-badge" class="tab-badge-count tab-badge-count-corner" style="display:none;">0</span></div>
+        </div>
+
+        <!-- ============================================================
+             ĐỀ MINH HOẠ IELTS — thư mục cha chứa các dạng đề minh hoạ IELTS
+             (hiện có: IELTS Listening Test). Có thể bổ sung Reading /
+             Writing / Speaking minh hoạ vào đây sau này.
+        ============================================================= -->
+        <div id="ielts-sample-panel" style="display:none;">
+            <div class="grammar-panel-header">
+                <button class="grammar-back-btn" id="ielts-sample-back-btn">← Quay lại</button>
+                <h3 style="margin:0;">📁 Đề minh họa IELTS</h3>
+            </div>
+            <div class="folder-grid" id="ielts-sample-folder-grid">
+                <div class="folder-card" id="ielts-listening-folder-card">🎧 IELTS Listening Test</div>
+            </div>
         </div>
 
         <!-- ============================================================
@@ -673,6 +688,88 @@
                 <h4 id="ctest-result-title" style="margin:0 0 4px;"></h4>
                 <div id="ctest-result-score" class="ctest-result-score"></div>
                 <div id="ctest-result-sections"></div>
+            </div>
+
+        </div>
+
+        <!-- ============================================================
+             IELTS LISTENING TEST — module luyện nghe theo đúng format đề
+             thi IELTS thật: 1 file mp3, 40 câu chia 4 Part (1-10/11-20/
+             21-30/31-40). Giảng viên soạn nội dung tự do (đoạn văn điền
+             từ, đóng khung, bảng, hình ảnh, trắc nghiệm) cho từng Part,
+             có thể chia thêm phần nhỏ kiểu "Questions 21-25". Dữ liệu
+             lưu ở bảng "ielts_listening_tests" / "ielts_listening_submissions"
+             trên Supabase (xem file "ielts_listening_setup.sql" đi kèm).
+        ============================================================= -->
+        <div id="ilt-panel" style="display:none;">
+
+            <!-- ---- 1) DANH SÁCH BÀI NGHE ---- -->
+            <div id="ilt-list-view">
+                <div class="grammar-panel-header">
+                    <button class="grammar-back-btn" id="ilt-list-back-btn">← Quay lại</button>
+                    <h3 style="margin:0;">🎧 IELTS Listening Test</h3>
+                </div>
+
+                <div class="grammar-admin-bar" id="ilt-admin-bar" style="display:none;">
+                    <button type="button" id="ilt-create-btn" class="grammar-admin-btn grammar-admin-btn-primary">➕ Tạo bài nghe mới</button>
+                </div>
+
+                <div id="ilt-list-container" class="ctest-list-container">
+                    <p class="ctest-loading-msg">Đang tải danh sách bài nghe...</p>
+                </div>
+            </div>
+
+            <!-- ---- 2) KHUNG SOẠN BÀI (chỉ giảng viên) ---- -->
+            <div id="ilt-editor-view" style="display:none;">
+                <div class="grammar-panel-header">
+                    <button class="grammar-back-btn" id="ilt-editor-back-btn">← Quay lại danh sách</button>
+                    <h3 class="grammar-panel-header-title" style="margin:0;">✏️ Soạn bài nghe IELTS</h3>
+                    <button type="button" id="ilt-delete-btn" class="grammar-admin-btn grammar-admin-btn-danger">🗑️ Xoá bài này</button>
+                </div>
+
+                <div class="ctest-editor-field">
+                    <label class="news-quiz-edit-label">Tiêu đề bài nghe</label>
+                    <input type="text" id="ilt-title-input" class="news-edit-input" placeholder="VD: IELTS Listening Practice Test 1">
+                </div>
+
+                <div class="ctest-editor-field">
+                    <label class="news-quiz-edit-label">File âm thanh (.mp3)</label>
+                    <div id="ilt-audio-field"></div>
+                </div>
+
+                <div class="ilt-summary-bar" id="ilt-summary-bar"></div>
+
+                <div id="ilt-parts-container"></div>
+
+                <div class="ctest-editor-actions">
+                    <span id="ilt-save-status" class="ctest-save-status"></span>
+                    <button type="button" id="ilt-preview-btn" class="grammar-admin-btn">👁️ Xem thử</button>
+                    <button type="button" id="ilt-publish-btn" class="grammar-admin-btn grammar-admin-btn-primary">📤 Lưu bài nghe</button>
+                </div>
+            </div>
+
+            <!-- ---- 3) LÀM BÀI / XEM THỬ ---- -->
+            <div id="ilt-take-view" style="display:none;">
+                <div class="ctest-take-header">
+                    <div>
+                        <button class="grammar-back-btn" id="ilt-take-back-btn">← Quay lại</button>
+                        <h3 id="ilt-take-title" style="display:inline-block; margin-left:8px;"></h3>
+                    </div>
+                </div>
+                <div class="ilt-audio-bar" id="ilt-take-audio-bar"></div>
+                <div id="ilt-take-body"></div>
+                <button type="button" id="ilt-submit-btn" class="grammar-admin-btn grammar-admin-btn-primary ctest-submit-btn">✅ Nộp bài</button>
+            </div>
+
+            <!-- ---- 4) KẾT QUẢ ---- -->
+            <div id="ilt-result-view" style="display:none;">
+                <div class="grammar-panel-header">
+                    <button class="grammar-back-btn" id="ilt-result-back-btn">← Quay lại danh sách</button>
+                    <h3 style="margin:0;">📊 Kết quả bài nghe</h3>
+                </div>
+                <h4 id="ilt-result-title" style="margin:0 0 4px;"></h4>
+                <div id="ilt-result-score" class="ctest-result-score"></div>
+                <div id="ilt-result-body"></div>
             </div>
 
         </div>

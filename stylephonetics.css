@@ -5613,6 +5613,186 @@ h3.news-editable:focus,
 }
 
 /* ===================================================================
+   ===== IELTS LISTENING TEST (tab "Kiểm tra" > "🎧 IELTS Listening Test") =====
+   =================================================================== */
+
+/* ---- Khung soạn bài (giảng viên) ---- */
+.ilt-summary-bar {
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    font-size: 0.85rem;
+    padding: 8px 12px;
+    border-radius: 8px;
+    margin: 10px 0 16px;
+}
+.ilt-summary-bar .ilt-count-ok { color: var(--success-dark); font-weight: 700; }
+.ilt-summary-bar .ilt-count-warn { color: #92400e; }
+
+.ilt-part-editor {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 18px;
+    background: var(--surface);
+}
+.ilt-part-editor-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; gap: 8px; }
+.ilt-part-editor-header h4 { margin: 0; font-size: 1.05rem; color: var(--primary-dark); letter-spacing: 0.03em; }
+.ilt-part-count-badge {
+    font-size: 0.78rem; font-weight: 700; padding: 3px 10px; border-radius: 999px;
+    background: var(--border); color: var(--text-muted); white-space: nowrap;
+}
+.ilt-part-count-badge.ilt-count-ok { background: var(--success-light); color: var(--success-dark); }
+.ilt-part-count-badge.ilt-count-warn { background: var(--warning-light); color: #92400e; }
+.ilt-part-intro-editor { margin-bottom: 10px; }
+
+.ilt-sections-list { display: flex; flex-direction: column; gap: 14px; }
+.ilt-section-editor {
+    border: 1px dashed var(--border-strong);
+    border-radius: 10px;
+    padding: 12px;
+    background: var(--bg);
+}
+.ilt-section-header-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+.ilt-section-heading-input { flex: 1; min-width: 180px; }
+.ilt-section-instruction-editor { margin-bottom: 10px; }
+.ilt-add-section-btn { margin-top: 10px; }
+
+.ilt-blocks-list { display: flex; flex-direction: column; gap: 10px; }
+.ilt-add-block-bar { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+
+.ilt-block {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    overflow: hidden;
+}
+.ilt-block-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 6px 10px; background: var(--primary-light); font-size: 0.8rem; font-weight: 700; color: var(--primary-dark);
+}
+.ilt-block-actions { display: flex; gap: 4px; }
+.ilt-block-move-btn, .ilt-block-remove-btn {
+    border: 1px solid var(--border); background: var(--surface); border-radius: 6px; cursor: pointer;
+    font-size: 0.78rem; padding: 2px 7px;
+}
+.ilt-block-move-btn:hover, .ilt-block-remove-btn:hover { background: var(--primary-light); }
+.ilt-block-body { padding: 10px; }
+.ilt-block-count-hint { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
+
+.ilt-image-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.ilt-image-row .news-edit-input { flex: 1; min-width: 180px; }
+.ilt-upload-btn { cursor: pointer; white-space: nowrap; }
+.ilt-upload-status { font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 4px; }
+.ilt-image-caption-input { margin-top: 8px; }
+
+.ilt-table-block-body { display: flex; flex-direction: column; gap: 8px; }
+.ilt-table-toolbar { margin-bottom: 2px; }
+.ilt-table-editor-wrap { overflow-x: auto; }
+.ilt-table-editor { border-collapse: collapse; width: 100%; }
+.ilt-table-editor td { border: 1px solid var(--border-strong); padding: 0; min-width: 110px; position: relative; }
+.ilt-table-cell { padding: 6px 8px; min-height: 20px; outline: none; font-size: 0.88rem; padding-right: 22px; }
+.ilt-table-cell:focus { background: var(--primary-light); }
+.ilt-table-controls { display: flex; flex-wrap: wrap; gap: 8px; }
+.ilt-merge-btn { background: var(--primary-light); color: var(--primary-dark); font-weight: 700; }
+/* Ô đang được giữ Ctrl/Cmd để chọn ghép */
+.ilt-table-editor td.ilt-cell-selected { outline: 2px solid var(--primary); outline-offset: -2px; background: var(--primary-light); }
+/* Ô đã ghép (colspan/rowspan > 1) */
+.ilt-table-editor td.ilt-cell-merged { background: #fffbea; }
+.ilt-unmerge-btn {
+    position: absolute; top: 2px; right: 2px; width: 18px; height: 18px; line-height: 16px;
+    padding: 0; border: none; border-radius: 4px; background: rgba(0,0,0,0.08); cursor: pointer; font-size: 11px;
+}
+.ilt-unmerge-btn:hover { background: rgba(0,0,0,0.18); }
+
+.ilt-audio-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.ilt-audio-row .news-edit-input { flex: 1; min-width: 220px; }
+.ilt-audio-preview { width: 100%; margin-top: 8px; }
+
+/* ---- Khung hiển thị khi làm bài / xem thử / xem kết quả (mô phỏng đề IELTS thật) ---- */
+.ilt-render-root {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 22px;
+    line-height: 1.95;
+}
+.ilt-render-part { margin-bottom: 28px; }
+.ilt-render-part:last-child { margin-bottom: 0; }
+.ilt-render-part-title {
+    font-weight: 800; font-size: 1.05rem; letter-spacing: 0.04em;
+    color: var(--primary-dark); text-transform: uppercase;
+    border-bottom: 2px solid var(--primary); padding-bottom: 6px; margin-bottom: 10px;
+}
+.ilt-render-part-intro { margin-bottom: 12px; color: var(--text); }
+.ilt-render-section { margin-bottom: 18px; }
+.ilt-render-section:last-child { margin-bottom: 0; }
+.ilt-render-section-heading { font-weight: 700; margin: 10px 0 4px; color: var(--text); }
+.ilt-render-section-instruction { font-style: italic; color: var(--text-muted); margin-bottom: 8px; font-size: 0.92rem; }
+
+.ilt-view-paragraph { margin-bottom: 10px; }
+.ilt-view-framed {
+    border: 1.5px solid var(--border-strong);
+    border-radius: 10px;
+    padding: 14px 16px;
+    background: var(--bg);
+    margin-bottom: 12px;
+}
+
+.ilt-num-badge { display: inline-block; min-width: 16px; font-weight: 800; color: var(--primary-dark); }
+.ilt-blank { display: inline-flex; align-items: center; gap: 2px; margin: 0 2px; }
+.ilt-blank-input {
+    border: none; border-bottom: 1.5px solid var(--text-muted); background: transparent;
+    padding: 1px 4px; min-width: 110px; font-size: 0.95em; font-family: inherit; color: var(--text);
+}
+.ilt-blank-input:focus { border-bottom-color: var(--primary); outline: none; }
+.ilt-blank-input:disabled { color: var(--text-light); }
+.ilt-blank-result { padding: 1px 4px; border-radius: 4px; }
+.ilt-blank-result.ilt-ok { background: var(--success-light); color: var(--success-dark); font-weight: 600; }
+.ilt-blank-result.ilt-wrong { background: #fee2e2; color: var(--danger-dark); }
+
+.ilt-view-table-wrap { overflow-x: auto; margin: 10px 0; }
+.ilt-view-table { border-collapse: collapse; width: 100%; }
+.ilt-view-table td { border: 1px solid var(--border-strong); padding: 8px 10px; vertical-align: top; }
+
+.ilt-view-image-wrap { margin: 12px 0; text-align: center; }
+.ilt-view-image { max-width: 100%; border-radius: 8px; border: 1px solid var(--border); }
+.ilt-view-image-caption { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; }
+
+.ilt-view-mcq {
+    display: block; margin-bottom: 14px; padding: 10px 12px;
+    border: 1px solid var(--border); border-radius: 10px; background: var(--surface);
+}
+.ilt-mcq-head { display: flex; gap: 2px; font-weight: 600; margin-bottom: 8px; }
+.ilt-mcq-options { display: flex; flex-direction: column; gap: 6px; padding-left: 22px; }
+.ilt-mcq-option { display: flex; align-items: flex-start; gap: 6px; cursor: pointer; font-size: 0.94rem; }
+.ilt-mcq-option input { margin-top: 3px; }
+.ilt-mcq-option.ilt-ok { color: var(--success-dark); font-weight: 700; }
+.ilt-mcq-option.ilt-wrong { color: var(--danger-dark); text-decoration: line-through; }
+.ilt-mcq-image { max-width: 260px; display: block; margin: 6px 0 8px 22px; border-radius: 8px; }
+
+.ilt-take-audio { position: sticky; top: 4px; z-index: 3; width: 100%; margin-bottom: 12px; }
+.ilt-note { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; font-weight: 400; }
+
+/* Script thoại (transcript) — chỉ hiện ở màn hình kết quả sau khi nộp bài */
+.ilt-part-transcript {
+    margin-top: 14px; padding: 10px 14px; border: 1px dashed var(--border-strong);
+    border-radius: 10px; background: var(--surface);
+}
+.ilt-part-transcript > summary { cursor: pointer; font-weight: 700; color: var(--primary-dark); }
+.ilt-part-transcript-body { margin-top: 10px; line-height: 1.6; white-space: pre-wrap; }
+.ilt-part-transcript-label { display: block; margin-top: 14px; }
+.ilt-part-transcript-editor { margin-bottom: 4px; }
+
+/* Band điểm quy đổi thang 9.0 IELTS, hiện cùng điểm số ở màn hình kết quả */
+.ilt-band-score { margin-top: 6px; font-size: 1rem; }
+.ilt-band-score b { color: var(--primary-dark); font-size: 1.15rem; }
+
+@media (max-width: 700px) {
+    .ilt-part-editor-header { flex-wrap: wrap; }
+    .ilt-mcq-image { margin-left: 0; max-width: 100%; }
+}
+
+/* ===================================================================
    ===== LUYỆN NGHE — GIAI ĐOẠN 1 — NGHE LV1 (tab "Luyện kỹ năng" > "Nghe") =====
    =================================================================== */
 .ln-quiz-card { max-width: 560px; margin: 0 auto; background: var(--surface-2,#f7f7f9); border-radius: 18px; padding: 22px; box-shadow: 0 8px 24px rgba(0,0,0,.08); }
@@ -6089,4 +6269,18 @@ h3.news-editable:focus,
     .ielts-type-grid { grid-template-columns: 1fr 1fr; }
     .ielts-header-text h4 { font-size: 0.98rem; }
     .ielts-block-body { font-size: 0.85rem; }
+}
+/* ===== Nghe lv3 — Rich blocks editor (điền từ dạng đoạn văn) ===== */
+.ln3-blocks-area { margin-top: 10px; }
+.ilt-table-ctrl-bar { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.ilt-table-cell-editor-td { border: 1px solid var(--border-strong); padding: 2px; min-width: 90px; vertical-align: top; }
+
+/* Blank input states khi chấm điểm (Nghe lv3) */
+.ilt-blank-wrap { display: inline-flex; align-items: center; gap: 2px; margin: 0 2px; position: relative; }
+.ilt-blank-input.is-correct { border-bottom-color: var(--success-dark) !important; color: var(--success-dark); }
+.ilt-blank-input.is-wrong { border-bottom-color: var(--danger) !important; color: var(--danger-dark); text-decoration: line-through; }
+.ln3-blank-correct-hint {
+    font-size: 0.82em; color: var(--success-dark); font-weight: 700;
+    background: var(--success-light); padding: 1px 6px; border-radius: 4px;
+    white-space: nowrap; margin-left: 4px;
 }
