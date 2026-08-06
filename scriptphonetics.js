@@ -594,7 +594,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (insideWrapper) insideWrapper.style.display = 'none';
             if (accountArea) accountArea.style.display = 'none';
             if (accountMenu) accountMenu.classList.remove('open');
-            authStatus.innerText = 'Tài khoản demo (thử nghiệm): host@admin.com, Mật khẩu: admin';
+            authStatus.innerText = '';
 
             // [CẬP NHẬT] Ẩn Menu và TOÀN BỘ các Tab khi chưa đăng nhập
             if (mainMenu) mainMenu.style.display = 'none';
