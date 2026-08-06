@@ -5746,6 +5746,8 @@ h3.news-editable:focus,
 }
 .ilt-blank-input:focus { border-bottom-color: var(--primary); outline: none; }
 .ilt-blank-input:disabled { color: var(--text-light); }
+.ilt-blank-input.is-correct { border-bottom-color: #2fb56d; color: #2fb56d; }
+.ilt-blank-input.is-wrong { border-bottom-color: #ff5d5d; color: #ff5d5d; }
 .ilt-blank-result { padding: 1px 4px; border-radius: 4px; }
 .ilt-blank-result.ilt-ok { background: var(--success-light); color: var(--success-dark); font-weight: 600; }
 .ilt-blank-result.ilt-wrong { background: #fee2e2; color: var(--danger-dark); }
@@ -5791,6 +5793,384 @@ h3.news-editable:focus,
     .ilt-part-editor-header { flex-wrap: wrap; }
     .ilt-mcq-image { margin-left: 0; max-width: 100%; }
 }
+
+/* ---- Điều hướng PART 1-4 (mỗi Part 1 "trang" riêng khi làm bài thật / xem thử) ---- */
+.ilt-part-nav { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.ilt-part-nav-btn {
+    padding: 8px 18px; border-radius: 999px; border: 1.5px solid var(--border-strong);
+    background: var(--surface); color: var(--text-muted); font-weight: 700; font-size: 0.88rem;
+    cursor: pointer; letter-spacing: 0.02em;
+}
+.ilt-part-nav-btn:hover { border-color: var(--primary); color: var(--primary-dark); }
+.ilt-part-nav-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+/* ---- Bố cục khi làm bài thật: nội dung bài bên trái + Bảng câu trả lời cố định bên phải ---- */
+.ilt-take-layout { display: flex; align-items: flex-start; gap: 20px; }
+.ilt-take-main { flex: 1; min-width: 0; }
+
+.ilt-answer-sheet {
+    width: 232px; flex-shrink: 0;
+    position: sticky; top: 12px; max-height: calc(100vh - 24px); overflow-y: auto;
+    border: 1px solid var(--border); border-radius: var(--radius);
+    background: var(--surface); padding: 14px;
+}
+.ilt-answer-sheet-title {
+    font-weight: 800; color: var(--primary-dark); margin-bottom: 10px;
+    display: flex; align-items: center; justify-content: space-between;
+}
+.ilt-answer-sheet-close { display: none; border: none; background: none; font-size: 1rem; cursor: pointer; color: var(--text-muted); }
+.ilt-answer-sheet-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 12px; }
+.ilt-answer-sheet-item {
+    border: 1.5px solid var(--border-strong); background: var(--surface); border-radius: 7px;
+    padding: 7px 0; font-weight: 700; font-size: 0.8rem; cursor: pointer; color: var(--text-muted);
+}
+.ilt-answer-sheet-item:hover { border-color: var(--primary); color: var(--primary-dark); }
+.ilt-answer-sheet-item.is-answered { background: var(--success-light); border-color: var(--success); color: var(--success-dark); }
+.ilt-answer-sheet-legend { display: flex; flex-direction: column; gap: 6px; font-size: 0.78rem; color: var(--text-muted); }
+.ilt-legend-item { display: flex; align-items: center; gap: 6px; }
+.ilt-legend-dot { width: 12px; height: 12px; border-radius: 4px; display: inline-block; border: 1.5px solid var(--border-strong); }
+.ilt-legend-dot.ilt-legend-answered { background: var(--success-light); border-color: var(--success); }
+.ilt-legend-dot.ilt-legend-unanswered { background: var(--surface); }
+
+.ilt-answer-sheet-toggle {
+    display: none; position: fixed; right: 16px; bottom: 16px; z-index: 500;
+    border: none; border-radius: 999px; padding: 12px 20px; background: var(--primary); color: #fff;
+    font-weight: 700; font-size: 0.88rem; box-shadow: 0 8px 20px rgba(0,0,0,.25); cursor: pointer;
+}
+
+/* Nhấp nháy nhẹ khi bấm từ Bảng câu trả lời để nhảy tới đúng câu hỏi */
+.ilt-jump-flash { animation: iltJumpFlash 1.2s ease; border-radius: 4px; }
+@keyframes iltJumpFlash { 0% { background: #fff59d; } 100% { background: transparent; } }
+
+/* Bôi đen (highlight) văn bản trong lúc làm bài — bấm lại vào chỗ đã bôi đen để xoá */
+mark.ilt-highlight { background: #fff59d; padding: 0 1px; border-radius: 2px; cursor: pointer; }
+
+@media (max-width: 900px) {
+    .ilt-take-layout { flex-direction: column; }
+    .ilt-answer-sheet {
+        position: fixed; left: 0; right: 0; bottom: 0; top: auto; width: auto;
+        max-height: 62vh; border-radius: 16px 16px 0 0; z-index: 600;
+        box-shadow: 0 -8px 24px rgba(0,0,0,.25);
+        transform: translateY(105%); transition: transform 0.25s ease;
+    }
+    .ilt-answer-sheet.is-open { transform: translateY(0); }
+    .ilt-answer-sheet-close { display: inline-block; }
+    .ilt-answer-sheet-toggle { display: inline-flex; align-items: center; gap: 6px; }
+}
+
+/* ---- Hộp thoại "sẵn sàng làm bài chưa" ---- */
+.ilt-ready-modal-overlay {
+    position: fixed; inset: 0; background: rgba(15,23,42,.6); z-index: 9999;
+    display: flex; align-items: center; justify-content: center; padding: 16px;
+}
+.ilt-ready-modal-box {
+    background: #fff; border-radius: 18px; padding: 28px 26px; max-width: 460px; width: 100%;
+    box-shadow: 0 16px 48px rgba(0,0,0,.35);
+}
+.ilt-ready-modal-box h3 { margin: 0 0 10px; color: var(--primary-dark); }
+.ilt-ready-modal-box p { margin: 0 0 14px; color: var(--text); font-size: 0.92rem; line-height: 1.6; }
+.ilt-ready-modal-rules { margin: 0 0 20px; padding-left: 20px; font-size: 0.86rem; line-height: 1.65; color: var(--text-muted); }
+.ilt-ready-modal-rules li { margin-bottom: 6px; }
+.ilt-ready-modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
+
+/* ===================================================================
+   ===== IELTS READING TEST (tab "Kiểm tra" > "📖 IELTS Reading Test") =====
+   =================================================================== */
+
+/* ---- Khung soạn bài (giảng viên) ---- */
+.irt-summary-bar {
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    font-size: 0.85rem;
+    padding: 8px 12px;
+    border-radius: 8px;
+    margin: 10px 0 16px;
+}
+.irt-summary-bar .irt-count-ok { color: var(--success-dark); font-weight: 700; }
+.irt-summary-bar .irt-count-warn { color: #92400e; }
+
+.irt-part-editor {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 18px;
+    background: var(--surface);
+}
+.irt-part-editor-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; gap: 8px; }
+.irt-part-editor-header h4 { margin: 0; font-size: 1.05rem; color: var(--primary-dark); letter-spacing: 0.03em; }
+.irt-part-count-badge {
+    font-size: 0.78rem; font-weight: 700; padding: 3px 10px; border-radius: 999px;
+    background: var(--border); color: var(--text-muted); white-space: nowrap;
+}
+.irt-part-count-badge.irt-count-ok { background: var(--success-light); color: var(--success-dark); }
+.irt-part-count-badge.irt-count-warn { background: var(--warning-light); color: #92400e; }
+.irt-part-intro-editor { margin-bottom: 10px; }
+
+.irt-sections-list { display: flex; flex-direction: column; gap: 14px; }
+.irt-section-editor {
+    border: 1px dashed var(--border-strong);
+    border-radius: 10px;
+    padding: 12px;
+    background: var(--bg);
+}
+.irt-section-header-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; flex-wrap: wrap; }
+.irt-section-heading-input { flex: 1; min-width: 180px; }
+.irt-section-instruction-editor { margin-bottom: 10px; }
+.irt-add-section-btn { margin-top: 10px; }
+
+.irt-blocks-list { display: flex; flex-direction: column; gap: 10px; }
+.irt-add-block-bar { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+
+.irt-block {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    overflow: hidden;
+}
+.irt-block-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 6px 10px; background: var(--primary-light); font-size: 0.8rem; font-weight: 700; color: var(--primary-dark);
+}
+.irt-block-actions { display: flex; gap: 4px; }
+.irt-block-move-btn, .irt-block-remove-btn {
+    border: 1px solid var(--border); background: var(--surface); border-radius: 6px; cursor: pointer;
+    font-size: 0.78rem; padding: 2px 7px;
+}
+.irt-block-move-btn:hover, .irt-block-remove-btn:hover { background: var(--primary-light); }
+.irt-block-body { padding: 10px; }
+.irt-block-count-hint { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; }
+
+.irt-image-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.irt-image-row .news-edit-input { flex: 1; min-width: 180px; }
+.irt-upload-btn { cursor: pointer; white-space: nowrap; }
+.irt-upload-status { font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 4px; }
+.irt-image-caption-input { margin-top: 8px; }
+
+.irt-table-block-body { display: flex; flex-direction: column; gap: 8px; }
+.irt-table-toolbar { margin-bottom: 2px; }
+.irt-table-editor-wrap { overflow-x: auto; }
+.irt-table-editor { border-collapse: collapse; width: 100%; }
+.irt-table-editor td { border: 1px solid var(--border-strong); padding: 0; min-width: 110px; position: relative; }
+.irt-table-cell { padding: 6px 8px; min-height: 20px; outline: none; font-size: 0.88rem; padding-right: 22px; }
+.irt-table-cell:focus { background: var(--primary-light); }
+.irt-table-controls { display: flex; flex-wrap: wrap; gap: 8px; }
+.irt-merge-btn { background: var(--primary-light); color: var(--primary-dark); font-weight: 700; }
+/* Ô đang được giữ Ctrl/Cmd để chọn ghép */
+.irt-table-editor td.irt-cell-selected { outline: 2px solid var(--primary); outline-offset: -2px; background: var(--primary-light); }
+/* Ô đã ghép (colspan/rowspan > 1) */
+.irt-table-editor td.irt-cell-merged { background: #fffbea; }
+.irt-unmerge-btn {
+    position: absolute; top: 2px; right: 2px; width: 18px; height: 18px; line-height: 16px;
+    padding: 0; border: none; border-radius: 4px; background: rgba(0,0,0,0.08); cursor: pointer; font-size: 11px;
+}
+.irt-unmerge-btn:hover { background: rgba(0,0,0,0.18); }
+
+
+/* ---- Khung hiển thị khi làm bài / xem thử / xem kết quả (mô phỏng đề IELTS thật) ---- */
+.irt-render-root {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 22px;
+    line-height: 1.95;
+}
+.irt-render-part { margin-bottom: 28px; }
+.irt-render-part:last-child { margin-bottom: 0; }
+.irt-render-part-title {
+    font-weight: 800; font-size: 1.05rem; letter-spacing: 0.04em;
+    color: var(--primary-dark); text-transform: uppercase;
+    border-bottom: 2px solid var(--primary); padding-bottom: 6px; margin-bottom: 10px;
+}
+.irt-render-part-intro { margin-bottom: 12px; color: var(--text); }
+.irt-render-section { margin-bottom: 18px; }
+.irt-render-section:last-child { margin-bottom: 0; }
+.irt-render-section-heading { font-weight: 700; margin: 10px 0 4px; color: var(--text); }
+.irt-render-section-instruction { font-style: italic; color: var(--text-muted); margin-bottom: 8px; font-size: 0.92rem; }
+
+.irt-view-paragraph { margin-bottom: 10px; }
+.irt-view-framed {
+    border: 1.5px solid var(--border-strong);
+    border-radius: 10px;
+    padding: 14px 16px;
+    background: var(--bg);
+    margin-bottom: 12px;
+}
+
+.irt-num-badge { display: inline-block; min-width: 16px; font-weight: 800; color: var(--primary-dark); }
+.irt-blank { display: inline-flex; align-items: center; gap: 2px; margin: 0 2px; }
+.irt-blank-input {
+    border: none; border-bottom: 1.5px solid var(--text-muted); background: transparent;
+    padding: 1px 4px; min-width: 110px; font-size: 0.95em; font-family: inherit; color: var(--text);
+}
+.irt-blank-input:focus { border-bottom-color: var(--primary); outline: none; }
+.irt-blank-input:disabled { color: var(--text-light); }
+.irt-blank-input.is-correct { border-bottom-color: #2fb56d; color: #2fb56d; }
+.irt-blank-input.is-wrong { border-bottom-color: #ff5d5d; color: #ff5d5d; }
+.irt-blank-result { padding: 1px 4px; border-radius: 4px; }
+.irt-blank-result.irt-ok { background: var(--success-light); color: var(--success-dark); font-weight: 600; }
+.irt-blank-result.irt-wrong { background: #fee2e2; color: var(--danger-dark); }
+
+.irt-view-table-wrap { overflow-x: auto; margin: 10px 0; }
+.irt-view-table { border-collapse: collapse; width: 100%; }
+.irt-view-table td { border: 1px solid var(--border-strong); padding: 8px 10px; vertical-align: top; }
+
+.irt-view-image-wrap { margin: 12px 0; text-align: center; }
+.irt-view-image { max-width: 100%; border-radius: 8px; border: 1px solid var(--border); }
+.irt-view-image-caption { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; }
+
+.irt-view-mcq {
+    display: block; margin-bottom: 14px; padding: 10px 12px;
+    border: 1px solid var(--border); border-radius: 10px; background: var(--surface);
+}
+.irt-mcq-head { display: flex; gap: 2px; font-weight: 600; margin-bottom: 8px; }
+.irt-mcq-options { display: flex; flex-direction: column; gap: 6px; padding-left: 22px; }
+.irt-mcq-option { display: flex; align-items: flex-start; gap: 6px; cursor: pointer; font-size: 0.94rem; }
+.irt-mcq-option input { margin-top: 3px; }
+.irt-mcq-option.irt-ok { color: var(--success-dark); font-weight: 700; }
+.irt-mcq-option.irt-wrong { color: var(--danger-dark); text-decoration: line-through; }
+.irt-mcq-image { max-width: 260px; display: block; margin: 6px 0 8px 22px; border-radius: 8px; }
+
+.irt-note { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; font-weight: 400; }
+
+
+/* Band điểm quy đổi thang 9.0 IELTS, hiện cùng điểm số ở màn hình kết quả */
+.irt-band-score { margin-top: 6px; font-size: 1rem; }
+.irt-band-score b { color: var(--primary-dark); font-size: 1.15rem; }
+
+@media (max-width: 700px) {
+    .irt-part-editor-header { flex-wrap: wrap; }
+    .irt-mcq-image { margin-left: 0; max-width: 100%; }
+}
+
+/* ---- Điều hướng PASSAGE 1-3 (mỗi Passage 1 "trang" riêng khi làm bài thật / xem thử) ---- */
+.irt-part-nav { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.irt-part-nav-btn {
+    padding: 8px 18px; border-radius: 999px; border: 1.5px solid var(--border-strong);
+    background: var(--surface); color: var(--text-muted); font-weight: 700; font-size: 0.88rem;
+    cursor: pointer; letter-spacing: 0.02em;
+}
+.irt-part-nav-btn:hover { border-color: var(--primary); color: var(--primary-dark); }
+.irt-part-nav-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+/* ---- Bố cục khi làm bài thật: nội dung bài bên trái + Bảng câu trả lời cố định bên phải ---- */
+.irt-take-layout { display: flex; align-items: flex-start; gap: 20px; }
+.irt-take-main { flex: 1; min-width: 0; }
+
+.irt-answer-sheet {
+    width: 232px; flex-shrink: 0;
+    position: sticky; top: 12px; max-height: calc(100vh - 24px); overflow-y: auto;
+    border: 1px solid var(--border); border-radius: var(--radius);
+    background: var(--surface); padding: 14px;
+}
+.irt-answer-sheet-title {
+    font-weight: 800; color: var(--primary-dark); margin-bottom: 10px;
+    display: flex; align-items: center; justify-content: space-between;
+}
+.irt-answer-sheet-close { display: none; border: none; background: none; font-size: 1rem; cursor: pointer; color: var(--text-muted); }
+.irt-answer-sheet-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 12px; }
+.irt-answer-sheet-item {
+    border: 1.5px solid var(--border-strong); background: var(--surface); border-radius: 7px;
+    padding: 7px 0; font-weight: 700; font-size: 0.8rem; cursor: pointer; color: var(--text-muted);
+}
+.irt-answer-sheet-item:hover { border-color: var(--primary); color: var(--primary-dark); }
+.irt-answer-sheet-item.is-answered { background: var(--success-light); border-color: var(--success); color: var(--success-dark); }
+.irt-answer-sheet-legend { display: flex; flex-direction: column; gap: 6px; font-size: 0.78rem; color: var(--text-muted); }
+.irt-legend-item { display: flex; align-items: center; gap: 6px; }
+.irt-legend-dot { width: 12px; height: 12px; border-radius: 4px; display: inline-block; border: 1.5px solid var(--border-strong); }
+.irt-legend-dot.irt-legend-answered { background: var(--success-light); border-color: var(--success); }
+.irt-legend-dot.irt-legend-unanswered { background: var(--surface); }
+
+.irt-answer-sheet-toggle {
+    display: none; position: fixed; right: 16px; bottom: 16px; z-index: 500;
+    border: none; border-radius: 999px; padding: 12px 20px; background: var(--primary); color: #fff;
+    font-weight: 700; font-size: 0.88rem; box-shadow: 0 8px 20px rgba(0,0,0,.25); cursor: pointer;
+}
+
+/* Nhấp nháy nhẹ khi bấm từ Bảng câu trả lời để nhảy tới đúng câu hỏi */
+.irt-jump-flash { animation: irtJumpFlash 1.2s ease; border-radius: 4px; }
+@keyframes irtJumpFlash { 0% { background: #fff59d; } 100% { background: transparent; } }
+
+/* Bôi đen (highlight) văn bản trong lúc làm bài đọc — bấm lại vào chỗ đã bôi đen để xoá.
+   Được lưu xuống CSDL cho tới khi nộp bài, không mất khi tải lại trang. */
+mark.irt-highlight { background: #fff59d; padding: 0 1px; border-radius: 2px; cursor: pointer; }
+
+
+@media (max-width: 900px) {
+    .irt-take-layout { flex-direction: column; }
+    .irt-answer-sheet {
+        position: fixed; left: 0; right: 0; bottom: 0; top: auto; width: auto;
+        max-height: 62vh; border-radius: 16px 16px 0 0; z-index: 600;
+        box-shadow: 0 -8px 24px rgba(0,0,0,.25);
+        transform: translateY(105%); transition: transform 0.25s ease;
+    }
+    .irt-answer-sheet.is-open { transform: translateY(0); }
+    .irt-answer-sheet-close { display: inline-block; }
+    .irt-answer-sheet-toggle { display: inline-flex; align-items: center; gap: 6px; }
+}
+
+/* ---- Hộp thoại "sẵn sàng làm bài chưa" ---- */
+.irt-ready-modal-overlay {
+    position: fixed; inset: 0; background: rgba(15,23,42,.6); z-index: 9999;
+    display: flex; align-items: center; justify-content: center; padding: 16px;
+}
+.irt-ready-modal-box {
+    background: #fff; border-radius: 18px; padding: 28px 26px; max-width: 460px; width: 100%;
+    box-shadow: 0 16px 48px rgba(0,0,0,.35);
+}
+.irt-ready-modal-box h3 { margin: 0 0 10px; color: var(--primary-dark); }
+.irt-ready-modal-box p { margin: 0 0 14px; color: var(--text); font-size: 0.92rem; line-height: 1.6; }
+.irt-ready-modal-rules { margin: 0 0 20px; padding-left: 20px; font-size: 0.86rem; line-height: 1.65; color: var(--text-muted); }
+.irt-ready-modal-rules li { margin-bottom: 6px; }
+.irt-ready-modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
+
+/* ---- Đoạn văn đọc (passage) — hiện phía trên các câu hỏi của mỗi Passage ---- */
+.irt-render-passage {
+    margin-bottom: 18px; padding: 14px 16px;
+    border: 1px solid var(--border); border-radius: 10px; background: var(--bg);
+}
+.irt-render-passage-image { max-width: 100%; border-radius: 8px; margin-bottom: 10px; display: block; }
+.irt-render-passage-text { line-height: 1.85; color: var(--text); }
+
+/* ---- Khung soạn đoạn văn (passage) trong trình soạn bài ---- */
+.irt-passage-editor-wrap { margin-bottom: 14px; }
+.irt-passage-editor-wrap > label { display: block; margin-bottom: 6px; }
+.irt-passage-image-field { margin-top: 10px; }
+
+/* ---- Khối: Nối / Ghép (Matching) — dùng cho Matching Heading/Feature/
+   Information/Ending. Có 1 "ngân hàng đáp án" dùng chung + danh sách câu hỏi,
+   mỗi câu chọn 1 mục trong ngân hàng qua dropdown. ---- */
+.irt-matching-bank-list { display: flex; flex-direction: column; gap: 6px; margin: 8px 0 14px; }
+.irt-matching-bank-row { display: flex; gap: 8px; align-items: center; }
+.irt-matching-bank-key { width: 56px; flex-shrink: 0; text-align: center; font-weight: 700; }
+.irt-matching-bank-text { flex: 1; }
+.irt-matching-questions-list { display: flex; flex-direction: column; gap: 8px; }
+.irt-matching-question-row { display: flex; gap: 8px; align-items: center; }
+.irt-matching-question-prompt { flex: 1; }
+.irt-matching-question-correct { width: 90px; flex-shrink: 0; }
+.irt-matching-add-row-bar { display: flex; gap: 10px; margin-top: 8px; }
+
+.irt-view-matching { margin-bottom: 16px; }
+.irt-view-matching-bank {
+    border: 1px dashed var(--border-strong); border-radius: 10px;
+    padding: 10px 14px; margin-bottom: 12px; background: var(--surface);
+}
+.irt-view-matching-bank-title { font-weight: 700; margin-bottom: 6px; color: var(--primary-dark); }
+.irt-view-matching-bank-item { margin-bottom: 3px; font-size: 0.92rem; }
+.irt-view-matching-bank-item b { margin-right: 6px; }
+.irt-view-matching-question {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;
+}
+.irt-view-matching-question select {
+    padding: 4px 8px; border: 1.5px solid var(--border-strong); border-radius: 6px;
+    font-family: inherit; font-size: 0.9rem; background: var(--surface);
+}
+.irt-view-matching-question select.is-correct { border-color: #2fb56d; color: #2fb56d; }
+.irt-view-matching-question select.is-wrong { border-color: #ff5d5d; color: #ff5d5d; }
+.irt-view-matching-answer-key { font-size: 0.85rem; color: var(--success-dark); font-weight: 700; }
+
+/* ---- Nút điền nhanh True/False/Not Given trong khối trắc nghiệm ---- */
+.irt-mcq-preset-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+
 
 /* ===================================================================
    ===== LUYỆN NGHE — GIAI ĐOẠN 1 — NGHE LV1 (tab "Luyện kỹ năng" > "Nghe") =====
@@ -6270,17 +6650,217 @@ h3.news-editable:focus,
     .ielts-header-text h4 { font-size: 0.98rem; }
     .ielts-block-body { font-size: 0.85rem; }
 }
-/* ===== Nghe lv3 — Rich blocks editor (điền từ dạng đoạn văn) ===== */
-.ln3-blocks-area { margin-top: 10px; }
-.ilt-table-ctrl-bar { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
-.ilt-table-cell-editor-td { border: 1px solid var(--border-strong); padding: 2px; min-width: 90px; vertical-align: top; }
+/* ===================================================================
+   ===== LUYỆN VIẾT (kỹ năng Viết) — 3 giai đoạn =====
+   =================================================================== */
 
-/* Blank input states khi chấm điểm (Nghe lv3) */
-.ilt-blank-wrap { display: inline-flex; align-items: center; gap: 2px; margin: 0 2px; position: relative; }
-.ilt-blank-input.is-correct { border-bottom-color: var(--success-dark) !important; color: var(--success-dark); }
-.ilt-blank-input.is-wrong { border-bottom-color: var(--danger) !important; color: var(--danger-dark); text-decoration: line-through; }
-.ln3-blank-correct-hint {
-    font-size: 0.82em; color: var(--success-dark); font-weight: 700;
-    background: var(--success-light); padding: 1px 6px; border-radius: 4px;
-    white-space: nowrap; margin-left: 4px;
+/* ----- Khối giới thiệu chung mỗi giai đoạn ----- */
+.wr-sub-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 18px; }
+.wr-sub-tab {
+    padding: 9px 16px;
+    border-radius: 999px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
 }
+.wr-sub-tab.active { border-color: var(--primary); color: #fff; background: var(--primary); }
+
+.wr-chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
+.wr-chip {
+    padding: 7px 13px;
+    border-radius: 999px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+.wr-chip.active { border-color: var(--primary); color: var(--primary-dark); background: var(--primary-light); }
+
+.wr-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border: none;
+    background: none;
+    color: var(--primary-dark);
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    padding: 6px 0;
+    margin-bottom: 10px;
+}
+.wr-back-link:hover { text-decoration: underline; }
+
+/* ----- Từ khoá bắt buộc (Giai đoạn 1) ----- */
+.wr-keyword-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 14px 0; }
+.wr-keyword-chip {
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    font-weight: 700;
+    font-size: 0.82rem;
+    border: 1px solid var(--border-strong);
+}
+.wr-keyword-chip.is-used { background: var(--success-light); color: var(--success-dark); border-color: var(--success); }
+
+.wr-compose-textarea {
+    width: 100%;
+    min-height: 90px;
+    resize: vertical;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    background: var(--surface);
+    color: var(--text);
+}
+.wr-compose-textarea:focus { outline: none; border-color: var(--primary); box-shadow: var(--shadow-glow); }
+.wr-compose-textarea.wr-tall { min-height: 220px; }
+
+.wr-word-count { text-align: right; font-size: 0.75rem; color: var(--text-light); margin-top: 4px; }
+.wr-word-count.is-short { color: var(--warning); font-weight: 700; }
+.wr-word-count.is-ok { color: var(--success-dark); font-weight: 700; }
+
+/* ----- Kết quả chấm AI (dùng chung cho cả 3 giai đoạn) ----- */
+.wr-ai-feedback {
+    margin-top: 16px;
+    border-radius: 14px;
+    padding: 16px 18px;
+    background: var(--surface-2);
+    border: 1.5px solid var(--border);
+}
+.wr-ai-feedback.is-correct { border-color: var(--success); background: var(--success-light); }
+.wr-ai-feedback.is-wrong { border-color: var(--danger); background: #fef2f2; }
+.wr-ai-feedback-head { display: flex; align-items: center; gap: 8px; font-weight: 800; margin-bottom: 8px; font-size: 0.92rem; }
+.wr-ai-feedback-body { font-size: 0.86rem; line-height: 1.65; color: var(--text); white-space: pre-line; }
+.wr-ai-feedback-body b { color: var(--primary-dark); }
+.wr-band-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: var(--primary);
+    color: #fff;
+    font-weight: 800;
+    font-size: 0.78rem;
+    margin-left: 6px;
+}
+.wr-criteria-list { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+.wr-criteria-row { display: flex; gap: 8px; font-size: 0.82rem; align-items: flex-start; }
+.wr-criteria-row b { flex: 0 0 auto; color: var(--primary-dark); min-width: 108px; }
+
+.wr-sample-toggle {
+    margin-top: 12px;
+    background: none;
+    border: 1.5px dashed var(--border-strong);
+    border-radius: 10px;
+    padding: 8px 12px;
+    width: 100%;
+    text-align: left;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--primary-dark);
+    cursor: pointer;
+}
+.wr-sample-box { margin-top: 8px; font-size: 0.85rem; line-height: 1.6; background: var(--surface); border-radius: 10px; padding: 12px 14px; border: 1px solid var(--border); white-space: pre-line; }
+
+.wr-loading { text-align: center; padding: 20px; color: var(--text-muted); font-size: 0.88rem; }
+.wr-loading::before { content: "⏳ "; }
+
+/* ----- Giai đoạn 2a: Email công sở ----- */
+.wr-level-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 16px; }
+.wr-level-btn {
+    padding: 8px 14px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    cursor: pointer;
+    flex: 1 1 auto;
+    min-width: 140px;
+    text-align: center;
+}
+.wr-level-btn.active { border-color: var(--primary); color: #fff; background: var(--primary); }
+.wr-scaffold-box {
+    background: var(--warning-light);
+    border: 1px dashed var(--warning);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 0.83rem;
+    line-height: 1.6;
+    white-space: pre-line;
+    margin-bottom: 12px;
+    color: #7a5300;
+}
+
+/* ----- Giai đoạn 2b: Nhắn tin / chat giả lập ----- */
+.wr-glossary-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin-bottom: 18px; }
+.wr-glossary-item { background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px; }
+.wr-glossary-abbr { font-weight: 800; color: var(--primary-dark); font-size: 0.85rem; }
+.wr-glossary-full { font-size: 0.72rem; color: var(--text-muted); }
+.wr-glossary-vi { font-size: 0.74rem; color: var(--text); margin-top: 2px; }
+
+.wr-chat-window {
+    max-width: 560px;
+    margin: 0 auto;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 220px;
+    max-height: 480px;
+    overflow-y: auto;
+}
+.wr-msg { max-width: 78%; padding: 9px 13px; border-radius: 14px; font-size: 0.87rem; line-height: 1.5; }
+.wr-msg-them { align-self: flex-start; background: var(--surface-2); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+.wr-msg-me { align-self: flex-end; background: var(--primary); color: #fff; border-bottom-right-radius: 4px; }
+.wr-msg-note { align-self: center; font-size: 0.72rem; color: var(--text-light); font-style: italic; text-align: center; }
+.wr-chat-input-row { display: flex; gap: 8px; margin-top: 12px; max-width: 560px; margin-left: auto; margin-right: auto; }
+.wr-chat-input-row input { flex: 1; border: 1.5px solid var(--border); border-radius: 999px; padding: 10px 16px; font: inherit; font-size: 0.87rem; }
+.wr-chat-input-row input:focus { outline: none; border-color: var(--primary); }
+.wr-chat-typing { align-self: flex-start; font-size: 0.78rem; color: var(--text-light); font-style: italic; }
+
+/* ----- Giai đoạn 3: IELTS Task 1 / Task 2 ----- */
+.wr-vocab-group { margin-bottom: 14px; }
+.wr-vocab-group h5 { font-size: 0.82rem; font-weight: 800; color: var(--primary-dark); margin-bottom: 6px; }
+.wr-vocab-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.wr-vocab-tags span { background: var(--primary-light); color: var(--primary-dark); border-radius: 999px; padding: 4px 10px; font-size: 0.76rem; font-weight: 600; }
+
+.wr-t1-item-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; margin-bottom: 10px; }
+.wr-t1-item-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; cursor: pointer; transition: .15s; }
+.wr-t1-item-card:hover { transform: translateY(-3px); box-shadow: 0 6px 16px rgba(0,0,0,.08); border-color: var(--accent,#6d5bff); }
+.wr-t1-item-card img { width: 100%; height: 110px; object-fit: cover; display: block; background: var(--border); }
+.wr-t1-item-card-body { padding: 10px 12px; }
+.wr-t1-item-type { font-size: 0.68rem; font-weight: 800; color: var(--primary-dark); text-transform: uppercase; }
+.wr-t1-item-title { font-size: 0.83rem; font-weight: 700; margin-top: 2px; }
+.wr-t1-chart-img { width: 100%; max-width: 480px; display: block; margin: 0 auto 14px; border-radius: 12px; border: 1px solid var(--border); }
+
+.wr-t2-item-list { display: flex; flex-direction: column; gap: 10px; max-width: 640px; margin: 0 auto 10px; }
+.wr-t2-item-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; cursor: pointer; transition: .15s; }
+.wr-t2-item-card:hover { border-color: var(--accent,#6d5bff); box-shadow: 0 6px 16px rgba(0,0,0,.06); }
+.wr-t2-item-type { display: inline-block; font-size: 0.68rem; font-weight: 800; color: var(--primary-dark); background: var(--primary-light); border-radius: 999px; padding: 2px 9px; margin-bottom: 6px; }
+.wr-t2-item-q { font-size: 0.87rem; font-weight: 600; line-height: 1.5; }
+
+.wr-outline-toggle-btn { margin-bottom: 12px; }
+.wr-area-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 16px; }
+.wr-area-block { background: var(--surface-2); border: 1px dashed var(--border-strong); border-radius: 10px; padding: 10px 12px; }
+.wr-area-block label { display: block; font-size: 0.74rem; font-weight: 800; color: var(--primary-dark); margin-bottom: 4px; }
+.wr-area-block textarea { width: 100%; min-height: 44px; resize: vertical; border: 1px solid var(--border); border-radius: 8px; padding: 6px 9px; font: inherit; font-size: 0.82rem; }
+@media (min-width: 700px) { .wr-area-grid { grid-template-columns: 1fr 1fr; } }
+
+/* ----- Khung soạn nội dung (giảng viên) — dùng chung cho cả 3 giai đoạn ----- */
+.wr-admin-box { max-width: 640px; margin: 0 auto 20px; background: var(--surface-2); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 18px; }
+.wr-admin-form { display: flex; flex-direction: column; gap: 12px; }
+.wr-item-preview-list { max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 8px; }

@@ -9,6 +9,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Supabase Storage, xem file "ielts_listening_setup.sql" đi kèm để tạo tự động.
     const ILT_AUDIO_BUCKET = 'ielts_listening_audio'; // Bucket lưu file mp3 bài nghe
     const ILT_IMAGE_BUCKET = 'ielts_listening_images'; // Bucket lưu hình minh hoạ chèn trong bài nghe
+    const IRT_IMAGE_BUCKET = 'ielts_reading_images'; // Bucket lưu hình minh hoạ (đoạn văn / câu hỏi) trong bài đọc
+    // [MỚI] Bucket phục vụ khối "hình ảnh" trong phần soạn câu hỏi của "Nghe lv3" (tab Luyện kỹ
+    // năng) — cần tự tạo bucket PUBLIC này trong Supabase Storage (giống hệt cách tạo bucket
+    // "ielts_listening_images" ở trên) trước khi giảng viên có thể tải ảnh lên.
+    const LN3_IMAGE_BUCKET = 'listening_lv3_images';
     const AVATAR_MAX_BYTES = 15 * 1024 * 1024; // Giới hạn 15MB cho ảnh đại diện gốc trước khi cắt
     const ADMIN_PASSWORD = 'admin'; 
     // Email của (các) giảng viên — được quyền xem mọi bài dịch và để lại nhận xét.
@@ -594,7 +599,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (insideWrapper) insideWrapper.style.display = 'none';
             if (accountArea) accountArea.style.display = 'none';
             if (accountMenu) accountMenu.classList.remove('open');
-            authStatus.innerText = '';
+            authStatus.innerText = 'Tài khoản demo (thử nghiệm): host@admin.com, Mật khẩu: admin';
 
             // [CẬP NHẬT] Ẩn Menu và TOÀN BỘ các Tab khi chưa đăng nhập
             if (mainMenu) mainMenu.style.display = 'none';
@@ -3929,6 +3934,13 @@ function toggleCompletion(symbolElement) {
             // [MỚI] Trả về toàn bộ danh sách từ vựng cá nhân — dùng cho mục "Luyện nghe" (tab
             // Luyện kỹ năng) để gộp vào kho từ vựng luyện nghe. Nhớ gọi ensureLoaded() trước.
             getList: () => myVocabList
+        };
+        // Cho các module khác (VD: tab "Luyện kỹ năng" > "✍️ Viết") dùng lại đúng 1 bộ
+        // logic gọi AI (Gemini -> Mistral) để chấm bài/tạo hội thoại giả lập, tránh phải
+        // khai báo lại API key ở nhiều nơi trong file.
+        window.aiHelper = {
+            callAIJSON,      // (prompt: string) => Promise<object> — gọi AI, trả JSON đã parse
+            aiConfigured     // () => boolean — có ít nhất 1 provider AI được cấu hình hay không
         };
         // ===== KẾT THÚC TRA TỪ NHANH + TỪ VỰNG CÁ NHÂN =====
     })();
@@ -12364,10 +12376,24 @@ function toggleCompletion(symbolElement) {
     const publishBtn     = document.getElementById('ilt-publish-btn');
     const deleteBtn      = document.getElementById('ilt-delete-btn');
 
+    const durationInput = document.getElementById('ilt-duration-input');
+
     const takeTitleEl  = document.getElementById('ilt-take-title');
     const takeAudioBar = document.getElementById('ilt-take-audio-bar');
     const takeBodyEl   = document.getElementById('ilt-take-body');
     const submitBtn    = document.getElementById('ilt-submit-btn');
+    const takeTimerEl     = document.getElementById('ilt-take-timer');
+    const violationBanner = document.getElementById('ilt-violation-banner');
+    const partNavEl       = document.getElementById('ilt-part-nav');
+    const answerSheetEl   = document.getElementById('ilt-answer-sheet');
+    const answerSheetGrid = document.getElementById('ilt-answer-sheet-grid');
+    const answerSheetToggleBtn = document.getElementById('ilt-answer-sheet-toggle');
+    const answerSheetCloseBtn  = document.getElementById('ilt-answer-sheet-close');
+
+    const readyModal     = document.getElementById('ilt-ready-modal');
+    const readyModalText = document.getElementById('ilt-ready-modal-text');
+    const readyCancelBtn = document.getElementById('ilt-ready-cancel-btn');
+    const readyStartBtn  = document.getElementById('ilt-ready-start-btn');
 
     const resultTitleEl = document.getElementById('ilt-result-title');
     const resultScoreEl = document.getElementById('ilt-result-score');
@@ -12379,6 +12405,22 @@ function toggleCompletion(symbolElement) {
     let currentAnswers       = {};
     let currentMode          = 'take'; // 'take' | 'preview' | 'result'
     let currentTakeTest      = null;
+
+    // [MỚI] state phục vụ: làm bài thật có chống gian lận + đếm giờ + lưu tiến độ dở dang
+    let currentHighlights     = [];   // [{id, partIdx, blockKey, startOffset, endOffset}]
+    let iltHighlightUndoStack = [];   // [{type:'add'|'remove', highlight}] — phục vụ Ctrl+Z
+    let iltHighlightRedoStack = [];   // phục vụ Ctrl+Y (hoặc Ctrl+Shift+Z)
+    let currentSubmission     = null; // dòng ielts_listening_submissions đang làm dở / vừa nộp
+    let currentPartIdx        = 0;    // Part đang hiển thị (0-3)
+    let iltAntiCheatActive    = false;
+    let iltHiddenSinceMs      = null;
+    let iltViolationCount     = 0;
+    let iltTestTimerInterval  = null;
+    let iltAudioEl            = null; // đối tượng Audio() ẩn, không hiện control, dùng lúc làm bài thật
+    let iltAudioPosition      = 0;    // vị trí phát gần nhất (giây) — để tiếp tục đúng chỗ nếu lỡ tải lại trang
+    let iltProgressSaveTimer  = null;
+    let iltPendingStartTest   = null; // bài đang chờ xác nhận ở hộp thoại "sẵn sàng chưa"
+    const ILT_RELOAD_FLAG_KEY = 'ilt_reloading_flag';
 
     const PART_LABELS = ['PART 1', 'PART 2', 'PART 3', 'PART 4'];
 
@@ -13173,7 +13215,12 @@ function toggleCompletion(symbolElement) {
     let autosaveTimer = null;
 
     function collectEditorPayload() {
-        return { title: titleInput.value.trim(), audio_url: currentAudioUrl, parts: collectAllParts() };
+        return {
+            title: titleInput.value.trim(),
+            audio_url: currentAudioUrl,
+            duration_minutes: (durationInput && durationInput.value) ? Number(durationInput.value) : null,
+            parts: collectAllParts()
+        };
     }
     function countTotalQuestions(test) {
         return (test.parts || []).reduce((sum, p) => sum + (p.sections || []).reduce((s2, sec) =>
@@ -13210,7 +13257,7 @@ function toggleCompletion(symbolElement) {
 
     async function createNewTest() {
         try {
-            const payload = { title: 'Bài nghe IELTS mới', audio_url: '', created_by: currentEmail, parts: [1, 2, 3, 4].map(emptyPart) };
+            const payload = { title: 'Bài nghe IELTS mới', audio_url: '', duration_minutes: null, created_by: currentEmail, parts: [1, 2, 3, 4].map(emptyPart) };
             const { data, error } = await sb.from('ielts_listening_tests').insert(payload).select().single();
             if (error) throw error;
             myTestsCache.unshift(data);
@@ -13224,6 +13271,7 @@ function toggleCompletion(symbolElement) {
     function openEditorForTest(row) {
         currentEditingTestId = row.id;
         titleInput.value = row.title || '';
+        if (durationInput) durationInput.value = row.duration_minutes || '';
         buildAudioField(row.audio_url || '');
         renderPartsEditor(row.parts);
         deleteBtn.style.display = 'inline-block';
@@ -13304,7 +13352,7 @@ function toggleCompletion(symbolElement) {
             input.spellcheck = false;
             input.disabled = (mode === 'preview');
             input.value = currentAnswers[keyBase] || '';
-            input.addEventListener('input', () => { currentAnswers[keyBase] = input.value; });
+            input.addEventListener('input', () => { currentAnswers[keyBase] = input.value; iltNotifyAnswerChanged(span); });
             span.appendChild(input);
         }
         return span;
@@ -13313,6 +13361,7 @@ function toggleCompletion(symbolElement) {
     function renderParagraphBlockView(block, pIdx, secId, mode) {
         const wrap = document.createElement('div');
         wrap.className = 'ilt-view-paragraph' + (block.type === 'framed' ? ' ilt-view-framed' : '');
+        wrap.dataset.hlBlock = pIdx + '_' + secId + '_' + block.id;
         const { displayHtml, blanks } = iltParseBlanks(block.html || '');
         wrap.innerHTML = displayHtml;
         wrap.querySelectorAll('.ilt-blank-slot').forEach(slot => {
@@ -13336,6 +13385,7 @@ function toggleCompletion(symbolElement) {
                 const td = document.createElement('td');
                 if (isObj && cell.colspan > 1) td.colSpan = cell.colspan;
                 if (isObj && cell.rowspan > 1) td.rowSpan = cell.rowspan;
+                td.dataset.hlBlock = pIdx + '_' + secId + '_' + block.id + '_c' + rIdx + '_' + cIdx;
                 const { displayHtml, blanks } = iltParseBlanks(cellHtml || '');
                 td.innerHTML = displayHtml;
                 td.querySelectorAll('.ilt-blank-slot').forEach(slot => {
@@ -13371,6 +13421,7 @@ function toggleCompletion(symbolElement) {
     function renderMcqBlockView(block, pIdx, secId, mode) {
         const wrap = document.createElement('div');
         wrap.className = 'ilt-numbered ilt-view-mcq';
+        wrap.dataset.hlBlock = pIdx + '_' + secId + '_' + block.id;
         const head = document.createElement('div');
         head.className = 'ilt-mcq-head';
         const badge = document.createElement('span');
@@ -13404,7 +13455,7 @@ function toggleCompletion(symbolElement) {
             radio.name = 'mcq_' + keyBase;
             radio.disabled = (mode !== 'take');
             radio.checked = (currentAnswers[keyBase] === i);
-            radio.addEventListener('change', () => { currentAnswers[keyBase] = i; });
+            radio.addEventListener('change', () => { currentAnswers[keyBase] = i; iltNotifyAnswerChanged(wrap); });
             label.appendChild(radio);
             const letterEl = document.createElement('span');
             letterEl.className = 'ilt-mcq-option-letter';
@@ -13433,6 +13484,7 @@ function toggleCompletion(symbolElement) {
         (test.parts || []).forEach((part, pIdx) => {
             const partEl = document.createElement('div');
             partEl.className = 'ilt-render-part';
+            partEl.dataset.partIdx = pIdx;
             const h = document.createElement('div');
             h.className = 'ilt-render-part-title';
             h.textContent = PART_LABELS[pIdx] || ('PART ' + (pIdx + 1));
@@ -13487,9 +13539,553 @@ function toggleCompletion(symbolElement) {
             const num = i + 1;
             const badge = elm.querySelector('.ilt-num-badge');
             if (badge) badge.textContent = num;
+            // [MỚI] gắn số câu + Part sở hữu để Bảng câu trả lời điều hướng đúng chỗ.
+            elm.dataset.qnum = num;
+            elm.id = 'ilt-q-' + num;
+            const ownerPart = elm.closest('.ilt-render-part');
+            if (ownerPart) elm.dataset.partIdx = ownerPart.dataset.partIdx;
             if (mode === 'result' && elm.dataset.isCorrect === '1') correctCount++;
         });
         return { el: root, total: numbered.length, correctCount };
+    }
+
+    // =====================================================================
+    // ===== BÔI ĐEN (HIGHLIGHT) VĂN BẢN LÚC LÀM BÀI =======================
+    // Toạ độ lưu theo (blockKey, startOffset, endOffset) tính trên CHỮ THÔ
+    // của khối đó (đi qua mọi text node theo thứ tự tài liệu) — không phụ
+    // thuộc cấu trúc DOM cụ thể nên không bị lệch dù đã có sẵn highlight
+    // khác trong cùng khối. Bấm chọn chữ mới = tạo highlight; bấm lại vào
+    // chữ đã bôi đen = xoá highlight đó.
+    // =====================================================================
+    function iltTextOffset(root, node, offset) {
+        let total = 0;
+        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+        let cur;
+        while ((cur = walker.nextNode())) {
+            if (cur === node) return total + offset;
+            total += cur.nodeValue.length;
+        }
+        return total;
+    }
+    function iltFindPositionByOffset(root, target) {
+        let total = 0;
+        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+        let cur, last = null;
+        while ((cur = walker.nextNode())) {
+            const len = cur.nodeValue.length;
+            if (target <= total + len) return { node: cur, offset: target - total };
+            total += len;
+            last = cur;
+        }
+        return last ? { node: last, offset: last.nodeValue.length } : null;
+    }
+    function iltWrapRangeInMark(range, id) {
+        const mark = document.createElement('mark');
+        mark.className = 'ilt-highlight';
+        mark.dataset.hlId = id;
+        try {
+            range.surroundContents(mark);
+        } catch (e) {
+            // Vùng chọn cắt ngang nhiều node (vd. xen giữa 2 thẻ) — gộp nội dung lại rồi bọc chung.
+            const frag = range.extractContents();
+            mark.appendChild(frag);
+            range.insertNode(mark);
+        }
+    }
+    function iltUnwrapMark(mark) {
+        const parent = mark.parentNode;
+        if (!parent) return;
+        while (mark.firstChild) parent.insertBefore(mark.firstChild, mark);
+        parent.removeChild(mark);
+        parent.normalize();
+    }
+    function iltApplyHighlightsForPart(partEl, pIdx) {
+        currentHighlights.filter(h => h.partIdx === pIdx).forEach(h => {
+            const blockRoot = partEl.querySelector('[data-hl-block="' + h.blockKey + '"]');
+            if (!blockRoot) return;
+            const start = iltFindPositionByOffset(blockRoot, h.startOffset);
+            const end = iltFindPositionByOffset(blockRoot, h.endOffset);
+            if (!start || !end) return;
+            try {
+                const range = document.createRange();
+                range.setStart(start.node, start.offset);
+                range.setEnd(end.node, end.offset);
+                if (range.collapsed) return;
+                iltWrapRangeInMark(range, h.id);
+            } catch (e) { /* bỏ qua 1 highlight lỗi, không chặn hiển thị cả bài */ }
+        });
+    }
+    function iltHandleSelectionMouseUp() {
+        const root = takeBodyEl;
+        const sel = window.getSelection();
+        if (!sel || sel.isCollapsed || sel.rangeCount === 0) return;
+        const range = sel.getRangeAt(0);
+        if (range.collapsed || !root.contains(range.commonAncestorContainer)) return;
+        let blockRoot = range.commonAncestorContainer;
+        if (blockRoot.nodeType === 3) blockRoot = blockRoot.parentElement;
+        blockRoot = blockRoot && blockRoot.closest('[data-hl-block]');
+        if (!blockRoot || !root.contains(blockRoot)) { sel.removeAllRanges(); return; }
+        // Chỉ cho bôi đen trong phạm vi 1 khối (không cho kéo xuyên nhiều đoạn/ô bảng khác nhau).
+        const startEl = range.startContainer.nodeType === 3 ? range.startContainer.parentElement : range.startContainer;
+        const endEl = range.endContainer.nodeType === 3 ? range.endContainer.parentElement : range.endContainer;
+        if (!blockRoot.contains(startEl) || !blockRoot.contains(endEl)) { sel.removeAllRanges(); return; }
+        const startOffset = iltTextOffset(blockRoot, range.startContainer, range.startOffset);
+        const endOffset = iltTextOffset(blockRoot, range.endContainer, range.endOffset);
+        if (endOffset <= startOffset) { sel.removeAllRanges(); return; }
+        const id = iltUid('hl');
+        try { iltWrapRangeInMark(range, id); } catch (e) { sel.removeAllRanges(); return; }
+        const newHl = { id, partIdx: currentPartIdx, blockKey: blockRoot.dataset.hlBlock, startOffset, endOffset };
+        currentHighlights.push(newHl);
+        iltHighlightUndoStack.push({ type: 'add', highlight: newHl });
+        iltHighlightRedoStack = [];
+        sel.removeAllRanges();
+        iltScheduleProgressSave();
+    }
+    function iltHandleClickForHighlight(e) {
+        const mark = e.target.closest && e.target.closest('mark.ilt-highlight');
+        if (!mark) return;
+        const sel = window.getSelection();
+        if (sel && !sel.isCollapsed) return; // đang kéo chọn chữ khác, không phải bấm để xoá
+        const id = mark.dataset.hlId;
+        const removedHl = currentHighlights.find(h => h.id === id);
+        iltUnwrapMark(mark);
+        currentHighlights = currentHighlights.filter(h => h.id !== id);
+        if (removedHl) {
+            iltHighlightUndoStack.push({ type: 'remove', highlight: removedHl });
+            iltHighlightRedoStack = [];
+        }
+        iltScheduleProgressSave();
+    }
+
+    // ---- Undo (Ctrl+Z) / Redo (Ctrl+Y hoặc Ctrl+Shift+Z) cho thao tác bôi đen ----
+    function iltFindHighlightBlockRoot(blockKey) {
+        return takeBodyEl ? takeBodyEl.querySelector('[data-hl-block="' + blockKey + '"]') : null;
+    }
+    function iltInsertHighlightMark(h) {
+        const blockRoot = iltFindHighlightBlockRoot(h.blockKey);
+        if (!blockRoot) return false;
+        const start = iltFindPositionByOffset(blockRoot, h.startOffset);
+        const end = iltFindPositionByOffset(blockRoot, h.endOffset);
+        if (!start || !end) return false;
+        try {
+            const range = document.createRange();
+            range.setStart(start.node, start.offset);
+            range.setEnd(end.node, end.offset);
+            if (range.collapsed) return false;
+            iltWrapRangeInMark(range, h.id);
+            return true;
+        } catch (e) { return false; }
+    }
+    function iltRemoveHighlightMark(id) {
+        const mark = takeBodyEl ? takeBodyEl.querySelector('mark.ilt-highlight[data-hl-id="' + id + '"]') : null;
+        if (mark) iltUnwrapMark(mark);
+    }
+    function iltGoToHighlightPart(partIdx) {
+        // Nhảy sang đúng Part chứa highlight đang undo/redo để học viên thấy ngay kết quả.
+        if (partIdx !== currentPartIdx) iltShowPart(partIdx);
+    }
+    function iltApplyHighlightAction(action, forward) {
+        // forward=true: thực hiện lại y hệt thao tác gốc (dùng khi redo).
+        // forward=false: thực hiện thao tác ngược lại (dùng khi undo).
+        const doAdd = (action.type === 'add') === forward;
+        iltGoToHighlightPart(action.highlight.partIdx);
+        if (doAdd) {
+            if (!currentHighlights.some(h => h.id === action.highlight.id)) currentHighlights.push(action.highlight);
+            iltInsertHighlightMark(action.highlight);
+        } else {
+            currentHighlights = currentHighlights.filter(h => h.id !== action.highlight.id);
+            iltRemoveHighlightMark(action.highlight.id);
+        }
+    }
+    function iltUndoHighlight() {
+        if (!iltHighlightUndoStack.length) return;
+        const action = iltHighlightUndoStack.pop();
+        iltApplyHighlightAction(action, false);
+        iltHighlightRedoStack.push(action);
+        iltScheduleProgressSave();
+    }
+    function iltRedoHighlight() {
+        if (!iltHighlightRedoStack.length) return;
+        const action = iltHighlightRedoStack.pop();
+        iltApplyHighlightAction(action, true);
+        iltHighlightUndoStack.push(action);
+        iltScheduleProgressSave();
+    }
+    function iltHandleHighlightUndoRedoKeydown(e) {
+        if (currentMode !== 'take') return;
+        if (!(e.ctrlKey || e.metaKey) || e.altKey) return;
+        const ae = document.activeElement;
+        const tag = ae && ae.tagName;
+        const isEditableFocus = tag === 'INPUT' || tag === 'TEXTAREA' || (ae && ae.isContentEditable);
+        if (isEditableFocus) return; // để trình duyệt tự xử lý undo/redo khi đang gõ trong ô nhập liệu
+        const key = e.key.toLowerCase();
+        if (key === 'z' && !e.shiftKey) {
+            e.preventDefault();
+            iltUndoHighlight();
+        } else if (key === 'y' || (key === 'z' && e.shiftKey)) {
+            e.preventDefault();
+            iltRedoHighlight();
+        }
+    }
+
+    // =====================================================================
+    // ===== ĐIỀU HƯỚNG PART 1-4 (mỗi Part 1 "trang" riêng) ================
+    // =====================================================================
+    function iltBuildPartNav() {
+        if (!partNavEl) return;
+        partNavEl.innerHTML = '';
+        PART_LABELS.forEach((label, i) => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'ilt-part-nav-btn';
+            btn.textContent = label;
+            btn.addEventListener('click', () => iltShowPart(i));
+            partNavEl.appendChild(btn);
+        });
+    }
+    function iltShowPart(idx) {
+        currentPartIdx = idx;
+        if (takeBodyEl) {
+            takeBodyEl.querySelectorAll('.ilt-render-part').forEach(el => {
+                el.style.display = (Number(el.dataset.partIdx) === idx) ? 'block' : 'none';
+            });
+        }
+        if (partNavEl) {
+            Array.from(partNavEl.children).forEach((btn, i) => btn.classList.toggle('active', i === idx));
+        }
+    }
+
+    // =====================================================================
+    // ===== BẢNG THEO DÕI CÂU TRẢ LỜI (answer sheet) — cố định 1 bên =====
+    // =====================================================================
+    function iltIsQuestionAnswered(qnum) {
+        const elm = document.getElementById('ilt-q-' + qnum);
+        if (!elm) return false;
+        if (elm.classList.contains('ilt-blank')) {
+            const input = elm.querySelector('.ilt-blank-input');
+            return !!(input && input.value && input.value.trim());
+        }
+        if (elm.classList.contains('ilt-view-mcq')) {
+            return elm.querySelector('input[type=radio]:checked') != null;
+        }
+        return false;
+    }
+    function iltBuildAnswerSheet(total) {
+        if (!answerSheetGrid) return;
+        answerSheetGrid.innerHTML = '';
+        for (let n = 1; n <= total; n++) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'ilt-answer-sheet-item';
+            btn.textContent = String(n);
+            btn.dataset.qnum = String(n);
+            btn.addEventListener('click', () => iltJumpToQuestion(n));
+            answerSheetGrid.appendChild(btn);
+        }
+        iltRefreshAnswerSheet();
+    }
+    function iltRefreshAnswerSheet() {
+        if (!answerSheetGrid) return;
+        Array.from(answerSheetGrid.children).forEach(btn => {
+            btn.classList.toggle('is-answered', iltIsQuestionAnswered(Number(btn.dataset.qnum)));
+        });
+    }
+    function iltJumpToQuestion(qnum) {
+        const elm = document.getElementById('ilt-q-' + qnum);
+        if (!elm) return;
+        iltShowPart(Number(elm.dataset.partIdx || 0));
+        requestAnimationFrame(() => {
+            elm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            elm.classList.add('ilt-jump-flash');
+            setTimeout(() => elm.classList.remove('ilt-jump-flash'), 1200);
+        });
+        if (answerSheetEl) answerSheetEl.classList.remove('is-open'); // đóng lại khung đáp án trên di động sau khi bấm
+    }
+    function iltNotifyAnswerChanged(elm) {
+        const qn = elm && elm.dataset ? elm.dataset.qnum : null;
+        if (qn && answerSheetGrid) {
+            const btn = answerSheetGrid.querySelector('.ilt-answer-sheet-item[data-qnum="' + qn + '"]');
+            if (btn) btn.classList.toggle('is-answered', iltIsQuestionAnswered(Number(qn)));
+        }
+        iltScheduleProgressSave();
+    }
+
+    // =====================================================================
+    // ===== LƯU TIẾN ĐỘ DỞ DANG (đáp án + highlight + số lần vi phạm) =====
+    // Lưu xuống Supabase để nếu học viên lỡ tải lại trang / thoát giữa
+    // chừng, có thể "Tiếp tục làm bài" đúng chỗ (không mất gì đã làm).
+    // =====================================================================
+    function iltScheduleProgressSave() {
+        if (!currentSubmission) return;
+        clearTimeout(iltProgressSaveTimer);
+        iltProgressSaveTimer = setTimeout(iltPersistProgress, 600);
+    }
+    async function iltPersistProgress() {
+        if (!currentSubmission) return;
+        try {
+            await sb.from('ielts_listening_submissions').update({
+                answers: currentAnswers,
+                highlights: currentHighlights,
+                violation_count: iltViolationCount,
+                audio_position: iltAudioPosition
+            }).eq('id', currentSubmission.id);
+        } catch (err) { /* im lặng — sẽ thử lưu lại ở lần thay đổi tiếp theo */ }
+    }
+
+    // =====================================================================
+    // ===== CHỐNG GIAN LẬN: chuyển tab/thu nhỏ/thoát trang + chặn copy/
+    // paste + chặn chuột phải + chặn mở DevTools/phím tắt chụp màn hình —
+    // y hệt cơ chế đã có ở "Bài kiểm tra riêng". Vi phạm quá 3 lần thì tự
+    // động nộp bài. (LƯU Ý: đây là biện pháp khả thi tốt nhất từ phía web,
+    // không thể chặn tuyệt đối ở cấp hệ điều hành.)
+    // Khác với "Bài kiểm tra riêng": KHÔNG khoá user-select toàn khung, vì
+    // học viên cần bôi đen (highlight) được văn bản trong lúc làm bài —
+    // chỉ chặn hành động copy/cut thực sự.
+    // =====================================================================
+    function iltRecordViolation(reason) {
+        if (!iltAntiCheatActive || !currentSubmission) return;
+        iltViolationCount++;
+        iltPersistProgress();
+        if (iltViolationCount >= 3) {
+            violationBanner.style.display = 'block';
+            violationBanner.textContent = '🚫 Bạn đã vi phạm lần thứ 3 (' + reason + '). Bài làm đã được TỰ ĐỘNG NỘP.';
+            iltSubmitTest(true);
+        } else {
+            violationBanner.style.display = 'block';
+            violationBanner.textContent = '⚠️ Cảnh báo vi phạm lần ' + iltViolationCount + '/3 (' + reason + '). Vi phạm lần thứ 3, bài sẽ tự động được nộp.';
+        }
+    }
+    function iltOnVisibilityChange() {
+        if (document.hidden) {
+            iltHiddenSinceMs = Date.now();
+        } else if (iltHiddenSinceMs !== null) {
+            let wasReload = false;
+            try { wasReload = sessionStorage.getItem(ILT_RELOAD_FLAG_KEY) === '1'; } catch (e) {}
+            iltHiddenSinceMs = null;
+            if (!wasReload) iltRecordViolation('chuyển sang tab/cửa sổ khác');
+            try { sessionStorage.removeItem(ILT_RELOAD_FLAG_KEY); } catch (e) {}
+        }
+    }
+    function iltOnBeforeUnload() {
+        try { sessionStorage.setItem(ILT_RELOAD_FLAG_KEY, '1'); } catch (e) {}
+    }
+    function iltOnCopyCut(e) {
+        e.preventDefault();
+        iltRecordViolation('cố gắng copy nội dung bài nghe');
+    }
+    function iltOnContextMenu(e) {
+        e.preventDefault();
+    }
+    function iltOnKeyDown(e) {
+        if (e.key === 'PrintScreen') { iltRecordViolation('cố gắng chụp màn hình'); }
+        const blockedCombo = (e.key === 'F12') ||
+            ((e.ctrlKey || e.metaKey) && e.shiftKey && ['I', 'J', 'C', 'i', 'j', 'c'].includes(e.key)) ||
+            ((e.ctrlKey || e.metaKey) && ['u', 'U', 'p', 'P', 's', 'S'].includes(e.key));
+        if (blockedCombo) { e.preventDefault(); iltRecordViolation('cố gắng dùng công cụ không được phép'); }
+    }
+    function iltOnKeyUp(e) {
+        if (e.key === 'PrintScreen') { iltRecordViolation('cố gắng chụp màn hình'); }
+    }
+    function iltSetupAntiCheat() {
+        if (iltAntiCheatActive) return;
+        iltAntiCheatActive = true;
+        iltHiddenSinceMs = null;
+        document.addEventListener('visibilitychange', iltOnVisibilityChange);
+        window.addEventListener('beforeunload', iltOnBeforeUnload);
+        takeView.addEventListener('copy', iltOnCopyCut);
+        takeView.addEventListener('cut', iltOnCopyCut);
+        takeView.addEventListener('contextmenu', iltOnContextMenu);
+        document.addEventListener('keydown', iltOnKeyDown);
+        document.addEventListener('keyup', iltOnKeyUp);
+        document.addEventListener('keydown', iltHandleHighlightUndoRedoKeydown);
+    }
+    function iltTeardownAntiCheat() {
+        if (!iltAntiCheatActive) return;
+        iltAntiCheatActive = false;
+        document.removeEventListener('visibilitychange', iltOnVisibilityChange);
+        window.removeEventListener('beforeunload', iltOnBeforeUnload);
+        takeView.removeEventListener('copy', iltOnCopyCut);
+        takeView.removeEventListener('cut', iltOnCopyCut);
+        takeView.removeEventListener('contextmenu', iltOnContextMenu);
+        document.removeEventListener('keydown', iltOnKeyDown);
+        document.removeEventListener('keyup', iltOnKeyUp);
+        document.removeEventListener('keydown', iltHandleHighlightUndoRedoKeydown);
+        clearInterval(iltTestTimerInterval);
+        iltTestTimerInterval = null;
+        if (iltAudioEl) { if (iltAudioEl._setAllowPause) iltAudioEl._setAllowPause(); try { iltAudioEl.pause(); } catch (e) {} }
+    }
+
+    // =====================================================================
+    // ===== ĐỒNG HỒ ĐẾM GIỜ (thời gian do giảng viên đặt) =================
+    // =====================================================================
+    function iltStartTimer(durationMinutes, startedAtIso) {
+        clearInterval(iltTestTimerInterval);
+        if (!durationMinutes) { takeTimerEl.style.display = 'none'; return; }
+        takeTimerEl.style.display = 'inline-block';
+        const startedAtMs = startedAtIso ? new Date(startedAtIso).getTime() : Date.now();
+        const totalSeconds = durationMinutes * 60;
+        function tick() {
+            const elapsed = Math.floor((Date.now() - startedAtMs) / 1000);
+            const remaining = Math.max(0, totalSeconds - elapsed);
+            const mm = String(Math.floor(remaining / 60)).padStart(2, '0');
+            const ss = String(remaining % 60).padStart(2, '0');
+            takeTimerEl.textContent = '⏱️ ' + mm + ':' + ss;
+            takeTimerEl.classList.toggle('ctest-timer-low', remaining <= 60);
+            if (remaining <= 0) {
+                clearInterval(iltTestTimerInterval);
+                violationBanner.style.display = 'block';
+                violationBanner.textContent = '⏰ Hết thời gian làm bài — bài làm đã được tự động nộp.';
+                iltSubmitTest(true);
+            }
+        }
+        tick();
+        iltTestTimerInterval = setInterval(tick, 1000);
+    }
+
+    // =====================================================================
+    // ===== PHÁT AUDIO ẨN — tự phát 1 lần, không cho tạm dừng/nghe lại ====
+    // "Không hiện audio": dùng đối tượng Audio() thuần JS, KHÔNG gắn thẻ
+    // <audio> nào lên giao diện nên học viên không thấy/điều khiển được.
+    // =====================================================================
+    function iltStartAudioPlayback(url) {
+        if (iltAudioEl) { try { iltAudioEl.pause(); } catch (e) {} iltAudioEl = null; }
+        if (!url) return;
+        const audio = new Audio(url);
+        audio.preload = 'auto';
+        let allowPause = false; // chỉ bật true khi bài đã nộp / rời trang để việc dừng audio là hợp lệ
+        audio.addEventListener('loadedmetadata', () => {
+            if (iltAudioPosition > 0 && isFinite(audio.duration) && iltAudioPosition < audio.duration) {
+                try { audio.currentTime = iltAudioPosition; } catch (e) {}
+            }
+            audio.play().catch(() => { iltShowManualPlayFallback(audio); });
+        });
+        audio.addEventListener('timeupdate', () => { iltAudioPosition = audio.currentTime; });
+        audio.addEventListener('pause', () => {
+            // Không cho phép tạm dừng — nếu bị hệ thống/tai nghe ngắt giữa chừng thì tự phát tiếp ngay.
+            if (!allowPause && !audio.ended) { audio.play().catch(() => {}); }
+        });
+        audio.addEventListener('ended', () => { allowPause = true; });
+        audio._setAllowPause = () => { allowPause = true; };
+        iltAudioEl = audio;
+        audio.load();
+    }
+    function iltShowManualPlayFallback(audio) {
+        // Một vài trình duyệt vẫn chặn autoplay dù đã có thao tác bấm trước đó — hiện 1 nút
+        // bấm để mở khoá phát audio (không tính là "nghe lại" vì audio chưa từng chạy được).
+        violationBanner.style.display = 'block';
+        violationBanner.innerHTML = '🔊 Trình duyệt đang chặn tự động phát âm thanh — ' +
+            '<button type="button" id="ilt-manual-play-btn" class="grammar-admin-btn grammar-admin-btn-primary" style="margin-left:8px;">Bấm để bắt đầu nghe</button>';
+        const btn = document.getElementById('ilt-manual-play-btn');
+        if (btn) btn.addEventListener('click', () => {
+            audio.play().then(() => {
+                violationBanner.style.display = iltViolationCount > 0 ? 'block' : 'none';
+                if (iltViolationCount > 0) violationBanner.textContent = '⚠️ Bạn đã vi phạm ' + iltViolationCount + '/3 lần trước đó trong bài này.';
+            }).catch(() => {});
+        });
+    }
+
+    // =====================================================================
+    // ===== HỘP THOẠI "SẴN SÀNG LÀM BÀI CHƯA" =============================
+    // =====================================================================
+    function iltOpenReadyModal(test) {
+        iltPendingStartTest = test;
+        const mins = test.duration_minutes ? (test.duration_minutes + ' phút') : 'không giới hạn';
+        readyModalText.textContent = 'Bài nghe "' + (test.title || '') + '" — thời gian làm bài: ' + mins + '.';
+        readyModal.style.display = 'flex';
+    }
+    function iltCloseReadyModal() {
+        readyModal.style.display = 'none';
+        iltPendingStartTest = null;
+    }
+    if (readyCancelBtn) readyCancelBtn.addEventListener('click', iltCloseReadyModal);
+    if (readyStartBtn) readyStartBtn.addEventListener('click', async () => {
+        const test = iltPendingStartTest;
+        if (!test) return;
+        readyStartBtn.disabled = true;
+        try {
+            await iltStartRealTake(test);
+        } finally {
+            readyStartBtn.disabled = false;
+            readyModal.style.display = 'none';
+            iltPendingStartTest = null;
+        }
+    });
+
+    // =====================================================================
+    // ===== BẮT ĐẦU / TIẾP TỤC LÀM BÀI THẬT (có chống gian lận) ===========
+    // =====================================================================
+    async function iltStartRealTake(test) {
+        currentTakeTest = test;
+        currentMode = 'take';
+        currentAnswers = {};
+        currentHighlights = [];
+        iltHighlightUndoStack = [];
+        iltHighlightRedoStack = [];
+        iltViolationCount = 0;
+        iltAudioPosition = 0;
+        currentSubmission = null;
+        try {
+            if (currentUserId) {
+                const { data: existing } = await sb.from('ielts_listening_submissions')
+                    .select('*').eq('test_id', test.id).eq('user_id', currentUserId).maybeSingle();
+                if (!existing) {
+                    const { data, error } = await sb.from('ielts_listening_submissions').insert({
+                        test_id: test.id, user_id: currentUserId, user_email: currentEmail,
+                        answers: {}, highlights: [], violation_count: 0, audio_position: 0,
+                        status: 'in_progress', started_at: new Date().toISOString()
+                    }).select().single();
+                    if (error) throw error;
+                    currentSubmission = data;
+                } else if (existing.status === 'in_progress') {
+                    currentSubmission = existing;
+                    currentAnswers = existing.answers || {};
+                    currentHighlights = existing.highlights || [];
+                    iltViolationCount = existing.violation_count || 0;
+                    iltAudioPosition = existing.audio_position || 0;
+                } else {
+                    // "Làm lại": ghi đè bằng 1 lượt làm mới, xoá sạch dữ liệu lần làm trước.
+                    const { data, error } = await sb.from('ielts_listening_submissions').update({
+                        answers: {}, highlights: [], violation_count: 0, audio_position: 0,
+                        status: 'in_progress', started_at: new Date().toISOString(),
+                        score: null, total: null, submitted_at: null
+                    }).eq('id', existing.id).select().single();
+                    if (error) throw error;
+                    currentSubmission = data;
+                }
+            }
+        } catch (err) {
+            alert('Không thể mở bài nghe: ' + err.message);
+            return;
+        }
+
+        takeTitleEl.textContent = '🎧 ' + (test.title || '');
+        takeAudioBar.innerHTML = '';
+        takeAudioBar.style.display = 'none'; // "Không hiện audio" khi làm bài thật
+        takeBodyEl.innerHTML = '';
+        const { el, total } = renderTestBody(test, 'take');
+        takeBodyEl.appendChild(el);
+        iltBuildPartNav();
+        iltShowPart(0);
+        if (answerSheetEl) answerSheetEl.style.display = '';
+        if (answerSheetToggleBtn) answerSheetToggleBtn.style.display = '';
+        iltBuildAnswerSheet(total);
+        // Khôi phục lại các highlight đã lưu (nếu học viên lỡ tải lại trang giữa chừng).
+        takeBodyEl.querySelectorAll('.ilt-render-part').forEach(partEl => {
+            iltApplyHighlightsForPart(partEl, Number(partEl.dataset.partIdx));
+        });
+        takeBodyEl.removeEventListener('mouseup', iltHandleSelectionMouseUp);
+        takeBodyEl.removeEventListener('click', iltHandleClickForHighlight);
+        takeBodyEl.addEventListener('mouseup', iltHandleSelectionMouseUp);
+        takeBodyEl.addEventListener('click', iltHandleClickForHighlight);
+
+        submitBtn.style.display = 'inline-block';
+        violationBanner.style.display = iltViolationCount > 0 ? 'block' : 'none';
+        if (iltViolationCount > 0) violationBanner.textContent = '⚠️ Bạn đã vi phạm ' + iltViolationCount + '/3 lần trước đó trong bài này.';
+        showView('take');
+
+        iltSetupAntiCheat();
+        iltStartTimer(test.duration_minutes, currentSubmission ? currentSubmission.started_at : null);
+        iltStartAudioPlayback(test.audio_url);
     }
 
     // =====================================================================
@@ -13526,10 +14122,14 @@ function toggleCompletion(symbolElement) {
             row.className = 'ctest-test-row';
             const total = countTotalQuestions(test);
             const sub = mySubs[test.id];
+            const submitted = sub && sub.status !== 'in_progress';
+            const inProgress = sub && sub.status === 'in_progress';
             row.innerHTML =
                 '<div class="ctest-test-row-main">' +
                     '<div class="ctest-test-title">🎧 ' + iltEscape(test.title || '(Chưa đặt tên)') + '</div>' +
-                    '<div class="ctest-test-meta">' + total + ' câu hỏi · 4 Parts' + (sub ? ' · Điểm gần nhất: ' + sub.score + '/' + sub.total : '') + '</div>' +
+                    '<div class="ctest-test-meta">' + total + ' câu hỏi · 4 Parts' +
+                        (submitted ? ' · Điểm gần nhất: ' + sub.score + '/' + sub.total : (inProgress ? ' · ⏸️ Đang làm dở' : '')) +
+                    '</div>' +
                 '</div>' +
                 '<div class="ctest-test-row-actions"></div>';
             const actions = row.querySelector('.ctest-test-row-actions');
@@ -13542,10 +14142,10 @@ function toggleCompletion(symbolElement) {
             } else {
                 const startBtn = document.createElement('button');
                 startBtn.className = 'grammar-admin-btn grammar-admin-btn-primary';
-                startBtn.textContent = sub ? '🔁 Làm lại' : '▶️ Bắt đầu làm bài';
+                startBtn.textContent = inProgress ? '⏯️ Tiếp tục làm bài' : (submitted ? '🔁 Làm lại' : '▶️ Bắt đầu làm bài');
                 startBtn.addEventListener('click', (e) => { e.stopPropagation(); openTakeView(test, 'take'); });
                 actions.appendChild(startBtn);
-                if (sub) {
+                if (submitted) {
                     const resBtn = document.createElement('button');
                     resBtn.className = 'grammar-admin-btn';
                     resBtn.textContent = '📊 Kết quả gần nhất';
@@ -13562,11 +14162,21 @@ function toggleCompletion(symbolElement) {
     // ===== LÀM BÀI / XEM THỬ / NỘP BÀI ===================================
     // =====================================================================
     function openTakeView(test, mode) {
+        if (mode === 'take') {
+            // Bài nghe thật: hiện hộp thoại "sẵn sàng chưa" trước — chỉ khi bấm "Bắt đầu"
+            // mới thật sự mở bài + tự phát audio + bật chống gian lận + đếm giờ.
+            iltOpenReadyModal(test);
+            return;
+        }
+        // 'preview' (giảng viên xem thử) — giữ đơn giản: không chống gian lận, không đếm
+        // giờ, không Bảng câu trả lời, audio hiện bình thường để giảng viên kiểm tra nội dung.
         currentTakeTest = test;
         currentMode = mode;
         currentAnswers = {};
-        takeTitleEl.textContent = (mode === 'preview' ? '👁️ Xem thử: ' : '🎧 ') + (test.title || '');
+        currentHighlights = [];
+        takeTitleEl.textContent = '👁️ Xem thử: ' + (test.title || '');
         takeAudioBar.innerHTML = '';
+        takeAudioBar.style.display = '';
         if (test.audio_url) {
             const audio = document.createElement('audio');
             audio.controls = true;
@@ -13575,9 +14185,15 @@ function toggleCompletion(symbolElement) {
             takeAudioBar.appendChild(audio);
         }
         takeBodyEl.innerHTML = '';
-        const { el } = renderTestBody(test, mode === 'preview' ? 'preview' : 'take');
+        const { el } = renderTestBody(test, 'preview');
         takeBodyEl.appendChild(el);
-        submitBtn.style.display = (mode === 'preview') ? 'none' : 'inline-block';
+        iltBuildPartNav();
+        iltShowPart(0);
+        if (answerSheetEl) answerSheetEl.style.display = 'none';
+        if (answerSheetToggleBtn) answerSheetToggleBtn.style.display = 'none';
+        if (violationBanner) violationBanner.style.display = 'none';
+        if (takeTimerEl) takeTimerEl.style.display = 'none';
+        submitBtn.style.display = 'none';
         showView('take');
     }
     function computeScore(test, answers) {
@@ -13585,27 +14201,45 @@ function toggleCompletion(symbolElement) {
         const { total, correctCount } = renderTestBody(test, 'result');
         return { total, correctCount };
     }
+    async function iltSubmitTest(auto) {
+        if (!currentTakeTest) return;
+        if (iltAudioEl) { if (iltAudioEl._setAllowPause) iltAudioEl._setAllowPause(); try { iltAudioEl.pause(); } catch (e) {} }
+        clearTimeout(iltProgressSaveTimer);
+        const answersSnapshot = Object.assign({}, currentAnswers);
+        const highlightsSnapshot = currentHighlights.slice();
+        const { total, correctCount } = computeScore(currentTakeTest, answersSnapshot);
+        let savedOk = false;
+        try {
+            if (currentUserId) {
+                const payload = {
+                    answers: answersSnapshot, highlights: highlightsSnapshot,
+                    violation_count: iltViolationCount, status: 'submitted',
+                    score: correctCount, total: total, submitted_at: new Date().toISOString()
+                };
+                let data, error;
+                if (currentSubmission) {
+                    ({ data, error } = await sb.from('ielts_listening_submissions').update(payload).eq('id', currentSubmission.id).select().single());
+                } else {
+                    ({ data, error } = await sb.from('ielts_listening_submissions')
+                        .upsert(Object.assign({ test_id: currentTakeTest.id, user_id: currentUserId, user_email: currentEmail }, payload), { onConflict: 'test_id,user_id' })
+                        .select().single());
+                }
+                if (error) throw error;
+                currentSubmission = data;
+                savedOk = true;
+            }
+        } catch (err) {
+            if (!auto) alert('Không lưu được kết quả (vẫn xem được điểm): ' + err.message);
+        }
+        iltTeardownAntiCheat();
+        takeBodyEl.innerHTML = ''; // dọn cây DOM của phần làm bài để tránh trùng id với màn hình kết quả
+        openResultView(currentTakeTest, currentSubmission || { answers: answersSnapshot, score: correctCount, total: total }, !savedOk);
+    }
     if (submitBtn) {
         submitBtn.addEventListener('click', async () => {
             if (!currentTakeTest) return;
             if (!confirm('Nộp bài ngay bây giờ?')) return;
-            const answersSnapshot = Object.assign({}, currentAnswers);
-            const { total, correctCount } = computeScore(currentTakeTest, answersSnapshot);
-            let savedOk = false;
-            try {
-                if (currentUserId) {
-                    const payload = {
-                        test_id: currentTakeTest.id, user_id: currentUserId, user_email: currentEmail,
-                        answers: answersSnapshot, score: correctCount, total: total, submitted_at: new Date().toISOString()
-                    };
-                    const { error } = await sb.from('ielts_listening_submissions').upsert(payload, { onConflict: 'test_id,user_id' });
-                    if (error) throw error;
-                    savedOk = true;
-                }
-            } catch (err) {
-                alert('Không lưu được kết quả (vẫn xem được điểm): ' + err.message);
-            }
-            openResultView(currentTakeTest, { answers: answersSnapshot, score: correctCount, total: total }, !savedOk);
+            await iltSubmitTest(false);
         });
     }
     // Bảng quy đổi điểm thô (raw score / 40 câu) sang Band điểm IELTS Listening
@@ -13648,6 +14282,9 @@ function toggleCompletion(symbolElement) {
         editorView.style.display = name === 'editor' ? 'block' : 'none';
         takeView.style.display   = name === 'take'   ? 'block' : 'none';
         resultView.style.display = name === 'result' ? 'block' : 'none';
+        // Dọn cây DOM của phần làm bài khi rời khỏi màn hình "take" — tránh trùng id
+        // ilt-q-N với màn hình kết quả (nội dung sẽ được dựng lại mới mỗi lần vào làm bài).
+        if (name !== 'take' && takeBodyEl) takeBodyEl.innerHTML = '';
     }
     const ieltsSampleFolderCard = document.getElementById('ielts-sample-folder-card');
     const ieltsSamplePanel      = document.getElementById('ielts-sample-panel');
@@ -13687,14 +14324,2083 @@ function toggleCompletion(symbolElement) {
     if (editorBackBtn) editorBackBtn.addEventListener('click', () => { showView('list'); loadTests(); });
     const takeBackBtn = document.getElementById('ilt-take-back-btn');
     if (takeBackBtn) takeBackBtn.addEventListener('click', () => {
-        if (currentMode === 'preview') showView('editor');
-        else { showView('list'); loadTests(); }
+        if (currentMode === 'preview') { showView('editor'); return; }
+        if (iltAntiCheatActive) {
+            if (!confirm('Thoát khỏi bài đang làm? Tiến độ hiện tại đã được lưu, bạn có thể quay lại làm tiếp sau.')) return;
+            iltTeardownAntiCheat();
+        }
+        showView('list'); loadTests();
     });
     const resultBackBtn = document.getElementById('ilt-result-back-btn');
     if (resultBackBtn) resultBackBtn.addEventListener('click', () => { showView('list'); loadTests(); });
 
+    if (answerSheetToggleBtn && answerSheetEl) {
+        answerSheetToggleBtn.addEventListener('click', () => { answerSheetEl.classList.toggle('is-open'); });
+    }
+    if (answerSheetCloseBtn && answerSheetEl) {
+        answerSheetCloseBtn.addEventListener('click', () => { answerSheetEl.classList.remove('is-open'); });
+    }
+
+    // Chuyển sang mục khác trong ứng dụng (vd "Từ vựng", "Ngữ pháp"...) khi đang làm bài
+    // nghe thật cũng được tính là "chuyển tab" theo đúng yêu cầu chống gian lận.
+    document.querySelectorAll('.main-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (iltAntiCheatActive && btn.getAttribute('data-main-target') !== 'tab-kiem-tra') {
+                iltRecordViolation('chuyển sang mục khác trong ứng dụng khi đang làm bài');
+            }
+        });
+    });
+
 })();
 // ===== KẾT THÚC: TAB "KIỂM TRA" > "🎧 IELTS LISTENING TEST" =========
+
+(function initIeltsReadingModule() {
+
+    const iltFolderCard     = document.getElementById('ielts-reading-folder-card');
+    const kiemtraFolderGrid = document.getElementById('kiemtra-folder-grid');
+    const iltPanel          = document.getElementById('irt-panel');
+    if (!iltFolderCard || !iltPanel) return;
+
+    const listView   = document.getElementById('irt-list-view');
+    const editorView = document.getElementById('irt-editor-view');
+    const takeView   = document.getElementById('irt-take-view');
+    const resultView = document.getElementById('irt-result-view');
+
+    const listContainer = document.getElementById('irt-list-container');
+    const adminBar       = document.getElementById('irt-admin-bar');
+    const createBtn      = document.getElementById('irt-create-btn');
+
+    const titleInput     = document.getElementById('irt-title-input');
+    const summaryBar     = document.getElementById('irt-summary-bar');
+    const partsContainer = document.getElementById('irt-parts-container');
+    const saveStatusEl   = document.getElementById('irt-save-status');
+    const previewBtn     = document.getElementById('irt-preview-btn');
+    const publishBtn     = document.getElementById('irt-publish-btn');
+    const deleteBtn      = document.getElementById('irt-delete-btn');
+
+    const durationInput = document.getElementById('irt-duration-input');
+
+    const takeTitleEl  = document.getElementById('irt-take-title');
+    const takeBodyEl   = document.getElementById('irt-take-body');
+    const submitBtn    = document.getElementById('irt-submit-btn');
+    const takeTimerEl     = document.getElementById('irt-take-timer');
+    const violationBanner = document.getElementById('irt-violation-banner');
+    const partNavEl       = document.getElementById('irt-part-nav');
+    const answerSheetEl   = document.getElementById('irt-answer-sheet');
+    const answerSheetGrid = document.getElementById('irt-answer-sheet-grid');
+    const answerSheetToggleBtn = document.getElementById('irt-answer-sheet-toggle');
+    const answerSheetCloseBtn  = document.getElementById('irt-answer-sheet-close');
+
+    const readyModal     = document.getElementById('irt-ready-modal');
+    const readyModalText = document.getElementById('irt-ready-modal-text');
+    const readyCancelBtn = document.getElementById('irt-ready-cancel-btn');
+    const readyStartBtn  = document.getElementById('irt-ready-start-btn');
+
+    const resultTitleEl = document.getElementById('irt-result-title');
+    const resultScoreEl = document.getElementById('irt-result-score');
+    const resultBodyEl  = document.getElementById('irt-result-body');
+
+    let currentEditingTestId = null;
+    let myTestsCache         = [];
+    let currentAnswers       = {};
+    let currentMode          = 'take'; // 'take' | 'preview' | 'result'
+    let currentTakeTest      = null;
+
+    // [MỚI] state phục vụ: làm bài thật có chống gian lận (chuyển tab/chuyển trang) +
+    // đếm giờ + lưu tiến độ dở dang (giữ nguyên khi tải lại trang) + bôi đen (highlight)
+    let currentHighlights     = [];   // [{id, partIdx, blockKey, startOffset, endOffset}] — lưu tới khi nộp bài
+    let iltHighlightUndoStack = [];   // [{type:'add'|'remove', highlight}] — phục vụ Ctrl+Z
+    let iltHighlightRedoStack = [];   // phục vụ Ctrl+Y (hoặc Ctrl+Shift+Z)
+    let currentSubmission     = null; // dòng ielts_reading_submissions đang làm dở / vừa nộp
+    let currentPartIdx        = 0;    // Passage đang hiển thị (0-2)
+    let iltAntiCheatActive    = false;
+    let iltHiddenSinceMs      = null;
+    let iltViolationCount     = 0;
+    let iltTestTimerInterval  = null;
+    let iltProgressSaveTimer  = null;
+    let iltPendingStartTest   = null; // bài đang chờ xác nhận ở hộp thoại "sẵn sàng chưa"
+    const IRT_RELOAD_FLAG_KEY = 'irt_reloading_flag';
+
+    const PART_LABELS = ['PASSAGE 1', 'PASSAGE 2', 'PASSAGE 3'];
+
+    // =========================== TIỆN ÍCH CHUNG ===========================
+    function iltUid(prefix) { return (prefix || 'x') + '_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8); }
+    function iltEscape(str) { const d = document.createElement('div'); d.textContent = String(str == null ? '' : str); return d.innerHTML; }
+    function iltNormalize(s) { return String(s || '').trim().toLowerCase().replace(/\s+/g, ' '); }
+
+    // Trình soạn thảo mini dùng chung cho mọi ô nhập văn bản có định dạng
+    // (đoạn văn, hướng dẫn, câu hỏi trắc nghiệm...). Bôi đen rồi bấm U (gạch
+    // chân) để tạo "chỗ trống" — có thể gõ nhiều đáp án đúng cách nhau bằng
+    // dấu "|" trước khi bôi đen (vd: colour|color) để chấp nhận nhiều cách viết.
+    function iltCreateRichEditor(initialHtml, placeholder, hint, small) {
+        const wrap = document.createElement('div');
+        wrap.className = 'ctest-rich-wrap';
+        wrap.innerHTML =
+            '<div class="ctest-rich-toolbar">' +
+                '<button type="button" class="ctest-rich-btn" data-cmd="bold" title="In đậm"><b>B</b></button>' +
+                '<button type="button" class="ctest-rich-btn" data-cmd="underline" title="Gạch chân = tạo chỗ trống"><u>U</u></button>' +
+                '<button type="button" class="ctest-rich-btn" data-cmd="italic" title="In nghiêng"><i>I</i></button>' +
+                (hint ? '<span class="ctest-rich-hint">' + hint + '</span>' : '') +
+            '</div>' +
+            '<div class="ctest-rich-editable' + (small ? ' ctest-rich-small' : '') + '" contenteditable="true" data-placeholder="' + iltEscape(placeholder || '') + '"></div>';
+        const editable = wrap.querySelector('.ctest-rich-editable');
+        editable.innerHTML = initialHtml || '';
+        wrap.querySelectorAll('.ctest-rich-btn').forEach(btn => {
+            btn.addEventListener('mousedown', e => e.preventDefault());
+            btn.addEventListener('click', () => {
+                editable.focus();
+                document.execCommand(btn.dataset.cmd, false, null);
+                editable.dispatchEvent(new Event('input', { bubbles: true }));
+            });
+        });
+        return wrap;
+    }
+    function iltRichHtml(wrap) {
+        const ed = wrap && wrap.querySelector ? wrap.querySelector('.ctest-rich-editable') : null;
+        return ed ? ed.innerHTML.trim() : '';
+    }
+
+    // Đếm nhanh số chỗ trống (<u> gạch chân) trong 1 đoạn HTML nguồn — dùng để
+    // hiển thị số câu ước tính ngay trong khung soạn.
+    function iltCountBlanksInHtml(html) {
+        const d = document.createElement('div');
+        d.innerHTML = html || '';
+        return d.querySelectorAll('u').length;
+    }
+
+    // Tách <u> (gạch chân) trong 1 đoạn HTML thành các "chỗ trống" — mỗi chỗ
+    // trống có thể chấp nhận NHIỀU đáp án đúng, phân cách bằng dấu "|".
+    function iltParseBlanks(html) {
+        const container = document.createElement('div');
+        container.innerHTML = html || '';
+        const blanks = [];
+        Array.from(container.querySelectorAll('u')).forEach((elm) => {
+            const raw = elm.textContent.trim();
+            const accepted = raw.split('|').map(s => s.trim()).filter(Boolean);
+            const marker = document.createElement('span');
+            marker.className = 'irt-blank-slot';
+            marker.setAttribute('data-blank-idx', String(blanks.length));
+            blanks.push({ accepted: accepted.length ? accepted : [raw], display: raw });
+            elm.replaceWith(marker);
+        });
+        return { displayHtml: container.innerHTML, blanks };
+    }
+
+    // Trường chèn hình: dán URL hoặc tải ảnh trực tiếp lên Supabase Storage.
+    function iltImageField(initialUrl) {
+        const wrap = document.createElement('div');
+        wrap.className = 'ctest-image-field irt-image-field';
+        wrap.innerHTML =
+            '<label class="news-quiz-edit-label">Hình minh hoạ (tuỳ chọn)</label>' +
+            '<div class="irt-image-row">' +
+                '<input type="text" class="news-edit-input ctest-image-url-input" placeholder="Dán link ảnh, hoặc tải ảnh lên ở nút bên cạnh...">' +
+                '<label class="grammar-admin-btn irt-upload-btn">📤 Tải ảnh lên<input type="file" accept="image/*" class="irt-image-file-input" style="display:none;"></label>' +
+            '</div>' +
+            '<span class="irt-upload-status"></span>' +
+            '<img class="ctest-image-preview" style="display:none;">';
+        const input    = wrap.querySelector('.ctest-image-url-input');
+        const preview  = wrap.querySelector('.ctest-image-preview');
+        const fileIn   = wrap.querySelector('.irt-image-file-input');
+        const statusEl = wrap.querySelector('.irt-upload-status');
+        input.value = initialUrl || '';
+        function refreshPreview() {
+            const url = input.value.trim();
+            if (url) { preview.src = url; preview.style.display = 'block'; }
+            else { preview.style.display = 'none'; }
+        }
+        input.addEventListener('input', refreshPreview);
+        input.addEventListener('input', () => wrap.dispatchEvent(new Event('ctest-changed', { bubbles: true })));
+        fileIn.addEventListener('change', async () => {
+            const file = fileIn.files && fileIn.files[0];
+            if (!file) return;
+            if (file.size > 5 * 1024 * 1024) { alert('Ảnh tối đa 5MB.'); fileIn.value = ''; return; }
+            statusEl.textContent = 'Đang tải ảnh lên...';
+            try {
+                const path = (currentEmail || 'gv').split('@')[0] + '/' + Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+                const { error: upErr } = await sb.storage.from(IRT_IMAGE_BUCKET).upload(path, file, { cacheControl: '3600', upsert: false });
+                if (upErr) throw upErr;
+                const ref = SUPABASE_URL.split('://')[1].split('.')[0];
+                input.value = `https://${ref}.supabase.co/storage/v1/object/public/${IRT_IMAGE_BUCKET}/${path}`;
+                refreshPreview();
+                statusEl.textContent = '✅ Đã tải ảnh lên.';
+                wrap.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
+            } catch (err) {
+                statusEl.textContent = '❌ Tải ảnh thất bại: ' + err.message;
+            }
+            fileIn.value = '';
+        });
+        refreshPreview();
+        return wrap;
+    }
+    function iltImageUrl(wrap) {
+        const input = wrap && wrap.querySelector ? wrap.querySelector('.ctest-image-url-input') : null;
+        return input ? input.value.trim() : '';
+    }
+
+    // =====================================================================
+    // ===== KHUNG SOẠN TỪNG LOẠI KHỐI NỘI DUNG (giảng viên) ===============
+    // =====================================================================
+    function iltBlockShell(type, label) {
+        const el = document.createElement('div');
+        el.className = 'irt-block irt-block-' + type;
+        el.dataset.blockType = type;
+        el.dataset.blockId = iltUid('blk');
+        el.innerHTML =
+            '<div class="irt-block-header">' +
+                '<span class="irt-block-label">' + label + '</span>' +
+                '<span class="irt-block-actions">' +
+                    '<button type="button" class="irt-block-move-btn" data-dir="up" title="Chuyển lên">↑</button>' +
+                    '<button type="button" class="irt-block-move-btn" data-dir="down" title="Chuyển xuống">↓</button>' +
+                    '<button type="button" class="irt-block-remove-btn" title="Xoá khối này">🗑️</button>' +
+                '</span>' +
+            '</div>';
+        return el;
+    }
+    function wireBlockChrome(el, body) {
+        body.classList.add('irt-block-body');
+        el.appendChild(body);
+        el.querySelector('.irt-block-remove-btn').addEventListener('click', () => {
+            if (!confirm('Xoá khối nội dung này?')) return;
+            const list = el.parentElement;
+            el.remove();
+            list.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
+        });
+        el.querySelectorAll('.irt-block-move-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const dir = btn.dataset.dir;
+                if (dir === 'up' && el.previousElementSibling) el.parentElement.insertBefore(el, el.previousElementSibling);
+                else if (dir === 'down' && el.nextElementSibling) el.parentElement.insertBefore(el.nextElementSibling, el);
+                el.parentElement.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
+            });
+        });
+        return el;
+    }
+
+    // ---- Khối: Đoạn văn (điền từ) / Đóng khung ----
+    function buildParagraphBlock(data, framed) {
+        const el = iltBlockShell(framed ? 'framed' : 'paragraph', framed ? '📦 Đoạn văn đóng khung' : '📝 Đoạn văn (điền từ)');
+        const body = document.createElement('div');
+        const editor = iltCreateRichEditor(
+            data.html || '',
+            'Nhập đoạn văn... Bôi đen từ/cụm từ cần ẩn rồi bấm U (gạch chân) để biến thành chỗ trống.',
+            'Bôi đen rồi bấm <u>U</u> (gạch chân) để tạo chỗ trống. Có thể gõ nhiều đáp án đúng, cách nhau bằng "|".'
+        );
+        editor.classList.add('irt-paragraph-editor');
+        body.appendChild(editor);
+        const countEl = document.createElement('div');
+        countEl.className = 'irt-block-count-hint';
+        body.appendChild(countEl);
+        function refreshCount() {
+            const n = iltCountBlanksInHtml(iltRichHtml(editor));
+            countEl.textContent = n ? ('→ ' + n + ' chỗ trống trong đoạn này') : '→ đoạn văn này chưa có chỗ trống nào (chỉ là nội dung hiển thị)';
+        }
+        editor.addEventListener('input', refreshCount);
+        refreshCount();
+        return wireBlockChrome(el, body);
+    }
+    function collectParagraphBlock(el, framed) {
+        return { id: el.dataset.blockId, type: framed ? 'framed' : 'paragraph', html: iltRichHtml(el.querySelector('.irt-paragraph-editor')) };
+    }
+
+    // ---- Khối: Bảng — tiện ích dùng chung để GHÉP Ô (merge cells) --------
+    // Thuật toán "occupancy grid" chuẩn: duyệt các <tr>/<td> thật trong DOM,
+    // suy ra vị trí (hàng, cột) thật của từng ô kể cả khi đã có ô bị ghép
+    // (colspan/rowspan) từ trước — dùng để kiểm tra vùng chọn có phải là
+    // 1 hình chữ nhật liền khối hay không, và để dựng lại bảng sau khi ghép/bỏ ghép.
+    function iltTableOccupancy(tableEl) {
+        const rows = Array.from(tableEl.querySelectorAll(':scope > tr'));
+        const grid = [];
+        const cellPos = new Map();
+        rows.forEach((tr, rIdx) => {
+            if (!grid[rIdx]) grid[rIdx] = [];
+            let colPtr = 0;
+            Array.from(tr.children).forEach(td => {
+                while (grid[rIdx][colPtr]) colPtr++;
+                const rowspan = td.rowSpan || 1;
+                const colspan = td.colSpan || 1;
+                for (let rr = 0; rr < rowspan; rr++) {
+                    if (!grid[rIdx + rr]) grid[rIdx + rr] = [];
+                    for (let cc = 0; cc < colspan; cc++) grid[rIdx + rr][colPtr + cc] = td;
+                }
+                cellPos.set(td, { row: rIdx, col: colPtr, rowspan, colspan });
+                colPtr += colspan;
+            });
+        });
+        const numRows = grid.length;
+        let numCols = 0;
+        grid.forEach(r => { numCols = Math.max(numCols, r.length); });
+        return { grid, cellPos, numRows, numCols };
+    }
+    function iltRebuildTable(tableEl, grid, cellPos, numRows, numCols, makeCellFn) {
+        tableEl.innerHTML = '';
+        for (let r = 0; r < numRows; r++) {
+            const tr = document.createElement('tr');
+            for (let c = 0; c < numCols; c++) {
+                const td = grid[r] && grid[r][c];
+                if (!td) continue;
+                const pos = cellPos.get(td);
+                if (!pos || pos.row !== r || pos.col !== c) continue; // chỉ vẽ tại đúng ô góc trên-trái
+                const cellDiv = td.querySelector('.irt-table-cell');
+                const newTd = makeCellFn(cellDiv ? cellDiv.innerHTML : '');
+                if (pos.colspan > 1) newTd.colSpan = pos.colspan;
+                if (pos.rowspan > 1) newTd.rowSpan = pos.rowspan;
+                tr.appendChild(newTd);
+            }
+            tableEl.appendChild(tr);
+        }
+    }
+    function iltRefreshMergeUI(tableEl, onUnmerge) {
+        Array.from(tableEl.querySelectorAll(':scope > tr > td')).forEach(td => {
+            const isMerged = (td.colSpan > 1 || td.rowSpan > 1);
+            td.classList.toggle('irt-cell-merged', isMerged);
+            let btn = td.querySelector('.irt-unmerge-btn');
+            if (isMerged && !btn) {
+                btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'irt-unmerge-btn';
+                btn.title = 'Bỏ ghép ô này';
+                btn.textContent = '✂️';
+                btn.addEventListener('mousedown', e => { e.preventDefault(); e.stopPropagation(); });
+                btn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); onUnmerge(td); });
+                td.appendChild(btn);
+            } else if (!isMerged && btn) {
+                btn.remove();
+            }
+        });
+    }
+    function iltMergeSelectedCells(tableEl, makeCellFn) {
+        const selected = Array.from(tableEl.querySelectorAll('td.irt-cell-selected'));
+        if (selected.length < 2) { alert('Giữ phím Ctrl (⌘ trên Mac) rồi bấm chọn ít nhất 2 ô cần ghép, sau đó bấm "Ghép ô".'); return; }
+        const { grid, cellPos, numRows, numCols } = iltTableOccupancy(tableEl);
+        let minR = Infinity, maxR = -Infinity, minC = Infinity, maxC = -Infinity;
+        selected.forEach(td => {
+            const p = cellPos.get(td);
+            if (!p) return;
+            minR = Math.min(minR, p.row); maxR = Math.max(maxR, p.row + p.rowspan - 1);
+            minC = Math.min(minC, p.col); maxC = Math.max(maxC, p.col + p.colspan - 1);
+        });
+        const selectedSet = new Set(selected);
+        for (let r = minR; r <= maxR; r++) {
+            for (let c = minC; c <= maxC; c++) {
+                const td = grid[r] && grid[r][c];
+                if (!td || !selectedSet.has(td)) { alert('Vùng chọn phải tạo thành 1 khối hình chữ nhật liền nhau thì mới ghép được.'); return; }
+            }
+        }
+        const uniqueTds = Array.from(selectedSet).sort((a, b) => {
+            const pa = cellPos.get(a), pb = cellPos.get(b);
+            return (pa.row - pb.row) || (pa.col - pb.col);
+        });
+        const master = uniqueTds[0];
+        const combinedHtml = uniqueTds
+            .map(td => { const cd = td.querySelector('.irt-table-cell'); return cd ? cd.innerHTML.trim() : ''; })
+            .filter(Boolean)
+            .join('<br>');
+        const masterCellDiv = master.querySelector('.irt-table-cell');
+        if (masterCellDiv) masterCellDiv.innerHTML = combinedHtml;
+        const newCellPos = new Map(cellPos);
+        newCellPos.set(master, { row: minR, col: minC, rowspan: maxR - minR + 1, colspan: maxC - minC + 1 });
+        uniqueTds.slice(1).forEach(td => newCellPos.delete(td));
+        const newGrid = [];
+        for (let r = 0; r < numRows; r++) {
+            newGrid[r] = [];
+            for (let c = 0; c < numCols; c++) {
+                newGrid[r][c] = (r >= minR && r <= maxR && c >= minC && c <= maxC) ? master : (grid[r] ? grid[r][c] : null);
+            }
+        }
+        iltRebuildTable(tableEl, newGrid, newCellPos, numRows, numCols, makeCellFn);
+    }
+    function iltUnmergeCell(tableEl, td, makeCellFn) {
+        const { grid, cellPos, numRows, numCols } = iltTableOccupancy(tableEl);
+        const p = cellPos.get(td);
+        if (!p || (p.rowspan <= 1 && p.colspan <= 1)) return;
+        const newCellPos = new Map(cellPos);
+        newCellPos.set(td, { row: p.row, col: p.col, rowspan: 1, colspan: 1 });
+        const newGrid = [];
+        for (let r = 0; r < numRows; r++) newGrid[r] = (grid[r] || []).slice();
+        for (let r = p.row; r < p.row + p.rowspan; r++) {
+            for (let c = p.col; c < p.col + p.colspan; c++) {
+                if (r === p.row && c === p.col) continue;
+                const emptyTd = makeCellFn('');
+                newGrid[r][c] = emptyTd;
+                newCellPos.set(emptyTd, { row: r, col: c, rowspan: 1, colspan: 1 });
+            }
+        }
+        iltRebuildTable(tableEl, newGrid, newCellPos, numRows, numCols, makeCellFn);
+    }
+
+    // ---- Khối: Bảng ----
+    function buildTableBlock(data) {
+        const el = iltBlockShell('table', '📊 Bảng');
+        const body = document.createElement('div');
+        body.classList.add('irt-table-block-body');
+
+        const toolbar = document.createElement('div');
+        toolbar.className = 'ctest-rich-toolbar irt-table-toolbar';
+        toolbar.innerHTML =
+            '<button type="button" class="ctest-rich-btn" data-cmd="bold" title="In đậm"><b>B</b></button>' +
+            '<button type="button" class="ctest-rich-btn" data-cmd="underline" title="Gạch chân = tạo chỗ trống"><u>U</u></button>' +
+            '<button type="button" class="ctest-rich-btn" data-cmd="italic" title="In nghiêng"><i>I</i></button>' +
+            '<span class="ctest-rich-hint">Bấm vào 1 ô rồi bôi đen từ cần ẩn, bấm <u>U</u> (gạch chân) để tạo chỗ trống trong ô đó. Giữ <b>Ctrl</b> (⌘ trên Mac) rồi bấm chọn nhiều ô liền khối để ghép lại; bấm ✂️ trên ô đã ghép để tách ra lại.</span>';
+        body.appendChild(toolbar);
+
+        let lastFocusedCell = null;
+        toolbar.querySelectorAll('.ctest-rich-btn').forEach(btn => {
+            btn.addEventListener('mousedown', e => e.preventDefault());
+            btn.addEventListener('click', () => {
+                if (!lastFocusedCell) return;
+                lastFocusedCell.focus();
+                document.execCommand(btn.dataset.cmd, false, null);
+                lastFocusedCell.dispatchEvent(new Event('input', { bubbles: true }));
+            });
+        });
+
+        const tableWrap = document.createElement('div');
+        tableWrap.className = 'irt-table-editor-wrap';
+        const table = document.createElement('table');
+        table.className = 'irt-table-editor';
+        tableWrap.appendChild(table);
+        body.appendChild(tableWrap);
+
+        function makeCell(html) {
+            const td = document.createElement('td');
+            const cell = document.createElement('div');
+            cell.className = 'irt-table-cell';
+            cell.contentEditable = 'true';
+            cell.innerHTML = html || '';
+            cell.addEventListener('focus', () => { lastFocusedCell = cell; });
+            td.appendChild(cell);
+            return td;
+        }
+        function currentColCount() {
+            const occ = iltTableOccupancy(table);
+            return occ.numCols || 2;
+        }
+        function addRow(cellsHtml) {
+            const tr = document.createElement('tr');
+            const cols = cellsHtml || new Array(currentColCount()).fill('');
+            cols.forEach(h => tr.appendChild(makeCell(h)));
+            table.appendChild(tr);
+            refreshMerge();
+        }
+        // Giữ Ctrl/Cmd rồi bấm vào 1 ô để CHỌN (không vào chế độ gõ chữ) — dùng để chọn nhiều ô cần ghép.
+        table.addEventListener('mousedown', (e) => {
+            if (!(e.ctrlKey || e.metaKey)) return;
+            const cellDiv = e.target.closest('.irt-table-cell');
+            if (!cellDiv) return;
+            e.preventDefault();
+            const td = cellDiv.closest('td');
+            if (td) td.classList.toggle('irt-cell-selected');
+        });
+        function refreshMerge() {
+            iltRefreshMergeUI(table, (td) => {
+                iltUnmergeCell(table, td, makeCell);
+                refreshMerge();
+                body.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
+            });
+        }
+        function loadInitialRows(rows) {
+            table.innerHTML = '';
+            rows.forEach(rowArr => {
+                const tr = document.createElement('tr');
+                rowArr.forEach(c => {
+                    const isObj = c && typeof c === 'object';
+                    const td = makeCell(isObj ? c.html : c);
+                    if (isObj && c.colspan > 1) td.colSpan = c.colspan;
+                    if (isObj && c.rowspan > 1) td.rowSpan = c.rowspan;
+                    tr.appendChild(td);
+                });
+                table.appendChild(tr);
+            });
+        }
+        const initRows = (data.rows && data.rows.length) ? data.rows : [['', ''], ['', '']];
+        loadInitialRows(initRows);
+        refreshMerge();
+
+        const ctrlRow = document.createElement('div');
+        ctrlRow.className = 'irt-table-controls';
+        ctrlRow.innerHTML =
+            '<button type="button" class="ctest-add-row-btn" data-act="add-row">+ Thêm dòng</button>' +
+            '<button type="button" class="ctest-add-row-btn" data-act="add-col">+ Thêm cột</button>' +
+            '<button type="button" class="ctest-add-row-btn" data-act="del-row">- Xoá dòng cuối</button>' +
+            '<button type="button" class="ctest-add-row-btn" data-act="del-col">- Xoá cột cuối</button>' +
+            '<button type="button" class="ctest-add-row-btn irt-merge-btn" data-act="merge">🔀 Ghép ô đã chọn</button>';
+        body.appendChild(ctrlRow);
+        ctrlRow.addEventListener('click', (e) => {
+            const btn = e.target.closest('button[data-act]');
+            if (!btn) return;
+            const act = btn.dataset.act;
+            if (act === 'add-row') { addRow(); }
+            else if (act === 'add-col') { Array.from(table.querySelectorAll(':scope > tr')).forEach(tr => tr.appendChild(makeCell(''))); refreshMerge(); }
+            else if (act === 'del-row') {
+                const occ = iltTableOccupancy(table);
+                if (occ.numRows <= 1) return;
+                const lastRow = occ.numRows - 1;
+                let blocked = false;
+                occ.cellPos.forEach(pos => { if (pos.rowspan > 1 && pos.row < lastRow && pos.row + pos.rowspan - 1 >= lastRow) blocked = true; });
+                if (blocked) { alert('Không thể xoá dòng cuối vì có ô đã ghép trải xuống dòng này. Hãy bấm ✂️ để bỏ ghép ô đó trước.'); return; }
+                if (table.children.length > 1) table.lastElementChild.remove();
+                refreshMerge();
+            }
+            else if (act === 'del-col') {
+                const occ = iltTableOccupancy(table);
+                if (occ.numCols <= 1) return;
+                const lastCol = occ.numCols - 1;
+                let blocked = false;
+                occ.cellPos.forEach(pos => { if (pos.colspan > 1 && pos.col < lastCol && pos.col + pos.colspan - 1 >= lastCol) blocked = true; });
+                if (blocked) { alert('Không thể xoá cột cuối vì có ô đã ghép trải qua cột này. Hãy bấm ✂️ để bỏ ghép ô đó trước.'); return; }
+                Array.from(table.querySelectorAll(':scope > tr')).forEach(tr => { if (tr.lastElementChild) tr.lastElementChild.remove(); });
+                refreshMerge();
+            }
+            else if (act === 'merge') {
+                iltMergeSelectedCells(table, makeCell);
+                refreshMerge();
+            }
+            body.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
+        });
+
+        return wireBlockChrome(el, body);
+    }
+    function collectTableBlock(el) {
+        const rows = Array.from(el.querySelectorAll('.irt-table-editor > tr')).map(tr =>
+            Array.from(tr.children).map(td => {
+                const cellDiv = td.querySelector('.irt-table-cell');
+                const html = cellDiv ? cellDiv.innerHTML.trim() : '';
+                const colspan = td.colSpan > 1 ? td.colSpan : 1;
+                const rowspan = td.rowSpan > 1 ? td.rowSpan : 1;
+                return (colspan > 1 || rowspan > 1) ? { html, colspan, rowspan } : html;
+            })
+        );
+        return { id: el.dataset.blockId, type: 'table', rows };
+    }
+
+    // ---- Khối: Hình ảnh ----
+    function buildImageBlock(data) {
+        const el = iltBlockShell('image', '🖼️ Hình ảnh');
+        const body = document.createElement('div');
+        body.appendChild(iltImageField(data.url));
+        const capInput = document.createElement('input');
+        capInput.type = 'text';
+        capInput.className = 'news-edit-input irt-image-caption-input';
+        capInput.placeholder = 'Chú thích ảnh (tuỳ chọn)';
+        capInput.value = data.caption || '';
+        body.appendChild(capInput);
+        return wireBlockChrome(el, body);
+    }
+    function collectImageBlock(el) {
+        return {
+            id: el.dataset.blockId, type: 'image',
+            url: iltImageUrl(el.querySelector('.irt-image-field')),
+            caption: el.querySelector('.irt-image-caption-input').value.trim()
+        };
+    }
+
+    // ---- Khối: Trắc nghiệm ----
+    function iltOptionsEditor(options, correctIndex) {
+        const box = document.createElement('div');
+        box.className = 'ctest-options-editor';
+        const groupName = iltUid('opt');
+        const opts = (options && options.length ? options : ['', '']);
+        opts.forEach((text, i) => box.appendChild(optionRow(text, i === correctIndex)));
+        const addBtn = document.createElement('button');
+        addBtn.type = 'button';
+        addBtn.className = 'ctest-add-option-btn';
+        addBtn.textContent = '+ Thêm đáp án';
+        addBtn.addEventListener('click', () => {
+            box.insertBefore(optionRow('', false), addBtn);
+            box.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
+        });
+        box.appendChild(addBtn);
+        return box;
+
+        function optionRow(text, isCorrect) {
+            const row = document.createElement('div');
+            row.className = 'ctest-option-row';
+            const radio = document.createElement('input');
+            radio.type = 'radio';
+            radio.name = groupName;
+            radio.className = 'ctest-option-correct-radio';
+            radio.checked = !!isCorrect;
+            const richWrap = iltCreateRichEditor(text, 'Nhập đáp án...', '', true);
+            const rm = document.createElement('button');
+            rm.type = 'button';
+            rm.className = 'ctest-row-remove-btn';
+            rm.textContent = '✕';
+            rm.addEventListener('click', () => {
+                if (box.querySelectorAll('.ctest-option-row').length <= 2) { alert('Cần ít nhất 2 đáp án.'); return; }
+                row.remove();
+                box.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
+            });
+            row.appendChild(radio); row.appendChild(richWrap); row.appendChild(rm);
+            return row;
+        }
+    }
+    function iltCollectOptions(box) {
+        const rows = Array.from(box.querySelectorAll(':scope > .ctest-option-row'));
+        const options = rows.map(r => iltRichHtml(r.querySelector('.ctest-rich-wrap')));
+        let correct = -1;
+        rows.forEach((r, i) => { if (r.querySelector('.ctest-option-correct-radio').checked) correct = i; });
+        return { options, correct };
+    }
+    function buildMcqBlock(data) {
+        const el = iltBlockShell('mcq', '✅ Câu trắc nghiệm');
+        const body = document.createElement('div');
+        const promptWrap = iltCreateRichEditor(data.prompt_html || '', 'Nhập câu hỏi trắc nghiệm...', '');
+        promptWrap.classList.add('irt-mcq-prompt-editor');
+        body.appendChild(promptWrap);
+        body.appendChild(iltImageField(data.image_url));
+
+        // Điền nhanh cho 2 dạng rất hay gặp trong IELTS Reading: True/False/Not Given
+        // và Yes/No/Not Given — bấm là thay ngay 3 đáp án, khỏi gõ tay.
+        const presetBar = document.createElement('div');
+        presetBar.className = 'irt-mcq-preset-bar';
+        presetBar.innerHTML =
+            '<button type="button" class="grammar-admin-btn irt-preset-btn" data-preset="tfng">🔤 Điền nhanh: True / False / Not Given</button>' +
+            '<button type="button" class="grammar-admin-btn irt-preset-btn" data-preset="ynng">🔤 Điền nhanh: Yes / No / Not Given</button>';
+        body.appendChild(presetBar);
+
+        let optionsBox = iltOptionsEditor(data.options, data.correct);
+        body.appendChild(optionsBox);
+
+        presetBar.addEventListener('click', (e) => {
+            const btn = e.target.closest('.irt-preset-btn');
+            if (!btn) return;
+            const preset = btn.dataset.preset === 'tfng' ? ['True', 'False', 'Not Given'] : ['Yes', 'No', 'Not Given'];
+            const fresh = iltOptionsEditor(preset, -1);
+            optionsBox.replaceWith(fresh);
+            optionsBox = fresh;
+            body.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
+        });
+
+        return wireBlockChrome(el, body);
+    }
+    function collectMcqBlock(el) {
+        const { options, correct } = iltCollectOptions(el.querySelector('.irt-block-body > .ctest-options-editor'));
+        return {
+            id: el.dataset.blockId, type: 'mcq',
+            prompt_html: iltRichHtml(el.querySelector('.irt-mcq-prompt-editor')),
+            image_url: iltImageUrl(el.querySelector('.irt-image-field')),
+            options, correct
+        };
+    }
+
+    // ---- Khối: Nối / Ghép (Matching) — dùng cho Matching Heading / Feature /
+    // Information / Ending: có 1 ngân hàng đáp án dùng chung, mỗi câu hỏi
+    // chọn 1 mục trong ngân hàng (giống hệt cách làm bài thi thật). ----
+    function buildMatchingBankRow(key, text) {
+        const row = document.createElement('div');
+        row.className = 'irt-matching-bank-row';
+        row.innerHTML =
+            '<input type="text" class="news-edit-input irt-matching-bank-key" placeholder="A / i...">' +
+            '<input type="text" class="news-edit-input irt-matching-bank-text" placeholder="Nội dung lựa chọn...">' +
+            '<button type="button" class="ctest-row-remove-btn" title="Xoá dòng">✕</button>';
+        row.querySelector('.irt-matching-bank-key').value = key || '';
+        row.querySelector('.irt-matching-bank-text').value = text || '';
+        row.querySelector('.ctest-row-remove-btn').addEventListener('click', () => {
+            const list = row.parentElement;
+            // Giảng viên có thể xoá hết để ngân hàng đáp án trống nếu chưa cần dùng.
+            row.remove();
+            list.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
+        });
+        return row;
+    }
+    function buildMatchingQuestionRow(promptHtml, correct) {
+        const row = document.createElement('div');
+        row.className = 'irt-matching-question-row';
+        const promptWrap = iltCreateRichEditor(promptHtml || '', 'Nội dung câu hỏi (VD: Đoạn văn B / Statement 1...)', '', true);
+        promptWrap.classList.add('irt-matching-question-prompt');
+        const correctInput = document.createElement('input');
+        correctInput.type = 'text';
+        correctInput.className = 'news-edit-input irt-matching-question-correct';
+        correctInput.placeholder = 'Đáp án đúng (VD: A)';
+        correctInput.value = correct || '';
+        const rm = document.createElement('button');
+        rm.type = 'button';
+        rm.className = 'ctest-row-remove-btn';
+        rm.textContent = '✕';
+        rm.addEventListener('click', () => {
+            const list = row.parentElement;
+            if (list.querySelectorAll(':scope > .irt-matching-question-row').length <= 1) { alert('Cần ít nhất 1 câu hỏi.'); return; }
+            row.remove();
+            list.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
+        });
+        row.appendChild(promptWrap); row.appendChild(correctInput); row.appendChild(rm);
+        return row;
+    }
+    function buildMatchingBlock(data) {
+        const el = iltBlockShell('matching', '🔗 Nối / Ghép (Matching)');
+        const body = document.createElement('div');
+
+        const bankLabel = document.createElement('label');
+        bankLabel.className = 'news-quiz-edit-label';
+        bankLabel.textContent = 'Ngân hàng đáp án dùng chung (VD Matching Heading dùng i, ii, iii...; Feature/Information/Ending dùng A, B, C...) — có thể để trống';
+        body.appendChild(bankLabel);
+
+        const bankList = document.createElement('div');
+        bankList.className = 'irt-matching-bank-list';
+        const bank = (data.bank && data.bank.length) ? data.bank : [{ key: 'A', text: '' }, { key: 'B', text: '' }];
+        bank.forEach(b => bankList.appendChild(buildMatchingBankRow(b.key, b.text)));
+        body.appendChild(bankList);
+
+        const addBankBtn = document.createElement('button');
+        addBankBtn.type = 'button';
+        addBankBtn.className = 'ctest-add-row-btn';
+        addBankBtn.textContent = '+ Thêm lựa chọn vào ngân hàng';
+        addBankBtn.addEventListener('click', () => {
+            bankList.appendChild(buildMatchingBankRow('', ''));
+            bankList.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
+        });
+        body.appendChild(addBankBtn);
+
+        const qLabel = document.createElement('label');
+        qLabel.className = 'news-quiz-edit-label';
+        qLabel.style.marginTop = '14px';
+        qLabel.textContent = 'Danh sách câu hỏi (mỗi câu chọn 1 đáp án đúng từ ngân hàng ở trên)';
+        body.appendChild(qLabel);
+
+        const qList = document.createElement('div');
+        qList.className = 'irt-matching-questions-list';
+        const questions = (data.questions && data.questions.length) ? data.questions : [{ prompt_html: '', correct: '' }];
+        questions.forEach(q => qList.appendChild(buildMatchingQuestionRow(q.prompt_html, q.correct)));
+        body.appendChild(qList);
+
+        const addQBtn = document.createElement('button');
+        addQBtn.type = 'button';
+        addQBtn.className = 'ctest-add-row-btn';
+        addQBtn.textContent = '+ Thêm câu hỏi';
+        addQBtn.addEventListener('click', () => {
+            qList.appendChild(buildMatchingQuestionRow('', ''));
+            qList.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
+        });
+        body.appendChild(addQBtn);
+
+        return wireBlockChrome(el, body);
+    }
+    function collectMatchingBlock(el) {
+        const bank = Array.from(el.querySelectorAll('.irt-matching-bank-row')).map(row => ({
+            key: row.querySelector('.irt-matching-bank-key').value.trim(),
+            text: row.querySelector('.irt-matching-bank-text').value.trim()
+        })).filter(b => b.key);
+        const questions = Array.from(el.querySelectorAll('.irt-matching-question-row')).map(row => ({
+            prompt_html: iltRichHtml(row.querySelector('.irt-matching-question-prompt')),
+            correct: row.querySelector('.irt-matching-question-correct').value.trim()
+        }));
+        return { id: el.dataset.blockId, type: 'matching', bank, questions };
+    }
+
+    const ILT_BLOCK_BUILDERS = {
+        paragraph: (d) => buildParagraphBlock(d, false),
+        framed:    (d) => buildParagraphBlock(d, true),
+        table:     buildTableBlock,
+        image:     buildImageBlock,
+        mcq:       buildMcqBlock,
+        matching:  buildMatchingBlock
+    };
+    const ILT_BLOCK_COLLECTORS = {
+        paragraph: (el) => collectParagraphBlock(el, false),
+        framed:    (el) => collectParagraphBlock(el, true),
+        table:     collectTableBlock,
+        image:     collectImageBlock,
+        mcq:       collectMcqBlock,
+        matching:  collectMatchingBlock
+    };
+    function buildBlock(type, data) {
+        const fn = ILT_BLOCK_BUILDERS[type];
+        return fn ? fn(data || {}) : null;
+    }
+    function collectBlock(el) {
+        const fn = ILT_BLOCK_COLLECTORS[el.dataset.blockType];
+        return fn ? fn(el) : null;
+    }
+
+    // =====================================================================
+    // ===== KHUNG SOẠN PHẦN NHỎ (section) & PART ==========================
+    // =====================================================================
+    function buildSectionEditor(section) {
+        const wrap = document.createElement('div');
+        wrap.className = 'irt-section-editor';
+        wrap.dataset.sectionId = section.id || iltUid('sec');
+
+        const headerRow = document.createElement('div');
+        headerRow.className = 'irt-section-header-row';
+        headerRow.innerHTML =
+            '<input type="text" class="news-edit-input irt-section-heading-input" placeholder="Tiêu đề phần nhỏ (tuỳ chọn) — VD: Questions 21-25, hoặc Booking Form">' +
+            '<button type="button" class="ctest-section-remove-btn irt-section-remove-btn" title="Xoá phần nhỏ này">🗑️</button>';
+        headerRow.querySelector('.irt-section-heading-input').value = section.heading || '';
+        wrap.appendChild(headerRow);
+
+        const instrEditor = iltCreateRichEditor(section.instruction_html || '', 'Hướng dẫn làm bài (tuỳ chọn) — VD: Write NO MORE THAN TWO WORDS AND/OR A NUMBER.', '', true);
+        instrEditor.classList.add('irt-section-instruction-editor');
+        wrap.appendChild(instrEditor);
+
+        const blocksList = document.createElement('div');
+        blocksList.className = 'irt-blocks-list';
+        (section.blocks || []).forEach(b => { const nb = buildBlock(b.type, b); if (nb) blocksList.appendChild(nb); });
+        wrap.appendChild(blocksList);
+
+        const addBar = document.createElement('div');
+        addBar.className = 'irt-add-block-bar';
+        addBar.innerHTML =
+            '<button type="button" class="ctest-type-btn" data-type="paragraph">📝 Đoạn văn (điền từ)</button>' +
+            '<button type="button" class="ctest-type-btn" data-type="framed">📦 Đóng khung</button>' +
+            '<button type="button" class="ctest-type-btn" data-type="table">📊 Bảng</button>' +
+            '<button type="button" class="ctest-type-btn" data-type="image">🖼️ Hình ảnh</button>' +
+            '<button type="button" class="ctest-type-btn" data-type="mcq">✅ Trắc nghiệm</button>' +
+            '<button type="button" class="ctest-type-btn" data-type="matching">🔗 Nối/Ghép (Matching)</button>';
+        addBar.addEventListener('click', (e) => {
+            const btn = e.target.closest('.ctest-type-btn');
+            if (!btn) return;
+            const nb = buildBlock(btn.dataset.type, {});
+            if (nb) blocksList.appendChild(nb);
+            blocksList.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
+        });
+        wrap.appendChild(addBar);
+
+        wrap.querySelector('.irt-section-remove-btn').addEventListener('click', () => {
+            const list = wrap.parentElement;
+            if (list.querySelectorAll(':scope > .irt-section-editor').length <= 1) { alert('Mỗi Part cần ít nhất 1 phần.'); return; }
+            if (!confirm('Xoá phần nhỏ này (kèm toàn bộ nội dung bên trong)?')) return;
+            wrap.remove();
+            list.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
+        });
+
+        return wrap;
+    }
+    function collectSectionEditor(wrap) {
+        const blocksList = wrap.querySelector(':scope > .irt-blocks-list');
+        const blocks = Array.from(blocksList.children).map(collectBlock).filter(Boolean);
+        return {
+            id: wrap.dataset.sectionId,
+            heading: wrap.querySelector('.irt-section-heading-input').value.trim(),
+            instruction_html: iltRichHtml(wrap.querySelector('.irt-section-instruction-editor')),
+            blocks
+        };
+    }
+
+    function buildPartEditor(part, idx) {
+        const wrap = document.createElement('div');
+        wrap.className = 'irt-part-editor';
+        wrap.dataset.partIdx = String(idx);
+
+        const header = document.createElement('div');
+        header.className = 'irt-part-editor-header';
+        header.innerHTML = '<h4>' + PART_LABELS[idx] + '</h4><span class="irt-part-count-badge"></span>';
+        wrap.appendChild(header);
+
+        // Đoạn văn đọc (passage) + hình minh hoạ (nếu có) — nội dung chính học viên sẽ đọc.
+        const passageWrap = document.createElement('div');
+        passageWrap.className = 'irt-passage-editor-wrap';
+        const passageLabel = document.createElement('label');
+        passageLabel.className = 'news-quiz-edit-label';
+        passageLabel.textContent = '📖 Đoạn văn đọc của ' + PART_LABELS[idx];
+        passageWrap.appendChild(passageLabel);
+        const passageEditor = iltCreateRichEditor(
+            part.passage_html || '',
+            'Dán / nhập đoạn văn đọc... (có thể đánh dấu đoạn A, B, C... ngay trong bài để dùng cho câu hỏi Matching Heading/Information)',
+            '', false
+        );
+        passageEditor.classList.add('irt-part-passage-editor');
+        passageWrap.appendChild(passageEditor);
+        const passageImageField = iltImageField(part.passage_image_url || '');
+        passageImageField.classList.add('irt-passage-image-field');
+        passageWrap.appendChild(passageImageField);
+        wrap.appendChild(passageWrap);
+
+        const sectionsList = document.createElement('div');
+        sectionsList.className = 'irt-sections-list';
+        (part.sections && part.sections.length ? part.sections : [{ id: iltUid('sec'), heading: '', instruction_html: '', blocks: [] }])
+            .forEach(sec => sectionsList.appendChild(buildSectionEditor(sec)));
+        wrap.appendChild(sectionsList);
+
+        const addSecBtn = document.createElement('button');
+        addSecBtn.type = 'button';
+        addSecBtn.className = 'ctest-add-row-btn irt-add-section-btn';
+        addSecBtn.textContent = '+ Thêm phần nhỏ trong Passage này';
+        addSecBtn.addEventListener('click', () => {
+            sectionsList.appendChild(buildSectionEditor({ id: iltUid('sec'), heading: '', instruction_html: '', blocks: [] }));
+            sectionsList.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
+        });
+        wrap.appendChild(addSecBtn);
+
+        return wrap;
+    }
+    function collectPartEditor(wrap, idx) {
+        const sectionsList = wrap.querySelector(':scope > .irt-sections-list');
+        const sections = Array.from(sectionsList.children).map(collectSectionEditor);
+        return {
+            part_number: idx + 1,
+            passage_html: iltRichHtml(wrap.querySelector('.irt-part-passage-editor')),
+            passage_image_url: iltImageUrl(wrap.querySelector('.irt-passage-image-field')),
+            sections
+        };
+    }
+
+    function emptyPart(n) { return { part_number: n, passage_html: '', passage_image_url: '', sections: [{ id: iltUid('sec'), heading: '', instruction_html: '', blocks: [] }] }; }
+
+    function renderPartsEditor(parts) {
+        partsContainer.innerHTML = '';
+        const list = (parts && parts.length === 3) ? parts : [1, 2, 3].map(emptyPart);
+        list.forEach((p, i) => partsContainer.appendChild(buildPartEditor(p, i)));
+        refreshSummary();
+    }
+    function collectAllParts() {
+        return Array.from(partsContainer.querySelectorAll(':scope > .irt-part-editor')).map(collectPartEditor);
+    }
+
+    function countBlockQuestionsLive(el) {
+        const type = el.dataset.blockType;
+        if (type === 'mcq') return 1;
+        if (type === 'matching') return el.querySelectorAll('.irt-matching-question-row').length;
+        if (type === 'paragraph' || type === 'framed') return iltCountBlanksInHtml(iltRichHtml(el.querySelector('.irt-paragraph-editor')));
+        if (type === 'table') {
+            let n = 0;
+            el.querySelectorAll('.irt-table-cell').forEach(c => { n += iltCountBlanksInHtml(c.innerHTML); });
+            return n;
+        }
+        return 0;
+    }
+    function refreshSummary() {
+        let total = 0;
+        Array.from(partsContainer.querySelectorAll(':scope > .irt-part-editor')).forEach(partEl => {
+            let count = 0;
+            partEl.querySelectorAll('.irt-blocks-list > .irt-block').forEach(b => { count += countBlockQuestionsLive(b); });
+            total += count;
+            const badge = partEl.querySelector('.irt-part-count-badge');
+            if (badge) {
+                badge.textContent = count + ' câu';
+                badge.className = 'irt-part-count-badge' + (count >= 12 && count <= 14 ? ' irt-count-ok' : ' irt-count-warn');
+            }
+        });
+        if (summaryBar) {
+            summaryBar.innerHTML = '🔢 Tổng số câu hỏi hiện tại: <b>' + total + '</b> / 40' +
+                (total === 40
+                    ? ' <span class="irt-count-ok">✅ Đủ 40 câu, đúng chuẩn IELTS</span>'
+                    : ' <span class="irt-count-warn">(đề IELTS Reading thật có đúng 40 câu chia cho 3 Passage — bạn có thể canh cho khớp, hoặc để khác nếu chỉ luyện tập riêng lẻ)</span>');
+        }
+    }
+    if (partsContainer) {
+        partsContainer.addEventListener('input', refreshSummary);
+        partsContainer.addEventListener('ctest-changed', refreshSummary);
+    }
+
+    // =====================================================================
+    // ===== TẢI / LƯU / XUẤT BẢN BÀI ĐỌC (giảng viên) ======================
+    // =====================================================================
+    let autosaveTimer = null;
+
+    function collectEditorPayload() {
+        return {
+            title: titleInput.value.trim(),
+            duration_minutes: (durationInput && durationInput.value) ? Number(durationInput.value) : null,
+            parts: collectAllParts()
+        };
+    }
+    function countTotalQuestions(test) {
+        return (test.parts || []).reduce((sum, p) => sum + (p.sections || []).reduce((s2, sec) =>
+            s2 + (sec.blocks || []).reduce((s3, b) => {
+                if (b.type === 'mcq') return s3 + 1;
+                if (b.type === 'matching') return s3 + (b.questions || []).length;
+                if (b.type === 'paragraph' || b.type === 'framed') return s3 + iltParseBlanks(b.html).blanks.length;
+                if (b.type === 'table') return s3 + (b.rows || []).reduce((s4, row) => s4 + row.reduce((s5, cell) => s5 + iltParseBlanks(cell && typeof cell === 'object' ? cell.html : cell).blanks.length, 0), 0);
+                return s3;
+            }, 0), 0), 0);
+    }
+    function scheduleAutosave() {
+        if (!currentEditingTestId) return;
+        saveStatusEl.textContent = 'Đang gõ...';
+        clearTimeout(autosaveTimer);
+        autosaveTimer = setTimeout(async () => {
+            try {
+                const payload = collectEditorPayload();
+                const { error } = await sb.from('ielts_reading_tests').update(payload).eq('id', currentEditingTestId);
+                if (error) throw error;
+                saveStatusEl.textContent = '💾 Đã lưu lúc ' + new Date().toLocaleTimeString('vi-VN');
+                const cached = myTestsCache.find(t => t.id === currentEditingTestId);
+                if (cached) Object.assign(cached, payload);
+            } catch (err) {
+                saveStatusEl.textContent = '❌ Lưu thất bại: ' + err.message;
+            }
+        }, 800);
+    }
+    if (partsContainer) {
+        partsContainer.addEventListener('input', scheduleAutosave);
+        partsContainer.addEventListener('change', scheduleAutosave);
+        partsContainer.addEventListener('ctest-changed', scheduleAutosave);
+    }
+    if (titleInput) titleInput.addEventListener('input', scheduleAutosave);
+
+    async function createNewTest() {
+        try {
+            const payload = { title: 'Bài đọc IELTS mới', duration_minutes: null, created_by: currentEmail, parts: [1, 2, 3].map(emptyPart) };
+            const { data, error } = await sb.from('ielts_reading_tests').insert(payload).select().single();
+            if (error) throw error;
+            myTestsCache.unshift(data);
+            openEditorForTest(data);
+        } catch (err) {
+            alert('Không thể tạo bài đọc mới: ' + err.message);
+        }
+    }
+    if (createBtn) createBtn.addEventListener('click', createNewTest);
+
+    function openEditorForTest(row) {
+        currentEditingTestId = row.id;
+        titleInput.value = row.title || '';
+        if (durationInput) durationInput.value = row.duration_minutes || '';
+        renderPartsEditor(row.parts);
+        deleteBtn.style.display = 'inline-block';
+        saveStatusEl.textContent = '';
+        showView('editor');
+    }
+
+    if (publishBtn) {
+        publishBtn.addEventListener('click', async () => {
+            if (!currentEditingTestId) return;
+            clearTimeout(autosaveTimer);
+            const payload = collectEditorPayload();
+            if (!payload.title) { alert('Hãy nhập tiêu đề bài đọc.'); return; }
+            try {
+                const { error } = await sb.from('ielts_reading_tests').update(payload).eq('id', currentEditingTestId);
+                if (error) throw error;
+                const cached = myTestsCache.find(t => t.id === currentEditingTestId);
+                if (cached) Object.assign(cached, payload);
+                saveStatusEl.textContent = '✅ Đã lưu bài đọc (' + countTotalQuestions(payload) + ' câu hỏi).';
+            } catch (err) {
+                alert('Lưu thất bại: ' + err.message);
+            }
+        });
+    }
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', async () => {
+            if (!currentEditingTestId) return;
+            if (!confirm('Xoá vĩnh viễn bài đọc này (kèm mọi bài nộp của học viên)?')) return;
+            try {
+                const { error } = await sb.from('ielts_reading_tests').delete().eq('id', currentEditingTestId);
+                if (error) throw error;
+                myTestsCache = myTestsCache.filter(t => t.id !== currentEditingTestId);
+                currentEditingTestId = null;
+                showView('list');
+                loadTests();
+            } catch (err) {
+                alert('Xoá thất bại: ' + err.message);
+            }
+        });
+    }
+    if (previewBtn) {
+        previewBtn.addEventListener('click', () => {
+            const payload = collectEditorPayload();
+            openTakeView({ id: currentEditingTestId, title: payload.title, parts: payload.parts }, 'preview');
+        });
+    }
+
+    // =====================================================================
+    // ===== KHUNG HIỂN THỊ DÙNG CHUNG: xem thử / làm bài / xem kết quả ====
+    // Số thứ tự câu hỏi (chỗ trống + trắc nghiệm + nối/ghép) được đánh 1 LẦN,
+    // đi qua toàn bộ nội dung theo đúng thứ tự xuất hiện trên trang
+    // (Passage 1→3, trên xuống dưới, trái sang phải trong bảng) — luôn khớp
+    // với cách trình bày thật của đề IELTS Reading.
+    // =====================================================================
+    function makeBlankNode(accepted, display, keyBase, mode) {
+        const span = document.createElement('span');
+        span.className = 'irt-numbered irt-blank';
+        const badge = document.createElement('span');
+        badge.className = 'irt-num-badge';
+        span.appendChild(badge);
+        span.appendChild(document.createTextNode('.\u00A0'));
+        if (mode === 'result') {
+            const given = currentAnswers[keyBase] || '';
+            const ok = accepted.some(a => iltNormalize(a) === iltNormalize(given));
+            span.dataset.isCorrect = ok ? '1' : '0';
+            const out = document.createElement('span');
+            out.className = 'irt-blank-result ' + (ok ? 'irt-ok' : 'irt-wrong');
+            out.textContent = ok ? (given || display) : (given ? given : '(bỏ trống)') + ' → ' + accepted.join(' / ');
+            span.appendChild(out);
+        } else {
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'irt-blank-input';
+            input.autocomplete = 'off';
+            input.autocapitalize = 'off';
+            input.spellcheck = false;
+            input.disabled = (mode === 'preview');
+            input.value = currentAnswers[keyBase] || '';
+            input.addEventListener('input', () => { currentAnswers[keyBase] = input.value; iltNotifyAnswerChanged(span); });
+            span.appendChild(input);
+        }
+        return span;
+    }
+
+    function renderParagraphBlockView(block, pIdx, secId, mode) {
+        const wrap = document.createElement('div');
+        wrap.className = 'irt-view-paragraph' + (block.type === 'framed' ? ' irt-view-framed' : '');
+        wrap.dataset.hlBlock = pIdx + '_' + secId + '_' + block.id;
+        const { displayHtml, blanks } = iltParseBlanks(block.html || '');
+        wrap.innerHTML = displayHtml;
+        wrap.querySelectorAll('.irt-blank-slot').forEach(slot => {
+            const idx = Number(slot.getAttribute('data-blank-idx'));
+            const b = blanks[idx];
+            const keyBase = pIdx + ':' + secId + ':' + block.id + ':' + idx;
+            slot.replaceWith(makeBlankNode(b.accepted, b.display, keyBase, mode));
+        });
+        return wrap;
+    }
+    function renderTableBlockView(block, pIdx, secId, mode) {
+        const wrap = document.createElement('div');
+        wrap.className = 'irt-view-table-wrap';
+        const table = document.createElement('table');
+        table.className = 'irt-view-table';
+        (block.rows || []).forEach((row, rIdx) => {
+            const tr = document.createElement('tr');
+            row.forEach((cell, cIdx) => {
+                const isObj = cell && typeof cell === 'object';
+                const cellHtml = isObj ? cell.html : cell;
+                const td = document.createElement('td');
+                if (isObj && cell.colspan > 1) td.colSpan = cell.colspan;
+                if (isObj && cell.rowspan > 1) td.rowSpan = cell.rowspan;
+                td.dataset.hlBlock = pIdx + '_' + secId + '_' + block.id + '_c' + rIdx + '_' + cIdx;
+                const { displayHtml, blanks } = iltParseBlanks(cellHtml || '');
+                td.innerHTML = displayHtml;
+                td.querySelectorAll('.irt-blank-slot').forEach(slot => {
+                    const idx = Number(slot.getAttribute('data-blank-idx'));
+                    const b = blanks[idx];
+                    const keyBase = pIdx + ':' + secId + ':' + block.id + ':cell' + rIdx + '_' + cIdx + ':' + idx;
+                    slot.replaceWith(makeBlankNode(b.accepted, b.display, keyBase, mode));
+                });
+                tr.appendChild(td);
+            });
+            table.appendChild(tr);
+        });
+        wrap.appendChild(table);
+        return wrap;
+    }
+    function renderImageBlockView(block) {
+        const wrap = document.createElement('div');
+        wrap.className = 'irt-view-image-wrap';
+        if (block.url) {
+            const img = document.createElement('img');
+            img.src = block.url;
+            img.className = 'irt-view-image';
+            wrap.appendChild(img);
+        }
+        if (block.caption) {
+            const cap = document.createElement('div');
+            cap.className = 'irt-view-image-caption';
+            cap.textContent = block.caption;
+            wrap.appendChild(cap);
+        }
+        return wrap;
+    }
+    function renderMcqBlockView(block, pIdx, secId, mode) {
+        const wrap = document.createElement('div');
+        wrap.className = 'irt-numbered irt-view-mcq';
+        wrap.dataset.hlBlock = pIdx + '_' + secId + '_' + block.id;
+        const head = document.createElement('div');
+        head.className = 'irt-mcq-head';
+        const badge = document.createElement('span');
+        badge.className = 'irt-num-badge';
+        head.appendChild(badge);
+        head.appendChild(document.createTextNode('.\u00A0'));
+        const promptEl = document.createElement('span');
+        promptEl.className = 'irt-mcq-prompt';
+        promptEl.innerHTML = block.prompt_html || '';
+        head.appendChild(promptEl);
+        wrap.appendChild(head);
+        if (block.image_url) {
+            const img = document.createElement('img');
+            img.src = block.image_url;
+            img.className = 'irt-view-image irt-mcq-image';
+            wrap.appendChild(img);
+        }
+        const keyBase = pIdx + ':' + secId + ':' + block.id;
+        const optWrap = document.createElement('div');
+        optWrap.className = 'irt-mcq-options';
+        (block.options || []).forEach((opt, i) => {
+            const label = document.createElement('label');
+            label.className = 'irt-mcq-option';
+            if (mode === 'result') {
+                const given = currentAnswers[keyBase];
+                if (i === block.correct) label.classList.add('irt-ok');
+                else if (given === i) label.classList.add('irt-wrong');
+            }
+            const radio = document.createElement('input');
+            radio.type = 'radio';
+            radio.name = 'mcq_' + keyBase;
+            radio.disabled = (mode !== 'take');
+            radio.checked = (currentAnswers[keyBase] === i);
+            radio.addEventListener('change', () => { currentAnswers[keyBase] = i; iltNotifyAnswerChanged(wrap); });
+            label.appendChild(radio);
+            const letterEl = document.createElement('span');
+            letterEl.className = 'irt-mcq-option-letter';
+            letterEl.textContent = String.fromCharCode(65 + i) + '. ';
+            label.appendChild(letterEl);
+            const optContent = document.createElement('span');
+            optContent.innerHTML = opt;
+            label.appendChild(optContent);
+            optWrap.appendChild(label);
+        });
+        wrap.appendChild(optWrap);
+        if (mode === 'result') wrap.dataset.isCorrect = (currentAnswers[keyBase] === block.correct) ? '1' : '0';
+        return wrap;
+    }
+    function renderMatchingBlockView(block, pIdx, secId, mode) {
+        const wrap = document.createElement('div');
+        wrap.className = 'irt-view-matching';
+
+        const bankBox = document.createElement('div');
+        bankBox.className = 'irt-view-matching-bank';
+        bankBox.dataset.hlBlock = pIdx + '_' + secId + '_' + block.id + '_bank';
+        const bankTitle = document.createElement('div');
+        bankTitle.className = 'irt-view-matching-bank-title';
+        bankTitle.textContent = 'Ngân hàng đáp án:';
+        bankBox.appendChild(bankTitle);
+        (block.bank || []).forEach(b => {
+            const item = document.createElement('div');
+            item.className = 'irt-view-matching-bank-item';
+            item.innerHTML = '<b>' + iltEscape(b.key) + '.</b> ' + iltEscape(b.text);
+            bankBox.appendChild(item);
+        });
+        wrap.appendChild(bankBox);
+
+        (block.questions || []).forEach((q, qIdx) => {
+            const keyBase = pIdx + ':' + secId + ':' + block.id + ':' + qIdx;
+            const row = document.createElement('div');
+            row.className = 'irt-numbered irt-view-matching-question';
+            const badge = document.createElement('span');
+            badge.className = 'irt-num-badge';
+            row.appendChild(badge);
+            row.appendChild(document.createTextNode('.\u00A0'));
+            const promptSpan = document.createElement('span');
+            promptSpan.dataset.hlBlock = pIdx + '_' + secId + '_' + block.id + '_q' + qIdx;
+            promptSpan.innerHTML = q.prompt_html || '';
+            row.appendChild(promptSpan);
+
+            if (mode === 'result') {
+                const given = currentAnswers[keyBase] || '';
+                const isCorrect = !!(given && q.correct && iltNormalize(given) === iltNormalize(q.correct));
+                row.dataset.isCorrect = isCorrect ? '1' : '0';
+                const answerSpan = document.createElement('span');
+                answerSpan.className = 'irt-view-matching-answer-key';
+                answerSpan.textContent = isCorrect
+                    ? ((given || '(bỏ trống)') + ' ✅')
+                    : ((given ? given : '(bỏ trống)') + ' ❌ (Đáp án đúng: ' + q.correct + ')');
+                row.appendChild(answerSpan);
+            } else {
+                const select = document.createElement('select');
+                const blankOpt = document.createElement('option');
+                blankOpt.value = ''; blankOpt.textContent = '— Chọn —';
+                select.appendChild(blankOpt);
+                (block.bank || []).forEach(b => {
+                    const opt = document.createElement('option');
+                    opt.value = b.key; opt.textContent = b.key;
+                    select.appendChild(opt);
+                });
+                select.value = currentAnswers[keyBase] || '';
+                select.disabled = (mode === 'preview');
+                select.addEventListener('change', () => { currentAnswers[keyBase] = select.value; iltNotifyAnswerChanged(row); });
+                row.appendChild(select);
+            }
+            wrap.appendChild(row);
+        });
+        return wrap;
+    }
+    function renderBlockView(block, pIdx, secId, mode) {
+        if (block.type === 'paragraph' || block.type === 'framed') return renderParagraphBlockView(block, pIdx, secId, mode);
+        if (block.type === 'table') return renderTableBlockView(block, pIdx, secId, mode);
+        if (block.type === 'image') return renderImageBlockView(block);
+        if (block.type === 'mcq') return renderMcqBlockView(block, pIdx, secId, mode);
+        if (block.type === 'matching') return renderMatchingBlockView(block, pIdx, secId, mode);
+        return document.createElement('div');
+    }
+
+    function renderTestBody(test, mode) {
+        const root = document.createElement('div');
+        root.className = 'irt-render-root';
+        (test.parts || []).forEach((part, pIdx) => {
+            const partEl = document.createElement('div');
+            partEl.className = 'irt-render-part';
+            partEl.dataset.partIdx = pIdx;
+            const h = document.createElement('div');
+            h.className = 'irt-render-part-title';
+            h.textContent = PART_LABELS[pIdx] || ('PASSAGE ' + (pIdx + 1));
+            partEl.appendChild(h);
+
+            // Đoạn văn đọc (passage) + hình minh hoạ (nếu có) — hiện phía trên câu hỏi.
+            if (part.passage_html || part.passage_image_url) {
+                const passageEl = document.createElement('div');
+                passageEl.className = 'irt-render-passage';
+                if (part.passage_image_url) {
+                    const img = document.createElement('img');
+                    img.src = part.passage_image_url;
+                    img.className = 'irt-render-passage-image';
+                    passageEl.appendChild(img);
+                }
+                if (part.passage_html) {
+                    const textEl = document.createElement('div');
+                    textEl.className = 'irt-render-passage-text';
+                    textEl.dataset.hlBlock = pIdx + '_passage';
+                    textEl.innerHTML = part.passage_html;
+                    passageEl.appendChild(textEl);
+                }
+                partEl.appendChild(passageEl);
+            }
+
+            (part.sections || []).forEach(sec => {
+                const secEl = document.createElement('div');
+                secEl.className = 'irt-render-section';
+                if (sec.heading) {
+                    const hh = document.createElement('div');
+                    hh.className = 'irt-render-section-heading';
+                    hh.textContent = sec.heading;
+                    secEl.appendChild(hh);
+                }
+                if (sec.instruction_html) {
+                    const inst = document.createElement('div');
+                    inst.className = 'irt-render-section-instruction';
+                    inst.innerHTML = sec.instruction_html;
+                    secEl.appendChild(inst);
+                }
+                (sec.blocks || []).forEach(block => { secEl.appendChild(renderBlockView(block, pIdx, sec.id, mode)); });
+                partEl.appendChild(secEl);
+            });
+
+            root.appendChild(partEl);
+        });
+
+        // ---- Đánh số toàn bộ, đi theo đúng thứ tự tài liệu (document order) ----
+        const numbered = Array.from(root.querySelectorAll('.irt-numbered'));
+        let correctCount = 0;
+        numbered.forEach((elm, i) => {
+            const num = i + 1;
+            const badge = elm.querySelector('.irt-num-badge');
+            if (badge) badge.textContent = num;
+            // [MỚI] gắn số câu + Part sở hữu để Bảng câu trả lời điều hướng đúng chỗ.
+            elm.dataset.qnum = num;
+            elm.id = 'irt-q-' + num;
+            const ownerPart = elm.closest('.irt-render-part');
+            if (ownerPart) elm.dataset.partIdx = ownerPart.dataset.partIdx;
+            if (mode === 'result' && elm.dataset.isCorrect === '1') correctCount++;
+        });
+        return { el: root, total: numbered.length, correctCount };
+    }
+
+    // =====================================================================
+    // ===== BÔI ĐEN (HIGHLIGHT) VĂN BẢN LÚC LÀM BÀI =======================
+    // Toạ độ lưu theo (blockKey, startOffset, endOffset) tính trên CHỮ THÔ
+    // của khối đó (đi qua mọi text node theo thứ tự tài liệu) — không phụ
+    // thuộc cấu trúc DOM cụ thể nên không bị lệch dù đã có sẵn highlight
+    // khác trong cùng khối. Bấm chọn chữ mới = tạo highlight; bấm lại vào
+    // chữ đã bôi đen = xoá highlight đó. Lưu xuống CSDL cho tới khi nộp bài
+    // (không mất khi tải lại trang giữa chừng).
+    // =====================================================================
+    function iltTextOffset(root, node, offset) {
+        let total = 0;
+        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+        let cur;
+        while ((cur = walker.nextNode())) {
+            if (cur === node) return total + offset;
+            total += cur.nodeValue.length;
+        }
+        return total;
+    }
+    function iltFindPositionByOffset(root, target) {
+        let total = 0;
+        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+        let cur, last = null;
+        while ((cur = walker.nextNode())) {
+            const len = cur.nodeValue.length;
+            if (target <= total + len) return { node: cur, offset: target - total };
+            total += len;
+            last = cur;
+        }
+        return last ? { node: last, offset: last.nodeValue.length } : null;
+    }
+    function iltWrapRangeInMark(range, id) {
+        const mark = document.createElement('mark');
+        mark.className = 'irt-highlight';
+        mark.dataset.hlId = id;
+        try {
+            range.surroundContents(mark);
+        } catch (e) {
+            // Vùng chọn cắt ngang nhiều node (vd. xen giữa 2 thẻ) — gộp nội dung lại rồi bọc chung.
+            const frag = range.extractContents();
+            mark.appendChild(frag);
+            range.insertNode(mark);
+        }
+    }
+    function iltUnwrapMark(mark) {
+        const parent = mark.parentNode;
+        if (!parent) return;
+        while (mark.firstChild) parent.insertBefore(mark.firstChild, mark);
+        parent.removeChild(mark);
+        parent.normalize();
+    }
+    function iltApplyHighlightsForPart(partEl, pIdx) {
+        currentHighlights.filter(h => h.partIdx === pIdx).forEach(h => {
+            const blockRoot = partEl.querySelector('[data-hl-block="' + h.blockKey + '"]');
+            if (!blockRoot) return;
+            const start = iltFindPositionByOffset(blockRoot, h.startOffset);
+            const end = iltFindPositionByOffset(blockRoot, h.endOffset);
+            if (!start || !end) return;
+            try {
+                const range = document.createRange();
+                range.setStart(start.node, start.offset);
+                range.setEnd(end.node, end.offset);
+                if (range.collapsed) return;
+                iltWrapRangeInMark(range, h.id);
+            } catch (e) { /* bỏ qua 1 highlight lỗi, không chặn hiển thị cả bài */ }
+        });
+    }
+    function iltHandleSelectionMouseUp() {
+        const root = takeBodyEl;
+        const sel = window.getSelection();
+        if (!sel || sel.isCollapsed || sel.rangeCount === 0) return;
+        const range = sel.getRangeAt(0);
+        if (range.collapsed || !root.contains(range.commonAncestorContainer)) return;
+        let blockRoot = range.commonAncestorContainer;
+        if (blockRoot.nodeType === 3) blockRoot = blockRoot.parentElement;
+        blockRoot = blockRoot && blockRoot.closest('[data-hl-block]');
+        if (!blockRoot || !root.contains(blockRoot)) { sel.removeAllRanges(); return; }
+        // Chỉ cho bôi đen trong phạm vi 1 khối (không cho kéo xuyên nhiều đoạn/ô khác nhau).
+        const startEl = range.startContainer.nodeType === 3 ? range.startContainer.parentElement : range.startContainer;
+        const endEl = range.endContainer.nodeType === 3 ? range.endContainer.parentElement : range.endContainer;
+        if (!blockRoot.contains(startEl) || !blockRoot.contains(endEl)) { sel.removeAllRanges(); return; }
+        const startOffset = iltTextOffset(blockRoot, range.startContainer, range.startOffset);
+        const endOffset = iltTextOffset(blockRoot, range.endContainer, range.endOffset);
+        if (endOffset <= startOffset) { sel.removeAllRanges(); return; }
+        const id = iltUid('hl');
+        try { iltWrapRangeInMark(range, id); } catch (e) { sel.removeAllRanges(); return; }
+        const newHl = { id, partIdx: currentPartIdx, blockKey: blockRoot.dataset.hlBlock, startOffset, endOffset };
+        currentHighlights.push(newHl);
+        iltHighlightUndoStack.push({ type: 'add', highlight: newHl });
+        iltHighlightRedoStack = [];
+        sel.removeAllRanges();
+        iltScheduleProgressSave();
+    }
+    function iltHandleClickForHighlight(e) {
+        const mark = e.target.closest && e.target.closest('mark.irt-highlight');
+        if (!mark) return;
+        const sel = window.getSelection();
+        if (sel && !sel.isCollapsed) return; // đang kéo chọn chữ khác, không phải bấm để xoá
+        const id = mark.dataset.hlId;
+        const removedHl = currentHighlights.find(h => h.id === id);
+        iltUnwrapMark(mark);
+        currentHighlights = currentHighlights.filter(h => h.id !== id);
+        if (removedHl) {
+            iltHighlightUndoStack.push({ type: 'remove', highlight: removedHl });
+            iltHighlightRedoStack = [];
+        }
+        iltScheduleProgressSave();
+    }
+
+    // ---- Undo (Ctrl+Z) / Redo (Ctrl+Y hoặc Ctrl+Shift+Z) cho thao tác bôi đen ----
+    function iltFindHighlightBlockRoot(blockKey) {
+        return takeBodyEl ? takeBodyEl.querySelector('[data-hl-block="' + blockKey + '"]') : null;
+    }
+    function iltInsertHighlightMark(h) {
+        const blockRoot = iltFindHighlightBlockRoot(h.blockKey);
+        if (!blockRoot) return false;
+        const start = iltFindPositionByOffset(blockRoot, h.startOffset);
+        const end = iltFindPositionByOffset(blockRoot, h.endOffset);
+        if (!start || !end) return false;
+        try {
+            const range = document.createRange();
+            range.setStart(start.node, start.offset);
+            range.setEnd(end.node, end.offset);
+            if (range.collapsed) return false;
+            iltWrapRangeInMark(range, h.id);
+            return true;
+        } catch (e) { return false; }
+    }
+    function iltRemoveHighlightMark(id) {
+        const mark = takeBodyEl ? takeBodyEl.querySelector('mark.irt-highlight[data-hl-id="' + id + '"]') : null;
+        if (mark) iltUnwrapMark(mark);
+    }
+    function iltGoToHighlightPart(partIdx) {
+        // Nhảy sang đúng Passage chứa highlight đang undo/redo để học viên thấy ngay kết quả.
+        if (partIdx !== currentPartIdx) iltShowPart(partIdx);
+    }
+    function iltApplyHighlightAction(action, forward) {
+        // forward=true: thực hiện lại y hệt thao tác gốc (dùng khi redo).
+        // forward=false: thực hiện thao tác ngược lại (dùng khi undo).
+        const doAdd = (action.type === 'add') === forward;
+        iltGoToHighlightPart(action.highlight.partIdx);
+        if (doAdd) {
+            if (!currentHighlights.some(h => h.id === action.highlight.id)) currentHighlights.push(action.highlight);
+            iltInsertHighlightMark(action.highlight);
+        } else {
+            currentHighlights = currentHighlights.filter(h => h.id !== action.highlight.id);
+            iltRemoveHighlightMark(action.highlight.id);
+        }
+    }
+    function iltUndoHighlight() {
+        if (!iltHighlightUndoStack.length) return;
+        const action = iltHighlightUndoStack.pop();
+        iltApplyHighlightAction(action, false);
+        iltHighlightRedoStack.push(action);
+        iltScheduleProgressSave();
+    }
+    function iltRedoHighlight() {
+        if (!iltHighlightRedoStack.length) return;
+        const action = iltHighlightRedoStack.pop();
+        iltApplyHighlightAction(action, true);
+        iltHighlightUndoStack.push(action);
+        iltScheduleProgressSave();
+    }
+    function iltHandleHighlightUndoRedoKeydown(e) {
+        if (currentMode !== 'take') return;
+        if (!(e.ctrlKey || e.metaKey) || e.altKey) return;
+        const ae = document.activeElement;
+        const tag = ae && ae.tagName;
+        const isEditableFocus = tag === 'INPUT' || tag === 'TEXTAREA' || (ae && ae.isContentEditable);
+        if (isEditableFocus) return; // để trình duyệt tự xử lý undo/redo khi đang gõ trong ô nhập liệu
+        const key = e.key.toLowerCase();
+        if (key === 'z' && !e.shiftKey) {
+            e.preventDefault();
+            iltUndoHighlight();
+        } else if (key === 'y' || (key === 'z' && e.shiftKey)) {
+            e.preventDefault();
+            iltRedoHighlight();
+        }
+    }
+
+    // =====================================================================
+    // ===== ĐIỀU HƯỚNG PASSAGE 1-3 (mỗi Passage 1 "trang" riêng) ===========
+    // =====================================================================
+    function iltBuildPartNav() {
+        if (!partNavEl) return;
+        partNavEl.innerHTML = '';
+        PART_LABELS.forEach((label, i) => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'irt-part-nav-btn';
+            btn.textContent = label;
+            btn.addEventListener('click', () => iltShowPart(i));
+            partNavEl.appendChild(btn);
+        });
+    }
+    function iltShowPart(idx) {
+        currentPartIdx = idx;
+        if (takeBodyEl) {
+            takeBodyEl.querySelectorAll('.irt-render-part').forEach(el => {
+                el.style.display = (Number(el.dataset.partIdx) === idx) ? 'block' : 'none';
+            });
+        }
+        if (partNavEl) {
+            Array.from(partNavEl.children).forEach((btn, i) => btn.classList.toggle('active', i === idx));
+        }
+    }
+
+    // =====================================================================
+    // ===== BẢNG THEO DÕI CÂU TRẢ LỜI (answer sheet) — cố định 1 bên =====
+    // =====================================================================
+    function iltIsQuestionAnswered(qnum) {
+        const elm = document.getElementById('irt-q-' + qnum);
+        if (!elm) return false;
+        if (elm.classList.contains('irt-blank')) {
+            const input = elm.querySelector('.irt-blank-input');
+            return !!(input && input.value && input.value.trim());
+        }
+        if (elm.classList.contains('irt-view-mcq')) {
+            return elm.querySelector('input[type=radio]:checked') != null;
+        }
+        if (elm.classList.contains('irt-view-matching-question')) {
+            const select = elm.querySelector('select');
+            return !!(select && select.value);
+        }
+        return false;
+    }
+    function iltBuildAnswerSheet(total) {
+        if (!answerSheetGrid) return;
+        answerSheetGrid.innerHTML = '';
+        for (let n = 1; n <= total; n++) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'irt-answer-sheet-item';
+            btn.textContent = String(n);
+            btn.dataset.qnum = String(n);
+            btn.addEventListener('click', () => iltJumpToQuestion(n));
+            answerSheetGrid.appendChild(btn);
+        }
+        iltRefreshAnswerSheet();
+    }
+    function iltRefreshAnswerSheet() {
+        if (!answerSheetGrid) return;
+        Array.from(answerSheetGrid.children).forEach(btn => {
+            btn.classList.toggle('is-answered', iltIsQuestionAnswered(Number(btn.dataset.qnum)));
+        });
+    }
+    function iltJumpToQuestion(qnum) {
+        const elm = document.getElementById('irt-q-' + qnum);
+        if (!elm) return;
+        iltShowPart(Number(elm.dataset.partIdx || 0));
+        requestAnimationFrame(() => {
+            elm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            elm.classList.add('irt-jump-flash');
+            setTimeout(() => elm.classList.remove('irt-jump-flash'), 1200);
+        });
+        if (answerSheetEl) answerSheetEl.classList.remove('is-open'); // đóng lại khung đáp án trên di động sau khi bấm
+    }
+    function iltNotifyAnswerChanged(elm) {
+        const qn = elm && elm.dataset ? elm.dataset.qnum : null;
+        if (qn && answerSheetGrid) {
+            const btn = answerSheetGrid.querySelector('.irt-answer-sheet-item[data-qnum="' + qn + '"]');
+            if (btn) btn.classList.toggle('is-answered', iltIsQuestionAnswered(Number(qn)));
+        }
+        iltScheduleProgressSave();
+    }
+
+    // =====================================================================
+    // ===== LƯU TIẾN ĐỘ DỞ DANG (đáp án + số lần vi phạm) =================
+    // Lưu xuống Supabase để nếu học viên lỡ tải lại trang / thoát giữa
+    // chừng, có thể "Tiếp tục làm bài" đúng chỗ (không mất gì đã làm).
+    // =====================================================================
+    function iltScheduleProgressSave() {
+        if (!currentSubmission) return;
+        clearTimeout(iltProgressSaveTimer);
+        iltProgressSaveTimer = setTimeout(iltPersistProgress, 600);
+    }
+    async function iltPersistProgress() {
+        if (!currentSubmission) return;
+        try {
+            await sb.from('ielts_reading_submissions').update({
+                answers: currentAnswers,
+                highlights: currentHighlights,
+                violation_count: iltViolationCount
+            }).eq('id', currentSubmission.id);
+        } catch (err) { /* im lặng — sẽ thử lưu lại ở lần thay đổi tiếp theo */ }
+    }
+
+    // =====================================================================
+    // ===== CHỐNG GIAN LẬN: phát hiện chuyển tab / thu nhỏ / chuyển sang mục
+    // khác trong ứng dụng khi đang làm bài — cảnh cáo ngay, quá 3 lần thì
+    // TỰ ĐỘNG NỘP BÀI. (LƯU Ý: đây là biện pháp khả thi tốt nhất từ phía
+    // web, không thể chặn tuyệt đối ở cấp hệ điều hành.)
+    // =====================================================================
+    function iltRecordViolation(reason) {
+        if (!iltAntiCheatActive || !currentSubmission) return;
+        iltViolationCount++;
+        iltPersistProgress();
+        if (iltViolationCount >= 3) {
+            violationBanner.style.display = 'block';
+            violationBanner.textContent = '🚫 Bạn đã vi phạm lần thứ 3 (' + reason + '). Bài làm đã được TỰ ĐỘNG NỘP.';
+            iltSubmitTest(true);
+        } else {
+            violationBanner.style.display = 'block';
+            violationBanner.textContent = '⚠️ Cảnh báo vi phạm lần ' + iltViolationCount + '/3 (' + reason + '). Vi phạm lần thứ 3, bài sẽ tự động được nộp.';
+        }
+    }
+    function iltOnVisibilityChange() {
+        if (document.hidden) {
+            iltHiddenSinceMs = Date.now();
+        } else if (iltHiddenSinceMs !== null) {
+            let wasReload = false;
+            try { wasReload = sessionStorage.getItem(IRT_RELOAD_FLAG_KEY) === '1'; } catch (e) {}
+            iltHiddenSinceMs = null;
+            if (!wasReload) iltRecordViolation('chuyển sang tab/cửa sổ khác');
+            try { sessionStorage.removeItem(IRT_RELOAD_FLAG_KEY); } catch (e) {}
+        }
+    }
+    function iltOnBeforeUnload() {
+        try { sessionStorage.setItem(IRT_RELOAD_FLAG_KEY, '1'); } catch (e) {}
+    }
+    function iltSetupAntiCheat() {
+        if (iltAntiCheatActive) return;
+        iltAntiCheatActive = true;
+        iltHiddenSinceMs = null;
+        document.addEventListener('visibilitychange', iltOnVisibilityChange);
+        window.addEventListener('beforeunload', iltOnBeforeUnload);
+        document.addEventListener('keydown', iltHandleHighlightUndoRedoKeydown);
+    }
+    function iltTeardownAntiCheat() {
+        if (!iltAntiCheatActive) return;
+        iltAntiCheatActive = false;
+        document.removeEventListener('visibilitychange', iltOnVisibilityChange);
+        window.removeEventListener('beforeunload', iltOnBeforeUnload);
+        document.removeEventListener('keydown', iltHandleHighlightUndoRedoKeydown);
+        clearInterval(iltTestTimerInterval);
+        iltTestTimerInterval = null;
+    }
+
+    // =====================================================================
+    // ===== ĐỒNG HỒ ĐẾM GIỜ (thời gian do giảng viên đặt) =================
+    // =====================================================================
+    function iltStartTimer(durationMinutes, startedAtIso) {
+        clearInterval(iltTestTimerInterval);
+        if (!durationMinutes) { takeTimerEl.style.display = 'none'; return; }
+        takeTimerEl.style.display = 'inline-block';
+        const startedAtMs = startedAtIso ? new Date(startedAtIso).getTime() : Date.now();
+        const totalSeconds = durationMinutes * 60;
+        function tick() {
+            const elapsed = Math.floor((Date.now() - startedAtMs) / 1000);
+            const remaining = Math.max(0, totalSeconds - elapsed);
+            const mm = String(Math.floor(remaining / 60)).padStart(2, '0');
+            const ss = String(remaining % 60).padStart(2, '0');
+            takeTimerEl.textContent = '⏱️ ' + mm + ':' + ss;
+            takeTimerEl.classList.toggle('ctest-timer-low', remaining <= 60);
+            if (remaining <= 0) {
+                clearInterval(iltTestTimerInterval);
+                violationBanner.style.display = 'block';
+                violationBanner.textContent = '⏰ Hết thời gian làm bài — bài làm đã được tự động nộp.';
+                iltSubmitTest(true);
+            }
+        }
+        tick();
+        iltTestTimerInterval = setInterval(tick, 1000);
+    }
+
+    // =====================================================================
+    // ===== HỘP THOẠI "SẴN SÀNG LÀM BÀI CHƯA" =============================
+    // =====================================================================
+    function iltOpenReadyModal(test) {
+        iltPendingStartTest = test;
+        const mins = test.duration_minutes ? (test.duration_minutes + ' phút') : 'không giới hạn';
+        readyModalText.textContent = 'Bài đọc "' + (test.title || '') + '" — thời gian làm bài: ' + mins + '.';
+        readyModal.style.display = 'flex';
+    }
+    function iltCloseReadyModal() {
+        readyModal.style.display = 'none';
+        iltPendingStartTest = null;
+    }
+    if (readyCancelBtn) readyCancelBtn.addEventListener('click', iltCloseReadyModal);
+    if (readyStartBtn) readyStartBtn.addEventListener('click', async () => {
+        const test = iltPendingStartTest;
+        if (!test) return;
+        readyStartBtn.disabled = true;
+        try {
+            await iltStartRealTake(test);
+        } finally {
+            readyStartBtn.disabled = false;
+            readyModal.style.display = 'none';
+            iltPendingStartTest = null;
+        }
+    });
+
+    // =====================================================================
+    // ===== BẮT ĐẦU / TIẾP TỤC LÀM BÀI THẬT (có chống gian lận) ===========
+    // =====================================================================
+    async function iltStartRealTake(test) {
+        currentTakeTest = test;
+        currentMode = 'take';
+        currentAnswers = {};
+        currentHighlights = [];
+        iltHighlightUndoStack = [];
+        iltHighlightRedoStack = [];
+        iltViolationCount = 0;
+        currentSubmission = null;
+        try {
+            if (currentUserId) {
+                const { data: existing } = await sb.from('ielts_reading_submissions')
+                    .select('*').eq('test_id', test.id).eq('user_id', currentUserId).maybeSingle();
+                if (!existing) {
+                    const { data, error } = await sb.from('ielts_reading_submissions').insert({
+                        test_id: test.id, user_id: currentUserId, user_email: currentEmail,
+                        answers: {}, highlights: [], violation_count: 0,
+                        status: 'in_progress', started_at: new Date().toISOString()
+                    }).select().single();
+                    if (error) throw error;
+                    currentSubmission = data;
+                } else if (existing.status === 'in_progress') {
+                    currentSubmission = existing;
+                    currentAnswers = existing.answers || {};
+                    currentHighlights = existing.highlights || [];
+                    iltViolationCount = existing.violation_count || 0;
+                } else {
+                    // "Làm lại": ghi đè bằng 1 lượt làm mới, xoá sạch dữ liệu lần làm trước.
+                    const { data, error } = await sb.from('ielts_reading_submissions').update({
+                        answers: {}, highlights: [], violation_count: 0,
+                        status: 'in_progress', started_at: new Date().toISOString(),
+                        score: null, total: null, submitted_at: null
+                    }).eq('id', existing.id).select().single();
+                    if (error) throw error;
+                    currentSubmission = data;
+                }
+            }
+        } catch (err) {
+            alert('Không thể mở bài đọc: ' + err.message);
+            return;
+        }
+
+        takeTitleEl.textContent = '📖 ' + (test.title || '');
+        takeBodyEl.innerHTML = '';
+        const { el, total } = renderTestBody(test, 'take');
+        takeBodyEl.appendChild(el);
+        iltBuildPartNav();
+        iltShowPart(0);
+        if (answerSheetEl) answerSheetEl.style.display = '';
+        if (answerSheetToggleBtn) answerSheetToggleBtn.style.display = '';
+        iltBuildAnswerSheet(total);
+        // Khôi phục lại các highlight đã lưu (nếu học viên lỡ tải lại trang giữa chừng).
+        takeBodyEl.querySelectorAll('.irt-render-part').forEach(partEl => {
+            iltApplyHighlightsForPart(partEl, Number(partEl.dataset.partIdx));
+        });
+        takeBodyEl.removeEventListener('mouseup', iltHandleSelectionMouseUp);
+        takeBodyEl.removeEventListener('click', iltHandleClickForHighlight);
+        takeBodyEl.addEventListener('mouseup', iltHandleSelectionMouseUp);
+        takeBodyEl.addEventListener('click', iltHandleClickForHighlight);
+
+        submitBtn.style.display = 'inline-block';
+        violationBanner.style.display = iltViolationCount > 0 ? 'block' : 'none';
+        if (iltViolationCount > 0) violationBanner.textContent = '⚠️ Bạn đã vi phạm ' + iltViolationCount + '/3 lần trước đó trong bài này.';
+        showView('take');
+
+        iltSetupAntiCheat();
+        iltStartTimer(test.duration_minutes, currentSubmission ? currentSubmission.started_at : null);
+    }
+
+    // =====================================================================
+    // ===== DANH SÁCH BÀI ĐỌC ==============================================
+    // =====================================================================
+    async function loadTests() {
+        listContainer.innerHTML = '<p class="ctest-loading-msg">Đang tải danh sách bài đọc...</p>';
+        try {
+            const { data, error } = await sb.from('ielts_reading_tests').select('*').order('created_at', { ascending: false });
+            if (error) throw error;
+            myTestsCache = data || [];
+            await renderList();
+        } catch (err) {
+            listContainer.innerHTML = '<p class="ctest-empty-msg">❌ Không tải được danh sách: ' + iltEscape(err.message) + '</p>';
+        }
+    }
+    async function renderList() {
+        adminBar.style.display = isTeacher ? 'flex' : 'none';
+        if (!myTestsCache.length) {
+            listContainer.innerHTML = '<p class="ctest-empty-msg">' + (isTeacher ? 'Chưa có bài đọc nào — bấm "➕ Tạo bài đọc mới" để bắt đầu.' : 'Hiện chưa có bài đọc IELTS nào.') + '</p>';
+            return;
+        }
+        let mySubs = {};
+        if (!isTeacher && currentUserId) {
+            try {
+                const ids = myTestsCache.map(t => t.id);
+                const { data: subs } = await sb.from('ielts_reading_submissions').select('*').eq('user_id', currentUserId).in('test_id', ids);
+                (subs || []).forEach(s => { mySubs[s.test_id] = s; });
+            } catch (e) { /* bảng có thể chưa tồn tại — bỏ qua, vẫn hiển thị danh sách bình thường */ }
+        }
+        listContainer.innerHTML = '';
+        myTestsCache.forEach(test => {
+            const row = document.createElement('div');
+            row.className = 'ctest-test-row';
+            const total = countTotalQuestions(test);
+            const sub = mySubs[test.id];
+            const submitted = sub && sub.status !== 'in_progress';
+            const inProgress = sub && sub.status === 'in_progress';
+            row.innerHTML =
+                '<div class="ctest-test-row-main">' +
+                    '<div class="ctest-test-title">📖 ' + iltEscape(test.title || '(Chưa đặt tên)') + '</div>' +
+                    '<div class="ctest-test-meta">' + total + ' câu hỏi · 3 Passage' +
+                        (submitted ? ' · Điểm gần nhất: ' + sub.score + '/' + sub.total : (inProgress ? ' · ⏸️ Đang làm dở' : '')) +
+                    '</div>' +
+                '</div>' +
+                '<div class="ctest-test-row-actions"></div>';
+            const actions = row.querySelector('.ctest-test-row-actions');
+            if (isTeacher) {
+                const editBtn = document.createElement('button');
+                editBtn.className = 'grammar-admin-btn';
+                editBtn.textContent = '✏️ Soạn bài';
+                editBtn.addEventListener('click', (e) => { e.stopPropagation(); openEditorForTest(test); });
+                actions.appendChild(editBtn);
+            } else {
+                const startBtn = document.createElement('button');
+                startBtn.className = 'grammar-admin-btn grammar-admin-btn-primary';
+                startBtn.textContent = inProgress ? '⏯️ Tiếp tục làm bài' : (submitted ? '🔁 Làm lại' : '▶️ Bắt đầu làm bài');
+                startBtn.addEventListener('click', (e) => { e.stopPropagation(); openTakeView(test, 'take'); });
+                actions.appendChild(startBtn);
+                if (submitted) {
+                    const resBtn = document.createElement('button');
+                    resBtn.className = 'grammar-admin-btn';
+                    resBtn.textContent = '📊 Kết quả gần nhất';
+                    resBtn.addEventListener('click', (e) => { e.stopPropagation(); openResultView(test, sub); });
+                    actions.appendChild(resBtn);
+                }
+            }
+            row.addEventListener('click', () => { if (isTeacher) openEditorForTest(test); else openTakeView(test, 'take'); });
+            listContainer.appendChild(row);
+        });
+    }
+
+    // =====================================================================
+    // ===== LÀM BÀI / XEM THỬ / NỘP BÀI ===================================
+    // =====================================================================
+    function openTakeView(test, mode) {
+        if (mode === 'take') {
+            // Bài đọc thật: hiện hộp thoại "sẵn sàng chưa" trước — chỉ khi bấm "Bắt đầu"
+            // mới thật sự mở bài + bắt đầu đếm giờ + bật chống gian lận.
+            iltOpenReadyModal(test);
+            return;
+        }
+        // 'preview' (giảng viên xem thử) — giữ đơn giản: không chống gian lận, không đếm
+        // giờ, không Bảng câu trả lời, để giảng viên tập trung kiểm tra nội dung.
+        currentTakeTest = test;
+        currentMode = mode;
+        currentAnswers = {};
+        takeTitleEl.textContent = '👁️ Xem thử: ' + (test.title || '');
+        takeBodyEl.innerHTML = '';
+        const { el } = renderTestBody(test, 'preview');
+        takeBodyEl.appendChild(el);
+        iltBuildPartNav();
+        iltShowPart(0);
+        if (answerSheetEl) answerSheetEl.style.display = 'none';
+        if (answerSheetToggleBtn) answerSheetToggleBtn.style.display = 'none';
+        if (violationBanner) violationBanner.style.display = 'none';
+        if (takeTimerEl) takeTimerEl.style.display = 'none';
+        submitBtn.style.display = 'none';
+        showView('take');
+    }
+    function computeScore(test, answers) {
+        currentAnswers = answers;
+        const { total, correctCount } = renderTestBody(test, 'result');
+        return { total, correctCount };
+    }
+    async function iltSubmitTest(auto) {
+        if (!currentTakeTest) return;
+        clearTimeout(iltProgressSaveTimer);
+        const answersSnapshot = Object.assign({}, currentAnswers);
+        const highlightsSnapshot = currentHighlights.slice();
+        const { total, correctCount } = computeScore(currentTakeTest, answersSnapshot);
+        let savedOk = false;
+        try {
+            if (currentUserId) {
+                const payload = {
+                    answers: answersSnapshot,
+                    highlights: highlightsSnapshot,
+                    violation_count: iltViolationCount, status: 'submitted',
+                    score: correctCount, total: total, submitted_at: new Date().toISOString()
+                };
+                let data, error;
+                if (currentSubmission) {
+                    ({ data, error } = await sb.from('ielts_reading_submissions').update(payload).eq('id', currentSubmission.id).select().single());
+                } else {
+                    ({ data, error } = await sb.from('ielts_reading_submissions')
+                        .upsert(Object.assign({ test_id: currentTakeTest.id, user_id: currentUserId, user_email: currentEmail }, payload), { onConflict: 'test_id,user_id' })
+                        .select().single());
+                }
+                if (error) throw error;
+                currentSubmission = data;
+                savedOk = true;
+            }
+        } catch (err) {
+            if (!auto) alert('Không lưu được kết quả (vẫn xem được điểm): ' + err.message);
+        }
+        iltTeardownAntiCheat();
+        takeBodyEl.innerHTML = ''; // dọn cây DOM của phần làm bài để tránh trùng id với màn hình kết quả
+        openResultView(currentTakeTest, currentSubmission || { answers: answersSnapshot, score: correctCount, total: total }, !savedOk);
+    }
+    if (submitBtn) {
+        submitBtn.addEventListener('click', async () => {
+            if (!currentTakeTest) return;
+            if (!confirm('Nộp bài ngay bây giờ?')) return;
+            await iltSubmitTest(false);
+        });
+    }
+    // Bảng quy đổi điểm thô (raw score / 40 câu) sang Band điểm IELTS Reading
+    // trên thang 9.0 — theo mức quy đổi phổ biến vẫn dùng trong các đề luyện thi
+    // IELTS (chỉ mang tính tham khảo, không phải điểm số chính thức của IELTS).
+    const ILT_BAND_TABLE = [
+        [39, 9.0], [37, 8.5], [35, 8.0], [32, 7.5], [30, 7.0],
+        [26, 6.5], [23, 6.0], [18, 5.5], [16, 5.0], [13, 4.5],
+        [10, 4.0], [8, 3.5], [6, 3.0], [4, 2.5], [3, 2.0], [2, 1.5], [1, 1.0]
+    ];
+    function iltRawScoreToBand(rawOn40) {
+        for (const [minRaw, band] of ILT_BAND_TABLE) { if (rawOn40 >= minRaw) return band; }
+        return 0;
+    }
+    function openResultView(test, submissionLike, notSavedNote) {
+        currentAnswers = submissionLike.answers || {};
+        resultTitleEl.textContent = test.title || '';
+        const { el, total, correctCount } = renderTestBody(test, 'result');
+        const score = (submissionLike.score !== undefined) ? submissionLike.score : correctCount;
+        const tot = (submissionLike.total !== undefined) ? submissionLike.total : total;
+        // Quy điểm về thang 40 câu chuẩn IELTS trước khi tra Band (nếu đề không đủ 40 câu).
+        const rawOn40 = (tot === 40) ? score : Math.round((score / (tot || 1)) * 40);
+        const band = iltRawScoreToBand(rawOn40);
+        resultScoreEl.innerHTML = '🎯 Điểm: ' + score + ' / ' + tot +
+            '<div class="irt-band-score">📊 Band điểm ước tính: <b>' + band.toFixed(1) + '</b> / 9.0' +
+            (tot !== 40 ? ' <span class="irt-note">(đã quy đổi tương đương thang 40 câu)</span>' : '') +
+            '</div>' +
+            '<div class="irt-note">*Mức quy đổi Band điểm chỉ mang tính tham khảo theo thang phổ biến của IELTS Reading, không phải điểm số chính thức.</div>' +
+            (notSavedNote ? '<div class="irt-note">Đăng nhập để lưu lại điểm số của bạn cho lần sau.</div>' : '');
+        resultBodyEl.innerHTML = '';
+        resultBodyEl.appendChild(el);
+        showView('result');
+    }
+
+    // =====================================================================
+    // ===== CHUYỂN ĐỔI MÀN HÌNH / MỞ - ĐÓNG FOLDER ========================
+    // =====================================================================
+    function showView(name) {
+        listView.style.display   = name === 'list'   ? 'block' : 'none';
+        editorView.style.display = name === 'editor' ? 'block' : 'none';
+        takeView.style.display   = name === 'take'   ? 'block' : 'none';
+        resultView.style.display = name === 'result' ? 'block' : 'none';
+        // Dọn cây DOM của phần làm bài khi rời khỏi màn hình "take" — tránh trùng id
+        // irt-q-N với màn hình kết quả (nội dung sẽ được dựng lại mới mỗi lần vào làm bài).
+        if (name !== 'take' && takeBodyEl) takeBodyEl.innerHTML = '';
+    }
+    const ieltsSampleFolderCard = document.getElementById('ielts-sample-folder-card');
+    const ieltsSamplePanel      = document.getElementById('ielts-sample-panel');
+    const ieltsSampleBackBtn    = document.getElementById('ielts-sample-back-btn');
+
+    // "đề minh họa IELTS" là thư mục cha — bấm vào để mở ra các dạng đề
+    // minh hoạ bên trong (Listening, Reading...).
+    if (ieltsSampleFolderCard && ieltsSamplePanel) {
+        ieltsSampleFolderCard.addEventListener('click', () => {
+            kiemtraFolderGrid.style.display = 'none';
+            ieltsSamplePanel.style.display = 'block';
+        });
+    }
+    if (ieltsSampleBackBtn && ieltsSamplePanel) {
+        ieltsSampleBackBtn.addEventListener('click', () => {
+            ieltsSamplePanel.style.display = 'none';
+            kiemtraFolderGrid.style.display = '';
+        });
+    }
+
+    iltFolderCard.addEventListener('click', () => {
+        if (ieltsSamplePanel) ieltsSamplePanel.style.display = 'none';
+        iltPanel.style.display = 'block';
+        showView('list');
+        loadTests();
+    });
+    function backToFolders() {
+        iltPanel.style.display = 'none';
+        // Quay lại thư mục cha "đề minh họa IELTS" (không phải quay thẳng
+        // ra danh sách thư mục gốc của tab Kiểm tra).
+        if (ieltsSamplePanel) ieltsSamplePanel.style.display = 'block';
+        else kiemtraFolderGrid.style.display = '';
+    }
+    const listBackBtn = document.getElementById('irt-list-back-btn');
+    if (listBackBtn) listBackBtn.addEventListener('click', backToFolders);
+    const editorBackBtn = document.getElementById('irt-editor-back-btn');
+    if (editorBackBtn) editorBackBtn.addEventListener('click', () => { showView('list'); loadTests(); });
+    const takeBackBtn = document.getElementById('irt-take-back-btn');
+    if (takeBackBtn) takeBackBtn.addEventListener('click', () => {
+        if (currentMode === 'preview') { showView('editor'); return; }
+        if (iltAntiCheatActive) {
+            if (!confirm('Thoát khỏi bài đang làm? Tiến độ hiện tại đã được lưu, bạn có thể quay lại làm tiếp sau.')) return;
+            iltTeardownAntiCheat();
+        }
+        showView('list'); loadTests();
+    });
+    const resultBackBtn = document.getElementById('irt-result-back-btn');
+    if (resultBackBtn) resultBackBtn.addEventListener('click', () => { showView('list'); loadTests(); });
+
+    if (answerSheetToggleBtn && answerSheetEl) {
+        answerSheetToggleBtn.addEventListener('click', () => { answerSheetEl.classList.toggle('is-open'); });
+    }
+    if (answerSheetCloseBtn && answerSheetEl) {
+        answerSheetCloseBtn.addEventListener('click', () => { answerSheetEl.classList.remove('is-open'); });
+    }
+
+    // Chuyển sang mục khác trong ứng dụng (vd "Từ vựng", "Ngữ pháp"...) khi đang làm bài
+    // đọc thật cũng được tính là "chuyển trang" theo đúng yêu cầu chống gian lận.
+    document.querySelectorAll('.main-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (iltAntiCheatActive && btn.getAttribute('data-main-target') !== 'tab-kiem-tra') {
+                iltRecordViolation('chuyển sang mục khác trong ứng dụng khi đang làm bài');
+            }
+        });
+    });
+
+})();
+// ===== KẾT THÚC: TAB "KIỂM TRA" > "📖 IELTS READING TEST" ===========
+
 
 
 // ===================================================================
@@ -15080,16 +17786,19 @@ function toggleCompletion(symbolElement) {
 
 // ===================================================================
 // ===== BẮT ĐẦU: TAB "LUYỆN KỸ NĂNG" > "🎧 NGHE" — NGHE LV3 (NGHE HIỂU ĐOẠN HỘI THOẠI) =====
-// Nghe lv3 dùng 1 NGÂN HÀNG ĐOẠN HỘI THOẠI do giảng viên tự soạn, lưu ở bảng
-// "listening_lv3_items" trên Supabase. Mỗi đoạn hội thoại gồm:
-//   - audio_url : link file .mp3 (BẮT BUỘC)
+// Khác với Nghe lv2 (mỗi câu chỉ 1 dạng bài, nghe 1 câu ngắn), Nghe lv3 dùng 1 NGÂN HÀNG
+// ĐOẠN HỘI THOẠI do giảng viên tự soạn, lưu ở bảng "listening_lv3_items" trên Supabase (xem
+// file "listening_lv3_setup.sql" để tạo bảng + policy RLS). Mỗi đoạn hội thoại gồm:
+//   - audio_url : link file .mp3 đoạn hội thoại (giảng viên tự paste vào, BẮT BUỘC)
 //   - title     : tiêu đề/bối cảnh (tuỳ chọn)
-//   - questions : mảng câu hỏi con, mỗi câu thuộc 1 trong 3 dạng:
-//       + mcq         : trắc nghiệm
-//       + rich_blocks : đoạn văn điền từ — giảng viên paste đoạn văn, bôi đen từ rồi bấm U
-//                       (gạch chân) để tạo chỗ trống. Hỗ trợ đoạn văn thường, đoạn đóng khung,
-//                       bảng, hình ảnh — xen kẽ tuỳ ý (y hệt cơ chế IELTS Listening Test).
-//       + essay       : tự luận (so khớp MỀM theo từ khoá)
+//   - questions : một MẢNG câu hỏi con đi kèm, mỗi câu thuộc 1 trong 3 dạng:
+//       + mcq        : trắc nghiệm (nhiều đáp án, 1 đáp án đúng)
+//       + fill_blank : điền từ/cụm từ (so khớp gần đúng, không phân biệt hoa thường/dấu câu)
+//       + essay      : tự luận (so khớp MỀM theo từ khoá với "đáp án mẫu" giảng viên nhập; nếu
+//                      để trống đáp án mẫu thì KHÔNG chấm điểm — chỉ cần học viên có viết gì đó
+//                      là được coi là hoàn thành, phù hợp câu hỏi mở không có đáp án cố định)
+// Học viên nghe 1 đoạn hội thoại rồi trả lời hết các câu hỏi con của đoạn đó, bấm "Kiểm tra"
+// 1 lần để chấm tất cả cùng lúc. Mỗi lượt luyện tập lấy random tối đa 10 đoạn hội thoại.
 // ===================================================================
 (() => {
     const ln3Card = document.getElementById('ln-lv3-card');
@@ -15125,20 +17834,28 @@ function toggleCompletion(symbolElement) {
     const ln3ResultBox    = document.getElementById('ln3-result-box');
 
     const LN3_TABLE = 'listening_lv3_items';
-    const LN3_TOTAL_ITEMS = 10;
-    const LN3_MIN_ITEMS = 3;
+    const LN3_TOTAL_ITEMS = 10; // số đoạn hội thoại tối đa mỗi lượt luyện tập
+    const LN3_MIN_ITEMS = 3;    // số đoạn hội thoại tối thiểu trong ngân hàng để cho phép bắt đầu
     const LN3_SUBQ_MIN = 1;
     const LN3_SUBQ_MAX = 8;
     const LN3_MC_MIN_OPTIONS = 2;
     const LN3_MC_MAX_OPTIONS = 6;
+    const LN3_SUBQ_TYPE_META = {
+        mcq:        { label: 'Trắc nghiệm', icon: '☑️' },
+        fill_blank: { label: 'Điền từ',     icon: '📝' },
+        essay:      { label: 'Tự luận',     icon: '✍️' }
+    };
 
-    // ---------- Tiện ích ----------
+    // ---------- Tiện ích dùng chung (tách riêng, không phụ thuộc các khối Nghe khác) ----------
     function ln3Esc(s) {
         return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
+    // So khớp CHẶT (dùng cho trắc nghiệm/điền từ): bỏ hoa-thường, bỏ mọi ký tự không phải
+    // chữ/số, so sánh tuyệt đối — khớp đúng cách "dien" của Nghe lv2 để hành vi nhất quán.
     function ln3NormalizeStrict(s) {
         return String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
     }
+    // So khớp MỀM theo từ khoá (dùng cho tự luận): giữ khoảng trắng để tách được từng từ.
     function ln3NormalizeLoose(s) {
         return String(s || '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
     }
@@ -15150,10 +17867,16 @@ function toggleCompletion(symbolElement) {
         }
         return copy;
     }
+    // Chấm "tự luận" theo kiểu so khớp MỀM: nếu giảng viên không nhập đáp án mẫu -> không chấm,
+    // chỉ cần học viên có viết nội dung là được (phù hợp câu hỏi mở, không có đáp án cố định).
+    // Nếu có đáp án mẫu -> coi là đúng khi phần lớn (>=60%) các từ khoá (>=3 ký tự) trong đáp án
+    // mẫu xuất hiện trong câu trả lời của học viên — không yêu cầu đúng từng chữ như điền từ, vì
+    // tự luận thường được diễn đạt theo nhiều cách khác nhau. Đây là cách chấm GẦN ĐÚNG (heuristic),
+    // không thể thay thế việc giảng viên tự đọc và chấm bằng tay cho các câu tự luận phức tạp.
     function ln3EssayIsCorrect(sampleAnswer, userText) {
         const key = ln3NormalizeLoose(sampleAnswer);
         const userNorm = ln3NormalizeLoose(userText);
-        if (!key) return !!userNorm;
+        if (!key) return !!userNorm; // không có đáp án mẫu -> chỉ cần có viết gì đó là được
         if (!userNorm) return false;
         const keyWords = key.split(' ').filter(w => w.length >= 3);
         if (!keyWords.length) return userNorm.includes(key);
@@ -15161,76 +17884,28 @@ function toggleCompletion(symbolElement) {
         return (matched / keyWords.length) >= 0.6;
     }
 
-    // ----- Âm thanh hiệu ứng -----
-    let ln3SfxCtx = null;
-    function getLn3SfxCtx() {
-        const AC = window.AudioContext || window.webkitAudioContext;
-        if (!AC) return null;
-        if (!ln3SfxCtx) ln3SfxCtx = new AC();
-        if (ln3SfxCtx.state === 'suspended') ln3SfxCtx.resume();
-        return ln3SfxCtx;
-    }
-    function ln3PlayTone(freq, startTime, duration, type, peakGain) {
-        const ctx = getLn3SfxCtx();
-        if (!ctx) return;
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = type || 'sine';
-        osc.frequency.setValueAtTime(freq, ctx.currentTime + startTime);
-        gain.gain.setValueAtTime(0.0001, ctx.currentTime + startTime);
-        gain.gain.linearRampToValueAtTime(peakGain || 0.22, ctx.currentTime + startTime + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + startTime + duration);
-        osc.connect(gain).connect(ctx.destination);
-        osc.start(ctx.currentTime + startTime);
-        osc.stop(ctx.currentTime + startTime + duration + 0.05);
-    }
-    function ln3PlayCorrectSound() {
-        ln3PlayTone(523.25, 0,    0.16, 'sine', 0.22);
-        ln3PlayTone(659.25, 0.12, 0.16, 'sine', 0.22);
-        ln3PlayTone(783.99, 0.24, 0.22, 'sine', 0.22);
-    }
-    function ln3PlayWrongSound() {
-        ln3PlayTone(180, 0,    0.18, 'square', 0.16);
-        ln3PlayTone(140, 0.15, 0.22, 'square', 0.16);
-    }
+    // ============================================================================
+    // ===== KHỐI NỘI DUNG DÙNG CHUNG CHO ĐỀ BÀI (đoạn văn / đóng khung / bảng /
+    // hình ảnh) — áp dụng được cho CẢ 3 dạng câu (Trắc nghiệm / Điền từ / Tự luận).
+    // Dùng lại ĐÚNG cơ chế đã có ở tab "Kiểm tra" > "IELTS Listening Test": giảng
+    // viên bôi đen từ/cụm từ rồi bấm gạch chân (nút U) để biến thành CHỖ TRỐNG.
+    // Chỗ trống chỉ thực sự tạo ra ô nhập khi dạng câu là "Điền từ" — ở "Trắc
+    // nghiệm"/"Tự luận" gạch chân chỉ đơn thuần là định dạng hiển thị (không có
+    // tác dụng chấm điểm). Có thể gõ nhiều đáp án đúng cho 1 chỗ trống, cách nhau
+    // bằng dấu "|" (vd: colour|color) TRƯỚC khi bôi đen.
+    // Đây là bản sao độc lập của cơ chế bên "IELTS Listening Test" (2 IIFE tách
+    // biệt, không dùng chung scope) — cố tình KHÔNG đụng vào code gốc bên đó để
+    // tránh ảnh hưởng tính năng đang chạy tốt.
+    // ============================================================================
+    function ln3Uid(prefix) { return (prefix || 'blk') + '_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8); }
 
-    // ----- Audio mp3 -----
-    let ln3AudioEl = null;
-    function ln3GetAudioEl() {
-        if (!ln3AudioEl) { ln3AudioEl = new Audio(); ln3AudioEl.preload = 'auto'; }
-        return ln3AudioEl;
-    }
-    function ln3PlayItemAudio(item) {
-        const url = ((item && item.audio_url) || '').trim();
-        if (!url) return;
-        const audio = ln3GetAudioEl();
-        if (audio.src !== url) audio.src = url;
-        audio.currentTime = 0;
-        audio.play().catch(err => console.error('Lỗi khi phát file mp3 Nghe lv3:', err.message));
-    }
-    function ln3StopAudio() { if (ln3AudioEl) ln3AudioEl.pause(); }
-    document.querySelectorAll('.main-tab-btn').forEach(btn => btn.addEventListener('click', ln3StopAudio));
-    document.addEventListener('visibilitychange', () => { if (document.hidden) ln3StopAudio(); });
-    window.addEventListener('blur', ln3StopAudio);
-
-    // =====================================================================
-    // ===== KHỐI NỘI DUNG RICH (dùng cho dạng "rich_blocks" = điền từ) ====
-    // ===== Cơ chế y hệt IELTS Listening Test: bôi đen từ, bấm U (gạch  ====
-    // ===== chân) để tạo chỗ trống. Hỗ trợ đoạn văn, đóng khung, bảng, ====
-    // ===== hình ảnh — nhiều khối xen kẽ trong 1 câu hỏi.              ====
-    // =====================================================================
-
-    // --- Tiện ích block (nội bộ ln3, tách khỏi ILT) ---
-    function ln3uid(prefix) { return (prefix || 'x') + '_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8); }
-
-    // Rich text editor mini (toolbar B/U/I; bấm U gạch chân = tạo chỗ trống)
     function ln3CreateRichEditor(initialHtml, placeholder, hint, small) {
         const wrap = document.createElement('div');
         wrap.className = 'ctest-rich-wrap';
         wrap.innerHTML =
             '<div class="ctest-rich-toolbar">' +
                 '<button type="button" class="ctest-rich-btn" data-cmd="bold" title="In đậm"><b>B</b></button>' +
-                '<button type="button" class="ctest-rich-btn" data-cmd="underline" title="Gạch chân = tạo chỗ trống"><u>U</u></button>' +
+                '<button type="button" class="ctest-rich-btn" data-cmd="underline" title="Gạch chân = tạo chỗ trống (chỉ có tác dụng ở dạng Điền từ)"><u>U</u></button>' +
                 '<button type="button" class="ctest-rich-btn" data-cmd="italic" title="In nghiêng"><i>I</i></button>' +
                 (hint ? '<span class="ctest-rich-hint">' + hint + '</span>' : '') +
             '</div>' +
@@ -15251,17 +17926,19 @@ function toggleCompletion(symbolElement) {
         const ed = wrap && wrap.querySelector ? wrap.querySelector('.ctest-rich-editable') : null;
         return ed ? ed.innerHTML.trim() : '';
     }
-    function ln3CountBlanks(html) {
+    // Đếm nhanh số chỗ trống (thẻ <u> gạch chân) trong 1 đoạn HTML nguồn.
+    function ln3CountBlanksInHtml(html) {
         const d = document.createElement('div');
         d.innerHTML = html || '';
         return d.querySelectorAll('u').length;
     }
-    // Tách <u> thành mảng blanks; hỗ trợ nhiều đáp án đúng cách nhau bằng "|"
+    // Tách các thẻ <u> (gạch chân) trong 1 đoạn HTML thành các "chỗ trống" — mỗi chỗ trống có
+    // thể chấp nhận NHIỀU đáp án đúng, phân cách bằng dấu "|".
     function ln3ParseBlanks(html) {
         const container = document.createElement('div');
         container.innerHTML = html || '';
         const blanks = [];
-        Array.from(container.querySelectorAll('u')).forEach(elm => {
+        Array.from(container.querySelectorAll('u')).forEach((elm) => {
             const raw = elm.textContent.trim();
             const accepted = raw.split('|').map(s => s.trim()).filter(Boolean);
             const marker = document.createElement('span');
@@ -15273,8 +17950,7 @@ function toggleCompletion(symbolElement) {
         return { displayHtml: container.innerHTML, blanks };
     }
 
-    // --- Khung chèn ảnh (URL hoặc upload Supabase) ---
-    const LN3_IMAGE_BUCKET = 'ielts_listening_images'; // dùng chung bucket với ILT
+    // Trường chèn hình: dán URL hoặc tải ảnh trực tiếp lên Supabase Storage.
     function ln3ImageField(initialUrl) {
         const wrap = document.createElement('div');
         wrap.className = 'ctest-image-field ilt-image-field';
@@ -15286,9 +17962,9 @@ function toggleCompletion(symbolElement) {
             '</div>' +
             '<span class="ilt-upload-status"></span>' +
             '<img class="ctest-image-preview" style="display:none;">';
-        const input    = wrap.querySelector('.ctest-image-url-input');
-        const preview  = wrap.querySelector('.ctest-image-preview');
-        const fileIn   = wrap.querySelector('.ilt-image-file-input');
+        const input = wrap.querySelector('.ctest-image-url-input');
+        const preview = wrap.querySelector('.ctest-image-preview');
+        const fileIn = wrap.querySelector('.ilt-image-file-input');
         const statusEl = wrap.querySelector('.ilt-upload-status');
         input.value = initialUrl || '';
         function refreshPreview() {
@@ -15323,18 +17999,16 @@ function toggleCompletion(symbolElement) {
         return input ? input.value.trim() : '';
     }
 
-    // --- Block shell chung (header + move/remove) ---
+    // ---- Khung (chrome) dùng chung cho mọi khối: nhãn tên khối + nút xoá ----
     function ln3BlockShell(type, label) {
         const el = document.createElement('div');
         el.className = 'ilt-block ilt-block-' + type;
         el.dataset.blockType = type;
-        el.dataset.blockId = ln3uid('blk');
+        el.dataset.blockId = ln3Uid('blk');
         el.innerHTML =
             '<div class="ilt-block-header">' +
                 '<span class="ilt-block-label">' + label + '</span>' +
                 '<span class="ilt-block-actions">' +
-                    '<button type="button" class="ilt-block-move-btn" data-dir="up" title="Chuyển lên">↑</button>' +
-                    '<button type="button" class="ilt-block-move-btn" data-dir="down" title="Chuyển xuống">↓</button>' +
                     '<button type="button" class="ilt-block-remove-btn" title="Xoá khối này">🗑️</button>' +
                 '</span>' +
             '</div>';
@@ -15347,61 +18021,180 @@ function toggleCompletion(symbolElement) {
             if (!confirm('Xoá khối nội dung này?')) return;
             el.remove();
         });
-        el.querySelectorAll('.ilt-block-move-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const dir = btn.dataset.dir;
-                if (dir === 'up' && el.previousElementSibling) el.parentElement.insertBefore(el, el.previousElementSibling);
-                else if (dir === 'down' && el.nextElementSibling) el.parentElement.insertBefore(el.nextElementSibling, el);
-            });
-        });
         return el;
     }
 
-    // --- Khối: Đoạn văn (điền từ) / Đóng khung ---
+    // ---- Khối: Đoạn văn / Đoạn văn đóng khung ----
     function ln3BuildParagraphBlock(data, framed) {
-        const el = ln3BlockShell(framed ? 'framed' : 'paragraph', framed ? '📦 Đoạn văn đóng khung' : '📝 Đoạn văn (điền từ)');
+        const el = ln3BlockShell(framed ? 'framed' : 'paragraph', framed ? '📦 Đoạn văn đóng khung' : '📝 Đoạn văn');
         const body = document.createElement('div');
         const editor = ln3CreateRichEditor(
             data.html || '',
-            'Nhập đoạn văn... Bôi đen từ/cụm từ cần ẩn rồi bấm U (gạch chân) để tạo chỗ trống.',
-            'Bôi đen rồi bấm <u>U</u> để tạo chỗ trống. Nhiều đáp án đúng cách nhau bằng "|".'
+            'Nhập đoạn văn... Nếu là dạng Điền từ: bôi đen từ/cụm từ cần ẩn rồi bấm U để biến thành chỗ trống.',
+            'Bôi đen rồi bấm <u>U</u> (gạch chân) để tạo chỗ trống — chỉ có tác dụng ở dạng "Điền từ". Có thể gõ nhiều đáp án đúng, cách nhau bằng "|".'
         );
-        editor.classList.add('ilt-paragraph-editor');
+        editor.classList.add('ln3-paragraph-editor');
         body.appendChild(editor);
         const countEl = document.createElement('div');
         countEl.className = 'ilt-block-count-hint';
         body.appendChild(countEl);
         function refreshCount() {
-            const n = ln3CountBlanks(ln3RichHtml(editor));
-            countEl.textContent = n ? ('→ ' + n + ' chỗ trống trong đoạn này') : '→ đoạn văn này chưa có chỗ trống nào';
+            const n = ln3CountBlanksInHtml(ln3RichHtml(editor));
+            countEl.textContent = n ? ('→ ' + n + ' chỗ trống trong đoạn này') : '→ chưa có chỗ trống nào (chỉ hiển thị)';
         }
         editor.addEventListener('input', refreshCount);
         refreshCount();
         return ln3WireBlockChrome(el, body);
     }
     function ln3CollectParagraphBlock(el, framed) {
-        return { id: el.dataset.blockId, type: framed ? 'framed' : 'paragraph', html: ln3RichHtml(el.querySelector('.ilt-paragraph-editor')) };
+        return { id: el.dataset.blockId, type: framed ? 'framed' : 'paragraph', html: ln3RichHtml(el.querySelector('.ln3-paragraph-editor')) };
     }
 
-    // --- Khối: Bảng ---
-    // Rút gọn: không cần merge cells, chỉ cần rich editor trong mỗi ô
+    // ---- Khối: Bảng — tiện ích ghép ô (occupancy grid), giống hệt cơ chế IELTS Listening Test ----
+    function ln3TableOccupancy(tableEl) {
+        const rows = Array.from(tableEl.querySelectorAll(':scope > tr'));
+        const grid = [];
+        const cellPos = new Map();
+        rows.forEach((tr, rIdx) => {
+            if (!grid[rIdx]) grid[rIdx] = [];
+            let colPtr = 0;
+            Array.from(tr.children).forEach(td => {
+                while (grid[rIdx][colPtr]) colPtr++;
+                const rowspan = td.rowSpan || 1;
+                const colspan = td.colSpan || 1;
+                for (let rr = 0; rr < rowspan; rr++) {
+                    if (!grid[rIdx + rr]) grid[rIdx + rr] = [];
+                    for (let cc = 0; cc < colspan; cc++) grid[rIdx + rr][colPtr + cc] = td;
+                }
+                cellPos.set(td, { row: rIdx, col: colPtr, rowspan, colspan });
+                colPtr += colspan;
+            });
+        });
+        const numRows = grid.length;
+        let numCols = 0;
+        grid.forEach(r => { numCols = Math.max(numCols, r.length); });
+        return { grid, cellPos, numRows, numCols };
+    }
+    function ln3RebuildTable(tableEl, grid, cellPos, numRows, numCols, makeCellFn) {
+        tableEl.innerHTML = '';
+        for (let r = 0; r < numRows; r++) {
+            const tr = document.createElement('tr');
+            for (let c = 0; c < numCols; c++) {
+                const td = grid[r] && grid[r][c];
+                if (!td) continue;
+                const pos = cellPos.get(td);
+                if (!pos || pos.row !== r || pos.col !== c) continue;
+                const cellDiv = td.querySelector('.ilt-table-cell');
+                const newTd = makeCellFn(cellDiv ? cellDiv.innerHTML : '');
+                if (pos.colspan > 1) newTd.colSpan = pos.colspan;
+                if (pos.rowspan > 1) newTd.rowSpan = pos.rowspan;
+                tr.appendChild(newTd);
+            }
+            tableEl.appendChild(tr);
+        }
+    }
+    function ln3RefreshMergeUI(tableEl, onUnmerge) {
+        Array.from(tableEl.querySelectorAll(':scope > tr > td')).forEach(td => {
+            const isMerged = (td.colSpan > 1 || td.rowSpan > 1);
+            td.classList.toggle('ilt-cell-merged', isMerged);
+            let btn = td.querySelector('.ilt-unmerge-btn');
+            if (isMerged && !btn) {
+                btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'ilt-unmerge-btn';
+                btn.title = 'Bỏ ghép ô này';
+                btn.textContent = '✂️';
+                btn.addEventListener('mousedown', e => { e.preventDefault(); e.stopPropagation(); });
+                btn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); onUnmerge(td); });
+                td.appendChild(btn);
+            } else if (!isMerged && btn) {
+                btn.remove();
+            }
+        });
+    }
+    function ln3MergeSelectedCells(tableEl, makeCellFn) {
+        const selected = Array.from(tableEl.querySelectorAll('td.ilt-cell-selected'));
+        if (selected.length < 2) { alert('Giữ phím Ctrl (⌘ trên Mac) rồi bấm chọn ít nhất 2 ô cần ghép, sau đó bấm "Ghép ô".'); return; }
+        const { grid, cellPos, numRows, numCols } = ln3TableOccupancy(tableEl);
+        let minR = Infinity, maxR = -Infinity, minC = Infinity, maxC = -Infinity;
+        selected.forEach(td => {
+            const p = cellPos.get(td);
+            if (!p) return;
+            minR = Math.min(minR, p.row); maxR = Math.max(maxR, p.row + p.rowspan - 1);
+            minC = Math.min(minC, p.col); maxC = Math.max(maxC, p.col + p.colspan - 1);
+        });
+        const selectedSet = new Set(selected);
+        for (let r = minR; r <= maxR; r++) {
+            for (let c = minC; c <= maxC; c++) {
+                const td = grid[r] && grid[r][c];
+                if (!td || !selectedSet.has(td)) { alert('Vùng chọn phải tạo thành 1 khối hình chữ nhật liền nhau thì mới ghép được.'); return; }
+            }
+        }
+        const uniqueTds = Array.from(selectedSet).sort((a, b) => {
+            const pa = cellPos.get(a), pb = cellPos.get(b);
+            return (pa.row - pb.row) || (pa.col - pb.col);
+        });
+        const master = uniqueTds[0];
+        const combinedHtml = uniqueTds
+            .map(td => { const cd = td.querySelector('.ilt-table-cell'); return cd ? cd.innerHTML.trim() : ''; })
+            .filter(Boolean)
+            .join('<br>');
+        const masterCellDiv = master.querySelector('.ilt-table-cell');
+        if (masterCellDiv) masterCellDiv.innerHTML = combinedHtml;
+        const newCellPos = new Map(cellPos);
+        newCellPos.set(master, { row: minR, col: minC, rowspan: maxR - minR + 1, colspan: maxC - minC + 1 });
+        uniqueTds.slice(1).forEach(td => newCellPos.delete(td));
+        const newGrid = [];
+        for (let r = 0; r < numRows; r++) {
+            newGrid[r] = [];
+            for (let c = 0; c < numCols; c++) {
+                newGrid[r][c] = (r >= minR && r <= maxR && c >= minC && c <= maxC) ? master : (grid[r] ? grid[r][c] : null);
+            }
+        }
+        ln3RebuildTable(tableEl, newGrid, newCellPos, numRows, numCols, makeCellFn);
+    }
+    function ln3UnmergeCell(tableEl, td, makeCellFn) {
+        const { grid, cellPos, numRows, numCols } = ln3TableOccupancy(tableEl);
+        const p = cellPos.get(td);
+        if (!p || (p.rowspan <= 1 && p.colspan <= 1)) return;
+        const newCellPos = new Map(cellPos);
+        newCellPos.set(td, { row: p.row, col: p.col, rowspan: 1, colspan: 1 });
+        const newGrid = [];
+        for (let r = 0; r < numRows; r++) newGrid[r] = (grid[r] || []).slice();
+        for (let r = p.row; r < p.row + p.rowspan; r++) {
+            for (let c = p.col; c < p.col + p.colspan; c++) {
+                if (r === p.row && c === p.col) continue;
+                const emptyTd = makeCellFn('');
+                newGrid[r][c] = emptyTd;
+                newCellPos.set(emptyTd, { row: r, col: c, rowspan: 1, colspan: 1 });
+            }
+        }
+        ln3RebuildTable(tableEl, newGrid, newCellPos, numRows, numCols, makeCellFn);
+    }
     function ln3BuildTableBlock(data) {
         const el = ln3BlockShell('table', '📊 Bảng');
         const body = document.createElement('div');
         body.classList.add('ilt-table-block-body');
 
-        const rows = (data.rows && data.rows.length) ? data.rows.length : 2;
-        const cols = (data.rows && data.rows[0] && data.rows[0].length) ? data.rows[0].length : 2;
+        const toolbar = document.createElement('div');
+        toolbar.className = 'ctest-rich-toolbar ilt-table-toolbar';
+        toolbar.innerHTML =
+            '<button type="button" class="ctest-rich-btn" data-cmd="bold" title="In đậm"><b>B</b></button>' +
+            '<button type="button" class="ctest-rich-btn" data-cmd="underline" title="Gạch chân = tạo chỗ trống (chỉ ở dạng Điền từ)"><u>U</u></button>' +
+            '<button type="button" class="ctest-rich-btn" data-cmd="italic" title="In nghiêng"><i>I</i></button>' +
+            '<span class="ctest-rich-hint">Bấm vào 1 ô rồi bôi đen từ cần ẩn, bấm <u>U</u> để tạo chỗ trống trong ô đó. Giữ <b>Ctrl</b> (⌘ trên Mac) rồi bấm chọn nhiều ô liền khối để ghép; bấm ✂️ trên ô đã ghép để tách ra.</span>';
+        body.appendChild(toolbar);
 
-        // Controls: thêm/xóa hàng/cột
-        const ctrl = document.createElement('div');
-        ctrl.className = 'ilt-table-ctrl-bar';
-        ctrl.innerHTML =
-            '<button type="button" class="ctest-type-btn ln3-tbl-btn" data-act="addrow">+ Hàng</button>' +
-            '<button type="button" class="ctest-type-btn ln3-tbl-btn" data-act="delrow">- Hàng</button>' +
-            '<button type="button" class="ctest-type-btn ln3-tbl-btn" data-act="addcol">+ Cột</button>' +
-            '<button type="button" class="ctest-type-btn ln3-tbl-btn" data-act="delcol">- Cột</button>';
-        body.appendChild(ctrl);
+        let lastFocusedCell = null;
+        toolbar.querySelectorAll('.ctest-rich-btn').forEach(btn => {
+            btn.addEventListener('mousedown', e => e.preventDefault());
+            btn.addEventListener('click', () => {
+                if (!lastFocusedCell) return;
+                lastFocusedCell.focus();
+                document.execCommand(btn.dataset.cmd, false, null);
+                lastFocusedCell.dispatchEvent(new Event('input', { bubbles: true }));
+            });
+        });
 
         const tableWrap = document.createElement('div');
         tableWrap.className = 'ilt-table-editor-wrap';
@@ -15410,119 +18203,337 @@ function toggleCompletion(symbolElement) {
         tableWrap.appendChild(table);
         body.appendChild(tableWrap);
 
-        function makeCellEditor(html) {
+        function makeCell(html) {
             const td = document.createElement('td');
-            td.className = 'ilt-table-cell-editor-td';
-            const ed = ln3CreateRichEditor(html || '', '', '', true);
-            ed.classList.add('ilt-table-cell');
-            td.appendChild(ed);
+            const cell = document.createElement('div');
+            cell.className = 'ilt-table-cell';
+            cell.contentEditable = 'true';
+            cell.innerHTML = html || '';
+            cell.addEventListener('focus', () => { lastFocusedCell = cell; });
+            td.appendChild(cell);
             return td;
         }
-        function buildTableRows(initData) {
+        function currentColCount() {
+            const occ = ln3TableOccupancy(table);
+            return occ.numCols || 2;
+        }
+        function addRow(cellsHtml) {
+            const tr = document.createElement('tr');
+            const cols = cellsHtml || new Array(currentColCount()).fill('');
+            cols.forEach(h => tr.appendChild(makeCell(h)));
+            table.appendChild(tr);
+            refreshMerge();
+        }
+        table.addEventListener('mousedown', (e) => {
+            if (!(e.ctrlKey || e.metaKey)) return;
+            const cellDiv = e.target.closest('.ilt-table-cell');
+            if (!cellDiv) return;
+            e.preventDefault();
+            const td = cellDiv.closest('td');
+            if (td) td.classList.toggle('ilt-cell-selected');
+        });
+        function refreshMerge() {
+            ln3RefreshMergeUI(table, (td) => {
+                ln3UnmergeCell(table, td, makeCell);
+                refreshMerge();
+            });
+        }
+        function loadInitialRows(rows) {
             table.innerHTML = '';
-            initData.forEach(row => {
+            rows.forEach(rowArr => {
                 const tr = document.createElement('tr');
-                row.forEach(cell => {
-                    const cellHtml = cell && typeof cell === 'object' ? cell.html : (cell || '');
-                    tr.appendChild(makeCellEditor(cellHtml));
+                rowArr.forEach(c => {
+                    const isObj = c && typeof c === 'object';
+                    const td = makeCell(isObj ? c.html : c);
+                    if (isObj && c.colspan > 1) td.colSpan = c.colspan;
+                    if (isObj && c.rowspan > 1) td.rowSpan = c.rowspan;
+                    tr.appendChild(td);
                 });
                 table.appendChild(tr);
             });
         }
-        // Khởi tạo
-        let initRows;
-        if (data.rows && data.rows.length) {
-            initRows = data.rows;
-        } else {
-            initRows = Array.from({ length: rows }, () => Array.from({ length: cols }, () => ''));
-        }
-        buildTableRows(initRows);
+        const initRows = (data.rows && data.rows.length) ? data.rows : [['', ''], ['', '']];
+        loadInitialRows(initRows);
+        refreshMerge();
 
-        ctrl.addEventListener('click', e => {
-            const btn = e.target.closest('[data-act]');
+        const ctrlRow = document.createElement('div');
+        ctrlRow.className = 'ilt-table-controls';
+        ctrlRow.innerHTML =
+            '<button type="button" class="ctest-add-row-btn" data-act="add-row">+ Thêm dòng</button>' +
+            '<button type="button" class="ctest-add-row-btn" data-act="add-col">+ Thêm cột</button>' +
+            '<button type="button" class="ctest-add-row-btn" data-act="del-row">- Xoá dòng cuối</button>' +
+            '<button type="button" class="ctest-add-row-btn" data-act="del-col">- Xoá cột cuối</button>' +
+            '<button type="button" class="ctest-add-row-btn ilt-merge-btn" data-act="merge">🔀 Ghép ô đã chọn</button>';
+        body.appendChild(ctrlRow);
+        ctrlRow.addEventListener('click', (e) => {
+            const btn = e.target.closest('button[data-act]');
             if (!btn) return;
             const act = btn.dataset.act;
-            const trList = Array.from(table.querySelectorAll(':scope > tr'));
-            const colCount = trList.length ? trList[0].querySelectorAll('td').length : 2;
-            if (act === 'addrow') {
-                const tr = document.createElement('tr');
-                for (let c = 0; c < colCount; c++) tr.appendChild(makeCellEditor(''));
-                table.appendChild(tr);
-            } else if (act === 'delrow') {
-                if (table.rows.length > 1) table.deleteRow(table.rows.length - 1);
-            } else if (act === 'addcol') {
-                Array.from(table.querySelectorAll(':scope > tr')).forEach(tr => tr.appendChild(makeCellEditor('')));
-            } else if (act === 'delcol') {
-                Array.from(table.querySelectorAll(':scope > tr')).forEach(tr => {
-                    if (tr.cells.length > 1) tr.deleteCell(tr.cells.length - 1);
-                });
+            if (act === 'add-row') { addRow(); }
+            else if (act === 'add-col') { Array.from(table.querySelectorAll(':scope > tr')).forEach(tr => tr.appendChild(makeCell(''))); refreshMerge(); }
+            else if (act === 'del-row') {
+                const occ = ln3TableOccupancy(table);
+                if (occ.numRows <= 1) return;
+                const lastRow = occ.numRows - 1;
+                let blocked = false;
+                occ.cellPos.forEach(pos => { if (pos.rowspan > 1 && pos.row < lastRow && pos.row + pos.rowspan - 1 >= lastRow) blocked = true; });
+                if (blocked) { alert('Không thể xoá dòng cuối vì có ô đã ghép trải xuống dòng này. Hãy bấm ✂️ để bỏ ghép ô đó trước.'); return; }
+                if (table.children.length > 1) table.lastElementChild.remove();
+                refreshMerge();
+            }
+            else if (act === 'del-col') {
+                const occ = ln3TableOccupancy(table);
+                if (occ.numCols <= 1) return;
+                const lastCol = occ.numCols - 1;
+                let blocked = false;
+                occ.cellPos.forEach(pos => { if (pos.colspan > 1 && pos.col < lastCol && pos.col + pos.colspan - 1 >= lastCol) blocked = true; });
+                if (blocked) { alert('Không thể xoá cột cuối vì có ô đã ghép trải qua cột này. Hãy bấm ✂️ để bỏ ghép ô đó trước.'); return; }
+                Array.from(table.querySelectorAll(':scope > tr')).forEach(tr => { if (tr.lastElementChild) tr.lastElementChild.remove(); });
+                refreshMerge();
+            }
+            else if (act === 'merge') {
+                ln3MergeSelectedCells(table, makeCell);
+                refreshMerge();
             }
         });
 
         return ln3WireBlockChrome(el, body);
     }
     function ln3CollectTableBlock(el) {
-        const rows = [];
-        el.querySelectorAll(':scope table tr').forEach(tr => {
-            const row = [];
-            tr.querySelectorAll('td').forEach(td => {
-                const ed = td.querySelector('.ilt-table-cell');
-                row.push({ html: ed ? ln3RichHtml(ed) : '' });
-            });
-            rows.push(row);
-        });
+        const rows = Array.from(el.querySelectorAll('.ilt-table-editor > tr')).map(tr =>
+            Array.from(tr.children).map(td => {
+                const cellDiv = td.querySelector('.ilt-table-cell');
+                const html = cellDiv ? cellDiv.innerHTML.trim() : '';
+                const colspan = td.colSpan > 1 ? td.colSpan : 1;
+                const rowspan = td.rowSpan > 1 ? td.rowSpan : 1;
+                return (colspan > 1 || rowspan > 1) ? { html, colspan, rowspan } : html;
+            })
+        );
         return { id: el.dataset.blockId, type: 'table', rows };
     }
 
-    // --- Khối: Hình ảnh ---
+    // ---- Khối: Hình ảnh ----
     function ln3BuildImageBlock(data) {
         const el = ln3BlockShell('image', '🖼️ Hình ảnh');
         const body = document.createElement('div');
-        const imgField = ln3ImageField(data.url || '');
-        body.appendChild(imgField);
+        body.appendChild(ln3ImageField(data.url));
         const capInput = document.createElement('input');
         capInput.type = 'text';
-        capInput.className = 'news-edit-input';
+        capInput.className = 'news-edit-input ilt-image-caption-input';
         capInput.placeholder = 'Chú thích ảnh (tuỳ chọn)';
         capInput.value = data.caption || '';
         body.appendChild(capInput);
-        el._ln3CaptionInput = capInput;
-        el._ln3ImageField = imgField;
         return ln3WireBlockChrome(el, body);
     }
     function ln3CollectImageBlock(el) {
         return {
-            id: el.dataset.blockId,
-            type: 'image',
-            url: ln3ImageUrl(el._ln3ImageField || el.querySelector('.ilt-image-field')),
-            caption: (el._ln3CaptionInput || el.querySelector('input[placeholder*="thích"]') || { value: '' }).value.trim()
+            id: el.dataset.blockId, type: 'image',
+            url: ln3ImageUrl(el.querySelector('.ilt-image-field')),
+            caption: el.querySelector('.ilt-image-caption-input').value.trim()
         };
     }
 
-    // --- Collectors map ---
+    const LN3_BLOCK_BUILDERS = {
+        paragraph: (d) => ln3BuildParagraphBlock(d, false),
+        framed:    (d) => ln3BuildParagraphBlock(d, true),
+        table:     ln3BuildTableBlock,
+        image:     ln3BuildImageBlock
+    };
     const LN3_BLOCK_COLLECTORS = {
         paragraph: (el) => ln3CollectParagraphBlock(el, false),
         framed:    (el) => ln3CollectParagraphBlock(el, true),
         table:     ln3CollectTableBlock,
         image:     ln3CollectImageBlock
     };
-    const LN3_BLOCK_BUILDERS = {
-        paragraph: (data) => ln3BuildParagraphBlock(data, false),
-        framed:    (data) => ln3BuildParagraphBlock(data, true),
-        table:     ln3BuildTableBlock,
-        image:     ln3BuildImageBlock
-    };
-    function ln3BuildBlock(type, data) { const fn = LN3_BLOCK_BUILDERS[type]; return fn ? fn(data || {}) : null; }
-    function ln3CollectBlock(el) { const fn = LN3_BLOCK_COLLECTORS[el.dataset.blockType]; return fn ? fn(el) : null; }
+    function ln3BuildBlock(type, data) {
+        const fn = LN3_BLOCK_BUILDERS[type];
+        return fn ? fn(data || {}) : null;
+    }
+    function ln3CollectBlock(el) {
+        const fn = LN3_BLOCK_COLLECTORS[el.dataset.blockType];
+        return fn ? fn(el) : null;
+    }
+    function ln3CountBlockBlanksLive(el) {
+        const type = el.dataset.blockType;
+        if (type === 'paragraph' || type === 'framed') return ln3CountBlanksInHtml(ln3RichHtml(el.querySelector('.ln3-paragraph-editor')));
+        if (type === 'table') {
+            let n = 0;
+            el.querySelectorAll('.ilt-table-cell').forEach(c => { n += ln3CountBlanksInHtml(c.innerHTML); });
+            return n;
+        }
+        return 0;
+    }
+    // Chuyển 1 chuỗi "prompt" kiểu CŨ (chưa có blocks, VD dữ liệu đã lưu từ trước khi có tính năng
+    // này) thành 1 khối "đoạn văn" đơn giản để hiển thị/soạn tiếp — không tự tạo chỗ trống nào.
+    function ln3LegacyBlocksFromPrompt(promptText) {
+        return [{ id: ln3Uid('blk'), type: 'paragraph', html: ln3Esc(promptText || '') }];
+    }
+    // ---- Hiển thị TĨNH (không tạo chỗ trống) — dùng cho đề bài Trắc nghiệm / Tự luận ----
+    function ln3RenderBlockStatic(block) {
+        if (block.type === 'paragraph' || block.type === 'framed') {
+            const div = document.createElement('div');
+            div.className = 'ilt-view-paragraph' + (block.type === 'framed' ? ' ilt-view-framed' : '');
+            div.innerHTML = block.html || '';
+            return div;
+        }
+        if (block.type === 'table') {
+            const wrap = document.createElement('div');
+            wrap.className = 'ilt-view-table-wrap';
+            const table = document.createElement('table');
+            table.className = 'ilt-view-table';
+            (block.rows || []).forEach(row => {
+                const tr = document.createElement('tr');
+                row.forEach(cell => {
+                    const isObj = cell && typeof cell === 'object';
+                    const td = document.createElement('td');
+                    if (isObj && cell.colspan > 1) td.colSpan = cell.colspan;
+                    if (isObj && cell.rowspan > 1) td.rowSpan = cell.rowspan;
+                    td.innerHTML = isObj ? (cell.html || '') : (cell || '');
+                    tr.appendChild(td);
+                });
+                table.appendChild(tr);
+            });
+            wrap.appendChild(table);
+            return wrap;
+        }
+        if (block.type === 'image') {
+            const wrap = document.createElement('div');
+            wrap.className = 'ilt-view-image-wrap';
+            if (block.url) { const img = document.createElement('img'); img.src = block.url; img.className = 'ilt-view-image'; wrap.appendChild(img); }
+            if (block.caption) { const cap = document.createElement('div'); cap.className = 'ilt-view-image-caption'; cap.textContent = block.caption; wrap.appendChild(cap); }
+            return wrap;
+        }
+        return document.createElement('div');
+    }
+    // ---- Hiển thị dùng khi LÀM BÀI dạng "Điền từ" — biến chỗ trống thành ô nhập, ghi nhận đáp
+    // án vào ln3State.subAnswers[subqIdx] (map theo "key" của từng chỗ trống) và gom thông tin đáp
+    // án đúng của từng chỗ trống vào mảng blankMeta để chấm điểm ở bước Kiểm tra.
+    function ln3RenderBlockForTake(block, subqIdx, blankMeta) {
+        if (block.type === 'paragraph' || block.type === 'framed') {
+            const div = document.createElement('div');
+            div.className = 'ilt-view-paragraph' + (block.type === 'framed' ? ' ilt-view-framed' : '');
+            const { displayHtml, blanks } = ln3ParseBlanks(block.html || '');
+            div.innerHTML = displayHtml;
+            div.querySelectorAll('.ilt-blank-slot').forEach(slot => {
+                const idx = Number(slot.getAttribute('data-blank-idx'));
+                const b = blanks[idx];
+                const key = block.id + ':' + idx;
+                blankMeta.push({ key, accepted: b.accepted });
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'ilt-blank-input';
+                input.autocomplete = 'off'; input.autocapitalize = 'off'; input.spellcheck = false;
+                input.addEventListener('input', () => { ln3State.subAnswers[subqIdx][key] = input.value; });
+                slot.replaceWith(input);
+            });
+            return div;
+        }
+        if (block.type === 'table') {
+            const wrap = document.createElement('div');
+            wrap.className = 'ilt-view-table-wrap';
+            const table = document.createElement('table');
+            table.className = 'ilt-view-table';
+            (block.rows || []).forEach((row, rIdx) => {
+                const tr = document.createElement('tr');
+                row.forEach((cell, cIdx) => {
+                    const isObj = cell && typeof cell === 'object';
+                    const cellHtml = isObj ? cell.html : cell;
+                    const td = document.createElement('td');
+                    if (isObj && cell.colspan > 1) td.colSpan = cell.colspan;
+                    if (isObj && cell.rowspan > 1) td.rowSpan = cell.rowspan;
+                    const { displayHtml, blanks } = ln3ParseBlanks(cellHtml || '');
+                    td.innerHTML = displayHtml;
+                    td.querySelectorAll('.ilt-blank-slot').forEach(slot => {
+                        const idx = Number(slot.getAttribute('data-blank-idx'));
+                        const b = blanks[idx];
+                        const key = block.id + ':cell' + rIdx + '_' + cIdx + ':' + idx;
+                        blankMeta.push({ key, accepted: b.accepted });
+                        const input = document.createElement('input');
+                        input.type = 'text';
+                        input.className = 'ilt-blank-input';
+                        input.autocomplete = 'off'; input.autocapitalize = 'off'; input.spellcheck = false;
+                        input.addEventListener('input', () => { ln3State.subAnswers[subqIdx][key] = input.value; });
+                        slot.replaceWith(input);
+                    });
+                    tr.appendChild(td);
+                });
+                table.appendChild(tr);
+            });
+            wrap.appendChild(table);
+            return wrap;
+        }
+        if (block.type === 'image') return ln3RenderBlockStatic(block);
+        return document.createElement('div');
+    }
 
-    // ---------- Tải / lưu ngân hàng đoạn hội thoại ----------
+    // ----- Âm thanh hiệu ứng ĐÚNG / SAI (Web Audio API, không cần file mp3) -----
+    let ln3SfxCtx = null;
+    function getLn3SfxCtx() {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return null;
+        if (!ln3SfxCtx) ln3SfxCtx = new AC();
+        if (ln3SfxCtx.state === 'suspended') ln3SfxCtx.resume();
+        return ln3SfxCtx;
+    }
+    function ln3PlayTone(freq, startTime, duration, type, peakGain) {
+        const ctx = getLn3SfxCtx();
+        if (!ctx) return;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type || 'sine';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + startTime);
+        gain.gain.setValueAtTime(0.0001, ctx.currentTime + startTime);
+        gain.gain.linearRampToValueAtTime(peakGain || 0.22, ctx.currentTime + startTime + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + startTime + duration);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(ctx.currentTime + startTime);
+        osc.stop(ctx.currentTime + startTime + duration + 0.05);
+    }
+    function ln3PlayCorrectSound() {
+        ln3PlayTone(523.25, 0,    0.16, 'sine', 0.22);
+        ln3PlayTone(659.25, 0.12, 0.16, 'sine', 0.22);
+        ln3PlayTone(783.99, 0.24, 0.22, 'sine', 0.22);
+    }
+    function ln3PlayWrongSound() {
+        ln3PlayTone(180, 0,    0.18, 'square', 0.16);
+        ln3PlayTone(140, 0.15, 0.22, 'square', 0.16);
+    }
+
+    // ----- Phát file .mp3 đoạn hội thoại (LUÔN có link, do giảng viên bắt buộc phải gắn) -----
+    let ln3AudioEl = null;
+    function ln3GetAudioEl() {
+        if (!ln3AudioEl) {
+            ln3AudioEl = new Audio();
+            ln3AudioEl.preload = 'auto';
+        }
+        return ln3AudioEl;
+    }
+    function ln3PlayItemAudio(item) {
+        const url = ((item && item.audio_url) || '').trim();
+        if (!url) return;
+        const audio = ln3GetAudioEl();
+        if (audio.src !== url) audio.src = url;
+        audio.currentTime = 0;
+        audio.play().catch(err => console.error('Lỗi khi phát file mp3 Nghe lv3:', err.message));
+    }
+    function ln3StopAudio() {
+        if (ln3AudioEl) ln3AudioEl.pause();
+    }
+    document.querySelectorAll('.main-tab-btn').forEach(btn => btn.addEventListener('click', ln3StopAudio));
+    document.addEventListener('visibilitychange', () => { if (document.hidden) ln3StopAudio(); });
+    window.addEventListener('blur', ln3StopAudio);
+
+    // ---------- Tải / lưu ngân hàng đoạn hội thoại trên Supabase ----------
     let ln3Items = [];
     let ln3ItemsLoaded = false;
 
     async function ln3LoadItems(force) {
         if (ln3ItemsLoaded && !force) return ln3Items;
         try {
-            const { data, error } = await sb.from(LN3_TABLE).select('*').order('created_at', { ascending: false });
+            const { data, error } = await sb
+                .from(LN3_TABLE)
+                .select('*')
+                .order('created_at', { ascending: false });
             if (error) throw error;
             ln3Items = data || [];
             ln3ItemsLoaded = true;
@@ -15533,12 +18544,14 @@ function toggleCompletion(symbolElement) {
         return ln3Items;
     }
     async function ln3CreateItemDB(payload) {
-        const { data, error } = await sb.from(LN3_TABLE).insert(Object.assign({}, payload, { created_by: currentEmail })).select().single();
+        const insertPayload = Object.assign({}, payload, { created_by: currentEmail });
+        const { data, error } = await sb.from(LN3_TABLE).insert(insertPayload).select().single();
         if (error) throw error;
         return data;
     }
     async function ln3UpdateItemDB(id, payload) {
-        const { data, error } = await sb.from(LN3_TABLE).update(Object.assign({}, payload, { updated_at: new Date().toISOString(), updated_by: currentEmail })).eq('id', id).select().single();
+        const updatePayload = Object.assign({}, payload, { updated_at: new Date().toISOString(), updated_by: currentEmail });
+        const { data, error } = await sb.from(LN3_TABLE).update(updatePayload).eq('id', id).select().single();
         if (error) throw error;
         return data;
     }
@@ -15547,7 +18560,7 @@ function toggleCompletion(symbolElement) {
         if (error) throw error;
     }
 
-    // ---------- Điều hướng ----------
+    // ---------- Điều hướng: Nghe lv3 -> (Soạn hội thoại | Bắt đầu luyện tập) ----------
     ln3Card.addEventListener('click', () => {
         const stage1Panel = document.getElementById('ln-stage1-panel');
         if (stage1Panel) stage1Panel.style.display = 'none';
@@ -15575,37 +18588,42 @@ function toggleCompletion(symbolElement) {
     // ================= Khu vực giảng viên soạn hội thoại =================
     let ln3EditingId = null;
     let ln3DraftIdSeq = 0;
-    let ln3Draft = []; // mảng câu hỏi con đang soạn dở
+    let ln3Draft = []; // mảng câu hỏi con đang soạn dở trên form
 
     function ln3NewSubQuestion(type) {
         ln3DraftIdSeq++;
         return {
             localId: 'q' + ln3DraftIdSeq,
             type: type || 'mcq',
-            prompt: '',
+            blocks: [{ id: ln3Uid('blk'), type: 'paragraph', html: '' }],
             options: ['', ''],
             answerIndex: 0,
-            answer: '',
-            blocks: []  // dùng cho rich_blocks
+            answer: ''
         };
     }
 
-    // Đọc lại giá trị từ DOM vào ln3Draft (chỉ cho mcq/essay; rich_blocks dùng DOM blocks trực tiếp khi lưu)
+    // Đọc lại TOÀN BỘ giá trị đang có trên form vào ln3Draft — gọi TRƯỚC mỗi lần thay đổi cấu
+    // trúc (thêm/xoá câu hỏi, đổi dạng câu hỏi, thêm/xoá đáp án) để không mất nội dung giảng
+    // viên đã gõ ở những câu/khối/đáp án khác.
     function ln3ReadDraftFromDom() {
         document.querySelectorAll('#ln3-subq-list .ln3-subq-card').forEach(card => {
             const q = ln3Draft.find(x => x.localId === card.dataset.localId);
             if (!q) return;
-            const promptEl = card.querySelector('.ln3-subq-prompt');
-            if (promptEl) q.prompt = promptEl.value;
+            const blocksListEl = card.querySelector(':scope > .ln3-subq-blocks-list');
+            if (blocksListEl) {
+                q.blocks = Array.from(blocksListEl.children).map(ln3CollectBlock).filter(Boolean);
+            }
             if (q.type === 'mcq') {
                 const optionInputs = Array.from(card.querySelectorAll('.ln3-mc-opt-text'));
                 if (optionInputs.length) q.options = optionInputs.map(inp => inp.value);
                 const checked = card.querySelector('input[type="radio"]:checked');
                 if (checked) q.answerIndex = parseInt(checked.value, 10);
-            } else if (q.type !== 'rich_blocks') {
+            } else if (q.type === 'essay') {
                 const ansEl = card.querySelector('.ln3-subq-answer');
                 if (ansEl) q.answer = ansEl.value;
             }
+            // fill_blank: không còn ô "đáp án" riêng — đáp án nằm ngay trong các chỗ trống
+            // (gạch chân) bên trong q.blocks, đã được đọc ở trên.
         });
     }
 
@@ -15619,77 +18637,101 @@ function toggleCompletion(symbolElement) {
         `).join('');
     }
 
-    // Build card cho MCQ và Essay bằng innerHTML; rich_blocks dùng DOM riêng
-    function ln3BuildSubqCardHtml(q, idx) {
-        let bodyHtml = '';
-        if (q.type === 'mcq') {
-            bodyHtml = `
-                <div class="ln2-mc-edit-options" data-mc-options>${ln3BuildMcOptionRowsHtml(q)}</div>
-                ${q.options.length < LN3_MC_MAX_OPTIONS ? `<button type="button" class="ln2-mc-add-btn ln3-mc-opt-add-btn">+ Thêm đáp án</button>` : ''}
-            `;
-        } else if (q.type === 'essay') {
-            bodyHtml = `
-                <input type="text" class="news-edit-input ln3-subq-answer" placeholder="Đáp án mẫu (tuỳ chọn)..." value="${ln3Esc(q.answer)}">
-                <div class="ln3-subq-answer-hint">Để trống nếu là câu hỏi mở — hệ thống chấm gần đúng theo từ khoá.</div>
-            `;
-        }
-        // rich_blocks không có bodyHtml — được nối thêm sau bằng DOM
-        return `
-            <div class="ln3-subq-card" data-local-id="${q.localId}">
-                <div class="ln3-subq-head">
-                    <span class="ln3-subq-num">Câu ${idx + 1}</span>
-                    <select class="ln3-subq-type-select">
-                        <option value="mcq" ${q.type === 'mcq' ? 'selected' : ''}>☑️ Trắc nghiệm</option>
-                        <option value="rich_blocks" ${q.type === 'rich_blocks' ? 'selected' : ''}>📝 Điền từ (đoạn văn)</option>
-                        <option value="essay" ${q.type === 'essay' ? 'selected' : ''}>✍️ Tự luận</option>
-                    </select>
-                    ${ln3Draft.length > LN3_SUBQ_MIN ? `<button type="button" class="ln3-subq-remove-btn ln3-subq-remove-whole-btn" title="Xoá câu hỏi này">🗑️</button>` : ''}
-                </div>
-                <textarea class="ln3-subq-prompt" placeholder="Hướng dẫn / câu hỏi (tuỳ chọn — có thể để trống với dạng điền từ)...">${ln3Esc(q.prompt)}</textarea>
-                ${bodyHtml}
-                ${q.type === 'rich_blocks' ? '<div class="ln3-blocks-area"></div>' : ''}
-            </div>
+    // Xây khung câu hỏi con dưới dạng DOM thật (không phải chuỗi HTML) vì khối "đoạn văn/bảng/
+    // hình ảnh" cần các phần tử contenteditable còn sống (rich text, bảng, tải ảnh...).
+    function ln3BuildSubqCard(q, idx) {
+        const card = document.createElement('div');
+        card.className = 'ln3-subq-card';
+        card.dataset.localId = q.localId;
+
+        const head = document.createElement('div');
+        head.className = 'ln3-subq-head';
+        head.innerHTML = `
+            <span class="ln3-subq-num">Câu ${idx + 1}</span>
+            <select class="ln3-subq-type-select">
+                <option value="mcq" ${q.type === 'mcq' ? 'selected' : ''}>☑️ Trắc nghiệm</option>
+                <option value="fill_blank" ${q.type === 'fill_blank' ? 'selected' : ''}>📝 Điền từ (đoạn văn)</option>
+                <option value="essay" ${q.type === 'essay' ? 'selected' : ''}>✍️ Tự luận</option>
+            </select>
+            ${ln3Draft.length > LN3_SUBQ_MIN ? `<button type="button" class="ln3-subq-remove-btn ln3-subq-remove-whole-btn" title="Xoá câu hỏi này">🗑️</button>` : ''}
         `;
-    }
+        card.appendChild(head);
 
-    // Dựng blocks DOM cho 1 card rich_blocks
-    function ln3BuildRichBlocksArea(card, q) {
-        const area = card.querySelector('.ln3-blocks-area');
-        if (!area) return;
-        area.innerHTML = '';
-
+        // ---- Khối nội dung đề bài: đoạn văn / đóng khung / bảng / hình ảnh ----
+        // Dùng chung cho CẢ 3 dạng câu — ở dạng "Điền từ", chỗ trống (gạch chân) trong các khối
+        // đoạn văn/bảng chính là đáp án; ở "Trắc nghiệm"/"Tự luận" đây chỉ là nội dung đề bài.
         const blocksList = document.createElement('div');
-        blocksList.className = 'ilt-blocks-list';
-        (q.blocks || []).forEach(b => {
+        blocksList.className = 'ilt-blocks-list ln3-subq-blocks-list';
+        const initialBlocks = (q.blocks && q.blocks.length) ? q.blocks : [{ id: ln3Uid('blk'), type: 'paragraph', html: '' }];
+        initialBlocks.forEach(b => {
             const nb = ln3BuildBlock(b.type, b);
             if (nb) blocksList.appendChild(nb);
         });
-        area.appendChild(blocksList);
+        card.appendChild(blocksList);
 
         const addBar = document.createElement('div');
         addBar.className = 'ilt-add-block-bar';
         addBar.innerHTML =
-            '<button type="button" class="ctest-type-btn" data-type="paragraph">📝 Đoạn văn (điền từ)</button>' +
-            '<button type="button" class="ctest-type-btn" data-type="framed">📦 Đóng khung</button>' +
-            '<button type="button" class="ctest-type-btn" data-type="table">📊 Bảng</button>' +
-            '<button type="button" class="ctest-type-btn" data-type="image">🖼️ Hình ảnh</button>';
-        addBar.addEventListener('click', e => {
-            const btn = e.target.closest('.ctest-type-btn');
+            '<button type="button" class="ctest-type-btn" data-add-block="paragraph">📝 Đoạn văn</button>' +
+            '<button type="button" class="ctest-type-btn" data-add-block="framed">📦 Đóng khung</button>' +
+            '<button type="button" class="ctest-type-btn" data-add-block="table">📊 Bảng</button>' +
+            '<button type="button" class="ctest-type-btn" data-add-block="image">🖼️ Hình ảnh</button>';
+        addBar.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-add-block]');
             if (!btn) return;
-            const nb = ln3BuildBlock(btn.dataset.type, {});
+            const nb = ln3BuildBlock(btn.dataset.addBlock, {});
             if (nb) blocksList.appendChild(nb);
+            if (blankTotalHint) refreshBlankTotalHint();
         });
-        area.appendChild(addBar);
+        card.appendChild(addBar);
+
+        let blankTotalHint = null;
+        function refreshBlankTotalHint() {
+            let total = 0;
+            blocksList.querySelectorAll(':scope > .ilt-block').forEach(b => { total += ln3CountBlockBlanksLive(b); });
+            blankTotalHint.textContent = total
+                ? `→ Tổng cộng ${total} chỗ trống ở câu này. So khớp không phân biệt hoa/thường, dấu câu, khoảng trắng.`
+                : '⚠️ Câu này chưa có chỗ trống nào — hãy bôi đen từ/cụm từ cần ẩn trong đoạn văn hoặc bảng phía trên rồi bấm gạch chân (nút U).';
+        }
+
+        if (q.type === 'mcq') {
+            const optWrap = document.createElement('div');
+            optWrap.className = 'ln2-mc-edit-options';
+            optWrap.setAttribute('data-mc-options', '');
+            optWrap.innerHTML = ln3BuildMcOptionRowsHtml(q);
+            card.appendChild(optWrap);
+            if (q.options.length < LN3_MC_MAX_OPTIONS) {
+                const addOptBtn = document.createElement('button');
+                addOptBtn.type = 'button';
+                addOptBtn.className = 'ln2-mc-add-btn ln3-mc-opt-add-btn';
+                addOptBtn.textContent = '+ Thêm đáp án';
+                card.appendChild(addOptBtn);
+            }
+        } else if (q.type === 'fill_blank') {
+            blankTotalHint = document.createElement('div');
+            blankTotalHint.className = 'ln3-subq-answer-hint ln3-subq-blank-total-hint';
+            card.appendChild(blankTotalHint);
+            blocksList.addEventListener('input', refreshBlankTotalHint);
+            refreshBlankTotalHint();
+        } else if (q.type === 'essay') {
+            const ansInput = document.createElement('input');
+            ansInput.type = 'text';
+            ansInput.className = 'news-edit-input ln3-subq-answer';
+            ansInput.placeholder = 'Đáp án mẫu (tuỳ chọn, dùng để chấm gần đúng)...';
+            ansInput.value = q.answer || '';
+            card.appendChild(ansInput);
+            const hint = document.createElement('div');
+            hint.className = 'ln3-subq-answer-hint';
+            hint.textContent = 'Để trống nếu là câu hỏi mở, không có đáp án cố định — hệ thống sẽ không chấm đúng/sai, chỉ cần học viên viết câu trả lời.';
+            card.appendChild(hint);
+        }
+
+        return card;
     }
 
     function ln3RenderSubqForm() {
-        ln3SubqListEl.innerHTML = ln3Draft.map((q, i) => ln3BuildSubqCardHtml(q, i)).join('');
-        // Sau khi dựng HTML, nối thêm blocks DOM cho rich_blocks và wire events
-        ln3Draft.forEach(q => {
-            const card = ln3SubqListEl.querySelector(`.ln3-subq-card[data-local-id="${q.localId}"]`);
-            if (!card) return;
-            if (q.type === 'rich_blocks') ln3BuildRichBlocksArea(card, q);
-        });
+        ln3SubqListEl.innerHTML = '';
+        ln3Draft.forEach((q, i) => ln3SubqListEl.appendChild(ln3BuildSubqCard(q, i)));
         ln3WireSubqEvents();
     }
 
@@ -15703,7 +18745,6 @@ function toggleCompletion(symbolElement) {
                 if (!q) return;
                 q.type = typeSelect.value;
                 if (q.type === 'mcq' && (!q.options || q.options.length < LN3_MC_MIN_OPTIONS)) q.options = ['', ''];
-                if (q.type === 'rich_blocks') q.blocks = [];
                 ln3RenderSubqForm();
             });
             const removeWholeBtn = card.querySelector('.ln3-subq-remove-whole-btn');
@@ -15782,25 +18823,22 @@ function toggleCompletion(symbolElement) {
         const savedQuestions = Array.isArray(item.questions) && item.questions.length ? item.questions : [{ type: 'mcq' }];
         ln3Draft = savedQuestions.map(sq => {
             const draft = ln3NewSubQuestion(sq.type);
-            draft.prompt = sq.prompt || '';
+            // Dữ liệu MỚI đã có sẵn "blocks" (đoạn văn/đóng khung/bảng/hình ảnh) — nạp nguyên
+            // trạng. Dữ liệu CŨ (soạn trước khi có tính năng này) chỉ có "prompt" dạng chữ
+            // thường — tự động bọc thành 1 khối đoạn văn để giảng viên xem/soạn tiếp; với câu
+            // Điền từ kiểu cũ, giảng viên cần tự bôi đen lại từ cần ẩn rồi lưu để chuyển sang
+            // cơ chế mới (đề bài cũ vẫn hiển thị/chấm được bình thường cho học viên nếu chưa sửa).
+            draft.blocks = (Array.isArray(sq.blocks) && sq.blocks.length) ? sq.blocks : ln3LegacyBlocksFromPrompt(sq.prompt);
             if (sq.type === 'mcq') {
                 draft.options = (Array.isArray(sq.options) && sq.options.length >= LN3_MC_MIN_OPTIONS) ? sq.options.slice() : ['', ''];
                 draft.answerIndex = Number.isInteger(sq.answer_index) ? sq.answer_index : 0;
-            } else if (sq.type === 'rich_blocks') {
-                draft.blocks = Array.isArray(sq.blocks) ? sq.blocks : [];
-            } else {
+            } else if (sq.type === 'essay') {
                 draft.answer = sq.answer || '';
-            }
-            // Backward compat: old fill_blank → promote to rich_blocks with 1 paragraph block
-            if (sq.type === 'fill_blank') {
-                draft.type = 'rich_blocks';
-                draft.blocks = sq.answer
-                    ? [{ id: ln3uid('blk'), type: 'paragraph', html: ln3Esc(sq.prompt || sq.answer) }]
-                    : [];
             }
             return draft;
         });
         ln3RenderSubqForm();
+
         ln3EditingId = item.id;
         ln3AdminSaveBtn.textContent = '💾 Lưu thay đổi';
         ln3AdminCancelBtn.style.display = 'inline-block';
@@ -15809,11 +18847,26 @@ function toggleCompletion(symbolElement) {
         if (typeof ln3AudioUrlInput.scrollIntoView === 'function') ln3AudioUrlInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
-    // Thu thập blocks từ DOM của card rich_blocks
-    function ln3CollectRichBlocksFromCard(card) {
-        const blocksList = card.querySelector('.ln3-blocks-area .ilt-blocks-list');
-        if (!blocksList) return [];
-        return Array.from(blocksList.children).map(ln3CollectBlock).filter(Boolean);
+    // Bỏ qua khối rỗng (đoạn văn/khung trống, bảng toàn ô trống, ảnh chưa có link) khi lưu.
+    function ln3IsBlockNonEmpty(b) {
+        if (b.type === 'paragraph' || b.type === 'framed') return (b.html || '').replace(/<[^>]+>/g, '').trim().length > 0;
+        if (b.type === 'table') return (b.rows || []).some(row => row.some(c => {
+            const h = (c && typeof c === 'object') ? c.html : c;
+            return (h || '').replace(/<[^>]+>/g, '').trim().length > 0;
+        }));
+        if (b.type === 'image') return !!(b.url && b.url.trim());
+        return false;
+    }
+    function ln3CountBlanksInBlocks(blocks) {
+        let total = 0;
+        (blocks || []).forEach(b => {
+            if (b.type === 'paragraph' || b.type === 'framed') total += ln3CountBlanksInHtml(b.html);
+            else if (b.type === 'table') (b.rows || []).forEach(row => row.forEach(c => {
+                const h = (c && typeof c === 'object') ? c.html : c;
+                total += ln3CountBlanksInHtml(h);
+            }));
+        });
+        return total;
     }
 
     function ln3CollectFormPayload() {
@@ -15824,33 +18877,21 @@ function toggleCompletion(symbolElement) {
         if (!ln3Draft.length) throw new Error('Cần ít nhất 1 câu hỏi cho đoạn hội thoại này.');
 
         const questions = ln3Draft.map((q, i) => {
-            const prompt = (q.prompt || '').trim();
+            const blocks = (q.blocks || []).filter(ln3IsBlockNonEmpty);
+            if (!blocks.length) throw new Error(`Câu ${i + 1}: vui lòng nhập nội dung đề bài (đoạn văn / bảng / hình ảnh).`);
+
             if (q.type === 'mcq') {
                 const trimmedOptions = (q.options || []).map(o => (o || '').trim());
                 if (trimmedOptions.length < LN3_MC_MIN_OPTIONS) throw new Error(`Câu ${i + 1}: cần tối thiểu ${LN3_MC_MIN_OPTIONS} đáp án.`);
                 if (trimmedOptions.some(o => !o)) throw new Error(`Câu ${i + 1}: vui lòng nhập đủ nội dung cho tất cả các đáp án.`);
-                if (!prompt) throw new Error(`Câu ${i + 1}: vui lòng nhập câu hỏi.`);
-                return { type: 'mcq', prompt, options: trimmedOptions, answer_index: q.answerIndex || 0 };
+                return { type: 'mcq', blocks, options: trimmedOptions, answer_index: q.answerIndex || 0 };
             }
-            if (q.type === 'rich_blocks') {
-                const card = ln3SubqListEl.querySelector(`.ln3-subq-card[data-local-id="${q.localId}"]`);
-                const blocks = ln3CollectRichBlocksFromCard(card);
-                // Đếm tổng số blank
-                let totalBlanks = 0;
-                blocks.forEach(b => {
-                    if (b.type === 'paragraph' || b.type === 'framed') totalBlanks += ln3CountBlanks(b.html || '');
-                    if (b.type === 'table') {
-                        (b.rows || []).forEach(row => row.forEach(cell => {
-                            totalBlanks += ln3CountBlanks(cell && cell.html ? cell.html : '');
-                        }));
-                    }
-                });
-                if (!blocks.length) throw new Error(`Câu ${i + 1} (Điền từ): cần ít nhất 1 khối nội dung.`);
-                if (!totalBlanks) throw new Error(`Câu ${i + 1} (Điền từ): chưa có chỗ trống nào — bôi đen từ rồi bấm U (gạch chân) để tạo chỗ trống.`);
-                return { type: 'rich_blocks', prompt, blocks };
+            if (q.type === 'fill_blank') {
+                if (!ln3CountBlanksInBlocks(blocks)) throw new Error(`Câu ${i + 1}: hãy bôi đen từ/cụm từ cần ẩn rồi bấm gạch chân (nút U) để tạo ít nhất 1 chỗ trống.`);
+                return { type: 'fill_blank', blocks };
             }
-            // essay
-            return { type: 'essay', prompt, answer: (q.answer || '').trim() };
+            // essay: đáp án mẫu được phép để trống (câu hỏi mở, không chấm điểm)
+            return { type: 'essay', blocks, answer: (q.answer || '').trim() };
         });
 
         return { audio_url: audioUrl, title: title || null, questions };
@@ -15859,8 +18900,9 @@ function toggleCompletion(symbolElement) {
     ln3AdminSaveBtn.addEventListener('click', async () => {
         if (!isTeacher) return;
         let payload;
-        try { payload = ln3CollectFormPayload(); }
-        catch (err) {
+        try {
+            payload = ln3CollectFormPayload();
+        } catch (err) {
             ln3AdminStatus.textContent = '⚠️ ' + err.message;
             ln3AdminStatus.className = 'ln2-admin-status is-error';
             return;
@@ -15889,6 +18931,19 @@ function toggleCompletion(symbolElement) {
         }
     });
 
+    // Lấy đoạn chữ ngắn để xem trước từ câu hỏi đầu tiên — ưu tiên khối đoạn văn/đóng khung đầu
+    // tiên (dữ liệu mới); nếu là dữ liệu cũ chưa có blocks thì lấy "prompt" cũ.
+    function ln3PreviewTextFromItem(item) {
+        const q0 = Array.isArray(item.questions) ? item.questions[0] : null;
+        if (!q0) return '';
+        if (q0.prompt) return q0.prompt;
+        const textBlock = (q0.blocks || []).find(b => (b.type === 'paragraph' || b.type === 'framed') && b.html);
+        if (!textBlock) return '';
+        const d = document.createElement('div');
+        d.innerHTML = textBlock.html;
+        return (d.textContent || '').trim();
+    }
+
     function ln3RenderItemList() {
         if (!ln3Items.length) {
             ln3ItemListEl.innerHTML = '<p class="kid-hint">Chưa có đoạn hội thoại nào — hãy soạn đoạn đầu tiên ở khung bên trên.</p>';
@@ -15896,7 +18951,7 @@ function toggleCompletion(symbolElement) {
         }
         ln3ItemListEl.innerHTML = ln3Items.map(item => {
             const qCount = Array.isArray(item.questions) ? item.questions.length : 0;
-            const preview = item.title || (Array.isArray(item.questions) && item.questions[0] ? (item.questions[0].prompt || `Câu hỏi dạng ${item.questions[0].type}`) : '') || '(chưa có tiêu đề)';
+            const preview = item.title || ln3PreviewTextFromItem(item) || '(chưa có tiêu đề)';
             return `
                 <div class="ln2-item-row" data-item-id="${item.id}">
                     <span class="ln3-item-subcount-badge">🎵 ${qCount} câu hỏi</span>
@@ -15936,8 +18991,6 @@ function toggleCompletion(symbolElement) {
 
     // ================= Làm bài luyện tập (học viên) =================
     let ln3State = null;
-    // Lưu câu trả lời cho rich_blocks: key = "subqIdx:blockId:blankIdx" hoặc "subqIdx:blockId:cellR_C:blankIdx"
-    let ln3BlankAnswers = {};
 
     async function ln3StartQuiz() {
         ln3QuizPanel.style.display = 'block';
@@ -15957,161 +19010,81 @@ function toggleCompletion(symbolElement) {
         }
 
         const picked = ln3Shuffle(ln3Items).slice(0, Math.min(LN3_TOTAL_ITEMS, ln3Items.length));
-        ln3State = { items: picked, index: 0, score: 0, busy: false, subAnswers: [] };
-        ln3BlankAnswers = {};
+        ln3State = { items: picked, index: 0, score: 0, busy: false, subAnswers: [], subBlanks: [] };
         ln3RenderItem();
     }
 
-    // Render 1 block (đoạn văn / bảng / ảnh) cho học viên — tạo ô nhập tại chỗ blank
-    function ln3RenderBlockTake(block, subqIdx) {
-        if (block.type === 'paragraph' || block.type === 'framed') {
-            const wrap = document.createElement('div');
-            wrap.className = 'ilt-view-paragraph' + (block.type === 'framed' ? ' ilt-view-framed' : '');
-            const { displayHtml, blanks } = ln3ParseBlanks(block.html || '');
-            wrap.innerHTML = displayHtml;
-            wrap.querySelectorAll('.ilt-blank-slot').forEach(slot => {
-                const idx = Number(slot.getAttribute('data-blank-idx'));
-                const b = blanks[idx];
-                const key = subqIdx + ':' + block.id + ':' + idx;
-                slot.replaceWith(ln3MakeBlankInput(b, key));
-            });
-            return wrap;
-        }
-        if (block.type === 'table') {
-            const wrap = document.createElement('div');
-            wrap.className = 'ilt-view-table-wrap';
-            const table = document.createElement('table');
-            table.className = 'ilt-view-table';
-            (block.rows || []).forEach((row, rIdx) => {
-                const tr = document.createElement('tr');
-                row.forEach((cell, cIdx) => {
-                    const isObj = cell && typeof cell === 'object';
-                    const cellHtml = isObj ? cell.html : (cell || '');
-                    const td = document.createElement('td');
-                    if (isObj && cell.colspan > 1) td.colSpan = cell.colspan;
-                    if (isObj && cell.rowspan > 1) td.rowSpan = cell.rowspan;
-                    const { displayHtml, blanks } = ln3ParseBlanks(cellHtml);
-                    td.innerHTML = displayHtml;
-                    td.querySelectorAll('.ilt-blank-slot').forEach(slot => {
-                        const idx = Number(slot.getAttribute('data-blank-idx'));
-                        const b = blanks[idx];
-                        const key = subqIdx + ':' + block.id + ':cell' + rIdx + '_' + cIdx + ':' + idx;
-                        slot.replaceWith(ln3MakeBlankInput(b, key));
-                    });
-                    tr.appendChild(td);
-                });
-                table.appendChild(tr);
-            });
-            wrap.appendChild(table);
-            return wrap;
-        }
-        if (block.type === 'image') {
-            const wrap = document.createElement('div');
-            wrap.className = 'ilt-view-image-wrap';
-            if (block.url) {
-                const img = document.createElement('img');
-                img.src = block.url;
-                img.className = 'ilt-view-image';
-                wrap.appendChild(img);
-            }
-            if (block.caption) {
-                const cap = document.createElement('div');
-                cap.className = 'ilt-view-image-caption';
-                cap.textContent = block.caption;
-                wrap.appendChild(cap);
-            }
-            return wrap;
-        }
-        return document.createElement('div');
-    }
-
-    function ln3MakeBlankInput(blank, key) {
-        const span = document.createElement('span');
-        span.className = 'ilt-blank-wrap';
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.className = 'ilt-blank-input';
-        input.autocomplete = 'off';
-        input.autocapitalize = 'off';
-        input.spellcheck = false;
-        input.value = ln3BlankAnswers[key] || '';
-        input.addEventListener('input', () => { ln3BlankAnswers[key] = input.value; });
-        span.appendChild(input);
-        span.dataset.key = key;
-        span.dataset.accepted = JSON.stringify(blank.accepted || []);
-        return span;
-    }
-
+    // Xây 1 câu hỏi con cho màn hình LÀM BÀI. Trả về phần tử DOM (không phải chuỗi HTML) vì nội
+    // dung đề bài có thể gồm nhiều khối (đoạn văn/đóng khung/bảng/hình ảnh) xen kẽ, và dạng
+    // "Điền từ" cần tạo trực tiếp các ô nhập ngay tại vị trí chỗ trống trong đoạn văn/bảng.
     function ln3BuildTakeSubqEl(q, i) {
         const wrap = document.createElement('div');
         wrap.className = 'ln3-take-subq';
         wrap.dataset.subqIndex = String(i);
 
-        if (q.prompt) {
-            const promptEl = document.createElement('div');
-            promptEl.className = 'ln3-take-subq-prompt';
-            const numSpan = document.createElement('span');
-            numSpan.className = 'ln3-take-subq-num';
-            numSpan.textContent = `Câu ${i + 1}. `;
-            promptEl.appendChild(numSpan);
-            promptEl.appendChild(document.createTextNode(q.prompt));
-            wrap.appendChild(promptEl);
-        } else if (q.type !== 'rich_blocks') {
-            // mcq/essay luôn cần câu hỏi, nhưng rich_blocks có thể không có
-            const promptEl = document.createElement('div');
-            promptEl.className = 'ln3-take-subq-prompt';
-            const numSpan = document.createElement('span');
-            numSpan.className = 'ln3-take-subq-num';
-            numSpan.textContent = `Câu ${i + 1}. `;
-            promptEl.appendChild(numSpan);
-            wrap.appendChild(promptEl);
+        const promptWrap = document.createElement('div');
+        promptWrap.className = 'ln3-take-subq-prompt';
+        const numSpan = document.createElement('span');
+        numSpan.className = 'ln3-take-subq-num';
+        numSpan.textContent = `Câu ${i + 1}.`;
+        promptWrap.appendChild(numSpan);
+        wrap.appendChild(promptWrap);
+
+        const hasBlocks = Array.isArray(q.blocks) && q.blocks.length > 0;
+        if (hasBlocks) {
+            const contentWrap = document.createElement('div');
+            contentWrap.className = 'ln3-take-subq-content';
+            wrap.appendChild(contentWrap);
+            if (q.type === 'fill_blank') {
+                const blankMeta = [];
+                q.blocks.forEach(block => contentWrap.appendChild(ln3RenderBlockForTake(block, i, blankMeta)));
+                ln3State.subBlanks[i] = blankMeta;
+                ln3State.subAnswers[i] = {};
+            } else {
+                q.blocks.forEach(block => contentWrap.appendChild(ln3RenderBlockStatic(block)));
+            }
+        } else {
+            // Dữ liệu cũ (soạn trước khi có tính năng khối nội dung) — hiển thị như trước.
+            promptWrap.appendChild(document.createTextNode(q.prompt || ''));
         }
 
+        let bodyEl = null;
         if (q.type === 'mcq') {
             const options = q.options || [];
             const optOrder = ln3Shuffle(options.map((_, idx) => idx));
-            const grid = document.createElement('div');
-            grid.className = 'ln2-mc-grid';
-            grid.id = 'ln3-mc-grid-' + i;
+            bodyEl = document.createElement('div');
+            bodyEl.className = 'ln2-mc-grid';
+            bodyEl.id = `ln3-mc-grid-${i}`;
             optOrder.forEach((origIdx, pos) => {
                 const btn = document.createElement('button');
                 btn.type = 'button';
                 btn.className = 'ln2-mc-option';
                 btn.dataset.oi = String(origIdx);
                 btn.innerHTML = `<span class="ln2-mc-letter">${String.fromCharCode(65 + pos)}</span><span class="ln2-mc-text">${ln3Esc(options[origIdx])}</span>`;
-                grid.appendChild(btn);
+                bodyEl.appendChild(btn);
             });
-            wrap.appendChild(grid);
-        } else if (q.type === 'rich_blocks') {
-            // Render mỗi block (đoạn văn, bảng, ảnh, đóng khung)
-            (q.blocks || []).forEach(block => {
-                wrap.appendChild(ln3RenderBlockTake(block, i));
-            });
+        } else if (q.type === 'fill_blank' && !hasBlocks) {
+            // Dữ liệu cũ: 1 câu hỏi - 1 ô nhập riêng (không có chỗ trống gắn liền trong đoạn văn).
+            bodyEl = document.createElement('input');
+            bodyEl.type = 'text';
+            bodyEl.id = `ln3-take-input-${i}`;
+            bodyEl.className = 'thcs-translate-blank-input';
+            bodyEl.style.width = '90%';
+            bodyEl.placeholder = 'Nhập câu trả lời...';
+            bodyEl.autocomplete = 'off'; bodyEl.autocapitalize = 'off'; bodyEl.spellcheck = false;
         } else if (q.type === 'essay') {
-            const ta = document.createElement('textarea');
-            ta.id = 'ln3-take-input-' + i;
-            ta.className = 'ln3-take-essay-input';
-            ta.placeholder = 'Viết câu trả lời của bạn...';
-            wrap.appendChild(ta);
-        } else if (q.type === 'fill_blank') {
-            // backward compat for old data
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.id = 'ln3-take-input-' + i;
-            input.className = 'thcs-translate-blank-input';
-            input.style.width = '90%';
-            input.placeholder = 'Nhập câu trả lời...';
-            input.autocomplete = 'off';
-            input.autocapitalize = 'off';
-            input.spellcheck = false;
-            wrap.appendChild(input);
+            bodyEl = document.createElement('textarea');
+            bodyEl.id = `ln3-take-input-${i}`;
+            bodyEl.className = 'ln3-take-essay-input';
+            bodyEl.placeholder = 'Viết câu trả lời của bạn...';
         }
+        if (bodyEl) wrap.appendChild(bodyEl);
 
-        const fbLine = document.createElement('div');
-        fbLine.className = 'ln3-take-feedback-line';
-        fbLine.id = 'ln3-take-feedback-' + i;
-        fbLine.style.display = 'none';
-        wrap.appendChild(fbLine);
+        const fbEl = document.createElement('div');
+        fbEl.className = 'ln3-take-feedback-line';
+        fbEl.id = `ln3-take-feedback-${i}`;
+        fbEl.style.display = 'none';
+        wrap.appendChild(fbEl);
 
         return wrap;
     }
@@ -16127,32 +19100,28 @@ function toggleCompletion(symbolElement) {
         const item = ln3State.items[ln3State.index];
         const questions = Array.isArray(item.questions) ? item.questions : [];
         ln3State.subAnswers = questions.map(() => null);
+        ln3State.subBlanks = questions.map(() => null);
 
         ln3QuizBody.innerHTML = '';
-
         if (item.title) {
-            const titleEl = document.createElement('p');
-            titleEl.className = 'ln3-dialogue-title';
-            titleEl.textContent = item.title;
-            ln3QuizBody.appendChild(titleEl);
+            const t = document.createElement('p');
+            t.className = 'ln3-dialogue-title';
+            t.textContent = item.title;
+            ln3QuizBody.appendChild(t);
         }
-
         const playRow = document.createElement('div');
         playRow.className = 'ln-play-row';
-        playRow.innerHTML = '<button type="button" class="kid-btn kid-btn-primary" id="ln3-play-btn">🔊 Nghe đoạn hội thoại</button>';
+        playRow.innerHTML = `<button type="button" class="kid-btn kid-btn-primary" id="ln3-play-btn">🔊 Nghe đoạn hội thoại</button>`;
         ln3QuizBody.appendChild(playRow);
         document.getElementById('ln3-play-btn').addEventListener('click', () => ln3PlayItemAudio(item));
 
         questions.forEach((q, i) => {
-            ln3QuizBody.appendChild(ln3BuildTakeSubqEl(q, i));
-        });
-
-        // Wire interactions
-        questions.forEach((q, i) => {
+            const subqEl = ln3BuildTakeSubqEl(q, i);
+            ln3QuizBody.appendChild(subqEl);
             if (q.type === 'mcq') {
-                const grid = document.getElementById('ln3-mc-grid-' + i);
+                const grid = subqEl.querySelector(`#ln3-mc-grid-${i}`);
                 if (grid) {
-                    grid.addEventListener('click', e => {
+                    grid.addEventListener('click', (e) => {
                         const btn = e.target.closest('.ln2-mc-option');
                         if (!btn || ln3State.busy) return;
                         grid.querySelectorAll('.ln2-mc-option').forEach(b => b.classList.remove('is-selected-draft'));
@@ -16160,16 +19129,15 @@ function toggleCompletion(symbolElement) {
                         ln3State.subAnswers[i] = parseInt(btn.dataset.oi, 10);
                     });
                 }
-            } else if (q.type === 'rich_blocks') {
-                // blank inputs listen through ln3BlankAnswers (already wired in ln3MakeBlankInput)
-                ln3State.subAnswers[i] = 'rich_blocks'; // sentinel
-            } else {
-                const input = document.getElementById('ln3-take-input-' + i);
+            } else if (q.type === 'essay' || (q.type === 'fill_blank' && !(Array.isArray(q.blocks) && q.blocks.length))) {
+                const input = subqEl.querySelector(`#ln3-take-input-${i}`);
                 if (input) input.addEventListener('input', () => { ln3State.subAnswers[i] = input.value; });
             }
+            // fill_blank MỚI (có blocks): mỗi ô nhập chỗ trống đã tự gắn sự kiện cập nhật đáp án
+            // ngay khi được tạo ở ln3RenderBlockForTake, không cần gắn thêm ở đây.
         });
 
-        ln3QuizControls.innerHTML = '<button type="button" class="kid-btn kid-btn-primary" id="ln3-check-btn">✔️ Kiểm tra</button>';
+        ln3QuizControls.innerHTML = `<button type="button" class="kid-btn kid-btn-primary" id="ln3-check-btn">✔️ Kiểm tra</button>`;
         document.getElementById('ln3-check-btn').addEventListener('click', ln3CheckAnswer);
     }
 
@@ -16178,103 +19146,91 @@ function toggleCompletion(symbolElement) {
         const item = ln3State.items[ln3State.index];
         const questions = Array.isArray(item.questions) ? item.questions : [];
 
-        // Kiểm tra học viên đã trả lời chưa
+        // Bắt buộc trả lời hết các câu hỏi con (và hết mọi chỗ trống) trước khi chấm — giống
+        // cách các dạng "sắp xếp" ở Nghe lv1/lv2 yêu cầu xếp đủ trước khi cho kiểm tra.
         const allAnswered = questions.every((q, i) => {
             const ans = ln3State.subAnswers[i];
             if (q.type === 'mcq') return ans !== null && ans !== undefined;
-            if (q.type === 'rich_blocks') {
-                // Kiểm tra tất cả ô blank trong câu này đã điền chưa
-                const subqEl = ln3QuizBody.querySelector(`.ln3-take-subq[data-subq-index="${i}"]`);
-                if (!subqEl) return true;
-                const inputs = Array.from(subqEl.querySelectorAll('.ilt-blank-input'));
-                return inputs.every(inp => inp.value.trim().length > 0);
+            if (q.type === 'fill_blank' && Array.isArray(q.blocks) && q.blocks.length) {
+                const meta = ln3State.subBlanks[i] || [];
+                if (!meta.length) return true;
+                return meta.every(b => (((ans || {})[b.key]) || '').trim().length > 0);
             }
-            if (q.type === 'fill_blank' || q.type === 'essay') return typeof ans === 'string' && ans.trim().length > 0;
-            return true;
+            return typeof ans === 'string' && ans.trim().length > 0;
         });
-        if (!allAnswered) {
-            ln3QuizFeedback.className = 'thcs-translate-feedback is-warn';
-            ln3QuizFeedback.textContent = '⚠️ Vui lòng điền vào tất cả các chỗ trống trước khi kiểm tra.';
-            return;
-        }
+        if (!allAnswered) return;
 
         let allCorrect = true;
         questions.forEach((q, i) => {
             const ans = ln3State.subAnswers[i];
             let isCorrect = false;
-            let fbText = '';
-            const fbEl = document.getElementById('ln3-take-feedback-' + i);
-
+            let correctText = '';
             if (q.type === 'mcq') {
                 isCorrect = ans === q.answer_index;
-                const grid = document.getElementById('ln3-mc-grid-' + i);
+                correctText = q.options[q.answer_index];
+                const grid = document.getElementById(`ln3-mc-grid-${i}`);
                 if (grid) {
                     grid.querySelectorAll('.ln2-mc-option').forEach(btn => {
-                        btn.classList.remove('is-selected-draft');
+                        btn.classList.remove('is-selected-draft'); // bỏ highlight tạm, nhường chỗ cho is-correct/is-wrong
                         const oi = parseInt(btn.dataset.oi, 10);
                         btn.classList.add('is-disabled');
                         if (oi === q.answer_index) btn.classList.add('is-correct');
                         else if (oi === ans) btn.classList.add('is-wrong');
                     });
                 }
-                if (!isCorrect) fbText = `❌ Chưa đúng. Đáp án đúng: ${ln3Esc(q.options[q.answer_index])}`;
-
-            } else if (q.type === 'rich_blocks') {
-                // Chấm từng ô blank trong câu này
-                const subqEl = ln3QuizBody.querySelector(`.ln3-take-subq[data-subq-index="${i}"]`);
-                let allBlanksCorrect = true;
-                let wrongBlanks = [];
-                if (subqEl) {
-                    Array.from(subqEl.querySelectorAll('.ilt-blank-wrap')).forEach(span => {
-                        const key = span.dataset.key;
-                        const accepted = JSON.parse(span.dataset.accepted || '[]');
-                        const inp = span.querySelector('.ilt-blank-input');
-                        if (!inp) return;
-                        const userVal = ln3NormalizeStrict(inp.value);
-                        const correct = accepted.some(a => ln3NormalizeStrict(a) === userVal);
-                        inp.disabled = true;
-                        if (!correct) {
-                            allBlanksCorrect = false;
-                            inp.classList.add('is-wrong');
-                            // Highlight đáp án đúng bên cạnh
-                            const hint = document.createElement('span');
-                            hint.className = 'ln3-blank-correct-hint';
-                            hint.textContent = ' → ' + accepted[0];
-                            span.appendChild(hint);
-                        } else {
-                            inp.classList.add('is-correct');
-                        }
-                    });
-                }
-                isCorrect = allBlanksCorrect;
-                if (!isCorrect) fbText = '❌ Có chỗ trống chưa đúng — xem đáp án đúng bên cạnh ô trống.';
-
             } else if (q.type === 'fill_blank') {
-                // backward compat
-                isCorrect = ln3NormalizeStrict(ans) === ln3NormalizeStrict(q.answer);
-                const input = document.getElementById('ln3-take-input-' + i);
-                if (input) { input.disabled = true; if (!isCorrect) input.classList.add('is-wrong'); }
-                if (!isCorrect) fbText = `❌ Chưa đúng. Đáp án đúng: ${ln3Esc(q.answer)}`;
-
+                if (Array.isArray(q.blocks) && q.blocks.length) {
+                    // MỚI: nhiều chỗ trống nằm ngay trong đoạn văn/bảng — đúng cả câu khi TẤT CẢ
+                    // chỗ trống đều đúng.
+                    const meta = ln3State.subBlanks[i] || [];
+                    const answersMap = ans || {};
+                    isCorrect = meta.length > 0;
+                    const wrongParts = [];
+                    meta.forEach(b => {
+                        const given = answersMap[b.key] || '';
+                        const ok = b.accepted.some(a => ln3NormalizeStrict(a) === ln3NormalizeStrict(given));
+                        if (!ok) { isCorrect = false; wrongParts.push(b.accepted.join(' / ')); }
+                    });
+                    correctText = wrongParts.join(', ');
+                    const subqEl = document.querySelector(`.ln3-take-subq[data-subq-index="${i}"]`);
+                    if (subqEl) {
+                        const inputs = Array.from(subqEl.querySelectorAll('.ilt-blank-input'));
+                        inputs.forEach((inp, bi) => {
+                            const b = meta[bi];
+                            inp.disabled = true;
+                            if (!b) return;
+                            const ok = b.accepted.some(a => ln3NormalizeStrict(a) === ln3NormalizeStrict(inp.value));
+                            inp.classList.add(ok ? 'is-correct' : 'is-wrong');
+                        });
+                    }
+                } else {
+                    // CŨ: 1 câu hỏi - 1 ô nhập riêng.
+                    isCorrect = ln3NormalizeStrict(ans) === ln3NormalizeStrict(q.answer);
+                    correctText = q.answer;
+                    const input = document.getElementById(`ln3-take-input-${i}`);
+                    if (input) { input.disabled = true; if (!isCorrect) input.classList.add('is-wrong'); }
+                }
             } else if (q.type === 'essay') {
                 isCorrect = ln3EssayIsCorrect(q.answer, ans);
-                const input = document.getElementById('ln3-take-input-' + i);
-                if (input) { input.disabled = true; }
-                if (!isCorrect && q.answer) fbText = `❌ Chưa khớp. Đáp án tham khảo: ${ln3Esc(q.answer)}`;
-                else if (!isCorrect && !q.answer) { isCorrect = true; } // câu mở, có gì đó là đúng
+                correctText = q.answer;
+                const input = document.getElementById(`ln3-take-input-${i}`);
+                if (input) { input.disabled = true; if (!isCorrect) input.classList.add('is-wrong'); }
             }
-
             if (!isCorrect) allCorrect = false;
 
+            const fbEl = document.getElementById(`ln3-take-feedback-${i}`);
             if (fbEl) {
-                fbEl.style.display = isCorrect ? 'none' : 'block';
-                if (!isCorrect) {
-                    fbEl.className = 'ln3-take-feedback-line is-wrong';
-                    fbEl.textContent = fbText;
-                } else {
+                fbEl.style.display = 'block';
+                if (isCorrect) {
                     fbEl.className = 'ln3-take-feedback-line is-correct';
                     fbEl.textContent = '✅ Chính xác!';
-                    fbEl.style.display = 'block';
+                } else if (q.type === 'essay' && !q.answer) {
+                    // Không có đáp án mẫu -> không có gì để hiện là "đáp án đúng", chỉ ghi nhận
+                    fbEl.className = 'ln3-take-feedback-line is-correct';
+                    fbEl.textContent = '✅ Đã ghi nhận câu trả lời.';
+                } else {
+                    fbEl.className = 'ln3-take-feedback-line is-wrong';
+                    fbEl.textContent = `❌ Chưa đúng. Đáp án đúng: ${ln3Esc(correctText)}`;
                 }
             }
         });
@@ -16289,7 +19245,6 @@ function toggleCompletion(symbolElement) {
 
         const isLastItem = ln3State.index + 1 >= ln3State.items.length;
         const ln3GoNext = () => {
-            ln3BlankAnswers = {};
             ln3State.index++;
             if (ln3State.index >= ln3State.items.length) ln3FinishQuiz();
             else ln3RenderItem();
@@ -16325,7 +19280,7 @@ function toggleCompletion(symbolElement) {
                 <button type="button" class="kid-btn" id="ln3-back-result-btn">← Quay lại</button>
             </div>
         `;
-        document.getElementById('ln3-retry-btn').addEventListener('click', () => { ln3BlankAnswers = {}; ln3StartQuiz(); });
+        document.getElementById('ln3-retry-btn').addEventListener('click', () => ln3StartQuiz());
         document.getElementById('ln3-back-result-btn').addEventListener('click', () => {
             ln3ResultArea.style.display = 'none';
             ln3QuizPanel.style.display = 'none';
@@ -16337,7 +19292,6 @@ function toggleCompletion(symbolElement) {
     ln3QuizBackBtn.addEventListener('click', () => {
         ln3StopAudio();
         if (ln3State && ln3State.autoNextTimer) { clearTimeout(ln3State.autoNextTimer); ln3State.autoNextTimer = null; }
-        ln3BlankAnswers = {};
         ln3QuizPanel.style.display = 'none';
         ln3Panel.style.display = 'block';
         ln3RefreshIntro();
@@ -16345,5 +19299,1314 @@ function toggleCompletion(symbolElement) {
 })();
 // ===== KẾT THÚC: TAB "LUYỆN KỸ NĂNG" > "🎧 NGHE" — NGHE LV3 =====
 
+    // ===================================================================================
+    // ===== TAB "LUYỆN KỸ NĂNG" > "✍️ VIẾT" — 3 giai đoạn =====
+    // Giai đoạn 1: Dịch câu Việt-Anh theo từ khoá gợi ý (chấm bằng từ khoá + AI nhận xét)
+    // Giai đoạn 2: Email công sở (có khung mẫu -> tự viết) + Nhắn tin đời thường (chat AI)
+    // Giai đoạn 3: IELTS Writing Task 1 (biểu đồ) + Task 2 (nghị luận), chấm theo AI
+    //
+    // Cần tạo 5 bảng Supabase (xem file SQL "writing_skill_setup.sql" đi kèm):
+    //   writing_lv1_items, writing_lv2_email_items, writing_lv3_task1_items,
+    //   writing_lv3_task2_items — đều do giảng viên soạn qua giao diện "🛠️ Soạn..." bên dưới.
+    // Phần "Nhắn tin đời thường" (2b) không cần bảng riêng — AI đóng vai người nhắn tin
+    // trực tiếp theo các chủ đề dựng sẵn trong code.
+    //
+    // Việc chấm bài (Giai đoạn 1, 2, 3) dùng lại đúng 1 hạ tầng AI (Gemini -> Mistral) đã
+    // cấu hình sẵn ở khu vực "Tin ngắn" (xem window.aiHelper ở cuối initNewsTab phía trên).
+    // ===================================================================================
+    (function initWritingTab() {
+        const wrFolderGrid = document.getElementById('wr-stage-folder-grid');
+        if (!wrFolderGrid) return; // tab chưa có trong DOM -> bỏ qua an toàn
+
+        // ---------- Helper dùng chung cho cả 3 giai đoạn ----------
+        function wrEscHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+        function wrCountWords(s) {
+            const t = String(s || '').trim();
+            return t ? t.split(/\s+/).filter(Boolean).length : 0;
+        }
+        function wrShuffle(arr) {
+            const a = arr.slice();
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+        function wrEscapeRegex(s) { return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+        // Kiểm tra 1 từ khoá (có thể nhiều từ) có xuất hiện trong câu trả lời hay không,
+        // chấp nhận biến thể số ít/số nhiều, chia thì cơ bản (giống thcsFindKeySpan ở module THCS).
+        function wrKeywordPresent(answer, key) {
+            const ans = String(answer || '');
+            const k = String(key || '').trim();
+            if (!k) return true;
+            if (ans.toLowerCase().includes(k.toLowerCase())) return true;
+            const words = k.toLowerCase().split(/\s+/).filter(Boolean);
+            const patterns = words.map(w => {
+                if (w.length > 2 && /[^aeiou]y$/.test(w)) return wrEscapeRegex(w.slice(0, -1)) + '(?:y|ies)';
+                return wrEscapeRegex(w) + '(?:e?s|ing|ed|d)?';
+            });
+            try {
+                const re = new RegExp('\\b' + patterns.join('\\s+') + '\\b', 'i');
+                return re.test(ans);
+            } catch (e) { return false; }
+        }
+        // Gọi AI JSON dùng chung provider Gemini->Mistral đã cấu hình ở khu "Tin ngắn".
+        // Nếu chưa cấu hình AI hoặc lỗi mạng, ném lỗi để nơi gọi tự xử lý (thường là vẫn
+        // cho qua dựa trên kiểm tra từ khoá/độ dài, kèm thông báo "không chấm được chi tiết").
+        function wrAI(prompt) {
+            if (!window.aiHelper || typeof window.aiHelper.callAIJSON !== 'function') {
+                return Promise.reject(new Error('Chưa sẵn sàng module AI dùng chung.'));
+            }
+            if (!window.aiHelper.aiConfigured()) {
+                return Promise.reject(new Error('Chưa cấu hình AI (GEMINI_API_KEY / MISTRAL_API_KEY).'));
+            }
+            return window.aiHelper.callAIJSON(prompt);
+        }
+        function wrSafe(s) { return String(s || '').replace(/"/g, '\\"').replace(/\n/g, ' '); }
+
+        // Render 1 khối kết quả chấm theo 4 tiêu chí IELTS (dùng chung cho Task 1 & Task 2)
+        function wrRenderCriteriaFeedback(container, ai, sampleText, passThreshold) {
+            const band = ai && ai.band ? Number(ai.band) : null;
+            const overallOk = band !== null ? band >= (passThreshold || 5) : true;
+            container.className = 'wr-ai-feedback ' + (overallOk ? 'is-correct' : 'is-wrong');
+            const rows = [
+                ['Task Achievement', ai && ai.task_achievement],
+                ['Coherence & Cohesion', ai && ai.coherence],
+                ['Lexical Resource', ai && ai.lexical_resource],
+                ['Grammar', ai && ai.grammar]
+            ].filter(r => r[1]);
+            container.innerHTML = `
+                <div class="wr-ai-feedback-head">📊 Nhận xét của AI ${band !== null ? `<span class="wr-band-badge">~ Band ${band}</span>` : ''}</div>
+                <div class="wr-ai-feedback-body">${wrEscHtml(ai && ai.comment || '')}</div>
+                ${rows.length ? `<div class="wr-criteria-list">${rows.map(r => `<div class="wr-criteria-row"><b>${wrEscHtml(r[0])}:</b><span>${wrEscHtml(r[1])}</span></div>`).join('')}</div>` : ''}
+                ${sampleText ? `<button type="button" class="wr-sample-toggle" id="__wr-sample-toggle">👀 Xem bài mẫu tham khảo</button><div class="wr-sample-box" id="__wr-sample-box" style="display:none;">${wrEscHtml(sampleText)}</div>` : ''}
+            `;
+            const toggleBtn = container.querySelector('#__wr-sample-toggle');
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', () => {
+                    const box = container.querySelector('#__wr-sample-box');
+                    box.style.display = box.style.display === 'none' ? 'block' : 'none';
+                });
+            }
+        }
+
+        // ---------- Điều hướng cấp cao: 3 thẻ giai đoạn ----------
+        const wr1Panel = document.getElementById('wr1-panel');
+        const wr2Panel = document.getElementById('wr2-panel');
+        const wr3Panel = document.getElementById('wr3-panel');
+
+        function wrShowStage(which) {
+            wrFolderGrid.style.display = which ? 'none' : '';
+            wr1Panel.style.display = which === 1 ? 'block' : 'none';
+            wr2Panel.style.display = which === 2 ? 'block' : 'none';
+            wr3Panel.style.display = which === 3 ? 'block' : 'none';
+            window.scrollTo({ top: wrFolderGrid.getBoundingClientRect().top + window.scrollY - 90, behavior: 'smooth' });
+        }
+        document.getElementById('wr1-folder-card').addEventListener('click', () => { wrShowStage(1); wr1RefreshIntro(); });
+        document.getElementById('wr2-folder-card').addEventListener('click', () => { wrShowStage(2); wr2eRefreshIntro(); wr2cRenderGlossaryAndTopics(); });
+        document.getElementById('wr3-folder-card').addEventListener('click', () => { wrShowStage(3); wr3t1RefreshIntro(); wr3t2RefreshIntro(); });
+        document.getElementById('wr1-back-btn').addEventListener('click', () => wrShowStage(0));
+        document.getElementById('wr2-back-btn').addEventListener('click', () => wrShowStage(0));
+        document.getElementById('wr3-back-btn').addEventListener('click', () => wrShowStage(0));
+
+        // =========================================================================
+        // GIAI ĐOẠN 1 — DỊCH CÂU VIỆT-ANH THEO TỪ KHOÁ GỢI Ý
+        // =========================================================================
+        const WR1_TABLE = 'writing_lv1_items';
+        const WR1_TOTAL_QUESTIONS = 10;
+        const WR1_MIN_ITEMS = 5;
+
+        let wr1Items = [];
+        let wr1Loaded = false;
+        async function wr1FetchAll(force) {
+            if (wr1Loaded && !force) return wr1Items;
+            try {
+                const { data, error } = await sb.from(WR1_TABLE).select('*').order('id', { ascending: false });
+                if (error) throw error;
+                wr1Items = data || [];
+                wr1Loaded = true;
+            } catch (e) {
+                console.error('Lỗi tải kho câu Giai đoạn 1 (kiểm tra bảng "' + WR1_TABLE + '" đã tạo trên Supabase chưa — xem writing_skill_setup.sql):', e);
+                wr1Items = [];
+            }
+            return wr1Items;
+        }
+
+        const wr1StartCountEl = document.getElementById('wr1-start-count');
+        const wr1ManageBtn    = document.getElementById('wr1-manage-btn');
+        const wr1ItemCountEl  = document.getElementById('wr1-item-count');
+
+        async function wr1RefreshIntro() {
+            wr1ManageBtn.style.display = isTeacher ? 'inline-block' : 'none';
+            wr1StartCountEl.textContent = 'Đang tải kho câu...';
+            await wr1FetchAll();
+            wr1ItemCountEl.textContent = String(wr1Items.length);
+            wr1StartCountEl.textContent = wr1Items.length >= WR1_MIN_ITEMS
+                ? `Ngẫu nhiên ${Math.min(WR1_TOTAL_QUESTIONS, wr1Items.length)} / ${wr1Items.length} câu đã soạn`
+                : `Chưa đủ câu (${wr1Items.length}/${WR1_MIN_ITEMS} tối thiểu) — hãy quay lại sau`;
+        }
+
+        document.getElementById('wr1-start-card').addEventListener('click', () => {
+            if (wr1Items.length < WR1_MIN_ITEMS) { alert('Chưa đủ câu hỏi trong kho, hãy quay lại sau.'); return; }
+            wr1StartQuiz();
+        });
+
+        // ----- Quản lý (giảng viên soạn câu) -----
+        const wr1ManagePanel     = document.getElementById('wr1-manage-panel');
+        const wr1FVi             = document.getElementById('wr1-f-vi');
+        const wr1FKeywords       = document.getElementById('wr1-f-keywords');
+        const wr1FSample         = document.getElementById('wr1-f-sample');
+        const wr1AdminStatus     = document.getElementById('wr1-admin-status');
+        const wr1AdminSaveBtn    = document.getElementById('wr1-admin-save-btn');
+        const wr1AdminCancelBtn  = document.getElementById('wr1-admin-cancel-btn');
+        const wr1ItemListEl      = document.getElementById('wr1-item-list');
+        let wr1EditingId = null;
+
+        wr1ManageBtn.addEventListener('click', async () => {
+            if (!isTeacher) return;
+            wr1Panel.style.display = 'none';
+            wr1ManagePanel.style.display = 'block';
+            await wr1FetchAll(true);
+            wr1RenderItemList();
+        });
+        document.getElementById('wr1-manage-back-btn').addEventListener('click', () => {
+            wr1ManagePanel.style.display = 'none';
+            wr1Panel.style.display = 'block';
+            wr1RefreshIntro();
+        });
+
+        function wr1ResetForm() {
+            wr1EditingId = null;
+            wr1FVi.value = ''; wr1FKeywords.value = ''; wr1FSample.value = '';
+            wr1AdminSaveBtn.textContent = '➕ Thêm câu';
+            wr1AdminCancelBtn.style.display = 'none';
+            wr1AdminStatus.textContent = '';
+            wr1AdminStatus.className = 'ln2-admin-status';
+        }
+        wr1AdminCancelBtn.addEventListener('click', wr1ResetForm);
+
+        wr1AdminSaveBtn.addEventListener('click', async () => {
+            const vi = wr1FVi.value.trim();
+            const keywords = wr1FKeywords.value.trim();
+            const sample = wr1FSample.value.trim();
+            if (!vi || !keywords || !sample) {
+                wr1AdminStatus.textContent = 'Vui lòng nhập đủ 3 trường bắt buộc.';
+                wr1AdminStatus.className = 'ln2-admin-status is-error';
+                return;
+            }
+            wr1AdminSaveBtn.disabled = true;
+            try {
+                const payload = { vi, keywords, sample };
+                if (wr1EditingId) {
+                    const { data, error } = await sb.from(WR1_TABLE).update(payload).eq('id', wr1EditingId).select().single();
+                    if (error) throw error;
+                    const idx = wr1Items.findIndex(it => it.id === wr1EditingId);
+                    if (idx !== -1) wr1Items[idx] = data;
+                } else {
+                    const { data, error } = await sb.from(WR1_TABLE).insert(payload).select().single();
+                    if (error) throw error;
+                    wr1Items.unshift(data);
+                }
+                wr1ResetForm();
+                wr1RenderItemList();
+            } catch (e) {
+                wr1AdminStatus.textContent = 'Lỗi khi lưu: ' + e.message;
+                wr1AdminStatus.className = 'ln2-admin-status is-error';
+            } finally {
+                wr1AdminSaveBtn.disabled = false;
+            }
+        });
+
+        function wr1RenderItemList() {
+            wr1ItemCountEl.textContent = String(wr1Items.length);
+            if (!wr1Items.length) { wr1ItemListEl.innerHTML = '<p class="kid-hint">Chưa có câu nào.</p>'; return; }
+            wr1ItemListEl.innerHTML = wr1Items.map(item => `
+                <div class="ln2-item-row">
+                    <span class="ln2-item-preview">${wrEscHtml(item.vi)}</span>
+                    <div class="ln2-item-actions">
+                        <button type="button" class="ln2-item-edit-btn" data-id="${item.id}" title="Sửa">✏️</button>
+                        <button type="button" class="ln2-item-delete-btn" data-id="${item.id}" title="Xoá">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        wr1ItemListEl.addEventListener('click', async (e) => {
+            const editBtn = e.target.closest('.ln2-item-edit-btn');
+            const delBtn  = e.target.closest('.ln2-item-delete-btn');
+            if (editBtn) {
+                const item = wr1Items.find(it => String(it.id) === editBtn.dataset.id);
+                if (!item) return;
+                wr1EditingId = item.id;
+                wr1FVi.value = item.vi || '';
+                wr1FKeywords.value = item.keywords || '';
+                wr1FSample.value = item.sample || '';
+                wr1AdminSaveBtn.textContent = '💾 Lưu thay đổi';
+                wr1AdminCancelBtn.style.display = 'inline-block';
+                wr1FVi.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else if (delBtn) {
+                const item = wr1Items.find(it => String(it.id) === delBtn.dataset.id);
+                if (!item) return;
+                if (!confirm('Xoá câu này?')) return;
+                try {
+                    const { error } = await sb.from(WR1_TABLE).delete().eq('id', item.id);
+                    if (error) throw error;
+                    wr1Items = wr1Items.filter(it => it.id !== item.id);
+                    wr1RenderItemList();
+                } catch (e2) { alert('Xoá thất bại: ' + e2.message); }
+            }
+        });
+
+        // ----- Làm bài -----
+        const wr1QuizPanel     = document.getElementById('wr1-quiz-panel');
+        const wr1QuizPlayArea  = document.getElementById('wr1-quiz-play-area');
+        const wr1ResultArea    = document.getElementById('wr1-result-area');
+        const wr1QuizProgress  = document.getElementById('wr1-quiz-progress');
+        const wr1QuizBody      = document.getElementById('wr1-quiz-body');
+        const wr1QuizControls  = document.getElementById('wr1-quiz-controls');
+        const wr1QuizFeedback  = document.getElementById('wr1-quiz-feedback');
+        const wr1ResultBox     = document.getElementById('wr1-result-box');
+        let wr1State = null;
+
+        function wr1StartQuiz() {
+            const picked = wrShuffle(wr1Items).slice(0, Math.min(WR1_TOTAL_QUESTIONS, wr1Items.length));
+            wr1State = { items: picked, index: 0, score: 0, busy: false };
+            wr1Panel.style.display = 'none';
+            wr1QuizPanel.style.display = 'block';
+            wr1QuizPlayArea.style.display = '';
+            wr1ResultArea.style.display = 'none';
+            wr1RenderItem();
+        }
+
+        function wr1RenderItem() {
+            const it = wr1State.items[wr1State.index];
+            wr1QuizProgress.textContent = `Câu ${wr1State.index + 1} / ${wr1State.items.length}`;
+            const keys = String(it.keywords || '').split(',').map(s => s.trim()).filter(Boolean);
+            wr1QuizBody.innerHTML = `
+                <div class="thcs-translate-vi">${wrEscHtml(it.vi)}</div>
+                <div class="wr-keyword-row">${keys.map(k => `<span class="wr-keyword-chip" data-key="${wrEscHtml(k)}">${wrEscHtml(k)}</span>`).join('')}</div>
+                <textarea class="wr-compose-textarea" id="wr1-answer-input" placeholder="Viết câu tiếng Anh hoàn chỉnh, dùng đủ các từ khoá ở trên..."></textarea>
+            `;
+            wr1QuizControls.innerHTML = `<button type="button" class="kid-btn kid-btn-primary" id="wr1-check-btn">✅ Kiểm tra</button>`;
+            wr1QuizFeedback.innerHTML = '';
+            wr1QuizFeedback.className = '';
+            document.getElementById('wr1-check-btn').addEventListener('click', wr1CheckAnswer);
+            const inputEl = document.getElementById('wr1-answer-input');
+            inputEl.addEventListener('input', () => {
+                const val = inputEl.value;
+                wr1QuizBody.querySelectorAll('.wr-keyword-chip').forEach(chip => {
+                    chip.classList.toggle('is-used', wrKeywordPresent(val, chip.dataset.key));
+                });
+            });
+            inputEl.addEventListener('keydown', (ev) => {
+                if (ev.key === 'Enter' && (ev.ctrlKey || ev.metaKey)) wr1CheckAnswer();
+            });
+            inputEl.focus();
+        }
+
+        async function wr1CheckAnswer() {
+            if (wr1State.busy) return;
+            const it = wr1State.items[wr1State.index];
+            const inputEl = document.getElementById('wr1-answer-input');
+            const mine = inputEl.value.trim();
+            if (!mine) { inputEl.focus(); return; }
+            const keys = String(it.keywords || '').split(',').map(s => s.trim()).filter(Boolean);
+            const missing = keys.filter(k => !wrKeywordPresent(mine, k));
+
+            wr1State.busy = true;
+            document.getElementById('wr1-check-btn').disabled = true;
+            wr1QuizFeedback.className = '';
+            wr1QuizFeedback.innerHTML = '<div class="wr-loading">AI đang chấm bài của bạn...</div>';
+
+            let aiResult = null;
+            try {
+                const prompt = 'Bạn là giáo viên tiếng Anh cho học viên Việt Nam mới bắt đầu, đang chấm bài dịch Việt-Anh. ' +
+                    'Câu tiếng Việt gốc: "' + wrSafe(it.vi) + '". ' +
+                    'Từ khoá tiếng Anh bắt buộc phải xuất hiện trong câu trả lời: ' + keys.join(', ') + '. ' +
+                    'Câu tiếng Anh mẫu (chỉ 1 cách viết đúng, KHÔNG phải cách duy nhất): "' + wrSafe(it.sample) + '". ' +
+                    'Câu trả lời của học viên: "' + wrSafe(mine) + '". ' +
+                    'Hãy chấm theo kiểu LINH HOẠT: không cần giống hệt câu mẫu, chỉ cần đúng nghĩa câu gốc, đúng ngữ pháp/cấu trúc câu cơ bản, và có dùng đủ các từ khoá bắt buộc (chấp nhận biến thể số ít/số nhiều, chia thì, đổi vị trí từ trong câu). ' +
+                    'Chỉ trả lời bằng JSON hợp lệ, không thêm chữ nào khác, đúng định dạng: ' +
+                    '{"correct": true hoặc false, "comment": "1-2 câu nhận xét ngắn gọn, khích lệ, bằng tiếng Việt — khen chỗ đã đúng, chỉ rõ lỗi ngữ pháp/cấu trúc cụ thể nếu có kèm gợi ý sửa"}';
+                aiResult = await wrAI(prompt);
+            } catch (e) {
+                console.warn('Lỗi AI chấm Giai đoạn 1 (vẫn chấm theo từ khoá):', e.message);
+            }
+
+            wr1State.busy = false;
+            document.getElementById('wr1-check-btn').disabled = false;
+
+            const aiSaysWrong = aiResult && aiResult.correct === false;
+            const isCorrect = missing.length === 0 && !aiSaysWrong;
+            if (isCorrect) wr1State.score++;
+
+            let commentHtml;
+            if (aiResult && aiResult.comment) {
+                commentHtml = wrEscHtml(aiResult.comment);
+            } else if (missing.length) {
+                commentHtml = 'Bạn chưa dùng đủ từ khoá bắt buộc: <b>' + missing.map(wrEscHtml).join(', ') + '</b>.';
+            } else {
+                commentHtml = 'Không kết nối được AI để nhận xét chi tiết — đã dùng đủ từ khoá bắt buộc.';
+            }
+
+            wr1QuizFeedback.className = 'wr-ai-feedback ' + (isCorrect ? 'is-correct' : 'is-wrong');
+            wr1QuizFeedback.innerHTML = `
+                <div class="wr-ai-feedback-head">${isCorrect ? '✅ Tốt!' : '🤔 Xem lại nhé'}</div>
+                <div class="wr-ai-feedback-body">${commentHtml}</div>
+                <div class="wr-ai-feedback-body" style="margin-top:8px;"><b>Đáp án tham khảo:</b> ${wrEscHtml(it.sample)}</div>
+            `;
+
+            const isLast = wr1State.index + 1 >= wr1State.items.length;
+            wr1QuizControls.innerHTML = `<button type="button" class="kid-btn kid-btn-primary" id="wr1-next-btn">${isLast ? '🏁 Xem kết quả' : '➡️ Câu tiếp theo'}</button>`;
+            const nextBtn = document.getElementById('wr1-next-btn');
+            nextBtn.addEventListener('click', () => {
+                wr1State.index++;
+                if (wr1State.index >= wr1State.items.length) wr1FinishQuiz();
+                else wr1RenderItem();
+            });
+            nextBtn.focus();
+        }
+
+        function wr1FinishQuiz() {
+            wr1QuizPlayArea.style.display = 'none';
+            wr1ResultArea.style.display = 'block';
+            const total = wr1State.items.length;
+            const pct = Math.round((wr1State.score / total) * 100);
+            wr1ResultBox.innerHTML = `
+                <div class="ln-result-emoji">${pct >= 80 ? '🏆' : (pct >= 50 ? '👍' : '💪')}</div>
+                <h3>Kết quả: ${wr1State.score} / ${total} câu đúng (${pct}%)</h3>
+                <div class="thcs-translate-actions">
+                    <button type="button" class="kid-btn kid-btn-primary" id="wr1-retry-btn">🔄 Làm lại (câu mới)</button>
+                    <button type="button" class="kid-btn" id="wr1-back-result-btn">← Quay lại</button>
+                </div>
+            `;
+            document.getElementById('wr1-retry-btn').addEventListener('click', () => wr1StartQuiz());
+            document.getElementById('wr1-back-result-btn').addEventListener('click', () => {
+                wr1QuizPanel.style.display = 'none';
+                wr1Panel.style.display = 'block';
+                wr1RefreshIntro();
+            });
+        }
+
+        document.getElementById('wr1-quiz-back-btn').addEventListener('click', () => {
+            wr1QuizPanel.style.display = 'none';
+            wr1Panel.style.display = 'block';
+            wr1RefreshIntro();
+        });
+
+        // =========================================================================
+        // GIAI ĐOẠN 2a — EMAIL CÔNG SỞ
+        // =========================================================================
+        const WR2E_TABLE = 'writing_lv2_email_items';
+        let wr2eItems = [];
+        let wr2eLoaded = false;
+        async function wr2eFetchAll(force) {
+            if (wr2eLoaded && !force) return wr2eItems;
+            try {
+                const { data, error } = await sb.from(WR2E_TABLE).select('*').order('id', { ascending: false });
+                if (error) throw error;
+                wr2eItems = data || [];
+                wr2eLoaded = true;
+            } catch (e) {
+                console.error('Lỗi tải kho tình huống Email (kiểm tra bảng "' + WR2E_TABLE + '"):', e);
+                wr2eItems = [];
+            }
+            return wr2eItems;
+        }
+
+        const wr2eManageBtn   = document.getElementById('wr2e-manage-btn');
+        const wr2eItemCountEl = document.getElementById('wr2e-item-count');
+        const wr2eItemGrid    = document.getElementById('wr2e-item-grid');
+        const wr2eListView    = document.getElementById('wr2e-list-view');
+        const wr2eComposeView = document.getElementById('wr2e-compose-view');
+        const wr2eManagePanel = document.getElementById('wr2e-manage-panel');
+
+        async function wr2eRefreshIntro() {
+            wr2eManageBtn.style.display = isTeacher ? 'inline-block' : 'none';
+            wr2eItemGrid.innerHTML = '<p class="kid-hint">Đang tải danh sách tình huống...</p>';
+            await wr2eFetchAll();
+            wr2eItemCountEl.textContent = String(wr2eItems.length);
+            wr2eRenderItemGrid();
+        }
+
+        function wr2eRenderItemGrid() {
+            if (!wr2eItems.length) {
+                wr2eItemGrid.innerHTML = '<p class="kid-hint">Chưa có tình huống nào — quay lại sau nhé.</p>';
+                return;
+            }
+            wr2eItemGrid.innerHTML = wr2eItems.map(item => `
+                <div class="kid-topic-card" data-wr2e-id="${item.id}">
+                    <span class="kid-icon">✉️</span>
+                    <div class="kid-title">${wrEscHtml(item.scenario)}</div>
+                    <div class="kid-count">${wrEscHtml((item.brief || '').slice(0, 60))}${(item.brief || '').length > 60 ? '…' : ''}</div>
+                </div>
+            `).join('');
+        }
+
+        let wr2eCurrentItem = null;
+        let wr2eCurrentLevel = 3;
+
+        wr2eItemGrid.addEventListener('click', (e) => {
+            const card = e.target.closest('[data-wr2e-id]');
+            if (!card) return;
+            const item = wr2eItems.find(it => String(it.id) === card.dataset.wr2eId);
+            if (!item) return;
+            wr2eOpenCompose(item);
+        });
+
+        function wr2eOpenCompose(item) {
+            wr2eCurrentItem = item;
+            wr2eCurrentLevel = 3;
+            wr2eListView.style.display = 'none';
+            wr2eComposeView.style.display = 'block';
+            document.getElementById('wr2e-compose-title').textContent = '✉️ ' + item.scenario;
+            document.getElementById('wr2e-compose-brief').textContent = item.brief || '';
+            document.getElementById('wr2e-textarea').value = '';
+            document.getElementById('wr2e-feedback-area').innerHTML = '';
+            document.getElementById('wr2e-feedback-area').className = '';
+            wr2eUpdateWordCount();
+            document.querySelectorAll('#wr2e-level-row .wr-level-btn').forEach(btn => {
+                btn.classList.toggle('active', Number(btn.dataset.wr2eLevel) === 3);
+            });
+            wr2eRenderScaffold();
+        }
+
+        document.getElementById('wr2e-compose-back-btn').addEventListener('click', () => {
+            wr2eComposeView.style.display = 'none';
+            wr2eListView.style.display = 'block';
+        });
+
+        document.getElementById('wr2e-level-row').addEventListener('click', (e) => {
+            const btn = e.target.closest('.wr-level-btn');
+            if (!btn) return;
+            wr2eCurrentLevel = Number(btn.dataset.wr2eLevel);
+            document.querySelectorAll('#wr2e-level-row .wr-level-btn').forEach(b => b.classList.toggle('active', b === btn));
+            wr2eRenderScaffold();
+        });
+
+        function wr2eRenderScaffold() {
+            const box = document.getElementById('wr2e-scaffold-box');
+            const item = wr2eCurrentItem;
+            if (wr2eCurrentLevel === 1 && item.template) {
+                box.style.display = 'block';
+                box.innerHTML = '<b>📋 Khung mẫu — điền/chỉnh sửa theo tình huống của bạn:</b>\n' + wrEscHtml(item.template);
+            } else if (wr2eCurrentLevel === 2 && item.outline) {
+                box.style.display = 'block';
+                box.innerHTML = '<b>💡 Gợi ý dàn ý:</b>\n' + wrEscHtml(item.outline);
+            } else {
+                box.style.display = 'none';
+                box.innerHTML = '';
+            }
+        }
+
+        document.getElementById('wr2e-textarea').addEventListener('input', wr2eUpdateWordCount);
+        function wr2eUpdateWordCount() {
+            const n = wrCountWords(document.getElementById('wr2e-textarea').value);
+            const el = document.getElementById('wr2e-word-count');
+            el.textContent = n + ' từ';
+            el.className = 'wr-word-count ' + (n >= 40 ? 'is-ok' : (n > 0 ? 'is-short' : ''));
+        }
+
+        document.getElementById('wr2e-submit-btn').addEventListener('click', async () => {
+            const mine = document.getElementById('wr2e-textarea').value.trim();
+            const feedbackEl = document.getElementById('wr2e-feedback-area');
+            if (!mine) { document.getElementById('wr2e-textarea').focus(); return; }
+            const btn = document.getElementById('wr2e-submit-btn');
+            btn.disabled = true;
+            feedbackEl.className = '';
+            feedbackEl.innerHTML = '<div class="wr-loading">AI đang chấm email của bạn...</div>';
+            try {
+                const item = wr2eCurrentItem;
+                const prompt = 'Bạn là giáo viên tiếng Anh thương mại (Business English), đang chấm email công sở của học viên Việt Nam. ' +
+                    'Tình huống yêu cầu: "' + wrSafe(item.brief) + '". ' +
+                    'Email học viên viết:\n"' + wrSafe(mine) + '"\n' +
+                    'Hãy đánh giá xem email có đủ 3 phần (chào hỏi – nội dung – kết thư), có đúng văn phong trang trọng công sở (formal) hay không, và có đáp ứng đúng yêu cầu tình huống hay không. ' +
+                    'Chỉ trả lời bằng JSON hợp lệ, không thêm chữ nào khác, đúng định dạng: ' +
+                    '{"has_all_3_parts": true/false, "formal_tone_ok": true/false, "meets_requirement": true/false, ' +
+                    '"comment": "3-4 câu nhận xét cụ thể bằng tiếng Việt — khen điểm tốt, chỉ rõ điều cần sửa (thiếu phần nào, chỗ nào chưa đủ formal, câu nào nên viết lại) kèm gợi ý sửa"}';
+                const ai = await wrAI(prompt);
+                const ok = ai.has_all_3_parts && ai.formal_tone_ok && ai.meets_requirement;
+                feedbackEl.className = 'wr-ai-feedback ' + (ok ? 'is-correct' : 'is-wrong');
+                feedbackEl.innerHTML = `
+                    <div class="wr-ai-feedback-head">${ok ? '✅ Email đạt yêu cầu!' : '🤔 Cần chỉnh sửa thêm'}</div>
+                    <div class="wr-criteria-list">
+                        <div class="wr-criteria-row"><b>Đủ 3 phần:</b><span>${ai.has_all_3_parts ? '✅ Có' : '❌ Thiếu'}</span></div>
+                        <div class="wr-criteria-row"><b>Văn phong formal:</b><span>${ai.formal_tone_ok ? '✅ Đạt' : '❌ Chưa đạt'}</span></div>
+                        <div class="wr-criteria-row"><b>Đúng yêu cầu:</b><span>${ai.meets_requirement ? '✅ Đạt' : '❌ Chưa đạt'}</span></div>
+                    </div>
+                    <div class="wr-ai-feedback-body" style="margin-top:10px;">${wrEscHtml(ai.comment || '')}</div>
+                    ${item.sample ? `<button type="button" class="wr-sample-toggle" id="wr2e-sample-toggle">👀 Xem email mẫu tham khảo</button><div class="wr-sample-box" id="wr2e-sample-box" style="display:none;">${wrEscHtml(item.sample)}</div>` : ''}
+                `;
+                const toggleBtn = document.getElementById('wr2e-sample-toggle');
+                if (toggleBtn) toggleBtn.addEventListener('click', () => {
+                    const box = document.getElementById('wr2e-sample-box');
+                    box.style.display = box.style.display === 'none' ? 'block' : 'none';
+                });
+            } catch (e) {
+                feedbackEl.className = 'wr-ai-feedback';
+                feedbackEl.innerHTML = `<div class="wr-ai-feedback-body">⚠️ Không thể chấm bài lúc này (${wrEscHtml(e.message)}). Vui lòng thử lại sau.</div>`;
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        // ----- Quản lý (giảng viên soạn tình huống email) -----
+        wr2eManageBtn.addEventListener('click', async () => {
+            if (!isTeacher) return;
+            wr2eListView.style.display = 'none';
+            wr2eManagePanel.style.display = 'block';
+            await wr2eFetchAll(true);
+            wr2eRenderItemList();
+        });
+        document.getElementById('wr2e-manage-back-btn').addEventListener('click', () => {
+            wr2eManagePanel.style.display = 'none';
+            wr2eListView.style.display = 'block';
+            wr2eRefreshIntro();
+        });
+
+        const wr2eF = {
+            scenario: document.getElementById('wr2e-f-scenario'),
+            brief:    document.getElementById('wr2e-f-brief'),
+            template: document.getElementById('wr2e-f-template'),
+            outline:  document.getElementById('wr2e-f-outline'),
+            sample:   document.getElementById('wr2e-f-sample')
+        };
+        const wr2eAdminStatus    = document.getElementById('wr2e-admin-status');
+        const wr2eAdminSaveBtn   = document.getElementById('wr2e-admin-save-btn');
+        const wr2eAdminCancelBtn = document.getElementById('wr2e-admin-cancel-btn');
+        const wr2eItemListEl     = document.getElementById('wr2e-item-list');
+        let wr2eEditingId = null;
+
+        function wr2eResetForm() {
+            wr2eEditingId = null;
+            Object.values(wr2eF).forEach(el => el.value = '');
+            wr2eAdminSaveBtn.textContent = '➕ Thêm tình huống';
+            wr2eAdminCancelBtn.style.display = 'none';
+            wr2eAdminStatus.textContent = '';
+            wr2eAdminStatus.className = 'ln2-admin-status';
+        }
+        wr2eAdminCancelBtn.addEventListener('click', wr2eResetForm);
+
+        wr2eAdminSaveBtn.addEventListener('click', async () => {
+            const scenario = wr2eF.scenario.value.trim();
+            const brief    = wr2eF.brief.value.trim();
+            const sample   = wr2eF.sample.value.trim();
+            if (!scenario || !brief || !sample) {
+                wr2eAdminStatus.textContent = 'Vui lòng nhập đủ: tên tình huống, mô tả yêu cầu, email mẫu.';
+                wr2eAdminStatus.className = 'ln2-admin-status is-error';
+                return;
+            }
+            wr2eAdminSaveBtn.disabled = true;
+            try {
+                const payload = {
+                    scenario, brief, sample,
+                    template: wr2eF.template.value.trim() || null,
+                    outline: wr2eF.outline.value.trim() || null
+                };
+                if (wr2eEditingId) {
+                    const { data, error } = await sb.from(WR2E_TABLE).update(payload).eq('id', wr2eEditingId).select().single();
+                    if (error) throw error;
+                    const idx = wr2eItems.findIndex(it => it.id === wr2eEditingId);
+                    if (idx !== -1) wr2eItems[idx] = data;
+                } else {
+                    const { data, error } = await sb.from(WR2E_TABLE).insert(payload).select().single();
+                    if (error) throw error;
+                    wr2eItems.unshift(data);
+                }
+                wr2eResetForm();
+                wr2eRenderItemList();
+            } catch (e) {
+                wr2eAdminStatus.textContent = 'Lỗi khi lưu: ' + e.message;
+                wr2eAdminStatus.className = 'ln2-admin-status is-error';
+            } finally {
+                wr2eAdminSaveBtn.disabled = false;
+            }
+        });
+
+        function wr2eRenderItemList() {
+            wr2eItemCountEl.textContent = String(wr2eItems.length);
+            if (!wr2eItems.length) { wr2eItemListEl.innerHTML = '<p class="kid-hint">Chưa có tình huống nào.</p>'; return; }
+            wr2eItemListEl.innerHTML = wr2eItems.map(item => `
+                <div class="ln2-item-row">
+                    <span class="ln2-item-preview">${wrEscHtml(item.scenario)}</span>
+                    <div class="ln2-item-actions">
+                        <button type="button" class="ln2-item-edit-btn" data-id="${item.id}" title="Sửa">✏️</button>
+                        <button type="button" class="ln2-item-delete-btn" data-id="${item.id}" title="Xoá">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        wr2eItemListEl.addEventListener('click', async (e) => {
+            const editBtn = e.target.closest('.ln2-item-edit-btn');
+            const delBtn  = e.target.closest('.ln2-item-delete-btn');
+            if (editBtn) {
+                const item = wr2eItems.find(it => String(it.id) === editBtn.dataset.id);
+                if (!item) return;
+                wr2eEditingId = item.id;
+                wr2eF.scenario.value = item.scenario || '';
+                wr2eF.brief.value    = item.brief || '';
+                wr2eF.template.value = item.template || '';
+                wr2eF.outline.value  = item.outline || '';
+                wr2eF.sample.value   = item.sample || '';
+                wr2eAdminSaveBtn.textContent = '💾 Lưu thay đổi';
+                wr2eAdminCancelBtn.style.display = 'inline-block';
+                wr2eF.scenario.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else if (delBtn) {
+                const item = wr2eItems.find(it => String(it.id) === delBtn.dataset.id);
+                if (!item) return;
+                if (!confirm('Xoá tình huống này?')) return;
+                try {
+                    const { error } = await sb.from(WR2E_TABLE).delete().eq('id', item.id);
+                    if (error) throw error;
+                    wr2eItems = wr2eItems.filter(it => it.id !== item.id);
+                    wr2eRenderItemList();
+                } catch (e2) { alert('Xoá thất bại: ' + e2.message); }
+            }
+        });
+
+        // ----- Chuyển đổi 2 tab con trong Giai đoạn 2: Email / Nhắn tin -----
+        document.getElementById('wr2-sub-tabs').addEventListener('click', (e) => {
+            const btn = e.target.closest('.wr-sub-tab');
+            if (!btn) return;
+            document.querySelectorAll('#wr2-sub-tabs .wr-sub-tab').forEach(b => b.classList.toggle('active', b === btn));
+            const isEmail = btn.dataset.wr2Sub === 'email';
+            document.getElementById('wr2e-section').style.display = isEmail ? '' : 'none';
+            document.getElementById('wr2c-section').style.display = isEmail ? 'none' : '';
+        });
+
+        // =========================================================================
+        // GIAI ĐOẠN 2b — NHẮN TIN / CHAT ĐỜI THƯỜNG (hội thoại giả lập với AI)
+        // =========================================================================
+        const WR2C_ABBREV = [
+            ['btw', 'by the way', 'nhân tiện'],
+            ['imo', 'in my opinion', 'theo mình thấy'],
+            ['gonna', 'going to', 'sẽ (định làm gì)'],
+            ['wanna', 'want to', 'muốn'],
+            ['lol', 'laughing out loud', 'buồn cười quá'],
+            ['brb', 'be right back', 'quay lại ngay'],
+            ['tbh', 'to be honest', 'thật lòng mà nói'],
+            ['omg', 'oh my god', 'trời ơi'],
+            ['asap', 'as soon as possible', 'càng sớm càng tốt'],
+            ['idk', "I don't know", 'mình không biết'],
+            ['thx / ty', 'thanks / thank you', 'cảm ơn'],
+            ['np', 'no problem', 'không có gì'],
+            ['ttyl', 'talk to you later', 'nói chuyện sau nhé'],
+            ['ikr', 'I know, right', 'đúng vậy đó'],
+            ['nvm', 'never mind', 'thôi bỏ qua đi'],
+            ['wyd', 'what are you doing', 'đang làm gì đó'],
+            ['hbu', 'how about you', 'còn bạn thì sao'],
+            ['gr8', 'great', 'tuyệt']
+        ];
+        const WR2C_TOPICS = [
+            { id: 'movie', label: '🎬 Bạn rủ đi xem phim cuối tuần', persona: 'một người bạn thân đang nhắn tin rủ đi xem phim vào cuối tuần này, giọng điệu vui vẻ, thoải mái' },
+            { id: 'deadline', label: '💼 Đồng nghiệp nhắn hỏi deadline gấp', persona: 'một đồng nghiệp thân thiết nhắn tin (không phải sếp) hỏi thăm tiến độ 1 công việc đang gấp deadline, giọng điệu thân mật nhưng có chút sốt ruột' },
+            { id: 'borrow', label: '🎧 Hỏi mượn đồ (tai nghe/sạc...)', persona: 'một người bạn cùng lớp/cùng phòng nhắn tin hỏi mượn 1 món đồ (tai nghe, sạc, sách...) cho buổi học/làm ngày mai' },
+            { id: 'coffee', label: '☕ Hẹn cà phê cuối tuần', persona: 'một người bạn lâu ngày không gặp nhắn tin rủ đi cà phê để tám chuyện, giọng điệu thân thiện, hào hứng' },
+            { id: 'sick', label: '🤒 Hỏi thăm bạn sau khi ốm', persona: 'một người bạn nhắn tin hỏi thăm sau khi biết bạn mới bị ốm vài hôm nay, giọng điệu quan tâm nhẹ nhàng' },
+            { id: 'plan_change', label: '📅 Báo đổi lịch hẹn phút chót', persona: 'một người bạn nhắn tin báo phải đổi giờ hẹn đã lên kế hoạch trước đó vì có việc đột xuất, giọng điệu hơi ngại nhưng thân mật' }
+        ];
+
+        function wr2cRenderGlossaryAndTopics() {
+            const grid = document.getElementById('wr2c-glossary-grid');
+            if (grid.dataset.rendered) return;
+            grid.dataset.rendered = '1';
+            grid.innerHTML = WR2C_ABBREV.map(([abbr, full, vi]) => `
+                <div class="wr-glossary-item">
+                    <div class="wr-glossary-abbr">${wrEscHtml(abbr)}</div>
+                    <div class="wr-glossary-full">${wrEscHtml(full)}</div>
+                    <div class="wr-glossary-vi">${wrEscHtml(vi)}</div>
+                </div>
+            `).join('');
+            const chips = document.getElementById('wr2c-topic-chips');
+            chips.innerHTML = WR2C_TOPICS.map(t => `<button type="button" class="wr-chip" data-wr2c-topic="${t.id}">${t.label}</button>`).join('');
+        }
+
+        const wr2cIntroView = document.getElementById('wr2c-intro-view');
+        const wr2cChatView  = document.getElementById('wr2c-chat-view');
+        const wr2cWindow    = document.getElementById('wr2c-chat-window');
+        let wr2cState = null; // { topic, transcript: [{role:'them'|'me', text}], busy }
+
+        document.getElementById('wr2c-topic-chips').addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-wr2c-topic]');
+            if (!btn) return;
+            const topic = WR2C_TOPICS.find(t => t.id === btn.dataset.wr2cTopic);
+            wr2cStartChat(topic);
+        });
+
+        async function wr2cStartChat(topic) {
+            wr2cState = { topic, transcript: [], busy: true };
+            wr2cIntroView.style.display = 'none';
+            wr2cChatView.style.display = 'block';
+            document.getElementById('wr2c-feedback-area').innerHTML = '';
+            document.getElementById('wr2c-feedback-area').className = '';
+            document.getElementById('wr2c-chat-finish-btn').style.display = '';
+            document.getElementById('wr2c-chat-input').disabled = true;
+            document.getElementById('wr2c-chat-send-btn').disabled = true;
+            wr2cWindow.innerHTML = `<div class="wr-msg-note">💬 ${wrEscHtml(topic.label)}</div><div class="wr-chat-typing">Đang soạn tin nhắn...</div>`;
+            try {
+                const prompt = 'Bạn đang đóng vai ' + topic.persona + '. Hãy nhắn 1 tin nhắn MỞ ĐẦU bằng tiếng Anh, ngắn gọn (1-2 câu), đúng văn phong nhắn tin đời thường (informal texting), có thể dùng từ viết tắt tự nhiên (btw, gonna, lol...). ' +
+                    'Chỉ trả lời bằng JSON hợp lệ, không thêm chữ nào khác: {"message": "tin nhắn mở đầu bằng tiếng Anh"}';
+                const ai = await wrAI(prompt);
+                wr2cState.transcript.push({ role: 'them', text: ai.message });
+            } catch (e) {
+                wr2cState.transcript.push({ role: 'them', text: 'Hey! (⚠️ Không thể kết nối AI để tạo tin nhắn — hãy thử lại sau)' });
+            }
+            wr2cState.busy = false;
+            document.getElementById('wr2c-chat-input').disabled = false;
+            document.getElementById('wr2c-chat-send-btn').disabled = false;
+            wr2cRenderChat();
+            document.getElementById('wr2c-chat-input').focus();
+        }
+
+        document.getElementById('wr2c-chat-back-btn').addEventListener('click', () => {
+            wr2cChatView.style.display = 'none';
+            wr2cIntroView.style.display = 'block';
+        });
+
+        function wr2cRenderChat() {
+            wr2cWindow.innerHTML = `<div class="wr-msg-note">💬 ${wrEscHtml(wr2cState.topic.label)}</div>` +
+                wr2cState.transcript.map(m => `<div class="wr-msg ${m.role === 'me' ? 'wr-msg-me' : 'wr-msg-them'}">${wrEscHtml(m.text)}</div>`).join('') +
+                (wr2cState.busy ? '<div class="wr-chat-typing">Đang trả lời...</div>' : '');
+            wr2cWindow.scrollTop = wr2cWindow.scrollHeight;
+        }
+
+        async function wr2cSendMessage() {
+            const input = document.getElementById('wr2c-chat-input');
+            const text = input.value.trim();
+            if (!text || wr2cState.busy) return;
+            input.value = '';
+            wr2cState.transcript.push({ role: 'me', text });
+            wr2cState.busy = true;
+            wr2cRenderChat();
+            try {
+                const historyText = wr2cState.transcript.map(m => (m.role === 'me' ? 'Học viên: ' : 'Bạn: ') + m.text).join('\n');
+                const prompt = 'Bạn đang đóng vai ' + wr2cState.topic.persona + ', đang nhắn tin qua lại với 1 học viên tiếng Anh người Việt. ' +
+                    'Đây là đoạn hội thoại tính đến giờ (bằng tiếng Anh):\n' + historyText + '\n' +
+                    'Hãy trả lời tiếp tin nhắn cuối cùng của học viên, đúng vai trò trên, ngắn gọn tự nhiên (1-2 câu), văn phong nhắn tin đời thường (informal). ' +
+                    'Chỉ trả lời bằng JSON hợp lệ, không thêm chữ nào khác: {"message": "tin nhắn trả lời bằng tiếng Anh"}';
+                const ai = await wrAI(prompt);
+                wr2cState.transcript.push({ role: 'them', text: ai.message });
+            } catch (e) {
+                wr2cState.transcript.push({ role: 'them', text: '(⚠️ Không thể kết nối AI lúc này)' });
+            }
+            wr2cState.busy = false;
+            wr2cRenderChat();
+        }
+        document.getElementById('wr2c-chat-send-btn').addEventListener('click', wr2cSendMessage);
+        document.getElementById('wr2c-chat-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') wr2cSendMessage(); });
+
+        document.getElementById('wr2c-chat-finish-btn').addEventListener('click', async () => {
+            if (!wr2cState || wr2cState.transcript.filter(m => m.role === 'me').length === 0) {
+                alert('Hãy nhắn ít nhất 1 tin trước khi kết thúc nhé.');
+                return;
+            }
+            const feedbackEl = document.getElementById('wr2c-feedback-area');
+            const btn = document.getElementById('wr2c-chat-finish-btn');
+            btn.disabled = true;
+            feedbackEl.className = '';
+            feedbackEl.innerHTML = '<div class="wr-loading">AI đang nhận xét đoạn hội thoại...</div>';
+            try {
+                const myLines = wr2cState.transcript.filter(m => m.role === 'me').map(m => m.text).join(' | ');
+                const prompt = 'Bạn là giáo viên tiếng Anh, đang nhận xét cách 1 học viên Việt Nam nhắn tin đời thường (informal texting) bằng tiếng Anh. ' +
+                    'Các tin nhắn học viên đã gửi trong đoạn hội thoại: "' + wrSafe(myLines) + '". ' +
+                    'Hãy nhận xét về: có tự nhiên, đúng văn phong informal (không quá trang trọng/cứng nhắc) hay không; có phản hồi phù hợp ngữ cảnh hội thoại hay không; ngữ pháp/chính tả có ổn không. ' +
+                    'Chỉ trả lời bằng JSON hợp lệ, không thêm chữ nào khác: ' +
+                    '{"natural_informal_tone": true/false, "comment": "3-4 câu nhận xét cụ thể, khích lệ, bằng tiếng Việt — khen điểm tốt, gợi ý cách nhắn tự nhiên hơn nếu cần, có thể gợi ý 1-2 từ viết tắt phù hợp có thể dùng thêm"}';
+                const ai = await wrAI(prompt);
+                feedbackEl.className = 'wr-ai-feedback ' + (ai.natural_informal_tone ? 'is-correct' : 'is-wrong');
+                feedbackEl.innerHTML = `
+                    <div class="wr-ai-feedback-head">${ai.natural_informal_tone ? '✅ Văn phong khá tự nhiên!' : '🤔 Có thể tự nhiên hơn'}</div>
+                    <div class="wr-ai-feedback-body">${wrEscHtml(ai.comment || '')}</div>
+                `;
+            } catch (e) {
+                feedbackEl.className = 'wr-ai-feedback';
+                feedbackEl.innerHTML = `<div class="wr-ai-feedback-body">⚠️ Không thể chấm lúc này (${wrEscHtml(e.message)}).</div>`;
+            } finally {
+                btn.disabled = false;
+                document.getElementById('wr2c-chat-input').disabled = true;
+                document.getElementById('wr2c-chat-send-btn').disabled = true;
+            }
+        });
+
+        // ----- Chuyển đổi 2 tab con trong Giai đoạn 3: Task 1 / Task 2 -----
+        document.getElementById('wr3-sub-tabs').addEventListener('click', (e) => {
+            const btn = e.target.closest('.wr-sub-tab');
+            if (!btn) return;
+            document.querySelectorAll('#wr3-sub-tabs .wr-sub-tab').forEach(b => b.classList.toggle('active', b === btn));
+            const isT1 = btn.dataset.wr3Sub === 't1';
+            document.getElementById('wr3t1-section').style.display = isT1 ? '' : 'none';
+            document.getElementById('wr3t2-section').style.display = isT1 ? 'none' : '';
+        });
+
+        // =========================================================================
+        // GIAI ĐOẠN 3a — IELTS WRITING TASK 1 (phân tích biểu đồ)
+        // =========================================================================
+        const WR3T1_TABLE = 'writing_lv3_task1_items';
+        const WR3T1_TYPE_LABEL = { line: 'Line graph', bar: 'Bar chart', pie: 'Pie chart', table: 'Table', mixed: 'Mixed/Process' };
+        let wr3t1Items = [];
+        let wr3t1Loaded = false;
+        async function wr3t1FetchAll(force) {
+            if (wr3t1Loaded && !force) return wr3t1Items;
+            try {
+                const { data, error } = await sb.from(WR3T1_TABLE).select('*').order('id', { ascending: false });
+                if (error) throw error;
+                wr3t1Items = data || [];
+                wr3t1Loaded = true;
+            } catch (e) {
+                console.error('Lỗi tải kho biểu đồ Task 1 (kiểm tra bảng "' + WR3T1_TABLE + '"):', e);
+                wr3t1Items = [];
+            }
+            return wr3t1Items;
+        }
+
+        const wr3t1ManageBtn   = document.getElementById('wr3t1-manage-btn');
+        const wr3t1ItemCountEl = document.getElementById('wr3t1-item-count');
+        const wr3t1ItemGrid    = document.getElementById('wr3t1-item-grid');
+        const wr3t1ListView    = document.getElementById('wr3t1-list-view');
+        const wr3t1ComposeView = document.getElementById('wr3t1-compose-view');
+        const wr3t1ManagePanel = document.getElementById('wr3t1-manage-panel');
+
+        async function wr3t1RefreshIntro() {
+            wr3t1ManageBtn.style.display = isTeacher ? 'inline-block' : 'none';
+            wr3t1ItemGrid.innerHTML = '<p class="kid-hint">Đang tải danh sách biểu đồ...</p>';
+            await wr3t1FetchAll();
+            wr3t1ItemCountEl.textContent = String(wr3t1Items.length);
+            wr3t1RenderItemGrid();
+        }
+
+        function wr3t1RenderItemGrid() {
+            if (!wr3t1Items.length) { wr3t1ItemGrid.innerHTML = '<p class="kid-hint">Chưa có biểu đồ nào — quay lại sau nhé.</p>'; return; }
+            wr3t1ItemGrid.innerHTML = wr3t1Items.map(item => `
+                <div class="wr-t1-item-card" data-wr3t1-id="${item.id}">
+                    <img src="${wrEscHtml(item.image_url)}" alt="Chart" loading="lazy" onerror="this.style.opacity=0.25;">
+                    <div class="wr-t1-item-card-body">
+                        <div class="wr-t1-item-type">${wrEscHtml(WR3T1_TYPE_LABEL[item.chart_type] || item.chart_type || '')}</div>
+                        <div class="wr-t1-item-title">${wrEscHtml((item.title || '').slice(0, 70))}${(item.title || '').length > 70 ? '…' : ''}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        let wr3t1CurrentItem = null;
+        wr3t1ItemGrid.addEventListener('click', (e) => {
+            const card = e.target.closest('[data-wr3t1-id]');
+            if (!card) return;
+            const item = wr3t1Items.find(it => String(it.id) === card.dataset.wr3t1Id);
+            if (!item) return;
+            wr3t1CurrentItem = item;
+            wr3t1ListView.style.display = 'none';
+            wr3t1ComposeView.style.display = 'block';
+            document.getElementById('wr3t1-compose-title').textContent = item.title || '';
+            document.getElementById('wr3t1-compose-img').src = item.image_url || '';
+            document.getElementById('wr3t1-compose-notes').textContent = item.data_notes ? ('💡 ' + item.data_notes) : '';
+            document.getElementById('wr3t1-textarea').value = '';
+            document.getElementById('wr3t1-feedback-area').innerHTML = '';
+            document.getElementById('wr3t1-feedback-area').className = '';
+            wr3t1UpdateWordCount();
+        });
+
+        document.getElementById('wr3t1-compose-back-btn').addEventListener('click', () => {
+            wr3t1ComposeView.style.display = 'none';
+            wr3t1ListView.style.display = 'block';
+        });
+
+        document.getElementById('wr3t1-textarea').addEventListener('input', wr3t1UpdateWordCount);
+        function wr3t1UpdateWordCount() {
+            const n = wrCountWords(document.getElementById('wr3t1-textarea').value);
+            const el = document.getElementById('wr3t1-word-count');
+            el.textContent = n + ' từ (khuyến nghị ≥150 từ)';
+            el.className = 'wr-word-count ' + (n >= 150 ? 'is-ok' : (n > 0 ? 'is-short' : ''));
+        }
+
+        document.getElementById('wr3t1-submit-btn').addEventListener('click', async () => {
+            const mine = document.getElementById('wr3t1-textarea').value.trim();
+            const feedbackEl = document.getElementById('wr3t1-feedback-area');
+            if (!mine) { document.getElementById('wr3t1-textarea').focus(); return; }
+            const btn = document.getElementById('wr3t1-submit-btn');
+            btn.disabled = true;
+            feedbackEl.className = '';
+            feedbackEl.innerHTML = '<div class="wr-loading">AI đang chấm bài Task 1 của bạn...</div>';
+            try {
+                const item = wr3t1CurrentItem;
+                const prompt = 'Bạn là giám khảo IELTS Writing, đang chấm 1 bài Writing Task 1 của thí sinh. ' +
+                    'Đề bài: "' + wrSafe(item.title) + '" (loại biểu đồ: ' + (WR3T1_TYPE_LABEL[item.chart_type] || item.chart_type) + '). ' +
+                    (item.data_notes ? 'Số liệu nổi bật cần có trong bài: "' + wrSafe(item.data_notes) + '". ' : '') +
+                    'Bài làm của thí sinh:\n"' + wrSafe(mine) + '"\n' +
+                    'Hãy chấm theo 4 tiêu chí IELTS Writing Task 1: Task Achievement, Coherence & Cohesion, Lexical Resource, Grammatical Range & Accuracy, và ước lượng band điểm tổng (thang 4.0-9.0, có thể lẻ .5). ' +
+                    'Chỉ trả lời bằng JSON hợp lệ, không thêm chữ nào khác, đúng định dạng: ' +
+                    '{"band": số band ước lượng (vd 6.5), ' +
+                    '"task_achievement": "1 câu nhận xét ngắn bằng tiếng Việt", ' +
+                    '"coherence": "1 câu nhận xét ngắn bằng tiếng Việt", ' +
+                    '"lexical_resource": "1 câu nhận xét ngắn bằng tiếng Việt", ' +
+                    '"grammar": "1 câu nhận xét ngắn bằng tiếng Việt", ' +
+                    '"comment": "2-3 câu nhận xét tổng quan, khích lệ, bằng tiếng Việt kèm gợi ý cải thiện cụ thể nhất"}';
+                const ai = await wrAI(prompt);
+                wrRenderCriteriaFeedback(feedbackEl, ai, item.sample, 5);
+            } catch (e) {
+                feedbackEl.className = 'wr-ai-feedback';
+                feedbackEl.innerHTML = `<div class="wr-ai-feedback-body">⚠️ Không thể chấm bài lúc này (${wrEscHtml(e.message)}). Vui lòng thử lại sau.</div>`;
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        // ----- Quản lý (giảng viên soạn biểu đồ Task 1) -----
+        wr3t1ManageBtn.addEventListener('click', async () => {
+            if (!isTeacher) return;
+            wr3t1ListView.style.display = 'none';
+            wr3t1ManagePanel.style.display = 'block';
+            await wr3t1FetchAll(true);
+            wr3t1RenderItemList();
+        });
+        document.getElementById('wr3t1-manage-back-btn').addEventListener('click', () => {
+            wr3t1ManagePanel.style.display = 'none';
+            wr3t1ListView.style.display = 'block';
+            wr3t1RefreshIntro();
+        });
+
+        const wr3t1F = {
+            title: document.getElementById('wr3t1-f-title'),
+            type: document.getElementById('wr3t1-f-type'),
+            image: document.getElementById('wr3t1-f-image'),
+            notes: document.getElementById('wr3t1-f-notes'),
+            sample: document.getElementById('wr3t1-f-sample')
+        };
+        const wr3t1AdminStatus    = document.getElementById('wr3t1-admin-status');
+        const wr3t1AdminSaveBtn   = document.getElementById('wr3t1-admin-save-btn');
+        const wr3t1AdminCancelBtn = document.getElementById('wr3t1-admin-cancel-btn');
+        const wr3t1ItemListEl     = document.getElementById('wr3t1-item-list');
+        let wr3t1EditingId = null;
+
+        function wr3t1ResetForm() {
+            wr3t1EditingId = null;
+            wr3t1F.title.value = ''; wr3t1F.type.value = 'line'; wr3t1F.image.value = '';
+            wr3t1F.notes.value = ''; wr3t1F.sample.value = '';
+            wr3t1AdminSaveBtn.textContent = '➕ Thêm biểu đồ';
+            wr3t1AdminCancelBtn.style.display = 'none';
+            wr3t1AdminStatus.textContent = '';
+            wr3t1AdminStatus.className = 'ln2-admin-status';
+        }
+        wr3t1AdminCancelBtn.addEventListener('click', wr3t1ResetForm);
+
+        wr3t1AdminSaveBtn.addEventListener('click', async () => {
+            const title = wr3t1F.title.value.trim();
+            const image_url = wr3t1F.image.value.trim();
+            const sample = wr3t1F.sample.value.trim();
+            if (!title || !image_url || !sample) {
+                wr3t1AdminStatus.textContent = 'Vui lòng nhập đủ: đề bài, link ảnh, bài mẫu.';
+                wr3t1AdminStatus.className = 'ln2-admin-status is-error';
+                return;
+            }
+            wr3t1AdminSaveBtn.disabled = true;
+            try {
+                const payload = { title, image_url, sample, chart_type: wr3t1F.type.value, data_notes: wr3t1F.notes.value.trim() || null };
+                if (wr3t1EditingId) {
+                    const { data, error } = await sb.from(WR3T1_TABLE).update(payload).eq('id', wr3t1EditingId).select().single();
+                    if (error) throw error;
+                    const idx = wr3t1Items.findIndex(it => it.id === wr3t1EditingId);
+                    if (idx !== -1) wr3t1Items[idx] = data;
+                } else {
+                    const { data, error } = await sb.from(WR3T1_TABLE).insert(payload).select().single();
+                    if (error) throw error;
+                    wr3t1Items.unshift(data);
+                }
+                wr3t1ResetForm();
+                wr3t1RenderItemList();
+            } catch (e) {
+                wr3t1AdminStatus.textContent = 'Lỗi khi lưu: ' + e.message;
+                wr3t1AdminStatus.className = 'ln2-admin-status is-error';
+            } finally {
+                wr3t1AdminSaveBtn.disabled = false;
+            }
+        });
+
+        function wr3t1RenderItemList() {
+            wr3t1ItemCountEl.textContent = String(wr3t1Items.length);
+            if (!wr3t1Items.length) { wr3t1ItemListEl.innerHTML = '<p class="kid-hint">Chưa có biểu đồ nào.</p>'; return; }
+            wr3t1ItemListEl.innerHTML = wr3t1Items.map(item => `
+                <div class="ln2-item-row">
+                    <span class="ln2-item-preview">${wrEscHtml(item.title)}</span>
+                    <div class="ln2-item-actions">
+                        <button type="button" class="ln2-item-edit-btn" data-id="${item.id}" title="Sửa">✏️</button>
+                        <button type="button" class="ln2-item-delete-btn" data-id="${item.id}" title="Xoá">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        wr3t1ItemListEl.addEventListener('click', async (e) => {
+            const editBtn = e.target.closest('.ln2-item-edit-btn');
+            const delBtn  = e.target.closest('.ln2-item-delete-btn');
+            if (editBtn) {
+                const item = wr3t1Items.find(it => String(it.id) === editBtn.dataset.id);
+                if (!item) return;
+                wr3t1EditingId = item.id;
+                wr3t1F.title.value = item.title || '';
+                wr3t1F.type.value = item.chart_type || 'line';
+                wr3t1F.image.value = item.image_url || '';
+                wr3t1F.notes.value = item.data_notes || '';
+                wr3t1F.sample.value = item.sample || '';
+                wr3t1AdminSaveBtn.textContent = '💾 Lưu thay đổi';
+                wr3t1AdminCancelBtn.style.display = 'inline-block';
+                wr3t1F.title.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else if (delBtn) {
+                const item = wr3t1Items.find(it => String(it.id) === delBtn.dataset.id);
+                if (!item) return;
+                if (!confirm('Xoá biểu đồ này?')) return;
+                try {
+                    const { error } = await sb.from(WR3T1_TABLE).delete().eq('id', item.id);
+                    if (error) throw error;
+                    wr3t1Items = wr3t1Items.filter(it => it.id !== item.id);
+                    wr3t1RenderItemList();
+                } catch (e2) { alert('Xoá thất bại: ' + e2.message); }
+            }
+        });
+
+        // =========================================================================
+        // GIAI ĐOẠN 3b — IELTS WRITING TASK 2 (văn nghị luận)
+        // =========================================================================
+        const WR3T2_TABLE = 'writing_lv3_task2_items';
+        const WR3T2_TYPE_LABEL = {
+            agree_disagree: 'Agree / Disagree',
+            discuss_both: 'Discuss both views',
+            adv_disadv: 'Advantages / Disadvantages',
+            problem_solution: 'Problem / Solution',
+            two_part: 'Two-part question'
+        };
+        let wr3t2Items = [];
+        let wr3t2Loaded = false;
+        async function wr3t2FetchAll(force) {
+            if (wr3t2Loaded && !force) return wr3t2Items;
+            try {
+                const { data, error } = await sb.from(WR3T2_TABLE).select('*').order('id', { ascending: false });
+                if (error) throw error;
+                wr3t2Items = data || [];
+                wr3t2Loaded = true;
+            } catch (e) {
+                console.error('Lỗi tải kho đề bài Task 2 (kiểm tra bảng "' + WR3T2_TABLE + '"):', e);
+                wr3t2Items = [];
+            }
+            return wr3t2Items;
+        }
+
+        const wr3t2ManageBtn    = document.getElementById('wr3t2-manage-btn');
+        const wr3t2ItemCountEl  = document.getElementById('wr3t2-item-count');
+        const wr3t2ListEl       = document.getElementById('wr3t2-item-list-view');
+        const wr3t2ListView     = document.getElementById('wr3t2-list-view');
+        const wr3t2ComposeView  = document.getElementById('wr3t2-compose-view');
+        const wr3t2ManagePanel  = document.getElementById('wr3t2-manage-panel');
+        let wr3t2ActiveTypeFilter = 'all';
+
+        async function wr3t2RefreshIntro() {
+            wr3t2ManageBtn.style.display = isTeacher ? 'inline-block' : 'none';
+            wr3t2ListEl.innerHTML = '<p class="kid-hint">Đang tải danh sách đề bài...</p>';
+            await wr3t2FetchAll();
+            wr3t2ItemCountEl.textContent = String(wr3t2Items.length);
+            wr3t2RenderItemList();
+        }
+
+        document.getElementById('wr3t2-type-chips').addEventListener('click', (e) => {
+            const chip = e.target.closest('.wr-chip');
+            if (!chip) return;
+            wr3t2ActiveTypeFilter = chip.dataset.wr3t2Type;
+            document.querySelectorAll('#wr3t2-type-chips .wr-chip').forEach(c => c.classList.toggle('active', c === chip));
+            wr3t2RenderItemList();
+        });
+
+        function wr3t2RenderItemList() {
+            const filtered = wr3t2ActiveTypeFilter === 'all' ? wr3t2Items : wr3t2Items.filter(it => it.type === wr3t2ActiveTypeFilter);
+            if (!filtered.length) { wr3t2ListEl.innerHTML = '<p class="kid-hint">Chưa có đề bài nào — quay lại sau nhé.</p>'; return; }
+            wr3t2ListEl.innerHTML = filtered.map(item => `
+                <div class="wr-t2-item-card" data-wr3t2-id="${item.id}">
+                    <span class="wr-t2-item-type">${wrEscHtml(WR3T2_TYPE_LABEL[item.type] || item.type)}</span>
+                    <div class="wr-t2-item-q">${wrEscHtml(item.question)}</div>
+                </div>
+            `).join('');
+        }
+
+        let wr3t2CurrentItem = null;
+        wr3t2ListEl.addEventListener('click', (e) => {
+            const card = e.target.closest('[data-wr3t2-id]');
+            if (!card) return;
+            const item = wr3t2Items.find(it => String(it.id) === card.dataset.wr3t2Id);
+            if (!item) return;
+            wr3t2CurrentItem = item;
+            wr3t2ListView.style.display = 'none';
+            wr3t2ComposeView.style.display = 'block';
+            document.getElementById('wr3t2-compose-q').textContent = item.question;
+            document.getElementById('wr3t2-textarea').value = '';
+            document.getElementById('wr3t2-feedback-area').innerHTML = '';
+            document.getElementById('wr3t2-feedback-area').className = '';
+            document.getElementById('wr3t2-outline-box').style.display = 'none';
+            document.querySelectorAll('#wr3t2-outline-box textarea').forEach(t => t.value = '');
+            wr3t2UpdateWordCount();
+        });
+
+        document.getElementById('wr3t2-compose-back-btn').addEventListener('click', () => {
+            wr3t2ComposeView.style.display = 'none';
+            wr3t2ListView.style.display = 'block';
+        });
+
+        document.getElementById('wr3t2-outline-toggle-btn').addEventListener('click', () => {
+            const box = document.getElementById('wr3t2-outline-box');
+            box.style.display = box.style.display === 'none' ? 'block' : 'none';
+        });
+
+        document.getElementById('wr3t2-textarea').addEventListener('input', wr3t2UpdateWordCount);
+        function wr3t2UpdateWordCount() {
+            const n = wrCountWords(document.getElementById('wr3t2-textarea').value);
+            const el = document.getElementById('wr3t2-word-count');
+            el.textContent = n + ' từ (khuyến nghị ≥250 từ)';
+            el.className = 'wr-word-count ' + (n >= 250 ? 'is-ok' : (n > 0 ? 'is-short' : ''));
+        }
+
+        document.getElementById('wr3t2-submit-btn').addEventListener('click', async () => {
+            const mine = document.getElementById('wr3t2-textarea').value.trim();
+            const feedbackEl = document.getElementById('wr3t2-feedback-area');
+            if (!mine) { document.getElementById('wr3t2-textarea').focus(); return; }
+            const btn = document.getElementById('wr3t2-submit-btn');
+            btn.disabled = true;
+            feedbackEl.className = '';
+            feedbackEl.innerHTML = '<div class="wr-loading">AI đang chấm bài luận của bạn...</div>';
+            try {
+                const item = wr3t2CurrentItem;
+                const prompt = 'Bạn là giám khảo IELTS Writing, đang chấm 1 bài Writing Task 2 của thí sinh. ' +
+                    'Đề bài (' + (WR3T2_TYPE_LABEL[item.type] || item.type) + '): "' + wrSafe(item.question) + '". ' +
+                    'Bài làm của thí sinh:\n"' + wrSafe(mine) + '"\n' +
+                    'Hãy chấm theo 4 tiêu chí IELTS Writing Task 2: Task Response, Coherence & Cohesion, Lexical Resource, Grammatical Range & Accuracy, và ước lượng band điểm tổng (thang 4.0-9.0, có thể lẻ .5). Chú ý xem bài có trả lời đúng trọng tâm đề bài, có dàn ý rõ ràng (mở-thân-kết) và đủ độ dài hay không. ' +
+                    'Chỉ trả lời bằng JSON hợp lệ, không thêm chữ nào khác, đúng định dạng: ' +
+                    '{"band": số band ước lượng (vd 6.0), ' +
+                    '"task_achievement": "1 câu nhận xét ngắn bằng tiếng Việt (gọi là Task Response)", ' +
+                    '"coherence": "1 câu nhận xét ngắn bằng tiếng Việt", ' +
+                    '"lexical_resource": "1 câu nhận xét ngắn bằng tiếng Việt", ' +
+                    '"grammar": "1 câu nhận xét ngắn bằng tiếng Việt", ' +
+                    '"comment": "2-3 câu nhận xét tổng quan, khích lệ, bằng tiếng Việt kèm gợi ý cải thiện cụ thể nhất"}';
+                const ai = await wrAI(prompt);
+                wrRenderCriteriaFeedback(feedbackEl, ai, item.sample, 5);
+            } catch (e) {
+                feedbackEl.className = 'wr-ai-feedback';
+                feedbackEl.innerHTML = `<div class="wr-ai-feedback-body">⚠️ Không thể chấm bài lúc này (${wrEscHtml(e.message)}). Vui lòng thử lại sau.</div>`;
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        // ----- Quản lý (giảng viên soạn đề bài Task 2) -----
+        wr3t2ManageBtn.addEventListener('click', async () => {
+            if (!isTeacher) return;
+            wr3t2ListView.style.display = 'none';
+            wr3t2ManagePanel.style.display = 'block';
+            await wr3t2FetchAll(true);
+            wr3t2RenderAdminItemList();
+        });
+        document.getElementById('wr3t2-manage-back-btn').addEventListener('click', () => {
+            wr3t2ManagePanel.style.display = 'none';
+            wr3t2ListView.style.display = 'block';
+            wr3t2RefreshIntro();
+        });
+
+        const wr3t2F = {
+            question: document.getElementById('wr3t2-f-question'),
+            type: document.getElementById('wr3t2-f-type'),
+            sample: document.getElementById('wr3t2-f-sample')
+        };
+        const wr3t2AdminStatus    = document.getElementById('wr3t2-admin-status');
+        const wr3t2AdminSaveBtn   = document.getElementById('wr3t2-admin-save-btn');
+        const wr3t2AdminCancelBtn = document.getElementById('wr3t2-admin-cancel-btn');
+        const wr3t2ItemListEl     = document.getElementById('wr3t2-item-list');
+        let wr3t2EditingId = null;
+
+        function wr3t2ResetForm() {
+            wr3t2EditingId = null;
+            wr3t2F.question.value = ''; wr3t2F.type.value = 'agree_disagree'; wr3t2F.sample.value = '';
+            wr3t2AdminSaveBtn.textContent = '➕ Thêm đề bài';
+            wr3t2AdminCancelBtn.style.display = 'none';
+            wr3t2AdminStatus.textContent = '';
+            wr3t2AdminStatus.className = 'ln2-admin-status';
+        }
+        wr3t2AdminCancelBtn.addEventListener('click', wr3t2ResetForm);
+
+        wr3t2AdminSaveBtn.addEventListener('click', async () => {
+            const question = wr3t2F.question.value.trim();
+            if (!question) {
+                wr3t2AdminStatus.textContent = 'Vui lòng nhập đề bài.';
+                wr3t2AdminStatus.className = 'ln2-admin-status is-error';
+                return;
+            }
+            wr3t2AdminSaveBtn.disabled = true;
+            try {
+                const payload = { question, type: wr3t2F.type.value, sample: wr3t2F.sample.value.trim() || null };
+                if (wr3t2EditingId) {
+                    const { data, error } = await sb.from(WR3T2_TABLE).update(payload).eq('id', wr3t2EditingId).select().single();
+                    if (error) throw error;
+                    const idx = wr3t2Items.findIndex(it => it.id === wr3t2EditingId);
+                    if (idx !== -1) wr3t2Items[idx] = data;
+                } else {
+                    const { data, error } = await sb.from(WR3T2_TABLE).insert(payload).select().single();
+                    if (error) throw error;
+                    wr3t2Items.unshift(data);
+                }
+                wr3t2ResetForm();
+                wr3t2RenderAdminItemList();
+            } catch (e) {
+                wr3t2AdminStatus.textContent = 'Lỗi khi lưu: ' + e.message;
+                wr3t2AdminStatus.className = 'ln2-admin-status is-error';
+            } finally {
+                wr3t2AdminSaveBtn.disabled = false;
+            }
+        });
+
+        function wr3t2RenderAdminItemList() {
+            wr3t2ItemCountEl.textContent = String(wr3t2Items.length);
+            if (!wr3t2Items.length) { wr3t2ItemListEl.innerHTML = '<p class="kid-hint">Chưa có đề bài nào.</p>'; return; }
+            wr3t2ItemListEl.innerHTML = wr3t2Items.map(item => `
+                <div class="ln2-item-row">
+                    <span class="ln2-item-type-badge">${wrEscHtml(WR3T2_TYPE_LABEL[item.type] || item.type)}</span>
+                    <span class="ln2-item-preview">${wrEscHtml(item.question)}</span>
+                    <div class="ln2-item-actions">
+                        <button type="button" class="ln2-item-edit-btn" data-id="${item.id}" title="Sửa">✏️</button>
+                        <button type="button" class="ln2-item-delete-btn" data-id="${item.id}" title="Xoá">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        wr3t2ItemListEl.addEventListener('click', async (e) => {
+            const editBtn = e.target.closest('.ln2-item-edit-btn');
+            const delBtn  = e.target.closest('.ln2-item-delete-btn');
+            if (editBtn) {
+                const item = wr3t2Items.find(it => String(it.id) === editBtn.dataset.id);
+                if (!item) return;
+                wr3t2EditingId = item.id;
+                wr3t2F.question.value = item.question || '';
+                wr3t2F.type.value = item.type || 'agree_disagree';
+                wr3t2F.sample.value = item.sample || '';
+                wr3t2AdminSaveBtn.textContent = '💾 Lưu thay đổi';
+                wr3t2AdminCancelBtn.style.display = 'inline-block';
+                wr3t2F.question.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else if (delBtn) {
+                const item = wr3t2Items.find(it => String(it.id) === delBtn.dataset.id);
+                if (!item) return;
+                if (!confirm('Xoá đề bài này?')) return;
+                try {
+                    const { error } = await sb.from(WR3T2_TABLE).delete().eq('id', item.id);
+                    if (error) throw error;
+                    wr3t2Items = wr3t2Items.filter(it => it.id !== item.id);
+                    wr3t2RenderAdminItemList();
+                } catch (e2) { alert('Xoá thất bại: ' + e2.message); }
+            }
+        });
+
+    })();
+    // ===== KẾT THÚC TAB "LUYỆN KỸ NĂNG" > "✍️ VIẾT" =====
 
 });

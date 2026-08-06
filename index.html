@@ -598,6 +598,7 @@
             </div>
             <div class="folder-grid" id="ielts-sample-folder-grid">
                 <div class="folder-card" id="ielts-listening-folder-card">🎧 IELTS Listening Test</div>
+                <div class="folder-card" id="ielts-reading-folder-card">📖 IELTS Reading Test</div>
             </div>
         </div>
 
@@ -737,6 +738,11 @@
                     <div id="ilt-audio-field"></div>
                 </div>
 
+                <div class="ctest-editor-field">
+                    <label class="news-quiz-edit-label">Thời gian làm bài (phút — để trống nếu không giới hạn)</label>
+                    <input type="number" id="ilt-duration-input" class="news-edit-input ctest-duration-input" min="1" placeholder="VD: 30">
+                </div>
+
                 <div class="ilt-summary-bar" id="ilt-summary-bar"></div>
 
                 <div id="ilt-parts-container"></div>
@@ -755,10 +761,45 @@
                         <button class="grammar-back-btn" id="ilt-take-back-btn">← Quay lại</button>
                         <h3 id="ilt-take-title" style="display:inline-block; margin-left:8px;"></h3>
                     </div>
+                    <div class="ctest-take-timer" id="ilt-take-timer" style="display:none;"></div>
                 </div>
-                <div class="ilt-audio-bar" id="ilt-take-audio-bar"></div>
-                <div id="ilt-take-body"></div>
-                <button type="button" id="ilt-submit-btn" class="grammar-admin-btn grammar-admin-btn-primary ctest-submit-btn">✅ Nộp bài</button>
+                <div id="ilt-violation-banner" class="ctest-violation-banner" style="display:none;"></div>
+                <div class="ilt-part-nav" id="ilt-part-nav"></div>
+                <div class="ilt-take-layout">
+                    <div class="ilt-take-main">
+                        <div class="ilt-audio-bar" id="ilt-take-audio-bar"></div>
+                        <div id="ilt-take-body"></div>
+                        <button type="button" id="ilt-submit-btn" class="grammar-admin-btn grammar-admin-btn-primary ctest-submit-btn">✅ Nộp bài</button>
+                    </div>
+                    <aside class="ilt-answer-sheet" id="ilt-answer-sheet">
+                        <div class="ilt-answer-sheet-title">📝 Bảng câu trả lời<button type="button" id="ilt-answer-sheet-close" class="ilt-answer-sheet-close">✕</button></div>
+                        <div class="ilt-answer-sheet-grid" id="ilt-answer-sheet-grid"></div>
+                        <div class="ilt-answer-sheet-legend">
+                            <span class="ilt-legend-item"><i class="ilt-legend-dot ilt-legend-answered"></i>Đã trả lời</span>
+                            <span class="ilt-legend-item"><i class="ilt-legend-dot ilt-legend-unanswered"></i>Chưa trả lời</span>
+                        </div>
+                    </aside>
+                </div>
+                <button type="button" id="ilt-answer-sheet-toggle" class="ilt-answer-sheet-toggle">📝 Đáp án</button>
+            </div>
+
+            <!-- ---- Hộp thoại "sẵn sàng làm bài chưa" — hiện trước khi vào bài nghe thật,
+                 audio chỉ tự phát SAU KHI học viên bấm "Bắt đầu" (thao tác bấm này cũng
+                 giúp trình duyệt cho phép tự phát audio ngay sau đó). ---- -->
+            <div id="ilt-ready-modal" class="ilt-ready-modal-overlay" style="display:none;">
+                <div class="ilt-ready-modal-box">
+                    <h3>🎧 Bạn đã sẵn sàng làm bài chưa?</h3>
+                    <p id="ilt-ready-modal-text"></p>
+                    <ul class="ilt-ready-modal-rules">
+                        <li>Audio sẽ <b>tự động phát MỘT LẦN DUY NHẤT</b> ngay sau khi bạn bấm "Bắt đầu" — không thể tạm dừng hay nghe lại.</li>
+                        <li>Không chuyển sang tab/cửa sổ khác, không thu nhỏ hay thoát trang khi đang làm bài — vi phạm quá 3 lần bài sẽ <b>TỰ ĐỘNG NỘP</b>.</li>
+                        <li>Hãy bật sẵn âm thanh thiết bị (loa/tai nghe) và đảm bảo mạng ổn định trước khi bắt đầu.</li>
+                    </ul>
+                    <div class="ilt-ready-modal-actions">
+                        <button type="button" id="ilt-ready-cancel-btn" class="grammar-admin-btn">Để sau</button>
+                        <button type="button" id="ilt-ready-start-btn" class="grammar-admin-btn grammar-admin-btn-primary">▶️ Tôi đã sẵn sàng — Bắt đầu</button>
+                    </div>
+                </div>
             </div>
 
             <!-- ---- 4) KẾT QUẢ ---- -->
@@ -770,6 +811,122 @@
                 <h4 id="ilt-result-title" style="margin:0 0 4px;"></h4>
                 <div id="ilt-result-score" class="ctest-result-score"></div>
                 <div id="ilt-result-body"></div>
+            </div>
+
+        </div>
+
+        <!-- ============================================================
+             IELTS READING TEST — module luyện đọc theo đúng format đề thi
+             IELTS thật: 3 Passage (đoạn văn + hình do giảng viên soạn),
+             hỗ trợ đủ các dạng câu hỏi Reading thường gặp bằng 5 khối nội
+             dung có thể phối hợp tự do trong mỗi phần nhỏ: đoạn văn điền
+             từ / đóng khung, bảng, hình ảnh, trắc nghiệm, và nối/ghép
+             (matching) — dùng được cho True/False/NG, Yes/No/NG, Matching
+             Heading/Feature/Information/Ending, Multiple choice, Short
+             answer, Completing table/note/diagram/sentence. Dữ liệu lưu ở
+             bảng "ielts_reading_tests" / "ielts_reading_submissions" trên
+             Supabase (xem file "ielts_reading_setup.sql" đi kèm).
+        ============================================================= -->
+        <div id="irt-panel" style="display:none;">
+
+            <!-- ---- 1) DANH SÁCH BÀI ĐỌC ---- -->
+            <div id="irt-list-view">
+                <div class="grammar-panel-header">
+                    <button class="grammar-back-btn" id="irt-list-back-btn">← Quay lại</button>
+                    <h3 style="margin:0;">📖 IELTS Reading Test</h3>
+                </div>
+
+                <div class="grammar-admin-bar" id="irt-admin-bar" style="display:none;">
+                    <button type="button" id="irt-create-btn" class="grammar-admin-btn grammar-admin-btn-primary">➕ Tạo bài đọc mới</button>
+                </div>
+
+                <div id="irt-list-container" class="ctest-list-container">
+                    <p class="ctest-loading-msg">Đang tải danh sách bài đọc...</p>
+                </div>
+            </div>
+
+            <!-- ---- 2) KHUNG SOẠN BÀI (chỉ giảng viên) ---- -->
+            <div id="irt-editor-view" style="display:none;">
+                <div class="grammar-panel-header">
+                    <button class="grammar-back-btn" id="irt-editor-back-btn">← Quay lại danh sách</button>
+                    <h3 class="grammar-panel-header-title" style="margin:0;">✏️ Soạn bài đọc IELTS</h3>
+                    <button type="button" id="irt-delete-btn" class="grammar-admin-btn grammar-admin-btn-danger">🗑️ Xoá bài này</button>
+                </div>
+
+                <div class="ctest-editor-field">
+                    <label class="news-quiz-edit-label">Tiêu đề bài đọc</label>
+                    <input type="text" id="irt-title-input" class="news-edit-input" placeholder="VD: IELTS Reading Practice Test 1">
+                </div>
+
+                <div class="ctest-editor-field">
+                    <label class="news-quiz-edit-label">Thời gian làm bài (phút — để trống nếu không giới hạn)</label>
+                    <input type="number" id="irt-duration-input" class="news-edit-input ctest-duration-input" min="1" placeholder="VD: 60">
+                </div>
+
+                <div class="irt-summary-bar" id="irt-summary-bar"></div>
+                <div id="irt-parts-container"></div>
+
+                <div class="ctest-editor-actions">
+                    <span id="irt-save-status" class="ctest-save-status"></span>
+                    <button type="button" id="irt-preview-btn" class="grammar-admin-btn">👁️ Xem thử</button>
+                    <button type="button" id="irt-publish-btn" class="grammar-admin-btn grammar-admin-btn-primary">📤 Lưu &amp; Xuất bản</button>
+                </div>
+            </div>
+
+            <!-- ---- 3) LÀM BÀI / XEM THỬ ---- -->
+            <div id="irt-take-view" style="display:none;">
+                <div class="ctest-take-header">
+                    <div>
+                        <button class="grammar-back-btn" id="irt-take-back-btn">← Quay lại</button>
+                        <h3 id="irt-take-title" style="display:inline-block; margin-left:8px;"></h3>
+                    </div>
+                    <div class="ctest-take-timer" id="irt-take-timer" style="display:none;"></div>
+                </div>
+                <div id="irt-violation-banner" class="ctest-violation-banner" style="display:none;"></div>
+                <div class="irt-part-nav" id="irt-part-nav"></div>
+                <div class="irt-take-layout">
+                    <div class="irt-take-main">
+                        <div id="irt-take-body"></div>
+                        <button type="button" id="irt-submit-btn" class="grammar-admin-btn grammar-admin-btn-primary ctest-submit-btn">✅ Nộp bài</button>
+                    </div>
+                    <aside class="irt-answer-sheet" id="irt-answer-sheet">
+                        <div class="irt-answer-sheet-title">📝 Bảng câu trả lời<button type="button" id="irt-answer-sheet-close" class="irt-answer-sheet-close">✕</button></div>
+                        <div class="irt-answer-sheet-grid" id="irt-answer-sheet-grid"></div>
+                        <div class="irt-answer-sheet-legend">
+                            <span class="irt-legend-item"><i class="irt-legend-dot irt-legend-answered"></i>Đã trả lời</span>
+                            <span class="irt-legend-item"><i class="irt-legend-dot irt-legend-unanswered"></i>Chưa trả lời</span>
+                        </div>
+                    </aside>
+                </div>
+                <button type="button" id="irt-answer-sheet-toggle" class="irt-answer-sheet-toggle">📝 Đáp án</button>
+            </div>
+
+            <!-- ---- Hộp thoại "sẵn sàng làm bài chưa" ---- -->
+            <div id="irt-ready-modal" class="irt-ready-modal-overlay" style="display:none;">
+                <div class="irt-ready-modal-box">
+                    <h3>📖 Bạn đã sẵn sàng làm bài chưa?</h3>
+                    <p id="irt-ready-modal-text"></p>
+                    <ul class="irt-ready-modal-rules">
+                        <li>Đồng hồ sẽ bắt đầu đếm ngược ngay sau khi bạn bấm "Bắt đầu".</li>
+                        <li>Không chuyển sang tab/cửa sổ khác, không chuyển sang mục khác trong ứng dụng khi đang làm bài — vi phạm quá 3 lần bài sẽ <b>TỰ ĐỘNG NỘP</b>.</li>
+                        <li>Nếu lỡ tải lại trang giữa chừng, bài làm của bạn vẫn được giữ nguyên — vào lại để tiếp tục.</li>
+                    </ul>
+                    <div class="irt-ready-modal-actions">
+                        <button type="button" id="irt-ready-cancel-btn" class="grammar-admin-btn">Để sau</button>
+                        <button type="button" id="irt-ready-start-btn" class="grammar-admin-btn grammar-admin-btn-primary">▶️ Tôi đã sẵn sàng — Bắt đầu</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ---- 4) KẾT QUẢ ---- -->
+            <div id="irt-result-view" style="display:none;">
+                <div class="grammar-panel-header">
+                    <button class="grammar-back-btn" id="irt-result-back-btn">← Quay lại danh sách</button>
+                    <h3 style="margin:0;">📊 Kết quả bài đọc</h3>
+                </div>
+                <h4 id="irt-result-title" style="margin:0 0 4px;"></h4>
+                <div id="irt-result-score" class="ctest-result-score"></div>
+                <div id="irt-result-body"></div>
             </div>
 
         </div>
@@ -1758,7 +1915,378 @@
 
     <div id="tab-luyen-viet" class="main-tab-content">
         <h2>✍️ Luyện Viết</h2>
-        <p class="kid-hint">Nội dung luyện Viết đang được xây dựng — sẽ sớm cập nhật tại đây.</p>
+        <p class="kid-hint">Luyện viết tiếng Anh qua 3 giai đoạn: dịch câu theo từ khoá gợi ý → email công sở &amp; nhắn tin đời thường → phân tích biểu đồ &amp; nghị luận chuẩn IELTS. Mỗi bài làm đều được AI chấm và nhận xét ngay.</p>
+
+        <!-- ===== Danh sách 3 giai đoạn luyện viết ===== -->
+        <div class="folder-grid" id="wr-stage-folder-grid">
+            <div class="folder-card" id="wr1-folder-card">🧩 Giai đoạn 1<br><span style="font-weight:400;font-size:12.5px;opacity:.75;">Dịch câu theo từ khoá</span></div>
+            <div class="folder-card" id="wr2-folder-card">✉️ Giai đoạn 2<br><span style="font-weight:400;font-size:12.5px;opacity:.75;">Email &amp; nhắn tin</span></div>
+            <div class="folder-card" id="wr3-folder-card">🎓 Giai đoạn 3<br><span style="font-weight:400;font-size:12.5px;opacity:.75;">IELTS Writing</span></div>
+        </div>
+
+        <!-- =========================================================
+             GIAI ĐOẠN 1 — DỊCH CÂU VIỆT–ANH THEO TỪ KHOÁ GỢI Ý
+             ========================================================= -->
+        <div id="wr1-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <button class="grammar-back-btn" id="wr1-back-btn">← Quay lại</button>
+                    <h3 style="margin:0;">🧩 Giai đoạn 1 — Dịch câu theo từ khoá</h3>
+                </div>
+                <button type="button" class="kid-btn" id="wr1-manage-btn" style="display:none;">🛠️ Soạn câu (<span id="wr1-item-count">0</span>)</button>
+            </div>
+            <p class="kid-hint">Mục tiêu: làm quen cấu trúc câu tiếng Anh cơ bản, tránh dịch từng chữ một (word-by-word). Mỗi câu tiếng Việt đi kèm vài từ khoá tiếng Anh <strong>bắt buộc phải dùng</strong> — hãy viết lại thành 1 câu tiếng Anh hoàn chỉnh. AI chấm theo kiểu <em>linh hoạt</em>: không cần đúng 100% từng chữ so với đáp án mẫu, chỉ cần đúng cấu trúc câu và dùng đủ từ khoá gợi ý.</p>
+            <div class="kid-topic-grid" id="wr1-start-grid">
+                <div class="kid-topic-card" id="wr1-start-card">
+                    <span class="kid-icon">▶️</span>
+                    <div class="kid-title">Bắt đầu luyện tập</div>
+                    <div class="kid-count" id="wr1-start-count">Đang tải kho câu...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ----- Panel giảng viên soạn câu (Giai đoạn 1) ----- -->
+        <div id="wr1-manage-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border);">
+                <button class="grammar-back-btn" id="wr1-manage-back-btn">← Quay lại</button>
+                <h3 style="margin:0;">🛠️ Soạn câu — Giai đoạn 1</h3>
+            </div>
+            <div class="ln2-admin-box">
+                <div class="ln2-admin-form" id="wr1-admin-form">
+                    <div class="ln2-field">
+                        <label>Câu tiếng Việt (bắt buộc)</label>
+                        <textarea id="wr1-f-vi" class="news-edit-input" rows="2" placeholder="VD: Mặc dù trời mưa to nhưng chúng tôi vẫn quyết định đi dã ngoại."></textarea>
+                    </div>
+                    <div class="ln2-field">
+                        <label>Từ khoá tiếng Anh bắt buộc phải dùng (cách nhau bởi dấu phẩy)</label>
+                        <input type="text" id="wr1-f-keywords" class="news-edit-input" placeholder="VD: although, decided to, picnic">
+                    </div>
+                    <div class="ln2-field">
+                        <label>Câu tiếng Anh mẫu (đáp án tham khảo, bắt buộc)</label>
+                        <textarea id="wr1-f-sample" class="news-edit-input" rows="2" placeholder="VD: Although it was raining heavily, we decided to go on a picnic."></textarea>
+                    </div>
+                </div>
+                <div class="ln2-admin-actions">
+                    <span class="ln2-admin-status" id="wr1-admin-status"></span>
+                    <button type="button" class="kid-btn" id="wr1-admin-cancel-btn" style="display:none;">Hủy sửa</button>
+                    <button type="button" class="kid-btn kid-btn-primary" id="wr1-admin-save-btn">➕ Thêm câu</button>
+                </div>
+            </div>
+            <div class="ln2-item-list" id="wr1-item-list">
+                <p class="kid-hint">Đang tải danh sách câu...</p>
+            </div>
+        </div>
+
+        <!-- ----- Panel làm bài (Giai đoạn 1) ----- -->
+        <div id="wr1-quiz-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border);">
+                <button class="grammar-back-btn" id="wr1-quiz-back-btn">← Quay lại</button>
+                <h3 style="margin:0;">🧩 Giai đoạn 1 — Dịch câu theo từ khoá</h3>
+            </div>
+            <div id="wr1-quiz-play-area">
+                <div class="thcs-translate-progress" id="wr1-quiz-progress"></div>
+                <div class="thcs-translate-card">
+                    <div id="wr1-quiz-body"></div>
+                    <div class="thcs-translate-actions" id="wr1-quiz-controls"></div>
+                    <div id="wr1-quiz-feedback"></div>
+                </div>
+            </div>
+            <div id="wr1-result-area" style="display:none;">
+                <div class="ln-result-box" id="wr1-result-box"></div>
+            </div>
+        </div>
+
+        <!-- =========================================================
+             GIAI ĐOẠN 2 — EMAIL CÔNG SỞ + NHẮN TIN ĐỜI THƯỜNG
+             ========================================================= -->
+        <div id="wr2-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border);">
+                <button class="grammar-back-btn" id="wr2-back-btn">← Quay lại</button>
+                <h3 style="margin:0;">✉️ Giai đoạn 2 — Email công sở &amp; nhắn tin đời thường</h3>
+            </div>
+            <p class="kid-hint">Mục tiêu: viết đúng văn phong theo từng ngữ cảnh — phân biệt <strong>formal</strong> (email công sở) và <strong>informal</strong> (nhắn tin/chat đời thường).</p>
+
+            <div class="wr-sub-tabs" id="wr2-sub-tabs">
+                <button type="button" class="wr-sub-tab active" data-wr2-sub="email">✉️ Email công sở</button>
+                <button type="button" class="wr-sub-tab" data-wr2-sub="chat">💬 Nhắn tin đời thường</button>
+            </div>
+
+            <!-- ----- 2a. EMAIL CÔNG SỞ ----- -->
+            <div id="wr2e-section">
+                <div id="wr2e-list-view">
+                    <div style="display:flex; justify-content:flex-end; margin-bottom:10px;">
+                        <button type="button" class="kid-btn" id="wr2e-manage-btn" style="display:none;">🛠️ Soạn tình huống (<span id="wr2e-item-count">0</span>)</button>
+                    </div>
+                    <p class="kid-hint">Chọn 1 tình huống bên dưới, sau đó chọn mức hỗ trợ phù hợp: có sẵn khung mẫu → chỉ có gợi ý dàn ý → tự viết hoàn toàn. Mỗi email cần đủ 3 phần: <strong>chào hỏi – nội dung – kết thư</strong>.</p>
+                    <div class="kid-topic-grid" id="wr2e-item-grid">
+                        <p class="kid-hint">Đang tải danh sách tình huống...</p>
+                    </div>
+                </div>
+
+                <div id="wr2e-compose-view" style="display:none;">
+                    <button type="button" class="wr-back-link" id="wr2e-compose-back-btn">← Chọn tình huống khác</button>
+                    <h4 id="wr2e-compose-title" style="margin-bottom:6px;"></h4>
+                    <p class="kid-hint" id="wr2e-compose-brief" style="margin-bottom:14px;"></p>
+
+                    <div class="wr-level-row" id="wr2e-level-row">
+                        <button type="button" class="wr-level-btn" data-wr2e-level="1">📋 Có khung mẫu</button>
+                        <button type="button" class="wr-level-btn" data-wr2e-level="2">💡 Có gợi ý dàn ý</button>
+                        <button type="button" class="wr-level-btn active" data-wr2e-level="3">✍️ Tự viết hoàn toàn</button>
+                    </div>
+                    <div class="wr-scaffold-box" id="wr2e-scaffold-box" style="display:none;"></div>
+
+                    <textarea class="wr-compose-textarea wr-tall" id="wr2e-textarea" placeholder="Viết email đầy đủ 3 phần (chào hỏi – nội dung – kết thư) vào đây..."></textarea>
+                    <div class="wr-word-count" id="wr2e-word-count">0 từ</div>
+                    <div class="thcs-translate-actions" style="margin-top:12px;">
+                        <button type="button" class="kid-btn kid-btn-primary" id="wr2e-submit-btn">✅ Nộp bài &amp; nhận xét</button>
+                    </div>
+                    <div id="wr2e-feedback-area"></div>
+                </div>
+
+                <!-- Panel giảng viên soạn tình huống email -->
+                <div id="wr2e-manage-panel" style="display:none;">
+                    <button type="button" class="wr-back-link" id="wr2e-manage-back-btn">← Quay lại</button>
+                    <div class="ln2-admin-box">
+                        <div class="ln2-admin-form" id="wr2e-admin-form">
+                            <div class="ln2-field">
+                                <label>Tên tình huống (bắt buộc)</label>
+                                <input type="text" id="wr2e-f-scenario" class="news-edit-input" placeholder="VD: Xin nghỉ phép">
+                            </div>
+                            <div class="ln2-field">
+                                <label>Mô tả yêu cầu / bối cảnh (tiếng Việt, bắt buộc)</label>
+                                <textarea id="wr2e-f-brief" class="news-edit-input" rows="3" placeholder="VD: Viết email gửi quản lý xin nghỉ phép 2 ngày vì việc gia đình, nêu rõ thời gian nghỉ và người bàn giao công việc."></textarea>
+                            </div>
+                            <div class="ln2-field">
+                                <label>Khung mẫu cho mức "Có khung mẫu" (tuỳ chọn — để trống nếu không cần)</label>
+                                <textarea id="wr2e-f-template" class="news-edit-input" rows="3" placeholder="VD: Dear [Tên quản lý],&#10;I am writing to... [nêu lý do]&#10;...&#10;Best regards,&#10;[Tên bạn]"></textarea>
+                            </div>
+                            <div class="ln2-field">
+                                <label>Gợi ý dàn ý cho mức "Có gợi ý" (tuỳ chọn)</label>
+                                <textarea id="wr2e-f-outline" class="news-edit-input" rows="3" placeholder="VD: - Chào hỏi trang trọng&#10;- Nêu lý do nghỉ + thời gian cụ thể&#10;- Đề xuất người bàn giao&#10;- Lời cảm ơn + kết thư"></textarea>
+                            </div>
+                            <div class="ln2-field">
+                                <label>Email mẫu hoàn chỉnh (đáp án tham khảo, bắt buộc)</label>
+                                <textarea id="wr2e-f-sample" class="news-edit-input" rows="4"></textarea>
+                            </div>
+                        </div>
+                        <div class="ln2-admin-actions">
+                            <span class="ln2-admin-status" id="wr2e-admin-status"></span>
+                            <button type="button" class="kid-btn" id="wr2e-admin-cancel-btn" style="display:none;">Hủy sửa</button>
+                            <button type="button" class="kid-btn kid-btn-primary" id="wr2e-admin-save-btn">➕ Thêm tình huống</button>
+                        </div>
+                    </div>
+                    <div class="ln2-item-list" id="wr2e-item-list"></div>
+                </div>
+            </div>
+
+            <!-- ----- 2b. NHẮN TIN / CHAT ĐỜI THƯỜNG ----- -->
+            <div id="wr2c-section" style="display:none;">
+                <div id="wr2c-intro-view">
+                    <h4 style="margin-bottom:8px;">📚 Từ viết tắt phổ biến khi nhắn tin</h4>
+                    <div class="wr-glossary-grid" id="wr2c-glossary-grid"></div>
+
+                    <h4 style="margin-bottom:8px;">💬 Chọn 1 tình huống để luyện hội thoại với AI</h4>
+                    <p class="kid-hint">AI sẽ đóng vai người nhắn tin với bạn (bạn bè/đồng nghiệp) bằng văn phong đời thường. Hãy phản hồi tự nhiên, có thể dùng từ viết tắt ở trên. Khi xong, bấm "Kết thúc &amp; nhận xét" để AI chấm cách dùng văn phong informal của bạn.</p>
+                    <div class="wr-chip-row" id="wr2c-topic-chips"></div>
+                </div>
+
+                <div id="wr2c-chat-view" style="display:none;">
+                    <button type="button" class="wr-back-link" id="wr2c-chat-back-btn">← Chọn tình huống khác</button>
+                    <div class="wr-chat-window" id="wr2c-chat-window"></div>
+                    <div class="wr-chat-input-row">
+                        <input type="text" id="wr2c-chat-input" placeholder="Nhắn tin trả lời..." autocomplete="off">
+                        <button type="button" class="kid-btn kid-btn-primary" id="wr2c-chat-send-btn">Gửi</button>
+                    </div>
+                    <div class="thcs-translate-actions" style="margin-top:14px;">
+                        <button type="button" class="kid-btn" id="wr2c-chat-finish-btn">🏁 Kết thúc &amp; nhận xét</button>
+                    </div>
+                    <div id="wr2c-feedback-area"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =========================================================
+             GIAI ĐOẠN 3 — PHÂN TÍCH BIỂU ĐỒ + VĂN NGHỊ LUẬN CHUẨN IELTS
+             ========================================================= -->
+        <div id="wr3-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border);">
+                <button class="grammar-back-btn" id="wr3-back-btn">← Quay lại</button>
+                <h3 style="margin:0;">🎓 Giai đoạn 3 — IELTS Writing Task 1 &amp; Task 2</h3>
+            </div>
+            <p class="kid-hint">Mục tiêu: viết học thuật, đúng chuẩn IELTS Writing. AI chấm theo 4 tiêu chí: Task Achievement/Response, Coherence &amp; Cohesion, Lexical Resource, Grammatical Range &amp; Accuracy — kèm ước lượng band điểm.</p>
+
+            <div class="wr-sub-tabs" id="wr3-sub-tabs">
+                <button type="button" class="wr-sub-tab active" data-wr3-sub="t1">📊 Task 1 — Biểu đồ</button>
+                <button type="button" class="wr-sub-tab" data-wr3-sub="t2">📝 Task 2 — Nghị luận</button>
+            </div>
+
+            <!-- ----- 3a. TASK 1: PHÂN TÍCH BIỂU ĐỒ ----- -->
+            <div id="wr3t1-section">
+                <div id="wr3t1-list-view">
+                    <div style="display:flex; justify-content:flex-end; margin-bottom:6px;">
+                        <button type="button" class="kid-btn" id="wr3t1-manage-btn" style="display:none;">🛠️ Soạn biểu đồ (<span id="wr3t1-item-count">0</span>)</button>
+                    </div>
+                    <div class="wr-vocab-group">
+                        <h5>📈 Tăng</h5>
+                        <div class="wr-vocab-tags"><span>increase</span><span>rise</span><span>grow</span><span>surge</span><span>climb</span><span>soar</span></div>
+                    </div>
+                    <div class="wr-vocab-group">
+                        <h5>📉 Giảm</h5>
+                        <div class="wr-vocab-tags"><span>decrease</span><span>decline</span><span>drop</span><span>fall</span><span>plummet</span><span>dip</span></div>
+                    </div>
+                    <div class="wr-vocab-group">
+                        <h5>➡️ Không đổi / dao động</h5>
+                        <div class="wr-vocab-tags"><span>remain stable</span><span>stay constant</span><span>fluctuate</span><span>level off</span><span>plateau</span></div>
+                    </div>
+                    <div class="wr-vocab-group">
+                        <h5>⛰️ Đỉnh / đáy</h5>
+                        <div class="wr-vocab-tags"><span>peak at</span><span>reach a high of</span><span>bottom out</span><span>hit a low of</span></div>
+                    </div>
+                    <p class="kid-hint">Chọn 1 biểu đồ bên dưới để luyện viết overview + mô tả xu hướng.</p>
+                    <div class="wr-t1-item-grid" id="wr3t1-item-grid">
+                        <p class="kid-hint">Đang tải danh sách biểu đồ...</p>
+                    </div>
+                </div>
+
+                <div id="wr3t1-compose-view" style="display:none;">
+                    <button type="button" class="wr-back-link" id="wr3t1-compose-back-btn">← Chọn biểu đồ khác</button>
+                    <h4 id="wr3t1-compose-title" style="margin-bottom:10px;"></h4>
+                    <img id="wr3t1-compose-img" class="wr-t1-chart-img" src="" alt="Biểu đồ">
+                    <p class="kid-hint" id="wr3t1-compose-notes" style="margin-bottom:10px;"></p>
+                    <textarea class="wr-compose-textarea wr-tall" id="wr3t1-textarea" placeholder="Viết bài Task 1 (câu overview + các đoạn mô tả xu hướng chi tiết, tối thiểu 150 từ)..."></textarea>
+                    <div class="wr-word-count" id="wr3t1-word-count">0 từ (khuyến nghị ≥150 từ)</div>
+                    <div class="thcs-translate-actions" style="margin-top:12px;">
+                        <button type="button" class="kid-btn kid-btn-primary" id="wr3t1-submit-btn">✅ Nộp bài &amp; nhận xét</button>
+                    </div>
+                    <div id="wr3t1-feedback-area"></div>
+                </div>
+
+                <div id="wr3t1-manage-panel" style="display:none;">
+                    <button type="button" class="wr-back-link" id="wr3t1-manage-back-btn">← Quay lại</button>
+                    <div class="ln2-admin-box">
+                        <div class="ln2-admin-form" id="wr3t1-admin-form">
+                            <div class="ln2-field">
+                                <label>Tiêu đề / đề bài biểu đồ (bắt buộc)</label>
+                                <textarea id="wr3t1-f-title" class="news-edit-input" rows="2" placeholder="VD: The chart shows the percentage of..."></textarea>
+                            </div>
+                            <div class="ln2-field">
+                                <label>Loại biểu đồ</label>
+                                <select id="wr3t1-f-type" class="news-edit-input">
+                                    <option value="line">Line graph</option>
+                                    <option value="bar">Bar chart</option>
+                                    <option value="pie">Pie chart</option>
+                                    <option value="table">Table</option>
+                                    <option value="mixed">Mixed / Process</option>
+                                </select>
+                            </div>
+                            <div class="ln2-field">
+                                <label>Link ảnh biểu đồ (bắt buộc)</label>
+                                <input type="text" id="wr3t1-f-image" class="news-edit-input" placeholder="VD: https://.../chart-1.png">
+                            </div>
+                            <div class="ln2-field">
+                                <label>Ghi chú số liệu nổi bật (tuỳ chọn — gợi ý cho học viên)</label>
+                                <textarea id="wr3t1-f-notes" class="news-edit-input" rows="2" placeholder="VD: Chú ý mốc cao nhất năm 2015 và xu hướng giảm sau 2018."></textarea>
+                            </div>
+                            <div class="ln2-field">
+                                <label>Bài mẫu tham khảo (bắt buộc)</label>
+                                <textarea id="wr3t1-f-sample" class="news-edit-input" rows="5"></textarea>
+                            </div>
+                        </div>
+                        <div class="ln2-admin-actions">
+                            <span class="ln2-admin-status" id="wr3t1-admin-status"></span>
+                            <button type="button" class="kid-btn" id="wr3t1-admin-cancel-btn" style="display:none;">Hủy sửa</button>
+                            <button type="button" class="kid-btn kid-btn-primary" id="wr3t1-admin-save-btn">➕ Thêm biểu đồ</button>
+                        </div>
+                    </div>
+                    <div class="ln2-item-list" id="wr3t1-item-list"></div>
+                </div>
+            </div>
+
+            <!-- ----- 3b. TASK 2: VĂN NGHỊ LUẬN ----- -->
+            <div id="wr3t2-section" style="display:none;">
+                <div id="wr3t2-list-view">
+                    <div style="display:flex; justify-content:flex-end; margin-bottom:6px;">
+                        <button type="button" class="kid-btn" id="wr3t2-manage-btn" style="display:none;">🛠️ Soạn đề bài (<span id="wr3t2-item-count">0</span>)</button>
+                    </div>
+                    <div class="wr-chip-row" id="wr3t2-type-chips">
+                        <button type="button" class="wr-chip active" data-wr3t2-type="all">Tất cả</button>
+                        <button type="button" class="wr-chip" data-wr3t2-type="agree_disagree">Agree / Disagree</button>
+                        <button type="button" class="wr-chip" data-wr3t2-type="discuss_both">Discuss both views</button>
+                        <button type="button" class="wr-chip" data-wr3t2-type="adv_disadv">Advantages / Disadvantages</button>
+                    </div>
+                    <div class="wr-t2-item-list" id="wr3t2-item-list-view">
+                        <p class="kid-hint">Đang tải danh sách đề bài...</p>
+                    </div>
+                </div>
+
+                <div id="wr3t2-compose-view" style="display:none;">
+                    <button type="button" class="wr-back-link" id="wr3t2-compose-back-btn">← Chọn đề bài khác</button>
+                    <h4 id="wr3t2-compose-q" style="margin-bottom:12px; line-height:1.5;"></h4>
+
+                    <button type="button" class="kid-btn wr-outline-toggle-btn" id="wr3t2-outline-toggle-btn">📝 Lập dàn ý nháp theo khung A.R.E.A (không bắt buộc)</button>
+                    <div id="wr3t2-outline-box" style="display:none;">
+                        <p class="kid-hint">Mở bài: giới thiệu chủ đề + nêu quan điểm (thesis statement). Mỗi đoạn thân bài phát triển 1 ý theo khung <strong>A.R.E.A</strong> (Answer – Reason – Example – Alternative/mở rộng), giống khung dùng trong phần Nói. Kết bài: tóm tắt lại quan điểm.</p>
+                        <div class="ln2-field" style="margin-bottom:10px;">
+                            <label>Mở bài (Introduction)</label>
+                            <textarea class="news-edit-input" id="wr3t2-o-intro" rows="2"></textarea>
+                        </div>
+                        <div class="wr-area-grid">
+                            <div class="wr-area-block"><label>Thân bài 1 — Answer (luận điểm chính)</label><textarea id="wr3t2-o-p1-a"></textarea></div>
+                            <div class="wr-area-block"><label>Thân bài 1 — Reason (lý do)</label><textarea id="wr3t2-o-p1-r"></textarea></div>
+                            <div class="wr-area-block"><label>Thân bài 1 — Example (ví dụ)</label><textarea id="wr3t2-o-p1-e"></textarea></div>
+                            <div class="wr-area-block"><label>Thân bài 1 — Alternative (mở rộng)</label><textarea id="wr3t2-o-p1-alt"></textarea></div>
+                            <div class="wr-area-block"><label>Thân bài 2 — Answer (luận điểm chính)</label><textarea id="wr3t2-o-p2-a"></textarea></div>
+                            <div class="wr-area-block"><label>Thân bài 2 — Reason (lý do)</label><textarea id="wr3t2-o-p2-r"></textarea></div>
+                            <div class="wr-area-block"><label>Thân bài 2 — Example (ví dụ)</label><textarea id="wr3t2-o-p2-e"></textarea></div>
+                            <div class="wr-area-block"><label>Thân bài 2 — Alternative (mở rộng)</label><textarea id="wr3t2-o-p2-alt"></textarea></div>
+                        </div>
+                        <div class="ln2-field" style="margin-bottom:10px;">
+                            <label>Kết bài (Conclusion)</label>
+                            <textarea class="news-edit-input" id="wr3t2-o-concl" rows="2"></textarea>
+                        </div>
+                    </div>
+
+                    <textarea class="wr-compose-textarea wr-tall" id="wr3t2-textarea" placeholder="Viết bài luận hoàn chỉnh vào đây (tối thiểu 250 từ, 40 phút)..."></textarea>
+                    <div class="wr-word-count" id="wr3t2-word-count">0 từ (khuyến nghị ≥250 từ)</div>
+                    <div class="thcs-translate-actions" style="margin-top:12px;">
+                        <button type="button" class="kid-btn kid-btn-primary" id="wr3t2-submit-btn">✅ Nộp bài &amp; nhận xét</button>
+                    </div>
+                    <div id="wr3t2-feedback-area"></div>
+                </div>
+
+                <div id="wr3t2-manage-panel" style="display:none;">
+                    <button type="button" class="wr-back-link" id="wr3t2-manage-back-btn">← Quay lại</button>
+                    <div class="ln2-admin-box">
+                        <div class="ln2-admin-form" id="wr3t2-admin-form">
+                            <div class="ln2-field">
+                                <label>Đề bài (tiếng Anh, bắt buộc)</label>
+                                <textarea id="wr3t2-f-question" class="news-edit-input" rows="3" placeholder="VD: Some people think... To what extent do you agree or disagree?"></textarea>
+                            </div>
+                            <div class="ln2-field">
+                                <label>Dạng bài</label>
+                                <select id="wr3t2-f-type" class="news-edit-input">
+                                    <option value="agree_disagree">Agree / Disagree</option>
+                                    <option value="discuss_both">Discuss both views</option>
+                                    <option value="adv_disadv">Advantages / Disadvantages</option>
+                                    <option value="problem_solution">Problem / Solution</option>
+                                    <option value="two_part">Two-part question</option>
+                                </select>
+                            </div>
+                            <div class="ln2-field">
+                                <label>Dàn ý / bài mẫu tham khảo (tuỳ chọn)</label>
+                                <textarea id="wr3t2-f-sample" class="news-edit-input" rows="5"></textarea>
+                            </div>
+                        </div>
+                        <div class="ln2-admin-actions">
+                            <span class="ln2-admin-status" id="wr3t2-admin-status"></span>
+                            <button type="button" class="kid-btn" id="wr3t2-admin-cancel-btn" style="display:none;">Hủy sửa</button>
+                            <button type="button" class="kid-btn kid-btn-primary" id="wr3t2-admin-save-btn">➕ Thêm đề bài</button>
+                        </div>
+                    </div>
+                    <div class="ln2-item-list" id="wr3t2-item-list"></div>
+                </div>
+            </div>
+        </div>
     </div>
     <!-- ===== KẾT THÚC TAB LUYỆN KỸ NĂNG ===== -->
 
