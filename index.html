@@ -1671,9 +1671,11 @@
     <div id="tab-luyen-nghe" class="main-tab-content">
         <h2>🎧 Luyện Nghe</h2>
 
-        <!-- ===== Danh sách giai đoạn luyện nghe (hiện tại mới có Giai đoạn 1) ===== -->
+        <!-- ===== Danh sách giai đoạn luyện nghe ===== -->
         <div class="folder-grid" id="ln-stage-folder-grid">
             <div class="folder-card" id="ln-stage1-folder-card">🎯 Luyện nghe giai đoạn 1</div>
+            <div class="folder-card" id="ln-stage2-folder-card">🎧 Luyện nghe giai đoạn 2</div>
+            <div class="folder-card" id="ln-stage3-folder-card">📊 Luyện nghe giai đoạn 3</div>
         </div>
 
         <!-- ===== Panel Giai đoạn 1: chọn cấp độ (hiện tại mới có Nghe lv1) ===== -->
@@ -1900,6 +1902,210 @@
                 <div class="ln-result-box" id="ln3-result-box"></div>
             </div>
         </div>
+
+        <!-- =====================================================================
+             GIAI ĐOẠN 2 — Nghe podcast A1/A2 + hội thoại đời thường đa chủ đề
+             ===================================================================== -->
+        <div id="ln-stage2-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <button class="grammar-back-btn" id="ln-stage2-back-btn">← Quay lại</button>
+                    <h3 style="margin:0;">🎧 Luyện nghe giai đoạn 2</h3>
+                </div>
+                <button type="button" class="kid-btn" id="ln-stage2-manage-btn" style="display:none;">🛠️ Soạn bài nghe (<span id="ln-stage2-item-count">0</span>)</button>
+            </div>
+            <p class="kid-hint">Mục tiêu: nghe hiểu đoạn hội thoại/podcast ngắn (1–3 phút), tốc độ chậm–vừa, chủ đề quen thuộc (gia đình, mua sắm, thời tiết, sở thích, đi lại...). Mỗi bài có thể gồm trắc nghiệm, điền vào chỗ trống (số, tên riêng, địa điểm, thời gian) và tự luận ngắn. Mỗi lượt luyện tập chọn ngẫu nhiên vài bài trong kho.</p>
+            <div class="kid-topic-grid" id="ln-stage2-start-grid">
+                <div class="kid-topic-card" id="ln-stage2-start-card">
+                    <span class="kid-icon">▶️</span>
+                    <div class="kid-title">Bắt đầu luyện tập</div>
+                    <div class="kid-count" id="ln-stage2-start-count">Đang tải kho bài nghe...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Panel giảng viên soạn bài nghe Giai đoạn 2 ===== -->
+        <div id="ln-stage2-manage-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border);">
+                <button class="grammar-back-btn" id="ln-stage2-manage-back-btn">← Quay lại</button>
+                <h3 style="margin:0;">🛠️ Soạn bài nghe Giai đoạn 2</h3>
+            </div>
+
+            <div class="ln2-admin-box">
+                <div class="ln2-field">
+                    <label>Tiêu đề bài nghe</label>
+                    <input type="text" id="ln-stage2-f-title" class="news-edit-input" placeholder="VD: Đặt lịch hẹn đi khám răng">
+                </div>
+                <div class="ln2-field">
+                    <label>Chủ đề</label>
+                    <select id="ln-stage2-f-topic" class="news-edit-input">
+                        <option value="Đời sống hằng ngày">Đời sống hằng ngày</option>
+                        <option value="Du lịch">Du lịch</option>
+                        <option value="Sức khỏe">Sức khỏe</option>
+                        <option value="Công việc part-time">Công việc part-time</option>
+                        <option value="Trường học">Trường học</option>
+                    </select>
+                </div>
+                <div class="ln2-field">
+                    <label>Cấp độ</label>
+                    <select id="ln-stage2-f-level" class="news-edit-input">
+                        <option value="A1">A1</option>
+                        <option value="A2">A2</option>
+                    </select>
+                </div>
+                <div class="ln2-field">
+                    <label>Link file .mp3 (dán link, hoặc tải file lên ở nút bên dưới)</label>
+                    <input type="text" id="ln-stage2-f-audio-url" class="news-edit-input" placeholder="VD: https://.../podcast-1.mp3">
+                    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                        <input type="file" id="ln-stage2-f-audio-file" accept="audio/*">
+                        <span class="ln2-admin-status" id="ln-stage2-f-audio-status"></span>
+                    </div>
+                    <audio id="ln-stage2-f-audio-player" controls style="display:none; width:100%; margin-top:6px;"></audio>
+                </div>
+                <div class="ln2-field">
+                    <label>Kịch bản / lời thoại (tuỳ chọn — nếu chưa có file mp3, hệ thống sẽ đọc tạm nội dung này bằng giọng đọc máy; nội dung này cũng dùng làm gợi ý đối chiếu tốc ký)</label>
+                    <textarea id="ln-stage2-f-transcript" class="news-edit-input" rows="3" placeholder="Dán lời thoại/kịch bản bài nghe..."></textarea>
+                </div>
+
+                <div class="ln3-subq-list" id="ln-stage2-subq-list"></div>
+                <button type="button" class="ln2-mc-add-btn" id="ln-stage2-add-subq-btn">+ Thêm câu hỏi</button>
+
+                <div class="ln2-admin-actions">
+                    <span class="ln2-admin-status" id="ln-stage2-admin-status"></span>
+                    <button type="button" class="kid-btn" id="ln-stage2-admin-cancel-btn" style="display:none;">Hủy sửa</button>
+                    <button type="button" class="kid-btn kid-btn-primary" id="ln-stage2-admin-save-btn">➕ Thêm bài nghe</button>
+                </div>
+            </div>
+
+            <div class="ln2-item-list" id="ln-stage2-item-list">
+                <p class="kid-hint">Đang tải danh sách bài nghe...</p>
+            </div>
+        </div>
+
+        <!-- ===== Panel làm bài Giai đoạn 2 ===== -->
+        <div id="ln-stage2-quiz-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border);">
+                <button class="grammar-back-btn" id="ln-stage2-quiz-back-btn">← Quay lại</button>
+                <h3 style="margin:0;">🎧 Luyện nghe giai đoạn 2</h3>
+            </div>
+
+            <div id="ln-stage2-quiz-play-area">
+                <div class="thcs-translate-progress" id="ln-stage2-quiz-progress"></div>
+                <div class="thcs-translate-card ln-quiz-card">
+                    <div id="ln-stage2-quiz-body"></div>
+                    <div class="thcs-translate-actions" id="ln-stage2-quiz-controls"></div>
+                    <div class="thcs-translate-feedback" id="ln-stage2-quiz-feedback"></div>
+                </div>
+            </div>
+
+            <div id="ln-stage2-quiz-result-area" style="display:none;">
+                <div class="ln-result-box" id="ln-stage2-result-box"></div>
+            </div>
+        </div>
+
+        <!-- =====================================================================
+             GIAI ĐOẠN 3 — Nghe podcast B1/B2 + họp/thuyết trình công ty + tốc ký
+             ===================================================================== -->
+        <div id="ln-stage3-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <button class="grammar-back-btn" id="ln-stage3-back-btn">← Quay lại</button>
+                    <h3 style="margin:0;">📊 Luyện nghe giai đoạn 3</h3>
+                </div>
+                <button type="button" class="kid-btn" id="ln-stage3-manage-btn" style="display:none;">🛠️ Soạn bài nghe (<span id="ln-stage3-item-count">0</span>)</button>
+            </div>
+            <p class="kid-hint">Mục tiêu: nghe hiểu nội dung dài hơn, tốc độ tự nhiên, có từ vựng chuyên ngành/công sở nhẹ (podcast B1/B2, họp/thuyết trình công ty). Có thể bật ô ghi tốc ký tự do trong lúc nghe — không chấm điểm, chỉ để luyện phản xạ và tự đối chiếu với gợi ý sau khi làm xong.</p>
+            <div class="kid-topic-grid" id="ln-stage3-start-grid">
+                <div class="kid-topic-card" id="ln-stage3-start-card">
+                    <span class="kid-icon">▶️</span>
+                    <div class="kid-title">Bắt đầu luyện tập</div>
+                    <div class="kid-count" id="ln-stage3-start-count">Đang tải kho bài nghe...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Panel giảng viên soạn bài nghe Giai đoạn 3 ===== -->
+        <div id="ln-stage3-manage-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border);">
+                <button class="grammar-back-btn" id="ln-stage3-manage-back-btn">← Quay lại</button>
+                <h3 style="margin:0;">🛠️ Soạn bài nghe Giai đoạn 3</h3>
+            </div>
+
+            <div class="ln2-admin-box">
+                <div class="ln2-field">
+                    <label>Tiêu đề bài nghe</label>
+                    <input type="text" id="ln-stage3-f-title" class="news-edit-input" placeholder="VD: Họp báo cáo doanh số quý 3">
+                </div>
+                <div class="ln2-field">
+                    <label>Bối cảnh</label>
+                    <select id="ln-stage3-f-topic" class="news-edit-input">
+                        <option value="Podcast">Podcast</option>
+                        <option value="Họp công ty">Họp công ty</option>
+                        <option value="Thuyết trình">Thuyết trình</option>
+                    </select>
+                </div>
+                <div class="ln2-field">
+                    <label>Cấp độ</label>
+                    <select id="ln-stage3-f-level" class="news-edit-input">
+                        <option value="B1">B1</option>
+                        <option value="B2">B2</option>
+                    </select>
+                </div>
+                <div class="ln2-field">
+                    <label>Link file .mp3 (dán link, hoặc tải file lên ở nút bên dưới)</label>
+                    <input type="text" id="ln-stage3-f-audio-url" class="news-edit-input" placeholder="VD: https://.../meeting-1.mp3">
+                    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                        <input type="file" id="ln-stage3-f-audio-file" accept="audio/*">
+                        <span class="ln2-admin-status" id="ln-stage3-f-audio-status"></span>
+                    </div>
+                    <audio id="ln-stage3-f-audio-player" controls style="display:none; width:100%; margin-top:6px;"></audio>
+                </div>
+                <div class="ln2-field">
+                    <label>Kịch bản / lời thoại (tuỳ chọn — nếu chưa có file mp3, hệ thống sẽ đọc tạm nội dung này bằng giọng đọc máy; nội dung này cũng dùng làm gợi ý đối chiếu tốc ký)</label>
+                    <textarea id="ln-stage3-f-transcript" class="news-edit-input" rows="3" placeholder="Dán lời thoại/kịch bản bài nghe..."></textarea>
+                </div>
+                <div class="ln2-field">
+                    <label style="display:flex; align-items:center; gap:8px; font-weight:700;">
+                        <input type="checkbox" id="ln-stage3-f-shorthand-toggle" style="width:auto;">
+                        Bật ô ghi tốc ký tự do khi học viên làm bài này
+                    </label>
+                </div>
+
+                <div class="ln3-subq-list" id="ln-stage3-subq-list"></div>
+                <button type="button" class="ln2-mc-add-btn" id="ln-stage3-add-subq-btn">+ Thêm câu hỏi</button>
+
+                <div class="ln2-admin-actions">
+                    <span class="ln2-admin-status" id="ln-stage3-admin-status"></span>
+                    <button type="button" class="kid-btn" id="ln-stage3-admin-cancel-btn" style="display:none;">Hủy sửa</button>
+                    <button type="button" class="kid-btn kid-btn-primary" id="ln-stage3-admin-save-btn">➕ Thêm bài nghe</button>
+                </div>
+            </div>
+
+            <div class="ln2-item-list" id="ln-stage3-item-list">
+                <p class="kid-hint">Đang tải danh sách bài nghe...</p>
+            </div>
+        </div>
+
+        <!-- ===== Panel làm bài Giai đoạn 3 ===== -->
+        <div id="ln-stage3-quiz-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border);">
+                <button class="grammar-back-btn" id="ln-stage3-quiz-back-btn">← Quay lại</button>
+                <h3 style="margin:0;">📊 Luyện nghe giai đoạn 3</h3>
+            </div>
+
+            <div id="ln-stage3-quiz-play-area">
+                <div class="thcs-translate-progress" id="ln-stage3-quiz-progress"></div>
+                <div class="thcs-translate-card ln-quiz-card">
+                    <div id="ln-stage3-quiz-body"></div>
+                    <div class="thcs-translate-actions" id="ln-stage3-quiz-controls"></div>
+                    <div class="thcs-translate-feedback" id="ln-stage3-quiz-feedback"></div>
+                </div>
+            </div>
+
+            <div id="ln-stage3-quiz-result-area" style="display:none;">
+                <div class="ln-result-box" id="ln-stage3-result-box"></div>
+            </div>
+        </div>
     </div>
 
 
@@ -1910,7 +2116,152 @@
 
     <div id="tab-luyen-doc" class="main-tab-content">
         <h2>📖 Luyện Đọc</h2>
-        <p class="kid-hint">Nội dung luyện Đọc đang được xây dựng — sẽ sớm cập nhật tại đây.</p>
+        <p class="kid-hint">Lộ trình luyện Đọc gồm 3 giai đoạn: từ nắm chắc từ loại &amp; tin ngắn cơ bản, đến tóm tắt ý chính &amp; đoán nghĩa từ trong ngữ cảnh, và cuối cùng là tin nâng cao, báo/tài liệu chuyên ngành &amp; đọc hợp đồng.</p>
+
+        <!-- ===== Danh sách giai đoạn luyện đọc ===== -->
+        <div class="folder-grid" id="rd-stage-folder-grid">
+            <div class="folder-card" id="rd-stage1-folder-card">🔤 Luyện đọc giai đoạn 1</div>
+            <div class="folder-card" id="rd-stage2-folder-card">📝 Luyện đọc giai đoạn 2</div>
+            <div class="folder-card" id="rd-stage3-folder-card">💼 Luyện đọc giai đoạn 3</div>
+        </div>
+
+        <!-- ===== Panel Giai đoạn 1: Câu đơn + tin ngắn lv1 ===== -->
+        <div id="rd-stage1-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border);">
+                <button class="grammar-back-btn" data-rd-stage-back>← Quay lại</button>
+                <h3 style="margin:0;">🔤 Luyện đọc giai đoạn 1</h3>
+            </div>
+            <p class="kid-hint">Mục tiêu: nắm chắc từ loại (danh từ/động từ/tính từ/trạng từ) trong ngữ cảnh câu đơn, đọc hiểu tin tức đơn giản.</p>
+            <div class="kid-topic-grid" id="rd-stage1-level-grid">
+                <div class="kid-topic-card" id="rd-s1-wordtype-card">
+                    <span class="kid-icon">🧩</span>
+                    <div class="kid-title">Điền từ loại</div>
+                    <div class="kid-count">Câu có 1 chỗ trống — chọn đúng loại từ cần điền</div>
+                </div>
+                <div class="kid-topic-card" id="rd-s1-news-card">
+                    <span class="kid-icon">📰</span>
+                    <div class="kid-title">Tin ngắn lv1</div>
+                    <div class="kid-count">Đọc tin ngắn, trả lời câu hỏi chi tiết (Wh-questions)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Panel Giai đoạn 2: Tóm tắt + đoán nghĩa từ + tin ngắn lv2 ===== -->
+        <div id="rd-stage2-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border);">
+                <button class="grammar-back-btn" data-rd-stage-back>← Quay lại</button>
+                <h3 style="margin:0;">📝 Luyện đọc giai đoạn 2</h3>
+            </div>
+            <p class="kid-hint">Mục tiêu: đọc hiểu ý chính (main idea) và khả năng suy luận nghĩa từ vựng mới từ ngữ cảnh.</p>
+            <div class="kid-topic-grid" id="rd-stage2-level-grid">
+                <div class="kid-topic-card" id="rd-s2-summary-card">
+                    <span class="kid-icon">🧵</span>
+                    <div class="kid-title">Chọn câu tóm tắt</div>
+                    <div class="kid-count">Đọc đoạn văn → chọn 1 trong 4 câu tóm tắt phù hợp nhất</div>
+                </div>
+                <div class="kid-topic-card" id="rd-s2-guess-card">
+                    <span class="kid-icon">🔍</span>
+                    <div class="kid-title">Đoán nghĩa từ</div>
+                    <div class="kid-count">Đọc đoạn có từ in đậm → đoán nghĩa dựa vào ngữ cảnh</div>
+                </div>
+                <div class="kid-topic-card" id="rd-s2-news-card">
+                    <span class="kid-icon">📰</span>
+                    <div class="kid-title">Tin ngắn lv2</div>
+                    <div class="kid-count">Chủ đề đa dạng hơn, câu hỏi True/False/Not Given cơ bản</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Panel Giai đoạn 3: Tin ngắn lv3 + báo dài/tài liệu chuyên ngành/hợp đồng ===== -->
+        <div id="rd-stage3-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border);">
+                <button class="grammar-back-btn" data-rd-stage-back>← Quay lại</button>
+                <h3 style="margin:0;">💼 Luyện đọc giai đoạn 3</h3>
+            </div>
+            <p class="kid-hint">Mục tiêu: đọc học thuật/chuyên ngành, xử lý văn bản dài, câu phức, thuật ngữ chuyên môn — sát với IELTS Reading Passage 3 hoặc đọc tài liệu công việc thật.</p>
+            <div class="kid-topic-grid" id="rd-stage3-level-grid">
+                <div class="kid-topic-card" id="rd-s3-news-card">
+                    <span class="kid-icon">📰</span>
+                    <div class="kid-title">Tin ngắn lv3</div>
+                    <div class="kid-count">Trắc nghiệm nâng cao — suy luận, tác giả ngụ ý gì</div>
+                </div>
+                <div class="kid-topic-card" id="rd-s3-article-card">
+                    <span class="kid-icon">📚</span>
+                    <div class="kid-title">Báo/tài liệu chuyên ngành</div>
+                    <div class="kid-count">Đọc báo dài theo lĩnh vực học viên chọn (IT, tài chính, y tế...)</div>
+                </div>
+                <div class="kid-topic-card" id="rd-s3-contract-card">
+                    <span class="kid-icon">📄</span>
+                    <div class="kid-title">Đọc hợp đồng</div>
+                    <div class="kid-count">Tìm điều khoản, xác định nghĩa vụ của bên nào — thực tế cho công việc</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Các panel dạng bài — khung điều hướng, logic luyện tập từng dạng sẽ bổ sung sau ===== -->
+        <div id="rd-s1-wordtype-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border);">
+                <button class="grammar-back-btn" data-rd-level-back>← Quay lại</button>
+                <h3 style="margin:0;">🧩 Điền từ loại</h3>
+            </div>
+            <p class="kid-hint">Câu có 1 chỗ trống — học viên chọn đúng loại từ cần điền (không chỉ đúng nghĩa mà đúng cả từ loại: danh từ / động từ / tính từ / trạng từ). Nội dung luyện tập đang được xây dựng — sẽ sớm cập nhật tại đây.</p>
+        </div>
+
+        <div id="rd-s1-news-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border);">
+                <button class="grammar-back-btn" data-rd-level-back>← Quay lại</button>
+                <h3 style="margin:0;">📰 Tin ngắn lv1</h3>
+            </div>
+            <p class="kid-hint">Đọc tin ngắn lv1, trả lời câu hỏi chi tiết đơn giản (Wh-questions). Nội dung luyện tập đang được xây dựng — sẽ sớm cập nhật tại đây.</p>
+        </div>
+
+        <div id="rd-s2-summary-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border);">
+                <button class="grammar-back-btn" data-rd-level-back>← Quay lại</button>
+                <h3 style="margin:0;">🧵 Chọn câu tóm tắt</h3>
+            </div>
+            <p class="kid-hint">Đọc đoạn văn rồi chọn 1 trong 4 câu tóm tắt phù hợp nhất (gần giống dạng "Matching sentence endings" trong IELTS). Nội dung luyện tập đang được xây dựng — sẽ sớm cập nhật tại đây.</p>
+        </div>
+
+        <div id="rd-s2-guess-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border);">
+                <button class="grammar-back-btn" data-rd-level-back>← Quay lại</button>
+                <h3 style="margin:0;">🔍 Đoán nghĩa từ</h3>
+            </div>
+            <p class="kid-hint">Đọc đoạn văn có từ in đậm, đoán nghĩa dựa vào ngữ cảnh (trắc nghiệm hoặc điền từ đồng nghĩa). Nội dung luyện tập đang được xây dựng — sẽ sớm cập nhật tại đây.</p>
+        </div>
+
+        <div id="rd-s2-news-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border);">
+                <button class="grammar-back-btn" data-rd-level-back>← Quay lại</button>
+                <h3 style="margin:0;">📰 Tin ngắn lv2</h3>
+            </div>
+            <p class="kid-hint">Chủ đề đa dạng hơn, câu hỏi bắt đầu có suy luận nhẹ (True/False/Not Given cơ bản). Nội dung luyện tập đang được xây dựng — sẽ sớm cập nhật tại đây.</p>
+        </div>
+
+        <div id="rd-s3-news-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border);">
+                <button class="grammar-back-btn" data-rd-level-back>← Quay lại</button>
+                <h3 style="margin:0;">📰 Tin ngắn lv3</h3>
+            </div>
+            <p class="kid-hint">Tin ngắn lv3 kèm trắc nghiệm nâng cao (inference, tác giả ngụ ý gì). Nội dung luyện tập đang được xây dựng — sẽ sớm cập nhật tại đây.</p>
+        </div>
+
+        <div id="rd-s3-article-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border);">
+                <button class="grammar-back-btn" data-rd-level-back>← Quay lại</button>
+                <h3 style="margin:0;">📚 Báo/tài liệu chuyên ngành</h3>
+            </div>
+            <p class="kid-hint">Đọc báo dài/tài liệu chuyên ngành theo lĩnh vực học viên chọn (IT, tài chính, y tế...). Nội dung luyện tập đang được xây dựng — sẽ sớm cập nhật tại đây.</p>
+        </div>
+
+        <div id="rd-s3-contract-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border);">
+                <button class="grammar-back-btn" data-rd-level-back>← Quay lại</button>
+                <h3 style="margin:0;">📄 Đọc hợp đồng</h3>
+            </div>
+            <p class="kid-hint">Dạng bài "tìm điều khoản", "xác định nghĩa vụ của bên nào" — thực tế cho công việc, không chỉ để thi. Nội dung luyện tập đang được xây dựng — sẽ sớm cập nhật tại đây.</p>
+        </div>
     </div>
 
     <div id="tab-luyen-viet" class="main-tab-content">

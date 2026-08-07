@@ -14941,6 +14941,85 @@ function toggleCompletion(symbolElement) {
         rows.forEach((r, i) => { if (r.querySelector('.ctest-option-correct-radio').checked) correct = i; });
         return { options, correct };
     }
+
+    // ---- Khối: Trắc nghiệm NHIỀU đáp án (ô vuông ✔️, chọn từ 2 đáp án đúng
+    // trở lên) — dùng cho dạng "Choose TWO/THREE letters" của IELTS Reading.
+    // Khác MCQ thường (1 đáp án, ô tròn): ở đây giảng viên tick ✔️ vào NHIỀU
+    // ô đúng, số đáp án đúng đã tick = số câu hỏi (số thứ tự) mà khối này
+    // chiếm, học viên phải tick đúng số lượng đó khi làm bài.
+    function iltOptionsEditorMulti(options, correctIndices) {
+        const box = document.createElement('div');
+        box.className = 'ctest-options-editor';
+        const opts = (options && options.length ? options : ['', '', '']);
+        const correctSet = new Set(correctIndices || []);
+        opts.forEach((text, i) => box.appendChild(optionRow(text, correctSet.has(i))));
+        const addBtn = document.createElement('button');
+        addBtn.type = 'button';
+        addBtn.className = 'ctest-add-option-btn';
+        addBtn.textContent = '+ Thêm đáp án';
+        addBtn.addEventListener('click', () => {
+            box.insertBefore(optionRow('', false), addBtn);
+            box.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
+        });
+        box.appendChild(addBtn);
+        return box;
+
+        function optionRow(text, isCorrect) {
+            const row = document.createElement('div');
+            row.className = 'ctest-option-row';
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'ctest-option-correct-checkbox';
+            checkbox.checked = !!isCorrect;
+            checkbox.addEventListener('change', () => box.dispatchEvent(new Event('ctest-changed', { bubbles: true })));
+            const richWrap = iltCreateRichEditor(text, 'Nhập đáp án...', '', true);
+            const rm = document.createElement('button');
+            rm.type = 'button';
+            rm.className = 'ctest-row-remove-btn';
+            rm.textContent = '✕';
+            rm.addEventListener('click', () => {
+                if (box.querySelectorAll('.ctest-option-row').length <= 3) { alert('Cần ít nhất 3 đáp án (để có phương án nhiễu).'); return; }
+                row.remove();
+                box.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
+            });
+            row.appendChild(checkbox); row.appendChild(richWrap); row.appendChild(rm);
+            return row;
+        }
+    }
+    function iltCollectOptionsMulti(box) {
+        const rows = Array.from(box.querySelectorAll(':scope > .ctest-option-row'));
+        const options = rows.map(r => iltRichHtml(r.querySelector('.ctest-rich-wrap')));
+        const correct = [];
+        rows.forEach((r, i) => { if (r.querySelector('.ctest-option-correct-checkbox').checked) correct.push(i); });
+        return { options, correct };
+    }
+    function buildMcqMultiBlock(data) {
+        const el = iltBlockShell('mcq_multi', '☑️ Trắc nghiệm nhiều đáp án');
+        const body = document.createElement('div');
+        const promptWrap = iltCreateRichEditor(data.prompt_html || '', 'Nhập câu hỏi (VD: Theo bài đọc, HAI ý nào sau đây đúng?)...', '');
+        promptWrap.classList.add('irt-mcq-prompt-editor');
+        body.appendChild(promptWrap);
+        body.appendChild(iltImageField(data.image_url));
+
+        const hint = document.createElement('div');
+        hint.className = 'irt-block-count-hint';
+        hint.textContent = '✔️ Tick vào ô trước các đáp án ĐÚNG (từ 2 đáp án trở lên) — số ô đã tick chính là số câu hỏi mà khối này chiếm, học viên sẽ phải chọn đúng bằng số đó khi làm bài.';
+        body.appendChild(hint);
+
+        const optionsBox = iltOptionsEditorMulti(data.options, data.correct);
+        body.appendChild(optionsBox);
+
+        return wireBlockChrome(el, body);
+    }
+    function collectMcqMultiBlock(el) {
+        const { options, correct } = iltCollectOptionsMulti(el.querySelector('.irt-block-body > .ctest-options-editor'));
+        return {
+            id: el.dataset.blockId, type: 'mcq_multi',
+            prompt_html: iltRichHtml(el.querySelector('.irt-mcq-prompt-editor')),
+            image_url: iltImageUrl(el.querySelector('.irt-image-field')),
+            options, correct
+        };
+    }
     function buildMcqBlock(data) {
         const el = iltBlockShell('mcq', '✅ Câu trắc nghiệm');
         const body = document.createElement('div');
@@ -15093,6 +15172,7 @@ function toggleCompletion(symbolElement) {
         table:     buildTableBlock,
         image:     buildImageBlock,
         mcq:       buildMcqBlock,
+        mcq_multi: buildMcqMultiBlock,
         matching:  buildMatchingBlock
     };
     const ILT_BLOCK_COLLECTORS = {
@@ -15101,6 +15181,7 @@ function toggleCompletion(symbolElement) {
         table:     collectTableBlock,
         image:     collectImageBlock,
         mcq:       collectMcqBlock,
+        mcq_multi: collectMcqMultiBlock,
         matching:  collectMatchingBlock
     };
     function buildBlock(type, data) {
@@ -15145,6 +15226,7 @@ function toggleCompletion(symbolElement) {
             '<button type="button" class="ctest-type-btn" data-type="table">📊 Bảng</button>' +
             '<button type="button" class="ctest-type-btn" data-type="image">🖼️ Hình ảnh</button>' +
             '<button type="button" class="ctest-type-btn" data-type="mcq">✅ Trắc nghiệm</button>' +
+            '<button type="button" class="ctest-type-btn" data-type="mcq_multi">☑️ Trắc nghiệm nhiều đáp án</button>' +
             '<button type="button" class="ctest-type-btn" data-type="matching">🔗 Nối/Ghép (Matching)</button>';
         addBar.addEventListener('click', (e) => {
             const btn = e.target.closest('.ctest-type-btn');
@@ -15249,6 +15331,7 @@ function toggleCompletion(symbolElement) {
     function countBlockQuestionsLive(el) {
         const type = el.dataset.blockType;
         if (type === 'mcq') return 1;
+        if (type === 'mcq_multi') return el.querySelectorAll('.ctest-option-correct-checkbox:checked').length;
         if (type === 'matching') return el.querySelectorAll('.irt-matching-question-row').length;
         if (type === 'paragraph' || type === 'framed') return iltCountBlanksInHtml(iltRichHtml(el.querySelector('.irt-paragraph-editor')));
         if (type === 'table') {
@@ -15298,6 +15381,7 @@ function toggleCompletion(symbolElement) {
         return (test.parts || []).reduce((sum, p) => sum + (p.sections || []).reduce((s2, sec) =>
             s2 + (sec.blocks || []).reduce((s3, b) => {
                 if (b.type === 'mcq') return s3 + 1;
+                if (b.type === 'mcq_multi') return s3 + (b.correct || []).length;
                 if (b.type === 'matching') return s3 + (b.questions || []).length;
                 if (b.type === 'paragraph' || b.type === 'framed') return s3 + iltParseBlanks(b.html).blanks.length;
                 if (b.type === 'table') return s3 + (b.rows || []).reduce((s4, row) => s4 + row.reduce((s5, cell) => s5 + iltParseBlanks(cell && typeof cell === 'object' ? cell.html : cell).blanks.length, 0), 0);
@@ -15540,6 +15624,116 @@ function toggleCompletion(symbolElement) {
         if (mode === 'result') wrap.dataset.isCorrect = (currentAnswers[keyBase] === block.correct) ? '1' : '0';
         return wrap;
     }
+
+    // ---- Trắc nghiệm NHIỀU đáp án (ô vuông ✔️) — "Choose TWO/THREE letters".
+    // Một khối này chiếm NHIỀU số thứ tự câu hỏi cùng lúc (bằng số đáp án
+    // đúng đã cấu hình), nên mỗi số thứ tự có 1 "mốc đánh số" nhỏ riêng
+    // (irt-mcq-multi-num) — giống hệt cách mỗi chỗ trống điền từ có 1 mốc
+    // riêng — dù về mặt hiển thị chỉ có 1 khối ô vuông dùng chung.
+    function renderMcqMultiBlockView(block, pIdx, secId, mode) {
+        const wrap = document.createElement('div');
+        wrap.className = 'irt-view-mcq irt-view-mcq-multi';
+        wrap.dataset.hlBlock = pIdx + '_' + secId + '_' + block.id;
+        const keyBase = pIdx + ':' + secId + ':' + block.id;
+        const need = (block.correct && block.correct.length) ? block.correct.length : 2;
+
+        const head = document.createElement('div');
+        head.className = 'irt-mcq-head';
+        const badgeGroup = document.createElement('span');
+        badgeGroup.className = 'irt-mcq-multi-badges';
+        for (let i = 0; i < need; i++) {
+            if (i > 0) badgeGroup.appendChild(document.createTextNode(', '));
+            const numEl = document.createElement('span');
+            numEl.className = 'irt-numbered irt-mcq-multi-num';
+            numEl.dataset.groupKey = keyBase;
+            numEl.dataset.slotIdx = String(i);
+            const badge = document.createElement('span');
+            badge.className = 'irt-num-badge';
+            numEl.appendChild(badge);
+            badgeGroup.appendChild(numEl);
+        }
+        head.appendChild(badgeGroup);
+        head.appendChild(document.createTextNode('.\u00A0'));
+        const promptEl = document.createElement('span');
+        promptEl.className = 'irt-mcq-prompt';
+        promptEl.innerHTML = block.prompt_html || '';
+        head.appendChild(promptEl);
+        wrap.appendChild(head);
+
+        const hint = document.createElement('div');
+        hint.className = 'irt-mcq-multi-hint';
+        hint.textContent = '☑️ Chọn đúng ' + need + ' đáp án.';
+        wrap.appendChild(hint);
+
+        if (block.image_url) {
+            const img = document.createElement('img');
+            img.src = block.image_url;
+            img.className = 'irt-view-image irt-mcq-image';
+            wrap.appendChild(img);
+        }
+
+        // Đáp án học viên đã chọn được lưu chung 1 mảng chỉ số (index) cho cả khối.
+        let selected = Array.isArray(currentAnswers[keyBase]) ? currentAnswers[keyBase] : [];
+        currentAnswers[keyBase] = selected;
+
+        function refreshAnsweredUI() {
+            wrap.querySelectorAll('.irt-mcq-multi-num').forEach(numEl => {
+                const qn = numEl.dataset.qnum;
+                if (qn && answerSheetGrid) {
+                    const btn = answerSheetGrid.querySelector('.irt-answer-sheet-item[data-qnum="' + qn + '"]');
+                    if (btn) btn.classList.toggle('is-answered', iltIsQuestionAnswered(Number(qn)));
+                }
+            });
+            iltScheduleProgressSave();
+        }
+
+        const optWrap = document.createElement('div');
+        optWrap.className = 'irt-mcq-options';
+        (block.options || []).forEach((opt, i) => {
+            const label = document.createElement('label');
+            label.className = 'irt-mcq-option';
+            const isCorrectOpt = (block.correct || []).includes(i);
+            if (mode === 'result') {
+                if (isCorrectOpt) label.classList.add('irt-ok');
+                else if (selected.includes(i)) label.classList.add('irt-wrong');
+            }
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.disabled = (mode !== 'take');
+            checkbox.checked = selected.includes(i);
+            checkbox.addEventListener('change', () => {
+                if (checkbox.checked) {
+                    if (selected.length >= need) { checkbox.checked = false; return; } // đã đủ số đáp án cần chọn
+                    selected.push(i);
+                } else {
+                    const idx = selected.indexOf(i);
+                    if (idx !== -1) selected.splice(idx, 1);
+                }
+                refreshAnsweredUI();
+            });
+            label.appendChild(checkbox);
+            const letterEl = document.createElement('span');
+            letterEl.className = 'irt-mcq-option-letter';
+            letterEl.textContent = String.fromCharCode(65 + i) + '. ';
+            label.appendChild(letterEl);
+            const optContent = document.createElement('span');
+            optContent.innerHTML = opt;
+            label.appendChild(optContent);
+            optWrap.appendChild(label);
+        });
+        wrap.appendChild(optWrap);
+
+        if (mode === 'result') {
+            // Chấm điểm từng phần: mỗi đáp án đúng học viên đã chọn = 1 số thứ tự đúng,
+            // không phụ thuộc thứ tự chọn — giống cách chấm thật của IELTS Reading.
+            const correctSelectedCount = selected.filter(i => (block.correct || []).includes(i)).length;
+            wrap.querySelectorAll('.irt-mcq-multi-num').forEach((numEl, idx) => {
+                numEl.dataset.isCorrect = (idx < correctSelectedCount) ? '1' : '0';
+            });
+        }
+        return wrap;
+    }
+
     function renderMatchingBlockView(block, pIdx, secId, mode) {
         const wrap = document.createElement('div');
         wrap.className = 'irt-view-matching';
@@ -15606,6 +15800,7 @@ function toggleCompletion(symbolElement) {
         if (block.type === 'table') return renderTableBlockView(block, pIdx, secId, mode);
         if (block.type === 'image') return renderImageBlockView(block);
         if (block.type === 'mcq') return renderMcqBlockView(block, pIdx, secId, mode);
+        if (block.type === 'mcq_multi') return renderMcqMultiBlockView(block, pIdx, secId, mode);
         if (block.type === 'matching') return renderMatchingBlockView(block, pIdx, secId, mode);
         return document.createElement('div');
     }
@@ -15622,7 +15817,16 @@ function toggleCompletion(symbolElement) {
             h.textContent = PART_LABELS[pIdx] || ('PASSAGE ' + (pIdx + 1));
             partEl.appendChild(h);
 
-            // Đoạn văn đọc (passage) + hình minh hoạ (nếu có) — hiện phía trên câu hỏi.
+            // [MỚI] Bố cục chia đôi khi làm bài: tablet trở lên = passage bên trái /
+            // câu hỏi bên phải (cuộn riêng từng bên); dưới tablet = passage trên /
+            // câu hỏi dưới (xem @media trong .irt-render-split ở CSS).
+            const splitEl = document.createElement('div');
+            splitEl.className = 'irt-render-split';
+
+            const passageCol = document.createElement('div');
+            passageCol.className = 'irt-render-passage-col';
+
+            // Đoạn văn đọc (passage) + hình minh hoạ (nếu có).
             if (part.passage_html || part.passage_image_url) {
                 const passageEl = document.createElement('div');
                 passageEl.className = 'irt-render-passage';
@@ -15639,9 +15843,12 @@ function toggleCompletion(symbolElement) {
                     textEl.innerHTML = part.passage_html;
                     passageEl.appendChild(textEl);
                 }
-                partEl.appendChild(passageEl);
+                passageCol.appendChild(passageEl);
             }
+            splitEl.appendChild(passageCol);
 
+            const questionsCol = document.createElement('div');
+            questionsCol.className = 'irt-render-questions-col';
             (part.sections || []).forEach(sec => {
                 const secEl = document.createElement('div');
                 secEl.className = 'irt-render-section';
@@ -15658,9 +15865,11 @@ function toggleCompletion(symbolElement) {
                     secEl.appendChild(inst);
                 }
                 (sec.blocks || []).forEach(block => { secEl.appendChild(renderBlockView(block, pIdx, sec.id, mode)); });
-                partEl.appendChild(secEl);
+                questionsCol.appendChild(secEl);
             });
+            splitEl.appendChild(questionsCol);
 
+            partEl.appendChild(splitEl);
             root.appendChild(partEl);
         });
 
@@ -15904,6 +16113,10 @@ function toggleCompletion(symbolElement) {
         if (elm.classList.contains('irt-view-matching-question')) {
             const select = elm.querySelector('select');
             return !!(select && select.value);
+        }
+        if (elm.classList.contains('irt-mcq-multi-num')) {
+            const selected = currentAnswers[elm.dataset.groupKey];
+            return Array.isArray(selected) && selected.length > Number(elm.dataset.slotIdx || 0);
         }
         return false;
     }
@@ -19298,6 +19511,771 @@ function toggleCompletion(symbolElement) {
     });
 })();
 // ===== KẾT THÚC: TAB "LUYỆN KỸ NĂNG" > "🎧 NGHE" — NGHE LV3 =====
+(() => {
+    function initListeningStageModule(cfg) {
+        const card = document.getElementById(cfg.prefix + '-folder-card');
+        if (!card) return;
+        const lnStageFolderGrid = document.getElementById('ln-stage-folder-grid');
+        const id = (name) => document.getElementById(cfg.prefix + '-' + name);
+
+        const panel        = id('panel');
+        const backBtn       = id('back-btn');
+        const manageBtn     = id('manage-btn');
+        const itemCountEl   = id('item-count');
+        const startCard     = id('start-card');
+        const startCountEl  = id('start-count');
+
+        const managePanel      = id('manage-panel');
+        const manageBackBtn    = id('manage-back-btn');
+        const fTitle            = id('f-title');
+        const fTopic            = id('f-topic');
+        const fLevel             = id('f-level');
+        const fAudioUrl          = id('f-audio-url');
+        const fAudioFile         = id('f-audio-file');
+        const fAudioStatus       = id('f-audio-status');
+        const fAudioPlayer       = id('f-audio-player');
+        const fTranscript        = id('f-transcript');
+        const fShorthandToggle   = id('f-shorthand-toggle'); // null nếu giai đoạn không hỗ trợ tốc ký
+        const subqListEl         = id('subq-list');
+        const addSubqBtn         = id('add-subq-btn');
+        const adminStatus        = id('admin-status');
+        const adminSaveBtn       = id('admin-save-btn');
+        const adminCancelBtn     = id('admin-cancel-btn');
+        const itemListEl         = id('item-list');
+
+        const quizPanel     = id('quiz-panel');
+        const quizBackBtn   = id('quiz-back-btn');
+        const quizPlayArea  = id('quiz-play-area');
+        const quizProgress  = id('quiz-progress');
+        const quizBody      = id('quiz-body');
+        const quizControls  = id('quiz-controls');
+        const quizFeedback  = id('quiz-feedback');
+        const resultArea    = id('quiz-result-area');
+        const resultBox     = id('result-box');
+
+        const TABLE = 'listening_stage_items';
+        const MIN_ITEMS = cfg.minItems;
+        const TOTAL_ITEMS = cfg.totalItems;
+        const SUBQ_MIN = 1, SUBQ_MAX = 8, MC_MIN = 2, MC_MAX = 6;
+
+        // ---------- Tiện ích ----------
+        function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+        function normStrict(s) { return String(s || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
+        function normLoose(s) { return String(s || '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim(); }
+        function shuffle(arr) { const c = arr.slice(); for (let i = c.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [c[i], c[j]] = [c[j], c[i]]; } return c; }
+        function essayIsCorrect(sample, userText) {
+            const key = normLoose(sample); const u = normLoose(userText);
+            if (!key) return !!u;
+            if (!u) return false;
+            const words = key.split(' ').filter(w => w.length >= 3);
+            if (!words.length) return u.includes(key);
+            const matched = words.filter(w => u.includes(w)).length;
+            return (matched / words.length) >= 0.6;
+        }
+        function fillBlankIsCorrect(accepted, given) {
+            const list = String(accepted || '').split('|').map(s => s.trim()).filter(Boolean);
+            if (!list.length) return false;
+            return list.some(a => normStrict(a) === normStrict(given));
+        }
+
+        // ---- Âm thanh phản hồi đúng/sai (tự tạo bằng WebAudio, không cần file mp3 riêng) ----
+        function playTone(freq, delay, dur, type, vol) {
+            try {
+                const AC = window.AudioContext || window.webkitAudioContext;
+                if (!AC) return;
+                const ctx = playTone._ctx || (playTone._ctx = new AC());
+                const osc = ctx.createOscillator(); const gain = ctx.createGain();
+                osc.type = type || 'sine'; osc.frequency.value = freq;
+                osc.connect(gain); gain.connect(ctx.destination);
+                const t0 = ctx.currentTime + (delay || 0);
+                gain.gain.setValueAtTime(0, t0);
+                gain.gain.linearRampToValueAtTime(vol || 0.2, t0 + 0.02);
+                gain.gain.linearRampToValueAtTime(0, t0 + (dur || 0.2));
+                osc.start(t0); osc.stop(t0 + (dur || 0.2) + 0.02);
+            } catch (e) { /* bỏ qua nếu trình duyệt không hỗ trợ WebAudio */ }
+        }
+        function playCorrectSound() { playTone(523.25, 0, 0.16, 'sine', 0.22); playTone(659.25, 0.12, 0.16, 'sine', 0.22); playTone(783.99, 0.24, 0.22, 'sine', 0.22); }
+        function playWrongSound() { playTone(180, 0, 0.18, 'square', 0.16); playTone(140, 0.15, 0.22, 'square', 0.16); }
+
+        // ---------- Phát bài nghe: ưu tiên file mp3, nếu không có thì đọc tạm transcript bằng giọng máy ----------
+        let audioEl = null;
+        function getAudioEl() { if (!audioEl) { audioEl = new Audio(); audioEl.preload = 'auto'; } return audioEl; }
+        function stopAudio() { if (audioEl) audioEl.pause(); if ('speechSynthesis' in window) window.speechSynthesis.cancel(); }
+        function playItemAudio(item) {
+            stopAudio();
+            const url = (item.audio_url || '').trim();
+            if (url) {
+                const a = getAudioEl();
+                if (a.src !== url) a.src = url;
+                a.currentTime = 0;
+                a.play().catch(err => console.error(`Lỗi phát audio Giai đoạn ${cfg.stage}:`, err.message));
+            } else if (item.transcript) {
+                phoneticsSpeakWebSpeechFallback(item.transcript, 0.9, null);
+            }
+        }
+        document.querySelectorAll('.main-tab-btn').forEach(btn => btn.addEventListener('click', stopAudio));
+        document.addEventListener('visibilitychange', () => { if (document.hidden) stopAudio(); });
+        window.addEventListener('blur', stopAudio);
+
+        // ---------- Tải / lưu / xoá ngân hàng bài nghe trên Supabase ----------
+        let items = [];
+        let itemsLoaded = false;
+        async function loadItems(force) {
+            if (itemsLoaded && !force) return items;
+            try {
+                const { data, error } = await sb.from(TABLE).select('*').eq('stage', cfg.stage).order('created_at', { ascending: false });
+                if (error) throw error;
+                items = data || [];
+                itemsLoaded = true;
+            } catch (err) {
+                console.error(`Lỗi khi tải kho bài nghe Giai đoạn ${cfg.stage}:`, err.message);
+                items = [];
+            }
+            return items;
+        }
+        async function createItemDB(payload) {
+            const insertPayload = Object.assign({}, payload, { stage: cfg.stage, created_by: currentEmail });
+            const { data, error } = await sb.from(TABLE).insert(insertPayload).select().single();
+            if (error) throw error;
+            return data;
+        }
+        async function updateItemDB(itemId, payload) {
+            const updatePayload = Object.assign({}, payload, { updated_at: new Date().toISOString(), updated_by: currentEmail });
+            const { data, error } = await sb.from(TABLE).update(updatePayload).eq('id', itemId).select().single();
+            if (error) throw error;
+            return data;
+        }
+        async function deleteItemDB(itemId) {
+            const { error } = await sb.from(TABLE).delete().eq('id', itemId);
+            if (error) throw error;
+        }
+
+        // ---------- Tải file mp3 lên Supabase Storage (thay thế cho việc dán link) ----------
+        if (fAudioFile) {
+            fAudioFile.addEventListener('change', async () => {
+                const file = fAudioFile.files && fAudioFile.files[0];
+                if (!file) return;
+                if (file.size > 60 * 1024 * 1024) { alert('File âm thanh tối đa 60MB.'); fAudioFile.value = ''; return; }
+                fAudioStatus.textContent = 'Đang tải file lên, vui lòng chờ...';
+                try {
+                    const path = (currentEmail || 'gv').split('@')[0] + '/' + Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+                    const { error: upErr } = await sb.storage.from(LN_STAGE_AUDIO_BUCKET).upload(path, file, { cacheControl: '3600', upsert: false });
+                    if (upErr) throw upErr;
+                    const ref = SUPABASE_URL.split('://')[1].split('.')[0];
+                    const url = `https://${ref}.supabase.co/storage/v1/object/public/${LN_STAGE_AUDIO_BUCKET}/${path}`;
+                    fAudioUrl.value = url;
+                    fAudioPlayer.src = url; fAudioPlayer.style.display = 'block';
+                    fAudioStatus.textContent = '✅ Đã tải file lên.';
+                } catch (err) {
+                    fAudioStatus.textContent = '❌ Tải file thất bại: ' + err.message;
+                }
+                fAudioFile.value = '';
+            });
+        }
+        if (fAudioUrl) {
+            fAudioUrl.addEventListener('input', () => {
+                const url = fAudioUrl.value.trim();
+                if (url) { fAudioPlayer.src = url; fAudioPlayer.style.display = 'block'; }
+                else { fAudioPlayer.style.display = 'none'; }
+                fAudioStatus.textContent = '';
+            });
+        }
+
+        // ---------- Điều hướng: Danh sách giai đoạn -> Panel giai đoạn này ----------
+        card.addEventListener('click', () => {
+            if (lnStageFolderGrid) lnStageFolderGrid.style.display = 'none';
+            panel.style.display = 'block';
+            refreshIntro();
+        });
+        backBtn.addEventListener('click', () => {
+            panel.style.display = 'none';
+            if (lnStageFolderGrid) lnStageFolderGrid.style.display = '';
+        });
+
+        async function refreshIntro() {
+            manageBtn.style.display = isTeacher ? 'inline-block' : 'none';
+            await loadItems();
+            if (itemCountEl) itemCountEl.textContent = String(items.length);
+            if (startCountEl) {
+                startCountEl.textContent = items.length >= MIN_ITEMS
+                    ? `Ngẫu nhiên ${Math.min(TOTAL_ITEMS, items.length)} / ${items.length} bài đã soạn`
+                    : `Chưa đủ bài nghe (${items.length}/${MIN_ITEMS} tối thiểu) — hãy quay lại sau`;
+            }
+        }
+        startCard.addEventListener('click', startQuiz);
+
+        // ---------- Khu vực giảng viên soạn bài ----------
+        let editingId = null;
+        let draftIdSeq = 0;
+        let draft = [];
+
+        function newSubQuestion(type) {
+            draftIdSeq++;
+            return { localId: 'q' + draftIdSeq, type: type || 'mcq', prompt: '', options: ['', ''], answerIndex: 0, answer: '' };
+        }
+        function readDraftFromDom() {
+            subqListEl.querySelectorAll('.stg-subq-card').forEach(cardEl => {
+                const q = draft.find(x => x.localId === cardEl.dataset.localId);
+                if (!q) return;
+                const promptEl = cardEl.querySelector('.stg-subq-prompt');
+                if (promptEl) q.prompt = promptEl.value;
+                if (q.type === 'mcq') {
+                    const optionInputs = Array.from(cardEl.querySelectorAll('.stg-mc-opt-text'));
+                    if (optionInputs.length) q.options = optionInputs.map(inp => inp.value);
+                    const checked = cardEl.querySelector('input[type="radio"]:checked');
+                    if (checked) q.answerIndex = parseInt(checked.value, 10);
+                } else {
+                    const ansEl = cardEl.querySelector('.stg-subq-answer');
+                    if (ansEl) q.answer = ansEl.value;
+                }
+            });
+        }
+        function buildMcOptionRowsHtml(q) {
+            return q.options.map((val, i) => `
+                <div class="news-quiz-edit-option-row" data-idx="${i}">
+                    <input type="radio" name="stg-answer-${q.localId}" value="${i}" ${i === q.answerIndex ? 'checked' : ''}>
+                    <input type="text" class="news-edit-input stg-mc-opt-text" placeholder="Đáp án ${String.fromCharCode(65 + i)}..." value="${esc(val)}">
+                    ${q.options.length > MC_MIN ? `<button type="button" class="ln3-subq-remove-btn stg-mc-opt-remove-btn" data-remove-idx="${i}" title="Xoá đáp án này">✕</button>` : ''}
+                </div>
+            `).join('');
+        }
+        function buildSubqCard(q, idx) {
+            const cardEl = document.createElement('div');
+            cardEl.className = 'ln3-subq-card stg-subq-card';
+            cardEl.dataset.localId = q.localId;
+            const head = document.createElement('div');
+            head.className = 'ln3-subq-head';
+            head.innerHTML = `
+                <span class="ln3-subq-num">Câu ${idx + 1}</span>
+                <select class="stg-subq-type-select">
+                    <option value="mcq" ${q.type === 'mcq' ? 'selected' : ''}>☑️ Trắc nghiệm</option>
+                    <option value="fill_blank" ${q.type === 'fill_blank' ? 'selected' : ''}>📝 Điền từ</option>
+                    <option value="essay" ${q.type === 'essay' ? 'selected' : ''}>✍️ Tự luận</option>
+                </select>
+                ${draft.length > SUBQ_MIN ? `<button type="button" class="ln3-subq-remove-btn stg-subq-remove-whole-btn" title="Xoá câu hỏi này">🗑️</button>` : ''}
+            `;
+            cardEl.appendChild(head);
+
+            const promptEl = document.createElement('textarea');
+            promptEl.className = 'news-edit-input stg-subq-prompt';
+            promptEl.rows = 2;
+            promptEl.placeholder = q.type === 'fill_blank' ? 'Nhập câu hỏi, dùng ___ để đánh dấu chỗ trống. VD: The meeting starts at ___.' : 'Nhập câu hỏi...';
+            promptEl.value = q.prompt || '';
+            cardEl.appendChild(promptEl);
+
+            if (q.type === 'mcq') {
+                const optWrap = document.createElement('div');
+                optWrap.className = 'ln2-mc-edit-options';
+                optWrap.innerHTML = buildMcOptionRowsHtml(q);
+                cardEl.appendChild(optWrap);
+                if (q.options.length < MC_MAX) {
+                    const addOptBtn = document.createElement('button');
+                    addOptBtn.type = 'button';
+                    addOptBtn.className = 'ln2-mc-add-btn stg-mc-opt-add-btn';
+                    addOptBtn.textContent = '+ Thêm đáp án';
+                    cardEl.appendChild(addOptBtn);
+                }
+            } else if (q.type === 'fill_blank') {
+                const ansInput = document.createElement('input');
+                ansInput.type = 'text';
+                ansInput.className = 'news-edit-input stg-subq-answer';
+                ansInput.placeholder = 'Đáp án đúng (có thể nhiều đáp án, cách nhau bằng |). VD: 7pm|seven pm';
+                ansInput.value = q.answer || '';
+                cardEl.appendChild(ansInput);
+            } else if (q.type === 'essay') {
+                const ansInput = document.createElement('input');
+                ansInput.type = 'text';
+                ansInput.className = 'news-edit-input stg-subq-answer';
+                ansInput.placeholder = 'Đáp án mẫu (tuỳ chọn, dùng để chấm gần đúng)...';
+                ansInput.value = q.answer || '';
+                cardEl.appendChild(ansInput);
+                const hint = document.createElement('div');
+                hint.className = 'ln3-subq-answer-hint';
+                hint.textContent = 'Để trống nếu là câu hỏi mở, không có đáp án cố định — hệ thống sẽ không chấm đúng/sai, chỉ cần học viên viết câu trả lời.';
+                cardEl.appendChild(hint);
+            }
+            return cardEl;
+        }
+        function renderSubqForm() {
+            subqListEl.innerHTML = '';
+            draft.forEach((q, i) => subqListEl.appendChild(buildSubqCard(q, i)));
+            wireSubqEvents();
+        }
+        function wireSubqEvents() {
+            subqListEl.querySelectorAll('.stg-subq-card').forEach(cardEl => {
+                const localId = cardEl.dataset.localId;
+                const typeSelect = cardEl.querySelector('.stg-subq-type-select');
+                typeSelect.addEventListener('change', () => {
+                    readDraftFromDom();
+                    const q = draft.find(x => x.localId === localId);
+                    if (!q) return;
+                    q.type = typeSelect.value;
+                    if (q.type === 'mcq' && (!q.options || q.options.length < MC_MIN)) q.options = ['', ''];
+                    renderSubqForm();
+                });
+                const removeWholeBtn = cardEl.querySelector('.stg-subq-remove-whole-btn');
+                if (removeWholeBtn) removeWholeBtn.addEventListener('click', () => {
+                    readDraftFromDom();
+                    draft = draft.filter(x => x.localId !== localId);
+                    renderSubqForm();
+                });
+                const addOptBtn = cardEl.querySelector('.stg-mc-opt-add-btn');
+                if (addOptBtn) addOptBtn.addEventListener('click', () => {
+                    readDraftFromDom();
+                    const q = draft.find(x => x.localId === localId);
+                    if (!q || q.options.length >= MC_MAX) return;
+                    q.options.push('');
+                    renderSubqForm();
+                });
+                cardEl.querySelectorAll('.stg-mc-opt-remove-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        readDraftFromDom();
+                        const q = draft.find(x => x.localId === localId);
+                        if (!q || q.options.length <= MC_MIN) return;
+                        const removeIdx = parseInt(btn.dataset.removeIdx, 10);
+                        q.options.splice(removeIdx, 1);
+                        if (removeIdx === q.answerIndex) q.answerIndex = 0;
+                        else if (removeIdx < q.answerIndex) q.answerIndex -= 1;
+                        renderSubqForm();
+                    });
+                });
+            });
+        }
+        addSubqBtn.addEventListener('click', () => {
+            readDraftFromDom();
+            if (draft.length >= SUBQ_MAX) return;
+            draft.push(newSubQuestion('mcq'));
+            renderSubqForm();
+        });
+
+        manageBtn.addEventListener('click', async () => {
+            if (!isTeacher) { alert('Chỉ giảng viên mới dùng được chức năng này.'); return; }
+            panel.style.display = 'none';
+            managePanel.style.display = 'block';
+            resetForm();
+            itemListEl.innerHTML = '<p class="kid-hint">Đang tải danh sách bài nghe...</p>';
+            await loadItems(true);
+            renderItemList();
+        });
+        manageBackBtn.addEventListener('click', () => {
+            managePanel.style.display = 'none';
+            panel.style.display = 'block';
+            refreshIntro();
+        });
+
+        function resetForm(preserveStatus) {
+            editingId = null;
+            adminSaveBtn.textContent = '➕ Thêm bài nghe';
+            adminCancelBtn.style.display = 'none';
+            if (!preserveStatus) { adminStatus.textContent = ''; adminStatus.className = 'ln2-admin-status'; }
+            fTitle.value = '';
+            fTopic.selectedIndex = 0;
+            fLevel.selectedIndex = 0;
+            fAudioUrl.value = '';
+            fAudioPlayer.style.display = 'none';
+            fAudioStatus.textContent = '';
+            fTranscript.value = '';
+            if (fShorthandToggle) fShorthandToggle.checked = false;
+            draft = [newSubQuestion('mcq')];
+            renderSubqForm();
+        }
+        adminCancelBtn.addEventListener('click', () => resetForm());
+
+        function populateFormForEdit(item) {
+            fTitle.value = item.title || '';
+            if (item.topic) fTopic.value = item.topic;
+            if (item.level) fLevel.value = item.level;
+            fAudioUrl.value = item.audio_url || '';
+            if (item.audio_url) { fAudioPlayer.src = item.audio_url; fAudioPlayer.style.display = 'block'; }
+            else { fAudioPlayer.style.display = 'none'; }
+            fTranscript.value = item.transcript || '';
+            if (fShorthandToggle) fShorthandToggle.checked = !!item.shorthand_enabled;
+            const saved = Array.isArray(item.questions) && item.questions.length ? item.questions : [{ type: 'mcq' }];
+            draft = saved.map(sq => {
+                const d = newSubQuestion(sq.type);
+                d.prompt = sq.prompt || '';
+                if (sq.type === 'mcq') {
+                    d.options = (Array.isArray(sq.options) && sq.options.length >= MC_MIN) ? sq.options.slice() : ['', ''];
+                    d.answerIndex = Number.isInteger(sq.answer_index) ? sq.answer_index : 0;
+                } else {
+                    d.answer = sq.answer || '';
+                }
+                return d;
+            });
+            renderSubqForm();
+            editingId = item.id;
+            adminSaveBtn.textContent = '💾 Lưu thay đổi';
+            adminCancelBtn.style.display = 'inline-block';
+            adminStatus.textContent = '';
+            adminStatus.className = 'ln2-admin-status';
+            if (typeof fTitle.scrollIntoView === 'function') fTitle.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function collectFormPayload() {
+            readDraftFromDom();
+            const audioUrl = (fAudioUrl.value || '').trim();
+            const transcript = (fTranscript.value || '').trim();
+            const title = (fTitle.value || '').trim();
+            if (!audioUrl && !transcript) throw new Error('Cần có link file .mp3 hoặc kịch bản (để hệ thống đọc tạm bằng giọng máy).');
+            if (!title) throw new Error('Vui lòng nhập tiêu đề bài nghe.');
+            if (!draft.length) throw new Error('Cần ít nhất 1 câu hỏi cho bài nghe này.');
+            const questions = draft.map((q, i) => {
+                const prompt = (q.prompt || '').trim();
+                if (!prompt) throw new Error(`Câu ${i + 1}: vui lòng nhập nội dung câu hỏi.`);
+                if (q.type === 'mcq') {
+                    const trimmed = (q.options || []).map(o => (o || '').trim());
+                    if (trimmed.length < MC_MIN) throw new Error(`Câu ${i + 1}: cần tối thiểu ${MC_MIN} đáp án.`);
+                    if (trimmed.some(o => !o)) throw new Error(`Câu ${i + 1}: vui lòng nhập đủ nội dung cho tất cả các đáp án.`);
+                    return { type: 'mcq', prompt, options: trimmed, answer_index: q.answerIndex || 0 };
+                }
+                if (q.type === 'fill_blank') {
+                    const answer = (q.answer || '').trim();
+                    if (!answer) throw new Error(`Câu ${i + 1}: vui lòng nhập đáp án đúng.`);
+                    return { type: 'fill_blank', prompt, answer };
+                }
+                return { type: 'essay', prompt, answer: (q.answer || '').trim() };
+            });
+            return {
+                title, topic: fTopic.value, level: fLevel.value,
+                audio_url: audioUrl || null, transcript: transcript || null,
+                shorthand_enabled: fShorthandToggle ? !!fShorthandToggle.checked : false,
+                questions
+            };
+        }
+
+        adminSaveBtn.addEventListener('click', async () => {
+            if (!isTeacher) return;
+            let payload;
+            try { payload = collectFormPayload(); }
+            catch (err) { adminStatus.textContent = '⚠️ ' + err.message; adminStatus.className = 'ln2-admin-status is-error'; return; }
+            adminSaveBtn.disabled = true;
+            adminStatus.textContent = 'Đang lưu...';
+            adminStatus.className = 'ln2-admin-status';
+            try {
+                if (editingId !== null) {
+                    const updated = await updateItemDB(editingId, payload);
+                    const idx = items.findIndex(it => it.id === editingId);
+                    if (idx !== -1) items[idx] = updated;
+                    adminStatus.textContent = '✅ Đã lưu thay đổi.';
+                } else {
+                    const created = await createItemDB(payload);
+                    items.unshift(created);
+                    adminStatus.textContent = '✅ Đã thêm bài nghe mới.';
+                }
+                resetForm(true);
+                renderItemList();
+            } catch (err) {
+                adminStatus.textContent = '❌ Lưu thất bại: ' + err.message;
+                adminStatus.className = 'ln2-admin-status is-error';
+            } finally {
+                adminSaveBtn.disabled = false;
+            }
+        });
+
+        function renderItemList() {
+            if (!items.length) {
+                itemListEl.innerHTML = '<p class="kid-hint">Chưa có bài nghe nào — hãy soạn bài đầu tiên ở khung bên trên.</p>';
+                return;
+            }
+            itemListEl.innerHTML = items.map(item => {
+                const qCount = Array.isArray(item.questions) ? item.questions.length : 0;
+                const preview = item.title || '(chưa có tiêu đề)';
+                const badge = [item.topic, item.level].filter(Boolean).join(' · ');
+                return `
+                    <div class="ln2-item-row" data-item-id="${item.id}">
+                        <span class="ln3-item-subcount-badge">🎵 ${qCount} câu hỏi${badge ? ' · ' + esc(badge) : ''}</span>
+                        <span class="ln2-item-preview">${esc(preview)}</span>
+                        <div class="ln2-item-actions">
+                            <button type="button" class="ln2-item-edit-btn" data-id="${item.id}" title="Sửa">✏️</button>
+                            <button type="button" class="ln2-item-delete-btn" data-id="${item.id}" title="Xóa">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        itemListEl.addEventListener('click', async (e) => {
+            const editBtn = e.target.closest('.ln2-item-edit-btn');
+            const delBtn = e.target.closest('.ln2-item-delete-btn');
+            if (editBtn) {
+                const item = items.find(it => String(it.id) === editBtn.dataset.id);
+                if (item) populateFormForEdit(item);
+                return;
+            }
+            if (delBtn) {
+                const item = items.find(it => String(it.id) === delBtn.dataset.id);
+                if (!item) return;
+                if (!confirm(`Xóa "${item.title || 'bài nghe này'}"? Hành động này không thể hoàn tác.`)) return;
+                try {
+                    await deleteItemDB(item.id);
+                    items = items.filter(it => it.id !== item.id);
+                    renderItemList();
+                    if (editingId === item.id) resetForm();
+                } catch (err) { alert('Xóa thất bại: ' + err.message); }
+            }
+        });
+
+        // ---------- Làm bài (học viên) ----------
+        let state = null;
+
+        async function startQuiz() {
+            quizPanel.style.display = 'block';
+            panel.style.display = 'none';
+            resultArea.style.display = 'none';
+            quizPlayArea.style.display = 'block';
+            quizProgress.textContent = '';
+            quizBody.innerHTML = '<p class="kid-hint">Đang chuẩn bị bài nghe...</p>';
+            quizControls.innerHTML = '';
+            quizFeedback.innerHTML = '';
+            quizFeedback.className = 'thcs-translate-feedback';
+
+            await loadItems();
+            if (items.length < MIN_ITEMS) {
+                quizBody.innerHTML = `<p class="kid-hint">⚠️ Kho bài nghe Giai đoạn ${cfg.stage} chưa đủ để luyện tập (cần ít nhất ${MIN_ITEMS} bài). Hãy quay lại sau khi giảng viên soạn thêm nhé!</p>`;
+                return;
+            }
+            const picked = shuffle(items).slice(0, Math.min(TOTAL_ITEMS, items.length));
+            state = { items: picked, index: 0, score: 0, busy: false, subAnswers: [] };
+            renderItem();
+        }
+
+        function buildTakeSubqEl(q, i) {
+            const wrap = document.createElement('div');
+            wrap.className = 'ln3-take-subq';
+            wrap.dataset.subqIndex = String(i);
+            const promptWrap = document.createElement('div');
+            promptWrap.className = 'ln3-take-subq-prompt';
+            promptWrap.innerHTML = `<span class="ln3-take-subq-num">Câu ${i + 1}.</span>`;
+            promptWrap.appendChild(document.createTextNode(q.prompt || ''));
+            wrap.appendChild(promptWrap);
+
+            let bodyEl = null;
+            if (q.type === 'mcq') {
+                const options = q.options || [];
+                const optOrder = shuffle(options.map((_, idx) => idx));
+                bodyEl = document.createElement('div');
+                bodyEl.className = 'ln2-mc-grid';
+                bodyEl.id = `${cfg.prefix}-mc-grid-${i}`;
+                optOrder.forEach((origIdx, pos) => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'ln2-mc-option';
+                    btn.dataset.oi = String(origIdx);
+                    btn.innerHTML = `<span class="ln2-mc-letter">${String.fromCharCode(65 + pos)}</span><span class="ln2-mc-text">${esc(options[origIdx])}</span>`;
+                    bodyEl.appendChild(btn);
+                });
+            } else if (q.type === 'fill_blank') {
+                bodyEl = document.createElement('input');
+                bodyEl.type = 'text';
+                bodyEl.id = `${cfg.prefix}-take-input-${i}`;
+                bodyEl.className = 'thcs-translate-blank-input';
+                bodyEl.style.width = '90%';
+                bodyEl.placeholder = 'Nhập câu trả lời...';
+                bodyEl.autocomplete = 'off'; bodyEl.autocapitalize = 'off'; bodyEl.spellcheck = false;
+            } else if (q.type === 'essay') {
+                bodyEl = document.createElement('textarea');
+                bodyEl.id = `${cfg.prefix}-take-input-${i}`;
+                bodyEl.className = 'ln3-take-essay-input';
+                bodyEl.placeholder = 'Viết câu trả lời của bạn...';
+            }
+            if (bodyEl) wrap.appendChild(bodyEl);
+
+            const fbEl = document.createElement('div');
+            fbEl.className = 'ln3-take-feedback-line';
+            fbEl.id = `${cfg.prefix}-take-feedback-${i}`;
+            fbEl.style.display = 'none';
+            wrap.appendChild(fbEl);
+            return wrap;
+        }
+
+        function renderItem() {
+            if (!state) return;
+            state.busy = false;
+            stopAudio();
+            quizFeedback.innerHTML = '';
+            quizFeedback.className = 'thcs-translate-feedback';
+            quizProgress.textContent = `Bài ${state.index + 1} / ${state.items.length} — Điểm: ${state.score}`;
+
+            const item = state.items[state.index];
+            const questions = Array.isArray(item.questions) ? item.questions : [];
+            state.subAnswers = questions.map(() => null);
+
+            quizBody.innerHTML = '';
+            const titleEl = document.createElement('p');
+            titleEl.className = 'ln3-dialogue-title';
+            const badge = [item.topic, item.level].filter(Boolean).join(' · ');
+            titleEl.textContent = item.title + (badge ? ` (${badge})` : '');
+            quizBody.appendChild(titleEl);
+
+            const playRow = document.createElement('div');
+            playRow.className = 'ln-play-row';
+            playRow.innerHTML = `<button type="button" class="kid-btn kid-btn-primary" id="${cfg.prefix}-play-btn">🔊 Nghe bài</button>`;
+            quizBody.appendChild(playRow);
+            document.getElementById(`${cfg.prefix}-play-btn`).addEventListener('click', () => playItemAudio(item));
+
+            if (cfg.shorthandSupported && item.shorthand_enabled) {
+                const shWrap = document.createElement('div');
+                shWrap.className = 'ln2-field';
+                shWrap.style.margin = '14px 0';
+                shWrap.innerHTML = '<label>📝 Ghi tốc ký tự do (không chấm điểm — chỉ để luyện phản xạ)</label>';
+                const shInput = document.createElement('textarea');
+                shInput.className = 'news-edit-input';
+                shInput.rows = 3;
+                shInput.id = `${cfg.prefix}-shorthand-input`;
+                shInput.placeholder = 'Ghi nhanh ý chính bằng ký hiệu tốc ký trong lúc nghe...';
+                shWrap.appendChild(shInput);
+                quizBody.appendChild(shWrap);
+            }
+
+            questions.forEach((q, i) => {
+                const subqEl = buildTakeSubqEl(q, i);
+                quizBody.appendChild(subqEl);
+                if (q.type === 'mcq') {
+                    const grid = subqEl.querySelector(`#${cfg.prefix}-mc-grid-${i}`);
+                    if (grid) grid.addEventListener('click', (e) => {
+                        const btn = e.target.closest('.ln2-mc-option');
+                        if (!btn || state.busy) return;
+                        grid.querySelectorAll('.ln2-mc-option').forEach(b => b.classList.remove('is-selected-draft'));
+                        btn.classList.add('is-selected-draft');
+                        state.subAnswers[i] = parseInt(btn.dataset.oi, 10);
+                    });
+                }
+            });
+
+            quizControls.innerHTML = `<button type="button" class="kid-btn kid-btn-primary" id="${cfg.prefix}-check-btn">✔️ Kiểm tra</button>`;
+            document.getElementById(`${cfg.prefix}-check-btn`).addEventListener('click', checkAnswer);
+
+            questions.forEach((q, i) => {
+                if (q.type === 'fill_blank' || q.type === 'essay') {
+                    const inp = document.getElementById(`${cfg.prefix}-take-input-${i}`);
+                    if (inp) inp.addEventListener('input', () => { state.subAnswers[i] = inp.value; });
+                }
+            });
+        }
+
+        function checkAnswer() {
+            if (!state || state.busy) return;
+            const item = state.items[state.index];
+            const questions = Array.isArray(item.questions) ? item.questions : [];
+
+            const allAnswered = questions.every((q, i) => {
+                const ans = state.subAnswers[i];
+                if (q.type === 'mcq') return ans !== null && ans !== undefined;
+                return typeof ans === 'string' && ans.trim().length > 0;
+            });
+            if (!allAnswered) return;
+
+            let allCorrect = true;
+            questions.forEach((q, i) => {
+                const ans = state.subAnswers[i];
+                let isCorrect = false;
+                let correctText = '';
+                if (q.type === 'mcq') {
+                    isCorrect = ans === q.answer_index;
+                    correctText = q.options[q.answer_index];
+                    const grid = document.getElementById(`${cfg.prefix}-mc-grid-${i}`);
+                    if (grid) grid.querySelectorAll('.ln2-mc-option').forEach(btn => {
+                        btn.classList.remove('is-selected-draft');
+                        const oi = parseInt(btn.dataset.oi, 10);
+                        btn.classList.add('is-disabled');
+                        if (oi === q.answer_index) btn.classList.add('is-correct');
+                        else if (oi === ans) btn.classList.add('is-wrong');
+                    });
+                } else if (q.type === 'fill_blank') {
+                    isCorrect = fillBlankIsCorrect(q.answer, ans);
+                    correctText = q.answer;
+                    const input = document.getElementById(`${cfg.prefix}-take-input-${i}`);
+                    if (input) { input.disabled = true; if (!isCorrect) input.classList.add('is-wrong'); }
+                } else if (q.type === 'essay') {
+                    isCorrect = essayIsCorrect(q.answer, ans);
+                    correctText = q.answer;
+                    const input = document.getElementById(`${cfg.prefix}-take-input-${i}`);
+                    if (input) { input.disabled = true; if (!isCorrect) input.classList.add('is-wrong'); }
+                }
+                if (!isCorrect) allCorrect = false;
+                const fbEl = document.getElementById(`${cfg.prefix}-take-feedback-${i}`);
+                if (fbEl) {
+                    fbEl.style.display = 'block';
+                    if (isCorrect) { fbEl.className = 'ln3-take-feedback-line is-correct'; fbEl.textContent = '✅ Chính xác!'; }
+                    else if (q.type === 'essay' && !q.answer) { fbEl.className = 'ln3-take-feedback-line is-correct'; fbEl.textContent = '✅ Đã ghi nhận câu trả lời.'; }
+                    else { fbEl.className = 'ln3-take-feedback-line is-wrong'; fbEl.textContent = `❌ Chưa đúng. Đáp án đúng: ${esc(correctText)}`; }
+                }
+            });
+
+            state.busy = true;
+            if (allCorrect) state.score++;
+            if (allCorrect) playCorrectSound(); else playWrongSound();
+            quizFeedback.className = 'thcs-translate-feedback ' + (allCorrect ? 'is-correct' : 'is-wrong');
+            quizFeedback.innerHTML = allCorrect ? '✅ Chính xác toàn bộ!' : '❌ Có câu chưa đúng — xem đáp án chi tiết ở từng câu bên trên.';
+
+            if (cfg.shorthandSupported && item.shorthand_enabled && item.transcript) {
+                const note = document.createElement('div');
+                note.className = 'kid-hint';
+                note.style.marginTop = '10px';
+                note.innerHTML = `<strong>📝 Gợi ý đối chiếu tốc ký</strong> (kịch bản gốc): ${esc(item.transcript)}`;
+                quizBody.appendChild(note);
+            }
+
+            const isLastItem = state.index + 1 >= state.items.length;
+            const goNext = () => {
+                state.index++;
+                if (state.index >= state.items.length) finishQuiz();
+                else renderItem();
+            };
+            if (allCorrect) {
+                quizControls.innerHTML = '';
+                const sessionState = state;
+                sessionState.autoNextTimer = setTimeout(() => {
+                    if (state !== sessionState) return;
+                    sessionState.autoNextTimer = null;
+                    goNext();
+                }, 1200);
+            } else {
+                quizControls.innerHTML = `<button type="button" class="kid-btn kid-btn-primary" id="${cfg.prefix}-next-btn">${isLastItem ? '🏁 Xem kết quả' : '➡️ Bài tiếp theo'}</button>`;
+                const nextBtn = document.getElementById(`${cfg.prefix}-next-btn`);
+                nextBtn.addEventListener('click', goNext);
+                nextBtn.focus();
+            }
+        }
+
+        function finishQuiz() {
+            stopAudio();
+            quizPlayArea.style.display = 'none';
+            resultArea.style.display = 'block';
+            const total = state.items.length;
+            const pct = Math.round((state.score / total) * 100);
+            resultBox.innerHTML = `
+                <div class="ln-result-emoji">${pct >= 80 ? '🏆' : (pct >= 50 ? '👍' : '💪')}</div>
+                <h3>Kết quả: ${state.score} / ${total} bài đúng toàn bộ (${pct}%)</h3>
+                <div class="thcs-translate-actions">
+                    <button type="button" class="kid-btn kid-btn-primary" id="${cfg.prefix}-retry-btn">🔄 Làm lại (bài mới)</button>
+                    <button type="button" class="kid-btn" id="${cfg.prefix}-back-result-btn">← Quay lại</button>
+                </div>
+            `;
+            document.getElementById(`${cfg.prefix}-retry-btn`).addEventListener('click', () => startQuiz());
+            document.getElementById(`${cfg.prefix}-back-result-btn`).addEventListener('click', () => {
+                resultArea.style.display = 'none';
+                quizPanel.style.display = 'none';
+                panel.style.display = 'block';
+                refreshIntro();
+            });
+        }
+
+        quizBackBtn.addEventListener('click', () => {
+            stopAudio();
+            if (state && state.autoNextTimer) { clearTimeout(state.autoNextTimer); state.autoNextTimer = null; }
+            quizPanel.style.display = 'none';
+            panel.style.display = 'block';
+            refreshIntro();
+        });
+
+        // Form soạn bài có sẵn 1 câu hỏi trống ngay từ đầu (trước khi giảng viên bấm "Soạn bài nghe").
+        draft = [newSubQuestion('mcq')];
+    }
+
+    initListeningStageModule({ stage: 2, prefix: 'ln-stage2', minItems: 3, totalItems: 5, shorthandSupported: false });
+    initListeningStageModule({ stage: 3, prefix: 'ln-stage3', minItems: 3, totalItems: 4, shorthandSupported: true });
+})();
+// ===== KẾT THÚC: GIAI ĐOẠN 2 & GIAI ĐOẠN 3 =====
 
     // ===================================================================================
     // ===== TAB "LUYỆN KỸ NĂNG" > "✍️ VIẾT" — 3 giai đoạn =====
@@ -20608,5 +21586,70 @@ function toggleCompletion(symbolElement) {
 
     })();
     // ===== KẾT THÚC TAB "LUYỆN KỸ NĂNG" > "✍️ VIẾT" =====
+// ===================================================================
+// ===== BẮT ĐẦU: TAB "LUYỆN KỸ NĂNG" > "📖 ĐỌC" — KHUNG 3 GIAI ĐOẠN LUYỆN ĐỌC =====
+// Giai đoạn 1: Câu đơn + tin ngắn lv1 (điền từ loại, tin ngắn lv1)
+// Giai đoạn 2: Tóm tắt + đoán nghĩa từ + tin ngắn lv2
+// Giai đoạn 3: Tin ngắn lv3 + báo dài/tài liệu chuyên ngành + đọc hợp đồng
+// Hiện tại đây mới là khung điều hướng (folder giai đoạn -> lưới dạng bài -> panel dạng bài).
+// Logic luyện tập thật của từng dạng bài (câu hỏi, chấm điểm, lưu Supabase...) sẽ được bổ
+// sung dần theo từng dạng, tương tự cách Nghe lv1/lv2/lv3 đã được xây dựng trước đó.
+// ===================================================================
+(() => {
+    const rdStageFolderGrid = document.getElementById('rd-stage-folder-grid');
+    if (!rdStageFolderGrid) return;
 
+    // ---------- Điều hướng cấp 1: lưới giai đoạn <-> panel từng giai đoạn ----------
+    const rdStageCardToPanel = {
+        'rd-stage1-folder-card': 'rd-stage1-panel',
+        'rd-stage2-folder-card': 'rd-stage2-panel',
+        'rd-stage3-folder-card': 'rd-stage3-panel'
+    };
+    Object.entries(rdStageCardToPanel).forEach(([cardId, panelId]) => {
+        const card  = document.getElementById(cardId);
+        const panel = document.getElementById(panelId);
+        if (!card || !panel) return;
+        card.addEventListener('click', () => {
+            rdStageFolderGrid.style.display = 'none';
+            panel.style.display = 'block';
+        });
+        const backBtn = panel.querySelector('[data-rd-stage-back]');
+        if (backBtn) {
+            backBtn.addEventListener('click', () => {
+                panel.style.display = 'none';
+                rdStageFolderGrid.style.display = '';
+            });
+        }
+    });
+
+    // ---------- Điều hướng cấp 2: thẻ dạng bài trong mỗi giai đoạn <-> panel dạng bài ----------
+    const rdLevelCardMap = {
+        'rd-s1-wordtype-card': { panel: 'rd-s1-wordtype-panel', stage: 'rd-stage1-panel' },
+        'rd-s1-news-card':     { panel: 'rd-s1-news-panel',     stage: 'rd-stage1-panel' },
+        'rd-s2-summary-card':  { panel: 'rd-s2-summary-panel',  stage: 'rd-stage2-panel' },
+        'rd-s2-guess-card':    { panel: 'rd-s2-guess-panel',    stage: 'rd-stage2-panel' },
+        'rd-s2-news-card':     { panel: 'rd-s2-news-panel',     stage: 'rd-stage2-panel' },
+        'rd-s3-news-card':     { panel: 'rd-s3-news-panel',     stage: 'rd-stage3-panel' },
+        'rd-s3-article-card':  { panel: 'rd-s3-article-panel',  stage: 'rd-stage3-panel' },
+        'rd-s3-contract-card': { panel: 'rd-s3-contract-panel', stage: 'rd-stage3-panel' }
+    };
+    Object.entries(rdLevelCardMap).forEach(([cardId, { panel: panelId, stage: stageId }]) => {
+        const card       = document.getElementById(cardId);
+        const panel      = document.getElementById(panelId);
+        const stagePanel = document.getElementById(stageId);
+        if (!card || !panel || !stagePanel) return;
+        card.addEventListener('click', () => {
+            stagePanel.style.display = 'none';
+            panel.style.display = 'block';
+        });
+        const backBtn = panel.querySelector('[data-rd-level-back]');
+        if (backBtn) {
+            backBtn.addEventListener('click', () => {
+                panel.style.display = 'none';
+                stagePanel.style.display = 'block';
+            });
+        }
+    });
+})();
+// ===== KẾT THÚC: TAB "LUYỆN KỸ NĂNG" > "📖 ĐỌC" — KHUNG 3 GIAI ĐOẠN LUYỆN ĐỌC =====
 });

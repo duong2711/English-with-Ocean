@@ -6030,6 +6030,13 @@ mark.ilt-highlight { background: #fff59d; padding: 0 1px; border-radius: 2px; cu
 .irt-mcq-option.irt-wrong { color: var(--danger-dark); text-decoration: line-through; }
 .irt-mcq-image { max-width: 260px; display: block; margin: 6px 0 8px 22px; border-radius: 8px; }
 
+/* ---- Trắc nghiệm NHIỀU đáp án (ô vuông ✔️) — "Choose TWO/THREE letters" ---- */
+.irt-mcq-multi-badges { display: inline-flex; align-items: center; }
+.irt-mcq-multi-num { display: inline-block; }
+.irt-mcq-multi-hint { font-style: italic; color: var(--text-muted); font-size: 0.85rem; margin: -4px 0 8px; }
+/* Checkbox mặc định của trình duyệt vốn đã là ô vuông (khác ô tròn của trắc nghiệm 1 đáp án) — chỉ chỉnh cỡ cho dễ bấm trên di động. */
+.irt-view-mcq-multi .irt-mcq-option input[type="checkbox"] { width: 16px; height: 16px; flex-shrink: 0; }
+
 .irt-note { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; font-weight: 400; }
 
 
@@ -6130,6 +6137,28 @@ mark.irt-highlight { background: #fff59d; padding: 0 1px; border-radius: 2px; cu
 }
 .irt-render-passage-image { max-width: 100%; border-radius: 8px; margin-bottom: 10px; display: block; }
 .irt-render-passage-text { line-height: 1.85; color: var(--text); }
+
+/* ---- Bố cục Passage / Câu hỏi khi làm bài (mô phỏng màn hình thi IELTS thật) ----
+   - Từ tablet trở lên (>=768px): chia đôi trái/phải — passage bên trái (cuộn riêng,
+     dính lại khi cuộn trang) và câu hỏi bên phải, để học viên vừa đọc vừa trả lời
+     mà không mất chỗ đang đọc.
+   - Dưới tablet (điện thoại, <768px): xếp trên/dưới — passage ở trên, câu hỏi ở dưới,
+     cuộn tự nhiên theo trang như bình thường. */
+.irt-render-split { display: flex; flex-direction: column; gap: 18px; }
+.irt-render-passage-col { min-width: 0; }
+.irt-render-questions-col { min-width: 0; }
+
+@media (min-width: 768px) {
+    .irt-render-split { flex-direction: row; align-items: flex-start; gap: 24px; }
+    .irt-render-passage-col,
+    .irt-render-questions-col { flex: 1 1 50%; }
+    .irt-render-passage-col {
+        position: sticky; top: 12px;
+        max-height: calc(100vh - 24px);
+        overflow-y: auto;
+    }
+    .irt-render-passage-col .irt-render-passage { margin-bottom: 0; }
+}
 
 /* ---- Khung soạn đoạn văn (passage) trong trình soạn bài ---- */
 .irt-passage-editor-wrap { margin-bottom: 14px; }
