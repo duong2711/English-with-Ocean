@@ -408,10 +408,28 @@ document.addEventListener('DOMContentLoaded', () => {
         const dropdowns = document.querySelectorAll('.header-tab-dropdown');
         if (!dropdowns.length) return;
 
+        // [FIX Safari/iPhone] .header-tabs có overflow-x:auto + -webkit-overflow-scrolling:touch.
+        // Trên iOS, thuộc tính -webkit-overflow-scrolling:touch khiến WebKit tạo 1 lớp compositing
+        // cho phần tử cha, và lớp này vô tình trở thành containing block mới — khiến các phần tử
+        // con position:fixed (menu xổ xuống) bị GIAM/CẮT trong vùng của thanh tab thay vì "dính"
+        // theo viewport như bình thường. Đây là lý do trên iPhone menu không xổ xuống được dù
+        // desktop/Android vẫn ổn. Cách sửa: dời hẳn menu ra khỏi thanh tab, gắn thẳng vào <body>
+        // (chỉ giữ nút bấm ở lại trong thanh tab), để menu không còn là con cháu của vùng overflow
+        // đó nữa. Vị trí menu vẫn được tính bằng JS dựa trên getBoundingClientRect() của nút nên
+        // việc dời sang body không ảnh hưởng gì đến cách canh vị trí.
+        dropdowns.forEach(dd => {
+            const menu = dd.querySelector('.header-tab-dropdown-menu');
+            if (menu) {
+                document.body.appendChild(menu);
+                dd._dropdownMenuEl = menu; // lưu tham chiếu vì menu không còn nằm trong dd nữa
+            }
+        });
+        function getMenu(dd) { return dd._dropdownMenuEl || dd.querySelector('.header-tab-dropdown-menu'); }
+
         function closeAllDropdowns() {
             dropdowns.forEach(dd => {
                 dd.classList.remove('open');
-                const menu = dd.querySelector('.header-tab-dropdown-menu');
+                const menu = getMenu(dd);
                 if (menu) menu.classList.remove('open');
             });
         }
@@ -420,7 +438,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // thanh tab (overflow-x:auto trên mobile) cắt mất phần tràn theo chiều dọc.
         function positionMenu(dd) {
             const btn = dd.querySelector('.main-tab-dropdown-btn');
-            const menu = dd.querySelector('.header-tab-dropdown-menu');
+            const menu = getMenu(dd);
             if (!btn || !menu) return;
             const rect = btn.getBoundingClientRect();
             menu.style.top = (rect.bottom + 6) + 'px';
@@ -434,7 +452,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         dropdowns.forEach(dd => {
             const btn = dd.querySelector('.main-tab-dropdown-btn');
-            const menu = dd.querySelector('.header-tab-dropdown-menu');
+            const menu = getMenu(dd);
             if (!btn || !menu) return;
 
             btn.addEventListener('click', (e) => {
@@ -599,7 +617,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (insideWrapper) insideWrapper.style.display = 'none';
             if (accountArea) accountArea.style.display = 'none';
             if (accountMenu) accountMenu.classList.remove('open');
-            authStatus.innerText = 'Tài khoản demo (thử nghiệm): host@admin.com, Mật khẩu: admin';
+            authStatus.innerText = 'Liên hệ zalo: 0988007529 để được cấp tài khoản';
 
             // [CẬP NHẬT] Ẩn Menu và TOÀN BỘ các Tab khi chưa đăng nhập
             if (mainMenu) mainMenu.style.display = 'none';

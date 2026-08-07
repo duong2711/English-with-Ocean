@@ -2111,7 +2111,201 @@
 
     <div id="tab-luyen-noi" class="main-tab-content">
         <h2>🗣️ Luyện Nói</h2>
-        <p class="kid-hint">Nội dung luyện Nói đang được xây dựng — sẽ sớm cập nhật tại đây.</p>
+
+        <!-- ===== Danh sách giai đoạn luyện nói (hiện tại có Giai đoạn 2 & 3) ===== -->
+        <div class="folder-grid" id="ls-stage-folder-grid">
+            <div class="folder-card" id="ls-stage2-folder-card">🌊 Luyện nói giai đoạn 2</div>
+            <div class="folder-card" id="ls-stage3-folder-card">🎓 Luyện nói giai đoạn 3</div>
+        </div>
+
+        <!-- ===== Panel Giai đoạn 2: chọn hoạt động ===== -->
+        <div id="ls-stage2-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <button class="grammar-back-btn" id="ls-stage2-back-btn">← Quay lại</button>
+                    <h3 style="margin:0;">🌊 Luyện nói giai đoạn 2</h3>
+                </div>
+            </div>
+            <p class="kid-hint">Mục tiêu: cải thiện ngữ điệu, phát âm tự nhiên, và khả năng diễn đạt 1 sự việc thành câu chuyện có mạch.</p>
+            <div class="kid-topic-grid" id="ls-stage2-activity-grid">
+                <div class="kid-topic-card" id="ls-shadow-card">
+                    <span class="kid-icon">👂</span>
+                    <div class="kid-title">Shadowing</div>
+                    <div class="kid-count">Nghe đoạn hội thoại ngắn, nhại lại theo tốc độ gốc (có thể tua chậm), ghi âm so khớp</div>
+                </div>
+                <div class="kid-topic-card" id="ls-narrate-card">
+                    <span class="kid-icon">📖</span>
+                    <div class="kid-title">Miêu tả sự việc</div>
+                    <div class="kid-count">Nhìn chuỗi sự việc, kể lại thành đoạn 4–5 câu — luyện thì quá khứ &amp; liên từ</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Hoạt động "Shadowing" (lssh): giới thiệu + bắt đầu + (giảng viên) soạn nội dung ===== -->
+        <div id="lssh-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <button class="grammar-back-btn" id="lssh-back-btn">← Quay lại</button>
+                    <h3 style="margin:0;">👂 Shadowing</h3>
+                </div>
+                <button type="button" class="kid-btn" id="lssh-manage-btn" style="display:none;">🛠️ Soạn nội dung (<span id="lssh-item-count">0</span>)</button>
+            </div>
+            <p class="kid-hint">Mục tiêu: nghe 1 đoạn hội thoại/câu nói ngắn, chọn tốc độ nghe (gốc / chậm dần), rồi ghi âm nhại lại đúng nhịp — nghe lại bản ghi của bạn để tự so khớp với bản gốc. Mỗi lượt luyện tập lấy ngẫu nhiên tối đa 15 đoạn trong kho.</p>
+            <div class="kid-topic-grid" id="lssh-start-grid">
+                <div class="kid-topic-card" id="lssh-start-card">
+                    <span class="kid-icon">▶️</span>
+                    <div class="kid-title">Bắt đầu luyện tập</div>
+                    <div class="kid-count" id="lssh-start-count">Đang tải kho đoạn hội thoại...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Panel giảng viên soạn nội dung "Shadowing" ===== -->
+        <div id="lssh-manage-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border);">
+                <button class="grammar-back-btn" id="lssh-manage-back-btn">← Quay lại</button>
+                <h3 style="margin:0;">🛠️ Soạn nội dung — Shadowing</h3>
+            </div>
+            <div class="ln2-admin-box">
+                <div class="ln2-admin-form" id="lssh-admin-form"></div>
+                <div class="ln2-admin-actions">
+                    <span class="ln2-admin-status" id="lssh-admin-status"></span>
+                    <button type="button" class="kid-btn" id="lssh-admin-cancel-btn" style="display:none;">Hủy sửa</button>
+                    <button type="button" class="kid-btn kid-btn-primary" id="lssh-admin-save-btn">➕ Thêm đoạn</button>
+                </div>
+            </div>
+            <div class="ln2-item-list" id="lssh-item-list">
+                <p class="kid-hint">Đang tải danh sách đoạn hội thoại...</p>
+            </div>
+        </div>
+
+        <!-- ===== Panel luyện tập "Shadowing" ===== -->
+        <div id="lssh-practice-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border);">
+                <button class="grammar-back-btn" id="lssh-practice-back-btn">← Quay lại</button>
+                <h3 style="margin:0;">👂 Shadowing</h3>
+            </div>
+            <div id="lssh-practice-play-area">
+                <div class="thcs-translate-progress" id="lssh-practice-progress"></div>
+                <div class="thcs-translate-card ln-quiz-card">
+                    <div id="lssh-practice-body"></div>
+                    <div class="thcs-translate-actions" id="lssh-practice-controls"></div>
+                </div>
+            </div>
+            <div id="lssh-practice-result-area" style="display:none;">
+                <div class="ln-result-box" id="lssh-result-box"></div>
+            </div>
+        </div>
+
+        <!-- ===== Hoạt động "Miêu tả sự việc" (lsmt): giới thiệu + bắt đầu + (giảng viên) soạn nội dung ===== -->
+        <div id="lsmt-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <button class="grammar-back-btn" id="lsmt-back-btn">← Quay lại</button>
+                    <h3 style="margin:0;">📖 Miêu tả sự việc</h3>
+                </div>
+                <button type="button" class="kid-btn" id="lsmt-manage-btn" style="display:none;">🛠️ Soạn nội dung (<span id="lsmt-item-count">0</span>)</button>
+            </div>
+            <p class="kid-hint">Mục tiêu: nhìn 1 chuỗi sự việc (hình ảnh/từ khoá), kể lại thành đoạn 4–5 câu tiếng Anh — luyện thì quá khứ và các liên từ (then, after that, because...). Ghi âm phần nói của bạn rồi so với đoạn văn mẫu. Mỗi lượt luyện tập lấy ngẫu nhiên tối đa 15 chuỗi trong kho.</p>
+            <div class="kid-topic-grid" id="lsmt-start-grid">
+                <div class="kid-topic-card" id="lsmt-start-card">
+                    <span class="kid-icon">▶️</span>
+                    <div class="kid-title">Bắt đầu luyện tập</div>
+                    <div class="kid-count" id="lsmt-start-count">Đang tải kho chuỗi sự việc...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Panel giảng viên soạn nội dung "Miêu tả sự việc" ===== -->
+        <div id="lsmt-manage-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border);">
+                <button class="grammar-back-btn" id="lsmt-manage-back-btn">← Quay lại</button>
+                <h3 style="margin:0;">🛠️ Soạn nội dung — Miêu tả sự việc</h3>
+            </div>
+            <div class="ln2-admin-box">
+                <div class="ln2-admin-form" id="lsmt-admin-form"></div>
+                <div class="ln2-admin-actions">
+                    <span class="ln2-admin-status" id="lsmt-admin-status"></span>
+                    <button type="button" class="kid-btn" id="lsmt-admin-cancel-btn" style="display:none;">Hủy sửa</button>
+                    <button type="button" class="kid-btn kid-btn-primary" id="lsmt-admin-save-btn">➕ Thêm chuỗi sự việc</button>
+                </div>
+            </div>
+            <div class="ln2-item-list" id="lsmt-item-list">
+                <p class="kid-hint">Đang tải danh sách chuỗi sự việc...</p>
+            </div>
+        </div>
+
+        <!-- ===== Panel luyện tập "Miêu tả sự việc" ===== -->
+        <div id="lsmt-practice-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border);">
+                <button class="grammar-back-btn" id="lsmt-practice-back-btn">← Quay lại</button>
+                <h3 style="margin:0;">📖 Miêu tả sự việc</h3>
+            </div>
+            <div id="lsmt-practice-play-area">
+                <div class="thcs-translate-progress" id="lsmt-practice-progress"></div>
+                <div class="thcs-translate-card ln-quiz-card">
+                    <div id="lsmt-practice-body"></div>
+                    <div class="thcs-translate-actions" id="lsmt-practice-controls"></div>
+                </div>
+            </div>
+            <div id="lsmt-practice-result-area" style="display:none;">
+                <div class="ln-result-box" id="lsmt-result-box"></div>
+            </div>
+        </div>
+
+        <!-- ===== Panel Giai đoạn 3: giới thiệu + bắt đầu + (giảng viên) soạn đề bài (chỉ 1 hoạt động tổng hợp A.R.E.A) ===== -->
+        <div id="ls-stage3-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <button class="grammar-back-btn" id="ls-stage3-back-btn">← Quay lại</button>
+                    <h3 style="margin:0;">🎓 Luyện nói giai đoạn 3</h3>
+                </div>
+                <button type="button" class="kid-btn" id="lsarea-manage-btn" style="display:none;">🛠️ Soạn đề bài (<span id="lsarea-item-count">0</span>)</button>
+            </div>
+            <p class="kid-hint">Mục tiêu: nói được đoạn dài có cấu trúc, mạch lạc, giống văn nói học thuật / IELTS Speaking Part 2–3 — dùng khung <b>A.R.E.A</b> (Answer → Reason → Example → Answer), mẫu câu chuyển ý khi bí ý, và kỹ năng tốc ký ý tưởng trước khi nói (1 phút chuẩn bị). Mỗi lượt luyện tập lấy ngẫu nhiên tối đa 10 đề trong kho.</p>
+            <div class="kid-topic-grid" id="lsarea-start-grid">
+                <div class="kid-topic-card" id="lsarea-start-card">
+                    <span class="kid-icon">▶️</span>
+                    <div class="kid-title">Bắt đầu luyện tập</div>
+                    <div class="kid-count" id="lsarea-start-count">Đang tải kho đề bài...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Panel giảng viên soạn đề bài Giai đoạn 3 ===== -->
+        <div id="lsarea-manage-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border);">
+                <button class="grammar-back-btn" id="lsarea-manage-back-btn">← Quay lại</button>
+                <h3 style="margin:0;">🛠️ Soạn đề bài — Giai đoạn 3</h3>
+            </div>
+            <div class="ln2-admin-box">
+                <div class="ln2-admin-form" id="lsarea-admin-form"></div>
+                <div class="ln2-admin-actions">
+                    <span class="ln2-admin-status" id="lsarea-admin-status"></span>
+                    <button type="button" class="kid-btn" id="lsarea-admin-cancel-btn" style="display:none;">Hủy sửa</button>
+                    <button type="button" class="kid-btn kid-btn-primary" id="lsarea-admin-save-btn">➕ Thêm đề bài</button>
+                </div>
+            </div>
+            <div class="ln2-item-list" id="lsarea-item-list">
+                <p class="kid-hint">Đang tải danh sách đề bài...</p>
+            </div>
+        </div>
+
+        <!-- ===== Panel luyện tập Giai đoạn 3 (A.R.E.A + tốc ký + chuyển ý) ===== -->
+        <div id="lsarea-practice-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border);">
+                <button class="grammar-back-btn" id="lsarea-practice-back-btn">← Quay lại</button>
+                <h3 style="margin:0;">🎓 Luyện nói giai đoạn 3</h3>
+            </div>
+            <div id="lsarea-practice-play-area">
+                <div class="thcs-translate-progress" id="lsarea-practice-progress"></div>
+                <div id="lsarea-practice-body"></div>
+                <div class="thcs-translate-actions" id="lsarea-practice-controls" style="max-width:600px; margin:16px auto 0;"></div>
+            </div>
+            <div id="lsarea-practice-result-area" style="display:none;">
+                <div class="ln-result-box" id="lsarea-result-box"></div>
+            </div>
+        </div>
     </div>
 
     <div id="tab-luyen-doc" class="main-tab-content">
