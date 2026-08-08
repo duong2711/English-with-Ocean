@@ -243,8 +243,38 @@ document.addEventListener('DOMContentLoaded', () => {
     let mediaRecorder;
     let audioChunks = [];
     let currentSymbol = ''; 
+    let recordedAudioMime = ''; // [FIX iPhone] lưu ĐÚNG định dạng trình duyệt thực sự ghi ra
     let recordedAudioBlob = null; 
     let currentVideoSrc = null; 
+
+    // [FIX iPhone] Safari không hỗ trợ ghi audio/webm — nó tự chọn audio/mp4 (AAC).
+    // Trước đây code luôn gán cứng nhãn 'audio/webm' cho Blob dù trình duyệt ghi ra định dạng
+    // gì, nên trên iPhone dữ liệu thật là mp4 nhưng bị dán nhãn webm -> phát lại báo lỗi (Safari
+    // kiểm tra nhãn rất nghiêm ngặt). Hàm dưới đây chọn định dạng ưu tiên mà trình duyệt hiện tại
+    // THỰC SỰ hỗ trợ ghi, để dùng đúng ngay từ đầu.
+    function pickSupportedAudioMime() {
+        const candidates = [
+            'audio/webm;codecs=opus',
+            'audio/webm',
+            'audio/mp4;codecs=mp4a.40.2',
+            'audio/mp4',
+            'audio/aac',
+            'audio/ogg;codecs=opus'
+        ];
+        if (typeof MediaRecorder === 'undefined' || !MediaRecorder.isTypeSupported) return '';
+        for (const type of candidates) {
+            if (MediaRecorder.isTypeSupported(type)) return type;
+        }
+        return '';
+    }
+    // Suy ra phần mở rộng file từ mimeType thật, để tên file khớp với nội dung thật bên trong.
+    function extFromAudioMime(mime) {
+        if (!mime) return 'webm';
+        if (mime.includes('mp4')) return 'mp4';
+        if (mime.includes('aac')) return 'aac';
+        if (mime.includes('ogg')) return 'ogg';
+        return 'webm';
+    }
 
     const commentSymbolDisplay = document.getElementById('comment-symbol-display');
     const commentsList = document.getElementById('comments-list');
@@ -2055,46 +2085,41 @@ function toggleCompletion(symbolElement) {
         const parentSymbol = iconContainer.closest('.ipa-symbol');
         if (!parentSymbol) return;
 
-        // Bắt đầu giữ chuột
-        iconContainer.addEventListener('mousedown', (e) => {
+        // [FIX iPhone] Trước đây chỉ có mousedown/mouseup/mouseleave. Trên màn hình cảm ứng
+        // (iPhone/Android), trình duyệt chỉ phát sinh mousedown "giả lập" SAU KHI đã nhấc ngón
+        // tay ra (touchend) — tức là mousedown và mouseup gần như xảy ra cùng lúc, không có
+        // khoảng thời gian giữ thật sự -> giữ bao lâu cũng không bao giờ đủ 3 giây để kích hoạt.
+        // Cách sửa: xử lý logic giữ trong 2 hàm dùng chung, gắn cho cả mouse lẫn touch.
+        function startHoldComplete(e) {
             e.stopPropagation();
-            
-            // Clear bất kỳ timer cũ nào nếu có lỗi
             if (holdTimer) clearTimeout(holdTimer);
-
-            // Thiết lập timer 3 giây (3000ms)
             holdTimer = setTimeout(() => {
-                holdTimer = null; // Reset timer sau khi kích hoạt
-                
-                // Kích hoạt logic hoàn thành chỉ khi giữ đủ 3 giây
+                holdTimer = null;
                 toggleCompletion(parentSymbol);
-                
-                // Tạm thời vô hiệu hóa con trỏ để tránh kích hoạt lại ngay lập tức
                 iconContainer.style.pointerEvents = 'none';
                 setTimeout(() => {
                     iconContainer.style.pointerEvents = 'auto';
-                }, 500); // 0.5 giây chờ để tránh double-click/nhả chuột nhanh
-                
-            }, 3000); // 3 giây
-        });
+                }, 500);
+            }, 3000);
+        }
+        function cancelHoldComplete(e) {
+            e.stopPropagation();
+            if (holdTimer) {
+                clearTimeout(holdTimer);
+                holdTimer = null;
+            }
+        }
 
+        // Bắt đầu giữ chuột
+        iconContainer.addEventListener('mousedown', startHoldComplete);
         // Nhả chuột (ngắt quá trình giữ)
-        iconContainer.addEventListener('mouseup', (e) => {
-            e.stopPropagation();
-            if (holdTimer) {
-                clearTimeout(holdTimer);
-                holdTimer = null;
-            }
-        });
-
+        iconContainer.addEventListener('mouseup', cancelHoldComplete);
         // Rê chuột ra khỏi khu vực (ngắt quá trình giữ)
-        iconContainer.addEventListener('mouseleave', (e) => {
-            e.stopPropagation();
-            if (holdTimer) {
-                clearTimeout(holdTimer);
-                holdTimer = null;
-            }
-        });
+        iconContainer.addEventListener('mouseleave', cancelHoldComplete);
+        // Bắt đầu/kết thúc giữ ngón tay (iPhone/Android)
+        iconContainer.addEventListener('touchstart', startHoldComplete, { passive: true });
+        iconContainer.addEventListener('touchend', cancelHoldComplete);
+        iconContainer.addEventListener('touchcancel', cancelHoldComplete);
     });
 
     // --- CÁC HÀM XỬ LÝ GHI ÂM/SUPABASE ---
@@ -2108,11 +2133,15 @@ function toggleCompletion(symbolElement) {
 
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorder = new MediaRecorder(stream);
+            const chosenMime = pickSupportedAudioMime();
+            mediaRecorder = chosenMime ? new MediaRecorder(stream, { mimeType: chosenMime }) : new MediaRecorder(stream);
             mediaRecorder.ondataavailable = event => audioChunks.push(event.data);
 
             mediaRecorder.onstop = () => {
-                recordedAudioBlob = new Blob(audioChunks, { type: 'audio/webm' }); 
+                // Dùng ĐÚNG định dạng mediaRecorder thực sự đã ghi (mediaRecorder.mimeType),
+                // không hard-code 'audio/webm' — trên iPhone giá trị này sẽ là audio/mp4.
+                recordedAudioMime = mediaRecorder.mimeType || chosenMime || 'audio/webm';
+                recordedAudioBlob = new Blob(audioChunks, { type: recordedAudioMime }); 
                 const audioUrl = URL.createObjectURL(recordedAudioBlob);
                 recordingPreview.src = audioUrl; 
                 recordingPreview.style.display = 'block';
@@ -2175,7 +2204,8 @@ function toggleCompletion(symbolElement) {
         const safeSymbolName = getSafeSymbolName(currentSymbol); 
 
         try {
-            const uniqueFileName = `${currentUserId.substring(0, 8)}_${Date.now()}.webm`; 
+            const fileExt = extFromAudioMime(recordedAudioMime);
+            const uniqueFileName = `${currentUserId.substring(0, 8)}_${Date.now()}.${fileExt}`; 
             audioPath = `${safeSymbolName}/${uniqueFileName}`; 
             
             // 1. Tải file lên Storage
@@ -2183,7 +2213,8 @@ function toggleCompletion(symbolElement) {
                 .from(AUDIO_BUCKET_NAME)
                 .upload(audioPath, recordedAudioBlob, {
                     cacheControl: '3600',
-                    upsert: false
+                    upsert: false,
+                    contentType: recordedAudioMime || 'audio/webm'
                 });
 
             if (uploadError) throw uploadError;
@@ -2405,6 +2436,7 @@ function toggleCompletion(symbolElement) {
         
         audioChunks = [];
         recordedAudioBlob = null;
+        recordedAudioMime = '';
         
         recordButton.disabled = false;
         stopButton.disabled = true;
@@ -5035,6 +5067,7 @@ function toggleCompletion(symbolElement) {
         let dubMediaStream = null;
         let dubMediaRecorder = null;
         let dubRecordedChunks = [];
+        let dubRecordedMime = ''; // [FIX iPhone] định dạng thật mà mediaRecorder đã ghi
         let dubSessionToken = 0; // tăng lên mỗi lần bắt đầu/kết thúc phiên để huỷ các bước đang hẹn giờ dở dang
         let dubPhaseTimer = null;      // setTimeout kết thúc phase hiện tại (preview hoặc recording)
         let dubPhaseTickTimer = null;  // setInterval cập nhật đồng hồ đếm ngược trên giao diện
@@ -5714,11 +5747,15 @@ function toggleCompletion(symbolElement) {
             reviewBox.style.display = 'none';
 
             dubRecordedChunks = [];
-            dubMediaRecorder = new MediaRecorder(dubMediaStream);
+            const dubChosenMime = pickSupportedAudioMime();
+            dubMediaRecorder = dubChosenMime ? new MediaRecorder(dubMediaStream, { mimeType: dubChosenMime }) : new MediaRecorder(dubMediaStream);
             dubMediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) dubRecordedChunks.push(e.data); };
             dubMediaRecorder.onstop = () => {
                 if (token !== dubSessionToken) return;
-                const blob = new Blob(dubRecordedChunks, { type: 'audio/webm' });
+                // Dùng ĐÚNG định dạng mediaRecorder thực sự đã ghi — trên iPhone sẽ là audio/mp4,
+                // không phải audio/webm, gán sai sẽ khiến phát lại (reviewAudio) báo lỗi.
+                dubRecordedMime = dubMediaRecorder.mimeType || dubChosenMime || 'audio/webm';
+                const blob = new Blob(dubRecordedChunks, { type: dubRecordedMime });
                 const url = URL.createObjectURL(blob);
                 if (dubRecordings[i] && dubRecordings[i].url) URL.revokeObjectURL(dubRecordings[i].url);
                 dubRecordings[i] = { blob, url };
@@ -14092,8 +14129,13 @@ function toggleCompletion(symbolElement) {
             iltApplyHighlightsForPart(partEl, Number(partEl.dataset.partIdx));
         });
         takeBodyEl.removeEventListener('mouseup', iltHandleSelectionMouseUp);
+        takeBodyEl.removeEventListener('touchend', iltHandleSelectionMouseUp);
         takeBodyEl.removeEventListener('click', iltHandleClickForHighlight);
         takeBodyEl.addEventListener('mouseup', iltHandleSelectionMouseUp);
+        // [FIX iPhone] Bôi đen chọn chữ trên iOS Safari dùng cơ chế "tay cầm" (selection handles)
+        // của hệ điều hành, không phát sinh sự kiện 'mouseup' đáng tin cậy như trên desktop —
+        // nên phải lắng nghe thêm 'touchend' để lưu lại phần bôi đen khi học viên dùng tay chọn chữ.
+        takeBodyEl.addEventListener('touchend', iltHandleSelectionMouseUp);
         takeBodyEl.addEventListener('click', iltHandleClickForHighlight);
 
         submitBtn.style.display = 'inline-block';
@@ -16363,8 +16405,13 @@ function toggleCompletion(symbolElement) {
             iltApplyHighlightsForPart(partEl, Number(partEl.dataset.partIdx));
         });
         takeBodyEl.removeEventListener('mouseup', iltHandleSelectionMouseUp);
+        takeBodyEl.removeEventListener('touchend', iltHandleSelectionMouseUp);
         takeBodyEl.removeEventListener('click', iltHandleClickForHighlight);
         takeBodyEl.addEventListener('mouseup', iltHandleSelectionMouseUp);
+        // [FIX iPhone] Bôi đen chọn chữ trên iOS Safari dùng cơ chế "tay cầm" (selection handles)
+        // của hệ điều hành, không phát sinh sự kiện 'mouseup' đáng tin cậy như trên desktop —
+        // nên phải lắng nghe thêm 'touchend' để lưu lại phần bôi đen khi học viên dùng tay chọn chữ.
+        takeBodyEl.addEventListener('touchend', iltHandleSelectionMouseUp);
         takeBodyEl.addEventListener('click', iltHandleClickForHighlight);
 
         submitBtn.style.display = 'inline-block';

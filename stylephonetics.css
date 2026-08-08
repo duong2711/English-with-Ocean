@@ -7059,3 +7059,17 @@ mark.irt-highlight { background: #fff59d; padding: 0 1px; border-radius: 2px; cu
 .lsarea-linker-label:first-child { margin-top: 0; }
 
 .lsarea-timer-display { font-weight: 800; font-size: 15px; color: var(--primary-dark, #4c3fcf); }
+
+/* ============================================================
+   [FIX iPhone] Ngan Safari/iOS tu dong ZOOM man hinh khi hoc vien
+   cham vao o nhap lieu (input/textarea/select) co co chu < 16px.
+   Day la hanh vi mac dinh cua iOS Safari, khong co cach tat bang
+   thuoc tinh CSS/JS thong thuong - cach duy nhat la dam bao co
+   chu toi thieu 16px tren man hinh nho. Chi ap dung cho mobile,
+   khong anh huong giao dien desktop da co san.
+   ============================================================ */
+@media (max-width: 599px) {
+    input, textarea, select {
+        font-size: 16px !important;
+    }
+}
