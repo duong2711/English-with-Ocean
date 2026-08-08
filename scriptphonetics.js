@@ -21717,4 +21717,2927 @@ function toggleCompletion(symbolElement) {
     });
 })();
 // ===== KẾT THÚC: TAB "LUYỆN KỸ NĂNG" > "📖 ĐỌC" — KHUNG 3 GIAI ĐOẠN LUYỆN ĐỌC =====
+// ===================================================================
+// ===== BẮT ĐẦU: TAB "LUYỆN KỸ NĂNG" > "🗣️ NÓI" — GIAI ĐOẠN 1: ĐIỀU HƯỚNG =====
+// Điều hướng cấp "Giai đoạn 1" -> chọn 1 trong 2 hoạt động (Hỏi-đáp / Mở lời hội
+// thoại). Từng hoạt động có khối chức năng riêng ở 2 phần bên dưới (ls1 = Phản xạ
+// hỏi-đáp, ls2 = Mở lời hội thoại).
+// ===================================================================
+(() => {
+    const lsStage1FolderCard = document.getElementById('ls-stage1-folder-card');
+    if (!lsStage1FolderCard) return;
+
+    const lsStageFolderGrid = document.getElementById('ls-stage-folder-grid');
+    const lsStage1Panel     = document.getElementById('ls-stage1-panel');
+    const lsStage1BackBtn   = document.getElementById('ls-stage1-back-btn');
+
+    lsStage1FolderCard.addEventListener('click', () => {
+        lsStageFolderGrid.style.display = 'none';
+        lsStage1Panel.style.display = 'block';
+    });
+    lsStage1BackBtn.addEventListener('click', () => {
+        lsStage1Panel.style.display = 'none';
+        lsStageFolderGrid.style.display = '';
+    });
+})();
+// ===== KẾT THÚC: ĐIỀU HƯỚNG GIAI ĐOẠN 1 (NÓI) =====
+
+
+// ===================================================================
+// ===== BẮT ĐẦU: TAB "LUYỆN KỸ NĂNG" > "🗣️ NÓI" — HOẠT ĐỘNG "PHẢN XẠ HỎI-ĐÁP" (ls1) =====
+// Ngân hàng câu hỏi do giảng viên tự soạn, lưu ở bảng "speaking_lv1_qa_items" trên
+// Supabase (xem file "speaking_lv1_setup.sql" để tạo bảng + policy RLS). Có 2 dạng bài:
+//   - dien        : nghe câu hỏi -> điền từ/cụm còn thiếu vào câu trả lời mẫu
+//   - trac_nghiem : nghe câu hỏi -> chọn đúng câu trả lời mẫu trong các đáp án
+// Sau khi trả lời (đúng hoặc sai), hệ thống hiện câu trả lời mẫu đầy đủ và mời học
+// viên GHI ÂM nói lại câu đó — bản ghi chỉ phát lại ngay tại chỗ (KHÔNG upload lên
+// máy chủ) để học viên tự nghe và so khớp với giọng đọc mẫu; hệ thống không lưu trữ
+// hay chấm điểm phát âm tự động. Mỗi lượt luyện tập lấy random tối đa 20 câu trong
+// toàn bộ ngân hàng.
+// ===================================================================
+(() => {
+    const ls1Card = document.getElementById('ls-hoidap-card');
+    if (!ls1Card) return;
+
+    // ---------- Tham chiếu DOM ----------
+    const ls1Panel        = document.getElementById('ls1-panel');
+    const ls1BackBtn      = document.getElementById('ls1-back-btn');
+    const ls1ManageBtn    = document.getElementById('ls1-manage-btn');
+    const ls1ItemCountEl  = document.getElementById('ls1-item-count');
+    const ls1StartCard    = document.getElementById('ls1-start-card');
+    const ls1StartCountEl = document.getElementById('ls1-start-count');
+
+    const ls1ManagePanel    = document.getElementById('ls1-manage-panel');
+    const ls1ManageBackBtn  = document.getElementById('ls1-manage-back-btn');
+    const ls1TypeTabs       = document.getElementById('ls1-admin-type-tabs');
+    const ls1AdminForm      = document.getElementById('ls1-admin-form');
+    const ls1AdminStatus    = document.getElementById('ls1-admin-status');
+    const ls1AdminSaveBtn   = document.getElementById('ls1-admin-save-btn');
+    const ls1AdminCancelBtn = document.getElementById('ls1-admin-cancel-btn');
+    const ls1ItemListEl     = document.getElementById('ls1-item-list');
+
+    const ls1QuizPanel    = document.getElementById('ls1-quiz-panel');
+    const ls1QuizBackBtn  = document.getElementById('ls1-quiz-back-btn');
+    const ls1QuizPlayArea = document.getElementById('ls1-quiz-play-area');
+    const ls1QuizProgress = document.getElementById('ls1-quiz-progress');
+    const ls1QuizBody     = document.getElementById('ls1-quiz-body');
+    const ls1QuizControls = document.getElementById('ls1-quiz-controls');
+    const ls1QuizFeedback = document.getElementById('ls1-quiz-feedback');
+    const ls1ResultArea   = document.getElementById('ls1-quiz-result-area');
+    const ls1ResultBox    = document.getElementById('ls1-result-box');
+
+    const LS1_TABLE = 'speaking_lv1_qa_items';
+    const LS1_TOTAL_QUESTIONS = 20;
+    const LS1_MIN_ITEMS = 4; // số câu tối thiểu trong ngân hàng để cho phép bắt đầu luyện tập
+    const LS1_TYPE_META = {
+        dien:        { label: 'Điền đáp án mẫu', icon: '📝' },
+        trac_nghiem: { label: 'Chọn đáp án mẫu', icon: '☑️' }
+    };
+
+    // ---------- Tiện ích dùng chung ----------
+    function ls1Esc(s) {
+        return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+    function ls1Normalize(s) {
+        return String(s || '').toLowerCase().replace(/[^a-z]/g, '');
+    }
+    function ls1Shuffle(arr) {
+        const copy = arr.slice();
+        for (let i = copy.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [copy[i], copy[j]] = [copy[j], copy[i]];
+        }
+        return copy;
+    }
+    function ls1EscapeRegex(s) { return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+    // Tìm vị trí (start, end) của "key" trong "sentence" — hỗ trợ khớp gần đúng (số
+    // nhiều, thì động từ...) để câu vẫn tạo được chỗ trống ngay cả khi giảng viên gõ
+    // "wake up" nhưng câu chứa "wakes up".
+    function ls1FindKeySpan(sentence, key) {
+        const s = String(sentence || '');
+        const k = String(key || '').trim();
+        if (!k) return null;
+        const lowerS = s.toLowerCase();
+        const lowerK = k.toLowerCase();
+        const idx = lowerS.indexOf(lowerK);
+        if (idx !== -1) {
+            const end = idx + lowerK.length;
+            const beforeOk = idx === 0 || !/[a-zA-Z]/.test(lowerS[idx - 1]);
+            const afterOk = end === lowerS.length || !/[a-zA-Z]/.test(lowerS[end]);
+            if (beforeOk && afterOk) return { start: idx, end };
+        }
+        const words = lowerK.split(/\s+/).filter(Boolean);
+        const wordPatterns = words.map(w => {
+            if (w.length > 2 && /[^aeiou]y$/.test(w)) return ls1EscapeRegex(w.slice(0, -1)) + '(?:y|ies)';
+            return ls1EscapeRegex(w) + '(?:e?s|ing|ed|d)?';
+        });
+        try {
+            const re = new RegExp('\\b' + wordPatterns.join('\\s+') + '\\b', 'i');
+            const m = s.match(re);
+            if (m) return { start: m.index, end: m.index + m[0].length };
+        } catch (e) { /* bỏ qua nếu regex lỗi */ }
+        return null;
+    }
+
+    // ----- Âm thanh hiệu ứng ĐÚNG / SAI (Web Audio API, không cần file mp3) -----
+    let ls1SfxCtx = null;
+    function getLs1SfxCtx() {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return null;
+        if (!ls1SfxCtx) ls1SfxCtx = new AC();
+        if (ls1SfxCtx.state === 'suspended') ls1SfxCtx.resume();
+        return ls1SfxCtx;
+    }
+    function ls1PlayTone(freq, startTime, duration, type, peakGain) {
+        const ctx = getLs1SfxCtx();
+        if (!ctx) return;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type || 'sine';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + startTime);
+        gain.gain.setValueAtTime(0.0001, ctx.currentTime + startTime);
+        gain.gain.linearRampToValueAtTime(peakGain || 0.22, ctx.currentTime + startTime + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + startTime + duration);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(ctx.currentTime + startTime);
+        osc.stop(ctx.currentTime + startTime + duration + 0.05);
+    }
+    function ls1PlayCorrectSound() {
+        ls1PlayTone(523.25, 0,    0.16, 'sine', 0.22);
+        ls1PlayTone(659.25, 0.12, 0.16, 'sine', 0.22);
+        ls1PlayTone(783.99, 0.24, 0.22, 'sine', 0.22);
+    }
+    function ls1PlayWrongSound() {
+        ls1PlayTone(180, 0,    0.18, 'square', 0.16);
+        ls1PlayTone(140, 0.15, 0.22, 'square', 0.16);
+    }
+
+    // ----- Phát audio câu hỏi: dùng file .mp3 nếu giảng viên gắn link, không thì đọc tự động -----
+    let ls1AudioEl = null;
+    function ls1GetAudioEl() {
+        if (!ls1AudioEl) { ls1AudioEl = new Audio(); ls1AudioEl.preload = 'auto'; }
+        return ls1AudioEl;
+    }
+    function ls1Speak(text) {
+        if (typeof window.speakEnglishWord === 'function') window.speakEnglishWord(text);
+    }
+    function ls1PlayItemAudio(item) {
+        const url = ((item && item.audio_url) || '').trim();
+        if (url) {
+            const audio = ls1GetAudioEl();
+            if (audio.src !== url) audio.src = url;
+            audio.currentTime = 0;
+            audio.play().catch(err => console.error('Lỗi khi phát file mp3 Nói — Hỏi-đáp:', err.message));
+        } else {
+            ls1Speak(item ? item.question_text : '');
+        }
+    }
+    function ls1StopAudio() {
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        if (ls1AudioEl) ls1AudioEl.pause();
+    }
+    document.querySelectorAll('.main-tab-btn').forEach(btn => btn.addEventListener('click', ls1StopAudio));
+    document.addEventListener('visibilitychange', () => { if (document.hidden) ls1StopAudio(); });
+    window.addEventListener('blur', ls1StopAudio);
+
+    // ----- Ghi âm tự luyện (KHÔNG upload — chỉ phát lại tại chỗ để học viên tự so
+    // khớp với giọng đọc mẫu). Dùng chung 1 bộ biến trạng thái vì tại một thời điểm
+    // chỉ có tối đa 1 khối ghi âm đang hiển thị trên màn hình. -----
+    let ls1Recorder = null;
+    let ls1RecStream = null;
+    let ls1RecChunks = [];
+    let ls1Recording = false;
+
+    function ls1StopRecordingHard() {
+        if (ls1Recorder && ls1Recorder.state !== 'inactive') {
+            try { ls1Recorder.stop(); } catch (e) { /* bỏ qua */ }
+        }
+        if (ls1RecStream) { ls1RecStream.getTracks().forEach(t => t.stop()); ls1RecStream = null; }
+        ls1Recording = false;
+    }
+
+    function ls1RenderRecordBox(targetText) {
+        return `
+            <div class="ls-record-box">
+                <p class="ls-record-hint">🎙️ Đến lượt bạn — bấm ghi âm rồi nói lại câu trả lời mẫu:</p>
+                <div class="ls-record-target">${ls1Esc(targetText)}</div>
+                <div class="ls-record-controls">
+                    <button type="button" class="kid-btn kid-btn-primary ls-record-btn" id="ls1-rec-btn">🎤 Ghi âm</button>
+                    <button type="button" class="kid-btn" id="ls1-rec-model-btn">🔊 Nghe giọng mẫu</button>
+                </div>
+                <p class="ls-record-status" id="ls1-rec-status"></p>
+                <audio class="ls-record-audio" id="ls1-rec-audio" controls style="display:none;"></audio>
+            </div>
+        `;
+    }
+
+    function ls1WireRecordBox(targetText) {
+        const btn      = document.getElementById('ls1-rec-btn');
+        const modelBtn = document.getElementById('ls1-rec-model-btn');
+        const status   = document.getElementById('ls1-rec-status');
+        const audioEl  = document.getElementById('ls1-rec-audio');
+        if (!btn) return;
+
+        btn.addEventListener('click', async () => {
+            if (!ls1Recording) {
+                try {
+                    ls1RecStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    ls1Recorder = new MediaRecorder(ls1RecStream);
+                    ls1RecChunks = [];
+                    ls1Recorder.ondataavailable = (e) => ls1RecChunks.push(e.data);
+                    ls1Recorder.onstop = () => {
+                        const blob = new Blob(ls1RecChunks, { type: 'audio/webm' });
+                        audioEl.src = URL.createObjectURL(blob);
+                        audioEl.style.display = 'block';
+                        status.textContent = '✅ Đã ghi âm xong — nghe lại rồi so với giọng mẫu ở trên nhé.';
+                        if (ls1RecStream) { ls1RecStream.getTracks().forEach(t => t.stop()); ls1RecStream = null; }
+                    };
+                    ls1Recorder.start();
+                    ls1Recording = true;
+                    btn.textContent = '⏹️ Dừng ghi âm';
+                    btn.classList.add('is-recording');
+                    status.textContent = '🔴 Đang ghi âm... bấm "Dừng ghi âm" khi nói xong.';
+                    audioEl.style.display = 'none';
+                } catch (err) {
+                    status.textContent = '⚠️ Không truy cập được micro — hãy cho phép quyền truy cập micro trên trình duyệt.';
+                }
+            } else {
+                if (ls1Recorder && ls1Recorder.state !== 'inactive') ls1Recorder.stop();
+                ls1Recording = false;
+                btn.textContent = '🎤 Ghi âm lại';
+                btn.classList.remove('is-recording');
+            }
+        });
+
+        if (modelBtn) modelBtn.addEventListener('click', () => ls1Speak(targetText));
+    }
+
+    // ---------- Tải / lưu ngân hàng câu hỏi trên Supabase ----------
+    let ls1Items = [];
+    let ls1ItemsLoaded = false;
+
+    async function ls1LoadItems(force) {
+        if (ls1ItemsLoaded && !force) return ls1Items;
+        try {
+            const { data, error } = await sb
+                .from(LS1_TABLE)
+                .select('*')
+                .order('created_at', { ascending: false });
+            if (error) throw error;
+            ls1Items = data || [];
+            ls1ItemsLoaded = true;
+        } catch (err) {
+            console.error('Lỗi khi tải ngân hàng câu Nói — Hỏi-đáp:', err.message);
+            ls1Items = [];
+        }
+        return ls1Items;
+    }
+    async function ls1CreateItemDB(payload) {
+        const insertPayload = Object.assign({}, payload, { created_by: currentEmail });
+        const { data, error } = await sb.from(LS1_TABLE).insert(insertPayload).select().single();
+        if (error) throw error;
+        return data;
+    }
+    async function ls1UpdateItemDB(id, payload) {
+        const updatePayload = Object.assign({}, payload, { updated_at: new Date().toISOString(), updated_by: currentEmail });
+        const { data, error } = await sb.from(LS1_TABLE).update(updatePayload).eq('id', id).select().single();
+        if (error) throw error;
+        return data;
+    }
+    async function ls1DeleteItemDB(id) {
+        const { error } = await sb.from(LS1_TABLE).delete().eq('id', id);
+        if (error) throw error;
+    }
+
+    // ---------- Điều hướng: Giai đoạn 1 -> Hỏi-đáp -> (Soạn nội dung | Bắt đầu luyện tập) ----------
+    ls1Card.addEventListener('click', () => {
+        const stage1Panel = document.getElementById('ls-stage1-panel');
+        if (stage1Panel) stage1Panel.style.display = 'none';
+        ls1Panel.style.display = 'block';
+        ls1RefreshIntro();
+    });
+    ls1BackBtn.addEventListener('click', () => {
+        ls1Panel.style.display = 'none';
+        const stage1Panel = document.getElementById('ls-stage1-panel');
+        if (stage1Panel) stage1Panel.style.display = 'block';
+    });
+
+    async function ls1RefreshIntro() {
+        ls1ManageBtn.style.display = isTeacher ? 'inline-block' : 'none';
+        await ls1LoadItems();
+        if (ls1ItemCountEl) ls1ItemCountEl.textContent = String(ls1Items.length);
+        if (ls1StartCountEl) {
+            ls1StartCountEl.textContent = ls1Items.length >= LS1_MIN_ITEMS
+                ? `Ngẫu nhiên ${Math.min(LS1_TOTAL_QUESTIONS, ls1Items.length)} / ${ls1Items.length} câu đã soạn`
+                : `Chưa đủ câu hỏi (${ls1Items.length}/${LS1_MIN_ITEMS} tối thiểu) — hãy quay lại sau`;
+        }
+    }
+
+    ls1StartCard.addEventListener('click', ls1StartQuiz);
+
+    // ---------- Khu vực giảng viên soạn nội dung ----------
+    let ls1CurrentType = 'dien';
+    let ls1EditingId = null;
+
+    ls1ManageBtn.addEventListener('click', async () => {
+        if (!isTeacher) { alert('Chỉ giảng viên mới dùng được chức năng này.'); return; }
+        ls1Panel.style.display = 'none';
+        ls1ManagePanel.style.display = 'block';
+        ls1ResetForm();
+        ls1ItemListEl.innerHTML = '<p class="kid-hint">Đang tải danh sách câu hỏi...</p>';
+        await ls1LoadItems(true);
+        ls1RenderItemList();
+    });
+    ls1ManageBackBtn.addEventListener('click', () => {
+        ls1ManagePanel.style.display = 'none';
+        ls1Panel.style.display = 'block';
+        ls1RefreshIntro();
+    });
+
+    ls1TypeTabs.addEventListener('click', (e) => {
+        if (ls1EditingId !== null) return; // đang sửa 1 câu -> khoá đổi loại giữa chừng
+        const tab = e.target.closest('.ln2-type-tab');
+        if (!tab) return;
+        ls1TypeTabs.querySelectorAll('.ln2-type-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        ls1CurrentType = tab.dataset.ls1Type;
+        ls1RenderAdminForm();
+    });
+
+    const LS1_AUDIO_FIELD_HTML = `
+        <div class="ln2-field">
+            <label>Link file .mp3 câu hỏi (tuỳ chọn). Để trống nếu muốn dùng giọng đọc tự động.</label>
+            <input type="text" id="ls1-f-audio-url" class="news-edit-input" placeholder="VD: https://.../cau-hoi-1.mp3">
+        </div>
+    `;
+
+    const LS1_MC_MIN_OPTIONS = 2;
+    const LS1_MC_MAX_OPTIONS = 8;
+
+    function ls1BuildMcOptionRowsHtml(values, answerIndex) {
+        return values.map((val, i) => `
+            <div class="news-quiz-edit-option-row" data-idx="${i}">
+                <input type="radio" name="ls1-f-answer" value="${i}" id="ls1-f-answer-${i}" ${i === answerIndex ? 'checked' : ''}>
+                <input type="text" id="ls1-f-opt-${i}" class="news-edit-input" placeholder="Đáp án ${String.fromCharCode(65 + i)}..." value="${ls1Esc(val)}">
+                ${values.length > LS1_MC_MIN_OPTIONS ? `<button type="button" class="ln2-mc-remove-btn" data-remove-idx="${i}" title="Xoá đáp án này">✕</button>` : ''}
+            </div>
+        `).join('');
+    }
+    function ls1ReadMcOptionsFromDom() {
+        const rows = Array.from(document.querySelectorAll('#ls1-mc-edit-options [data-idx]'));
+        const values = rows.map(row => {
+            const inp = row.querySelector('input[type="text"]');
+            return inp ? inp.value : '';
+        });
+        const checked = document.querySelector('input[name="ls1-f-answer"]:checked');
+        const answerIndex = checked ? parseInt(checked.value, 10) : 0;
+        return { values, answerIndex };
+    }
+    function ls1RerenderMcOptions(values, answerIndex) {
+        const wrap = document.getElementById('ls1-mc-edit-options');
+        if (!wrap) return;
+        const safeAnswerIndex = Math.min(Math.max(answerIndex, 0), values.length - 1);
+        wrap.innerHTML = ls1BuildMcOptionRowsHtml(values, safeAnswerIndex);
+        const addBtn = document.getElementById('ls1-mc-add-btn');
+        if (addBtn) addBtn.style.display = values.length >= LS1_MC_MAX_OPTIONS ? 'none' : '';
+        ls1WireMcRemoveButtons();
+    }
+    function ls1WireMcRemoveButtons() {
+        document.querySelectorAll('#ls1-mc-edit-options .ln2-mc-remove-btn').forEach(btn => {
+            btn.onclick = () => {
+                const { values, answerIndex } = ls1ReadMcOptionsFromDom();
+                if (values.length <= LS1_MC_MIN_OPTIONS) return;
+                const removeIdx = parseInt(btn.dataset.removeIdx, 10);
+                values.splice(removeIdx, 1);
+                let newAnswerIndex = answerIndex;
+                if (removeIdx === answerIndex) newAnswerIndex = 0;
+                else if (removeIdx < answerIndex) newAnswerIndex = answerIndex - 1;
+                ls1RerenderMcOptions(values, newAnswerIndex);
+            };
+        });
+    }
+    function ls1WireMcAddButton() {
+        const addBtn = document.getElementById('ls1-mc-add-btn');
+        if (!addBtn) return;
+        addBtn.onclick = () => {
+            const { values, answerIndex } = ls1ReadMcOptionsFromDom();
+            if (values.length >= LS1_MC_MAX_OPTIONS) return;
+            values.push('');
+            ls1RerenderMcOptions(values, answerIndex);
+        };
+    }
+
+    function ls1RenderAdminForm() {
+        const t = ls1CurrentType;
+        if (t === 'dien') {
+            ls1AdminForm.innerHTML = `
+                <div class="ln2-field">
+                    <label>Câu hỏi tiếng Anh (sẽ được đọc to cho học viên nghe)</label>
+                    <input type="text" id="ls1-f-question" class="news-edit-input" placeholder="VD: What time do you usually wake up?">
+                </div>
+                <div class="ln2-field">
+                    <label>Câu trả lời mẫu tiếng Anh đầy đủ (chứa từ/cụm cần điền)</label>
+                    <input type="text" id="ls1-f-sentence" class="news-edit-input" placeholder="VD: I usually wake up at 7 AM.">
+                </div>
+                <div class="ln2-field">
+                    <label>Từ/cụm cần điền trong câu trả lời trên</label>
+                    <input type="text" id="ls1-f-key" class="news-edit-input" placeholder="VD: wake up">
+                </div>
+                <div class="ln2-field">
+                    <label>Nghĩa tiếng Việt của câu hỏi (tuỳ chọn)</label>
+                    <input type="text" id="ls1-f-vi" class="news-edit-input" placeholder="VD: Bạn thường thức dậy lúc mấy giờ?">
+                </div>
+                ${LS1_AUDIO_FIELD_HTML}
+            `;
+        } else if (t === 'trac_nghiem') {
+            ls1AdminForm.innerHTML = `
+                <div class="ln2-field">
+                    <label>Câu hỏi tiếng Anh (sẽ được đọc to cho học viên nghe)</label>
+                    <input type="text" id="ls1-f-question" class="news-edit-input" placeholder="VD: What time do you usually wake up?">
+                </div>
+                <div class="ln2-field">
+                    <label>Đáp án — câu trả lời mẫu (tối thiểu 2 — tick chọn đáp án đúng)</label>
+                    <div class="ln2-mc-edit-options news-quiz-edit-options" id="ls1-mc-edit-options">
+                        ${ls1BuildMcOptionRowsHtml(['', '', '', ''], 0)}
+                    </div>
+                    <button type="button" id="ls1-mc-add-btn" class="ln2-mc-add-btn">+ Thêm đáp án</button>
+                </div>
+                <div class="ln2-field">
+                    <label>Nghĩa tiếng Việt của câu hỏi (tuỳ chọn)</label>
+                    <input type="text" id="ls1-f-vi" class="news-edit-input" placeholder="VD: Bạn thường thức dậy lúc mấy giờ?">
+                </div>
+                ${LS1_AUDIO_FIELD_HTML}
+            `;
+            ls1WireMcRemoveButtons();
+            ls1WireMcAddButton();
+        }
+    }
+
+    function ls1ResetForm(preserveStatus) {
+        ls1EditingId = null;
+        ls1TypeTabs.classList.remove('is-locked');
+        ls1AdminSaveBtn.textContent = '➕ Thêm câu hỏi';
+        ls1AdminCancelBtn.style.display = 'none';
+        if (!preserveStatus) {
+            ls1AdminStatus.textContent = '';
+            ls1AdminStatus.className = 'ln2-admin-status';
+        }
+        ls1RenderAdminForm();
+    }
+    ls1AdminCancelBtn.addEventListener('click', () => ls1ResetForm());
+
+    function ls1PopulateFormForEdit(item) {
+        ls1CurrentType = item.type;
+        ls1TypeTabs.querySelectorAll('.ln2-type-tab').forEach(t => t.classList.toggle('active', t.dataset.ls1Type === item.type));
+        ls1RenderAdminForm();
+        const questionEl = document.getElementById('ls1-f-question');
+        if (questionEl) questionEl.value = item.question_text || '';
+        if (item.type === 'dien') {
+            document.getElementById('ls1-f-sentence').value = item.content || '';
+            document.getElementById('ls1-f-key').value = item.blank_key || '';
+        } else if (item.type === 'trac_nghiem') {
+            const savedOptions = (item.options && item.options.length >= LS1_MC_MIN_OPTIONS)
+                ? item.options.slice()
+                : ['', ''];
+            ls1RerenderMcOptions(savedOptions, item.answer_index || 0);
+        }
+        const viEl = document.getElementById('ls1-f-vi');
+        if (viEl) viEl.value = item.vi || '';
+        const audioUrlEl = document.getElementById('ls1-f-audio-url');
+        if (audioUrlEl) audioUrlEl.value = item.audio_url || '';
+
+        ls1EditingId = item.id;
+        ls1TypeTabs.classList.add('is-locked');
+        ls1AdminSaveBtn.textContent = '💾 Lưu thay đổi';
+        ls1AdminCancelBtn.style.display = 'inline-block';
+        ls1AdminStatus.textContent = '';
+        ls1AdminStatus.className = 'ln2-admin-status';
+        if (typeof ls1AdminForm.scrollIntoView === 'function') ls1AdminForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function ls1CollectFormPayload() {
+        const t = ls1CurrentType;
+        const questionEl = document.getElementById('ls1-f-question');
+        const questionText = questionEl ? questionEl.value.trim() : '';
+        const viEl = document.getElementById('ls1-f-vi');
+        const vi = viEl ? viEl.value.trim() : '';
+        const audioUrlEl = document.getElementById('ls1-f-audio-url');
+        const audioUrl = audioUrlEl ? audioUrlEl.value.trim() : '';
+        if (!questionText) throw new Error('Vui lòng nhập câu hỏi tiếng Anh.');
+
+        if (t === 'dien') {
+            const sentence = (document.getElementById('ls1-f-sentence').value || '').trim();
+            const key = (document.getElementById('ls1-f-key').value || '').trim();
+            if (!sentence || !key) throw new Error('Vui lòng nhập đủ câu trả lời mẫu và từ cần điền.');
+            if (!ls1FindKeySpan(sentence, key)) throw new Error('Không tìm thấy từ/cụm từ cần điền trong câu trả lời — hãy kiểm tra lại chính tả.');
+            return { type: t, question_text: questionText, content: sentence, blank_key: key, options: null, answer_index: null, vi, audio_url: audioUrl || null };
+        }
+        if (t === 'trac_nghiem') {
+            const { values: options, answerIndex } = ls1ReadMcOptionsFromDom();
+            const trimmedOptions = options.map(o => o.trim());
+            if (trimmedOptions.length < LS1_MC_MIN_OPTIONS) throw new Error(`Cần tối thiểu ${LS1_MC_MIN_OPTIONS} đáp án.`);
+            if (trimmedOptions.some(o => !o)) throw new Error('Vui lòng nhập đủ nội dung cho tất cả các đáp án.');
+            return { type: t, question_text: questionText, content: trimmedOptions[answerIndex], blank_key: null, options: trimmedOptions, answer_index: answerIndex, vi, audio_url: audioUrl || null };
+        }
+        throw new Error('Loại câu hỏi không hợp lệ.');
+    }
+
+    ls1AdminSaveBtn.addEventListener('click', async () => {
+        if (!isTeacher) return;
+        let payload;
+        try {
+            payload = ls1CollectFormPayload();
+        } catch (err) {
+            ls1AdminStatus.textContent = '⚠️ ' + err.message;
+            ls1AdminStatus.className = 'ln2-admin-status is-error';
+            return;
+        }
+        ls1AdminSaveBtn.disabled = true;
+        ls1AdminStatus.textContent = 'Đang lưu...';
+        ls1AdminStatus.className = 'ln2-admin-status';
+        try {
+            if (ls1EditingId !== null) {
+                const updated = await ls1UpdateItemDB(ls1EditingId, payload);
+                const idx = ls1Items.findIndex(it => it.id === ls1EditingId);
+                if (idx !== -1) ls1Items[idx] = updated;
+                ls1AdminStatus.textContent = '✅ Đã lưu thay đổi.';
+            } else {
+                const created = await ls1CreateItemDB(payload);
+                ls1Items.unshift(created);
+                ls1AdminStatus.textContent = '✅ Đã thêm câu hỏi mới.';
+            }
+            ls1ResetForm(true);
+            ls1RenderItemList();
+        } catch (err) {
+            ls1AdminStatus.textContent = '❌ Lưu thất bại: ' + err.message;
+            ls1AdminStatus.className = 'ln2-admin-status is-error';
+        } finally {
+            ls1AdminSaveBtn.disabled = false;
+        }
+    });
+
+    function ls1RenderItemList() {
+        if (!ls1Items.length) {
+            ls1ItemListEl.innerHTML = '<p class="kid-hint">Chưa có câu hỏi nào — hãy soạn câu đầu tiên ở khung bên trên.</p>';
+            return;
+        }
+        ls1ItemListEl.innerHTML = ls1Items.map(item => {
+            const meta = LS1_TYPE_META[item.type] || { label: item.type, icon: '' };
+            return `
+                <div class="ln2-item-row" data-item-id="${item.id}">
+                    <span class="ln2-item-type-badge">${meta.icon} ${ls1Esc(meta.label)}</span>
+                    ${item.audio_url ? '<span class="ln2-item-audio-badge" title="Đã gắn link .mp3">🎵</span>' : ''}
+                    <span class="ln2-item-preview">${ls1Esc(item.question_text)}</span>
+                    <div class="ln2-item-actions">
+                        <button type="button" class="ln2-item-edit-btn" data-id="${item.id}" title="Sửa">✏️</button>
+                        <button type="button" class="ln2-item-delete-btn" data-id="${item.id}" title="Xóa">🗑️</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    ls1ItemListEl.addEventListener('click', async (e) => {
+        const editBtn = e.target.closest('.ln2-item-edit-btn');
+        const delBtn = e.target.closest('.ln2-item-delete-btn');
+        if (editBtn) {
+            const item = ls1Items.find(it => String(it.id) === editBtn.dataset.id);
+            if (item) ls1PopulateFormForEdit(item);
+            return;
+        }
+        if (delBtn) {
+            const item = ls1Items.find(it => String(it.id) === delBtn.dataset.id);
+            if (!item) return;
+            if (!confirm(`Xóa câu hỏi "${item.question_text}"? Hành động này không thể hoàn tác.`)) return;
+            try {
+                await ls1DeleteItemDB(item.id);
+                ls1Items = ls1Items.filter(it => it.id !== item.id);
+                ls1RenderItemList();
+                if (ls1EditingId === item.id) ls1ResetForm();
+            } catch (err) {
+                alert('Xóa thất bại: ' + err.message);
+            }
+        }
+    });
+
+    // ---------- Làm bài luyện tập (học viên) ----------
+    let ls1State = null;
+
+    async function ls1StartQuiz() {
+        ls1QuizPanel.style.display = 'block';
+        ls1Panel.style.display = 'none';
+        ls1ResultArea.style.display = 'none';
+        ls1QuizPlayArea.style.display = 'block';
+        ls1QuizProgress.textContent = '';
+        ls1QuizBody.innerHTML = '<p class="kid-hint">Đang chuẩn bị câu hỏi...</p>';
+        ls1QuizControls.innerHTML = '';
+        ls1QuizFeedback.innerHTML = '';
+        ls1QuizFeedback.className = 'thcs-translate-feedback';
+
+        await ls1LoadItems();
+        if (ls1Items.length < LS1_MIN_ITEMS) {
+            ls1QuizBody.innerHTML = `<p class="kid-hint">⚠️ Kho câu hỏi chưa đủ để luyện tập (cần ít nhất ${LS1_MIN_ITEMS} câu). Hãy quay lại sau khi giảng viên soạn thêm câu hỏi nhé!</p>`;
+            return;
+        }
+
+        const picked = ls1Shuffle(ls1Items).slice(0, Math.min(LS1_TOTAL_QUESTIONS, ls1Items.length));
+        ls1State = { questions: picked, index: 0, score: 0, busy: false };
+        ls1RenderQuestion();
+    }
+
+    function ls1RenderQuestion() {
+        if (!ls1State) return;
+        ls1State.busy = false;
+        ls1StopRecordingHard();
+        ls1StopAudio();
+        ls1QuizFeedback.innerHTML = '';
+        ls1QuizFeedback.className = 'thcs-translate-feedback';
+        ls1QuizControls.innerHTML = '';
+        ls1QuizProgress.textContent = `Câu ${ls1State.index + 1} / ${ls1State.questions.length} — Điểm: ${ls1State.score}`;
+
+        const q = ls1State.questions[ls1State.index];
+
+        if (q.type === 'dien') {
+            const span = ls1FindKeySpan(q.content, q.blank_key);
+            let sentenceHtml;
+            if (span) {
+                const before = q.content.slice(0, span.start);
+                const answerPart = q.content.slice(span.start, span.end);
+                const after = q.content.slice(span.end);
+                const widthCh = Math.max(answerPart.length + 2, 4);
+                sentenceHtml = ls1Esc(before) +
+                    `<input type="text" id="ls1-blank-input" class="thcs-translate-blank-input" style="width:${widthCh}ch" autocomplete="off" autocapitalize="off" spellcheck="false">` +
+                    ls1Esc(after);
+                ls1State.blankAnswer = answerPart;
+            } else {
+                sentenceHtml = ls1Esc(q.content);
+                ls1State.blankAnswer = q.blank_key || '';
+            }
+            ls1QuizBody.innerHTML = `
+                <div class="ln-play-row">
+                    <button type="button" class="kid-btn kid-btn-primary" id="ls1-play-btn">🔊 Nghe câu hỏi</button>
+                </div>
+                <p class="ln2-mc-question">${ls1Esc(q.question_text)}</p>
+                <div class="thcs-translate-sentence">${sentenceHtml}</div>
+            `;
+            document.getElementById('ls1-play-btn').addEventListener('click', () => ls1PlayItemAudio(q));
+            ls1QuizControls.innerHTML = `<button type="button" class="kid-btn kid-btn-primary" id="ls1-check-btn">✔️ Kiểm tra</button>`;
+            const input = document.getElementById('ls1-blank-input');
+            input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); ls1CheckAnswer(); } });
+            document.getElementById('ls1-check-btn').addEventListener('click', ls1CheckAnswer);
+            input.focus();
+        } else if (q.type === 'trac_nghiem') {
+            const options = q.options || [];
+            const optOrder = ls1Shuffle(options.map((_, i) => i));
+            ls1QuizBody.innerHTML = `
+                <div class="ln-play-row">
+                    <button type="button" class="kid-btn kid-btn-primary" id="ls1-play-btn">🔊 Nghe câu hỏi</button>
+                </div>
+                <p class="ln2-mc-question">${ls1Esc(q.question_text)}</p>
+                <div class="ln2-mc-grid" id="ls1-mc-grid">
+                    ${optOrder.map((origIdx, pos) => `
+                        <button type="button" class="ln2-mc-option" data-oi="${origIdx}">
+                            <span class="ln2-mc-letter">${String.fromCharCode(65 + pos)}</span>
+                            <span class="ln2-mc-text">${ls1Esc(options[origIdx])}</span>
+                        </button>
+                    `).join('')}
+                </div>
+            `;
+            document.getElementById('ls1-play-btn').addEventListener('click', () => ls1PlayItemAudio(q));
+            ls1State.mcSelected = null;
+            document.getElementById('ls1-mc-grid').addEventListener('click', (e) => {
+                const btn = e.target.closest('.ln2-mc-option');
+                if (!btn || ls1State.busy) return;
+                ls1State.mcSelected = parseInt(btn.dataset.oi, 10);
+                ls1CheckAnswer();
+            });
+        }
+    }
+
+    function ls1CheckAnswer() {
+        if (!ls1State || ls1State.busy) return;
+        const q = ls1State.questions[ls1State.index];
+        let isCorrect = false;
+        let correctText = '';
+
+        if (q.type === 'dien') {
+            const input = document.getElementById('ls1-blank-input');
+            const userVal = ls1Normalize(input.value);
+            if (!userVal) { input.focus(); return; }
+            correctText = q.content;
+            isCorrect = userVal === ls1Normalize(ls1State.blankAnswer);
+            input.disabled = true;
+            if (!isCorrect) input.classList.add('is-wrong');
+        } else if (q.type === 'trac_nghiem') {
+            if (ls1State.mcSelected === null || ls1State.mcSelected === undefined) return;
+            correctText = q.options[q.answer_index];
+            isCorrect = ls1State.mcSelected === q.answer_index;
+            document.querySelectorAll('#ls1-mc-grid .ln2-mc-option').forEach(btn => {
+                const oi = parseInt(btn.dataset.oi, 10);
+                btn.classList.add('is-disabled');
+                if (oi === q.answer_index) btn.classList.add('is-correct');
+                else if (oi === ls1State.mcSelected) btn.classList.add('is-wrong');
+            });
+        }
+
+        ls1State.busy = true;
+        if (isCorrect) ls1State.score++;
+        if (isCorrect) ls1PlayCorrectSound(); else ls1PlayWrongSound();
+        ls1QuizFeedback.className = 'thcs-translate-feedback ' + (isCorrect ? 'is-correct' : 'is-wrong');
+        ls1QuizFeedback.innerHTML = isCorrect
+            ? '✅ Chính xác!'
+            : `❌ Chưa đúng. Câu trả lời mẫu: <span class="tf-answer"><b>${ls1Esc(correctText)}</b></span>${q.vi ? `<br><span class="tf-answer">${ls1Esc(q.vi)}</span>` : ''}`;
+
+        // Dù đúng hay sai, luôn mời học viên ghi âm nói lại câu trả lời mẫu trước khi
+        // qua câu tiếp theo — đây chính là bước "phản xạ nói" của Giai đoạn 1.
+        ls1QuizFeedback.insertAdjacentHTML('afterend', ls1RenderRecordBox(correctText));
+        ls1WireRecordBox(correctText);
+
+        const isLastQuestion = ls1State.index + 1 >= ls1State.questions.length;
+        ls1QuizControls.innerHTML = `<button type="button" class="kid-btn kid-btn-primary" id="ls1-next-btn">${isLastQuestion ? '🏁 Xem kết quả' : '➡️ Câu tiếp theo'}</button>`;
+        document.getElementById('ls1-next-btn').addEventListener('click', () => {
+            ls1StopRecordingHard();
+            ls1State.index++;
+            if (ls1State.index >= ls1State.questions.length) ls1FinishQuiz();
+            else ls1RenderQuestion();
+        });
+    }
+
+    function ls1FinishQuiz() {
+        ls1StopAudio();
+        ls1StopRecordingHard();
+        ls1QuizPlayArea.style.display = 'none';
+        ls1ResultArea.style.display = 'block';
+        const total = ls1State.questions.length;
+        const pct = Math.round((ls1State.score / total) * 100);
+        ls1ResultBox.innerHTML = `
+            <div class="ln-result-emoji">${pct >= 80 ? '🏆' : (pct >= 50 ? '👍' : '💪')}</div>
+            <h3>Kết quả: ${ls1State.score} / ${total} câu đúng (${pct}%)</h3>
+            <div class="thcs-translate-actions">
+                <button type="button" class="kid-btn kid-btn-primary" id="ls1-retry-btn">🔄 Làm lại (20 câu mới)</button>
+                <button type="button" class="kid-btn" id="ls1-back-result-btn">← Quay lại</button>
+            </div>
+        `;
+        document.getElementById('ls1-retry-btn').addEventListener('click', () => ls1StartQuiz());
+        document.getElementById('ls1-back-result-btn').addEventListener('click', () => {
+            ls1ResultArea.style.display = 'none';
+            ls1QuizPanel.style.display = 'none';
+            ls1Panel.style.display = 'block';
+            ls1RefreshIntro();
+        });
+    }
+
+    ls1QuizBackBtn.addEventListener('click', () => {
+        ls1StopAudio();
+        ls1StopRecordingHard();
+        ls1QuizPanel.style.display = 'none';
+        ls1Panel.style.display = 'block';
+        ls1RefreshIntro();
+    });
+})();
+// ===== KẾT THÚC: TAB "LUYỆN KỸ NĂNG" > "🗣️ NÓI" — HOẠT ĐỘNG "PHẢN XẠ HỎI-ĐÁP" (ls1) =====
+
+
+// ===================================================================
+// ===== BẮT ĐẦU: TAB "LUYỆN KỸ NĂNG" > "🗣️ NÓI" — HOẠT ĐỘNG "MỞ LỜI HỘI THOẠI" (ls2) =====
+// Ngân hàng tình huống do giảng viên tự soạn, lưu ở bảng "speaking_lv1_opener_items"
+// trên Supabase (xem file "speaking_lv1_setup.sql" để tạo bảng + policy RLS). Mỗi
+// tình huống gồm: mô tả (tiếng Việt), đối tượng giao tiếp (người lạ / người quen),
+// mức độ trang trọng của câu đúng (formal / informal), và các đáp án trắc nghiệm
+// (câu bắt chuyện) — học viên chọn đúng câu bắt chuyện phù hợp, sau đó GHI ÂM nói
+// lại câu đó (chỉ phát lại tại chỗ để tự so khớp, không upload). Mỗi lượt luyện tập
+// lấy random tối đa 20 tình huống trong toàn bộ ngân hàng.
+// ===================================================================
+(() => {
+    const ls2Card = document.getElementById('ls-modau-card');
+    if (!ls2Card) return;
+
+    // ---------- Tham chiếu DOM ----------
+    const ls2Panel        = document.getElementById('ls2-panel');
+    const ls2BackBtn      = document.getElementById('ls2-back-btn');
+    const ls2ManageBtn    = document.getElementById('ls2-manage-btn');
+    const ls2ItemCountEl  = document.getElementById('ls2-item-count');
+    const ls2StartCard    = document.getElementById('ls2-start-card');
+    const ls2StartCountEl = document.getElementById('ls2-start-count');
+
+    const ls2ManagePanel    = document.getElementById('ls2-manage-panel');
+    const ls2ManageBackBtn  = document.getElementById('ls2-manage-back-btn');
+    const ls2AdminForm      = document.getElementById('ls2-admin-form');
+    const ls2AdminStatus    = document.getElementById('ls2-admin-status');
+    const ls2AdminSaveBtn   = document.getElementById('ls2-admin-save-btn');
+    const ls2AdminCancelBtn = document.getElementById('ls2-admin-cancel-btn');
+    const ls2ItemListEl     = document.getElementById('ls2-item-list');
+
+    const ls2QuizPanel    = document.getElementById('ls2-quiz-panel');
+    const ls2QuizBackBtn  = document.getElementById('ls2-quiz-back-btn');
+    const ls2QuizPlayArea = document.getElementById('ls2-quiz-play-area');
+    const ls2QuizProgress = document.getElementById('ls2-quiz-progress');
+    const ls2QuizBody     = document.getElementById('ls2-quiz-body');
+    const ls2QuizControls = document.getElementById('ls2-quiz-controls');
+    const ls2QuizFeedback = document.getElementById('ls2-quiz-feedback');
+    const ls2ResultArea   = document.getElementById('ls2-quiz-result-area');
+    const ls2ResultBox    = document.getElementById('ls2-result-box');
+
+    const LS2_TABLE = 'speaking_lv1_opener_items';
+    const LS2_TOTAL_QUESTIONS = 20;
+    const LS2_MIN_ITEMS = 4;
+    const LS2_CONTEXT_META = {
+        stranger:     { label: 'Người lạ', icon: '👤', cls: 'ls-tag-stranger' },
+        acquaintance: { label: 'Người quen', icon: '🙋', cls: 'ls-tag-acquaintance' }
+    };
+    const LS2_REGISTER_META = {
+        formal:   { label: 'Formal (trang trọng)', icon: '🎩', cls: 'ls-tag-formal' },
+        informal: { label: 'Informal (thân mật)', icon: '😊', cls: 'ls-tag-informal' }
+    };
+
+    // ---------- Tiện ích dùng chung ----------
+    function ls2Esc(s) {
+        return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+    function ls2Shuffle(arr) {
+        const copy = arr.slice();
+        for (let i = copy.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [copy[i], copy[j]] = [copy[j], copy[i]];
+        }
+        return copy;
+    }
+
+    // ----- Âm thanh hiệu ứng ĐÚNG / SAI -----
+    let ls2SfxCtx = null;
+    function getLs2SfxCtx() {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return null;
+        if (!ls2SfxCtx) ls2SfxCtx = new AC();
+        if (ls2SfxCtx.state === 'suspended') ls2SfxCtx.resume();
+        return ls2SfxCtx;
+    }
+    function ls2PlayTone(freq, startTime, duration, type, peakGain) {
+        const ctx = getLs2SfxCtx();
+        if (!ctx) return;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type || 'sine';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + startTime);
+        gain.gain.setValueAtTime(0.0001, ctx.currentTime + startTime);
+        gain.gain.linearRampToValueAtTime(peakGain || 0.22, ctx.currentTime + startTime + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + startTime + duration);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(ctx.currentTime + startTime);
+        osc.stop(ctx.currentTime + startTime + duration + 0.05);
+    }
+    function ls2PlayCorrectSound() {
+        ls2PlayTone(523.25, 0,    0.16, 'sine', 0.22);
+        ls2PlayTone(659.25, 0.12, 0.16, 'sine', 0.22);
+        ls2PlayTone(783.99, 0.24, 0.22, 'sine', 0.22);
+    }
+    function ls2PlayWrongSound() {
+        ls2PlayTone(180, 0,    0.18, 'square', 0.16);
+        ls2PlayTone(140, 0.15, 0.22, 'square', 0.16);
+    }
+
+    // ----- Phát audio câu đúng (dùng file .mp3 nếu giảng viên gắn link, không thì đọc tự động) -----
+    let ls2AudioEl = null;
+    function ls2GetAudioEl() {
+        if (!ls2AudioEl) { ls2AudioEl = new Audio(); ls2AudioEl.preload = 'auto'; }
+        return ls2AudioEl;
+    }
+    function ls2Speak(text) {
+        if (typeof window.speakEnglishWord === 'function') window.speakEnglishWord(text);
+    }
+    function ls2PlayModelAudio(item, text) {
+        const url = ((item && item.audio_url) || '').trim();
+        if (url) {
+            const audio = ls2GetAudioEl();
+            if (audio.src !== url) audio.src = url;
+            audio.currentTime = 0;
+            audio.play().catch(err => console.error('Lỗi khi phát file mp3 Nói — Mở lời hội thoại:', err.message));
+        } else {
+            ls2Speak(text);
+        }
+    }
+    function ls2StopAudio() {
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        if (ls2AudioEl) ls2AudioEl.pause();
+    }
+    document.querySelectorAll('.main-tab-btn').forEach(btn => btn.addEventListener('click', ls2StopAudio));
+    document.addEventListener('visibilitychange', () => { if (document.hidden) ls2StopAudio(); });
+    window.addEventListener('blur', ls2StopAudio);
+
+    // ----- Ghi âm tự luyện (KHÔNG upload — chỉ phát lại tại chỗ để tự so khớp) -----
+    let ls2Recorder = null;
+    let ls2RecStream = null;
+    let ls2RecChunks = [];
+    let ls2Recording = false;
+
+    function ls2StopRecordingHard() {
+        if (ls2Recorder && ls2Recorder.state !== 'inactive') {
+            try { ls2Recorder.stop(); } catch (e) { /* bỏ qua */ }
+        }
+        if (ls2RecStream) { ls2RecStream.getTracks().forEach(t => t.stop()); ls2RecStream = null; }
+        ls2Recording = false;
+    }
+
+    function ls2RenderRecordBox(targetText) {
+        return `
+            <div class="ls-record-box">
+                <p class="ls-record-hint">🎙️ Đến lượt bạn — bấm ghi âm rồi nói lại câu mở lời:</p>
+                <div class="ls-record-target">${ls2Esc(targetText)}</div>
+                <div class="ls-record-controls">
+                    <button type="button" class="kid-btn kid-btn-primary ls-record-btn" id="ls2-rec-btn">🎤 Ghi âm</button>
+                    <button type="button" class="kid-btn" id="ls2-rec-model-btn">🔊 Nghe giọng mẫu</button>
+                </div>
+                <p class="ls-record-status" id="ls2-rec-status"></p>
+                <audio class="ls-record-audio" id="ls2-rec-audio" controls style="display:none;"></audio>
+            </div>
+        `;
+    }
+
+    function ls2WireRecordBox(item, targetText) {
+        const btn      = document.getElementById('ls2-rec-btn');
+        const modelBtn = document.getElementById('ls2-rec-model-btn');
+        const status   = document.getElementById('ls2-rec-status');
+        const audioEl  = document.getElementById('ls2-rec-audio');
+        if (!btn) return;
+
+        btn.addEventListener('click', async () => {
+            if (!ls2Recording) {
+                try {
+                    ls2RecStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    ls2Recorder = new MediaRecorder(ls2RecStream);
+                    ls2RecChunks = [];
+                    ls2Recorder.ondataavailable = (e) => ls2RecChunks.push(e.data);
+                    ls2Recorder.onstop = () => {
+                        const blob = new Blob(ls2RecChunks, { type: 'audio/webm' });
+                        audioEl.src = URL.createObjectURL(blob);
+                        audioEl.style.display = 'block';
+                        status.textContent = '✅ Đã ghi âm xong — nghe lại rồi so với giọng mẫu ở trên nhé.';
+                        if (ls2RecStream) { ls2RecStream.getTracks().forEach(t => t.stop()); ls2RecStream = null; }
+                    };
+                    ls2Recorder.start();
+                    ls2Recording = true;
+                    btn.textContent = '⏹️ Dừng ghi âm';
+                    btn.classList.add('is-recording');
+                    status.textContent = '🔴 Đang ghi âm... bấm "Dừng ghi âm" khi nói xong.';
+                    audioEl.style.display = 'none';
+                } catch (err) {
+                    status.textContent = '⚠️ Không truy cập được micro — hãy cho phép quyền truy cập micro trên trình duyệt.';
+                }
+            } else {
+                if (ls2Recorder && ls2Recorder.state !== 'inactive') ls2Recorder.stop();
+                ls2Recording = false;
+                btn.textContent = '🎤 Ghi âm lại';
+                btn.classList.remove('is-recording');
+            }
+        });
+
+        if (modelBtn) modelBtn.addEventListener('click', () => ls2PlayModelAudio(item, targetText));
+    }
+
+    // ---------- Tải / lưu ngân hàng tình huống trên Supabase ----------
+    let ls2Items = [];
+    let ls2ItemsLoaded = false;
+
+    async function ls2LoadItems(force) {
+        if (ls2ItemsLoaded && !force) return ls2Items;
+        try {
+            const { data, error } = await sb
+                .from(LS2_TABLE)
+                .select('*')
+                .order('created_at', { ascending: false });
+            if (error) throw error;
+            ls2Items = data || [];
+            ls2ItemsLoaded = true;
+        } catch (err) {
+            console.error('Lỗi khi tải ngân hàng tình huống Nói — Mở lời hội thoại:', err.message);
+            ls2Items = [];
+        }
+        return ls2Items;
+    }
+    async function ls2CreateItemDB(payload) {
+        const insertPayload = Object.assign({}, payload, { created_by: currentEmail });
+        const { data, error } = await sb.from(LS2_TABLE).insert(insertPayload).select().single();
+        if (error) throw error;
+        return data;
+    }
+    async function ls2UpdateItemDB(id, payload) {
+        const updatePayload = Object.assign({}, payload, { updated_at: new Date().toISOString(), updated_by: currentEmail });
+        const { data, error } = await sb.from(LS2_TABLE).update(updatePayload).eq('id', id).select().single();
+        if (error) throw error;
+        return data;
+    }
+    async function ls2DeleteItemDB(id) {
+        const { error } = await sb.from(LS2_TABLE).delete().eq('id', id);
+        if (error) throw error;
+    }
+
+    // ---------- Điều hướng: Giai đoạn 1 -> Mở lời hội thoại -> (Soạn tình huống | Bắt đầu luyện tập) ----------
+    ls2Card.addEventListener('click', () => {
+        const stage1Panel = document.getElementById('ls-stage1-panel');
+        if (stage1Panel) stage1Panel.style.display = 'none';
+        ls2Panel.style.display = 'block';
+        ls2RefreshIntro();
+    });
+    ls2BackBtn.addEventListener('click', () => {
+        ls2Panel.style.display = 'none';
+        const stage1Panel = document.getElementById('ls-stage1-panel');
+        if (stage1Panel) stage1Panel.style.display = 'block';
+    });
+
+    async function ls2RefreshIntro() {
+        ls2ManageBtn.style.display = isTeacher ? 'inline-block' : 'none';
+        await ls2LoadItems();
+        if (ls2ItemCountEl) ls2ItemCountEl.textContent = String(ls2Items.length);
+        if (ls2StartCountEl) {
+            ls2StartCountEl.textContent = ls2Items.length >= LS2_MIN_ITEMS
+                ? `Ngẫu nhiên ${Math.min(LS2_TOTAL_QUESTIONS, ls2Items.length)} / ${ls2Items.length} tình huống đã soạn`
+                : `Chưa đủ tình huống (${ls2Items.length}/${LS2_MIN_ITEMS} tối thiểu) — hãy quay lại sau`;
+        }
+    }
+
+    ls2StartCard.addEventListener('click', ls2StartQuiz);
+
+    // ---------- Khu vực giảng viên soạn tình huống ----------
+    let ls2EditingId = null;
+
+    ls2ManageBtn.addEventListener('click', async () => {
+        if (!isTeacher) { alert('Chỉ giảng viên mới dùng được chức năng này.'); return; }
+        ls2Panel.style.display = 'none';
+        ls2ManagePanel.style.display = 'block';
+        ls2ResetForm();
+        ls2ItemListEl.innerHTML = '<p class="kid-hint">Đang tải danh sách tình huống...</p>';
+        await ls2LoadItems(true);
+        ls2RenderItemList();
+    });
+    ls2ManageBackBtn.addEventListener('click', () => {
+        ls2ManagePanel.style.display = 'none';
+        ls2Panel.style.display = 'block';
+        ls2RefreshIntro();
+    });
+
+    const LS2_MC_MIN_OPTIONS = 2;
+    const LS2_MC_MAX_OPTIONS = 8;
+
+    function ls2BuildMcOptionRowsHtml(values, answerIndex) {
+        return values.map((val, i) => `
+            <div class="news-quiz-edit-option-row" data-idx="${i}">
+                <input type="radio" name="ls2-f-answer" value="${i}" id="ls2-f-answer-${i}" ${i === answerIndex ? 'checked' : ''}>
+                <input type="text" id="ls2-f-opt-${i}" class="news-edit-input" placeholder="Đáp án ${String.fromCharCode(65 + i)}..." value="${ls2Esc(val)}">
+                ${values.length > LS2_MC_MIN_OPTIONS ? `<button type="button" class="ln2-mc-remove-btn" data-remove-idx="${i}" title="Xoá đáp án này">✕</button>` : ''}
+            </div>
+        `).join('');
+    }
+    function ls2ReadMcOptionsFromDom() {
+        const rows = Array.from(document.querySelectorAll('#ls2-mc-edit-options [data-idx]'));
+        const values = rows.map(row => {
+            const inp = row.querySelector('input[type="text"]');
+            return inp ? inp.value : '';
+        });
+        const checked = document.querySelector('input[name="ls2-f-answer"]:checked');
+        const answerIndex = checked ? parseInt(checked.value, 10) : 0;
+        return { values, answerIndex };
+    }
+    function ls2RerenderMcOptions(values, answerIndex) {
+        const wrap = document.getElementById('ls2-mc-edit-options');
+        if (!wrap) return;
+        const safeAnswerIndex = Math.min(Math.max(answerIndex, 0), values.length - 1);
+        wrap.innerHTML = ls2BuildMcOptionRowsHtml(values, safeAnswerIndex);
+        const addBtn = document.getElementById('ls2-mc-add-btn');
+        if (addBtn) addBtn.style.display = values.length >= LS2_MC_MAX_OPTIONS ? 'none' : '';
+        ls2WireMcRemoveButtons();
+    }
+    function ls2WireMcRemoveButtons() {
+        document.querySelectorAll('#ls2-mc-edit-options .ln2-mc-remove-btn').forEach(btn => {
+            btn.onclick = () => {
+                const { values, answerIndex } = ls2ReadMcOptionsFromDom();
+                if (values.length <= LS2_MC_MIN_OPTIONS) return;
+                const removeIdx = parseInt(btn.dataset.removeIdx, 10);
+                values.splice(removeIdx, 1);
+                let newAnswerIndex = answerIndex;
+                if (removeIdx === answerIndex) newAnswerIndex = 0;
+                else if (removeIdx < answerIndex) newAnswerIndex = answerIndex - 1;
+                ls2RerenderMcOptions(values, newAnswerIndex);
+            };
+        });
+    }
+    function ls2WireMcAddButton() {
+        const addBtn = document.getElementById('ls2-mc-add-btn');
+        if (!addBtn) return;
+        addBtn.onclick = () => {
+            const { values, answerIndex } = ls2ReadMcOptionsFromDom();
+            if (values.length >= LS2_MC_MAX_OPTIONS) return;
+            values.push('');
+            ls2RerenderMcOptions(values, answerIndex);
+        };
+    }
+
+    function ls2RenderAdminForm() {
+        ls2AdminForm.innerHTML = `
+            <div class="ln2-field">
+                <label>Tình huống (mô tả bằng tiếng Việt, hiển thị cho học viên)</label>
+                <textarea id="ls2-f-situation" class="news-edit-input" rows="2" placeholder="VD: Bạn gặp một người hàng xóm mới lần đầu trong thang máy."></textarea>
+            </div>
+            <div class="ln2-field">
+                <label>Đối tượng giao tiếp</label>
+                <select id="ls2-f-context" class="news-edit-input">
+                    <option value="stranger">Người lạ</option>
+                    <option value="acquaintance">Người quen</option>
+                </select>
+            </div>
+            <div class="ln2-field">
+                <label>Mức độ trang trọng của câu đúng</label>
+                <select id="ls2-f-register" class="news-edit-input">
+                    <option value="formal">Formal (trang trọng)</option>
+                    <option value="informal">Informal (thân mật)</option>
+                </select>
+            </div>
+            <div class="ln2-field">
+                <label>Đáp án — câu bắt chuyện (tối thiểu 2 — tick chọn đáp án đúng)</label>
+                <div class="ln2-mc-edit-options news-quiz-edit-options" id="ls2-mc-edit-options">
+                    ${ls2BuildMcOptionRowsHtml(['', '', '', ''], 0)}
+                </div>
+                <button type="button" id="ls2-mc-add-btn" class="ln2-mc-add-btn">+ Thêm đáp án</button>
+            </div>
+            <div class="ln2-field">
+                <label>Nghĩa tiếng Việt của câu đúng (tuỳ chọn)</label>
+                <input type="text" id="ls2-f-vi" class="news-edit-input" placeholder="VD: Chào bạn, mình là hàng xóm mới ở tầng 3.">
+            </div>
+            <div class="ln2-field">
+                <label>Link file .mp3 (tuỳ chọn). Để trống nếu muốn dùng giọng đọc tự động.</label>
+                <input type="text" id="ls2-f-audio-url" class="news-edit-input" placeholder="VD: https://.../tinh-huong-1.mp3">
+            </div>
+        `;
+        ls2WireMcRemoveButtons();
+        ls2WireMcAddButton();
+    }
+
+    function ls2ResetForm(preserveStatus) {
+        ls2EditingId = null;
+        ls2AdminSaveBtn.textContent = '➕ Thêm tình huống';
+        ls2AdminCancelBtn.style.display = 'none';
+        if (!preserveStatus) {
+            ls2AdminStatus.textContent = '';
+            ls2AdminStatus.className = 'ln2-admin-status';
+        }
+        ls2RenderAdminForm();
+    }
+    ls2AdminCancelBtn.addEventListener('click', () => ls2ResetForm());
+
+    function ls2PopulateFormForEdit(item) {
+        ls2RenderAdminForm();
+        document.getElementById('ls2-f-situation').value = item.situation || '';
+        document.getElementById('ls2-f-context').value = item.context || 'stranger';
+        document.getElementById('ls2-f-register').value = item.register || 'formal';
+        const savedOptions = (item.options && item.options.length >= LS2_MC_MIN_OPTIONS)
+            ? item.options.slice()
+            : ['', ''];
+        ls2RerenderMcOptions(savedOptions, item.answer_index || 0);
+        const viEl = document.getElementById('ls2-f-vi');
+        if (viEl) viEl.value = item.vi || '';
+        const audioUrlEl = document.getElementById('ls2-f-audio-url');
+        if (audioUrlEl) audioUrlEl.value = item.audio_url || '';
+
+        ls2EditingId = item.id;
+        ls2AdminSaveBtn.textContent = '💾 Lưu thay đổi';
+        ls2AdminCancelBtn.style.display = 'inline-block';
+        ls2AdminStatus.textContent = '';
+        ls2AdminStatus.className = 'ln2-admin-status';
+        if (typeof ls2AdminForm.scrollIntoView === 'function') ls2AdminForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function ls2CollectFormPayload() {
+        const situation = (document.getElementById('ls2-f-situation').value || '').trim();
+        const context = document.getElementById('ls2-f-context').value;
+        const register = document.getElementById('ls2-f-register').value;
+        const viEl = document.getElementById('ls2-f-vi');
+        const vi = viEl ? viEl.value.trim() : '';
+        const audioUrlEl = document.getElementById('ls2-f-audio-url');
+        const audioUrl = audioUrlEl ? audioUrlEl.value.trim() : '';
+        if (!situation) throw new Error('Vui lòng nhập mô tả tình huống.');
+        const { values: options, answerIndex } = ls2ReadMcOptionsFromDom();
+        const trimmedOptions = options.map(o => o.trim());
+        if (trimmedOptions.length < LS2_MC_MIN_OPTIONS) throw new Error(`Cần tối thiểu ${LS2_MC_MIN_OPTIONS} đáp án.`);
+        if (trimmedOptions.some(o => !o)) throw new Error('Vui lòng nhập đủ nội dung cho tất cả các đáp án.');
+        return { situation, context, register, options: trimmedOptions, answer_index: answerIndex, vi, audio_url: audioUrl || null };
+    }
+
+    ls2AdminSaveBtn.addEventListener('click', async () => {
+        if (!isTeacher) return;
+        let payload;
+        try {
+            payload = ls2CollectFormPayload();
+        } catch (err) {
+            ls2AdminStatus.textContent = '⚠️ ' + err.message;
+            ls2AdminStatus.className = 'ln2-admin-status is-error';
+            return;
+        }
+        ls2AdminSaveBtn.disabled = true;
+        ls2AdminStatus.textContent = 'Đang lưu...';
+        ls2AdminStatus.className = 'ln2-admin-status';
+        try {
+            if (ls2EditingId !== null) {
+                const updated = await ls2UpdateItemDB(ls2EditingId, payload);
+                const idx = ls2Items.findIndex(it => it.id === ls2EditingId);
+                if (idx !== -1) ls2Items[idx] = updated;
+                ls2AdminStatus.textContent = '✅ Đã lưu thay đổi.';
+            } else {
+                const created = await ls2CreateItemDB(payload);
+                ls2Items.unshift(created);
+                ls2AdminStatus.textContent = '✅ Đã thêm tình huống mới.';
+            }
+            ls2ResetForm(true);
+            ls2RenderItemList();
+        } catch (err) {
+            ls2AdminStatus.textContent = '❌ Lưu thất bại: ' + err.message;
+            ls2AdminStatus.className = 'ln2-admin-status is-error';
+        } finally {
+            ls2AdminSaveBtn.disabled = false;
+        }
+    });
+
+    function ls2RenderItemList() {
+        if (!ls2Items.length) {
+            ls2ItemListEl.innerHTML = '<p class="kid-hint">Chưa có tình huống nào — hãy soạn tình huống đầu tiên ở khung bên trên.</p>';
+            return;
+        }
+        ls2ItemListEl.innerHTML = ls2Items.map(item => {
+            const ctxMeta = LS2_CONTEXT_META[item.context] || { label: item.context, icon: '' };
+            return `
+                <div class="ln2-item-row" data-item-id="${item.id}">
+                    <span class="ln2-item-type-badge">${ctxMeta.icon} ${ls2Esc(ctxMeta.label)}</span>
+                    ${item.audio_url ? '<span class="ln2-item-audio-badge" title="Đã gắn link .mp3">🎵</span>' : ''}
+                    <span class="ln2-item-preview">${ls2Esc(item.situation)}</span>
+                    <div class="ln2-item-actions">
+                        <button type="button" class="ln2-item-edit-btn" data-id="${item.id}" title="Sửa">✏️</button>
+                        <button type="button" class="ln2-item-delete-btn" data-id="${item.id}" title="Xóa">🗑️</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    ls2ItemListEl.addEventListener('click', async (e) => {
+        const editBtn = e.target.closest('.ln2-item-edit-btn');
+        const delBtn = e.target.closest('.ln2-item-delete-btn');
+        if (editBtn) {
+            const item = ls2Items.find(it => String(it.id) === editBtn.dataset.id);
+            if (item) ls2PopulateFormForEdit(item);
+            return;
+        }
+        if (delBtn) {
+            const item = ls2Items.find(it => String(it.id) === delBtn.dataset.id);
+            if (!item) return;
+            if (!confirm(`Xóa tình huống "${item.situation}"? Hành động này không thể hoàn tác.`)) return;
+            try {
+                await ls2DeleteItemDB(item.id);
+                ls2Items = ls2Items.filter(it => it.id !== item.id);
+                ls2RenderItemList();
+                if (ls2EditingId === item.id) ls2ResetForm();
+            } catch (err) {
+                alert('Xóa thất bại: ' + err.message);
+            }
+        }
+    });
+
+    // ---------- Làm bài luyện tập (học viên) ----------
+    let ls2State = null;
+
+    async function ls2StartQuiz() {
+        ls2QuizPanel.style.display = 'block';
+        ls2Panel.style.display = 'none';
+        ls2ResultArea.style.display = 'none';
+        ls2QuizPlayArea.style.display = 'block';
+        ls2QuizProgress.textContent = '';
+        ls2QuizBody.innerHTML = '<p class="kid-hint">Đang chuẩn bị tình huống...</p>';
+        ls2QuizControls.innerHTML = '';
+        ls2QuizFeedback.innerHTML = '';
+        ls2QuizFeedback.className = 'thcs-translate-feedback';
+
+        await ls2LoadItems();
+        if (ls2Items.length < LS2_MIN_ITEMS) {
+            ls2QuizBody.innerHTML = `<p class="kid-hint">⚠️ Kho tình huống chưa đủ để luyện tập (cần ít nhất ${LS2_MIN_ITEMS} tình huống). Hãy quay lại sau khi giảng viên soạn thêm nhé!</p>`;
+            return;
+        }
+
+        const picked = ls2Shuffle(ls2Items).slice(0, Math.min(LS2_TOTAL_QUESTIONS, ls2Items.length));
+        ls2State = { questions: picked, index: 0, score: 0, busy: false };
+        ls2RenderQuestion();
+    }
+
+    function ls2RenderQuestion() {
+        if (!ls2State) return;
+        ls2State.busy = false;
+        ls2StopRecordingHard();
+        ls2StopAudio();
+        ls2QuizFeedback.innerHTML = '';
+        ls2QuizFeedback.className = 'thcs-translate-feedback';
+        ls2QuizControls.innerHTML = '';
+        ls2QuizProgress.textContent = `Tình huống ${ls2State.index + 1} / ${ls2State.questions.length} — Điểm: ${ls2State.score}`;
+
+        const q = ls2State.questions[ls2State.index];
+        const ctxMeta = LS2_CONTEXT_META[q.context] || { label: q.context, icon: '', cls: '' };
+        const options = q.options || [];
+        const optOrder = ls2Shuffle(options.map((_, i) => i));
+
+        ls2QuizBody.innerHTML = `
+            <div class="ls-situation-box">
+                <div class="ls-tag-row"><span class="ls-tag ${ctxMeta.cls}">${ctxMeta.icon} ${ls2Esc(ctxMeta.label)}</span></div>
+                <div class="ls-situation-text">${ls2Esc(q.situation)}</div>
+            </div>
+            <p class="ln2-mc-question">Bạn nên mở lời thế nào?</p>
+            <div class="ln2-mc-grid" id="ls2-mc-grid">
+                ${optOrder.map((origIdx, pos) => `
+                    <button type="button" class="ln2-mc-option" data-oi="${origIdx}">
+                        <span class="ln2-mc-letter">${String.fromCharCode(65 + pos)}</span>
+                        <span class="ln2-mc-text">${ls2Esc(options[origIdx])}</span>
+                    </button>
+                `).join('')}
+            </div>
+        `;
+        ls2State.mcSelected = null;
+        document.getElementById('ls2-mc-grid').addEventListener('click', (e) => {
+            const btn = e.target.closest('.ln2-mc-option');
+            if (!btn || ls2State.busy) return;
+            ls2State.mcSelected = parseInt(btn.dataset.oi, 10);
+            ls2CheckAnswer();
+        });
+    }
+
+    function ls2CheckAnswer() {
+        if (!ls2State || ls2State.busy) return;
+        const q = ls2State.questions[ls2State.index];
+        if (ls2State.mcSelected === null || ls2State.mcSelected === undefined) return;
+
+        const correctText = q.options[q.answer_index];
+        const isCorrect = ls2State.mcSelected === q.answer_index;
+        document.querySelectorAll('#ls2-mc-grid .ln2-mc-option').forEach(btn => {
+            const oi = parseInt(btn.dataset.oi, 10);
+            btn.classList.add('is-disabled');
+            if (oi === q.answer_index) btn.classList.add('is-correct');
+            else if (oi === ls2State.mcSelected) btn.classList.add('is-wrong');
+        });
+
+        ls2State.busy = true;
+        if (isCorrect) ls2State.score++;
+        if (isCorrect) ls2PlayCorrectSound(); else ls2PlayWrongSound();
+
+        const regMeta = LS2_REGISTER_META[q.register] || { label: q.register, icon: '', cls: '' };
+        const regTagHtml = `<span class="ls-tag ${regMeta.cls}" style="margin-top:6px;">${regMeta.icon} ${ls2Esc(regMeta.label)}</span>`;
+
+        ls2QuizFeedback.className = 'thcs-translate-feedback ' + (isCorrect ? 'is-correct' : 'is-wrong');
+        ls2QuizFeedback.innerHTML = (isCorrect ? '✅ Chính xác! ' : `❌ Chưa đúng. Câu đúng: <span class="tf-answer"><b>${ls2Esc(correctText)}</b></span>${q.vi ? `<br><span class="tf-answer">${ls2Esc(q.vi)}</span>` : ''}`)
+            + `<div class="ls-tag-row" style="margin-top:8px;">${regTagHtml}</div>`;
+
+        // Dù đúng hay sai, luôn mời học viên ghi âm nói lại câu mở lời đúng trước khi
+        // qua tình huống tiếp theo.
+        ls2QuizFeedback.insertAdjacentHTML('afterend', ls2RenderRecordBox(correctText));
+        ls2WireRecordBox(q, correctText);
+
+        const isLastQuestion = ls2State.index + 1 >= ls2State.questions.length;
+        ls2QuizControls.innerHTML = `<button type="button" class="kid-btn kid-btn-primary" id="ls2-next-btn">${isLastQuestion ? '🏁 Xem kết quả' : '➡️ Tình huống tiếp theo'}</button>`;
+        document.getElementById('ls2-next-btn').addEventListener('click', () => {
+            ls2StopRecordingHard();
+            ls2State.index++;
+            if (ls2State.index >= ls2State.questions.length) ls2FinishQuiz();
+            else ls2RenderQuestion();
+        });
+    }
+
+    function ls2FinishQuiz() {
+        ls2StopAudio();
+        ls2StopRecordingHard();
+        ls2QuizPlayArea.style.display = 'none';
+        ls2ResultArea.style.display = 'block';
+        const total = ls2State.questions.length;
+        const pct = Math.round((ls2State.score / total) * 100);
+        ls2ResultBox.innerHTML = `
+            <div class="ln-result-emoji">${pct >= 80 ? '🏆' : (pct >= 50 ? '👍' : '💪')}</div>
+            <h3>Kết quả: ${ls2State.score} / ${total} tình huống đúng (${pct}%)</h3>
+            <div class="thcs-translate-actions">
+                <button type="button" class="kid-btn kid-btn-primary" id="ls2-retry-btn">🔄 Làm lại (tình huống mới)</button>
+                <button type="button" class="kid-btn" id="ls2-back-result-btn">← Quay lại</button>
+            </div>
+        `;
+        document.getElementById('ls2-retry-btn').addEventListener('click', () => ls2StartQuiz());
+        document.getElementById('ls2-back-result-btn').addEventListener('click', () => {
+            ls2ResultArea.style.display = 'none';
+            ls2QuizPanel.style.display = 'none';
+            ls2Panel.style.display = 'block';
+            ls2RefreshIntro();
+        });
+    }
+
+    ls2QuizBackBtn.addEventListener('click', () => {
+        ls2StopAudio();
+        ls2StopRecordingHard();
+        ls2QuizPanel.style.display = 'none';
+        ls2Panel.style.display = 'block';
+        ls2RefreshIntro();
+    });
+})();
+// ===== KẾT THÚC: TAB "LUYỆN KỸ NĂNG" > "🗣️ NÓI" — HOẠT ĐỘNG "MỞ LỜI HỘI THOẠI" (ls2) =====
+
+
+// ===================================================================
+// ===== BẮT ĐẦU: TAB "LUYỆN KỸ NĂNG" > "🗣️ NÓI" — GIAI ĐOẠN 2: ĐIỀU HƯỚNG =====
+// Điều hướng cấp "Giai đoạn 2" -> chọn 1 trong 2 hoạt động (Shadowing / Miêu tả sự
+// việc). Từng hoạt động có khối chức năng riêng ở 2 phần bên dưới (lssh = Shadowing,
+// lsmt = Miêu tả sự việc). Giai đoạn 3 (lsarea) chỉ có 1 hoạt động tổng hợp nên tự
+// điều hướng trực tiếp từ thẻ folder-card của nó, không cần khối điều hướng riêng.
+// ===================================================================
+(() => {
+    const lsStage2FolderCard = document.getElementById('ls-stage2-folder-card');
+    if (!lsStage2FolderCard) return;
+
+    const lsStageFolderGrid = document.getElementById('ls-stage-folder-grid');
+    const lsStage2Panel     = document.getElementById('ls-stage2-panel');
+    const lsStage2BackBtn   = document.getElementById('ls-stage2-back-btn');
+
+    lsStage2FolderCard.addEventListener('click', () => {
+        lsStageFolderGrid.style.display = 'none';
+        lsStage2Panel.style.display = 'block';
+    });
+    lsStage2BackBtn.addEventListener('click', () => {
+        lsStage2Panel.style.display = 'none';
+        lsStageFolderGrid.style.display = '';
+    });
+})();
+// ===== KẾT THÚC: ĐIỀU HƯỚNG GIAI ĐOẠN 2 (NÓI) =====
+
+
+// ===================================================================
+// ===== BẮT ĐẦU: TAB "LUYỆN KỸ NĂNG" > "🗣️ NÓI" — HOẠT ĐỘNG "SHADOWING" (lssh) =====
+// Ngân hàng đoạn hội thoại/câu nói ngắn do giảng viên tự soạn, lưu ở bảng
+// "speaking_lv2_shadow_items" trên Supabase (xem file "speaking_lv2_lv3_setup.sql"
+// để tạo bảng + policy RLS). Học viên nghe đoạn (tốc độ gốc hoặc chậm dần), rồi GHI
+// ÂM nhại lại — bản ghi chỉ phát lại tại chỗ (KHÔNG upload) để tự so khớp với bản
+// gốc, không chấm điểm phát âm tự động. Mỗi lượt luyện tập lấy random tối đa 15 đoạn.
+// ===================================================================
+(() => {
+    const lsshCard = document.getElementById('ls-shadow-card');
+    if (!lsshCard) return;
+
+    // ---------- Tham chiếu DOM ----------
+    const lsshPanel        = document.getElementById('lssh-panel');
+    const lsshBackBtn      = document.getElementById('lssh-back-btn');
+    const lsshManageBtn    = document.getElementById('lssh-manage-btn');
+    const lsshItemCountEl  = document.getElementById('lssh-item-count');
+    const lsshStartCard    = document.getElementById('lssh-start-card');
+    const lsshStartCountEl = document.getElementById('lssh-start-count');
+
+    const lsshManagePanel    = document.getElementById('lssh-manage-panel');
+    const lsshManageBackBtn  = document.getElementById('lssh-manage-back-btn');
+    const lsshAdminForm      = document.getElementById('lssh-admin-form');
+    const lsshAdminStatus    = document.getElementById('lssh-admin-status');
+    const lsshAdminSaveBtn   = document.getElementById('lssh-admin-save-btn');
+    const lsshAdminCancelBtn = document.getElementById('lssh-admin-cancel-btn');
+    const lsshItemListEl     = document.getElementById('lssh-item-list');
+
+    const lsshPracticePanel    = document.getElementById('lssh-practice-panel');
+    const lsshPracticeBackBtn  = document.getElementById('lssh-practice-back-btn');
+    const lsshPracticePlayArea = document.getElementById('lssh-practice-play-area');
+    const lsshPracticeProgress = document.getElementById('lssh-practice-progress');
+    const lsshPracticeBody     = document.getElementById('lssh-practice-body');
+    const lsshPracticeControls = document.getElementById('lssh-practice-controls');
+    const lsshResultArea       = document.getElementById('lssh-practice-result-area');
+    const lsshResultBox        = document.getElementById('lssh-result-box');
+
+    const LSSH_TABLE = 'speaking_lv2_shadow_items';
+    const LSSH_TOTAL_ITEMS = 15;
+    const LSSH_MIN_ITEMS = 3; // số đoạn tối thiểu trong ngân hàng để cho phép bắt đầu luyện tập
+
+    // ---------- Tiện ích dùng chung ----------
+    function lsshEsc(s) {
+        return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+    function lsshShuffle(arr) {
+        const copy = arr.slice();
+        for (let i = copy.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [copy[i], copy[j]] = [copy[j], copy[i]];
+        }
+        return copy;
+    }
+
+    // ----- Phát đoạn hội thoại theo tốc độ tuỳ chọn: dùng file .mp3 (điều chỉnh
+    // playbackRate) nếu giảng viên gắn link, không thì đọc bằng giọng máy (điều chỉnh
+    // "rate" của SpeechSynthesisUtterance) -----
+    let lsshAudioEl = null;
+    function lsshGetAudioEl() {
+        if (!lsshAudioEl) { lsshAudioEl = new Audio(); lsshAudioEl.preload = 'auto'; }
+        return lsshAudioEl;
+    }
+    function lsshSpeakAt(text, rate) {
+        if (!('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.rate = rate || 1;
+        utter.lang = 'en-US';
+        window.speechSynthesis.speak(utter);
+    }
+    function lsshPlayAt(item, rate) {
+        const url = ((item && item.audio_url) || '').trim();
+        if (url) {
+            const audio = lsshGetAudioEl();
+            if (audio.src !== url) audio.src = url;
+            audio.currentTime = 0;
+            audio.playbackRate = rate || 1;
+            audio.play().catch(err => console.error('Lỗi khi phát file mp3 Shadowing:', err.message));
+        } else {
+            lsshSpeakAt(item ? item.text : '', rate);
+        }
+    }
+    function lsshStopAudio() {
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        if (lsshAudioEl) lsshAudioEl.pause();
+    }
+    document.querySelectorAll('.main-tab-btn').forEach(btn => btn.addEventListener('click', lsshStopAudio));
+    document.addEventListener('visibilitychange', () => { if (document.hidden) lsshStopAudio(); });
+    window.addEventListener('blur', lsshStopAudio);
+
+    // ----- Ghi âm tự luyện (KHÔNG upload — chỉ phát lại tại chỗ để tự so khớp) -----
+    let lsshRecorder = null;
+    let lsshRecStream = null;
+    let lsshRecChunks = [];
+    let lsshRecording = false;
+
+    function lsshStopRecordingHard() {
+        if (lsshRecorder && lsshRecorder.state !== 'inactive') {
+            try { lsshRecorder.stop(); } catch (e) { /* bỏ qua */ }
+        }
+        if (lsshRecStream) { lsshRecStream.getTracks().forEach(t => t.stop()); lsshRecStream = null; }
+        lsshRecording = false;
+    }
+    function lsshRenderRecordBoxHtml() {
+        return `
+            <div class="ls-record-box">
+                <p class="ls-record-hint">🎙️ Giờ đến lượt bạn — bấm ghi âm rồi nhại lại đúng nhịp:</p>
+                <div class="ls-record-controls">
+                    <button type="button" class="kid-btn kid-btn-primary ls-record-btn" id="lssh-rec-btn">🎤 Ghi âm</button>
+                </div>
+                <p class="ls-record-status" id="lssh-rec-status"></p>
+                <audio class="ls-record-audio" id="lssh-rec-audio" controls style="display:none;"></audio>
+            </div>
+        `;
+    }
+    function lsshWireRecordBox() {
+        const btn     = document.getElementById('lssh-rec-btn');
+        const status  = document.getElementById('lssh-rec-status');
+        const audioEl = document.getElementById('lssh-rec-audio');
+        if (!btn) return;
+        btn.addEventListener('click', async () => {
+            if (!lsshRecording) {
+                try {
+                    lsshRecStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    lsshRecorder = new MediaRecorder(lsshRecStream);
+                    lsshRecChunks = [];
+                    lsshRecorder.ondataavailable = (e) => lsshRecChunks.push(e.data);
+                    lsshRecorder.onstop = () => {
+                        const blob = new Blob(lsshRecChunks, { type: 'audio/webm' });
+                        audioEl.src = URL.createObjectURL(blob);
+                        audioEl.style.display = 'block';
+                        status.textContent = '✅ Đã ghi âm xong — nghe lại rồi so với bản gốc ở trên nhé.';
+                        if (lsshRecStream) { lsshRecStream.getTracks().forEach(t => t.stop()); lsshRecStream = null; }
+                    };
+                    lsshRecorder.start();
+                    lsshRecording = true;
+                    btn.textContent = '⏹️ Dừng ghi âm';
+                    btn.classList.add('is-recording');
+                    status.textContent = '🔴 Đang ghi âm... bấm "Dừng ghi âm" khi nói xong.';
+                    audioEl.style.display = 'none';
+                } catch (err) {
+                    status.textContent = '⚠️ Không truy cập được micro — hãy cho phép quyền truy cập micro trên trình duyệt.';
+                }
+            } else {
+                if (lsshRecorder && lsshRecorder.state !== 'inactive') lsshRecorder.stop();
+                lsshRecording = false;
+                btn.textContent = '🎤 Ghi âm lại';
+                btn.classList.remove('is-recording');
+            }
+        });
+    }
+
+    // ---------- Tải / lưu ngân hàng đoạn hội thoại trên Supabase ----------
+    let lsshItems = [];
+    let lsshItemsLoaded = false;
+
+    async function lsshLoadItems(force) {
+        if (lsshItemsLoaded && !force) return lsshItems;
+        try {
+            const { data, error } = await sb.from(LSSH_TABLE).select('*').order('created_at', { ascending: false });
+            if (error) throw error;
+            lsshItems = data || [];
+            lsshItemsLoaded = true;
+        } catch (err) {
+            console.error('Lỗi khi tải ngân hàng Shadowing:', err.message);
+            lsshItems = [];
+        }
+        return lsshItems;
+    }
+    async function lsshCreateItemDB(payload) {
+        const insertPayload = Object.assign({}, payload, { created_by: currentEmail });
+        const { data, error } = await sb.from(LSSH_TABLE).insert(insertPayload).select().single();
+        if (error) throw error;
+        return data;
+    }
+    async function lsshUpdateItemDB(id, payload) {
+        const updatePayload = Object.assign({}, payload, { updated_at: new Date().toISOString(), updated_by: currentEmail });
+        const { data, error } = await sb.from(LSSH_TABLE).update(updatePayload).eq('id', id).select().single();
+        if (error) throw error;
+        return data;
+    }
+    async function lsshDeleteItemDB(id) {
+        const { error } = await sb.from(LSSH_TABLE).delete().eq('id', id);
+        if (error) throw error;
+    }
+
+    // ---------- Điều hướng ----------
+    lsshCard.addEventListener('click', () => {
+        const stage2Panel = document.getElementById('ls-stage2-panel');
+        if (stage2Panel) stage2Panel.style.display = 'none';
+        lsshPanel.style.display = 'block';
+        lsshRefreshIntro();
+    });
+    lsshBackBtn.addEventListener('click', () => {
+        lsshPanel.style.display = 'none';
+        const stage2Panel = document.getElementById('ls-stage2-panel');
+        if (stage2Panel) stage2Panel.style.display = 'block';
+    });
+
+    async function lsshRefreshIntro() {
+        lsshManageBtn.style.display = isTeacher ? 'inline-block' : 'none';
+        await lsshLoadItems();
+        if (lsshItemCountEl) lsshItemCountEl.textContent = String(lsshItems.length);
+        if (lsshStartCountEl) {
+            lsshStartCountEl.textContent = lsshItems.length >= LSSH_MIN_ITEMS
+                ? `Ngẫu nhiên ${Math.min(LSSH_TOTAL_ITEMS, lsshItems.length)} / ${lsshItems.length} đoạn đã soạn`
+                : `Chưa đủ đoạn hội thoại (${lsshItems.length}/${LSSH_MIN_ITEMS} tối thiểu) — hãy quay lại sau`;
+        }
+    }
+
+    lsshStartCard.addEventListener('click', lsshStartPractice);
+
+    // ---------- Khu vực giảng viên soạn nội dung ----------
+    let lsshEditingId = null;
+
+    lsshManageBtn.addEventListener('click', async () => {
+        if (!isTeacher) { alert('Chỉ giảng viên mới dùng được chức năng này.'); return; }
+        lsshPanel.style.display = 'none';
+        lsshManagePanel.style.display = 'block';
+        lsshResetForm();
+        lsshItemListEl.innerHTML = '<p class="kid-hint">Đang tải danh sách...</p>';
+        await lsshLoadItems(true);
+        lsshRenderItemList();
+    });
+    lsshManageBackBtn.addEventListener('click', () => {
+        lsshManagePanel.style.display = 'none';
+        lsshPanel.style.display = 'block';
+        lsshRefreshIntro();
+    });
+
+    function lsshRenderAdminForm() {
+        lsshAdminForm.innerHTML = `
+            <div class="ln2-field">
+                <label>Đoạn hội thoại / câu nói tiếng Anh (1–3 câu ngắn)</label>
+                <textarea id="lssh-f-text" class="news-edit-input" rows="2" placeholder="VD: Hey! Long time no see. How have you been?"></textarea>
+            </div>
+            <div class="ln2-field">
+                <label>Nghĩa tiếng Việt (tuỳ chọn)</label>
+                <textarea id="lssh-f-vi" class="news-edit-input" rows="2" placeholder="VD: Chào! Lâu rồi không gặp. Dạo này bạn thế nào?"></textarea>
+            </div>
+            <div class="ln2-field">
+                <label>Link file .mp3 giọng đọc tự nhiên (tuỳ chọn — nên có để luyện ngữ điệu thật; để trống thì dùng giọng đọc máy)</label>
+                <input type="text" id="lssh-f-audio-url" class="news-edit-input" placeholder="VD: https://.../doan-1.mp3">
+            </div>
+        `;
+    }
+
+    function lsshResetForm(preserveStatus) {
+        lsshEditingId = null;
+        lsshAdminSaveBtn.textContent = '➕ Thêm đoạn';
+        lsshAdminCancelBtn.style.display = 'none';
+        if (!preserveStatus) {
+            lsshAdminStatus.textContent = '';
+            lsshAdminStatus.className = 'ln2-admin-status';
+        }
+        lsshRenderAdminForm();
+    }
+    lsshAdminCancelBtn.addEventListener('click', () => lsshResetForm());
+
+    function lsshPopulateFormForEdit(item) {
+        lsshRenderAdminForm();
+        document.getElementById('lssh-f-text').value = item.text || '';
+        document.getElementById('lssh-f-vi').value = item.vi || '';
+        document.getElementById('lssh-f-audio-url').value = item.audio_url || '';
+        lsshEditingId = item.id;
+        lsshAdminSaveBtn.textContent = '💾 Lưu thay đổi';
+        lsshAdminCancelBtn.style.display = 'inline-block';
+        lsshAdminStatus.textContent = '';
+        lsshAdminStatus.className = 'ln2-admin-status';
+        if (typeof lsshAdminForm.scrollIntoView === 'function') lsshAdminForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function lsshCollectFormPayload() {
+        const text = (document.getElementById('lssh-f-text').value || '').trim();
+        const vi = (document.getElementById('lssh-f-vi').value || '').trim();
+        const audioUrl = (document.getElementById('lssh-f-audio-url').value || '').trim();
+        if (!text) throw new Error('Vui lòng nhập đoạn hội thoại / câu nói tiếng Anh.');
+        return { text, vi: vi || null, audio_url: audioUrl || null };
+    }
+
+    lsshAdminSaveBtn.addEventListener('click', async () => {
+        if (!isTeacher) return;
+        let payload;
+        try { payload = lsshCollectFormPayload(); }
+        catch (err) {
+            lsshAdminStatus.textContent = '⚠️ ' + err.message;
+            lsshAdminStatus.className = 'ln2-admin-status is-error';
+            return;
+        }
+        lsshAdminSaveBtn.disabled = true;
+        lsshAdminStatus.textContent = 'Đang lưu...';
+        lsshAdminStatus.className = 'ln2-admin-status';
+        try {
+            if (lsshEditingId !== null) {
+                const updated = await lsshUpdateItemDB(lsshEditingId, payload);
+                const idx = lsshItems.findIndex(it => it.id === lsshEditingId);
+                if (idx !== -1) lsshItems[idx] = updated;
+                lsshAdminStatus.textContent = '✅ Đã lưu thay đổi.';
+            } else {
+                const created = await lsshCreateItemDB(payload);
+                lsshItems.unshift(created);
+                lsshAdminStatus.textContent = '✅ Đã thêm đoạn mới.';
+            }
+            lsshResetForm(true);
+            lsshRenderItemList();
+        } catch (err) {
+            lsshAdminStatus.textContent = '❌ Lưu thất bại: ' + err.message;
+            lsshAdminStatus.className = 'ln2-admin-status is-error';
+        } finally {
+            lsshAdminSaveBtn.disabled = false;
+        }
+    });
+
+    function lsshRenderItemList() {
+        if (!lsshItems.length) {
+            lsshItemListEl.innerHTML = '<p class="kid-hint">Chưa có đoạn nào — hãy soạn đoạn đầu tiên ở khung bên trên.</p>';
+            return;
+        }
+        lsshItemListEl.innerHTML = lsshItems.map(item => `
+            <div class="ln2-item-row" data-item-id="${item.id}">
+                ${item.audio_url ? '<span class="ln2-item-audio-badge" title="Đã gắn link .mp3">🎵</span>' : '<span class="ln2-item-type-badge">🤖 Giọng máy</span>'}
+                <span class="ln2-item-preview">${lsshEsc(item.text)}</span>
+                <div class="ln2-item-actions">
+                    <button type="button" class="ln2-item-edit-btn" data-id="${item.id}" title="Sửa">✏️</button>
+                    <button type="button" class="ln2-item-delete-btn" data-id="${item.id}" title="Xóa">🗑️</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    lsshItemListEl.addEventListener('click', async (e) => {
+        const editBtn = e.target.closest('.ln2-item-edit-btn');
+        const delBtn = e.target.closest('.ln2-item-delete-btn');
+        if (editBtn) {
+            const item = lsshItems.find(it => String(it.id) === editBtn.dataset.id);
+            if (item) lsshPopulateFormForEdit(item);
+            return;
+        }
+        if (delBtn) {
+            const item = lsshItems.find(it => String(it.id) === delBtn.dataset.id);
+            if (!item) return;
+            if (!confirm(`Xóa đoạn "${item.text}"? Hành động này không thể hoàn tác.`)) return;
+            try {
+                await lsshDeleteItemDB(item.id);
+                lsshItems = lsshItems.filter(it => it.id !== item.id);
+                lsshRenderItemList();
+                if (lsshEditingId === item.id) lsshResetForm();
+            } catch (err) {
+                alert('Xóa thất bại: ' + err.message);
+            }
+        }
+    });
+
+    // ---------- Luyện tập (học viên) ----------
+    let lsshState = null;
+
+    async function lsshStartPractice() {
+        lsshPracticePanel.style.display = 'block';
+        lsshPanel.style.display = 'none';
+        lsshResultArea.style.display = 'none';
+        lsshPracticePlayArea.style.display = 'block';
+        lsshPracticeProgress.textContent = '';
+        lsshPracticeBody.innerHTML = '<p class="kid-hint">Đang chuẩn bị đoạn hội thoại...</p>';
+        lsshPracticeControls.innerHTML = '';
+
+        await lsshLoadItems();
+        if (lsshItems.length < LSSH_MIN_ITEMS) {
+            lsshPracticeBody.innerHTML = `<p class="kid-hint">⚠️ Kho đoạn hội thoại chưa đủ để luyện tập (cần ít nhất ${LSSH_MIN_ITEMS} đoạn). Hãy quay lại sau khi giảng viên soạn thêm nhé!</p>`;
+            return;
+        }
+        const picked = lsshShuffle(lsshItems).slice(0, Math.min(LSSH_TOTAL_ITEMS, lsshItems.length));
+        lsshState = { items: picked, index: 0 };
+        lsshRenderItem();
+    }
+
+    function lsshRenderItem() {
+        if (!lsshState) return;
+        lsshStopRecordingHard();
+        lsshStopAudio();
+        const q = lsshState.items[lsshState.index];
+        lsshPracticeProgress.textContent = `Đoạn ${lsshState.index + 1} / ${lsshState.items.length}`;
+        lsshPracticeBody.innerHTML = `
+            <div class="lssh-text-box">
+                <div class="lssh-text-main">${lsshEsc(q.text)}</div>
+                ${q.vi ? `<div class="lssh-text-vi">${lsshEsc(q.vi)}</div>` : ''}
+            </div>
+            <div class="lssh-speed-row">
+                <button type="button" class="kid-btn kid-btn-primary" id="lssh-play-1">🔊 Nghe tốc độ gốc</button>
+                <button type="button" class="kid-btn" id="lssh-play-075">🐢 Nghe chậm (0.75x)</button>
+                <button type="button" class="kid-btn" id="lssh-play-05">🐌 Rất chậm (0.5x)</button>
+            </div>
+            ${lsshRenderRecordBoxHtml()}
+        `;
+        document.getElementById('lssh-play-1').addEventListener('click', () => lsshPlayAt(q, 1));
+        document.getElementById('lssh-play-075').addEventListener('click', () => lsshPlayAt(q, 0.75));
+        document.getElementById('lssh-play-05').addEventListener('click', () => lsshPlayAt(q, 0.5));
+        lsshWireRecordBox();
+
+        const isLast = lsshState.index + 1 >= lsshState.items.length;
+        lsshPracticeControls.innerHTML = `<button type="button" class="kid-btn kid-btn-primary" id="lssh-next-btn">${isLast ? '🏁 Hoàn thành' : '➡️ Đoạn tiếp theo'}</button>`;
+        document.getElementById('lssh-next-btn').addEventListener('click', () => {
+            lsshStopRecordingHard();
+            lsshStopAudio();
+            lsshState.index++;
+            if (lsshState.index >= lsshState.items.length) lsshFinish();
+            else lsshRenderItem();
+        });
+    }
+
+    function lsshFinish() {
+        lsshStopAudio();
+        lsshStopRecordingHard();
+        lsshPracticePlayArea.style.display = 'none';
+        lsshResultArea.style.display = 'block';
+        lsshResultBox.innerHTML = `
+            <div class="ln-result-emoji">🎉</div>
+            <h3>Đã hoàn thành ${lsshState.items.length} đoạn Shadowing!</h3>
+            <div class="thcs-translate-actions">
+                <button type="button" class="kid-btn kid-btn-primary" id="lssh-retry-btn">🔄 Luyện tiếp (đoạn mới)</button>
+                <button type="button" class="kid-btn" id="lssh-back-result-btn">← Quay lại</button>
+            </div>
+        `;
+        document.getElementById('lssh-retry-btn').addEventListener('click', () => lsshStartPractice());
+        document.getElementById('lssh-back-result-btn').addEventListener('click', () => {
+            lsshResultArea.style.display = 'none';
+            lsshPracticePanel.style.display = 'none';
+            lsshPanel.style.display = 'block';
+            lsshRefreshIntro();
+        });
+    }
+
+    lsshPracticeBackBtn.addEventListener('click', () => {
+        lsshStopAudio();
+        lsshStopRecordingHard();
+        lsshPracticePanel.style.display = 'none';
+        lsshPanel.style.display = 'block';
+        lsshRefreshIntro();
+    });
+})();
+// ===== KẾT THÚC: TAB "LUYỆN KỸ NĂNG" > "🗣️ NÓI" — HOẠT ĐỘNG "SHADOWING" (lssh) =====
+
+
+// ===================================================================
+// ===== BẮT ĐẦU: TAB "LUYỆN KỸ NĂNG" > "🗣️ NÓI" — HOẠT ĐỘNG "MIÊU TẢ SỰ VIỆC" (lsmt) =====
+// Ngân hàng chuỗi sự việc do giảng viên tự soạn, lưu ở bảng "speaking_lv2_narrate_items"
+// trên Supabase (xem file "speaking_lv2_lv3_setup.sql"). Mỗi chuỗi gồm 3–6 "bước" (ảnh
+// tuỳ chọn + từ khoá tiếng Anh + nghĩa tiếng Việt tuỳ chọn) theo thứ tự thời gian, cùng
+// 1 đoạn văn mẫu (4–5 câu, thì quá khứ + liên từ). Học viên nhìn chuỗi bước, GHI ÂM kể
+// lại thành đoạn văn, rồi tự bấm xem/nghe đoạn mẫu để so sánh — không chấm điểm tự động.
+// Mỗi lượt luyện tập lấy random tối đa 15 chuỗi.
+// ===================================================================
+(() => {
+    const lsmtCard = document.getElementById('ls-narrate-card');
+    if (!lsmtCard) return;
+
+    // ---------- Tham chiếu DOM ----------
+    const lsmtPanel        = document.getElementById('lsmt-panel');
+    const lsmtBackBtn      = document.getElementById('lsmt-back-btn');
+    const lsmtManageBtn    = document.getElementById('lsmt-manage-btn');
+    const lsmtItemCountEl  = document.getElementById('lsmt-item-count');
+    const lsmtStartCard    = document.getElementById('lsmt-start-card');
+    const lsmtStartCountEl = document.getElementById('lsmt-start-count');
+
+    const lsmtManagePanel    = document.getElementById('lsmt-manage-panel');
+    const lsmtManageBackBtn  = document.getElementById('lsmt-manage-back-btn');
+    const lsmtAdminForm      = document.getElementById('lsmt-admin-form');
+    const lsmtAdminStatus    = document.getElementById('lsmt-admin-status');
+    const lsmtAdminSaveBtn   = document.getElementById('lsmt-admin-save-btn');
+    const lsmtAdminCancelBtn = document.getElementById('lsmt-admin-cancel-btn');
+    const lsmtItemListEl     = document.getElementById('lsmt-item-list');
+
+    const lsmtPracticePanel    = document.getElementById('lsmt-practice-panel');
+    const lsmtPracticeBackBtn  = document.getElementById('lsmt-practice-back-btn');
+    const lsmtPracticePlayArea = document.getElementById('lsmt-practice-play-area');
+    const lsmtPracticeProgress = document.getElementById('lsmt-practice-progress');
+    const lsmtPracticeBody     = document.getElementById('lsmt-practice-body');
+    const lsmtPracticeControls = document.getElementById('lsmt-practice-controls');
+    const lsmtResultArea       = document.getElementById('lsmt-practice-result-area');
+    const lsmtResultBox        = document.getElementById('lsmt-result-box');
+
+    const LSMT_TABLE = 'speaking_lv2_narrate_items';
+    const LSMT_TOTAL_ITEMS = 15;
+    const LSMT_MIN_ITEMS = 3;
+    const LSMT_STEP_MIN = 3;
+    const LSMT_STEP_MAX = 6;
+    const LSMT_CONNECTORS = ['first', 'then', 'after that', 'next', 'because', 'so', 'finally'];
+
+    // ---------- Tiện ích dùng chung ----------
+    function lsmtEsc(s) {
+        return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+    function lsmtShuffle(arr) {
+        const copy = arr.slice();
+        for (let i = copy.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [copy[i], copy[j]] = [copy[j], copy[i]];
+        }
+        return copy;
+    }
+
+    // ----- Phát đoạn văn mẫu -----
+    let lsmtAudioEl = null;
+    function lsmtGetAudioEl() {
+        if (!lsmtAudioEl) { lsmtAudioEl = new Audio(); lsmtAudioEl.preload = 'auto'; }
+        return lsmtAudioEl;
+    }
+    function lsmtSpeak(text) {
+        if (!('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.rate = 0.95;
+        utter.lang = 'en-US';
+        window.speechSynthesis.speak(utter);
+    }
+    function lsmtPlayModel(item) {
+        const url = ((item && item.audio_url) || '').trim();
+        if (url) {
+            const audio = lsmtGetAudioEl();
+            if (audio.src !== url) audio.src = url;
+            audio.currentTime = 0;
+            audio.play().catch(err => console.error('Lỗi khi phát file mp3 Miêu tả sự việc:', err.message));
+        } else {
+            lsmtSpeak(item.sample_narration);
+        }
+    }
+    function lsmtStopAudio() {
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        if (lsmtAudioEl) lsmtAudioEl.pause();
+    }
+    document.querySelectorAll('.main-tab-btn').forEach(btn => btn.addEventListener('click', lsmtStopAudio));
+    document.addEventListener('visibilitychange', () => { if (document.hidden) lsmtStopAudio(); });
+    window.addEventListener('blur', lsmtStopAudio);
+
+    // ----- Ghi âm tự luyện (KHÔNG upload) -----
+    let lsmtRecorder = null;
+    let lsmtRecStream = null;
+    let lsmtRecChunks = [];
+    let lsmtRecording = false;
+    function lsmtStopRecordingHard() {
+        if (lsmtRecorder && lsmtRecorder.state !== 'inactive') {
+            try { lsmtRecorder.stop(); } catch (e) { /* bỏ qua */ }
+        }
+        if (lsmtRecStream) { lsmtRecStream.getTracks().forEach(t => t.stop()); lsmtRecStream = null; }
+        lsmtRecording = false;
+    }
+    function lsmtWireRecordBox() {
+        const btn     = document.getElementById('lsmt-rec-btn');
+        const status  = document.getElementById('lsmt-rec-status');
+        const audioEl = document.getElementById('lsmt-rec-audio');
+        if (!btn) return;
+        btn.addEventListener('click', async () => {
+            if (!lsmtRecording) {
+                try {
+                    lsmtRecStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    lsmtRecorder = new MediaRecorder(lsmtRecStream);
+                    lsmtRecChunks = [];
+                    lsmtRecorder.ondataavailable = (e) => lsmtRecChunks.push(e.data);
+                    lsmtRecorder.onstop = () => {
+                        const blob = new Blob(lsmtRecChunks, { type: 'audio/webm' });
+                        audioEl.src = URL.createObjectURL(blob);
+                        audioEl.style.display = 'block';
+                        status.textContent = '✅ Đã ghi âm xong — bấm "Xem đoạn văn mẫu" bên dưới để so sánh.';
+                        if (lsmtRecStream) { lsmtRecStream.getTracks().forEach(t => t.stop()); lsmtRecStream = null; }
+                    };
+                    lsmtRecorder.start();
+                    lsmtRecording = true;
+                    btn.textContent = '⏹️ Dừng ghi âm';
+                    btn.classList.add('is-recording');
+                    status.textContent = '🔴 Đang ghi âm... bấm "Dừng ghi âm" khi kể xong.';
+                    audioEl.style.display = 'none';
+                } catch (err) {
+                    status.textContent = '⚠️ Không truy cập được micro — hãy cho phép quyền truy cập micro trên trình duyệt.';
+                }
+            } else {
+                if (lsmtRecorder && lsmtRecorder.state !== 'inactive') lsmtRecorder.stop();
+                lsmtRecording = false;
+                btn.textContent = '🎤 Ghi âm lại';
+                btn.classList.remove('is-recording');
+            }
+        });
+    }
+
+    // ---------- Tải / lưu ngân hàng chuỗi sự việc trên Supabase ----------
+    let lsmtItems = [];
+    let lsmtItemsLoaded = false;
+    async function lsmtLoadItems(force) {
+        if (lsmtItemsLoaded && !force) return lsmtItems;
+        try {
+            const { data, error } = await sb.from(LSMT_TABLE).select('*').order('created_at', { ascending: false });
+            if (error) throw error;
+            lsmtItems = data || [];
+            lsmtItemsLoaded = true;
+        } catch (err) {
+            console.error('Lỗi khi tải ngân hàng Miêu tả sự việc:', err.message);
+            lsmtItems = [];
+        }
+        return lsmtItems;
+    }
+    async function lsmtCreateItemDB(payload) {
+        const insertPayload = Object.assign({}, payload, { created_by: currentEmail });
+        const { data, error } = await sb.from(LSMT_TABLE).insert(insertPayload).select().single();
+        if (error) throw error;
+        return data;
+    }
+    async function lsmtUpdateItemDB(id, payload) {
+        const updatePayload = Object.assign({}, payload, { updated_at: new Date().toISOString(), updated_by: currentEmail });
+        const { data, error } = await sb.from(LSMT_TABLE).update(updatePayload).eq('id', id).select().single();
+        if (error) throw error;
+        return data;
+    }
+    async function lsmtDeleteItemDB(id) {
+        const { error } = await sb.from(LSMT_TABLE).delete().eq('id', id);
+        if (error) throw error;
+    }
+
+    // ---------- Điều hướng ----------
+    lsmtCard.addEventListener('click', () => {
+        const stage2Panel = document.getElementById('ls-stage2-panel');
+        if (stage2Panel) stage2Panel.style.display = 'none';
+        lsmtPanel.style.display = 'block';
+        lsmtRefreshIntro();
+    });
+    lsmtBackBtn.addEventListener('click', () => {
+        lsmtPanel.style.display = 'none';
+        const stage2Panel = document.getElementById('ls-stage2-panel');
+        if (stage2Panel) stage2Panel.style.display = 'block';
+    });
+
+    async function lsmtRefreshIntro() {
+        lsmtManageBtn.style.display = isTeacher ? 'inline-block' : 'none';
+        await lsmtLoadItems();
+        if (lsmtItemCountEl) lsmtItemCountEl.textContent = String(lsmtItems.length);
+        if (lsmtStartCountEl) {
+            lsmtStartCountEl.textContent = lsmtItems.length >= LSMT_MIN_ITEMS
+                ? `Ngẫu nhiên ${Math.min(LSMT_TOTAL_ITEMS, lsmtItems.length)} / ${lsmtItems.length} chuỗi đã soạn`
+                : `Chưa đủ chuỗi sự việc (${lsmtItems.length}/${LSMT_MIN_ITEMS} tối thiểu) — hãy quay lại sau`;
+        }
+    }
+    lsmtStartCard.addEventListener('click', lsmtStartPractice);
+
+    // ---------- Khu vực giảng viên soạn nội dung ----------
+    let lsmtEditingId = null;
+    let lsmtStepsSnapshot = [];
+
+    lsmtManageBtn.addEventListener('click', async () => {
+        if (!isTeacher) { alert('Chỉ giảng viên mới dùng được chức năng này.'); return; }
+        lsmtPanel.style.display = 'none';
+        lsmtManagePanel.style.display = 'block';
+        lsmtResetForm();
+        lsmtItemListEl.innerHTML = '<p class="kid-hint">Đang tải danh sách...</p>';
+        await lsmtLoadItems(true);
+        lsmtRenderItemList();
+    });
+    lsmtManageBackBtn.addEventListener('click', () => {
+        lsmtManagePanel.style.display = 'none';
+        lsmtPanel.style.display = 'block';
+        lsmtRefreshIntro();
+    });
+
+    function lsmtBuildStepCardsHtml(steps) {
+        return steps.map((s, i) => `
+            <div class="lsmt-step-card" data-step-idx="${i}">
+                <div class="lsmt-step-card-head">
+                    <span class="lsmt-step-num">Bước ${i + 1}</span>
+                    ${steps.length > LSMT_STEP_MIN ? `<button type="button" class="ln2-mc-remove-btn" data-remove-step-idx="${i}" title="Xoá bước này">✕</button>` : ''}
+                </div>
+                <input type="text" class="news-edit-input lsmt-step-img" placeholder="Link ảnh minh hoạ (tuỳ chọn)..." value="${lsmtEsc(s.image_url || '')}">
+                <input type="text" class="news-edit-input lsmt-step-en" placeholder="Từ khoá / tình huống tiếng Anh (VD: wake up late)..." value="${lsmtEsc(s.text_en || '')}">
+                <input type="text" class="news-edit-input lsmt-step-vi" placeholder="Nghĩa tiếng Việt (tuỳ chọn)..." value="${lsmtEsc(s.text_vi || '')}">
+            </div>
+        `).join('');
+    }
+    function lsmtReadStepsFromDom() {
+        return Array.from(document.querySelectorAll('#lsmt-steps-editor .lsmt-step-card')).map(card => ({
+            image_url: card.querySelector('.lsmt-step-img').value.trim(),
+            text_en: card.querySelector('.lsmt-step-en').value.trim(),
+            text_vi: card.querySelector('.lsmt-step-vi').value.trim()
+        }));
+    }
+    function lsmtSetStepsAndRender(steps) {
+        lsmtStepsSnapshot = steps;
+        const wrap = document.getElementById('lsmt-steps-editor');
+        if (!wrap) return;
+        wrap.innerHTML = lsmtBuildStepCardsHtml(steps);
+        const addBtn = document.getElementById('lsmt-step-add-btn');
+        if (addBtn) addBtn.style.display = steps.length >= LSMT_STEP_MAX ? 'none' : '';
+        wrap.querySelectorAll('.ln2-mc-remove-btn').forEach(btn => {
+            btn.onclick = () => {
+                const current = lsmtReadStepsFromDom();
+                if (current.length <= LSMT_STEP_MIN) return;
+                const idx = parseInt(btn.dataset.removeStepIdx, 10);
+                current.splice(idx, 1);
+                lsmtSetStepsAndRender(current);
+            };
+        });
+    }
+
+    function lsmtRenderAdminForm() {
+        lsmtAdminForm.innerHTML = `
+            <div class="ln2-field">
+                <label>Chủ đề / tên chuỗi sự việc (tuỳ chọn, hiển thị cho học viên)</label>
+                <input type="text" id="lsmt-f-topic" class="news-edit-input" placeholder="VD: Một buổi sáng đi làm trễ">
+            </div>
+            <div class="ln2-field">
+                <label>Các bước sự việc theo thứ tự (tối thiểu ${LSMT_STEP_MIN}, tối đa ${LSMT_STEP_MAX} bước)</label>
+                <div id="lsmt-steps-editor"></div>
+                <button type="button" id="lsmt-step-add-btn" class="ln2-mc-add-btn">+ Thêm bước</button>
+            </div>
+            <div class="ln2-field">
+                <label>Đoạn văn mẫu tiếng Anh (4–5 câu, dùng thì quá khứ + liên từ: then, after that, because...)</label>
+                <textarea id="lsmt-f-sample" class="news-edit-input" rows="4" placeholder="VD: This morning, I woke up late because my alarm didn't go off..."></textarea>
+            </div>
+            <div class="ln2-field">
+                <label>Nghĩa tiếng Việt đoạn mẫu (tuỳ chọn)</label>
+                <textarea id="lsmt-f-sample-vi" class="news-edit-input" rows="4"></textarea>
+            </div>
+            <div class="ln2-field">
+                <label>Link file .mp3 đọc đoạn mẫu (tuỳ chọn — để trống thì dùng giọng đọc máy)</label>
+                <input type="text" id="lsmt-f-audio-url" class="news-edit-input" placeholder="VD: https://.../mau-1.mp3">
+            </div>
+        `;
+        lsmtSetStepsAndRender([
+            { image_url: '', text_en: '', text_vi: '' },
+            { image_url: '', text_en: '', text_vi: '' },
+            { image_url: '', text_en: '', text_vi: '' }
+        ]);
+        document.getElementById('lsmt-step-add-btn').onclick = () => {
+            const current = lsmtReadStepsFromDom();
+            if (current.length >= LSMT_STEP_MAX) return;
+            current.push({ image_url: '', text_en: '', text_vi: '' });
+            lsmtSetStepsAndRender(current);
+        };
+    }
+
+    function lsmtResetForm(preserveStatus) {
+        lsmtEditingId = null;
+        lsmtAdminSaveBtn.textContent = '➕ Thêm chuỗi sự việc';
+        lsmtAdminCancelBtn.style.display = 'none';
+        if (!preserveStatus) {
+            lsmtAdminStatus.textContent = '';
+            lsmtAdminStatus.className = 'ln2-admin-status';
+        }
+        lsmtRenderAdminForm();
+    }
+    lsmtAdminCancelBtn.addEventListener('click', () => lsmtResetForm());
+
+    function lsmtPopulateFormForEdit(item) {
+        lsmtRenderAdminForm();
+        document.getElementById('lsmt-f-topic').value = item.topic_vi || '';
+        const steps = (item.steps && item.steps.length >= LSMT_STEP_MIN)
+            ? item.steps.slice()
+            : [{ image_url: '', text_en: '', text_vi: '' }, { image_url: '', text_en: '', text_vi: '' }, { image_url: '', text_en: '', text_vi: '' }];
+        lsmtSetStepsAndRender(steps);
+        document.getElementById('lsmt-f-sample').value = item.sample_narration || '';
+        document.getElementById('lsmt-f-sample-vi').value = item.sample_vi || '';
+        document.getElementById('lsmt-f-audio-url').value = item.audio_url || '';
+
+        lsmtEditingId = item.id;
+        lsmtAdminSaveBtn.textContent = '💾 Lưu thay đổi';
+        lsmtAdminCancelBtn.style.display = 'inline-block';
+        lsmtAdminStatus.textContent = '';
+        lsmtAdminStatus.className = 'ln2-admin-status';
+        if (typeof lsmtAdminForm.scrollIntoView === 'function') lsmtAdminForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function lsmtCollectFormPayload() {
+        const topic = (document.getElementById('lsmt-f-topic').value || '').trim();
+        const steps = lsmtReadStepsFromDom();
+        const sample = (document.getElementById('lsmt-f-sample').value || '').trim();
+        const sampleVi = (document.getElementById('lsmt-f-sample-vi').value || '').trim();
+        const audioUrl = (document.getElementById('lsmt-f-audio-url').value || '').trim();
+        if (steps.length < LSMT_STEP_MIN) throw new Error(`Cần tối thiểu ${LSMT_STEP_MIN} bước.`);
+        if (steps.some(s => !s.text_en)) throw new Error('Vui lòng nhập từ khoá tiếng Anh cho tất cả các bước.');
+        if (!sample) throw new Error('Vui lòng nhập đoạn văn mẫu.');
+        return { topic_vi: topic || null, steps, sample_narration: sample, sample_vi: sampleVi || null, audio_url: audioUrl || null };
+    }
+
+    lsmtAdminSaveBtn.addEventListener('click', async () => {
+        if (!isTeacher) return;
+        let payload;
+        try { payload = lsmtCollectFormPayload(); }
+        catch (err) {
+            lsmtAdminStatus.textContent = '⚠️ ' + err.message;
+            lsmtAdminStatus.className = 'ln2-admin-status is-error';
+            return;
+        }
+        lsmtAdminSaveBtn.disabled = true;
+        lsmtAdminStatus.textContent = 'Đang lưu...';
+        lsmtAdminStatus.className = 'ln2-admin-status';
+        try {
+            if (lsmtEditingId !== null) {
+                const updated = await lsmtUpdateItemDB(lsmtEditingId, payload);
+                const idx = lsmtItems.findIndex(it => it.id === lsmtEditingId);
+                if (idx !== -1) lsmtItems[idx] = updated;
+                lsmtAdminStatus.textContent = '✅ Đã lưu thay đổi.';
+            } else {
+                const created = await lsmtCreateItemDB(payload);
+                lsmtItems.unshift(created);
+                lsmtAdminStatus.textContent = '✅ Đã thêm chuỗi sự việc mới.';
+            }
+            lsmtResetForm(true);
+            lsmtRenderItemList();
+        } catch (err) {
+            lsmtAdminStatus.textContent = '❌ Lưu thất bại: ' + err.message;
+            lsmtAdminStatus.className = 'ln2-admin-status is-error';
+        } finally {
+            lsmtAdminSaveBtn.disabled = false;
+        }
+    });
+
+    function lsmtRenderItemList() {
+        if (!lsmtItems.length) {
+            lsmtItemListEl.innerHTML = '<p class="kid-hint">Chưa có chuỗi sự việc nào — hãy soạn chuỗi đầu tiên ở khung bên trên.</p>';
+            return;
+        }
+        lsmtItemListEl.innerHTML = lsmtItems.map(item => {
+            const preview = item.topic_vi || ((item.steps || []).map(s => s.text_en).filter(Boolean).join(' → '));
+            return `
+                <div class="ln2-item-row" data-item-id="${item.id}">
+                    <span class="ln2-item-type-badge">📖 ${(item.steps || []).length} bước</span>
+                    ${item.audio_url ? '<span class="ln2-item-audio-badge" title="Đã gắn link .mp3">🎵</span>' : ''}
+                    <span class="ln2-item-preview">${lsmtEsc(preview)}</span>
+                    <div class="ln2-item-actions">
+                        <button type="button" class="ln2-item-edit-btn" data-id="${item.id}" title="Sửa">✏️</button>
+                        <button type="button" class="ln2-item-delete-btn" data-id="${item.id}" title="Xóa">🗑️</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    lsmtItemListEl.addEventListener('click', async (e) => {
+        const editBtn = e.target.closest('.ln2-item-edit-btn');
+        const delBtn = e.target.closest('.ln2-item-delete-btn');
+        if (editBtn) {
+            const item = lsmtItems.find(it => String(it.id) === editBtn.dataset.id);
+            if (item) lsmtPopulateFormForEdit(item);
+            return;
+        }
+        if (delBtn) {
+            const item = lsmtItems.find(it => String(it.id) === delBtn.dataset.id);
+            if (!item) return;
+            if (!confirm('Xóa chuỗi sự việc này? Hành động này không thể hoàn tác.')) return;
+            try {
+                await lsmtDeleteItemDB(item.id);
+                lsmtItems = lsmtItems.filter(it => it.id !== item.id);
+                lsmtRenderItemList();
+                if (lsmtEditingId === item.id) lsmtResetForm();
+            } catch (err) {
+                alert('Xóa thất bại: ' + err.message);
+            }
+        }
+    });
+
+    // ---------- Luyện tập (học viên) ----------
+    let lsmtState = null;
+
+    async function lsmtStartPractice() {
+        lsmtPracticePanel.style.display = 'block';
+        lsmtPanel.style.display = 'none';
+        lsmtResultArea.style.display = 'none';
+        lsmtPracticePlayArea.style.display = 'block';
+        lsmtPracticeProgress.textContent = '';
+        lsmtPracticeBody.innerHTML = '<p class="kid-hint">Đang chuẩn bị chuỗi sự việc...</p>';
+        lsmtPracticeControls.innerHTML = '';
+
+        await lsmtLoadItems();
+        if (lsmtItems.length < LSMT_MIN_ITEMS) {
+            lsmtPracticeBody.innerHTML = `<p class="kid-hint">⚠️ Kho chuỗi sự việc chưa đủ để luyện tập (cần ít nhất ${LSMT_MIN_ITEMS} chuỗi). Hãy quay lại sau khi giảng viên soạn thêm nhé!</p>`;
+            return;
+        }
+        const picked = lsmtShuffle(lsmtItems).slice(0, Math.min(LSMT_TOTAL_ITEMS, lsmtItems.length));
+        lsmtState = { items: picked, index: 0 };
+        lsmtRenderItem();
+    }
+
+    function lsmtRenderItem() {
+        if (!lsmtState) return;
+        lsmtStopRecordingHard();
+        lsmtStopAudio();
+        const q = lsmtState.items[lsmtState.index];
+        const steps = q.steps || [];
+        lsmtPracticeProgress.textContent = `Chuỗi ${lsmtState.index + 1} / ${lsmtState.items.length}`;
+        lsmtPracticeBody.innerHTML = `
+            ${q.topic_vi ? `<p class="kid-hint" style="text-align:center; font-weight:700;">${lsmtEsc(q.topic_vi)}</p>` : ''}
+            <div class="ls-steps-row">
+                ${steps.map((s, i) => `
+                    <div class="ls-step-chip">
+                        <span class="ls-step-chip-num">${i + 1}</span>
+                        ${s.image_url ? `<img src="${lsmtEsc(s.image_url)}" class="ls-step-chip-img" alt="Bước ${i + 1}">` : ''}
+                        <div class="ls-step-chip-text">${lsmtEsc(s.text_en)}</div>
+                        ${s.text_vi ? `<div class="ls-step-chip-vi">${lsmtEsc(s.text_vi)}</div>` : ''}
+                    </div>
+                `).join('')}
+            </div>
+            <p class="kid-hint" style="text-align:center;">💡 Gợi ý liên từ:</p>
+            <div class="ls-tag-row">${LSMT_CONNECTORS.map(w => `<span class="ls-tag">${lsmtEsc(w)}</span>`).join('')}</div>
+            <div class="ls-record-box">
+                <p class="ls-record-hint">🎙️ Kể lại chuyện này bằng 4–5 câu tiếng Anh (dùng thì quá khứ):</p>
+                <div class="ls-record-controls">
+                    <button type="button" class="kid-btn kid-btn-primary ls-record-btn" id="lsmt-rec-btn">🎤 Ghi âm</button>
+                </div>
+                <p class="ls-record-status" id="lsmt-rec-status"></p>
+                <audio class="ls-record-audio" id="lsmt-rec-audio" controls style="display:none;"></audio>
+            </div>
+            <div style="text-align:center; margin-top:14px;">
+                <button type="button" class="kid-btn" id="lsmt-reveal-btn">🔎 Xem đoạn văn mẫu</button>
+                <div id="lsmt-sample-box" style="display:none; margin-top:10px;" class="ls-situation-box">
+                    <div class="ls-situation-text">${lsmtEsc(q.sample_narration)}</div>
+                    ${q.sample_vi ? `<div class="lssh-text-vi">${lsmtEsc(q.sample_vi)}</div>` : ''}
+                    <div class="ls-record-controls" style="margin-top:10px;">
+                        <button type="button" class="kid-btn" id="lsmt-play-sample-btn">🔊 Nghe đoạn mẫu</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        lsmtWireRecordBox();
+        document.getElementById('lsmt-reveal-btn').addEventListener('click', () => {
+            document.getElementById('lsmt-sample-box').style.display = 'block';
+            document.getElementById('lsmt-reveal-btn').style.display = 'none';
+        });
+        document.getElementById('lsmt-play-sample-btn').addEventListener('click', () => lsmtPlayModel(q));
+
+        const isLast = lsmtState.index + 1 >= lsmtState.items.length;
+        lsmtPracticeControls.innerHTML = `<button type="button" class="kid-btn kid-btn-primary" id="lsmt-next-btn">${isLast ? '🏁 Hoàn thành' : '➡️ Chuỗi tiếp theo'}</button>`;
+        document.getElementById('lsmt-next-btn').addEventListener('click', () => {
+            lsmtStopRecordingHard();
+            lsmtStopAudio();
+            lsmtState.index++;
+            if (lsmtState.index >= lsmtState.items.length) lsmtFinish();
+            else lsmtRenderItem();
+        });
+    }
+
+    function lsmtFinish() {
+        lsmtStopAudio();
+        lsmtStopRecordingHard();
+        lsmtPracticePlayArea.style.display = 'none';
+        lsmtResultArea.style.display = 'block';
+        lsmtResultBox.innerHTML = `
+            <div class="ln-result-emoji">🎉</div>
+            <h3>Đã hoàn thành ${lsmtState.items.length} chuỗi miêu tả sự việc!</h3>
+            <div class="thcs-translate-actions">
+                <button type="button" class="kid-btn kid-btn-primary" id="lsmt-retry-btn">🔄 Luyện tiếp (chuỗi mới)</button>
+                <button type="button" class="kid-btn" id="lsmt-back-result-btn">← Quay lại</button>
+            </div>
+        `;
+        document.getElementById('lsmt-retry-btn').addEventListener('click', () => lsmtStartPractice());
+        document.getElementById('lsmt-back-result-btn').addEventListener('click', () => {
+            lsmtResultArea.style.display = 'none';
+            lsmtPracticePanel.style.display = 'none';
+            lsmtPanel.style.display = 'block';
+            lsmtRefreshIntro();
+        });
+    }
+
+    lsmtPracticeBackBtn.addEventListener('click', () => {
+        lsmtStopAudio();
+        lsmtStopRecordingHard();
+        lsmtPracticePanel.style.display = 'none';
+        lsmtPanel.style.display = 'block';
+        lsmtRefreshIntro();
+    });
+})();
+// ===== KẾT THÚC: TAB "LUYỆN KỸ NĂNG" > "🗣️ NÓI" — HOẠT ĐỘNG "MIÊU TẢ SỰ VIỆC" (lsmt) =====
+
+
+// ===================================================================
+// ===== BẮT ĐẦU: TAB "LUYỆN KỸ NĂNG" > "🗣️ NÓI" — GIAI ĐOẠN 3: A.R.E.A (lsarea) =====
+// Ngân hàng đề bài (kiểu IELTS Speaking Part 2/3) do giảng viên tự soạn, lưu ở bảng
+// "speaking_lv3_topics" trên Supabase (xem file "speaking_lv2_lv3_setup.sql"). Đây là
+// hoạt động DUY NHẤT của Giai đoạn 3 nên tự điều hướng trực tiếp từ folder-card của nó
+// (không qua màn hình chọn hoạt động trung gian như Giai đoạn 2). Mỗi lượt luyện tập:
+//   1) Tốc ký ý tưởng — 1 phút chuẩn bị, ghi từ khoá vào ô scratchpad (không lưu).
+//      LƯU Ý: chưa có bộ ký hiệu tốc ký dùng chung với "Nghe Giai đoạn 3" trong dữ liệu
+//      hiện có của trang, nên ô scratchpad để tự do, chưa áp bộ ký hiệu cụ thể.
+//   2) Khung A.R.E.A — 4 ô nhập ý ngắn gọn (Answer / Reason / Example / Answer chốt).
+//   3) Gợi ý mẫu câu chuyển ý tĩnh cho 3 phần đầu/giữa/cuối (khắc phục "bí ý").
+//   4) Ghi âm nói trọn vẹn phần trả lời — chỉ phát lại tại chỗ để học viên tự nghe lại,
+//      không có "đáp án mẫu" vì đây là câu trả lời cá nhân, không chấm điểm tự động.
+// Mỗi lượt luyện tập lấy random tối đa 10 đề trong ngân hàng.
+// ===================================================================
+(() => {
+    const lsareaFolderCard = document.getElementById('ls-stage3-folder-card');
+    if (!lsareaFolderCard) return;
+
+    // ---------- Tham chiếu DOM ----------
+    const lsareaPanel        = document.getElementById('ls-stage3-panel');
+    const lsareaBackBtn      = document.getElementById('ls-stage3-back-btn');
+    const lsareaManageBtn    = document.getElementById('lsarea-manage-btn');
+    const lsareaItemCountEl  = document.getElementById('lsarea-item-count');
+    const lsareaStartCard    = document.getElementById('lsarea-start-card');
+    const lsareaStartCountEl = document.getElementById('lsarea-start-count');
+
+    const lsareaManagePanel    = document.getElementById('lsarea-manage-panel');
+    const lsareaManageBackBtn  = document.getElementById('lsarea-manage-back-btn');
+    const lsareaAdminForm      = document.getElementById('lsarea-admin-form');
+    const lsareaAdminStatus    = document.getElementById('lsarea-admin-status');
+    const lsareaAdminSaveBtn   = document.getElementById('lsarea-admin-save-btn');
+    const lsareaAdminCancelBtn = document.getElementById('lsarea-admin-cancel-btn');
+    const lsareaItemListEl     = document.getElementById('lsarea-item-list');
+
+    const lsareaPracticePanel    = document.getElementById('lsarea-practice-panel');
+    const lsareaPracticeBackBtn  = document.getElementById('lsarea-practice-back-btn');
+    const lsareaPracticePlayArea = document.getElementById('lsarea-practice-play-area');
+    const lsareaPracticeProgress = document.getElementById('lsarea-practice-progress');
+    const lsareaPracticeBody     = document.getElementById('lsarea-practice-body');
+    const lsareaPracticeControls = document.getElementById('lsarea-practice-controls');
+    const lsareaResultArea       = document.getElementById('lsarea-practice-result-area');
+    const lsareaResultBox        = document.getElementById('lsarea-result-box');
+
+    const LSAREA_TABLE = 'speaking_lv3_topics';
+    const LSAREA_TOTAL_ITEMS = 10;
+    const LSAREA_MIN_ITEMS = 2;
+    const LSAREA_CUE_MAX = 5;
+    const LSAREA_PREP_SECONDS = 60;
+    const LSAREA_LINKERS = {
+        start: ['Well, ...', 'To be honest, ...', 'Actually, ...', 'Let me think for a second...'],
+        middle: ['The main reason is that...', 'This is because...', 'For example, ...', 'For instance, ...'],
+        end: ['So, in my opinion, ...', 'Overall, I think...', "That's why I...", 'To sum up, ...']
+    };
+
+    // ---------- Tiện ích dùng chung ----------
+    function lsareaEsc(s) {
+        return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+    function lsareaShuffle(arr) {
+        const copy = arr.slice();
+        for (let i = copy.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [copy[i], copy[j]] = [copy[j], copy[i]];
+        }
+        return copy;
+    }
+
+    // ---------- Tải / lưu ngân hàng đề bài trên Supabase ----------
+    let lsareaItems = [];
+    let lsareaItemsLoaded = false;
+    async function lsareaLoadItems(force) {
+        if (lsareaItemsLoaded && !force) return lsareaItems;
+        try {
+            const { data, error } = await sb.from(LSAREA_TABLE).select('*').order('created_at', { ascending: false });
+            if (error) throw error;
+            lsareaItems = data || [];
+            lsareaItemsLoaded = true;
+        } catch (err) {
+            console.error('Lỗi khi tải ngân hàng đề bài Giai đoạn 3:', err.message);
+            lsareaItems = [];
+        }
+        return lsareaItems;
+    }
+    async function lsareaCreateItemDB(payload) {
+        const insertPayload = Object.assign({}, payload, { created_by: currentEmail });
+        const { data, error } = await sb.from(LSAREA_TABLE).insert(insertPayload).select().single();
+        if (error) throw error;
+        return data;
+    }
+    async function lsareaUpdateItemDB(id, payload) {
+        const updatePayload = Object.assign({}, payload, { updated_at: new Date().toISOString(), updated_by: currentEmail });
+        const { data, error } = await sb.from(LSAREA_TABLE).update(updatePayload).eq('id', id).select().single();
+        if (error) throw error;
+        return data;
+    }
+    async function lsareaDeleteItemDB(id) {
+        const { error } = await sb.from(LSAREA_TABLE).delete().eq('id', id);
+        if (error) throw error;
+    }
+
+    // ---------- Điều hướng (folder-card -> panel trực tiếp, không qua màn chọn hoạt động) ----------
+    lsareaFolderCard.addEventListener('click', () => {
+        const stageFolderGrid = document.getElementById('ls-stage-folder-grid');
+        if (stageFolderGrid) stageFolderGrid.style.display = 'none';
+        lsareaPanel.style.display = 'block';
+        lsareaRefreshIntro();
+    });
+    lsareaBackBtn.addEventListener('click', () => {
+        lsareaPanel.style.display = 'none';
+        const stageFolderGrid = document.getElementById('ls-stage-folder-grid');
+        if (stageFolderGrid) stageFolderGrid.style.display = '';
+    });
+
+    async function lsareaRefreshIntro() {
+        lsareaManageBtn.style.display = isTeacher ? 'inline-block' : 'none';
+        await lsareaLoadItems();
+        if (lsareaItemCountEl) lsareaItemCountEl.textContent = String(lsareaItems.length);
+        if (lsareaStartCountEl) {
+            lsareaStartCountEl.textContent = lsareaItems.length >= LSAREA_MIN_ITEMS
+                ? `Ngẫu nhiên ${Math.min(LSAREA_TOTAL_ITEMS, lsareaItems.length)} / ${lsareaItems.length} đề đã soạn`
+                : `Chưa đủ đề bài (${lsareaItems.length}/${LSAREA_MIN_ITEMS} tối thiểu) — hãy quay lại sau`;
+        }
+    }
+    lsareaStartCard.addEventListener('click', lsareaStartPractice);
+
+    // ---------- Khu vực giảng viên soạn đề bài ----------
+    let lsareaEditingId = null;
+
+    lsareaManageBtn.addEventListener('click', async () => {
+        if (!isTeacher) { alert('Chỉ giảng viên mới dùng được chức năng này.'); return; }
+        lsareaPanel.style.display = 'none';
+        lsareaManagePanel.style.display = 'block';
+        lsareaResetForm();
+        lsareaItemListEl.innerHTML = '<p class="kid-hint">Đang tải danh sách đề bài...</p>';
+        await lsareaLoadItems(true);
+        lsareaRenderItemList();
+    });
+    lsareaManageBackBtn.addEventListener('click', () => {
+        lsareaManagePanel.style.display = 'none';
+        lsareaPanel.style.display = 'block';
+        lsareaRefreshIntro();
+    });
+
+    function lsareaBuildCueRowsHtml(values) {
+        return values.map((val, i) => `
+            <div class="news-quiz-edit-option-row" data-idx="${i}">
+                <input type="text" class="news-edit-input" placeholder="Gợi ý ${i + 1} (VD: what the book is about)..." value="${lsareaEsc(val)}">
+                <button type="button" class="ln2-mc-remove-btn" data-remove-idx="${i}" title="Xoá gợi ý này">✕</button>
+            </div>
+        `).join('');
+    }
+    function lsareaReadCuesFromDomRaw() {
+        return Array.from(document.querySelectorAll('#lsarea-cue-editor [data-idx]')).map(row => row.querySelector('input').value);
+    }
+    function lsareaCuesRender(values) {
+        const wrap = document.getElementById('lsarea-cue-editor');
+        if (!wrap) return;
+        wrap.innerHTML = lsareaBuildCueRowsHtml(values);
+        const addBtn = document.getElementById('lsarea-cue-add-btn');
+        if (addBtn) addBtn.style.display = values.length >= LSAREA_CUE_MAX ? 'none' : '';
+        wrap.querySelectorAll('.ln2-mc-remove-btn').forEach(btn => {
+            btn.onclick = () => {
+                const current = lsareaReadCuesFromDomRaw();
+                const idx = parseInt(btn.dataset.removeIdx, 10);
+                current.splice(idx, 1);
+                lsareaCuesRender(current);
+            };
+        });
+    }
+
+    function lsareaRenderAdminForm() {
+        lsareaAdminForm.innerHTML = `
+            <div class="ln2-field">
+                <label>Đề bài tiếng Anh (kiểu đề IELTS Speaking Part 2/3)</label>
+                <textarea id="lsarea-f-topic-en" class="news-edit-input" rows="2" placeholder="VD: Describe a book you recently read."></textarea>
+            </div>
+            <div class="ln2-field">
+                <label>Gợi ý tiếng Việt (tuỳ chọn)</label>
+                <input type="text" id="lsarea-f-topic-vi" class="news-edit-input" placeholder="VD: Miêu tả một cuốn sách bạn mới đọc gần đây.">
+            </div>
+            <div class="ln2-field">
+                <label>Các gợi ý / cue points (tuỳ chọn, tối đa ${LSAREA_CUE_MAX})</label>
+                <div id="lsarea-cue-editor"></div>
+                <button type="button" id="lsarea-cue-add-btn" class="ln2-mc-add-btn">+ Thêm gợi ý</button>
+            </div>
+        `;
+        lsareaCuesRender([]);
+        document.getElementById('lsarea-cue-add-btn').onclick = () => {
+            const current = lsareaReadCuesFromDomRaw();
+            if (current.length >= LSAREA_CUE_MAX) return;
+            current.push('');
+            lsareaCuesRender(current);
+        };
+    }
+
+    function lsareaResetForm(preserveStatus) {
+        lsareaEditingId = null;
+        lsareaAdminSaveBtn.textContent = '➕ Thêm đề bài';
+        lsareaAdminCancelBtn.style.display = 'none';
+        if (!preserveStatus) {
+            lsareaAdminStatus.textContent = '';
+            lsareaAdminStatus.className = 'ln2-admin-status';
+        }
+        lsareaRenderAdminForm();
+    }
+    lsareaAdminCancelBtn.addEventListener('click', () => lsareaResetForm());
+
+    function lsareaPopulateFormForEdit(item) {
+        lsareaRenderAdminForm();
+        document.getElementById('lsarea-f-topic-en').value = item.topic_en || '';
+        document.getElementById('lsarea-f-topic-vi').value = item.topic_vi || '';
+        lsareaCuesRender((item.cue_points && item.cue_points.length) ? item.cue_points.slice() : []);
+
+        lsareaEditingId = item.id;
+        lsareaAdminSaveBtn.textContent = '💾 Lưu thay đổi';
+        lsareaAdminCancelBtn.style.display = 'inline-block';
+        lsareaAdminStatus.textContent = '';
+        lsareaAdminStatus.className = 'ln2-admin-status';
+        if (typeof lsareaAdminForm.scrollIntoView === 'function') lsareaAdminForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function lsareaCollectFormPayload() {
+        const topicEn = (document.getElementById('lsarea-f-topic-en').value || '').trim();
+        const topicVi = (document.getElementById('lsarea-f-topic-vi').value || '').trim();
+        const cues = lsareaReadCuesFromDomRaw().map(c => c.trim()).filter(Boolean);
+        if (!topicEn) throw new Error('Vui lòng nhập đề bài tiếng Anh.');
+        return { topic_en: topicEn, topic_vi: topicVi || null, cue_points: cues };
+    }
+
+    lsareaAdminSaveBtn.addEventListener('click', async () => {
+        if (!isTeacher) return;
+        let payload;
+        try { payload = lsareaCollectFormPayload(); }
+        catch (err) {
+            lsareaAdminStatus.textContent = '⚠️ ' + err.message;
+            lsareaAdminStatus.className = 'ln2-admin-status is-error';
+            return;
+        }
+        lsareaAdminSaveBtn.disabled = true;
+        lsareaAdminStatus.textContent = 'Đang lưu...';
+        lsareaAdminStatus.className = 'ln2-admin-status';
+        try {
+            if (lsareaEditingId !== null) {
+                const updated = await lsareaUpdateItemDB(lsareaEditingId, payload);
+                const idx = lsareaItems.findIndex(it => it.id === lsareaEditingId);
+                if (idx !== -1) lsareaItems[idx] = updated;
+                lsareaAdminStatus.textContent = '✅ Đã lưu thay đổi.';
+            } else {
+                const created = await lsareaCreateItemDB(payload);
+                lsareaItems.unshift(created);
+                lsareaAdminStatus.textContent = '✅ Đã thêm đề bài mới.';
+            }
+            lsareaResetForm(true);
+            lsareaRenderItemList();
+        } catch (err) {
+            lsareaAdminStatus.textContent = '❌ Lưu thất bại: ' + err.message;
+            lsareaAdminStatus.className = 'ln2-admin-status is-error';
+        } finally {
+            lsareaAdminSaveBtn.disabled = false;
+        }
+    });
+
+    function lsareaRenderItemList() {
+        if (!lsareaItems.length) {
+            lsareaItemListEl.innerHTML = '<p class="kid-hint">Chưa có đề bài nào — hãy soạn đề đầu tiên ở khung bên trên.</p>';
+            return;
+        }
+        lsareaItemListEl.innerHTML = lsareaItems.map(item => `
+            <div class="ln2-item-row" data-item-id="${item.id}">
+                <span class="ln2-item-type-badge">🎓 ${(item.cue_points || []).length} gợi ý</span>
+                <span class="ln2-item-preview">${lsareaEsc(item.topic_en)}</span>
+                <div class="ln2-item-actions">
+                    <button type="button" class="ln2-item-edit-btn" data-id="${item.id}" title="Sửa">✏️</button>
+                    <button type="button" class="ln2-item-delete-btn" data-id="${item.id}" title="Xóa">🗑️</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    lsareaItemListEl.addEventListener('click', async (e) => {
+        const editBtn = e.target.closest('.ln2-item-edit-btn');
+        const delBtn = e.target.closest('.ln2-item-delete-btn');
+        if (editBtn) {
+            const item = lsareaItems.find(it => String(it.id) === editBtn.dataset.id);
+            if (item) lsareaPopulateFormForEdit(item);
+            return;
+        }
+        if (delBtn) {
+            const item = lsareaItems.find(it => String(it.id) === delBtn.dataset.id);
+            if (!item) return;
+            if (!confirm(`Xóa đề bài "${item.topic_en}"? Hành động này không thể hoàn tác.`)) return;
+            try {
+                await lsareaDeleteItemDB(item.id);
+                lsareaItems = lsareaItems.filter(it => it.id !== item.id);
+                lsareaRenderItemList();
+                if (lsareaEditingId === item.id) lsareaResetForm();
+            } catch (err) {
+                alert('Xóa thất bại: ' + err.message);
+            }
+        }
+    });
+
+    // ---------- Luyện tập (học viên) ----------
+    let lsareaState = null;
+    let lsareaTimerInterval = null;
+    let lsareaTimerSecondsLeft = LSAREA_PREP_SECONDS;
+
+    function lsareaClearTimer() {
+        if (lsareaTimerInterval) { clearInterval(lsareaTimerInterval); lsareaTimerInterval = null; }
+    }
+    function lsareaToggleTimer() {
+        const btn = document.getElementById('lsarea-timer-btn');
+        const display = document.getElementById('lsarea-timer-display');
+        if (!btn || !display) return;
+        if (lsareaTimerInterval) {
+            lsareaClearTimer();
+            btn.textContent = `⏱️ Bắt đầu đếm ${LSAREA_PREP_SECONDS} giây`;
+            display.textContent = '';
+            return;
+        }
+        lsareaTimerSecondsLeft = LSAREA_PREP_SECONDS;
+        display.textContent = `⏳ ${lsareaTimerSecondsLeft}s`;
+        btn.textContent = '⏹️ Dừng đếm giờ';
+        lsareaTimerInterval = setInterval(() => {
+            lsareaTimerSecondsLeft--;
+            if (lsareaTimerSecondsLeft <= 0) {
+                display.textContent = '⏰ Hết giờ chuẩn bị!';
+                lsareaClearTimer();
+                btn.textContent = '🔄 Đếm lại';
+            } else {
+                display.textContent = `⏳ ${lsareaTimerSecondsLeft}s`;
+            }
+        }, 1000);
+    }
+
+    // ----- Ghi âm tự luyện (KHÔNG upload) -----
+    let lsareaRecorder = null;
+    let lsareaRecStream = null;
+    let lsareaRecChunks = [];
+    let lsareaRecording = false;
+    function lsareaStopRecordingHard() {
+        if (lsareaRecorder && lsareaRecorder.state !== 'inactive') {
+            try { lsareaRecorder.stop(); } catch (e) { /* bỏ qua */ }
+        }
+        if (lsareaRecStream) { lsareaRecStream.getTracks().forEach(t => t.stop()); lsareaRecStream = null; }
+        lsareaRecording = false;
+    }
+    function lsareaWireRecordBox() {
+        const btn     = document.getElementById('lsarea-rec-btn');
+        const status  = document.getElementById('lsarea-rec-status');
+        const audioEl = document.getElementById('lsarea-rec-audio');
+        if (!btn) return;
+        btn.addEventListener('click', async () => {
+            if (!lsareaRecording) {
+                try {
+                    lsareaRecStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    lsareaRecorder = new MediaRecorder(lsareaRecStream);
+                    lsareaRecChunks = [];
+                    lsareaRecorder.ondataavailable = (e) => lsareaRecChunks.push(e.data);
+                    lsareaRecorder.onstop = () => {
+                        const blob = new Blob(lsareaRecChunks, { type: 'audio/webm' });
+                        audioEl.src = URL.createObjectURL(blob);
+                        audioEl.style.display = 'block';
+                        status.textContent = '✅ Đã ghi âm xong — nghe lại để tự đánh giá phần trình bày của bạn.';
+                        if (lsareaRecStream) { lsareaRecStream.getTracks().forEach(t => t.stop()); lsareaRecStream = null; }
+                    };
+                    lsareaRecorder.start();
+                    lsareaRecording = true;
+                    btn.textContent = '⏹️ Dừng ghi âm';
+                    btn.classList.add('is-recording');
+                    status.textContent = '🔴 Đang ghi âm... bấm "Dừng ghi âm" khi nói xong.';
+                    audioEl.style.display = 'none';
+                } catch (err) {
+                    status.textContent = '⚠️ Không truy cập được micro — hãy cho phép quyền truy cập micro trên trình duyệt.';
+                }
+            } else {
+                if (lsareaRecorder && lsareaRecorder.state !== 'inactive') lsareaRecorder.stop();
+                lsareaRecording = false;
+                btn.textContent = '🎤 Ghi âm lại';
+                btn.classList.remove('is-recording');
+            }
+        });
+    }
+
+    async function lsareaStartPractice() {
+        lsareaPracticePanel.style.display = 'block';
+        lsareaPanel.style.display = 'none';
+        lsareaResultArea.style.display = 'none';
+        lsareaPracticePlayArea.style.display = 'block';
+        lsareaPracticeProgress.textContent = '';
+        lsareaPracticeBody.innerHTML = '<p class="kid-hint">Đang chuẩn bị đề bài...</p>';
+        lsareaPracticeControls.innerHTML = '';
+
+        await lsareaLoadItems();
+        if (lsareaItems.length < LSAREA_MIN_ITEMS) {
+            lsareaPracticeBody.innerHTML = `<p class="kid-hint">⚠️ Kho đề bài chưa đủ để luyện tập (cần ít nhất ${LSAREA_MIN_ITEMS} đề). Hãy quay lại sau khi giảng viên soạn thêm nhé!</p>`;
+            return;
+        }
+        const picked = lsareaShuffle(lsareaItems).slice(0, Math.min(LSAREA_TOTAL_ITEMS, lsareaItems.length));
+        lsareaState = { items: picked, index: 0 };
+        lsareaRenderItem();
+    }
+
+    function lsareaRenderItem() {
+        if (!lsareaState) return;
+        lsareaClearTimer();
+        lsareaStopRecordingHard();
+        const q = lsareaState.items[lsareaState.index];
+        lsareaPracticeProgress.textContent = `Đề ${lsareaState.index + 1} / ${lsareaState.items.length}`;
+
+        const cueHtml = (q.cue_points && q.cue_points.length)
+            ? `<ul style="text-align:left; margin:10px auto 0; max-width:420px; font-size:13.5px; opacity:.85; padding-left:20px;">${q.cue_points.map(c => `<li>${lsareaEsc(c)}</li>`).join('')}</ul>`
+            : '';
+
+        lsareaPracticeBody.innerHTML = `
+            <div class="ls-situation-box" style="max-width:600px;">
+                <div class="ls-situation-text" style="font-weight:700;">${lsareaEsc(q.topic_en)}</div>
+                ${q.topic_vi ? `<div class="lssh-text-vi">${lsareaEsc(q.topic_vi)}</div>` : ''}
+                ${cueHtml}
+            </div>
+
+            <div class="ls-record-box" style="max-width:600px;">
+                <p class="ls-record-hint">⏱️ Tốc ký ý tưởng (${LSAREA_PREP_SECONDS} giây chuẩn bị) — ghi từ khoá thật nhanh, không cần viết câu hoàn chỉnh:</p>
+                <textarea id="lsarea-scratch" class="news-edit-input" rows="3" placeholder="VD: book - Harry Potter - magic school - because exciting - example: finished first book in a week"></textarea>
+                <div class="ls-record-controls" style="margin-top:10px;">
+                    <button type="button" class="kid-btn kid-btn-primary" id="lsarea-timer-btn">⏱️ Bắt đầu đếm ${LSAREA_PREP_SECONDS} giây</button>
+                    <span class="lsarea-timer-display" id="lsarea-timer-display"></span>
+                </div>
+            </div>
+
+            <div class="ln2-field" style="max-width:600px; margin:16px auto;">
+                <label>Khung A.R.E.A — điền ý ngắn gọn cho từng phần</label>
+                <div class="lsarea-box-grid">
+                    <div class="lsarea-box"><label>A — Answer (trả lời thẳng)</label><textarea id="lsarea-f-a1" class="news-edit-input" rows="2"></textarea></div>
+                    <div class="lsarea-box"><label>R — Reason (lý do)</label><textarea id="lsarea-f-r" class="news-edit-input" rows="2"></textarea></div>
+                    <div class="lsarea-box"><label>E — Example (ví dụ)</label><textarea id="lsarea-f-e" class="news-edit-input" rows="2"></textarea></div>
+                    <div class="lsarea-box"><label>A — Answer (chốt lại ý)</label><textarea id="lsarea-f-a2" class="news-edit-input" rows="2"></textarea></div>
+                </div>
+            </div>
+
+            <div class="ln2-field" style="max-width:600px; margin:16px auto;">
+                <label>💡 Mẫu câu chuyển ý — khắc phục "bí ý"</label>
+                <div class="lsarea-linker-group">
+                    <div class="lsarea-linker-label">Đầu (mở lời)</div>
+                    <div class="ls-tag-row">${LSAREA_LINKERS.start.map(p => `<span class="ls-tag">${lsareaEsc(p)}</span>`).join('')}</div>
+                    <div class="lsarea-linker-label">Giữa (lý do / ví dụ)</div>
+                    <div class="ls-tag-row">${LSAREA_LINKERS.middle.map(p => `<span class="ls-tag">${lsareaEsc(p)}</span>`).join('')}</div>
+                    <div class="lsarea-linker-label">Cuối (chốt ý)</div>
+                    <div class="ls-tag-row">${LSAREA_LINKERS.end.map(p => `<span class="ls-tag">${lsareaEsc(p)}</span>`).join('')}</div>
+                </div>
+            </div>
+
+            <div class="ls-record-box" style="max-width:600px;">
+                <p class="ls-record-hint">🎙️ Giờ hãy nói trọn vẹn đoạn trả lời dựa trên khung A.R.E.A ở trên:</p>
+                <div class="ls-record-controls">
+                    <button type="button" class="kid-btn kid-btn-primary ls-record-btn" id="lsarea-rec-btn">🎤 Ghi âm</button>
+                </div>
+                <p class="ls-record-status" id="lsarea-rec-status"></p>
+                <audio class="ls-record-audio" id="lsarea-rec-audio" controls style="display:none;"></audio>
+            </div>
+        `;
+        document.getElementById('lsarea-timer-btn').addEventListener('click', lsareaToggleTimer);
+        lsareaWireRecordBox();
+
+        const isLast = lsareaState.index + 1 >= lsareaState.items.length;
+        lsareaPracticeControls.innerHTML = `<button type="button" class="kid-btn kid-btn-primary" id="lsarea-next-btn">${isLast ? '🏁 Hoàn thành' : '➡️ Đề tiếp theo'}</button>`;
+        document.getElementById('lsarea-next-btn').addEventListener('click', () => {
+            lsareaClearTimer();
+            lsareaStopRecordingHard();
+            lsareaState.index++;
+            if (lsareaState.index >= lsareaState.items.length) lsareaFinish();
+            else lsareaRenderItem();
+        });
+    }
+
+    function lsareaFinish() {
+        lsareaClearTimer();
+        lsareaStopRecordingHard();
+        lsareaPracticePlayArea.style.display = 'none';
+        lsareaResultArea.style.display = 'block';
+        lsareaResultBox.innerHTML = `
+            <div class="ln-result-emoji">🎉</div>
+            <h3>Đã hoàn thành ${lsareaState.items.length} đề luyện nói Giai đoạn 3!</h3>
+            <div class="thcs-translate-actions">
+                <button type="button" class="kid-btn kid-btn-primary" id="lsarea-retry-btn">🔄 Luyện tiếp (đề mới)</button>
+                <button type="button" class="kid-btn" id="lsarea-back-result-btn">← Quay lại</button>
+            </div>
+        `;
+        document.getElementById('lsarea-retry-btn').addEventListener('click', () => lsareaStartPractice());
+        document.getElementById('lsarea-back-result-btn').addEventListener('click', () => {
+            lsareaResultArea.style.display = 'none';
+            lsareaPracticePanel.style.display = 'none';
+            lsareaPanel.style.display = 'block';
+            lsareaRefreshIntro();
+        });
+    }
+
+    lsareaPracticeBackBtn.addEventListener('click', () => {
+        lsareaClearTimer();
+        lsareaStopRecordingHard();
+        lsareaPracticePanel.style.display = 'none';
+        lsareaPanel.style.display = 'block';
+        lsareaRefreshIntro();
+    });
+})();
+// ===== KẾT THÚC: TAB "LUYỆN KỸ NĂNG" > "🗣️ NÓI" — GIAI ĐOẠN 3: A.R.E.A (lsarea) =====
 });

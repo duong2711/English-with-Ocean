@@ -7060,6 +7060,7 @@ mark.irt-highlight { background: #fff59d; padding: 0 1px; border-radius: 2px; cu
 
 .lsarea-timer-display { font-weight: 800; font-size: 15px; color: var(--primary-dark, #4c3fcf); }
 
+
 /* ============================================================
    [FIX iPhone] Ngan Safari/iOS tu dong ZOOM man hinh khi hoc vien
    cham vao o nhap lieu (input/textarea/select) co co chu < 16px.

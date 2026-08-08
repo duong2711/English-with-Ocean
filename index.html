@@ -2114,8 +2114,161 @@
 
         <!-- ===== Danh sách giai đoạn luyện nói (hiện tại có Giai đoạn 2 & 3) ===== -->
         <div class="folder-grid" id="ls-stage-folder-grid">
+            <div class="folder-card" id="ls-stage1-folder-card">🎯 Luyện nói giai đoạn 1</div>
             <div class="folder-card" id="ls-stage2-folder-card">🌊 Luyện nói giai đoạn 2</div>
             <div class="folder-card" id="ls-stage3-folder-card">🎓 Luyện nói giai đoạn 3</div>
+        </div>
+
+        <!-- ===== Panel Giai đoạn 1: chọn hoạt động ===== -->
+        <div id="ls-stage1-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <button class="grammar-back-btn" id="ls-stage1-back-btn">← Quay lại</button>
+                    <h3 style="margin:0;">🎯 Luyện nói giai đoạn 1</h3>
+                </div>
+            </div>
+            <p class="kid-hint">Mục tiêu: phản xạ nói nhanh, không cần nói dài — tập trung vào việc dám nói và nói đúng ngữ pháp cơ bản.</p>
+            <div class="kid-topic-grid" id="ls-stage1-activity-grid">
+                <div class="kid-topic-card" id="ls-hoidap-card">
+                    <span class="kid-icon">💬</span>
+                    <div class="kid-title">Phản xạ hỏi–đáp</div>
+                    <div class="kid-count">Nghe câu hỏi thường nhật, chọn/điền đáp án mẫu rồi ghi âm nói lại</div>
+                </div>
+                <div class="kid-topic-card" id="ls-modau-card">
+                    <span class="kid-icon">👋</span>
+                    <div class="kid-title">Mở lời hội thoại</div>
+                    <div class="kid-count">Chọn tình huống người lạ/người quen, chọn câu bắt chuyện phù hợp rồi ghi âm nói lại</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Hoạt động "Phản xạ hỏi–đáp" (ls1): giới thiệu + bắt đầu luyện tập + (giảng viên) soạn nội dung ===== -->
+        <div id="ls1-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <button class="grammar-back-btn" id="ls1-back-btn">← Quay lại</button>
+                    <h3 style="margin:0;">💬 Phản xạ hỏi–đáp</h3>
+                </div>
+                <button type="button" class="kid-btn" id="ls1-manage-btn" style="display:none;">🛠️ Soạn nội dung (<span id="ls1-item-count">0</span>)</button>
+            </div>
+            <p class="kid-hint">Mục tiêu: nghe 1 câu hỏi thường nhật, chọn hoặc điền khuyết câu trả lời mẫu (bước đệm trước khi tự nói) — sau đó ghi âm chính bạn trả lời và nghe lại để so khớp với đáp án mẫu. Mỗi lượt luyện tập lấy ngẫu nhiên tối đa 20 câu trong kho.</p>
+            <div class="kid-topic-grid" id="ls1-start-grid">
+                <div class="kid-topic-card" id="ls1-start-card">
+                    <span class="kid-icon">▶️</span>
+                    <div class="kid-title">Bắt đầu luyện tập</div>
+                    <div class="kid-count" id="ls1-start-count">Đang tải kho câu hỏi...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Panel giảng viên soạn nội dung "Phản xạ hỏi–đáp" ===== -->
+        <div id="ls1-manage-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border);">
+                <button class="grammar-back-btn" id="ls1-manage-back-btn">← Quay lại</button>
+                <h3 style="margin:0;">🛠️ Soạn nội dung — Phản xạ hỏi–đáp</h3>
+            </div>
+
+            <div class="ln2-admin-box">
+                <div class="ln2-admin-type-tabs" id="ls1-admin-type-tabs">
+                    <button type="button" class="ln2-type-tab active" data-ls1-type="dien">📝 Điền đáp án mẫu</button>
+                    <button type="button" class="ln2-type-tab" data-ls1-type="trac_nghiem">☑️ Chọn đáp án mẫu</button>
+                </div>
+
+                <div class="ln2-admin-form" id="ls1-admin-form"></div>
+
+                <div class="ln2-admin-actions">
+                    <span class="ln2-admin-status" id="ls1-admin-status"></span>
+                    <button type="button" class="kid-btn" id="ls1-admin-cancel-btn" style="display:none;">Hủy sửa</button>
+                    <button type="button" class="kid-btn kid-btn-primary" id="ls1-admin-save-btn">➕ Thêm câu hỏi</button>
+                </div>
+            </div>
+
+            <div class="ln2-item-list" id="ls1-item-list">
+                <p class="kid-hint">Đang tải danh sách câu hỏi...</p>
+            </div>
+        </div>
+
+        <!-- ===== Panel làm bài "Phản xạ hỏi–đáp" ===== -->
+        <div id="ls1-quiz-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border);">
+                <button class="grammar-back-btn" id="ls1-quiz-back-btn">← Quay lại</button>
+                <h3 style="margin:0;">💬 Phản xạ hỏi–đáp</h3>
+            </div>
+
+            <div id="ls1-quiz-play-area">
+                <div class="thcs-translate-progress" id="ls1-quiz-progress"></div>
+                <div class="thcs-translate-card ln-quiz-card">
+                    <div id="ls1-quiz-body"></div>
+                    <div class="thcs-translate-actions" id="ls1-quiz-controls"></div>
+                    <div class="thcs-translate-feedback" id="ls1-quiz-feedback"></div>
+                </div>
+            </div>
+
+            <div id="ls1-quiz-result-area" style="display:none;">
+                <div class="ln-result-box" id="ls1-result-box"></div>
+            </div>
+        </div>
+
+        <!-- ===== Hoạt động "Mở lời hội thoại" (ls2): giới thiệu + bắt đầu luyện tập + (giảng viên) soạn tình huống ===== -->
+        <div id="ls2-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <button class="grammar-back-btn" id="ls2-back-btn">← Quay lại</button>
+                    <h3 style="margin:0;">👋 Mở lời hội thoại</h3>
+                </div>
+                <button type="button" class="kid-btn" id="ls2-manage-btn" style="display:none;">🛠️ Soạn tình huống (<span id="ls2-item-count">0</span>)</button>
+            </div>
+            <p class="kid-hint">Mục tiêu: cho 1 tình huống (gặp người lạ / người quen) → chọn câu bắt chuyện phù hợp, phân biệt formal vs informal — sau đó ghi âm chính bạn nói lại câu mở lời. Mỗi lượt luyện tập lấy ngẫu nhiên tối đa 20 tình huống trong kho.</p>
+            <div class="kid-topic-grid" id="ls2-start-grid">
+                <div class="kid-topic-card" id="ls2-start-card">
+                    <span class="kid-icon">▶️</span>
+                    <div class="kid-title">Bắt đầu luyện tập</div>
+                    <div class="kid-count" id="ls2-start-count">Đang tải kho tình huống...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Panel giảng viên soạn tình huống "Mở lời hội thoại" ===== -->
+        <div id="ls2-manage-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border);">
+                <button class="grammar-back-btn" id="ls2-manage-back-btn">← Quay lại</button>
+                <h3 style="margin:0;">🛠️ Soạn tình huống — Mở lời hội thoại</h3>
+            </div>
+
+            <div class="ln2-admin-box">
+                <div class="ln2-admin-form" id="ls2-admin-form"></div>
+
+                <div class="ln2-admin-actions">
+                    <span class="ln2-admin-status" id="ls2-admin-status"></span>
+                    <button type="button" class="kid-btn" id="ls2-admin-cancel-btn" style="display:none;">Hủy sửa</button>
+                    <button type="button" class="kid-btn kid-btn-primary" id="ls2-admin-save-btn">➕ Thêm tình huống</button>
+                </div>
+            </div>
+
+            <div class="ln2-item-list" id="ls2-item-list">
+                <p class="kid-hint">Đang tải danh sách tình huống...</p>
+            </div>
+        </div>
+
+        <!-- ===== Panel làm bài "Mở lời hội thoại" ===== -->
+        <div id="ls2-quiz-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border);">
+                <button class="grammar-back-btn" id="ls2-quiz-back-btn">← Quay lại</button>
+                <h3 style="margin:0;">👋 Mở lời hội thoại</h3>
+            </div>
+
+            <div id="ls2-quiz-play-area">
+                <div class="thcs-translate-progress" id="ls2-quiz-progress"></div>
+                <div class="thcs-translate-card ln-quiz-card">
+                    <div id="ls2-quiz-body"></div>
+                    <div class="thcs-translate-actions" id="ls2-quiz-controls"></div>
+                    <div class="thcs-translate-feedback" id="ls2-quiz-feedback"></div>
+                </div>
+            </div>
+
+            <div id="ls2-quiz-result-area" style="display:none;">
+                <div class="ln-result-box" id="ls2-result-box"></div>
+            </div>
         </div>
 
         <!-- ===== Panel Giai đoạn 2: chọn hoạt động ===== -->
