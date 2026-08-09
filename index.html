@@ -1001,6 +1001,13 @@
                     <button id="kid-flash-flip" class="kid-btn kid-btn-primary">Lật thẻ</button>
                     <button id="kid-flash-next" class="kid-btn">Sau ›</button>
                 </div>
+                <!-- [MỚI] Chấm phát âm tự động (Web Speech API) — đọc đúng mới qua được thẻ tiếp theo -->
+                <div class="kf-pronounce-row" id="kid-flash-pronounce-row">
+                    <button type="button" id="kid-flash-mic-btn" class="kf-mic-btn">
+                        <span class="kf-mic-icon">🎤</span><span class="kf-mic-label">Đọc to từ này</span>
+                    </button>
+                    <div class="kf-pronounce-status" id="kid-flash-pronounce-status"></div>
+                </div>
             </div>
 
             <!-- 2. Nối từ -->
@@ -1109,6 +1116,13 @@
                     <button id="thcs-flash-prev" class="kid-btn">‹ Trước</button>
                     <button id="thcs-flash-flip" class="kid-btn kid-btn-primary">Lật thẻ</button>
                     <button id="thcs-flash-next" class="kid-btn">Sau ›</button>
+                </div>
+                <!-- [MỚI] Chấm phát âm tự động (Web Speech API) — đọc đúng mới qua được thẻ tiếp theo -->
+                <div class="kf-pronounce-row" id="thcs-flash-pronounce-row">
+                    <button type="button" id="thcs-flash-mic-btn" class="kf-mic-btn">
+                        <span class="kf-mic-icon">🎤</span><span class="kf-mic-label">Đọc to từ này</span>
+                    </button>
+                    <div class="kf-pronounce-status" id="thcs-flash-pronounce-status"></div>
                 </div>
             </div>
 
@@ -8001,6 +8015,14 @@
             </div>
             <div class="word-lookup-phonetic" id="word-lookup-phonetic"></div>
             <div class="word-lookup-body" id="word-lookup-body"></div>
+            <!-- [MỚI] Chỉ hiện khi tra từ trong Flashcard/Câu chuyện "Cho bé" hoặc THCS/THPT —
+                 bắt buộc đọc đúng phát âm mới đóng được hộp thoại (mặc định ẩn, JS tự bật). -->
+            <div class="word-lookup-pronounce-row" id="word-lookup-pronounce-row">
+                <button type="button" id="word-lookup-mic-btn" class="kf-mic-btn">
+                    <span class="kf-mic-icon">🎤</span><span class="kf-mic-label">Đọc to từ này</span>
+                </button>
+                <div class="word-lookup-pronounce-status" id="word-lookup-pronounce-status"></div>
+            </div>
         </div>
     </div>
 

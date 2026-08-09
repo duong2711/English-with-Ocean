@@ -3761,6 +3761,28 @@ h3.news-editable:focus,
 .kid-flashcard-face .kf-ex{font-size:14px;margin-top:10px;font-style:italic;opacity:.9;}
 .kid-flashcard-face .kf-ex-vi{font-size:13px;margin-top:6px;opacity:.85;}
 
+/* ================================================================
+   [MỚI] CHẤM PHÁT ÂM TỰ ĐỘNG (Web Speech API) trên Flashcard
+   "Cho bé" / THCS-THPT + khung tra từ (word-lookup-popup).
+   ================================================================ */
+.kf-pronounce-row{display:flex;flex-direction:column;align-items:center;gap:6px;margin:14px auto 0;max-width:460px;}
+.kf-mic-btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:30px;border:none;background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(79,110,247,.28);transition:transform .15s ease, background .2s ease, box-shadow .2s ease;}
+.kf-mic-btn:hover{transform:translateY(-1px);}
+.kf-mic-btn:active{transform:scale(.95);}
+.kf-mic-btn:disabled{cursor:default;opacity:.85;}
+.kf-mic-btn.kf-mic-done{background:linear-gradient(135deg,var(--success),var(--success-dark));box-shadow:0 4px 14px rgba(16,185,129,.28);}
+.kf-mic-btn.kf-mic-listening{background:linear-gradient(135deg,var(--danger),var(--danger-dark));animation:kfMicPulse 1s ease-in-out infinite;}
+.kf-mic-icon{font-size:16px;line-height:1;}
+@keyframes kfMicPulse{
+    0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.45);}
+    50%{box-shadow:0 0 0 10px rgba(239,68,68,0);}
+}
+.kf-pronounce-status{font-size:12.5px;text-align:center;color:var(--text-muted);min-height:16px;max-width:420px;}
+.kf-pronounce-status.kf-pronounce-correct{color:var(--success-dark);font-weight:700;}
+.kf-pronounce-status.kf-pronounce-wrong{color:var(--danger-dark);font-weight:700;}
+.kf-pronounce-status.kf-pronounce-listening{color:var(--danger-dark);font-weight:700;}
+.kf-pronounce-status.kf-pronounce-unsupported{color:var(--warning);}
+
 /* [MỚI] Ảnh dự phòng Pixabay khi ảnh từ vựng gốc bị lỗi: hiển thị dạng icon căn giữa, không bị crop xấu */
 .kid-img-fallback{object-fit:contain !important;padding:16%;background:rgba(0,0,0,.04);}
 .kid-flash-nav{display:flex;gap:10px;justify-content:center;margin-top:18px;}
@@ -4541,6 +4563,14 @@ h3.news-editable:focus,
     padding: 10px 0;
 }
 .word-lookup-error { color: var(--danger-dark); }
+/* [MỚI] Hàng micro chấm phát âm trong khung tra từ — chỉ hiện khi bắt buộc đọc đúng mới
+   đóng được (Flashcard "Cho bé" / THCS-THPT), ẩn ở mọi nơi khác (mặc định display:none). */
+.word-lookup-pronounce-row{display:none;flex-direction:column;align-items:center;gap:6px;margin-top:14px;padding-top:14px;border-top:1px dashed var(--border, #e5e7eb);}
+.word-lookup-pronounce-row .kf-mic-btn{padding:9px 18px;font-size:13px;}
+.word-lookup-pronounce-status{font-size:12.5px;text-align:center;color:var(--text-muted);min-height:16px;}
+.word-lookup-pronounce-status.word-lookup-pronounce-correct{color:var(--success-dark);font-weight:700;}
+.word-lookup-pronounce-status.word-lookup-pronounce-wrong{color:var(--danger-dark);font-weight:700;}
+.word-lookup-pronounce-status.word-lookup-pronounce-listening{color:var(--danger-dark);font-weight:700;}
 .word-lookup-tag {
     display: inline-block;
     font-size: 0.72rem;

@@ -141,6 +141,148 @@ document.addEventListener('DOMContentLoaded', () => {
         utter.onerror = () => { if (onEnd) onEnd(); };
         window.speechSynthesis.speak(utter);
     }
+
+    // ================================================================================
+    // [MỚI] CHẤM PHÁT ÂM TỰ ĐỘNG BẰNG WEB SPEECH API — 100% MIỄN PHÍ, CHẠY THẲNG TRÊN
+    // TRÌNH DUYỆT, KHÔNG CẦN BACKEND/API KEY.
+    // Trình duyệt (chỉ Chrome/Edge/Cốc Cốc... hỗ trợ tốt — Safari/iOS KHÔNG hỗ trợ) có sẵn
+    // SpeechRecognition, chuyển giọng nói của học viên thành văn bản; ta so khớp (fuzzy —
+    // cho phép lệch nhẹ do trình duyệt nghe chưa chuẩn) với từ mục tiêu để báo đúng/sai.
+    // Dùng CHUNG cho: Flashcard "Cho bé" (20 chủ đề), Flashcard THCS/THPT, và khung tra
+    // nhanh 1 từ (word-lookup-popup) khi mở từ 2 khu vực trên. Gắn vào window.pronounceGate
+    // để mọi khối code khác trong file (đều nằm trong các IIFE riêng) gọi được.
+    // ================================================================================
+    (() => {
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const pgSupported = !!SR;
+
+        // Chuẩn hoá 1 chuỗi tiếng Anh để so khớp: chữ thường, bỏ dấu câu, gộp khoảng trắng.
+        function pgNormalize(s) {
+            return String(s || '')
+                .toLowerCase()
+                .normalize('NFKD')
+                .replace(/[^a-z0-9\s'-]/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        // Khoảng cách Levenshtein (số bước sửa tối thiểu để biến chuỗi a thành b) — dùng để
+        // tính độ giống nhau (so khớp mờ) giữa lời học viên đọc và từ mục tiêu.
+        function pgLevenshtein(a, b) {
+            const m = a.length, n = b.length;
+            if (m === 0) return n;
+            if (n === 0) return m;
+            const dp = new Array(n + 1);
+            for (let j = 0; j <= n; j++) dp[j] = j;
+            for (let i = 1; i <= m; i++) {
+                let prevDiag = dp[0];
+                dp[0] = i;
+                for (let j = 1; j <= n; j++) {
+                    const tmp = dp[j];
+                    dp[j] = (a[i - 1] === b[j - 1]) ? prevDiag : 1 + Math.min(prevDiag, dp[j], dp[j - 1]);
+                    prevDiag = tmp;
+                }
+            }
+            return dp[n];
+        }
+
+        // Tỉ lệ giống nhau 0..1 (1 = giống hệt) giữa 2 chuỗi ĐÃ chuẩn hoá.
+        function pgSimilarity(a, b) {
+            if (!a || !b) return 0;
+            const maxLen = Math.max(a.length, b.length);
+            if (maxLen === 0) return 1;
+            return 1 - (pgLevenshtein(a, b) / maxLen);
+        }
+
+        // 1 kết quả nhận dạng giọng nói có được coi là khớp với từ mục tiêu không?
+        //  - Từ càng NGẮN thì ngưỡng càng CHẶT (1-2 ký tự sai đã lệch nghĩa rất nhiều).
+        //  - Nếu kết quả nhận dạng có nhiều từ (trình duyệt nghe thêm chữ đệm xung quanh do
+        //    micro nhạy/ồn), thử so khớp riêng từng từ tách rời với mục tiêu (chỉ áp dụng khi
+        //    mục tiêu là 1 từ đơn — cụm từ nhiều chữ phải so khớp nguyên cụm).
+        function pgIsMatch(transcript, target) {
+            const t = pgNormalize(transcript);
+            const g = pgNormalize(target);
+            if (!t || !g) return false;
+            if (t === g) return true;
+            const threshold = g.length <= 4 ? 0.8 : (g.length <= 7 ? 0.72 : 0.65);
+            if (pgSimilarity(t, g) >= threshold) return true;
+            if (g.indexOf(' ') !== -1) return false; // mục tiêu là cụm từ -> không tách nhỏ nữa
+            return t.split(' ').some(w => w && pgSimilarity(w, g) >= threshold);
+        }
+
+        let pgActiveRecognition = null; // chỉ 1 phiên nghe tại 1 thời điểm trên toàn trang
+
+        // Dừng phiên nghe hiện tại (nếu có) — gọi khi chuyển thẻ/đóng popup/chuyển tab/ẩn trang...
+        function pgStop() {
+            if (pgActiveRecognition) {
+                try { pgActiveRecognition.abort(); } catch (e) { /* bỏ qua */ }
+                pgActiveRecognition = null;
+            }
+        }
+
+        // Bắt đầu 1 phiên nghe cho 1 từ mục tiêu. callbacks có thể gồm:
+        //   onStart()            — vừa bắt đầu lắng nghe (micro đang mở)
+        //   onMatch(transcript)  — học viên đọc ĐÚNG (khớp với từ mục tiêu)
+        //   onMismatch(heard)    — nghe được nhưng KHÔNG khớp (đọc sai / nói từ khác)
+        //   onError(code)        — 'unsupported' | 'denied' | 'no-mic' | 'no-speech' | 'network' | 'error'
+        //   onEnd()              — LUÔN được gọi cuối cùng (dù đúng/sai/lỗi), dùng để tắt
+        //                          trạng thái "đang nghe" trên giao diện
+        function pgListen(targetWord, callbacks) {
+            callbacks = callbacks || {};
+            if (!pgSupported) { if (callbacks.onError) callbacks.onError('unsupported'); if (callbacks.onEnd) callbacks.onEnd(); return; }
+            pgStop();
+            const rec = new SR();
+            pgActiveRecognition = rec;
+            rec.lang = 'en-US';
+            rec.interimResults = false;
+            rec.maxAlternatives = 5;
+            rec.continuous = false;
+
+            let handled = false;
+            rec.onstart = () => { if (callbacks.onStart) callbacks.onStart(); };
+            rec.onresult = (ev) => {
+                handled = true;
+                try {
+                    const alts = [];
+                    for (let i = 0; i < ev.results[0].length; i++) alts.push(ev.results[0][i].transcript);
+                    const matched = alts.some(alt => pgIsMatch(alt, targetWord));
+                    if (matched) { if (callbacks.onMatch) callbacks.onMatch(alts[0]); }
+                    else { if (callbacks.onMismatch) callbacks.onMismatch(alts[0] || ''); }
+                } catch (e) {
+                    if (callbacks.onError) callbacks.onError('error');
+                }
+            };
+            rec.onerror = (ev) => {
+                handled = true;
+                // [MỚI] In ra console mã lỗi gốc của trình duyệt để dễ chẩn đoán khi debug
+                // (vd: mở DevTools > Console sẽ thấy chính xác Chrome báo lỗi gì).
+                if (window.console && console.warn) console.warn('[pronounceGate] Lỗi SpeechRecognition:', ev.error, ev.message || '');
+                let msg = 'error';
+                if (ev.error === 'no-speech') msg = 'no-speech';
+                else if (ev.error === 'not-allowed' || ev.error === 'service-not-allowed') msg = 'denied';
+                else if (ev.error === 'audio-capture') msg = 'no-mic';
+                // Chrome/Edge chạy Web Speech API bằng cách gửi audio lên server nhận dạng của
+                // Google qua Internet (không phải xử lý hoàn toàn trên máy) -> mất mạng/mạng
+                // chập chờn sẽ báo lỗi 'network'.
+                else if (ev.error === 'network') msg = 'network';
+                else if (ev.error === 'aborted') msg = 'aborted';
+                if (msg !== 'aborted' && callbacks.onError) callbacks.onError(msg);
+            };
+            rec.onend = () => {
+                pgActiveRecognition = null;
+                if (!handled && callbacks.onError) callbacks.onError('no-speech');
+                if (callbacks.onEnd) callbacks.onEnd();
+            };
+            try { rec.start(); } catch (e) {
+                if (window.console && console.warn) console.warn('[pronounceGate] Lỗi khi gọi rec.start():', e);
+                if (callbacks.onError) callbacks.onError('error');
+                if (callbacks.onEnd) callbacks.onEnd();
+            }
+        }
+
+        window.pronounceGate = { supported: pgSupported, listen: pgListen, stop: pgStop, isMatch: pgIsMatch };
+    })();
+
     // Cache trong phiên làm việc (từ đã tra -> link mp3, hoặc null nếu xác nhận không có) để đỡ
     // gọi lại Edge Function nhiều lần cho cùng 1 từ (Cambridge có thể bị chặn nếu gọi quá dồn dập,
     // Merriam-Webster chỉ cho 1000 lượt gọi miễn phí/ngày mỗi API key).
@@ -402,6 +544,9 @@ document.addEventListener('DOMContentLoaded', () => {
         pauseAllAudio();
         pauseAllYoutubeVideos();
         pauseGuideVideo();
+        // [MỚI] Dừng luôn phiên "đang nghe micro" của tính năng chấm phát âm tự động
+        // (Flashcard/tra từ) — tránh micro treo lắng nghe khi học viên đã chuyển tab/thoát ra.
+        if (window.pronounceGate && window.pronounceGate.stop) window.pronounceGate.stop();
     }
 
     // Khi tab trình duyệt bị chuyển đi/ẩn đi (sang tab khác, thu nhỏ, khóa máy...)
@@ -3692,13 +3837,95 @@ function toggleCompletion(symbolElement) {
         const wordLookupBody     = document.getElementById('word-lookup-body');
         const wordLookupCloseBtn = document.getElementById('word-lookup-close');
 
-        function closeWordLookupPopup() {
+        // ===== [MỚI] CHẤM PHÁT ÂM TỰ ĐỘNG khi tra từ — CHỈ áp dụng khi bấm vào từ trong khu
+        // vực Flashcard "Cho bé" (20 chủ đề) / THCS-THPT (xem wordLookupIsGatedContext bên
+        // dưới) — các khu vực khác (Tin ngắn, IELTS, Nghe...) vẫn đóng hộp thoại tự do như cũ.
+        const wordLookupPronounceRow    = document.getElementById('word-lookup-pronounce-row');
+        const wordLookupMicBtn          = document.getElementById('word-lookup-mic-btn');
+        const wordLookupPronounceStatus = document.getElementById('word-lookup-pronounce-status');
+        let wordLookupPronounceRequired = false; // popup lần mở này có bắt buộc đọc đúng mới đóng được không
+        let wordLookupPronounceWord     = '';    // từ cần đọc đúng (chính là từ vừa chạm vào)
+        let wordLookupPronounceDone     = false; // đã đọc đúng trong lần mở popup này chưa
+        let wordLookupMicBlocked        = false; // trình duyệt không hỗ trợ/từ chối micro -> bỏ chặn
+
+        // Chỉ bắt buộc đọc đúng khi từ được chạm nằm trong Flashcard/Câu chuyện/Dịch câu của
+        // khu vực "Cho bé" (#kid-topic-panel) hoặc "THCS/THPT" (#thcs-unit-panel).
+        function wordLookupIsGatedContext(wordEl) {
+            return !!(wordEl && wordEl.closest && wordEl.closest('#kid-topic-panel, #thcs-unit-panel'));
+        }
+
+        function wordLookupUpdatePronounceUI() {
+            if (!wordLookupPronounceRow || !wordLookupMicBtn || !wordLookupPronounceStatus) return;
+            if (!wordLookupPronounceRequired || !window.pronounceGate || !window.pronounceGate.supported) {
+                wordLookupPronounceRow.style.display = 'none';
+                return;
+            }
+            wordLookupPronounceRow.style.display = '';
+            wordLookupMicBtn.classList.remove('kf-mic-listening');
+            wordLookupMicBtn.classList.toggle('kf-mic-done', wordLookupPronounceDone);
+            wordLookupMicBtn.disabled = false;
+            if (wordLookupPronounceDone) {
+                wordLookupPronounceStatus.textContent = '✅ Phát âm đúng! Giờ bạn có thể đóng hộp thoại này.';
+                wordLookupPronounceStatus.className = 'word-lookup-pronounce-status word-lookup-pronounce-correct';
+            } else {
+                wordLookupPronounceStatus.textContent = '🎙️ Đọc to từ này để đóng hộp thoại.';
+                wordLookupPronounceStatus.className = 'word-lookup-pronounce-status';
+            }
+        }
+
+        if (wordLookupMicBtn) {
+            wordLookupMicBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (!window.pronounceGate || !window.pronounceGate.supported || !wordLookupPronounceWord) return;
+                wordLookupMicBtn.classList.add('kf-mic-listening');
+                wordLookupMicBtn.disabled = true;
+                wordLookupPronounceStatus.textContent = '🔴 Đang nghe... hãy đọc to "' + wordLookupPronounceWord + '"';
+                wordLookupPronounceStatus.className = 'word-lookup-pronounce-status word-lookup-pronounce-listening';
+                window.pronounceGate.listen(wordLookupPronounceWord, {
+                    onMatch: () => {
+                        wordLookupPronounceDone = true;
+                        wordLookupUpdatePronounceUI();
+                    },
+                    onMismatch: (heard) => {
+                        wordLookupPronounceStatus.textContent = heard
+                            ? '❌ Chưa đúng (nghe được: "' + heard + '"), thử lại nhé!'
+                            : '❌ Chưa đúng, thử lại nhé!';
+                        wordLookupPronounceStatus.className = 'word-lookup-pronounce-status word-lookup-pronounce-wrong';
+                    },
+                    onError: (code) => {
+                        let msg = '⚠️ Có lỗi khi nhận dạng giọng nói, hãy bấm micro và thử lại.';
+                        if (code === 'no-speech') msg = '🔇 Chưa nghe thấy gì — hãy bấm micro rồi đọc to, rõ hơn nhé!';
+                        else if (code === 'network') msg = '⚠️ Mất kết nối mạng (tính năng này cần Internet để nhận dạng giọng nói) — kiểm tra mạng rồi thử lại.';
+                        else if (code === 'denied') { msg = '⚠️ Hãy cho phép trình duyệt dùng micro để luyện phát âm.'; wordLookupMicBlocked = true; }
+                        else if (code === 'no-mic') { msg = '⚠️ Không tìm thấy micro trên thiết bị này.'; wordLookupMicBlocked = true; }
+                        else if (code === 'unsupported') { msg = '⚠️ Trình duyệt này chưa hỗ trợ chấm phát âm — hãy dùng Chrome/Edge.'; wordLookupMicBlocked = true; }
+                        wordLookupPronounceStatus.textContent = msg;
+                        wordLookupPronounceStatus.className = 'word-lookup-pronounce-status word-lookup-pronounce-wrong';
+                    },
+                    onEnd: () => {
+                        wordLookupMicBtn.classList.remove('kf-mic-listening');
+                        wordLookupMicBtn.disabled = false;
+                    }
+                });
+            });
+        }
+
+        // force=true dùng nội bộ (vd: học viên bấm "Tra lại") để đóng không cần điều kiện gì.
+        function closeWordLookupPopup(force) {
+            if (!force && wordLookupPronounceRequired && !wordLookupPronounceDone
+                && window.pronounceGate && window.pronounceGate.supported && !wordLookupMicBlocked) {
+                wordLookupPronounceStatus.textContent = '🎙️ Hãy đọc đúng từ "' + wordLookupPronounceWord + '" để đóng hộp thoại này.';
+                wordLookupPronounceStatus.className = 'word-lookup-pronounce-status word-lookup-pronounce-wrong';
+                if (window.vocabTap && window.vocabTap.toast) window.vocabTap.toast('🎙️ Đọc đúng từ để đóng hộp thoại chú thích nhé!', 'info');
+                return;
+            }
+            if (window.pronounceGate) window.pronounceGate.stop();
             if (wordLookupPopup) wordLookupPopup.style.display = 'none';
         }
-        if (wordLookupCloseBtn) wordLookupCloseBtn.addEventListener('click', closeWordLookupPopup);
+        if (wordLookupCloseBtn) wordLookupCloseBtn.addEventListener('click', () => closeWordLookupPopup(false));
         if (wordLookupPopup) {
             wordLookupPopup.addEventListener('click', (e) => {
-                if (e.target === wordLookupPopup) closeWordLookupPopup();
+                if (e.target === wordLookupPopup) closeWordLookupPopup(false);
             });
         }
 
@@ -3730,6 +3957,14 @@ function toggleCompletion(symbolElement) {
 
             wordLookupWordEl.textContent = rawWord;
             wordLookupPopup.style.display = 'flex';
+
+            // [MỚI] Chỉ bắt buộc đọc đúng phát âm mới được đóng hộp thoại khi từ này nằm trong
+            // khu vực Flashcard/Câu chuyện "Cho bé" (20 chủ đề) hoặc THCS/THPT.
+            wordLookupPronounceRequired = wordLookupIsGatedContext(wordEl);
+            wordLookupPronounceWord = rawWord;
+            wordLookupPronounceDone = false;
+            wordLookupMicBlocked = false;
+            wordLookupUpdatePronounceUI();
 
             // Tự động phát âm ngay khi học viên chạm vào từ (gọi NGAY, đồng bộ, không
             // chờ await nào cả — để Safari/iOS vẫn coi đây là hành động trực tiếp của
@@ -6262,6 +6497,15 @@ function toggleCompletion(symbolElement) {
         // [SỬA LỖI] Đánh dấu để renderFlashcard() bỏ qua việc đọc lại từ đầu tiên khi vừa mở
         // chủ đề, vì từ đó đã được đọc ĐỒNG BỘ ngay trong lúc bấm (xem openTopic bên dưới).
         let kidSkipNextAutoSpeak = false;
+        // [MỚI] CHẤM PHÁT ÂM TỰ ĐỘNG trên Flashcard: tập hợp chỉ số (trong flashOrder) các
+        // thẻ đã được đọc ĐÚNG phát âm trong lượt mở chủ đề hiện tại (reset mỗi khi mở lại
+        // chủ đề — xem initFlashcards). Khi đã đọc đúng HẾT toàn bộ thẻ đang hiển thị mới
+        // báo "xong Flashcard" (không lưu lên Supabase — xem ghi chú tại kidHandlePronounceComplete).
+        let kidFlashPronouncedSet = new Set();
+        let kidFlashCompleteNotified = false;
+        // Nếu trình duyệt từ chối quyền micro hoặc máy không có micro, không thể ép học viên
+        // đọc được nữa -> tự động bỏ chặn (an toàn), tránh học viên bị kẹt không qua được thẻ.
+        let kidFlashMicBlocked = false;
 
         // ================== [MỚI] ẢNH DỰ PHÒNG TỰ ĐỘNG QUA PIXABAY API ==================
         // Khi ảnh gốc của 1 từ vựng bị lỗi (404, mất link...), hệ thống sẽ tự động gọi
@@ -6992,6 +7236,10 @@ function toggleCompletion(symbolElement) {
             // [MỚI] Tráo thứ tự 25 thẻ đầu (đợt 1) và áp dụng luôn khi mở khóa hết từ vựng
             // còn lại, để mỗi lần vào chủ đề thẻ hiện theo thứ tự ngẫu nhiên thay vì cố định.
             flashOrder = kidShuffleArray(topic.words.slice(0, visibleCount));
+            // [MỚI] Mỗi lần mở lại (hoặc mở mới) 1 chủ đề, phải đọc lại phát âm từ đầu.
+            kidFlashPronouncedSet = new Set();
+            kidFlashCompleteNotified = false;
+            kidFlashMicBlocked = false;
             renderFlashcard();
 
             const notice = document.getElementById('kid-flash-lock-notice');
@@ -7010,6 +7258,8 @@ function toggleCompletion(symbolElement) {
        function renderFlashcard() {
     const w = flashOrder[flashIndex];
     kidFlashcard.classList.remove('flipped');
+    // [MỚI] Dừng phiên nghe micro cũ (nếu có) mỗi khi đổi sang thẻ khác.
+    if (window.pronounceGate) window.pronounceGate.stop();
     
     kidFlashFront.innerHTML = `
         <div class="kf-img-wrap">
@@ -7044,7 +7294,104 @@ function toggleCompletion(symbolElement) {
         const imgPreload = new Image();
         imgPreload.src = nextWord.img;
     }
+
+    kidUpdatePronounceUI(); // [MỚI] cập nhật nút micro + trạng thái đọc đúng/sai cho thẻ này
 }
+
+        // ===== [MỚI] CHẤM PHÁT ÂM TỰ ĐỘNG (đọc to từ vựng) trên Flashcard "Cho bé" =====
+        const kidFlashMicBtn = document.getElementById('kid-flash-mic-btn');
+        const kidFlashPronounceStatus = document.getElementById('kid-flash-pronounce-status');
+
+        function kidUpdatePronounceUI() {
+            if (!kidFlashMicBtn || !kidFlashPronounceStatus) return;
+            const done = kidFlashPronouncedSet.has(flashIndex);
+            kidFlashMicBtn.classList.remove('kf-mic-listening');
+            kidFlashMicBtn.classList.toggle('kf-mic-done', done);
+            kidFlashMicBtn.disabled = false;
+            const label = kidFlashMicBtn.querySelector('.kf-mic-label');
+            if (!window.pronounceGate || !window.pronounceGate.supported) {
+                if (label) label.textContent = 'Đọc to từ này';
+                kidFlashMicBtn.style.display = 'none';
+                kidFlashPronounceStatus.textContent = '⚠️ Trình duyệt này chưa hỗ trợ chấm phát âm tự động — hãy dùng Chrome hoặc Edge để luyện đọc.';
+                kidFlashPronounceStatus.className = 'kf-pronounce-status kf-pronounce-unsupported';
+                return;
+            }
+            kidFlashMicBtn.style.display = '';
+            if (done) {
+                if (label) label.textContent = 'Đã đọc đúng ✓ (đọc lại)';
+                kidFlashPronounceStatus.textContent = '✅ Phát âm đúng rồi!';
+                kidFlashPronounceStatus.className = 'kf-pronounce-status kf-pronounce-correct';
+            } else {
+                if (label) label.textContent = '🎤 Đọc to từ này';
+                kidFlashPronounceStatus.textContent = 'Bấm micro và đọc to từ tiếng Anh để qua thẻ tiếp theo.';
+                kidFlashPronounceStatus.className = 'kf-pronounce-status';
+            }
+        }
+
+        // Được gọi khi học viên đã đọc đúng HẾT toàn bộ thẻ đang hiển thị (đợt hiện tại).
+        // [GHI CHÚ] Khác với Nối từ/Ô chữ/Câu chuyện/Trò chơi, trạng thái này KHÔNG được lưu
+        // lên Supabase (kid_topic_progress không có cột riêng cho Flashcard — xem đoạn code
+        // "Flashcard không có trạng thái hoàn thành riêng" trong setupKidAdminPhaseHoldTrick
+        // phía trên) nên sẽ reset lại mỗi khi học viên mở lại chủ đề. Đây là lựa chọn có chủ
+        // đích để không phải đổi cấu trúc bảng + lộ trình mở khóa Đợt 1/Đợt 2 hiện có.
+        function kidHandlePronounceComplete() {
+            if (kidFlashCompleteNotified) return;
+            if (flashOrder.length === 0 || kidFlashPronouncedSet.size < flashOrder.length) return;
+            kidFlashCompleteNotified = true;
+            if (window.vocabTap && window.vocabTap.toast) {
+                window.vocabTap.toast('🎉 Tuyệt vời! Bạn đã đọc đúng phát âm tất cả từ vựng trong Flashcard đợt này.', 'success');
+            }
+        }
+
+        if (kidFlashMicBtn) {
+            kidFlashMicBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (!window.pronounceGate || !window.pronounceGate.supported) return;
+                const w = flashOrder[flashIndex];
+                if (!w) return;
+                kidFlashMicBtn.classList.add('kf-mic-listening');
+                kidFlashMicBtn.disabled = true;
+                kidFlashPronounceStatus.textContent = '🔴 Đang nghe... hãy đọc to "' + w.en + '"';
+                kidFlashPronounceStatus.className = 'kf-pronounce-status kf-pronounce-listening';
+                window.pronounceGate.listen(w.en, {
+                    onMatch: () => {
+                        kidFlashPronouncedSet.add(flashIndex);
+                        if (typeof playKidCorrectSound === 'function') playKidCorrectSound();
+                        kidUpdatePronounceUI();
+                        kidHandlePronounceComplete();
+                    },
+                    onMismatch: (heard) => {
+                        if (typeof playKidWrongSound === 'function') playKidWrongSound();
+                        kidFlashPronounceStatus.textContent = heard
+                            ? '❌ Chưa đúng (nghe được: "' + heard + '"), thử lại nhé!'
+                            : '❌ Chưa đúng, thử lại nhé!';
+                        kidFlashPronounceStatus.className = 'kf-pronounce-status kf-pronounce-wrong';
+                    },
+                    onError: (code) => {
+                        let msg = '⚠️ Có lỗi khi nhận dạng giọng nói, hãy bấm micro và thử lại.';
+                        if (code === 'no-speech') msg = '🔇 Chưa nghe thấy gì — hãy bấm micro rồi đọc to, rõ hơn nhé!';
+                        else if (code === 'network') msg = '⚠️ Mất kết nối mạng (tính năng này cần Internet để nhận dạng giọng nói) — kiểm tra mạng rồi thử lại.';
+                        else if (code === 'denied') { msg = '⚠️ Hãy cho phép trình duyệt dùng micro để luyện phát âm.'; kidFlashMicBlocked = true; }
+                        else if (code === 'no-mic') { msg = '⚠️ Không tìm thấy micro trên thiết bị này.'; kidFlashMicBlocked = true; }
+                        else if (code === 'unsupported') { msg = '⚠️ Trình duyệt này chưa hỗ trợ chấm phát âm — hãy dùng Chrome/Edge.'; kidFlashMicBlocked = true; }
+                        kidFlashPronounceStatus.textContent = msg;
+                        kidFlashPronounceStatus.className = 'kf-pronounce-status kf-pronounce-wrong';
+                    },
+                    onEnd: () => {
+                        kidFlashMicBtn.classList.remove('kf-mic-listening');
+                        kidFlashMicBtn.disabled = false;
+                    }
+                });
+            });
+        }
+
+        // Có được phép sang thẻ tiếp theo không: đã đọc đúng thẻ hiện tại, HOẶC trình duyệt
+        // không hỗ trợ/không có micro/bị từ chối quyền (không thể ép được nữa -> bỏ chặn).
+        function kidCanAdvanceFlashcard() {
+            if (!window.pronounceGate || !window.pronounceGate.supported) return true;
+            if (kidFlashMicBlocked) return true;
+            return kidFlashPronouncedSet.has(flashIndex);
+        }
 
         kidFlashFlip.addEventListener('click', () => kidFlashcard.classList.toggle('flipped'));
         kidFlashcard.addEventListener('click', () => kidFlashcard.classList.toggle('flipped'));
@@ -7053,6 +7400,12 @@ function toggleCompletion(symbolElement) {
             renderFlashcard();
         });
         kidFlashNext.addEventListener('click', () => {
+            if (!kidCanAdvanceFlashcard()) {
+                kidFlashPronounceStatus.textContent = '🎙️ Hãy đọc đúng từ này trước khi qua thẻ tiếp theo.';
+                kidFlashPronounceStatus.className = 'kf-pronounce-status kf-pronounce-wrong';
+                if (window.vocabTap && window.vocabTap.toast) window.vocabTap.toast('🎙️ Hãy đọc đúng từ hiện tại trước khi sang thẻ tiếp theo nhé!', 'info');
+                return;
+            }
             flashIndex = (flashIndex + 1) % flashOrder.length;
             renderFlashcard();
         });
@@ -8633,6 +8986,14 @@ function toggleCompletion(symbolElement) {
         // [SỬA LỖI] Đánh dấu để thcsRenderFlashcard() bỏ qua việc đọc lại từ đầu tiên khi vừa
         // mở Unit, vì từ đó đã được đọc ĐỒNG BỘ ngay trong lúc bấm (xem openUnit bên dưới).
         let thcsSkipNextAutoSpeak = false;
+        // [MỚI] CHẤM PHÁT ÂM TỰ ĐỘNG trên Flashcard: chỉ số các thẻ đã đọc ĐÚNG phát âm trong
+        // lượt mở Unit hiện tại (reset mỗi khi mở lại Unit — xem thcsInitFlashcards). Khi đọc
+        // đúng HẾT toàn bộ Unit mới ghi nhận "flashcard_done" (thay cho cách cũ là chỉ cần
+        // xem qua hết, xem thcsHandleFlashcardsCompleted).
+        let thcsFlashPronouncedSet = new Set();
+        // Nếu trình duyệt từ chối quyền micro / không có micro -> không thể ép đọc được nữa,
+        // tự động bỏ chặn để học viên không bị kẹt không qua được thẻ.
+        let thcsFlashMicBlocked = false;
 
         thcsFlashFront.addEventListener('click', (e) => {
             const btn = e.target.closest('.kf-speak-btn');
@@ -8644,12 +9005,17 @@ function toggleCompletion(symbolElement) {
         function thcsInitFlashcards(unit) {
             flashIndex = 0;
             flashWords = unit.words;
+            // [MỚI] Mỗi lần mở lại (hoặc mở mới) 1 Unit, phải đọc lại phát âm từ đầu.
+            thcsFlashPronouncedSet = new Set();
+            thcsFlashMicBlocked = false;
             thcsRenderFlashcard();
         }
 
         function thcsRenderFlashcard() {
             const w = flashWords[flashIndex];
             thcsFlashcard.classList.remove('flipped');
+            // [MỚI] Dừng phiên nghe micro cũ (nếu có) mỗi khi đổi sang thẻ khác.
+            if (window.pronounceGate) window.pronounceGate.stop();
             thcsFlashFront.innerHTML = `
                 <div class="kf-img-wrap">
                     <img src="${w.img}" class="kf-img kf-anim-img" alt="${w.en}" ${thcsImgErrorAttr(w.en)}>
@@ -8676,9 +9042,92 @@ function toggleCompletion(symbolElement) {
             if (nextWord && nextWord.img) { const pre = new Image(); pre.src = nextWord.img; }
 
             thcsFlashSeenSet.add(flashIndex);
-            if (flashWords.length > 0 && thcsFlashSeenSet.size >= flashWords.length) {
-                thcsHandleFlashcardsCompleted();
+            thcsUpdatePronounceUI(); // [MỚI] cập nhật nút micro + trạng thái đọc đúng/sai cho thẻ này
+        }
+
+        // ===== [MỚI] CHẤM PHÁT ÂM TỰ ĐỘNG (đọc to từ vựng) trên Flashcard THCS/THPT =====
+        const thcsFlashMicBtn = document.getElementById('thcs-flash-mic-btn');
+        const thcsFlashPronounceStatus = document.getElementById('thcs-flash-pronounce-status');
+
+        function thcsUpdatePronounceUI() {
+            if (!thcsFlashMicBtn || !thcsFlashPronounceStatus) return;
+            const done = thcsFlashPronouncedSet.has(flashIndex);
+            thcsFlashMicBtn.classList.remove('kf-mic-listening');
+            thcsFlashMicBtn.classList.toggle('kf-mic-done', done);
+            thcsFlashMicBtn.disabled = false;
+            const label = thcsFlashMicBtn.querySelector('.kf-mic-label');
+            if (!window.pronounceGate || !window.pronounceGate.supported) {
+                thcsFlashMicBtn.style.display = 'none';
+                thcsFlashPronounceStatus.textContent = '⚠️ Trình duyệt này chưa hỗ trợ chấm phát âm tự động — hãy dùng Chrome hoặc Edge để luyện đọc.';
+                thcsFlashPronounceStatus.className = 'kf-pronounce-status kf-pronounce-unsupported';
+                return;
             }
+            thcsFlashMicBtn.style.display = '';
+            if (done) {
+                if (label) label.textContent = 'Đã đọc đúng ✓ (đọc lại)';
+                thcsFlashPronounceStatus.textContent = '✅ Phát âm đúng rồi!';
+                thcsFlashPronounceStatus.className = 'kf-pronounce-status kf-pronounce-correct';
+            } else {
+                if (label) label.textContent = '🎤 Đọc to từ này';
+                thcsFlashPronounceStatus.textContent = 'Bấm micro và đọc to từ tiếng Anh để qua thẻ tiếp theo.';
+                thcsFlashPronounceStatus.className = 'kf-pronounce-status';
+            }
+        }
+
+        // Được gọi khi học viên đã đọc đúng HẾT toàn bộ thẻ trong Unit hiện tại ít nhất 1 lần.
+        // Thay cho điều kiện cũ (chỉ cần XEM qua hết) — giờ phải ĐỌC ĐÚNG mới ghi nhận
+        // "flashcard_done" (dùng lại đúng cột đã có sẵn trên Supabase, không cần đổi bảng).
+        function thcsHandlePronounceComplete() {
+            if (flashWords.length === 0 || thcsFlashPronouncedSet.size < flashWords.length) return;
+            thcsHandleFlashcardsCompleted();
+        }
+
+        if (thcsFlashMicBtn) {
+            thcsFlashMicBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (!window.pronounceGate || !window.pronounceGate.supported) return;
+                const w = flashWords[flashIndex];
+                if (!w) return;
+                thcsFlashMicBtn.classList.add('kf-mic-listening');
+                thcsFlashMicBtn.disabled = true;
+                thcsFlashPronounceStatus.textContent = '🔴 Đang nghe... hãy đọc to "' + w.en + '"';
+                thcsFlashPronounceStatus.className = 'kf-pronounce-status kf-pronounce-listening';
+                window.pronounceGate.listen(w.en, {
+                    onMatch: () => {
+                        thcsFlashPronouncedSet.add(flashIndex);
+                        thcsUpdatePronounceUI();
+                        thcsHandlePronounceComplete();
+                    },
+                    onMismatch: (heard) => {
+                        thcsFlashPronounceStatus.textContent = heard
+                            ? '❌ Chưa đúng (nghe được: "' + heard + '"), thử lại nhé!'
+                            : '❌ Chưa đúng, thử lại nhé!';
+                        thcsFlashPronounceStatus.className = 'kf-pronounce-status kf-pronounce-wrong';
+                    },
+                    onError: (code) => {
+                        let msg = '⚠️ Có lỗi khi nhận dạng giọng nói, hãy bấm micro và thử lại.';
+                        if (code === 'no-speech') msg = '🔇 Chưa nghe thấy gì — hãy bấm micro rồi đọc to, rõ hơn nhé!';
+                        else if (code === 'network') msg = '⚠️ Mất kết nối mạng (tính năng này cần Internet để nhận dạng giọng nói) — kiểm tra mạng rồi thử lại.';
+                        else if (code === 'denied') { msg = '⚠️ Hãy cho phép trình duyệt dùng micro để luyện phát âm.'; thcsFlashMicBlocked = true; }
+                        else if (code === 'no-mic') { msg = '⚠️ Không tìm thấy micro trên thiết bị này.'; thcsFlashMicBlocked = true; }
+                        else if (code === 'unsupported') { msg = '⚠️ Trình duyệt này chưa hỗ trợ chấm phát âm — hãy dùng Chrome/Edge.'; thcsFlashMicBlocked = true; }
+                        thcsFlashPronounceStatus.textContent = msg;
+                        thcsFlashPronounceStatus.className = 'kf-pronounce-status kf-pronounce-wrong';
+                    },
+                    onEnd: () => {
+                        thcsFlashMicBtn.classList.remove('kf-mic-listening');
+                        thcsFlashMicBtn.disabled = false;
+                    }
+                });
+            });
+        }
+
+        // Có được phép sang thẻ tiếp theo không: đã đọc đúng thẻ hiện tại, HOẶC trình duyệt
+        // không hỗ trợ/không có micro/bị từ chối quyền (không thể ép được nữa -> bỏ chặn).
+        function thcsCanAdvanceFlashcard() {
+            if (!window.pronounceGate || !window.pronounceGate.supported) return true;
+            if (thcsFlashMicBlocked) return true;
+            return thcsFlashPronouncedSet.has(flashIndex);
         }
 
         // Được gọi khi học viên đã xem qua hết toàn bộ Flashcard của Unit hiện tại ít nhất 1 lần
@@ -8702,6 +9151,12 @@ function toggleCompletion(symbolElement) {
             thcsRenderFlashcard();
         });
         thcsFlashNext.addEventListener('click', () => {
+            if (!thcsCanAdvanceFlashcard()) {
+                thcsFlashPronounceStatus.textContent = '🎙️ Hãy đọc đúng từ này trước khi qua thẻ tiếp theo.';
+                thcsFlashPronounceStatus.className = 'kf-pronounce-status kf-pronounce-wrong';
+                if (window.vocabTap && window.vocabTap.toast) window.vocabTap.toast('🎙️ Hãy đọc đúng từ hiện tại trước khi sang thẻ tiếp theo nhé!', 'info');
+                return;
+            }
             flashIndex = (flashIndex + 1) % flashWords.length;
             thcsRenderFlashcard();
         });
