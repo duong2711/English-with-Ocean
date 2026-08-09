@@ -8268,9 +8268,46 @@ function toggleCompletion(symbolElement) {
                     .eq('user_id', currentUserId);
                 if (error) throw error;
                 thcsProgressMap = {};
+                // [SỬA LỖI] Nếu bảng "thcs_unit_progress" lỡ thiếu ràng buộc UNIQUE trên
+                // (user_id, grade, unit_id), lệnh upsert() ở thcsSaveProgress() bên dưới sẽ âm
+                // thầm chèn (insert) THÊM một dòng mới thay vì cập nhật đúng dòng cũ mỗi khi lưu
+                // — mỗi lần hoàn thành 1 mục (Flashcard/Dịch câu/Câu chuyện) tạo ra 1 dòng riêng,
+                // dòng nào cũng chỉ có ĐÚNG 1 cờ true, các cờ còn lại false. Trước đây code này
+                // dùng forEach ghi đè trực tiếp (dòng trả về SAU CÙNG từ Supabase thắng), nên tiến
+                // độ Flashcard/Dịch câu bị "biến mất" ngay khi có dòng khác (vd: Câu chuyện) ghi
+                // đè sau — dù bản chất là do dữ liệu bị nhân bản chứ không phải người dùng làm lại
+                // từ đầu. Gộp (OR) tất cả các dòng trùng key lại để không mất cờ đã hoàn thành.
                 (data || []).forEach(row => {
-                    thcsProgressMap[thcsProgressKey(row.grade, row.unit_id)] = row;
+                    const key = thcsProgressKey(row.grade, row.unit_id);
+                    const existing = thcsProgressMap[key];
+                    thcsProgressMap[key] = existing ? {
+                        grade: row.grade,
+                        unit_id: row.unit_id,
+                        flashcard_done: !!(existing.flashcard_done || row.flashcard_done),
+                        translate_done: !!(existing.translate_done || row.translate_done),
+                        story_done: !!(existing.story_done || row.story_done),
+                        completed: !!(existing.completed || row.completed)
+                    } : row;
                 });
+                // Vẫn còn nhiều dòng trùng (user_id, grade, unit_id) cho cùng 1 Unit -> bảng chắc
+                // chắn đang thiếu ràng buộc UNIQUE cần thiết để onConflict hoạt động đúng. Báo rõ
+                // ra console để dễ phát hiện, kèm gợi ý câu lệnh SQL cần chạy trên Supabase.
+                const seenKeys = {};
+                let duplicateFound = false;
+                (data || []).forEach(row => {
+                    const key = thcsProgressKey(row.grade, row.unit_id);
+                    if (seenKeys[key]) duplicateFound = true;
+                    seenKeys[key] = true;
+                });
+                if (duplicateFound) {
+                    console.error(
+                        '[thcs_unit_progress] Phát hiện nhiều dòng trùng (user_id, grade, unit_id) cho cùng 1 Unit — ' +
+                        'bảng đang thiếu ràng buộc UNIQUE nên upsert() không gộp được, khiến tiến độ Flashcard/Dịch câu ' +
+                        'có vẻ như bị "reset". Hãy chạy trên Supabase SQL editor: ' +
+                        'ALTER TABLE thcs_unit_progress ADD CONSTRAINT thcs_unit_progress_unique UNIQUE (user_id, grade, unit_id); ' +
+                        '(và trước đó dọn các dòng trùng bằng cách gộp thủ công hoặc xoá dòng thừa).'
+                    );
+                }
             } catch (err) {
                 console.error('Lỗi khi tải tiến độ Unit (THCS/THPT):', err.message);
                 thcsProgressMap = {};
@@ -8315,9 +8352,20 @@ function toggleCompletion(symbolElement) {
                 const { error } = await sb
                     .from('thcs_unit_progress')
                     .upsert(payload, { onConflict: 'user_id, grade, unit_id' });
-                if (error) console.error('Lỗi khi lưu tiến độ Unit (THCS/THPT — kiểm tra RLS trên bảng thcs_unit_progress):', error);
+                if (error) {
+                    console.error('Lỗi khi lưu tiến độ Unit (THCS/THPT — kiểm tra RLS/UNIQUE constraint trên bảng thcs_unit_progress):', error);
+                    // [SỬA LỖI] Trước đây lỗi này chỉ nằm im trong console — người học không hề
+                    // biết tiến độ KHÔNG được lưu, nên tưởng nhầm là "tự nhiên bị reset" ở lần
+                    // mở lại sau. Báo trực tiếp cho người học biết ngay khi lưu thất bại.
+                    if (window.vocabTap && window.vocabTap.toast) {
+                        window.vocabTap.toast('⚠️ Lưu tiến độ thất bại (lỗi kết nối/máy chủ). Tiến độ có thể mất khi tải lại trang, hãy thử lại.', 'info');
+                    }
+                }
             } catch (err) {
                 console.error('Lỗi ngoại lệ khi lưu tiến độ Unit (THCS/THPT):', err.message);
+                if (window.vocabTap && window.vocabTap.toast) {
+                    window.vocabTap.toast('⚠️ Lưu tiến độ thất bại (lỗi kết nối/máy chủ). Tiến độ có thể mất khi tải lại trang, hãy thử lại.', 'info');
+                }
             }
             return merged;
         }
@@ -18204,19 +18252,39 @@ function toggleCompletion(symbolElement) {
         const ed = wrap && wrap.querySelector ? wrap.querySelector('.ctest-rich-editable') : null;
         return ed ? ed.innerHTML.trim() : '';
     }
-    // Đếm nhanh số chỗ trống (thẻ <u> gạch chân) trong 1 đoạn HTML nguồn.
+    // [SỬA LỖI] Trước đây chỉ tìm thẻ <u> thật (querySelectorAll('u')). Vấn đề: khi giảng viên
+    // bấm CẢ "In đậm" (B) LẪN "Gạch chân" (U) cho cùng 1 từ, một số trình duyệt (đặc biệt
+    // Safari trên iPhone/iPad/Mac) không lồng gọn <u> bên trong <b> như Chrome/Edge, mà tạo ra
+    // 1 phần tử có "text-decoration: underline" trong thuộc tính style thay vì thẻ <u> — khiến
+    // querySelectorAll('u') không tìm thấy từ đó. Hậu quả: từ đó KHÔNG bị biến thành chỗ trống
+    // (vẫn hiện nguyên chữ, không có ô nhập), nên nếu đó là chỗ trống duy nhất của câu, câu đó
+    // không bao giờ có ô nào để điền/chấm đúng — học viên bấm "Kiểm tra" nhưng không có gì để
+    // kiểm tra cả. Hàm này tìm CẢ 2 kiểu: thẻ <u> thật lẫn phần tử có text-decoration:underline
+    // trong style, và loại các phần tử lồng bên trong 1 phần tử gạch chân khác để không đếm
+    // trùng 1 chỗ trống nhiều lần.
+    function ln3IsUnderlineEl(el) {
+        if (!el || el.nodeType !== 1) return false;
+        if (el.tagName.toLowerCase() === 'u') return true;
+        const style = el.getAttribute('style') || '';
+        return /text-decoration[^;"]*underline/i.test(style);
+    }
+    function ln3FindUnderlineEls(container) {
+        const all = Array.from(container.querySelectorAll('*')).filter(ln3IsUnderlineEl);
+        return all.filter(el => !all.some(other => other !== el && other.contains(el)));
+    }
+    // Đếm nhanh số chỗ trống (gạch chân) trong 1 đoạn HTML nguồn.
     function ln3CountBlanksInHtml(html) {
         const d = document.createElement('div');
         d.innerHTML = html || '';
-        return d.querySelectorAll('u').length;
+        return ln3FindUnderlineEls(d).length;
     }
-    // Tách các thẻ <u> (gạch chân) trong 1 đoạn HTML thành các "chỗ trống" — mỗi chỗ trống có
+    // Tách các phần tử gạch chân trong 1 đoạn HTML thành các "chỗ trống" — mỗi chỗ trống có
     // thể chấp nhận NHIỀU đáp án đúng, phân cách bằng dấu "|".
     function ln3ParseBlanks(html) {
         const container = document.createElement('div');
         container.innerHTML = html || '';
         const blanks = [];
-        Array.from(container.querySelectorAll('u')).forEach((elm) => {
+        ln3FindUnderlineEls(container).forEach((elm) => {
             const raw = elm.textContent.trim();
             const accepted = raw.split('|').map(s => s.trim()).filter(Boolean);
             const marker = document.createElement('span');
@@ -18227,6 +18295,7 @@ function toggleCompletion(symbolElement) {
         });
         return { displayHtml: container.innerHTML, blanks };
     }
+
 
     // Trường chèn hình: dán URL hoặc tải ảnh trực tiếp lên Supabase Storage.
     function ln3ImageField(initialUrl) {
