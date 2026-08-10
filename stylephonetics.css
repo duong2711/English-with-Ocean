@@ -4095,6 +4095,25 @@ h3.news-editable:focus,
    TAB HƯỚNG DẪN
    ===================================================== */
 .huongdan-guide-content { display:flex; flex-direction:column; gap:14px; margin-top:4px; }
+/* [MỚI] Nút xem lại vòng tham quan tương tác (spotlight) trong panel "Cách học trên web" */
+.huongdan-replay-tour-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 4px 0 16px;
+    padding: 11px 20px;
+    border-radius: 22px;
+    font-size: .88rem;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    box-shadow: 0 2px 8px var(--primary-glow);
+    transition: transform .15s ease;
+}
+.huongdan-replay-tour-btn:hover { transform: translateY(-1px); }
+.huongdan-replay-tour-btn:active { transform: translateY(0); }
 .huongdan-guide-section {
     background: var(--surface);
     border: 1.5px solid var(--border);
@@ -7103,4 +7122,127 @@ mark.irt-highlight { background: #fff59d; padding: 0 1px; border-radius: 2px; cu
     input, textarea, select {
         font-size: 16px !important;
     }
+}
+
+/* =====================================================
+   [MỚI] HƯỚNG DẪN THAM QUAN LẦN ĐẦU (ONBOARDING TOUR)
+   Kiểu "spotlight": 1 lớp chặn click trong suốt phủ toàn màn hình
+   (.onboard-tour-catcher) + 1 khung sáng đi theo từng mục đang giới
+   thiệu (.onboard-tour-spotlight, dùng box-shadow để tạo vùng tối
+   xung quanh) + 1 hộp thoại mô tả (.onboard-tour-tooltip).
+   ===================================================== */
+.onboard-tour-catcher {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    background: transparent;
+}
+.onboard-tour-spotlight {
+    position: fixed;
+    z-index: 10001;
+    border-radius: var(--radius);
+    box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.72);
+    border: 2px solid var(--primary);
+    pointer-events: none;
+    transition: top .35s cubic-bezier(.4,0,.2,1), left .35s cubic-bezier(.4,0,.2,1),
+                width .35s cubic-bezier(.4,0,.2,1), height .35s cubic-bezier(.4,0,.2,1);
+}
+.onboard-tour-spotlight.is-centered {
+    top: 0; left: 0; right: 0; bottom: 0; width: auto; height: auto;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    background: rgba(15, 23, 42, 0.72);
+}
+.onboard-tour-tooltip {
+    position: fixed;
+    z-index: 10002;
+    width: min(320px, calc(100vw - 32px));
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    padding: 18px 20px;
+    opacity: 1;
+    transition: opacity .2s ease;
+}
+.onboard-tour-tooltip.is-welcome {
+    text-align: center;
+    width: min(360px, calc(100vw - 32px));
+}
+.onboard-tour-badge {
+    display: inline-block;
+    font-size: .7rem;
+    font-weight: 800;
+    letter-spacing: .04em;
+    color: var(--primary-dark);
+    background: var(--primary-light);
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-bottom: 8px;
+}
+.onboard-tour-title {
+    font-size: 1.02rem;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 6px;
+}
+.onboard-tour-desc {
+    font-size: .87rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-bottom: 14px;
+}
+.onboard-tour-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+.onboard-tour-tooltip.is-welcome .onboard-tour-footer {
+    justify-content: center;
+}
+.onboard-tour-dots {
+    display: flex;
+    gap: 5px;
+}
+.onboard-tour-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--border-strong);
+    transition: background .2s, transform .2s;
+}
+.onboard-tour-dot.active {
+    background: var(--primary);
+    transform: scale(1.3);
+}
+.onboard-tour-actions { display: flex; align-items: center; gap: 8px; }
+.onboard-tour-skip {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: .8rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 8px 4px;
+}
+.onboard-tour-skip:hover { color: var(--text); }
+.onboard-tour-next {
+    padding: 9px 18px;
+    border-radius: 20px;
+    font-size: .82rem;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    white-space: nowrap;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    box-shadow: 0 2px 8px var(--primary-glow);
+}
+.onboard-tour-next:hover { transform: translateY(-1px); }
+
+@media (max-width: 599px) {
+    .onboard-tour-tooltip { padding: 14px 16px; }
+    .onboard-tour-title { font-size: .95rem; }
+    .onboard-tour-desc { font-size: .82rem; }
 }

@@ -747,6 +747,11 @@ document.addEventListener('DOMContentLoaded', () => {
             // [MỚI] Tự động cập nhật điểm chuyên cần ngay khi đăng nhập — không cần đợi học
             // viên mở hồ sơ của mình mới tính (hàm này tự bỏ qua nếu là tài khoản giảng viên).
             renderProfileAchievements();
+
+            // [MỚI] Học viên đăng nhập lần đầu (chưa có cờ has_seen_onboarding_tour) sẽ được
+            // tự động dẫn đi 1 vòng tham quan nhanh qua các mục chính trên web (xem định
+            // nghĩa maybeStartOnboardTour/ONBOARD_STEPS ở phía trên).
+            maybeStartOnboardTour(user);
             
             // [CẬP NHẬT] Hiển thị Menu và xóa trạng thái ẩn của các Tab
             if (mainMenu) mainMenu.style.display = 'flex';
@@ -785,6 +790,23 @@ document.addEventListener('DOMContentLoaded', () => {
             clearImpersonationState();
             hideImpersonationBanner();
             stopStudyTimeHeartbeat(); // [MỚI] ngừng tính thời gian tự học khi đăng xuất
+            // [MỚI] Đăng xuất giữa chừng khi tour đang chạy -> dọn giao diện tour ngay,
+            // KHÔNG gọi sb.auth.updateUser (phiên đã mất) để lần đăng nhập lại vẫn hiện tour.
+            if (onboardTourActive) {
+                onboardTourActive = false;
+                closeAllHeaderTabDropdowns();
+                if (onboardEls) {
+                    onboardEls.catcher.remove();
+                    onboardEls.spotlight.remove();
+                    onboardEls.tooltip.remove();
+                    onboardEls = null;
+                }
+                if (onboardResizeHandler) {
+                    window.removeEventListener('resize', onboardResizeHandler);
+                    onboardResizeHandler = null;
+                }
+            }
+            onboardTourTriggeredForUserId = null;
             // [MỚI] Không còn đăng nhập -> ẩn badge bài kiểm tra chưa làm, tính lại từ đầu lần sau
             lastKnownUnfinishedCtestCount = null;
             setCtestBadgeCount(0);
@@ -935,6 +957,313 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!clickedInsideMenu && !clickedTrigger) closeAccountMenu();
     });
     window.addEventListener('resize', () => { if (accountMenu && accountMenu.classList.contains('open')) positionAccountMenu(); });
+
+    // ============================================================
+    // [MỚI] HƯỚNG DẪN THAM QUAN LẦN ĐẦU (ONBOARDING TOUR) — tự động
+    // chạy đúng 1 LẦN, ngay sau lần đăng nhập đầu tiên của MỖI học
+    // viên (không áp dụng cho tài khoản giảng viên, cũng không chạy
+    // khi giảng viên đang "xem như học viên"). Đi qua từng khu vực
+    // chính trên thanh menu, kiểu "spotlight" giống Adobe/Filmora.
+    //
+    // Trạng thái "đã xem" được lưu trong user_metadata.has_seen_onboarding_tour
+    // (dùng đúng cách sb.auth.updateUser({data:{...}}) như display_name/avatar_url
+    // ở trên) nên theo sát TÀI KHOẢN, không phụ thuộc trình duyệt/máy đang dùng.
+    // Sau khi xem xong tour, toàn bộ nội dung tương ứng vẫn còn ở dạng văn bản
+    // trong tab "📖 Hướng dẫn" → mục "Cách học trên web" để xem lại bất cứ lúc nào.
+    // ============================================================
+    let onboardTourActive = false;
+    let onboardTourTriggeredForUserId = null; // tránh kích hoạt lặp trong cùng 1 lần tải trang
+    let onboardStepIndex = 0;
+    let onboardEls = null; // { catcher, spotlight, tooltip }
+    let onboardResizeHandler = null;
+
+    // Nút tài khoản đang HIỂN THỊ thực tế (desktop dùng accountTrigger, mobile dùng
+    // accountBurger) — cùng cách xác định với positionAccountMenu() ở trên.
+    function onboardGetVisibleAccountTrigger() {
+        if (!accountBurger) return accountTrigger;
+        return window.getComputedStyle(accountBurger).display !== 'none' ? accountBurger : accountTrigger;
+    }
+
+    // Mở 1 dropdown tab-mẹ (Nền tảng / Lộ trình / Luyện kỹ năng) để phục vụ tour —
+    // viết lại độc lập ở đây (không đụng vào IIFE "initHeaderDropdowns" phía trên)
+    // nhưng dùng đúng cách canh vị trí tương tự (menu đã được dời ra <body>).
+    function onboardOpenHeaderDropdown(ddId) {
+        const dd = document.getElementById(ddId);
+        if (!dd) return null;
+        const btn = dd.querySelector('.main-tab-dropdown-btn');
+        const menu = dd._dropdownMenuEl || dd.querySelector('.header-tab-dropdown-menu');
+        if (!btn || !menu) return null;
+        closeAllHeaderTabDropdowns();
+        dd.classList.add('open');
+        menu.classList.add('open');
+        const rect = btn.getBoundingClientRect();
+        menu.style.top = (rect.bottom + 6) + 'px';
+        let left = rect.left;
+        const menuWidth = menu.offsetWidth || 180;
+        if (left + menuWidth > window.innerWidth - 8) left = Math.max(8, window.innerWidth - menuWidth - 8);
+        menu.style.left = left + 'px';
+        return { btn, menu };
+    }
+
+    // Gộp 2 hình chữ nhật (vd: nút bấm + menu xổ xuống của nó) thành 1 khung bao quanh cả 2
+    function onboardUnionRect(a, b) {
+        if (!a) return b;
+        if (!b) return a;
+        const left = Math.min(a.left, b.left);
+        const top = Math.min(a.top, b.top);
+        const right = Math.max(a.right, b.right);
+        const bottom = Math.max(a.bottom, b.bottom);
+        return { left, top, right, bottom, width: right - left, height: bottom - top };
+    }
+
+    // Danh sách các bước tour, đi theo đúng thứ tự các mục trên thanh menu (trái -> phải)
+    const ONBOARD_STEPS = [
+        {
+            centered: true,
+            title: 'Chào mừng bạn đến với LDD English! 👋',
+            desc: 'Trước khi bắt đầu, mình dẫn bạn đi một vòng nhanh qua các khu vực chính trên web nhé — chỉ mất khoảng 30 giây thôi.',
+            nextLabel: 'Bắt đầu'
+        },
+        {
+            title: '📘 Nền tảng',
+            desc: 'Nơi học 3 kỹ năng gốc: Phiên âm IPA, Từ vựng theo chủ đề và Ngữ pháp cơ bản — điểm khởi đầu tốt nhất nếu bạn mới học.',
+            getTarget: () => {
+                const parts = onboardOpenHeaderDropdown('dropdown-nen-tang');
+                return parts ? onboardUnionRect(parts.btn.getBoundingClientRect(), parts.menu.getBoundingClientRect()) : null;
+            }
+        },
+        {
+            title: '🧭 Lộ trình',
+            desc: 'Chọn lộ trình phù hợp với mục tiêu của bạn: Mất gốc, ôn thi THCS/THPT, tiếng Anh đi làm, hoặc luyện IELTS.',
+            getTarget: () => {
+                const parts = onboardOpenHeaderDropdown('dropdown-chuyen-sau');
+                return parts ? onboardUnionRect(parts.btn.getBoundingClientRect(), parts.menu.getBoundingClientRect()) : null;
+            }
+        },
+        {
+            title: '🎧 Luyện kỹ năng',
+            desc: 'Rèn 4 kỹ năng Nghe – Nói – Đọc – Viết qua các bài luyện tập thực hành riêng cho từng kỹ năng.',
+            getTarget: () => {
+                const parts = onboardOpenHeaderDropdown('dropdown-luyen-ky-nang');
+                return parts ? onboardUnionRect(parts.btn.getBoundingClientRect(), parts.menu.getBoundingClientRect()) : null;
+            }
+        },
+        {
+            title: '📝 Kiểm tra',
+            desc: 'Làm đề kiểm tra tổng hợp hoặc bài kiểm tra riêng do giảng viên giao, để tự đánh giá năng lực của mình.',
+            getTarget: () => {
+                closeAllHeaderTabDropdowns();
+                const el = document.querySelector('.main-tab-btn[data-main-target="tab-kiem-tra"]');
+                if (el) el.scrollIntoView({ behavior: 'auto', inline: 'center', block: 'nearest' });
+                return el ? el.getBoundingClientRect() : null;
+            }
+        },
+        {
+            title: '🎮 Giải trí',
+            desc: 'Vừa học vừa chơi với các trò chơi tiếng Anh nhẹ nhàng cùng bạn học.',
+            getTarget: () => {
+                closeAllHeaderTabDropdowns();
+                const el = document.querySelector('.main-tab-btn[data-main-target="tab-giai-tri"]');
+                if (el) el.scrollIntoView({ behavior: 'auto', inline: 'center', block: 'nearest' });
+                return el ? el.getBoundingClientRect() : null;
+            }
+        },
+        {
+            title: '👤 Tài khoản của bạn',
+            desc: 'Bấm vào đây để xem Hồ sơ, thành tựu học tập, bảng xếp hạng chăm chỉ, Lịch học và mục Hướng dẫn chi tiết bất cứ lúc nào.',
+            getTarget: () => {
+                closeAllHeaderTabDropdowns();
+                const trigger = onboardGetVisibleAccountTrigger();
+                if (!trigger) return null;
+                if (!accountMenu) return trigger.getBoundingClientRect();
+                accountMenu.classList.add('open');
+                positionAccountMenu();
+                return onboardUnionRect(trigger.getBoundingClientRect(), accountMenu.getBoundingClientRect());
+            }
+        },
+        {
+            centered: true,
+            title: 'Vậy là xong! 🎉',
+            desc: 'Bạn có thể xem lại toàn bộ nội dung này dưới dạng văn bản, hoặc bấm nút "🔄 Xem hướng dẫn dùng website" để xem lại đúng như thế này, trong mục 📖 Hướng dẫn ở menu tài khoản — bất cứ lúc nào. Chúc bạn học tốt!',
+            nextLabel: 'Hoàn tất'
+        }
+    ];
+
+    function onboardBuildDom() {
+        if (onboardEls) return onboardEls;
+        const catcher = document.createElement('div');
+        catcher.className = 'onboard-tour-catcher';
+        // Chặn MỌI click trong lúc tour đang chạy (kể cả click lên vùng đang tối) để
+        // tránh học viên vô tình mở dropdown/chuyển tab/đóng dropdown đang minh họa.
+        catcher.addEventListener('click', (e) => e.stopPropagation());
+
+        const spotlight = document.createElement('div');
+        spotlight.className = 'onboard-tour-spotlight';
+
+        const tooltip = document.createElement('div');
+        tooltip.className = 'onboard-tour-tooltip';
+        tooltip.innerHTML = `
+            <span class="onboard-tour-badge">Hướng dẫn nhanh</span>
+            <div class="onboard-tour-title"></div>
+            <div class="onboard-tour-desc"></div>
+            <div class="onboard-tour-footer">
+                <div class="onboard-tour-dots"></div>
+                <div class="onboard-tour-actions">
+                    <button type="button" class="onboard-tour-skip">Bỏ qua</button>
+                    <button type="button" class="onboard-tour-next">Tiếp theo</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(catcher);
+        document.body.appendChild(spotlight);
+        document.body.appendChild(tooltip);
+        onboardEls = { catcher, spotlight, tooltip };
+
+        // stopPropagation trên 2 nút để KHÔNG bị các listener click-toàn-trang (đóng
+        // dropdown tab-mẹ / đóng menu tài khoản) can thiệp giữa chừng khi tour tự mở
+        // dropdown cho bước kế tiếp trong cùng 1 lần click.
+        tooltip.querySelector('.onboard-tour-skip').addEventListener('click', (e) => {
+            e.stopPropagation();
+            endOnboardTour();
+        });
+        tooltip.querySelector('.onboard-tour-next').addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (onboardStepIndex >= ONBOARD_STEPS.length - 1) {
+                endOnboardTour();
+            } else {
+                onboardStepIndex++;
+                showOnboardStep(onboardStepIndex);
+            }
+        });
+        return onboardEls;
+    }
+
+    function onboardComputeTooltipPos(rect, tooltip) {
+        const margin = 16;
+        const vw = window.innerWidth, vh = window.innerHeight;
+        const tw = tooltip.offsetWidth || 300;
+        const th = tooltip.offsetHeight || 140;
+        let top;
+        if (rect.bottom + margin + th <= vh) {
+            top = rect.bottom + margin;
+        } else if (rect.top - margin - th >= 0) {
+            top = rect.top - margin - th;
+        } else {
+            top = Math.max(margin, Math.min(vh - th - margin, rect.top));
+        }
+        let left = rect.left + rect.width / 2 - tw / 2;
+        left = Math.max(margin, Math.min(vw - tw - margin, left));
+        top = Math.max(margin, Math.min(vh - th - margin, top));
+        return { top, left };
+    }
+
+    function showOnboardStep(index) {
+        const step = ONBOARD_STEPS[index];
+        if (!step || !onboardEls) return;
+        const { spotlight, tooltip } = onboardEls;
+
+        const rect = step.centered ? null : (typeof step.getTarget === 'function' ? step.getTarget() : null);
+
+        tooltip.querySelector('.onboard-tour-title').textContent = step.title;
+        tooltip.querySelector('.onboard-tour-desc').textContent = step.desc;
+        tooltip.querySelector('.onboard-tour-next').textContent = step.nextLabel || (index === ONBOARD_STEPS.length - 1 ? 'Hoàn tất' : 'Tiếp theo');
+        tooltip.querySelector('.onboard-tour-skip').style.display = index === ONBOARD_STEPS.length - 1 ? 'none' : '';
+        tooltip.querySelector('.onboard-tour-dots').innerHTML =
+            ONBOARD_STEPS.map((_, i) => `<span class="onboard-tour-dot${i === index ? ' active' : ''}"></span>`).join('');
+
+        if (!rect) {
+            // Bước chào mừng / kết thúc: không có mục cụ thể để rọi đèn -> phủ tối toàn
+            // màn hình, hộp thoại canh giữa.
+            spotlight.classList.add('is-centered');
+            tooltip.classList.add('is-welcome');
+            tooltip.style.top = '50%';
+            tooltip.style.left = '50%';
+            tooltip.style.transform = 'translate(-50%, -50%)';
+            tooltip.style.opacity = '1';
+        } else {
+            spotlight.classList.remove('is-centered');
+            tooltip.classList.remove('is-welcome');
+            tooltip.style.transform = 'none';
+            const pad = 8;
+            spotlight.style.top = (rect.top - pad) + 'px';
+            spotlight.style.left = (rect.left - pad) + 'px';
+            spotlight.style.width = (rect.width + pad * 2) + 'px';
+            spotlight.style.height = (rect.height + pad * 2) + 'px';
+
+            // Ẩn tạm hộp thoại rồi mới canh vị trí ở khung hình kế tiếp (tránh chớp
+            // hình tại vị trí mặc định 0x0 ngay lần đo kích thước đầu tiên).
+            tooltip.style.opacity = '0';
+            requestAnimationFrame(() => {
+                const pos = onboardComputeTooltipPos(rect, tooltip);
+                tooltip.style.top = pos.top + 'px';
+                tooltip.style.left = pos.left + 'px';
+                tooltip.style.opacity = '1';
+            });
+        }
+    }
+
+    function startOnboardTour() {
+        if (onboardTourActive) return;
+        onboardTourActive = true;
+        onboardStepIndex = 0;
+        onboardBuildDom();
+        showOnboardStep(0);
+        onboardResizeHandler = () => { if (onboardTourActive) showOnboardStep(onboardStepIndex); };
+        window.addEventListener('resize', onboardResizeHandler);
+    }
+
+    function endOnboardTour() {
+        if (!onboardTourActive) return;
+        onboardTourActive = false;
+        closeAllHeaderTabDropdowns();
+        closeAccountMenu();
+        if (onboardEls) {
+            onboardEls.catcher.remove();
+            onboardEls.spotlight.remove();
+            onboardEls.tooltip.remove();
+            onboardEls = null;
+        }
+        if (onboardResizeHandler) {
+            window.removeEventListener('resize', onboardResizeHandler);
+            onboardResizeHandler = null;
+        }
+        // Ghi nhớ VĨNH VIỄN vào tài khoản (user_metadata, giống display_name/avatar_url)
+        // rằng học viên này đã xem tour — để các lần đăng nhập sau, kể cả trên máy/trình
+        // duyệt khác, không tự động hiện lại nữa.
+        sb.auth.updateUser({ data: { has_seen_onboarding_tour: true } })
+            .then(({ error }) => { if (error) console.error('Lỗi khi lưu trạng thái đã xem hướng dẫn:', error.message); })
+            .catch(err => console.error('Lỗi ngoại lệ khi lưu trạng thái đã xem hướng dẫn:', err.message));
+    }
+
+    // Gọi ngay sau khi đăng nhập/khôi phục phiên thành công (xem updateUIForUser bên
+    // dưới) — chỉ chạy cho học viên thật sự (KHÔNG chạy cho giảng viên, và KHÔNG chạy
+    // khi giảng viên đang "xem như học viên"), và chỉ khi tài khoản CHƯA có cờ
+    // has_seen_onboarding_tour trong user_metadata.
+    async function maybeStartOnboardTour(user) {
+        if (!user || isTeacher || isImpersonating) return;
+        if (onboardTourTriggeredForUserId === user.id) return; // đã kiểm tra/kích hoạt trong lần tải trang này rồi
+        onboardTourTriggeredForUserId = user.id;
+
+        // [SỬA LỖI] TRƯỚC ĐÂY: chỉ đọc user_metadata ngay trên đối tượng `user` được truyền vào
+        // (lấy từ sb.auth.getSession(), tức là dữ liệu phiên đăng nhập được KHÔI PHỤC từ bộ nhớ
+        // trình duyệt / access token cũ). Nếu access token này được cấp TRƯỚC lúc học viên bấm
+        // "Bỏ qua"/"Hoàn tất" ở lần trước (và chưa kịp tự làm mới), nó vẫn còn mang cờ
+        // has_seen_onboarding_tour CŨ (chưa có/false) -> tour cứ hiện lại mỗi lần vào web dù đã
+        // xem/bỏ qua rồi. Gọi thẳng getUser() để hỏi trực tiếp Supabase Auth server lấy đúng
+        // trạng thái mới nhất (không dùng dữ liệu đọc từ bộ nhớ đệm) trước khi quyết định.
+        let freshUser = user;
+        try {
+            const { data, error } = await sb.auth.getUser();
+            if (!error && data && data.user) freshUser = data.user;
+        } catch (err) {
+            console.error('Lỗi khi kiểm tra trạng thái đã xem hướng dẫn tham quan (tạm dùng dữ liệu phiên hiện có):', err.message);
+        }
+        if (freshUser.user_metadata && freshUser.user_metadata.has_seen_onboarding_tour) return;
+
+        setTimeout(() => startOnboardTour(), 700); // đợi giao diện chính ổn định rồi mới hiện
+    }
+    // --- KẾT THÚC LOGIC HƯỚNG DẪN THAM QUAN LẦN ĐẦU ---
 
     // --- [MỚI] MODAL HỒ SƠ: hiển thị/đóng + nạp dữ liệu ---
     function openProfileModal() {
@@ -6540,10 +6869,20 @@ function toggleCompletion(symbolElement) {
         let kidSkipNextAutoSpeak = false;
         // [MỚI] CHẤM PHÁT ÂM TỰ ĐỘNG trên Flashcard: tập hợp chỉ số (trong flashOrder) các
         // thẻ đã được đọc ĐÚNG phát âm trong lượt mở chủ đề hiện tại (reset mỗi khi mở lại
-        // chủ đề — xem initFlashcards). Khi đã đọc đúng HẾT toàn bộ thẻ đang hiển thị mới
-        // báo "xong Flashcard" (không lưu lên Supabase — xem ghi chú tại kidHandlePronounceComplete).
+        // chủ đề — xem initFlashcards). Chỉ dùng để hiển thị "✅ đọc đúng rồi" trên UI, KHÔNG
+        // lưu lên Supabase và KHÔNG còn là điều kiện để tính hoàn thành Flashcard nữa — xem
+        // kidFlashVisitedSet + kidHandleFlashcardMaybeComplete bên dưới (giờ chỉ cần xem hết).
         let kidFlashPronouncedSet = new Set();
+        // [MỚI] Tập hợp chỉ số các thẻ ĐÃ XEM QUA (bất kể đọc đúng phát âm hay không) trong lượt
+        // mở chủ đề hiện tại (reset mỗi khi mở lại — xem initFlashcards). Dùng để tính "hoàn thành
+        // Flashcard": chỉ cần xem hết toàn bộ thẻ là được tính hoàn thành — không bắt buộc phải đọc
+        // đúng phát âm từng từ (nếu bị lỗi mic/không đọc được thì đã tự động bỏ chặn ở
+        // kidCanAdvanceFlashcard rồi, xem hết vẫn tính hoàn thành như thường).
+        let kidFlashVisitedSet = new Set();
         let kidFlashCompleteNotified = false;
+        // [MỚI] Đợt (batch1/batch2/free) mà Flashcard đang hiển thị — chốt lại lúc mở/khởi tạo
+        // Flashcard (initFlashcards), dùng khi báo hoàn thành, giống kidCurrentMatchStage của Nối từ.
+        let kidCurrentFlashcardStage = null;
         // Nếu trình duyệt từ chối quyền micro hoặc máy không có micro, không thể ép học viên
         // đọc được nữa -> tự động bỏ chặn (an toàn), tránh học viên bị kẹt không qua được thẻ.
         let kidFlashMicBlocked = false;
@@ -6652,8 +6991,11 @@ function toggleCompletion(symbolElement) {
 
         function kidEmptyProgress() {
             return {
-                batch1_match: false, batch1_crossword: false, batch1_story: false, batch1_game: false,
-                batch2_match: false, batch2_crossword: false, batch2_story: false, batch2_game: false
+                // [MỚI] batch1_flashcard/batch2_flashcard: Flashcard giờ cũng là 1 điều kiện bắt
+                // buộc để hoàn thành đợt (giống Nối từ/Ô chữ/Câu chuyện/Trò chơi) — xem
+                // kidIsBatch1Done/kidIsBatch2Done và kidHandleFlashcardMaybeComplete bên dưới.
+                batch1_flashcard: false, batch1_match: false, batch1_crossword: false, batch1_story: false, batch1_game: false,
+                batch2_flashcard: false, batch2_match: false, batch2_crossword: false, batch2_story: false, batch2_game: false
             };
         }
 
@@ -6736,8 +7078,8 @@ function toggleCompletion(symbolElement) {
             }
         }
 
-        function kidIsBatch1Done(p) { return !!(p.batch1_match && p.batch1_crossword && p.batch1_story && p.batch1_game); }
-        function kidIsBatch2Done(p) { return !!(p.batch2_match && p.batch2_crossword && p.batch2_story && p.batch2_game); }
+        function kidIsBatch1Done(p) { return !!(p.batch1_flashcard && p.batch1_match && p.batch1_crossword && p.batch1_story && p.batch1_game); }
+        function kidIsBatch2Done(p) { return !!(p.batch2_flashcard && p.batch2_match && p.batch2_crossword && p.batch2_story && p.batch2_game); }
 
         // 'batch1'  = đang học 25 từ đầu (Flashcard chỉ hiện 25 từ này)
         // 'batch2'  = đã xong Đợt 1, Flashcard đã mở hết, đang học tiếp phần còn lại
@@ -6768,8 +7110,8 @@ function toggleCompletion(symbolElement) {
                 const visibleCount = Math.min(25, topic.words.length);
                 const remain = topic.words.length - visibleCount;
                 if (remain <= 0) return null; // chủ đề vốn không đủ hơn 25 từ -> không có gì để khóa
-                return `🔒 Còn ${b(remain)} từ vựng nữa sẽ được mở khóa sau khi bạn hoàn thành đủ 4 phần: `
-                     + `${b('Nối từ')}, ${b('Ô chữ')}, ${b('Câu chuyện')} và ${b('Trò chơi')} ứng với 25 từ đầu tiên.`;
+                return `🔒 Còn ${b(remain)} từ vựng nữa sẽ được mở khóa sau khi bạn hoàn thành đủ 5 phần: `
+                     + `${b('Flashcard')}, ${b('Nối từ')}, ${b('Ô chữ')}, ${b('Câu chuyện')} và ${b('Trò chơi')} ứng với 25 từ đầu tiên.`;
             }
             if (stage === 'batch2') {
                 const remain = topic.words.length - 25;
@@ -6860,7 +7202,7 @@ function toggleCompletion(symbolElement) {
         function kidUpdateSubtabIndicators(topic) {
             if (!kidSubtabs) return;
             const stage = kidGetStage(topic, kidTopicProgress);
-            ['match', 'crossword', 'story', 'game'].forEach(phase => {
+            ['flashcard', 'match', 'crossword', 'story', 'game'].forEach(phase => {
                 const btn = kidSubtabs.querySelector(`[data-sub="${phase}"]`);
                 if (!btn) return;
                 const done = (stage === 'free') || !!kidTopicProgress[`batch${stage === 'batch1' ? 1 : 2}_${phase}`];
@@ -7172,7 +7514,6 @@ function toggleCompletion(symbolElement) {
 
             kidSubtabs.querySelectorAll('.kid-subtab-btn').forEach(btn => {
                 const phase = btn.dataset.sub;
-                if (phase === 'flashcard') return; // Flashcard không có trạng thái hoàn thành riêng
 
                 const startHold = (e) => {
                     e.stopPropagation();
@@ -7278,12 +7619,14 @@ function toggleCompletion(symbolElement) {
             flashIndex = 0;
             kidResetFlashSearch();
             const stage = kidGetStage(topic, kidTopicProgress);
+            kidCurrentFlashcardStage = stage;
             const visibleCount = (stage === 'batch1') ? Math.min(25, topic.words.length) : topic.words.length;
             // [MỚI] Tráo thứ tự 25 thẻ đầu (đợt 1) và áp dụng luôn khi mở khóa hết từ vựng
             // còn lại, để mỗi lần vào chủ đề thẻ hiện theo thứ tự ngẫu nhiên thay vì cố định.
             flashOrder = kidShuffleArray(topic.words.slice(0, visibleCount));
             // [MỚI] Mỗi lần mở lại (hoặc mở mới) 1 chủ đề, phải đọc lại phát âm từ đầu.
             kidFlashPronouncedSet = new Set();
+            kidFlashVisitedSet = new Set();
             kidFlashCompleteNotified = false;
             kidFlashMicBlocked = false;
             renderFlashcard();
@@ -7343,6 +7686,11 @@ function toggleCompletion(symbolElement) {
 
     kidFlashAttemptCount = 0; // [MỚI] mỗi thẻ mới -> tính lại từ đầu số lần thử
     kidUpdatePronounceUI(); // [MỚI] cập nhật nút micro + trạng thái đọc đúng/sai cho thẻ này
+
+    // [MỚI] Ghi nhận đã xem qua thẻ này -> kiểm tra xem đã xem hết toàn bộ thẻ chưa (xem hết
+    // là tính hoàn thành Flashcard, không bắt buộc đọc đúng phát âm từng từ).
+    kidFlashVisitedSet.add(flashIndex);
+    kidHandleFlashcardMaybeComplete();
 }
 
         // ===== [MỚI] CHẤM PHÁT ÂM TỰ ĐỘNG (đọc to từ vựng) trên Flashcard "Cho bé" =====
@@ -7384,18 +7732,21 @@ function toggleCompletion(symbolElement) {
             }
         }
 
-        // Được gọi khi học viên đã đọc đúng HẾT toàn bộ thẻ đang hiển thị (đợt hiện tại).
-        // [GHI CHÚ] Khác với Nối từ/Ô chữ/Câu chuyện/Trò chơi, trạng thái này KHÔNG được lưu
-        // lên Supabase (kid_topic_progress không có cột riêng cho Flashcard — xem đoạn code
-        // "Flashcard không có trạng thái hoàn thành riêng" trong setupKidAdminPhaseHoldTrick
-        // phía trên) nên sẽ reset lại mỗi khi học viên mở lại chủ đề. Đây là lựa chọn có chủ
-        // đích để không phải đổi cấu trúc bảng + lộ trình mở khóa Đợt 1/Đợt 2 hiện có.
-        function kidHandlePronounceComplete() {
+        // [SỬA] Được gọi khi học viên đã XEM QUA HẾT toàn bộ thẻ đang hiển thị (đợt hiện tại) —
+        // đọc đúng phát âm hay không không quan trọng, xem hết là tính hoàn thành (nếu bị lỗi
+        // mic/không đọc được thì đã tự động bỏ chặn ở kidCanAdvanceFlashcard rồi). Trạng thái
+        // này giờ ĐƯỢC LƯU lên Supabase (cột batch1_flashcard/batch2_flashcard trong
+        // kid_topic_progress — xem kidEmptyProgress) và là 1 điều kiện bắt buộc để hoàn thành
+        // đợt/chủ đề, dùng chung hàm kidHandlePhaseCompleted() như Nối từ/Ô chữ/Câu chuyện/Trò chơi.
+        function kidHandleFlashcardMaybeComplete() {
             if (kidFlashCompleteNotified) return;
-            if (flashOrder.length === 0 || kidFlashPronouncedSet.size < flashOrder.length) return;
+            if (flashOrder.length === 0 || kidFlashVisitedSet.size < flashOrder.length) return;
             kidFlashCompleteNotified = true;
             if (window.vocabTap && window.vocabTap.toast) {
-                window.vocabTap.toast('🎉 Tuyệt vời! Bạn đã đọc đúng phát âm tất cả từ vựng trong Flashcard đợt này.', 'success');
+                window.vocabTap.toast('🎉 Tuyệt vời! Bạn đã xem hết Flashcard đợt này.', 'success');
+            }
+            if (currentTopic) {
+                kidHandlePhaseCompleted(currentTopic, 'flashcard', kidCurrentFlashcardStage === 'batch1' ? 1 : 2);
             }
         }
 
@@ -7415,7 +7766,7 @@ function toggleCompletion(symbolElement) {
                         kidFlashAttemptCount = 0;
                         if (typeof playKidCorrectSound === 'function') playKidCorrectSound();
                         kidUpdatePronounceUI();
-                        kidHandlePronounceComplete();
+                        kidHandleFlashcardMaybeComplete();
                     },
                     onMismatch: (heard) => {
                         if (typeof playKidWrongSound === 'function') playKidWrongSound();
@@ -9064,14 +9415,17 @@ function toggleCompletion(symbolElement) {
 
         let flashWords = [];
         let flashIndex = 0;
-        let thcsFlashSeenSet = new Set(); // các chỉ số thẻ đã xem trong lượt mở Unit hiện tại
+        // [SỬA] Các chỉ số thẻ đã XEM QUA trong lượt mở Unit hiện tại — đây là điều kiện để
+        // ghi nhận "flashcard_done": xem hết toàn bộ thẻ là tính hoàn thành, không bắt buộc
+        // phải đọc đúng phát âm từng từ (xem thcsHandleFlashcardMaybeComplete bên dưới).
+        let thcsFlashSeenSet = new Set();
         // [SỬA LỖI] Đánh dấu để thcsRenderFlashcard() bỏ qua việc đọc lại từ đầu tiên khi vừa
         // mở Unit, vì từ đó đã được đọc ĐỒNG BỘ ngay trong lúc bấm (xem openUnit bên dưới).
         let thcsSkipNextAutoSpeak = false;
         // [MỚI] CHẤM PHÁT ÂM TỰ ĐỘNG trên Flashcard: chỉ số các thẻ đã đọc ĐÚNG phát âm trong
-        // lượt mở Unit hiện tại (reset mỗi khi mở lại Unit — xem thcsInitFlashcards). Khi đọc
-        // đúng HẾT toàn bộ Unit mới ghi nhận "flashcard_done" (thay cho cách cũ là chỉ cần
-        // xem qua hết, xem thcsHandleFlashcardsCompleted).
+        // lượt mở Unit hiện tại (reset mỗi khi mở lại Unit — xem thcsInitFlashcards). Chỉ dùng
+        // để hiển thị "✅ đọc đúng rồi" trên UI, KHÔNG còn là điều kiện bắt buộc để ghi nhận
+        // "flashcard_done" nữa (xem thcsFlashSeenSet ở trên — giờ chỉ cần xem hết là tính xong).
         let thcsFlashPronouncedSet = new Set();
         // Nếu trình duyệt từ chối quyền micro / không có micro -> không thể ép đọc được nữa,
         // tự động bỏ chặn để học viên không bị kẹt không qua được thẻ.
@@ -9130,6 +9484,7 @@ function toggleCompletion(symbolElement) {
             thcsFlashSeenSet.add(flashIndex);
             thcsFlashAttemptCount = 0; // [MỚI] mỗi thẻ mới -> tính lại từ đầu số lần thử
             thcsUpdatePronounceUI(); // [MỚI] cập nhật nút micro + trạng thái đọc đúng/sai cho thẻ này
+            thcsHandleFlashcardMaybeComplete(); // [SỬA] xem hết thẻ (kể cả nhờ bỏ qua lỗi mic) -> tính hoàn thành
         }
 
         // ===== [MỚI] CHẤM PHÁT ÂM TỰ ĐỘNG (đọc to từ vựng) trên Flashcard THCS/THPT =====
@@ -9170,11 +9525,11 @@ function toggleCompletion(symbolElement) {
             }
         }
 
-        // Được gọi khi học viên đã đọc đúng HẾT toàn bộ thẻ trong Unit hiện tại ít nhất 1 lần.
-        // Thay cho điều kiện cũ (chỉ cần XEM qua hết) — giờ phải ĐỌC ĐÚNG mới ghi nhận
-        // "flashcard_done" (dùng lại đúng cột đã có sẵn trên Supabase, không cần đổi bảng).
-        function thcsHandlePronounceComplete() {
-            if (flashWords.length === 0 || thcsFlashPronouncedSet.size < flashWords.length) return;
+        // [SỬA] Được gọi khi học viên đã XEM QUA HẾT toàn bộ thẻ trong Unit hiện tại ít nhất 1
+        // lần — đọc đúng phát âm hay không không quan trọng, xem hết là ghi nhận "flashcard_done"
+        // (nếu bị lỗi mic/không đọc được thì đã tự động bỏ chặn ở thcsCanAdvanceFlashcard rồi).
+        function thcsHandleFlashcardMaybeComplete() {
+            if (flashWords.length === 0 || thcsFlashSeenSet.size < flashWords.length) return;
             thcsHandleFlashcardsCompleted();
         }
 
@@ -9193,7 +9548,7 @@ function toggleCompletion(symbolElement) {
                         thcsFlashPronouncedSet.add(flashIndex);
                         thcsFlashAttemptCount = 0;
                         thcsUpdatePronounceUI();
-                        thcsHandlePronounceComplete();
+                        thcsHandleFlashcardMaybeComplete();
                     },
                     onMismatch: (heard) => {
                         thcsFlashAttemptCount++;
@@ -10380,6 +10735,19 @@ function toggleCompletion(symbolElement) {
         document.querySelectorAll('#tab-huong-dan .huongdan-back-btn').forEach(btn => {
             btn.addEventListener('click', hdShowGrid);
         });
+
+        // [MỚI] Cho phép học viên chủ động xem lại vòng tham quan tương tác (spotlight) bất
+        // cứ lúc nào, không giới hạn số lần — dùng lại đúng startOnboardTour() đã có sẵn cho
+        // lần tự động đầu tiên (định nghĩa ở khu vực "LOGIC XÁC THỰC" phía trên trong cùng
+        // file này). Không đụng tới cờ has_seen_onboarding_tour nên không ảnh hưởng gì tới
+        // việc tour có tự hiện lại ở lần đăng nhập sau hay không.
+        const replayTourBtn = document.getElementById('huongdan-replay-tour-btn');
+        if (replayTourBtn) {
+            replayTourBtn.addEventListener('click', () => {
+                hdShowGrid(); // đóng panel văn bản lại cho đỡ vướng trước khi tour tự mở dropdown
+                startOnboardTour();
+            });
+        }
 
         // Nếu rời khỏi tab Hướng dẫn (chuyển sang tab chính khác) thì hủy kết nối realtime chat
         mainTabBtns.forEach(btn => {
