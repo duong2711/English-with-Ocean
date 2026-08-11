@@ -32,7 +32,7 @@
                     Nền tảng <span class="dropdown-arrow">▾</span>
                 </button>
                 <div class="header-tab-dropdown-menu">
-                    <button class="header-tab-btn main-tab-btn active" data-main-target="tab-phien-am">Phiên âm</button>
+                    <button class="header-tab-btn main-tab-btn active" data-main-target="tab-phien-am">Phiên âm<span id="phonam-tab-badge" class="tab-badge-count" style="display:none;">0</span></button>
                     <button class="header-tab-btn main-tab-btn" data-main-target="tab-tu-vung">Từ vựng</button>
                     <button class="header-tab-btn main-tab-btn" data-main-target="tab-ngu-phap">Ngữ pháp</button>
                 </div>
@@ -114,6 +114,16 @@
 <div id="inside">
     <!-- menu gốc giữ lại cho JS, CSS đã ẩn bằng display:none -->
     <div id="tab-phien-am" class="main-tab-content active">
+        <!-- [MỚI] Bảng thông báo "ghi âm đang chờ chấm" — CHỈ hiện với tài khoản giảng viên,
+             giúp giảng viên thấy ngay có bao nhiêu ghi âm phát âm của học viên chưa được nghe/chấm,
+             và bấm vào từng dòng để điều hướng thẳng tới đúng ô ghi âm đó bên dưới để chấm. -->
+        <div id="phonam-grading-panel" class="phonam-grading-panel" style="display:none;">
+            <div class="phonam-grading-panel-header">
+                <span class="phonam-grading-panel-title">🔔 Có <strong id="phonam-grading-count">0</strong> ghi âm phiên âm đang chờ chấm</span>
+                <button type="button" id="phonam-grading-toggle" class="phonam-grading-toggle">Xem danh sách ▾</button>
+            </div>
+            <div id="phonam-grading-list" class="phonam-grading-list"></div>
+        </div>
         <div id="guide-display">
         <div id="video-custom-controls">
             <button id="video-play-btn">▶ Tiếp tục</button>
