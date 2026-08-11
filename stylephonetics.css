@@ -1678,7 +1678,12 @@ h3 { font-size:0.95rem; font-weight:600; color:var(--text); margin:0 0 8px; }
     box-shadow: 0 0 0 3px var(--primary-glow), var(--shadow-sm);
 }
 .ipa-symbol.completed  { background: var(--success-light) !important; border-color: var(--success) !important; }
+/* [MỚI] Ký tự đã gửi ghi âm nhưng CÒN GHI ÂM CHƯA ĐƯỢC CHẤM -> nền vàng. */
 .ipa-symbol.submitted:not(.completed) { background: var(--warning-light) !important; border: 2px solid var(--warning) !important; }
+/* [MỚI] Ký tự đã gửi ghi âm và giảng viên đã CHẤM XONG (không cần tự tick) -> cũng chuyển
+   nền xanh lá giống như khi tự tick "hoàn thành", nhưng không đụng tới icon ☐/✔ (icon đó chỉ
+   phản ánh đúng việc học viên có tự tick hay không). */
+.ipa-symbol.graded-done:not(.completed) { background: var(--success-light) !important; border-color: var(--success) !important; }
 
 .ipa-symbol .symbol  { font-size: 1.35rem; font-weight: 700; color: var(--primary-dark); line-height: 1.1; }
 .ipa-symbol .example { font-size: 0.7rem; font-style: italic; color: var(--text-muted); margin-top: 3px; }
@@ -1899,6 +1904,8 @@ h3 { font-size:0.95rem; font-weight:600; color:var(--text); margin:0 0 8px; }
     transition: border-color 0.2s;
 }
 .comment-item:hover { border-color: var(--border-strong); }
+.comment-item-pending-grading:hover { border-color: var(--warning); }
+.comment-item-graded:hover { border-color: var(--success); }
 .comment-header-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
 .comment-header-row .comment-sender { margin-bottom: 0; }
 .comment-delete-btn {
@@ -1924,6 +1931,120 @@ h3 { font-size:0.95rem; font-weight:600; color:var(--text); margin:0 0 8px; }
 .comment-item p    { margin: 0 0 6px; color: var(--text); font-size: 0.86rem; white-space: pre-wrap; line-height: 1.5; }
 .comment-item audio { width: 100%; height: 30px; border-radius: 4px; }
 .comment-timestamp { font-size: 0.7rem; color: var(--text-light); margin-top: 5px; }
+
+/* [MỚI] Nhãn trạng thái chấm bài trên mỗi ghi âm (chờ chấm / đã chấm) */
+.phonam-grade-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    line-height: 1.6;
+    white-space: nowrap;
+}
+.phonam-grade-tag-pending { background: var(--warning-light); color: #92650c; border: 1px solid var(--warning); }
+.phonam-grade-tag-done    { background: var(--success-light); color: var(--success-dark); border: 1px solid var(--success); }
+
+/* [MỚI] Nút giảng viên bấm để đánh dấu đã chấm xong 1 ghi âm */
+.phonam-mark-graded-btn {
+    margin-top: 6px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--success);
+    background: var(--success-light);
+    color: var(--success-dark);
+    font-size: 0.76rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+}
+.phonam-mark-graded-btn:hover { background: var(--success); color: #fff; }
+.phonam-mark-graded-btn:active { transform: scale(0.96); }
+.phonam-mark-graded-btn:disabled { opacity: 0.6; cursor: default; }
+
+/* [MỚI] Ghi âm đang chờ chấm được viền cam nhẹ để giảng viên dễ nhận ra ngay trong danh sách */
+/* [MỚI] Ghi âm chưa được chấm -> nền vàng; đã chấm xong -> nền xanh lá — học viên nhìn vào
+   là biết ngay bài của mình đã được giảng viên nghe & chấm hay chưa. */
+.comment-item-pending-grading { border-color: var(--warning); background: var(--warning-light); }
+.comment-item-graded { border-color: var(--success); background: var(--success-light); }
+
+/* [MỚI] Hiệu ứng nhấp nháy tạm thời khi điều hướng nhanh tới đúng ô ghi âm cần chấm */
+.phonam-comment-highlight {
+    animation: phonamHighlightPulse 1.4s ease-in-out 0s 2;
+}
+@keyframes phonamHighlightPulse {
+    0%   { box-shadow: 0 0 0 0 var(--primary-glow); border-color: var(--primary); }
+    50%  { box-shadow: 0 0 0 6px var(--primary-glow); border-color: var(--primary); }
+    100% { box-shadow: 0 0 0 0 rgba(0,0,0,0); border-color: var(--border); }
+}
+
+/* [MỚI] Bảng thông báo "đang chờ chấm" — chỉ giảng viên nhìn thấy, đặt ngay đầu tab Phiên âm */
+.phonam-grading-panel {
+    margin-bottom: 14px;
+    border: 1px solid var(--warning);
+    background: var(--warning-light);
+    border-radius: var(--radius-sm, 10px);
+    overflow: hidden;
+}
+.phonam-grading-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 14px;
+    flex-wrap: wrap;
+}
+.phonam-grading-panel-title { font-size: 0.86rem; font-weight: 700; color: #92650c; }
+.phonam-grading-toggle {
+    border: 1px solid var(--warning);
+    background: var(--surface);
+    color: #92650c;
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-size: 0.76rem;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.phonam-grading-toggle:hover { background: var(--warning); color: #fff; }
+.phonam-grading-list {
+    display: none;
+    flex-direction: column;
+    max-height: 260px;
+    overflow-y: auto;
+    border-top: 1px solid var(--warning);
+    background: var(--surface);
+}
+.phonam-grading-list.expanded { display: flex; }
+.phonam-grading-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 14px;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+    font: inherit;
+    color: var(--text);
+    transition: background 0.15s;
+}
+.phonam-grading-item:last-child { border-bottom: none; }
+.phonam-grading-item:hover { background: var(--primary-light); }
+.phonam-grading-item-symbol {
+    flex-shrink: 0;
+    font-weight: 800;
+    color: var(--primary);
+    background: var(--primary-light);
+    border-radius: 6px;
+    padding: 2px 7px;
+    font-size: 0.8rem;
+}
+.phonam-grading-item-name { flex: 1; font-size: 0.82rem; font-weight: 600; }
+.phonam-grading-item-time { flex-shrink: 0; font-size: 0.7rem; color: var(--text-light); }
 
 /* =====================================================
    TAB LỊCH HỌC

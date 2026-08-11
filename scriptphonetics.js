@@ -388,6 +388,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let recordedAudioMime = ''; // [FIX iPhone] lưu ĐÚNG định dạng trình duyệt thực sự ghi ra
     let recordedAudioBlob = null; 
     let currentVideoSrc = null; 
+    // [MỚI] Nếu người dùng đã chủ động bấm "Dừng" video hướng dẫn, video sẽ KHÔNG tự động phát
+    // lại nữa (kể cả khi bấm nghe 1 ghi âm bên dưới) cho tới khi họ chủ động bấm lại "Tiếp tục".
+    let videoManuallyPaused = false;
 
     // [FIX iPhone] Safari không hỗ trợ ghi audio/webm — nó tự chọn audio/mp4 (AAC).
     // Trước đây code luôn gán cứng nhãn 'audio/webm' cho Blob dù trình duyệt ghi ra định dạng
@@ -420,6 +423,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const commentSymbolDisplay = document.getElementById('comment-symbol-display');
     const commentsList = document.getElementById('comments-list');
+    // [MỚI] Các phần tử cho bảng thông báo "ghi âm đang chờ chấm" (chỉ giảng viên thấy)
+    const phonamTabBadgeEl    = document.getElementById('phonam-tab-badge');
+    const phonamGradingPanel  = document.getElementById('phonam-grading-panel');
+    const phonamGradingCountEl = document.getElementById('phonam-grading-count');
+    const phonamGradingListEl  = document.getElementById('phonam-grading-list');
+    const phonamGradingToggleBtn = document.getElementById('phonam-grading-toggle');
     const recordButton = document.getElementById('record-button');
     const stopButton = document.getElementById('stop-button');
     const sendCommentButton = document.getElementById('send-comment-button');
@@ -744,6 +753,10 @@ document.addEventListener('DOMContentLoaded', () => {
             // [MỚI] Kiểm tra ngay xem có bài kiểm tra riêng nào chưa làm để hiện badge + thông báo
             lastKnownUnfinishedCtestCount = null; // mỗi lần đăng nhập mới, tính lại từ đầu
             refreshCtestBadge();
+            // [MỚI] Nếu đây là tài khoản giảng viên, kiểm tra ngay xem có ghi âm phiên âm nào
+            // đang chờ chấm để hiện badge + bảng thông báo (học viên bình thường sẽ tự ẩn đi).
+            lastKnownPendingGradingCount = null; // mỗi lần đăng nhập mới, tính lại từ đầu
+            refreshPhoneticsGradingBadge();
             // [MỚI] Tự động cập nhật điểm chuyên cần ngay khi đăng nhập — không cần đợi học
             // viên mở hồ sơ của mình mới tính (hàm này tự bỏ qua nếu là tài khoản giảng viên).
             renderProfileAchievements();
@@ -810,6 +823,10 @@ document.addEventListener('DOMContentLoaded', () => {
             // [MỚI] Không còn đăng nhập -> ẩn badge bài kiểm tra chưa làm, tính lại từ đầu lần sau
             lastKnownUnfinishedCtestCount = null;
             setCtestBadgeCount(0);
+            // [MỚI] Không còn đăng nhập -> ẩn badge + bảng "ghi âm đang chờ chấm", tính lại từ đầu lần sau
+            lastKnownPendingGradingCount = null;
+            setPhonamGradingBadgeCount(0);
+            if (phonamGradingPanel) phonamGradingPanel.style.display = 'none';
             authContainer.style.display = 'block';
             if (insideWrapper) insideWrapper.style.display = 'none';
             if (accountArea) accountArea.style.display = 'none';
@@ -2205,6 +2222,193 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }, 90 * 1000);
 
+    // --- [MỚI] BADGE + THÔNG BÁO "GHI ÂM PHIÊN ÂM ĐANG CHỜ CHẤM" (chỉ giảng viên) ---
+    // Khi học viên gửi 1 ghi âm luyện phát âm (bảng "comments", cột "graded"), giảng viên sẽ thấy:
+    // 1) Số ghi âm chưa chấm hiện thành 1 chấm đỏ trên tab "Phiên âm".
+    // 2) 1 bảng thông báo màu cam ngay đầu tab "Phiên âm" liệt kê từng ghi âm đang chờ, bấm vào
+    //    là điều hướng thẳng tới đúng ký tự + đúng ô ghi âm của học viên đó để nghe & chấm.
+    // 3) 1 thông báo (toast) khi có ghi âm mới cần chấm, giống hệt cơ chế "bài kiểm tra chưa làm"
+    //    ở phía trên.
+    // ⚠️ CẦN CHẠY FILE SQL "comments_grading_setup.sql" ĐI KÈM trên Supabase trước (để tạo cột
+    // "graded"/"graded_at"/"graded_by" trên bảng "comments" + policy UPDATE cho giảng viên),
+    // nếu chưa chạy thì mọi ghi âm sẽ luôn hiện "⏳ Chờ chấm" (vì cột "graded" mặc định coi như
+    // false) và bấm "Đánh dấu đã chấm" sẽ báo lỗi.
+    let lastKnownPendingGradingCount = null; // null = chưa tính lần nào trong phiên này
+    let phonamGradingSetupWarned = false; // chỉ cảnh báo thiếu cột "graded" 1 lần / phiên, tránh spam
+
+    function setPhonamGradingBadgeCount(n) {
+        if (phonamTabBadgeEl) {
+            if (n > 0) { phonamTabBadgeEl.textContent = n > 99 ? '99+' : String(n); phonamTabBadgeEl.style.display = 'inline-flex'; }
+            else { phonamTabBadgeEl.style.display = 'none'; }
+        }
+    }
+
+    async function refreshPhoneticsGradingBadge(opts) {
+        const notify = !opts || opts.notify !== false;
+        if (!currentUserId || !isTeacher || isImpersonating) {
+            setPhonamGradingBadgeCount(0);
+            if (phonamGradingPanel) phonamGradingPanel.style.display = 'none';
+            return;
+        }
+        try {
+            const { data, error } = await sb
+                .from('comments')
+                .select('id, symbol, user_id, created_at')
+                .eq('graded', false)
+                .not('audio_url', 'is', null)
+                .order('created_at', { ascending: true });
+            if (error) throw error;
+
+            // Bỏ qua ghi âm demo của chính tài khoản giảng viên đang đăng nhập (nếu có) — không
+            // tính là "bài của học viên đang chờ chấm". Đồng thời BỎ QUA luôn những ghi âm ứng
+            // với ký tự phiên âm đã bị ĐỔI TÊN hoặc XÓA khỏi bảng IPA hiện tại (không còn tồn
+            // tại trong ".ipa-symbol" nữa) — vì lúc này không còn cách nào điều hướng tới đúng ô
+            // để chấm, nên không cần hiện trong danh sách của giảng viên nữa.
+            const currentValidSymbols = new Set(Array.from(symbols).map(s => s.dataset.symbol));
+            const pending = (data || []).filter(c => c.user_id !== currentUserId && currentValidSymbols.has(c.symbol));
+
+            setPhonamGradingBadgeCount(pending.length);
+
+            if (phonamGradingPanel && phonamGradingCountEl && phonamGradingListEl) {
+                if (!pending.length) {
+                    phonamGradingPanel.style.display = 'none';
+                    phonamGradingListEl.innerHTML = '';
+                } else {
+                    phonamGradingPanel.style.display = 'block';
+                    phonamGradingCountEl.textContent = String(pending.length);
+
+                    // Tra tên hiển thị của học viên từ bảng "diligence_scores" (bảng dùng chung,
+                    // ai đăng nhập cũng đọc được) để danh sách dễ đọc hơn là chỉ có ID.
+                    let namesByUserId = {};
+                    const uniqueUserIds = [...new Set(pending.map(p => p.user_id).filter(Boolean))];
+                    if (uniqueUserIds.length) {
+                        const { data: names } = await sb
+                            .from('diligence_scores')
+                            .select('user_id, display_name')
+                            .in('user_id', uniqueUserIds);
+                        (names || []).forEach(n => { namesByUserId[n.user_id] = n.display_name; });
+                    }
+
+                    phonamGradingListEl.innerHTML = '';
+                    pending.forEach(p => {
+                        const displayName = namesByUserId[p.user_id] || ('Học viên ID ' + (p.user_id ? p.user_id.substring(0, 8) : '???') + '...');
+                        const timeStr = p.created_at ? new Date(p.created_at).toLocaleString('vi-VN') : '';
+
+                        const item = document.createElement('button');
+                        item.type = 'button';
+                        item.className = 'phonam-grading-item';
+                        item.dataset.symbol = p.symbol;
+                        item.dataset.commentId = p.id;
+
+                        const symbolEl = document.createElement('span');
+                        symbolEl.className = 'phonam-grading-item-symbol';
+                        symbolEl.textContent = '/' + p.symbol + '/';
+
+                        const nameEl = document.createElement('span');
+                        nameEl.className = 'phonam-grading-item-name';
+                        nameEl.textContent = displayName;
+
+                        const timeEl = document.createElement('span');
+                        timeEl.className = 'phonam-grading-item-time';
+                        timeEl.textContent = timeStr;
+
+                        item.appendChild(symbolEl);
+                        item.appendChild(nameEl);
+                        item.appendChild(timeEl);
+                        phonamGradingListEl.appendChild(item);
+                    });
+                }
+            }
+
+            if (notify && window.vocabTap && window.vocabTap.toast) {
+                if (lastKnownPendingGradingCount === null && pending.length > 0) {
+                    window.vocabTap.toast('🎙️ Có ' + pending.length + ' ghi âm phiên âm đang chờ bạn chấm.', 'info');
+                } else if (lastKnownPendingGradingCount !== null && pending.length > lastKnownPendingGradingCount) {
+                    window.vocabTap.toast('🎙️ Học viên vừa gửi thêm ghi âm phiên âm mới cần chấm!', 'info');
+                }
+            }
+            lastKnownPendingGradingCount = pending.length;
+        } catch (err) {
+            console.error('Lỗi khi kiểm tra ghi âm đang chờ chấm (kiểm tra đã chạy comments_grading_setup.sql chưa):', err.message);
+            // [MỚI] Nếu lỗi là do cột "graded" chưa tồn tại (chưa chạy file SQL đi kèm), hiện
+            // hẳn 1 cảnh báo dễ thấy thay vì chỉ ghi log âm thầm trong Console — vì lỗi này khiến
+            // giảng viên KHÔNG NHẬN ĐƯỢC bất kỳ thông báo nào mà không rõ lý do tại sao.
+            const msg = (err && err.message) ? err.message.toLowerCase() : '';
+            const missingColumn = msg.includes('graded') && (msg.includes('does not exist') || msg.includes('column') || msg.includes('42703'));
+            if (missingColumn && !phonamGradingSetupWarned) {
+                phonamGradingSetupWarned = true;
+                if (window.vocabTap && window.vocabTap.toast) {
+                    window.vocabTap.toast('⚠️ Chưa bật được thông báo "chờ chấm": hãy chạy file comments_grading_setup.sql trên Supabase trước (xem Console F12 để biết chi tiết).', 'error');
+                } else {
+                    alert('⚠️ Chưa bật được thông báo "ghi âm đang chờ chấm": bảng "comments" chưa có cột "graded". Hãy chạy file comments_grading_setup.sql trong Supabase SQL Editor rồi tải lại trang.');
+                }
+            }
+        }
+    }
+    window.refreshPhoneticsGradingBadge = refreshPhoneticsGradingBadge; // để displayComment() gọi lại sau khi bấm "Đánh dấu đã chấm"
+
+    // Mở/thu gọn danh sách chi tiết trong bảng thông báo
+    if (phonamGradingToggleBtn && phonamGradingListEl) {
+        phonamGradingToggleBtn.addEventListener('click', () => {
+            const expanded = phonamGradingListEl.classList.toggle('expanded');
+            phonamGradingToggleBtn.textContent = expanded ? 'Ẩn danh sách ▴' : 'Xem danh sách ▾';
+        });
+    }
+
+    // Chờ tối đa vài giây để đúng ô ghi âm (theo id) xuất hiện trong DOM sau khi loadComments()
+    // chạy xong (loadComments là async nên không thể biết chính xác lúc nào nó hoàn tất).
+    function waitForCommentElement(commentId, maxWaitMs) {
+        return new Promise(resolve => {
+            const start = Date.now();
+            (function poll() {
+                const el = document.getElementById('phonam-comment-' + commentId);
+                if (el || Date.now() - start > maxWaitMs) { resolve(el); return; }
+                setTimeout(poll, 150);
+            })();
+        });
+    }
+
+    // [MỚI] Điều hướng nhanh: chọn đúng ký tự IPA, mở đúng ô bình luận của học viên đó, cuộn tới
+    // và làm nổi bật tạm thời để giảng viên thấy ngay ghi âm nào cần chấm.
+    async function jumpToPendingGradingItem(symbol, commentId) {
+        const targetTabBtn = document.querySelector('.main-tab-btn[data-main-target="tab-phien-am"]');
+        if (targetTabBtn && !targetTabBtn.classList.contains('active')) targetTabBtn.click();
+
+        const symbolEl = Array.from(symbols).find(s => s.dataset.symbol === symbol);
+        if (!symbolEl) {
+            alert('Không tìm thấy ký tự phiên âm "' + symbol + '" trên bảng IPA (có thể đã bị đổi/xoá).');
+            return;
+        }
+        symbolEl.click(); // chọn ký tự -> tự động gọi loadComments(symbol) bên trong
+
+        const el = await waitForCommentElement(commentId, 4000);
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.classList.add('phonam-comment-highlight');
+            setTimeout(() => el.classList.remove('phonam-comment-highlight'), 2800);
+        } else {
+            const commentsSection = document.getElementById('comments-section');
+            if (commentsSection) commentsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+
+    if (phonamGradingListEl) {
+        phonamGradingListEl.addEventListener('click', (e) => {
+            const item = e.target.closest('.phonam-grading-item');
+            if (!item) return;
+            jumpToPendingGradingItem(item.dataset.symbol, item.dataset.commentId);
+        });
+    }
+
+    // Kiểm tra định kỳ (mỗi 90 giây) để giảng viên phát hiện ghi âm mới cần chấm trong lúc
+    // đang dùng web, không cần tải lại trang hay bấm ra vào tab Phiên âm.
+    setInterval(() => {
+        if (currentUserId && isTeacher && !isImpersonating && document.visibilityState === 'visible') {
+            refreshPhoneticsGradingBadge();
+        }
+    }, 90 * 1000);
+    // --- KẾT THÚC BADGE "GHI ÂM ĐANG CHỜ CHẤM" ---
+
     // [MỚI] Tự động cập nhật điểm chuyên cần định kỳ (mỗi 5 phút) trong lúc học viên đang
     // dùng web — không cần họ tự mở hồ sơ thì điểm & bảng xếp hạng mới cập nhật.
     setInterval(() => {
@@ -2277,6 +2481,7 @@ document.addEventListener('DOMContentLoaded', () => {
             videoPlayBtn.disabled = true;
             videoPauseBtn.disabled = false;
             videoPlaceholder.style.display = 'none'; 
+            videoManuallyPaused = false; // [MỚI] người dùng chủ động bấm "Tiếp tục" -> cho phép tự động phát lại bình thường
         }
     });
     
@@ -2287,6 +2492,7 @@ document.addEventListener('DOMContentLoaded', () => {
             videoPlayBtn.disabled = false;
             videoPauseBtn.disabled = true;
             videoPlaceholder.style.display = 'block'; 
+            videoManuallyPaused = true; // [MỚI] người dùng chủ động bấm "Dừng" -> không tự động phát lại nữa cho tới khi bấm "Tiếp tục"
         }
     });
 
@@ -2332,6 +2538,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const videoSrc = symbol.dataset.videoSrc;
             currentVideoSrc = videoSrc; 
+            videoManuallyPaused = false; // [MỚI] chọn ký tự mới -> video của ký tự mới luôn được phát bình thường (không bị khoá bởi trạng thái "đã dừng" của ký tự trước đó)
             
             const guideText = symbol.dataset.guide;
 
@@ -2407,6 +2614,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 targetContent.classList.add('active');
             }
 
+            // [MỚI] Chuyển sang tab "Phiên âm" -> kiểm tra ngay (không chờ tới lượt quét 90 giây
+            // tiếp theo) xem có ghi âm nào đang chờ chấm, để giảng viên luôn thấy số mới nhất
+            // ngay khi mở tab này.
+            if (targetId === 'tab-phien-am' && typeof window.refreshPhoneticsGradingBadge === 'function') {
+                refreshPhoneticsGradingBadge();
+            }
+
             // [MỚI] Ghi nhớ tab đang chọn để khôi phục khi tải lại trang
             try {
                 localStorage.setItem(MAIN_TAB_STORAGE_KEY, targetId);
@@ -2426,6 +2640,12 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('visibilitychange', () => {
         if (document.hidden && typeof window.thcsResetTranslateIfMidProgress === 'function') {
             window.thcsResetTranslateIfMidProgress();
+        }
+        // [MỚI] Vừa quay lại tab trình duyệt này (ví dụ vừa chuyển qua ứng dụng khác rồi quay
+        // lại) -> kiểm tra ngay số ghi âm phiên âm đang chờ chấm, thay vì phải đợi tới lượt
+        // quét định kỳ tiếp theo (tối đa 90 giây) mới thấy số mới nhất.
+        if (!document.hidden && typeof window.refreshPhoneticsGradingBadge === 'function') {
+            refreshPhoneticsGradingBadge();
         }
     });
 
@@ -2448,7 +2668,7 @@ document.addEventListener('DOMContentLoaded', () => {
 async function loadCompletionStatus(user) {
         if (!user) {
             symbols.forEach(symbolElement => {
-                symbolElement.classList.remove('completed', 'submitted');
+                symbolElement.classList.remove('completed', 'submitted', 'graded-done');
                 const iconElement = symbolElement.querySelector('.completion-status-icon');
                 if (iconElement) iconElement.textContent = '☐';
             });
@@ -2465,39 +2685,51 @@ async function loadCompletionStatus(user) {
                 .eq('user_id', userId);
             if (err1) throw err1;
 
-            // 2. Lấy dữ liệu các âm ĐÃ NỘP GHI ÂM
+            // 2. Lấy dữ liệu các âm ĐÃ NỘP GHI ÂM — lấy thêm cột "graded" để biết ghi âm nào đã
+            //    được giảng viên chấm hay chưa (dùng để tô nền vàng/xanh lá theo trạng thái chấm).
             const { data: submittedAudio, error: err2 } = await sb
                 .from('comments')
-                .select('symbol')
-                .eq('user_id', userId);
+                .select('symbol, graded')
+                .eq('user_id', userId)
+                .not('audio_url', 'is', null);
             if (err2) throw err2;
 
-            // Chuyển danh sách ghi âm thành mảng ký tự
-            const submittedSymbols = submittedAudio.map(item => item.symbol);
+            // [MỚI] Với mỗi ký tự, xác định: có ghi âm nào không, và TẤT CẢ ghi âm của ký tự đó
+            // đã được chấm hết chưa (hay còn ít nhất 1 cái đang chờ chấm).
+            const gradeStatusBySymbol = {}; // symbol -> { hasAny: true, allGraded: bool }
+            submittedAudio.forEach(item => {
+                if (!gradeStatusBySymbol[item.symbol]) {
+                    gradeStatusBySymbol[item.symbol] = { hasAny: true, allGraded: true };
+                }
+                if (!item.graded) gradeStatusBySymbol[item.symbol].allGraded = false;
+            });
 
             symbols.forEach(symbolElement => {
                 const ipaKey = symbolElement.dataset.symbol;
                 const matchCompletion = completions.find(item => item.symbol === ipaKey && item.completed);
-                const hasSubmitted = submittedSymbols.includes(ipaKey);
+                const gradeStatus = gradeStatusBySymbol[ipaKey]; // undefined nếu chưa từng gửi ghi âm nào
                 const iconElement = symbolElement.querySelector('.completion-status-icon');
 
                 // Reset toàn bộ class và icon
-                symbolElement.classList.remove('completed', 'submitted');
+                symbolElement.classList.remove('completed', 'submitted', 'graded-done');
                 if (iconElement) iconElement.textContent = '☐';
                 
                 // Áp dụng trạng thái
                 if (matchCompletion) {
-                    // Nếu đã tick -> Màu xanh dương (class completed)
+                    // Nếu đã tick -> Màu xanh dương/lá (class completed) — không liên quan tới chấm bài
                     symbolElement.classList.add('completed');
                     if (iconElement) iconElement.textContent = '✔';
-                } else if (hasSubmitted) {
-                    // Nếu chưa tick NHƯNG đã nộp ghi âm -> Màu vàng (class submitted)
+                } else if (gradeStatus && gradeStatus.allGraded) {
+                    // [MỚI] Chưa tự tick, nhưng ghi âm đã gửi ĐÃ ĐƯỢC GIẢNG VIÊN CHẤM HẾT -> nền xanh lá
+                    symbolElement.classList.add('graded-done');
+                } else if (gradeStatus) {
+                    // [MỚI] Đã gửi ghi âm nhưng còn ít nhất 1 cái CHƯA được chấm -> nền vàng
                     symbolElement.classList.add('submitted');
                 }
             });
 
         } catch (e) {
-            console.error('Lỗi khi tải trạng thái (Tick/Vàng):', e);
+            console.error('Lỗi khi tải trạng thái (Tick/Vàng/Xanh lá):', e);
         }
     }
 
@@ -2719,9 +2951,12 @@ function toggleCompletion(symbolElement) {
             resetCommentForm();
             loadComments(currentSymbol); 
 
-            // [THÊM MỚI] Đổi màu vàng nhạt nếu chưa được tick hoàn thành
+            // [THÊM MỚI] Đổi màu vàng nhạt nếu chưa được tick hoàn thành — ghi âm vừa gửi luôn
+            // đang ở trạng thái "chờ chấm", nên bỏ luôn nền xanh lá cũ (nếu trước đó các ghi âm
+            // khác của ký tự này đã từng được chấm hết) để hiện đúng màu vàng.
             const activeSymbolEl = document.querySelector(`.ipa-symbol[data-symbol="${currentSymbol}"]`);
             if (activeSymbolEl && !activeSymbolEl.classList.contains('completed')) {
+                activeSymbolEl.classList.remove('graded-done');
                 activeSymbolEl.classList.add('submitted');
             }
 
@@ -2778,8 +3013,22 @@ function toggleCompletion(symbolElement) {
     function displayComment(data) {
         const commentDiv = document.createElement('div');
         commentDiv.className = 'comment-item';
+        // [MỚI] Gắn id riêng cho từng ghi âm để có thể cuộn/điều hướng thẳng tới đây — dùng
+        // bởi bảng thông báo "ghi âm đang chờ chấm" của giảng viên (xem jumpToPendingGradingItem).
+        if (data.id !== undefined && data.id !== null) {
+            commentDiv.id = 'phonam-comment-' + data.id;
+        }
 
-        // [MỚI] Hàng đầu: tên người gửi + nút xóa (yêu cầu mật khẩu Admin)
+        // [MỚI] Ghi âm nào chưa được giảng viên chấm (cột "graded" trên bảng "comments" — cần
+        // chạy file SQL "comments_grading_setup.sql" đi kèm nếu bảng chưa có cột này) sẽ có nền
+        // VÀNG + đánh dấu "⏳ Chờ chấm"; đã chấm xong thì chuyển sang nền XANH LÁ + "✅ Đã chấm" —
+        // để học viên nhìn vào ô ghi âm của mình là biết ngay đã được chấm hay chưa.
+        const isPendingGrading = !!data.audio_url && !data.graded;
+        if (data.audio_url) {
+            commentDiv.classList.add(isPendingGrading ? 'comment-item-pending-grading' : 'comment-item-graded');
+        }
+
+        // [MỚI] Hàng đầu: tên người gửi + nhãn trạng thái chấm + nút xóa (yêu cầu mật khẩu Admin)
         const headerRow = document.createElement('div');
         headerRow.className = 'comment-header-row';
 
@@ -2792,6 +3041,19 @@ function toggleCompletion(symbolElement) {
         }
         senderInfo.textContent = senderDisplay;
         headerRow.appendChild(senderInfo);
+
+        // [MỚI] Nhãn "⏳ Chờ chấm" / "✅ Đã chấm" — chỉ hiện với ghi âm (không hiện với ghi chú chữ)
+        if (data.audio_url) {
+            const gradeTag = document.createElement('span');
+            if (isPendingGrading) {
+                gradeTag.className = 'phonam-grade-tag phonam-grade-tag-pending';
+                gradeTag.textContent = '⏳ Chờ chấm';
+            } else {
+                gradeTag.className = 'phonam-grade-tag phonam-grade-tag-done';
+                gradeTag.textContent = '✅ Đã chấm';
+            }
+            headerRow.appendChild(gradeTag);
+        }
 
         // [MỚI] Nút xóa ghi âm — chỉ xóa được khi nhập đúng mật khẩu Admin
         const deleteBtn = document.createElement('button');
@@ -2867,9 +3129,11 @@ function toggleCompletion(symbolElement) {
             audioEl.src = data.audio_url; 
             
             // [MỚI] Khi bấm nghe ghi âm này, tự động phát luôn video hướng dẫn phát âm
-            // (nếu ký tự IPA đang chọn có sẵn video) để học viên vừa nghe vừa xem hướng dẫn.
+            // (nếu ký tự IPA đang chọn có sẵn video) để học viên vừa nghe vừa xem hướng dẫn —
+            // NHƯNG nếu người dùng đã chủ động bấm "Dừng" video trước đó thì KHÔNG tự phát lại
+            // nữa, tôn trọng thao tác dừng của họ cho tới khi họ chủ động bấm "Tiếp tục".
             audioEl.addEventListener('play', () => {
-                if (currentVideoSrc) {
+                if (currentVideoSrc && !videoManuallyPaused) {
                     vimeoPlayerContainer.classList.remove('video-hidden');
                     loadOrUpdateIframe(currentVideoSrc, '1');
                     videoPlaceholder.style.display = 'none';
@@ -2895,6 +3159,44 @@ function toggleCompletion(symbolElement) {
             timeEl.className = 'comment-timestamp';
             timeEl.textContent = new Date(data.created_at).toLocaleString("vi-VN");
             commentDiv.appendChild(timeEl);
+        }
+
+        // [MỚI] Chỉ giảng viên mới thấy nút này — bấm sau khi đã nghe ghi âm để đánh dấu đã
+        // chấm xong, ghi âm sẽ tự hết viền cam + tự cập nhật lại số lượng "đang chờ chấm".
+        if (isTeacher && isPendingGrading) {
+            const gradeBtn = document.createElement('button');
+            gradeBtn.type = 'button';
+            gradeBtn.className = 'phonam-mark-graded-btn';
+            gradeBtn.textContent = '✅ Đánh dấu đã chấm';
+            gradeBtn.addEventListener('click', async () => {
+                gradeBtn.disabled = true;
+                gradeBtn.textContent = 'Đang lưu...';
+                try {
+                    const { error } = await sb
+                        .from('comments')
+                        .update({ graded: true, graded_at: new Date().toISOString(), graded_by: currentUserId })
+                        .eq('id', data.id);
+                    if (error) throw error;
+
+                    data.graded = true;
+                    commentDiv.classList.remove('comment-item-pending-grading');
+                    commentDiv.classList.add('comment-item-graded');
+                    const tagEl = headerRow.querySelector('.phonam-grade-tag');
+                    if (tagEl) {
+                        tagEl.className = 'phonam-grade-tag phonam-grade-tag-done';
+                        tagEl.textContent = '✅ Đã chấm';
+                    }
+                    gradeBtn.remove();
+                    // Cập nhật lại badge + danh sách "đang chờ chấm" ngay lập tức, không cần toast.
+                    if (typeof refreshPhoneticsGradingBadge === 'function') refreshPhoneticsGradingBadge({ notify: false });
+                } catch (err) {
+                    console.error('Lỗi khi đánh dấu đã chấm (kiểm tra cột "graded" + policy UPDATE trên bảng "comments" — xem file comments_grading_setup.sql):', err.message);
+                    alert(`Không thể đánh dấu đã chấm: ${err.message}`);
+                    gradeBtn.disabled = false;
+                    gradeBtn.textContent = '✅ Đánh dấu đã chấm';
+                }
+            });
+            commentDiv.appendChild(gradeBtn);
         }
 
         if (data.audio_url || (data.text && data.text.trim() !== "")) {
