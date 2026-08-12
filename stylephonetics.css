@@ -1684,6 +1684,9 @@ h3 { font-size:0.95rem; font-weight:600; color:var(--text); margin:0 0 8px; }
    nền xanh lá giống như khi tự tick "hoàn thành", nhưng không đụng tới icon ☐/✔ (icon đó chỉ
    phản ánh đúng việc học viên có tự tick hay không). */
 .ipa-symbol.graded-done:not(.completed) { background: var(--success-light) !important; border-color: var(--success) !important; }
+/* [MỚI] Giảng viên vừa để lại bình luận yêu cầu SỬA/GHI ÂM LẠI cho ghi âm mới nhất của ký tự
+   này -> nền đỏ, để học viên biết ngay cần ghi âm lại chứ chưa đạt. */
+.ipa-symbol.needs-redo:not(.completed) { background: var(--danger-light, #fee2e2) !important; border: 2px solid var(--danger) !important; }
 
 .ipa-symbol .symbol  { font-size: 1.35rem; font-weight: 700; color: var(--primary-dark); line-height: 1.1; }
 .ipa-symbol .example { font-size: 0.7rem; font-style: italic; color: var(--text-muted); margin-top: 3px; }
@@ -1906,6 +1909,7 @@ h3 { font-size:0.95rem; font-weight:600; color:var(--text); margin:0 0 8px; }
 .comment-item:hover { border-color: var(--border-strong); }
 .comment-item-pending-grading:hover { border-color: var(--warning); }
 .comment-item-graded:hover { border-color: var(--success); }
+.comment-item-needs-redo:hover { border-color: var(--danger); }
 .comment-header-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
 .comment-header-row .comment-sender { margin-bottom: 0; }
 .comment-delete-btn {
@@ -1932,6 +1936,16 @@ h3 { font-size:0.95rem; font-weight:600; color:var(--text); margin:0 0 8px; }
 .comment-item audio { width: 100%; height: 30px; border-radius: 4px; }
 .comment-timestamp { font-size: 0.7rem; color: var(--text-light); margin-top: 5px; }
 
+/* [MỚI] Nhận xét/bình luận của giảng viên gắn với 1 ghi âm cụ thể — học viên nhìn vào ghi âm
+   của mình là thấy ngay giảng viên góp ý gì. */
+.phonam-feedback-text {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 8px;
+    font-weight: 500;
+}
+
 /* [MỚI] Nhãn trạng thái chấm bài trên mỗi ghi âm (chờ chấm / đã chấm) */
 .phonam-grade-tag {
     display: inline-flex;
@@ -1946,10 +1960,31 @@ h3 { font-size:0.95rem; font-weight:600; color:var(--text); margin:0 0 8px; }
 }
 .phonam-grade-tag-pending { background: var(--warning-light); color: #92650c; border: 1px solid var(--warning); }
 .phonam-grade-tag-done    { background: var(--success-light); color: var(--success-dark); border: 1px solid var(--success); }
+.phonam-grade-tag-needs-redo { background: var(--danger-light, #fee2e2); color: var(--danger-dark); border: 1px solid var(--danger); }
 
-/* [MỚI] Nút giảng viên bấm để đánh dấu đã chấm xong 1 ghi âm */
+/* [MỚI] Khung giảng viên chấm 1 ghi âm: ô nhận xét + 2 nút "Cần ghi âm lại" / "Đúng - Hoàn thành" */
+.phonam-review-box {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.phonam-feedback-input {
+    width: 100%;
+    resize: vertical;
+    min-height: 44px;
+    padding: 6px 8px;
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    font-size: 0.82rem;
+    font-family: inherit;
+    color: var(--text);
+    background: var(--surface);
+}
+.phonam-review-btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* [MỚI] Nút giảng viên bấm để đánh dấu ghi âm đã chấm ĐÚNG/hoàn thành */
 .phonam-mark-graded-btn {
-    margin-top: 6px;
     padding: 5px 10px;
     border-radius: 6px;
     border: 1px solid var(--success);
@@ -1964,11 +1999,27 @@ h3 { font-size:0.95rem; font-weight:600; color:var(--text); margin:0 0 8px; }
 .phonam-mark-graded-btn:active { transform: scale(0.96); }
 .phonam-mark-graded-btn:disabled { opacity: 0.6; cursor: default; }
 
-/* [MỚI] Ghi âm đang chờ chấm được viền cam nhẹ để giảng viên dễ nhận ra ngay trong danh sách */
-/* [MỚI] Ghi âm chưa được chấm -> nền vàng; đã chấm xong -> nền xanh lá — học viên nhìn vào
-   là biết ngay bài của mình đã được giảng viên nghe & chấm hay chưa. */
+/* [MỚI] Nút giảng viên bấm để yêu cầu học viên ghi âm lại (kèm bình luận bắt buộc) */
+.phonam-redo-btn {
+    padding: 5px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--danger);
+    background: var(--danger-light, #fee2e2);
+    color: var(--danger-dark);
+    font-size: 0.76rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+}
+.phonam-redo-btn:hover { background: var(--danger); color: #fff; }
+.phonam-redo-btn:active { transform: scale(0.96); }
+.phonam-redo-btn:disabled { opacity: 0.6; cursor: default; }
+
+/* [MỚI] Ghi âm chưa được chấm -> nền vàng; giảng viên yêu cầu ghi âm lại -> nền đỏ; đã chấm
+   đúng/hoàn thành -> nền xanh lá — học viên nhìn vào là biết ngay bài của mình đang ở đâu. */
 .comment-item-pending-grading { border-color: var(--warning); background: var(--warning-light); }
 .comment-item-graded { border-color: var(--success); background: var(--success-light); }
+.comment-item-needs-redo { border-color: var(--danger); background: var(--danger-light, #fee2e2); }
 
 /* [MỚI] Hiệu ứng nhấp nháy tạm thời khi điều hướng nhanh tới đúng ô ghi âm cần chấm */
 .phonam-comment-highlight {
