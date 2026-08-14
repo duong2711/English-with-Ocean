@@ -757,6 +757,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // đang chờ chấm để hiện badge + bảng thông báo (học viên bình thường sẽ tự ẩn đi).
             lastKnownPendingGradingCount = null; // mỗi lần đăng nhập mới, tính lại từ đầu
             refreshPhoneticsGradingBadge();
+            // [MỚI] Tương tự cho ghi âm luyện nói (5 dạng bài ở tab "🗣️ Nói") — xem khối
+            // "HỆ THỐNG GỬI GHI ÂM LUYỆN NÓI CHO GIẢNG VIÊN CHẤM".
+            if (typeof window.refreshSpeakingGradingBadge === 'function') window.refreshSpeakingGradingBadge();
             // [MỚI] Tự động cập nhật điểm chuyên cần ngay khi đăng nhập — không cần đợi học
             // viên mở hồ sơ của mình mới tính (hàm này tự bỏ qua nếu là tài khoản giảng viên).
             renderProfileAchievements();
@@ -827,6 +830,7 @@ document.addEventListener('DOMContentLoaded', () => {
             lastKnownPendingGradingCount = null;
             setPhonamGradingBadgeCount(0);
             if (phonamGradingPanel) phonamGradingPanel.style.display = 'none';
+            if (typeof window.refreshSpeakingGradingBadge === 'function') window.refreshSpeakingGradingBadge();
             authContainer.style.display = 'block';
             if (insideWrapper) insideWrapper.style.display = 'none';
             if (accountArea) accountArea.style.display = 'none';
@@ -2620,6 +2624,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (targetId === 'tab-phien-am' && typeof window.refreshPhoneticsGradingBadge === 'function') {
                 refreshPhoneticsGradingBadge();
             }
+            // [MỚI] Chuyển sang tab "🗣️ Nói" -> kiểm tra ngay ghi âm luyện nói đang chờ chấm,
+            // tương tự cơ chế của tab "Phiên âm" ở trên.
+            if (targetId === 'tab-luyen-noi' && typeof window.refreshSpeakingGradingBadge === 'function') {
+                window.refreshSpeakingGradingBadge();
+            }
 
             // [MỚI] Ghi nhớ tab đang chọn để khôi phục khi tải lại trang
             try {
@@ -2646,6 +2655,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // quét định kỳ tiếp theo (tối đa 90 giây) mới thấy số mới nhất.
         if (!document.hidden && typeof window.refreshPhoneticsGradingBadge === 'function') {
             refreshPhoneticsGradingBadge();
+        }
+        if (!document.hidden && typeof window.refreshSpeakingGradingBadge === 'function') {
+            window.refreshSpeakingGradingBadge();
         }
     });
 
@@ -2844,6 +2856,10 @@ function toggleCompletion(symbolElement) {
              alert("Vui lòng đăng nhập để gửi ghi âm.");
              return;
         }
+
+        // [MỚI] Học viên bấm ghi âm -> tự động dừng video hướng dẫn (Vimeo) đang phát,
+        // tránh tiếng video lẫn vào bản ghi âm và để học viên tập trung nói.
+        pauseGuideVideo();
 
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -5019,6 +5035,14 @@ function toggleCompletion(symbolElement) {
         const grammarEditDriveInp    = document.getElementById('grammar-edit-drive-input');
         const grammarEditDriveBtn    = document.getElementById('grammar-edit-drive-btn');
 
+        // [MỚI] Tài liệu học / làm bài — Google Docs/Sheets
+        const grammarDocBlock        = document.getElementById('grammar-doc-block');
+        const grammarDocIframe       = document.getElementById('grammar-doc-iframe');
+        const grammarDocOpenBtn      = document.getElementById('grammar-doc-open-btn');
+        const grammarEditDocBar      = document.getElementById('grammar-edit-doc-bar');
+        const grammarEditDocInp      = document.getElementById('grammar-edit-doc-input');
+        const grammarEditDocBtn      = document.getElementById('grammar-edit-doc-btn');
+
         const grammarQuizOpenBtn     = document.getElementById('grammar-quiz-open-btn');
         const grammarEditQuizBar     = document.getElementById('grammar-edit-quiz-bar');
         const grammarEditQuizInp     = document.getElementById('grammar-edit-quiz-input');
@@ -5114,6 +5138,31 @@ function toggleCompletion(symbolElement) {
             return id ? `https://drive.google.com/file/d/${id}/view` : (rawUrl || '').trim();
         }
 
+        // [MỚI] Nhận 1 link Google Docs/Sheets/Slides/Forms bất kỳ → trích loại tài liệu + ID.
+        // Lưu ý: file phải được bật chia sẻ "Bất kỳ ai có đường liên kết" thì mới xem/nhúng được.
+        function googleDocFileInfo(rawUrl) {
+            const url = (rawUrl || '').trim();
+            if (!url) return null;
+            let match = url.match(/docs\.google\.com\/(document|spreadsheets|presentation|forms)\/d\/([a-zA-Z0-9_-]+)/);
+            if (match) return { type: match[1], id: match[2] };
+            if (/^[a-zA-Z0-9_-]{20,}$/.test(url)) return { type: 'document', id: url }; // lỡ dán sẵn ID
+            return null;
+        }
+        // Link nhúng xem trước ngay trong trang (không cần "Xuất bản lên web")
+        function googleDocEmbedUrl(rawUrl) {
+            const info = googleDocFileInfo(rawUrl);
+            if (!info) return 'about:blank';
+            if (info.type === 'forms') return `https://docs.google.com/forms/d/${info.id}/viewform?embedded=true`;
+            return `https://docs.google.com/${info.type}/d/${info.id}/preview`;
+        }
+        // Link mở toàn màn hình (tab mới) — mở đúng chế độ chỉnh sửa/làm bài
+        function googleDocOpenUrl(rawUrl) {
+            const info = googleDocFileInfo(rawUrl);
+            if (!info) return (rawUrl || '').trim();
+            if (info.type === 'forms') return `https://docs.google.com/forms/d/${info.id}/viewform`;
+            return `https://docs.google.com/${info.type}/d/${info.id}/edit`;
+        }
+
         // ===== SUPABASE: CRUD cho bảng "grammar_folders" =====
         async function loadGrammarFoldersFromDB() {
             try {
@@ -5135,6 +5184,7 @@ function toggleCompletion(symbolElement) {
                 title: 'Folder mới (bấm vào tiêu đề để đổi tên)',
                 youtube_url: '',
                 drive_url: '',
+                doc_url: '',
                 quiz_url: '',
                 created_by: currentEmail
             };
@@ -5290,6 +5340,14 @@ function toggleCompletion(symbolElement) {
             if (grammarEditDriveBar) grammarEditDriveBar.style.display = isTeacher ? 'flex' : 'none';
             if (grammarEditDriveInp) grammarEditDriveInp.value = folder.drive_url || '';
 
+            // [MỚI] Tài liệu học / làm bài (Google Docs/Sheets) — ẩn cả khối với học viên nếu
+            // giảng viên chưa dán link nào, nhưng vẫn hiện với giảng viên để dán link mới.
+            if (grammarDocBlock) grammarDocBlock.style.display = (isTeacher || folder.doc_url) ? '' : 'none';
+            if (grammarDocIframe) grammarDocIframe.src = folder.doc_url ? googleDocEmbedUrl(folder.doc_url) : 'about:blank';
+            if (grammarDocOpenBtn) grammarDocOpenBtn.dataset.docUrl = folder.doc_url ? googleDocOpenUrl(folder.doc_url) : '';
+            if (grammarEditDocBar) grammarEditDocBar.style.display = isTeacher ? 'flex' : 'none';
+            if (grammarEditDocInp) grammarEditDocInp.value = folder.doc_url || '';
+
             // Bài kiểm tra
             grammarQuizOpenBtn.dataset.quizUrl = folder.quiz_url || '';
             if (grammarEditQuizBar) grammarEditQuizBar.style.display = isTeacher ? 'flex' : 'none';
@@ -5364,6 +5422,40 @@ function toggleCompletion(symbolElement) {
                     grammarEditDriveBtn.textContent = oldLabel;
                     grammarEditDriveBtn.disabled = false;
                 }
+            });
+        }
+
+        // [MỚI] ===== CẬP NHẬT LINK TÀI LIỆU (Google Docs/Sheets): dán link rồi bấm nút =====
+        if (grammarEditDocBtn) {
+            grammarEditDocBtn.addEventListener('click', async () => {
+                if (!isTeacher || currentFolderId === null) return;
+                const url = grammarEditDocInp.value.trim();
+                if (!url) { alert('Vui lòng dán link Google Docs/Sheets trước khi cập nhật.'); return; }
+                grammarEditDocBtn.disabled = true;
+                const oldLabel = grammarEditDocBtn.textContent;
+                grammarEditDocBtn.textContent = 'Đang lưu...';
+                try {
+                    await updateGrammarFolderDB(currentFolderId, { doc_url: url });
+                    patchLocalFolder(currentFolderId, { doc_url: url });
+                    if (grammarDocIframe) grammarDocIframe.src = googleDocEmbedUrl(url);
+                    if (grammarDocOpenBtn) grammarDocOpenBtn.dataset.docUrl = googleDocOpenUrl(url);
+                    if (grammarDocBlock) grammarDocBlock.style.display = '';
+                    grammarEditDocBtn.textContent = '✅ Đã cập nhật';
+                    setTimeout(() => { grammarEditDocBtn.textContent = oldLabel; grammarEditDocBtn.disabled = false; }, 1300);
+                } catch (err) {
+                    alert('Cập nhật tài liệu thất bại: ' + err.message + (/doc_url/i.test(err.message || '') ? ' — hãy chạy file SQL "grammar_folders_add_doc_url.sql" trước.' : ''));
+                    grammarEditDocBtn.textContent = oldLabel;
+                    grammarEditDocBtn.disabled = false;
+                }
+            });
+        }
+
+        // [MỚI] Nút "Mở tài liệu" → mở toàn màn hình ở tab mới (giống nút "Xem chi tiết" ảnh)
+        if (grammarDocOpenBtn) {
+            grammarDocOpenBtn.addEventListener('click', () => {
+                const url = grammarDocOpenBtn.dataset.docUrl;
+                if (url) window.open(url, '_blank');
+                else alert('Giảng viên chưa dán link tài liệu cho bài này.');
             });
         }
 
@@ -13902,21 +13994,42 @@ function toggleCompletion(symbolElement) {
         return ed ? ed.innerHTML.trim() : '';
     }
 
-    // Đếm nhanh số chỗ trống (<u> gạch chân) trong 1 đoạn HTML nguồn — dùng để
+    // [SỬA LỖI] Trước đây chỉ tìm thẻ <u> thật (querySelectorAll('u')). Vấn đề: khi giảng viên
+    // bấm CẢ "In đậm" (B) LẪN "Gạch chân" (U) cho cùng 1 từ, một số trình duyệt (đặc biệt
+    // Safari trên iPhone/iPad/Mac) không lồng gọn <u> bên trong <b> như Chrome/Edge, mà tạo ra
+    // 1 phần tử có "text-decoration: underline" trong thuộc tính style thay vì thẻ <u> — khiến
+    // querySelectorAll('u') không tìm thấy từ đó. Hậu quả: từ đó KHÔNG bị biến thành chỗ trống
+    // (vẫn hiện nguyên chữ, không có ô nhập), nên nếu đó là chỗ trống duy nhất của câu, câu đó
+    // không bao giờ có ô nào để điền/chấm đúng — học viên bấm "Kiểm tra" nhưng không có gì để
+    // kiểm tra cả. Hàm này tìm CẢ 2 kiểu: thẻ <u> thật lẫn phần tử có text-decoration:underline
+    // trong style, và loại các phần tử lồng bên trong 1 phần tử gạch chân khác để không đếm
+    // trùng 1 chỗ trống nhiều lần.
+    function iltIsUnderlineEl(el) {
+        if (!el || el.nodeType !== 1) return false;
+        if (el.tagName.toLowerCase() === 'u') return true;
+        const style = el.getAttribute('style') || '';
+        return /text-decoration[^;"]*underline/i.test(style);
+    }
+    function iltFindUnderlineEls(container) {
+        const all = Array.from(container.querySelectorAll('*')).filter(iltIsUnderlineEl);
+        return all.filter(el => !all.some(other => other !== el && other.contains(el)));
+    }
+
+    // Đếm nhanh số chỗ trống (gạch chân) trong 1 đoạn HTML nguồn — dùng để
     // hiển thị số câu ước tính ngay trong khung soạn.
     function iltCountBlanksInHtml(html) {
         const d = document.createElement('div');
         d.innerHTML = html || '';
-        return d.querySelectorAll('u').length;
+        return iltFindUnderlineEls(d).length;
     }
 
-    // Tách <u> (gạch chân) trong 1 đoạn HTML thành các "chỗ trống" — mỗi chỗ
+    // Tách các phần tử gạch chân trong 1 đoạn HTML thành các "chỗ trống" — mỗi chỗ
     // trống có thể chấp nhận NHIỀU đáp án đúng, phân cách bằng dấu "|".
     function iltParseBlanks(html) {
         const container = document.createElement('div');
         container.innerHTML = html || '';
         const blanks = [];
-        Array.from(container.querySelectorAll('u')).forEach((elm) => {
+        iltFindUnderlineEls(container).forEach((elm) => {
             const raw = elm.textContent.trim();
             const accepted = raw.split('|').map(s => s.trim()).filter(Boolean);
             const marker = document.createElement('span');
@@ -15906,21 +16019,39 @@ function toggleCompletion(symbolElement) {
         return ed ? ed.innerHTML.trim() : '';
     }
 
-    // Đếm nhanh số chỗ trống (<u> gạch chân) trong 1 đoạn HTML nguồn — dùng để
+    // [SỬA LỖI] Trước đây chỉ tìm thẻ <u> thật (querySelectorAll('u')). Vấn đề: khi giảng viên
+    // bấm CẢ "In đậm" (B) LẪN "Gạch chân" (U) cho cùng 1 từ, một số trình duyệt (đặc biệt
+    // Safari trên iPhone/iPad/Mac) không lồng gọn <u> bên trong <b> như Chrome/Edge, mà tạo ra
+    // 1 phần tử có "text-decoration: underline" trong thuộc tính style thay vì thẻ <u> — khiến
+    // querySelectorAll('u') không tìm thấy từ đó. Hàm này tìm CẢ 2 kiểu: thẻ <u> thật lẫn phần
+    // tử có text-decoration:underline trong style, và loại các phần tử lồng bên trong 1 phần tử
+    // gạch chân khác để không đếm trùng 1 chỗ trống nhiều lần.
+    function iltIsUnderlineEl(el) {
+        if (!el || el.nodeType !== 1) return false;
+        if (el.tagName.toLowerCase() === 'u') return true;
+        const style = el.getAttribute('style') || '';
+        return /text-decoration[^;"]*underline/i.test(style);
+    }
+    function iltFindUnderlineEls(container) {
+        const all = Array.from(container.querySelectorAll('*')).filter(iltIsUnderlineEl);
+        return all.filter(el => !all.some(other => other !== el && other.contains(el)));
+    }
+
+    // Đếm nhanh số chỗ trống (gạch chân) trong 1 đoạn HTML nguồn — dùng để
     // hiển thị số câu ước tính ngay trong khung soạn.
     function iltCountBlanksInHtml(html) {
         const d = document.createElement('div');
         d.innerHTML = html || '';
-        return d.querySelectorAll('u').length;
+        return iltFindUnderlineEls(d).length;
     }
 
-    // Tách <u> (gạch chân) trong 1 đoạn HTML thành các "chỗ trống" — mỗi chỗ
+    // Tách các phần tử gạch chân trong 1 đoạn HTML thành các "chỗ trống" — mỗi chỗ
     // trống có thể chấp nhận NHIỀU đáp án đúng, phân cách bằng dấu "|".
     function iltParseBlanks(html) {
         const container = document.createElement('div');
         container.innerHTML = html || '';
         const blanks = [];
-        Array.from(container.querySelectorAll('u')).forEach((elm) => {
+        iltFindUnderlineEls(container).forEach((elm) => {
             const raw = elm.textContent.trim();
             const accepted = raw.split('|').map(s => s.trim()).filter(Boolean);
             const marker = document.createElement('span');
@@ -23125,6 +23256,417 @@ function toggleCompletion(symbolElement) {
 })();
 // ===== KẾT THÚC: TAB "LUYỆN KỸ NĂNG" > "📖 ĐỌC" — KHUNG 3 GIAI ĐOẠN LUYỆN ĐỌC =====
 // ===================================================================
+// ===== BẮT ĐẦU: HỆ THỐNG GỬI GHI ÂM LUYỆN NÓI CHO GIẢNG VIÊN CHẤM (dùng chung 5 dạng bài) =====
+// Áp dụng cho cả 3 giai đoạn Nói: Hỏi-đáp (ls1), Tình huống (ls2), Shadowing (lssh), Kể
+// chuyện (lsmt), Đề tự do (lsarea). Lưu vào bảng "speaking_comments" trên Supabase (xem file
+// "speaking_comments_setup.sql" đi kèm để tạo bảng + policy RLS trước khi dùng tính năng này).
+// Cơ chế y hệt bảng "chờ chấm" đã có ở tab "Phiên âm" (badge đỏ + bảng thông báo cam + toast),
+// chỉ khác 1 điểm: vì mỗi lượt luyện chọn NGẪU NHIÊN câu/đề trong ngân hàng (không phải lưới cố
+// định như bảng IPA) nên giảng viên chấm NGAY TRONG bảng thông báo (nghe + nhận xét tại chỗ)
+// thay vì phải "nhảy" vào đúng phiên luyện tập của học viên.
+(function initSpeakingGradingModule() {
+    const SPK_TABLE = 'speaking_comments';
+    // Bài Nói thường dài hơn hẳn 1 âm/từ của Phiên âm (cả câu, cả đoạn kể chuyện, cả bài A.R.E.A)
+    // nên đặt giới hạn dung lượng rộng hơn mức 500KB bên Phiên âm.
+    const SPK_MAX_FILE_SIZE_BYTES = 2 * 1024 * 1024; // 2MB
+    const SPK_TYPE_LABELS = {
+        ls1_qa:      '🎯 GĐ1 · Hỏi-đáp',
+        ls1_opener:  '🎯 GĐ1 · Tình huống',
+        ls2_shadow:  '🌊 GĐ2 · Shadowing',
+        ls2_narrate: '🌊 GĐ2 · Kể chuyện',
+        ls3_topic:   '🎓 GĐ3 · Đề tự do'
+    };
+
+    function spkSafeName(str) {
+        return String(str || 'item')
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .replace(/đ/gi, 'd')
+            .replace(/[^a-zA-Z0-9]+/g, '_')
+            .replace(/^_+|_+$/g, '')
+            .slice(0, 40) || 'item';
+    }
+
+    // ---------- GỬI 1 GHI ÂM lên Storage + lưu bản ghi vào bảng speaking_comments ----------
+    async function spkSubmit({ itemType, itemKey, itemLabel, blob, mime }) {
+        if (!currentUserId) throw new Error('Vui lòng đăng nhập để gửi ghi âm.');
+        if (!blob) throw new Error('Bạn chưa ghi âm.');
+        if (blob.size > SPK_MAX_FILE_SIZE_BYTES) {
+            throw new Error(`File ghi âm quá lớn (${(blob.size / 1024).toFixed(1)} KB). Kích thước tối đa là ${(SPK_MAX_FILE_SIZE_BYTES / 1024).toFixed(0)} KB — hãy ghi âm ngắn gọn hơn.`);
+        }
+        const fileExt = extFromAudioMime(mime);
+        const uniqueFileName = `${currentUserId.substring(0, 8)}_${Date.now()}.${fileExt}`;
+        // Dùng chung bucket "audio_comments" với Phiên âm, chỉ khác thư mục con "speaking/..."
+        // để không lẫn với ghi âm luyện phát âm IPA.
+        const storagePath = `speaking/${spkSafeName(itemType)}/${uniqueFileName}`;
+
+        const { error: uploadError } = await sb.storage.from(AUDIO_BUCKET_NAME).upload(storagePath, blob, {
+            cacheControl: '3600',
+            upsert: false,
+            contentType: mime || 'audio/webm'
+        });
+        if (uploadError) throw uploadError;
+
+        const supabaseRef = SUPABASE_URL.split('://')[1].split('.')[0];
+        const audioURL = `https://${supabaseRef}.supabase.co/storage/v1/object/public/${AUDIO_BUCKET_NAME}/${storagePath}`;
+
+        const { error: dbError } = await sb.from(SPK_TABLE).insert([{
+            item_type: itemType,
+            item_key: String(itemKey),
+            item_label: (itemLabel || '').toString().slice(0, 300),
+            audio_url: audioURL,
+            user_id: currentUserId,
+            created_at: new Date().toISOString()
+        }]);
+        if (dbError) {
+            sb.storage.from(AUDIO_BUCKET_NAME).remove([storagePath]);
+            throw dbError;
+        }
+        if (typeof window.refreshSpeakingGradingBadge === 'function') window.refreshSpeakingGradingBadge({ notify: false });
+    }
+
+    // ---------- 1 THẺ GHI ÂM (dùng chung: trong từng bài luyện & trong bảng chờ chấm) ----------
+    function spkBuildCard(data, opts) {
+        opts = opts || {};
+        const card = document.createElement('div');
+        card.className = 'comment-item';
+        if (data.id != null) card.id = 'spk-comment-' + data.id;
+
+        const isPendingGrading = !data.graded;
+        const isNeedsRedo = !!data.graded && data.is_correct === false;
+        card.classList.add(
+            isPendingGrading ? 'comment-item-pending-grading' :
+            isNeedsRedo ? 'comment-item-needs-redo' : 'comment-item-graded'
+        );
+
+        const headerRow = document.createElement('div');
+        headerRow.className = 'comment-header-row';
+
+        const senderInfo = document.createElement('div');
+        senderInfo.className = 'comment-sender';
+        senderInfo.textContent = opts.senderName || (data.user_id ? `Người dùng: ID ${data.user_id.substring(0, 8)}...` : 'Ẩn danh');
+        headerRow.appendChild(senderInfo);
+
+        const gradeTag = document.createElement('span');
+        if (isPendingGrading) {
+            gradeTag.className = 'phonam-grade-tag phonam-grade-tag-pending';
+            gradeTag.textContent = '⏳ Chờ chấm';
+        } else if (isNeedsRedo) {
+            gradeTag.className = 'phonam-grade-tag phonam-grade-tag-needs-redo';
+            gradeTag.textContent = '🔴 Cần nói lại';
+        } else {
+            gradeTag.className = 'phonam-grade-tag phonam-grade-tag-done';
+            gradeTag.textContent = '✅ Đã chấm';
+        }
+        headerRow.appendChild(gradeTag);
+
+        // Nút xóa — chỉ xóa được khi nhập đúng mật khẩu Admin, y hệt bảng "comments" của Phiên âm.
+        const deleteBtn = document.createElement('button');
+        deleteBtn.type = 'button';
+        deleteBtn.className = 'comment-delete-btn';
+        deleteBtn.title = 'Xóa ghi âm này (cần mật khẩu Admin)';
+        deleteBtn.textContent = '🗑️';
+        deleteBtn.addEventListener('click', async () => {
+            const pass = prompt('Nhập mật khẩu Admin để xóa ghi âm này:');
+            if (pass === null) return;
+            if (pass !== ADMIN_PASSWORD) { alert('Sai mật khẩu!'); return; }
+            if (!confirm('Bạn có chắc muốn xóa ghi âm này? Hành động này không thể hoàn tác.')) return;
+            deleteBtn.disabled = true;
+            try {
+                const { data: deletedRows, error: delError } = await sb.from(SPK_TABLE).delete().eq('id', data.id).select();
+                if (delError) throw delError;
+                if (!deletedRows || !deletedRows.length) {
+                    throw new Error('Xóa không thành công do thiếu quyền (RLS): hãy thêm policy DELETE cho bảng "speaking_comments" trên Supabase.');
+                }
+                if (data.audio_url) {
+                    const marker = `/public/${AUDIO_BUCKET_NAME}/`;
+                    const idx = data.audio_url.indexOf(marker);
+                    if (idx !== -1) sb.storage.from(AUDIO_BUCKET_NAME).remove([data.audio_url.substring(idx + marker.length)]);
+                }
+                card.remove();
+                if (typeof window.refreshSpeakingGradingBadge === 'function') window.refreshSpeakingGradingBadge({ notify: false });
+            } catch (err) {
+                console.error('Lỗi khi xóa ghi âm luyện nói (kiểm tra RLS DELETE trên bảng speaking_comments):', err.message);
+                alert(`Xóa thất bại: ${err.message}`);
+                deleteBtn.disabled = false;
+            }
+        });
+        headerRow.appendChild(deleteBtn);
+        card.appendChild(headerRow);
+
+        // Dòng "dạng bài · nội dung câu/đề" — luôn hiện để biết ghi âm này ứng với bài nào, vì
+        // không giống Phiên âm (lưới ký tự cố định), câu/đề bên Nói được rút ngẫu nhiên mỗi lượt.
+        const metaEl = document.createElement('p');
+        metaEl.className = 'spk-comment-meta';
+        metaEl.textContent = (SPK_TYPE_LABELS[data.item_type] || data.item_type) + (data.item_label ? ' · ' + data.item_label : '');
+        card.appendChild(metaEl);
+
+        if (data.text && data.text.trim() !== '') {
+            const textEl = document.createElement('p');
+            textEl.className = 'phonam-feedback-text';
+            textEl.textContent = '💬 Giảng viên: ' + data.text;
+            card.appendChild(textEl);
+        }
+
+        if (data.audio_url) {
+            const audioEl = document.createElement('audio');
+            audioEl.controls = true;
+            audioEl.src = data.audio_url;
+            card.appendChild(audioEl);
+        }
+
+        if (data.created_at) {
+            const timeEl = document.createElement('div');
+            timeEl.className = 'comment-timestamp';
+            timeEl.textContent = new Date(data.created_at).toLocaleString('vi-VN');
+            card.appendChild(timeEl);
+        }
+
+        // Chỉ giảng viên mới thấy khung chấm này, và chỉ khi ghi âm còn đang "chờ chấm".
+        if (isTeacher && isPendingGrading) {
+            const reviewBox = document.createElement('div');
+            reviewBox.className = 'phonam-review-box';
+
+            const feedbackInput = document.createElement('textarea');
+            feedbackInput.className = 'phonam-feedback-input';
+            feedbackInput.rows = 2;
+            feedbackInput.placeholder = 'Nhận xét cho học viên (bắt buộc nếu yêu cầu nói lại)...';
+            reviewBox.appendChild(feedbackInput);
+
+            const btnRow = document.createElement('div');
+            btnRow.className = 'phonam-review-btn-row';
+
+            const redoBtn = document.createElement('button');
+            redoBtn.type = 'button';
+            redoBtn.className = 'phonam-redo-btn';
+            redoBtn.textContent = '🔴 Cần nói lại';
+
+            const correctBtn = document.createElement('button');
+            correctBtn.type = 'button';
+            correctBtn.className = 'phonam-mark-graded-btn';
+            correctBtn.textContent = '✅ Đúng - Hoàn thành';
+
+            async function submitReview(isCorrect) {
+                const feedbackText = feedbackInput.value.trim();
+                if (!isCorrect && !feedbackText) {
+                    alert('Vui lòng nhập nhận xét để học viên biết cần sửa gì trước khi nói lại.');
+                    return;
+                }
+                redoBtn.disabled = true;
+                correctBtn.disabled = true;
+                const savingBtn = isCorrect ? correctBtn : redoBtn;
+                const savingLabel = savingBtn.textContent;
+                savingBtn.textContent = 'Đang lưu...';
+
+                try {
+                    const updatePayload = {
+                        graded: true,
+                        graded_at: new Date().toISOString(),
+                        graded_by: currentUserId,
+                        is_correct: isCorrect
+                    };
+                    if (feedbackText) updatePayload.text = feedbackText;
+
+                    const { error } = await sb.from(SPK_TABLE).update(updatePayload).eq('id', data.id);
+                    if (error) throw error;
+
+                    data.graded = true;
+                    data.is_correct = isCorrect;
+                    if (feedbackText) data.text = feedbackText;
+
+                    card.classList.remove('comment-item-pending-grading');
+                    card.classList.add(isCorrect ? 'comment-item-graded' : 'comment-item-needs-redo');
+                    gradeTag.className = isCorrect ? 'phonam-grade-tag phonam-grade-tag-done' : 'phonam-grade-tag phonam-grade-tag-needs-redo';
+                    gradeTag.textContent = isCorrect ? '✅ Đã chấm' : '🔴 Cần nói lại';
+
+                    if (feedbackText) {
+                        let textEl = card.querySelector('.phonam-feedback-text');
+                        if (!textEl) {
+                            textEl = document.createElement('p');
+                            textEl.className = 'phonam-feedback-text';
+                            card.insertBefore(textEl, metaEl.nextSibling);
+                        }
+                        textEl.textContent = '💬 Giảng viên: ' + feedbackText;
+                    }
+
+                    reviewBox.remove();
+                    if (typeof window.refreshSpeakingGradingBadge === 'function') window.refreshSpeakingGradingBadge({ notify: false });
+                    if (typeof opts.onGraded === 'function') opts.onGraded(data);
+                } catch (err) {
+                    console.error('Lỗi khi chấm ghi âm luyện nói (kiểm tra cột "is_correct"/"text" trên bảng "speaking_comments"):', err.message);
+                    alert(`Không thể lưu: ${err.message}`);
+                    redoBtn.disabled = false;
+                    correctBtn.disabled = false;
+                    savingBtn.textContent = savingLabel;
+                }
+            }
+
+            redoBtn.addEventListener('click', () => submitReview(false));
+            correctBtn.addEventListener('click', () => submitReview(true));
+
+            btnRow.appendChild(redoBtn);
+            btnRow.appendChild(correctBtn);
+            reviewBox.appendChild(btnRow);
+            card.appendChild(reviewBox);
+        }
+
+        return card;
+    }
+
+    // ---------- TẢI danh sách ghi âm đã gửi cho 1 câu/đề cụ thể (hiện dưới khối ghi âm) ----------
+    async function spkLoadComments(containerEl, itemType, itemKey) {
+        if (!containerEl) return;
+        if (!currentUserId) { containerEl.innerHTML = ''; return; }
+        containerEl.innerHTML = '<p class="kid-hint" style="font-size:12px;">Đang tải ghi âm đã gửi...</p>';
+        try {
+            const { data, error } = await sb.from(SPK_TABLE)
+                .select('*')
+                .eq('item_type', itemType)
+                .eq('item_key', String(itemKey))
+                .order('created_at', { ascending: false });
+            if (error) throw error;
+            containerEl.innerHTML = '';
+            if (!data || !data.length) {
+                containerEl.innerHTML = '<p class="kid-hint" style="font-size:12px;">Chưa có ghi âm nào được gửi cho câu/đề này.</p>';
+                return;
+            }
+            data.forEach(row => containerEl.appendChild(spkBuildCard(row)));
+        } catch (err) {
+            console.error('Lỗi khi tải ghi âm luyện nói (kiểm tra đã chạy speaking_comments_setup.sql chưa):', err.message);
+            containerEl.innerHTML = '<p class="kid-hint" style="font-size:12px;">Không thể tải ghi âm đã gửi.</p>';
+        }
+    }
+
+    // ---------- GẮN nút "Gửi cho giảng viên chấm" vào 1 khối ghi âm đã có sẵn ----------
+    // getBlob()/getMime(): hàm đọc đúng bản ghi âm hiện có trong biến trạng thái của module gọi.
+    function spkAttachSubmitUI({ itemType, itemKey, itemLabel, sendBtn, statusEl, commentsEl, getBlob, getMime }) {
+        if (!sendBtn) return;
+        sendBtn.disabled = true;
+        sendBtn.addEventListener('click', async () => {
+            const blob = getBlob ? getBlob() : null;
+            const mime = getMime ? getMime() : (blob && blob.type);
+            sendBtn.disabled = true;
+            if (statusEl) statusEl.textContent = 'Đang tải lên Supabase, vui lòng chờ...';
+            try {
+                await spkSubmit({ itemType, itemKey, itemLabel, blob, mime });
+                if (statusEl) statusEl.textContent = '✅ Đã gửi cho giảng viên chấm!';
+                if (commentsEl) spkLoadComments(commentsEl, itemType, itemKey);
+            } catch (err) {
+                console.error('Lỗi khi gửi ghi âm luyện nói:', err.message);
+                if (statusEl) statusEl.textContent = `❌ Gửi thất bại: ${err.message}`;
+                sendBtn.disabled = false;
+            }
+        });
+        if (commentsEl) spkLoadComments(commentsEl, itemType, itemKey);
+    }
+
+    window.speakingGrading = {
+        attachSubmitUI: spkAttachSubmitUI,
+        submit: spkSubmit,
+        loadComments: spkLoadComments,
+        typeLabels: SPK_TYPE_LABELS
+    };
+
+    // ---------- BADGE + BẢNG "GHI ÂM LUYỆN NÓI ĐANG CHỜ CHẤM" (chỉ giảng viên) trên tab Nói ----------
+    const spkTabBadgeEl = document.getElementById('speaking-tab-badge');
+    const spkGradingPanel = document.getElementById('speaking-grading-panel');
+    const spkGradingCountEl = document.getElementById('speaking-grading-count');
+    const spkGradingListEl = document.getElementById('speaking-grading-list');
+    const spkGradingToggleBtn = document.getElementById('speaking-grading-toggle');
+
+    let lastKnownSpkPendingCount = null;
+    let spkSetupWarned = false;
+
+    function setSpkBadgeCount(n) {
+        if (spkTabBadgeEl) {
+            if (n > 0) { spkTabBadgeEl.textContent = n > 99 ? '99+' : String(n); spkTabBadgeEl.style.display = 'inline-flex'; }
+            else { spkTabBadgeEl.style.display = 'none'; }
+        }
+    }
+
+    async function refreshSpeakingGradingBadge(opts) {
+        const notify = !opts || opts.notify !== false;
+        if (!currentUserId || !isTeacher || isImpersonating) {
+            setSpkBadgeCount(0);
+            if (spkGradingPanel) spkGradingPanel.style.display = 'none';
+            return;
+        }
+        try {
+            const { data, error } = await sb.from(SPK_TABLE)
+                .select('*')
+                .eq('graded', false)
+                .not('audio_url', 'is', null)
+                .order('created_at', { ascending: true });
+            if (error) throw error;
+
+            // Bỏ qua ghi âm demo của chính tài khoản giảng viên đang đăng nhập (nếu có).
+            const pending = (data || []).filter(c => c.user_id !== currentUserId);
+            setSpkBadgeCount(pending.length);
+
+            if (spkGradingPanel && spkGradingCountEl && spkGradingListEl) {
+                if (!pending.length) {
+                    spkGradingPanel.style.display = 'none';
+                    spkGradingListEl.innerHTML = '';
+                } else {
+                    spkGradingPanel.style.display = 'block';
+                    spkGradingCountEl.textContent = String(pending.length);
+
+                    let namesByUserId = {};
+                    const uniqueUserIds = [...new Set(pending.map(p => p.user_id).filter(Boolean))];
+                    if (uniqueUserIds.length) {
+                        const { data: names } = await sb.from('diligence_scores').select('user_id, display_name').in('user_id', uniqueUserIds);
+                        (names || []).forEach(n => { namesByUserId[n.user_id] = n.display_name; });
+                    }
+
+                    spkGradingListEl.innerHTML = '';
+                    pending.forEach(p => {
+                        const displayName = namesByUserId[p.user_id] || ('Học viên ID ' + (p.user_id ? p.user_id.substring(0, 8) : '???') + '...');
+                        const card = spkBuildCard(p, {
+                            senderName: displayName,
+                            onGraded: () => refreshSpeakingGradingBadge({ notify: false })
+                        });
+                        spkGradingListEl.appendChild(card);
+                    });
+                }
+            }
+
+            if (notify && window.vocabTap && window.vocabTap.toast) {
+                if (lastKnownSpkPendingCount === null && pending.length > 0) {
+                    window.vocabTap.toast('🗣️ Có ' + pending.length + ' ghi âm luyện nói đang chờ bạn chấm.', 'info');
+                } else if (lastKnownSpkPendingCount !== null && pending.length > lastKnownSpkPendingCount) {
+                    window.vocabTap.toast('🗣️ Học viên vừa gửi thêm ghi âm luyện nói mới cần chấm!', 'info');
+                }
+            }
+            lastKnownSpkPendingCount = pending.length;
+        } catch (err) {
+            console.error('Lỗi khi kiểm tra ghi âm luyện nói đang chờ chấm (kiểm tra đã chạy speaking_comments_setup.sql chưa):', err.message);
+            const msg = (err && err.message) ? err.message.toLowerCase() : '';
+            const missingTable = msg.includes('speaking_comments') && (msg.includes('does not exist') || msg.includes('relation') || msg.includes('42p01'));
+            if (missingTable && !spkSetupWarned) {
+                spkSetupWarned = true;
+                if (window.vocabTap && window.vocabTap.toast) {
+                    window.vocabTap.toast('⚠️ Chưa bật được thông báo "ghi âm Nói chờ chấm": hãy chạy file speaking_comments_setup.sql trên Supabase trước (xem Console F12 để biết chi tiết).', 'error');
+                }
+            }
+        }
+    }
+    window.refreshSpeakingGradingBadge = refreshSpeakingGradingBadge;
+
+    if (spkGradingToggleBtn && spkGradingListEl) {
+        spkGradingToggleBtn.addEventListener('click', () => {
+            const expanded = spkGradingListEl.classList.toggle('expanded');
+            spkGradingToggleBtn.textContent = expanded ? 'Ẩn danh sách ▴' : 'Xem danh sách ▾';
+        });
+    }
+
+    // Kiểm tra định kỳ (mỗi 90 giây), giống hệt cơ chế bên Phiên âm.
+    setInterval(() => {
+        if (currentUserId && isTeacher && !isImpersonating && document.visibilityState === 'visible') {
+            refreshSpeakingGradingBadge();
+        }
+    }, 90 * 1000);
+})();
+// ===== KẾT THÚC: HỆ THỐNG GỬI GHI ÂM LUYỆN NÓI CHO GIẢNG VIÊN CHẤM =====
+
 // ===== BẮT ĐẦU: TAB "LUYỆN KỸ NĂNG" > "🗣️ NÓI" — GIAI ĐOẠN 1: ĐIỀU HƯỚNG =====
 // Điều hướng cấp "Giai đoạn 1" -> chọn 1 trong 2 hoạt động (Hỏi-đáp / Mở lời hội
 // thoại). Từng hoạt động có khối chức năng riêng ở 2 phần bên dưới (ls1 = Phản xạ
@@ -23335,16 +23877,24 @@ function toggleCompletion(symbolElement) {
                 </div>
                 <p class="ls-record-status" id="ls1-rec-status"></p>
                 <audio class="ls-record-audio" id="ls1-rec-audio" controls style="display:none;"></audio>
+                <div class="ls-submit-row">
+                    <button type="button" class="kid-btn kid-btn-primary" id="ls1-rec-send-btn">📤 Gửi cho giảng viên chấm</button>
+                    <p class="ls-record-status" id="ls1-rec-send-status"></p>
+                </div>
+                <div class="spk-item-comments" id="ls1-rec-comments"></div>
             </div>
         `;
     }
 
-    function ls1WireRecordBox(targetText) {
+    function ls1WireRecordBox(item, targetText) {
         const btn      = document.getElementById('ls1-rec-btn');
         const modelBtn = document.getElementById('ls1-rec-model-btn');
         const status   = document.getElementById('ls1-rec-status');
         const audioEl  = document.getElementById('ls1-rec-audio');
         if (!btn) return;
+
+        let lastBlob = null;
+        let lastMime = 'audio/webm';
 
         btn.addEventListener('click', async () => {
             if (!ls1Recording) {
@@ -23354,11 +23904,14 @@ function toggleCompletion(symbolElement) {
                     ls1RecChunks = [];
                     ls1Recorder.ondataavailable = (e) => ls1RecChunks.push(e.data);
                     ls1Recorder.onstop = () => {
-                        const blob = new Blob(ls1RecChunks, { type: 'audio/webm' });
-                        audioEl.src = URL.createObjectURL(blob);
+                        lastMime = ls1Recorder.mimeType || 'audio/webm';
+                        lastBlob = new Blob(ls1RecChunks, { type: lastMime });
+                        audioEl.src = URL.createObjectURL(lastBlob);
                         audioEl.style.display = 'block';
                         status.textContent = '✅ Đã ghi âm xong — nghe lại rồi so với giọng mẫu ở trên nhé.';
                         if (ls1RecStream) { ls1RecStream.getTracks().forEach(t => t.stop()); ls1RecStream = null; }
+                        const sendBtn = document.getElementById('ls1-rec-send-btn');
+                        if (sendBtn) sendBtn.disabled = false;
                     };
                     ls1Recorder.start();
                     ls1Recording = true;
@@ -23378,6 +23931,20 @@ function toggleCompletion(symbolElement) {
         });
 
         if (modelBtn) modelBtn.addEventListener('click', () => ls1Speak(targetText));
+
+        // [MỚI] Gửi ghi âm cho giảng viên chấm + hiện danh sách ghi âm/nhận xét đã có cho câu này.
+        if (window.speakingGrading && item) {
+            window.speakingGrading.attachSubmitUI({
+                itemType: 'ls1_qa',
+                itemKey: item.id,
+                itemLabel: item.question_text || targetText,
+                sendBtn: document.getElementById('ls1-rec-send-btn'),
+                statusEl: document.getElementById('ls1-rec-send-status'),
+                commentsEl: document.getElementById('ls1-rec-comments'),
+                getBlob: () => lastBlob,
+                getMime: () => lastMime
+            });
+        }
     }
 
     // ---------- Tải / lưu ngân hàng câu hỏi trên Supabase ----------
@@ -23859,7 +24426,7 @@ function toggleCompletion(symbolElement) {
         // Dù đúng hay sai, luôn mời học viên ghi âm nói lại câu trả lời mẫu trước khi
         // qua câu tiếp theo — đây chính là bước "phản xạ nói" của Giai đoạn 1.
         ls1QuizFeedback.insertAdjacentHTML('afterend', ls1RenderRecordBox(correctText));
-        ls1WireRecordBox(correctText);
+        ls1WireRecordBox(q, correctText);
 
         const isLastQuestion = ls1State.index + 1 >= ls1State.questions.length;
         ls1QuizControls.innerHTML = `<button type="button" class="kid-btn kid-btn-primary" id="ls1-next-btn">${isLastQuestion ? '🏁 Xem kết quả' : '➡️ Câu tiếp theo'}</button>`;
@@ -24057,6 +24624,11 @@ function toggleCompletion(symbolElement) {
                 </div>
                 <p class="ls-record-status" id="ls2-rec-status"></p>
                 <audio class="ls-record-audio" id="ls2-rec-audio" controls style="display:none;"></audio>
+                <div class="ls-submit-row">
+                    <button type="button" class="kid-btn kid-btn-primary" id="ls2-rec-send-btn">📤 Gửi cho giảng viên chấm</button>
+                    <p class="ls-record-status" id="ls2-rec-send-status"></p>
+                </div>
+                <div class="spk-item-comments" id="ls2-rec-comments"></div>
             </div>
         `;
     }
@@ -24068,6 +24640,9 @@ function toggleCompletion(symbolElement) {
         const audioEl  = document.getElementById('ls2-rec-audio');
         if (!btn) return;
 
+        let lastBlob = null;
+        let lastMime = 'audio/webm';
+
         btn.addEventListener('click', async () => {
             if (!ls2Recording) {
                 try {
@@ -24076,11 +24651,14 @@ function toggleCompletion(symbolElement) {
                     ls2RecChunks = [];
                     ls2Recorder.ondataavailable = (e) => ls2RecChunks.push(e.data);
                     ls2Recorder.onstop = () => {
-                        const blob = new Blob(ls2RecChunks, { type: 'audio/webm' });
-                        audioEl.src = URL.createObjectURL(blob);
+                        lastMime = ls2Recorder.mimeType || 'audio/webm';
+                        lastBlob = new Blob(ls2RecChunks, { type: lastMime });
+                        audioEl.src = URL.createObjectURL(lastBlob);
                         audioEl.style.display = 'block';
                         status.textContent = '✅ Đã ghi âm xong — nghe lại rồi so với giọng mẫu ở trên nhé.';
                         if (ls2RecStream) { ls2RecStream.getTracks().forEach(t => t.stop()); ls2RecStream = null; }
+                        const sendBtn = document.getElementById('ls2-rec-send-btn');
+                        if (sendBtn) sendBtn.disabled = false;
                     };
                     ls2Recorder.start();
                     ls2Recording = true;
@@ -24100,6 +24678,20 @@ function toggleCompletion(symbolElement) {
         });
 
         if (modelBtn) modelBtn.addEventListener('click', () => ls2PlayModelAudio(item, targetText));
+
+        // [MỚI] Gửi ghi âm cho giảng viên chấm + hiện danh sách ghi âm/nhận xét đã có cho tình huống này.
+        if (window.speakingGrading && item) {
+            window.speakingGrading.attachSubmitUI({
+                itemType: 'ls1_opener',
+                itemKey: item.id,
+                itemLabel: item.situation || targetText,
+                sendBtn: document.getElementById('ls2-rec-send-btn'),
+                statusEl: document.getElementById('ls2-rec-send-status'),
+                commentsEl: document.getElementById('ls2-rec-comments'),
+                getBlob: () => lastBlob,
+                getMime: () => lastMime
+            });
+        }
     }
 
     // ---------- Tải / lưu ngân hàng tình huống trên Supabase ----------
@@ -24685,14 +25277,23 @@ function toggleCompletion(symbolElement) {
                 </div>
                 <p class="ls-record-status" id="lssh-rec-status"></p>
                 <audio class="ls-record-audio" id="lssh-rec-audio" controls style="display:none;"></audio>
+                <div class="ls-submit-row">
+                    <button type="button" class="kid-btn kid-btn-primary" id="lssh-rec-send-btn">📤 Gửi cho giảng viên chấm</button>
+                    <p class="ls-record-status" id="lssh-rec-send-status"></p>
+                </div>
+                <div class="spk-item-comments" id="lssh-rec-comments"></div>
             </div>
         `;
     }
-    function lsshWireRecordBox() {
+    function lsshWireRecordBox(item) {
         const btn     = document.getElementById('lssh-rec-btn');
         const status  = document.getElementById('lssh-rec-status');
         const audioEl = document.getElementById('lssh-rec-audio');
         if (!btn) return;
+
+        let lastBlob = null;
+        let lastMime = 'audio/webm';
+
         btn.addEventListener('click', async () => {
             if (!lsshRecording) {
                 try {
@@ -24701,11 +25302,14 @@ function toggleCompletion(symbolElement) {
                     lsshRecChunks = [];
                     lsshRecorder.ondataavailable = (e) => lsshRecChunks.push(e.data);
                     lsshRecorder.onstop = () => {
-                        const blob = new Blob(lsshRecChunks, { type: 'audio/webm' });
-                        audioEl.src = URL.createObjectURL(blob);
+                        lastMime = lsshRecorder.mimeType || 'audio/webm';
+                        lastBlob = new Blob(lsshRecChunks, { type: lastMime });
+                        audioEl.src = URL.createObjectURL(lastBlob);
                         audioEl.style.display = 'block';
                         status.textContent = '✅ Đã ghi âm xong — nghe lại rồi so với bản gốc ở trên nhé.';
                         if (lsshRecStream) { lsshRecStream.getTracks().forEach(t => t.stop()); lsshRecStream = null; }
+                        const sendBtn = document.getElementById('lssh-rec-send-btn');
+                        if (sendBtn) sendBtn.disabled = false;
                     };
                     lsshRecorder.start();
                     lsshRecording = true;
@@ -24723,6 +25327,20 @@ function toggleCompletion(symbolElement) {
                 btn.classList.remove('is-recording');
             }
         });
+
+        // [MỚI] Gửi ghi âm cho giảng viên chấm + hiện danh sách ghi âm/nhận xét đã có cho đoạn này.
+        if (window.speakingGrading && item) {
+            window.speakingGrading.attachSubmitUI({
+                itemType: 'ls2_shadow',
+                itemKey: item.id,
+                itemLabel: item.text,
+                sendBtn: document.getElementById('lssh-rec-send-btn'),
+                statusEl: document.getElementById('lssh-rec-send-status'),
+                commentsEl: document.getElementById('lssh-rec-comments'),
+                getBlob: () => lastBlob,
+                getMime: () => lastMime
+            });
+        }
     }
 
     // ---------- Tải / lưu ngân hàng đoạn hội thoại trên Supabase ----------
@@ -24969,7 +25587,7 @@ function toggleCompletion(symbolElement) {
         document.getElementById('lssh-play-1').addEventListener('click', () => lsshPlayAt(q, 1));
         document.getElementById('lssh-play-075').addEventListener('click', () => lsshPlayAt(q, 0.75));
         document.getElementById('lssh-play-05').addEventListener('click', () => lsshPlayAt(q, 0.5));
-        lsshWireRecordBox();
+        lsshWireRecordBox(q);
 
         const isLast = lsshState.index + 1 >= lsshState.items.length;
         lsshPracticeControls.innerHTML = `<button type="button" class="kid-btn kid-btn-primary" id="lssh-next-btn">${isLast ? '🏁 Hoàn thành' : '➡️ Đoạn tiếp theo'}</button>`;
@@ -25118,11 +25736,15 @@ function toggleCompletion(symbolElement) {
         if (lsmtRecStream) { lsmtRecStream.getTracks().forEach(t => t.stop()); lsmtRecStream = null; }
         lsmtRecording = false;
     }
-    function lsmtWireRecordBox() {
+    function lsmtWireRecordBox(item) {
         const btn     = document.getElementById('lsmt-rec-btn');
         const status  = document.getElementById('lsmt-rec-status');
         const audioEl = document.getElementById('lsmt-rec-audio');
         if (!btn) return;
+
+        let lastBlob = null;
+        let lastMime = 'audio/webm';
+
         btn.addEventListener('click', async () => {
             if (!lsmtRecording) {
                 try {
@@ -25131,11 +25753,14 @@ function toggleCompletion(symbolElement) {
                     lsmtRecChunks = [];
                     lsmtRecorder.ondataavailable = (e) => lsmtRecChunks.push(e.data);
                     lsmtRecorder.onstop = () => {
-                        const blob = new Blob(lsmtRecChunks, { type: 'audio/webm' });
-                        audioEl.src = URL.createObjectURL(blob);
+                        lastMime = lsmtRecorder.mimeType || 'audio/webm';
+                        lastBlob = new Blob(lsmtRecChunks, { type: lastMime });
+                        audioEl.src = URL.createObjectURL(lastBlob);
                         audioEl.style.display = 'block';
                         status.textContent = '✅ Đã ghi âm xong — bấm "Xem đoạn văn mẫu" bên dưới để so sánh.';
                         if (lsmtRecStream) { lsmtRecStream.getTracks().forEach(t => t.stop()); lsmtRecStream = null; }
+                        const sendBtn = document.getElementById('lsmt-rec-send-btn');
+                        if (sendBtn) sendBtn.disabled = false;
                     };
                     lsmtRecorder.start();
                     lsmtRecording = true;
@@ -25153,6 +25778,20 @@ function toggleCompletion(symbolElement) {
                 btn.classList.remove('is-recording');
             }
         });
+
+        // [MỚI] Gửi ghi âm cho giảng viên chấm + hiện danh sách ghi âm/nhận xét đã có cho chuỗi này.
+        if (window.speakingGrading && item) {
+            window.speakingGrading.attachSubmitUI({
+                itemType: 'ls2_narrate',
+                itemKey: item.id,
+                itemLabel: item.topic_vi || (item.steps && item.steps[0] && item.steps[0].text_en) || 'Miêu tả sự việc',
+                sendBtn: document.getElementById('lsmt-rec-send-btn'),
+                statusEl: document.getElementById('lsmt-rec-send-status'),
+                commentsEl: document.getElementById('lsmt-rec-comments'),
+                getBlob: () => lastBlob,
+                getMime: () => lastMime
+            });
+        }
     }
 
     // ---------- Tải / lưu ngân hàng chuỗi sự việc trên Supabase ----------
@@ -25477,6 +26116,11 @@ function toggleCompletion(symbolElement) {
                 </div>
                 <p class="ls-record-status" id="lsmt-rec-status"></p>
                 <audio class="ls-record-audio" id="lsmt-rec-audio" controls style="display:none;"></audio>
+                <div class="ls-submit-row">
+                    <button type="button" class="kid-btn kid-btn-primary" id="lsmt-rec-send-btn">📤 Gửi cho giảng viên chấm</button>
+                    <p class="ls-record-status" id="lsmt-rec-send-status"></p>
+                </div>
+                <div class="spk-item-comments" id="lsmt-rec-comments"></div>
             </div>
             <div style="text-align:center; margin-top:14px;">
                 <button type="button" class="kid-btn" id="lsmt-reveal-btn">🔎 Xem đoạn văn mẫu</button>
@@ -25489,7 +26133,7 @@ function toggleCompletion(symbolElement) {
                 </div>
             </div>
         `;
-        lsmtWireRecordBox();
+        lsmtWireRecordBox(q);
         document.getElementById('lsmt-reveal-btn').addEventListener('click', () => {
             document.getElementById('lsmt-sample-box').style.display = 'block';
             document.getElementById('lsmt-reveal-btn').style.display = 'none';
@@ -25888,11 +26532,15 @@ function toggleCompletion(symbolElement) {
         if (lsareaRecStream) { lsareaRecStream.getTracks().forEach(t => t.stop()); lsareaRecStream = null; }
         lsareaRecording = false;
     }
-    function lsareaWireRecordBox() {
+    function lsareaWireRecordBox(item) {
         const btn     = document.getElementById('lsarea-rec-btn');
         const status  = document.getElementById('lsarea-rec-status');
         const audioEl = document.getElementById('lsarea-rec-audio');
         if (!btn) return;
+
+        let lastBlob = null;
+        let lastMime = 'audio/webm';
+
         btn.addEventListener('click', async () => {
             if (!lsareaRecording) {
                 try {
@@ -25901,11 +26549,14 @@ function toggleCompletion(symbolElement) {
                     lsareaRecChunks = [];
                     lsareaRecorder.ondataavailable = (e) => lsareaRecChunks.push(e.data);
                     lsareaRecorder.onstop = () => {
-                        const blob = new Blob(lsareaRecChunks, { type: 'audio/webm' });
-                        audioEl.src = URL.createObjectURL(blob);
+                        lastMime = lsareaRecorder.mimeType || 'audio/webm';
+                        lastBlob = new Blob(lsareaRecChunks, { type: lastMime });
+                        audioEl.src = URL.createObjectURL(lastBlob);
                         audioEl.style.display = 'block';
                         status.textContent = '✅ Đã ghi âm xong — nghe lại để tự đánh giá phần trình bày của bạn.';
                         if (lsareaRecStream) { lsareaRecStream.getTracks().forEach(t => t.stop()); lsareaRecStream = null; }
+                        const sendBtn = document.getElementById('lsarea-rec-send-btn');
+                        if (sendBtn) sendBtn.disabled = false;
                     };
                     lsareaRecorder.start();
                     lsareaRecording = true;
@@ -25923,6 +26574,20 @@ function toggleCompletion(symbolElement) {
                 btn.classList.remove('is-recording');
             }
         });
+
+        // [MỚI] Gửi ghi âm cho giảng viên chấm + hiện danh sách ghi âm/nhận xét đã có cho đề này.
+        if (window.speakingGrading && item) {
+            window.speakingGrading.attachSubmitUI({
+                itemType: 'ls3_topic',
+                itemKey: item.id,
+                itemLabel: item.topic_en,
+                sendBtn: document.getElementById('lsarea-rec-send-btn'),
+                statusEl: document.getElementById('lsarea-rec-send-status'),
+                commentsEl: document.getElementById('lsarea-rec-comments'),
+                getBlob: () => lastBlob,
+                getMime: () => lastMime
+            });
+        }
     }
 
     async function lsareaStartPractice() {
@@ -26000,10 +26665,15 @@ function toggleCompletion(symbolElement) {
                 </div>
                 <p class="ls-record-status" id="lsarea-rec-status"></p>
                 <audio class="ls-record-audio" id="lsarea-rec-audio" controls style="display:none;"></audio>
+                <div class="ls-submit-row">
+                    <button type="button" class="kid-btn kid-btn-primary" id="lsarea-rec-send-btn">📤 Gửi cho giảng viên chấm</button>
+                    <p class="ls-record-status" id="lsarea-rec-send-status"></p>
+                </div>
+                <div class="spk-item-comments" id="lsarea-rec-comments"></div>
             </div>
         `;
         document.getElementById('lsarea-timer-btn').addEventListener('click', lsareaToggleTimer);
-        lsareaWireRecordBox();
+        lsareaWireRecordBox(q);
 
         const isLast = lsareaState.index + 1 >= lsareaState.items.length;
         lsareaPracticeControls.innerHTML = `<button type="button" class="kid-btn kid-btn-primary" id="lsarea-next-btn">${isLast ? '🏁 Hoàn thành' : '➡️ Đề tiếp theo'}</button>`;

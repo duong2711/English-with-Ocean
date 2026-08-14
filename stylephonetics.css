@@ -2555,13 +2555,14 @@ h3 { font-size:0.95rem; font-weight:600; color:var(--text); margin:0 0 8px; }
     .grammar-panel-body {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        grid-template-rows: 1fr auto;
+        grid-template-rows: 1fr auto auto;
         align-items: stretch;
         gap: 22px;
     }
     .grammar-video-block  { grid-column: 1; grid-row: 1; }
-    .grammar-images-block { grid-column: 2; grid-row: 1 / 3; }
+    .grammar-images-block { grid-column: 2; grid-row: 1 / 4; }
     .grammar-quiz-block   { grid-column: 1; grid-row: 2; }
+    .grammar-doc-block    { grid-column: 1; grid-row: 3; }
 }
 
 /* Label section */
@@ -2668,6 +2669,22 @@ h3 { font-size:0.95rem; font-weight:600; color:var(--text); margin:0 0 8px; }
 }
 .grammar-detail-btn:active {
     transform: translateY(0);
+}
+
+/* [MỚI] Tài liệu học / làm bài (Google Docs/Sheets) — cùng khung với khối video/quiz */
+.grammar-doc-block {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: var(--shadow-xs);
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+}
+.grammar-doc-block .grammar-single-image {
+    height: 260px;
 }
 
 /* Quiz block - căn giữa nút */
@@ -7182,6 +7199,14 @@ mark.irt-highlight { background: #fff59d; padding: 0 1px; border-radius: 2px; cu
 }
 .ls-record-status { font-size: 12.5px; opacity: .75; margin: 10px 0 0; min-height: 16px; }
 .ls-record-audio { display: block; width: 100%; margin-top: 10px; }
+
+/* [MỚI] Nút "Gửi cho giảng viên chấm" + danh sách ghi âm/nhận xét đã gửi — thêm vào cuối mọi
+   khối .ls-record-box (dùng chung cho 5 dạng bài luyện Nói). */
+.ls-submit-row { margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--border-strong); }
+.ls-submit-row .kid-btn:disabled { opacity: .5; cursor: default; }
+.spk-item-comments { text-align: left; margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+.spk-item-comments:empty { margin-top: 0; }
+.spk-comment-meta { font-size: 0.78rem; font-weight: 600; color: var(--text-light); margin: 0 0 6px; }
 
 /* ===================================================================
    ===== GIAI ĐOẠN 2 — "Shadowing" & "Miêu tả sự việc" =====

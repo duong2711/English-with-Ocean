@@ -58,7 +58,7 @@
                 </button>
                 <div class="header-tab-dropdown-menu">
                     <button class="header-tab-btn main-tab-btn" data-main-target="tab-luyen-nghe">🎧 Nghe</button>
-                    <button class="header-tab-btn main-tab-btn" data-main-target="tab-luyen-noi">🗣️ Nói</button>
+                    <button class="header-tab-btn main-tab-btn" data-main-target="tab-luyen-noi">🗣️ Nói<span id="speaking-tab-badge" class="tab-badge-count" style="display:none;">0</span></button>
                     <button class="header-tab-btn main-tab-btn" data-main-target="tab-luyen-doc">📖 Đọc</button>
                     <button class="header-tab-btn main-tab-btn" data-main-target="tab-luyen-viet">✍️ Viết</button>
                 </div>
@@ -560,6 +560,21 @@
                         <div class="grammar-edit-bar" id="grammar-edit-drive-bar" style="display:none;">
                             <input type="text" id="grammar-edit-drive-input" class="grammar-edit-input" placeholder="Dán link chia sẻ Google Drive...">
                             <button type="button" id="grammar-edit-drive-btn" class="grammar-admin-btn">Cập nhật ảnh</button>
+                        </div>
+                    </div>
+                    <!-- [MỚI] Tài liệu học / làm bài — giảng viên dán link Google Docs hoặc
+                         Google Sheets (cần bật chia sẻ "Bất kỳ ai có đường liên kết"), học viên
+                         xem/làm bài ngay trong khung xem trước hoặc mở toàn màn hình. -->
+                    <div class="grammar-doc-block" id="grammar-doc-block">
+                        <h4 class="grammar-section-label">📄 Tài liệu học / làm bài (Google Docs, Sheets...)</h4>
+                        <div class="grammar-single-image">
+                            <iframe id="grammar-doc-iframe" src="about:blank" allowfullscreen></iframe>
+                        </div>
+                        <button class="grammar-detail-btn" id="grammar-doc-open-btn" data-doc-url="">📄 Mở tài liệu</button>
+                        <!-- Khung dán link Google Docs/Sheets mới — chỉ hiện với giảng viên -->
+                        <div class="grammar-edit-bar" id="grammar-edit-doc-bar" style="display:none;">
+                            <input type="text" id="grammar-edit-doc-input" class="grammar-edit-input" placeholder="Dán link Google Docs/Sheets (đã bật chia sẻ 'Bất kỳ ai có đường liên kết')...">
+                            <button type="button" id="grammar-edit-doc-btn" class="grammar-admin-btn">Cập nhật tài liệu</button>
                         </div>
                     </div>
                     <div class="grammar-quiz-block">
@@ -2152,6 +2167,18 @@
 
     <div id="tab-luyen-noi" class="main-tab-content">
         <h2>🗣️ Luyện Nói</h2>
+
+        <!-- [MỚI] Bảng thông báo "ghi âm luyện nói đang chờ chấm" — CHỈ hiện với tài khoản
+             giảng viên, gộp chung cả 5 dạng bài (Hỏi-đáp / Tình huống / Shadowing / Kể chuyện /
+             Đề tự do). Giảng viên nghe + chấm đúng-sai + để lại nhận xét NGAY TẠI ĐÂY (không cần
+             mở đúng phiên luyện tập của học viên, vì câu/đề được rút ngẫu nhiên mỗi lượt). -->
+        <div id="speaking-grading-panel" class="phonam-grading-panel" style="display:none;">
+            <div class="phonam-grading-panel-header">
+                <span class="phonam-grading-panel-title">🔔 Có <strong id="speaking-grading-count">0</strong> ghi âm luyện nói đang chờ chấm</span>
+                <button type="button" id="speaking-grading-toggle" class="phonam-grading-toggle">Xem danh sách ▾</button>
+            </div>
+            <div id="speaking-grading-list" class="phonam-grading-list"></div>
+        </div>
 
         <!-- ===== Danh sách giai đoạn luyện nói (hiện tại có Giai đoạn 2 & 3) ===== -->
         <div class="folder-grid" id="ls-stage-folder-grid">
