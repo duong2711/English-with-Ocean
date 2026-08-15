@@ -13201,7 +13201,7 @@ function toggleCompletion(symbolElement) {
             block.appendChild(img);
         }
         const passage = document.createElement('div');
-        passage.className = 'ctest-take-instructions';
+        passage.className = 'ctest-take-instructions ctest-take-passage';
         passage.innerHTML = q.passage || '';
         block.appendChild(passage);
         (q.sub_questions || []).forEach((sq, i) => {
@@ -13684,7 +13684,7 @@ function toggleCompletion(symbolElement) {
             block.appendChild(img);
         }
         const passage = document.createElement('div');
-        passage.className = 'ctest-take-instructions';
+        passage.className = 'ctest-take-instructions ctest-take-passage';
         passage.innerHTML = q.passage || '';
         block.appendChild(passage);
         let correct = 0, total = 0;

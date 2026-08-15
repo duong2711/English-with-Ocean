@@ -5707,6 +5707,13 @@ h3.news-editable:focus,
     border-bottom: 2px solid var(--border);
     padding-bottom: 12px;
     margin-bottom: 10px;
+    /* [MOI] Dinh (sticky) o dau khi cuon, de dong ho dem nguoc va tieu de
+       bai luon nhin thay duoc du hoc vien cuon xuong cau nao. Can nen
+       (background) vi noi dung cau hoi se cuon qua ben duoi no. */
+    position: sticky;
+    top: calc(var(--total-top) + 14px);
+    z-index: 5;
+    background: var(--surface);
 }
 .ctest-take-timer {
     font-weight: 800;
@@ -5749,6 +5756,14 @@ h3.news-editable:focus,
     padding: 8px 12px;
     border-radius: 6px;
     margin-bottom: 14px;
+}
+/* Đoạn văn đọc hiểu (reading passage) dùng chung khung với .ctest-take-instructions
+   nhưng cần chữ to, rõ, dễ đọc — không nhỏ/mờ như một dòng hướng dẫn ngắn. */
+.ctest-take-passage {
+    font-size: 1rem;
+    color: var(--text);
+    line-height: 1.7;
+    padding: 14px 16px;
 }
 
 .ctest-take-qblock {
