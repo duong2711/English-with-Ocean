@@ -5707,13 +5707,6 @@ h3.news-editable:focus,
     border-bottom: 2px solid var(--border);
     padding-bottom: 12px;
     margin-bottom: 10px;
-    /* [MOI] Dinh (sticky) o dau khi cuon, de dong ho dem nguoc va tieu de
-       bai luon nhin thay duoc du hoc vien cuon xuong cau nao. Can nen
-       (background) vi noi dung cau hoi se cuon qua ben duoi no. */
-    position: sticky;
-    top: calc(var(--total-top) + 14px);
-    z-index: 5;
-    background: var(--surface);
 }
 .ctest-take-timer {
     font-weight: 800;
@@ -5722,6 +5715,17 @@ h3.news-editable:focus,
     background: var(--primary-light);
     padding: 6px 14px;
     border-radius: 20px;
+    /* [MOI] Chi rieng dong ho (khong dinh ca tieu de/nut Quay lai) duoc
+       ghim co dinh tren man hinh khi cuon, de hoc vien luon thay duoc
+       thoi gian con lai du dang cuon o cau nao. Dung position:fixed
+       (khong phai sticky) vi khung cha .ctest-take-header rat thap,
+       neu dung sticky thi dong ho se het dinh ngay sau vai chuc px
+       dau tien cuon qua. */
+    position: fixed;
+    top: calc(var(--total-top) + 10px);
+    right: 14px;
+    z-index: 500;
+    box-shadow: 0 3px 12px rgba(30,42,69,0.18);
 }
 .ctest-take-timer.ctest-timer-low { color: var(--danger-dark); background: #fee2e2; animation: ctestPulse 1s infinite; }
 @keyframes ctestPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.55; } }
