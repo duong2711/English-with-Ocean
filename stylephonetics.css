@@ -2192,6 +2192,83 @@ h3 { font-size:0.95rem; font-weight:600; color:var(--text); margin:0 0 8px; }
 .slot.available { background: linear-gradient(135deg, var(--success), var(--success-dark)) !important; }
 .slot:not(.available):hover { background: var(--primary-light) !important; }
 
+.schedule-block {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    padding: 4px 5px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    line-height: 1.25;
+    cursor: pointer;
+    overflow: hidden;
+    text-align: left;
+    word-break: break-word;
+    box-shadow: var(--shadow-xs);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    z-index: 5;
+}
+.schedule-block.empty-note {
+    background: linear-gradient(135deg, var(--success), var(--success-dark));
+    font-style: italic;
+    opacity: 0.9;
+}
+/* [MỚI] Học viên xem lịch (không ở chế độ chỉnh sửa): ô ghi chú của chính mình -> xanh lá */
+.schedule-block.own-note {
+    background: linear-gradient(135deg, var(--success), var(--success-dark));
+    font-style: normal;
+    opacity: 1;
+}
+/* [MỚI] Ô ghi chú thuộc về học viên khác -> xám, không nổi bật bằng ô của chính mình */
+.schedule-block.other-note {
+    background: linear-gradient(135deg, #9ca3af, #6b7280);
+    color: #fff;
+    font-style: normal;
+    opacity: 0.9;
+}
+.schedule-block:hover { filter: brightness(1.06); }
+
+/* [MỚI] Hàng gộp thể hiện 1 khoảng khung giờ TRỐNG liên tiếp (không có ghi chú nào ở bất kỳ
+   ngày nào) — chỉ hiện bên học viên, giúp bảng lịch gọn và dễ nhìn hơn. Bấm vào để mở chi tiết. */
+.row-collapse-summary {
+    background: var(--surface-2);
+    border: 1.5px dashed var(--border-strong);
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 4px;
+    z-index: 4;
+    user-select: none;
+    transition: background 0.1s, color 0.1s;
+}
+.row-collapse-summary:hover { background: var(--primary-light); color: var(--primary-dark); }
+
+/* Ô giờ đầu tiên của 1 nhóm khung giờ trống đã được mở ra xem -> bấm lại để thu gọn.
+   [CẬP NHẬT] Style rõ ràng như 1 nút bấm (nền màu, chữ đậm, thêm nhãn "▲ Thu gọn"
+   bên dưới giờ) để học viên dễ nhận ra và bấm thu gọn lại, thay vì chỉ gạch chân mờ. */
+.time-cell.row-collapse-toggle {
+    cursor: pointer;
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    font-weight: 700;
+    border-radius: 4px;
+    flex-direction: column;
+    gap: 1px;
+    transition: background 0.1s, color 0.1s;
+}
+.time-cell.row-collapse-toggle::after {
+    content: '▲ Thu gọn';
+    font-size: 0.56rem;
+    font-weight: 600;
+    letter-spacing: -0.2px;
+}
+.time-cell.row-collapse-toggle:hover { background: var(--primary); color: #fff; }
+
 /* =====================================================
    TAB FOLDER
    ===================================================== */
@@ -5615,6 +5692,21 @@ h3.news-editable:focus,
 .ctest-image-field { margin-top: 8px; }
 .ctest-image-field input { width: 100%; }
 .ctest-image-preview { max-width: 220px; max-height: 140px; border-radius: 8px; margin-top: 6px; display: block; }
+.ctest-image-scale-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.ctest-image-scale-label { font-size: 0.8rem; color: var(--text-muted); white-space: nowrap; }
+.ctest-image-scale-slider { flex: 1; min-width: 0; }
+.ctest-image-scale-value { font-size: 0.8rem; color: var(--text-muted); min-width: 52px; text-align: right; }
+.ctest-image-scale-reset {
+    font-size: 0.75rem;
+    padding: 3px 9px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-muted);
+    cursor: pointer;
+    white-space: nowrap;
+}
+.ctest-image-scale-reset:hover { background: var(--primary-light); color: var(--primary-dark); }
 
 .ctest-option-row {
     display: flex;

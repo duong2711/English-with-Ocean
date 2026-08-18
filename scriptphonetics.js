@@ -464,6 +464,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const impersonationTargetEmailEl = document.getElementById('impersonation-target-email');
     const impersonationReturnBtn = document.getElementById('impersonation-return-btn');
 
+    // [MỚI] Khu vực Lịch học: nút Mở khóa/Lưu/Đặt lại + badge trạng thái CHỈ dành cho
+    // giảng viên. Học viên chỉ xem lịch, không thấy các điều khiển chỉnh sửa này.
+    const lichHocAdminControls = document.getElementById('lich-hoc-admin-controls');
+    const lichHocStatusBadge = document.getElementById('status-badge');
+
     let currentUserId = null; 
     let currentEmail = ''; 
     let currentDisplayName = ''; // [MỚI] tên hiển thị tùy chỉnh (user_metadata.display_name)
@@ -750,6 +755,20 @@ document.addEventListener('DOMContentLoaded', () => {
             // đang tự mình bị "xem" — trường hợp này không xảy ra vì isTeacher sẽ là false
             // ngay khi phiên đăng nhập là của học viên đang bị xem).
             if (teacherImpersonateBtn) teacherImpersonateBtn.style.display = isTeacher ? 'block' : 'none';
+            // [MỚI] Học viên: ẩn hẳn cụm nút Mở khóa/Lưu lịch/Đặt lại ô trống + badge
+            // trạng thái (CHỈ XEM / ĐANG CHỈNH SỬA) — các điều khiển này chỉ giảng viên dùng.
+            if (lichHocAdminControls) lichHocAdminControls.style.display = isTeacher ? 'flex' : 'none';
+            if (lichHocStatusBadge) lichHocStatusBadge.style.display = isTeacher ? '' : 'none';
+            if (!isTeacher) {
+                // Học viên không có khái niệm "khóa/mở khóa" nên bỏ luôn hiệu ứng mờ (opacity)
+                // của chế độ khóa để lịch hiển thị rõ ràng, dễ đọc.
+                const lichHocGrid = document.getElementById('schedule-grid');
+                if (lichHocGrid) lichHocGrid.classList.remove('locked');
+            }
+            // [MỚI] Vẽ lại lịch theo đúng chế độ xem (giảng viên thấy đầy đủ, học viên thấy
+            // đã thu gọn khung giờ trống) ngay khi biết chắc đây là tài khoản giảng viên hay
+            // học viên (isTeacher vừa được xác định ở trên).
+            if (typeof window.__lichHocRedraw === 'function') window.__lichHocRedraw();
             // [MỚI] Kiểm tra ngay xem có bài kiểm tra riêng nào chưa làm để hiện badge + thông báo
             lastKnownUnfinishedCtestCount = null; // mỗi lần đăng nhập mới, tính lại từ đầu
             refreshCtestBadge();
@@ -800,6 +819,9 @@ document.addEventListener('DOMContentLoaded', () => {
             currentAccountCreatedAt = null;
             isTeacher = false;
             if (teacherImpersonateBtn) teacherImpersonateBtn.style.display = 'none';
+            if (lichHocAdminControls) lichHocAdminControls.style.display = 'none';
+            if (lichHocStatusBadge) lichHocStatusBadge.style.display = 'none';
+            if (typeof window.__lichHocRedraw === 'function') window.__lichHocRedraw();
             // [MỚI] Không còn phiên đăng nhập nào -> chắc chắn không còn đang "xem như học viên"
             isImpersonating = false;
             impersonationTargetEmail = '';
@@ -3388,6 +3410,8 @@ function toggleCompletion(symbolElement) {
     let isAdmin = false;
     let isDragging = false;
     let dragMode = null;
+    let dragTouchedCells = [];   // các ô .slot vừa được bật 'available' trong lượt kéo hiện tại
+    let scheduleBlocks = [];     // { id, day, times:[...], note } - các vùng đã gộp + ghi chú
 
     // Mở khóa admin
     window.xuLyMoKhoa = function() {
@@ -3399,7 +3423,7 @@ function toggleCompletion(symbolElement) {
             const badge = document.getElementById('status-badge');
             if (grid) grid.classList.remove('locked');
             if (badge) { badge.textContent = "ĐANG CHẾ ĐỘ CHỈNH SỬA"; badge.className = "status-badge unlocked-msg"; }
-            alert("Đã mở khóa! Kéo để chọn nhiều ô.");
+            alert("Đã mở khóa! Kéo để tô một vùng, thả chuột ra sẽ được hỏi ghi chú (VD: tên lớp/nhóm) rồi email học viên (có thể nhập nhiều email cách nhau bằng dấu phẩy để giao 1 khung giờ cho cả nhóm). Chạm vào một vùng đã tô để sửa/xoá ghi chú.");
         } else if (pass !== null) {
             alert("Sai mật khẩu!");
         }
@@ -3408,10 +3432,8 @@ function toggleCompletion(symbolElement) {
     // Lưu lịch
     window.xuLyLuuLich = async function() {
         if (!isAdmin) { alert("Vui lòng mở khóa trước!"); return; }
-        const availableSlots = Array.from(document.querySelectorAll('.slot.available')).map(el => ({
-            day: el.dataset.day, time: el.dataset.time
-        }));
-        const { error } = await sb.from('schedule_data').upsert({ id: 1, slots: availableSlots });
+        const payload = scheduleBlocks.map(b => ({ day: b.day, times: b.times, note: b.note || '', studentEmails: b.studentEmails || [] }));
+        const { error } = await sb.from('schedule_data').upsert({ id: 1, slots: payload });
         if (error) alert("Lỗi lưu: " + error.message);
         else alert("Đã lưu lịch thành công!");
     };
@@ -3421,30 +3443,345 @@ function toggleCompletion(symbolElement) {
         const grid = document.getElementById('schedule-grid');
         if (!grid) return;
 
-        // Xóa các ô cũ nếu inline script HTML đã tạo trước
-        Array.from(grid.querySelectorAll('.slot, .time-cell')).forEach(el => el.remove());
+        // Xóa các ô/khối cũ nếu có (giữ lại 8 ô .header)
+        Array.from(grid.querySelectorAll('.slot, .time-cell, .schedule-block')).forEach(el => el.remove());
+
+        // Gán vị trí cố định cho các ô tiêu đề (grid tường minh) để không bị xáo trộn
+        // khi sau này ta chèn thêm các khối .schedule-block có vị trí tường minh đè lên lưới.
+        Array.from(grid.querySelectorAll('.header')).forEach((h, i) => {
+            h.style.gridColumn = String(i + 1);
+            h.style.gridRow = '1';
+        });
+
+        const timeList = [];        // danh sách "HH:MM" theo thứ tự
+        const timeRowIndex = {};    // "HH:MM" -> số dòng lưới (grid row line)
+        let rowCounter = 2;         // dòng 1 dành cho header
 
         for (let h = 6; h <= 22; h++) {
             for (let m = 0; m < 60; m += 30) {
                 const time = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+                timeList.push(time);
+                timeRowIndex[time] = rowCounter;
+
                 const tc = document.createElement('div');
                 tc.className = 'time-cell';
+                tc.dataset.time = time; // [MỚI] để có thể truy vấn/ẩn-hiện theo giờ khi thu gọn hàng trống
                 tc.textContent = time;
+                tc.style.gridColumn = '1';
+                tc.style.gridRow = String(rowCounter);
                 grid.appendChild(tc);
+
                 for (let d = 0; d < 7; d++) {
                     const slot = document.createElement('div');
                     slot.className = 'slot';
                     slot.dataset.day = d;
                     slot.dataset.time = time;
+                    slot.style.gridColumn = String(d + 2);
+                    slot.style.gridRow = String(rowCounter);
                     grid.appendChild(slot);
                 }
+                rowCounter++;
             }
+        }
+
+        function cellsOfBlock(block) {
+            return block.times
+                .map(t => grid.querySelector(`.slot[data-day="${block.day}"][data-time="${t}"]`))
+                .filter(Boolean);
+        }
+
+        // [MỚI] Tính trước tập các mốc giờ đang bị GỘP lại (không có lịch liên quan đến học viên
+        // đang xem, và học viên chưa bấm mở nhóm đó ra) — dùng chung cho cả việc vẽ khối lịch
+        // (renderBlock) và việc ẩn/hiện hàng (updateEmptyRowCollapsing) để 2 nơi luôn khớp nhau.
+        function computeCollapsedTimes() {
+            const collapsedTimes = new Set();
+            if (isTeacher) return collapsedTimes; // giảng viên luôn xem đầy đủ, không gộp gì cả
+
+            const occupied = {};
+            timeList.forEach(t => { occupied[t] = false; });
+            scheduleBlocks.forEach(block => {
+                const emails = Array.isArray(block.studentEmails) ? block.studentEmails.filter(Boolean) : [];
+                const isRelevant = !emails.length ||
+                    (currentEmail && emails.some(e => e.trim().toLowerCase() === currentEmail.trim().toLowerCase()));
+                if (!isRelevant) return; // của học viên khác -> bỏ qua, không tính là "có lịch"
+                block.times.forEach(t => { occupied[t] = true; });
+            });
+
+            let i = 0;
+            while (i < timeList.length) {
+                if (occupied[timeList[i]]) { i++; continue; }
+                let j = i;
+                while (j < timeList.length && !occupied[timeList[j]]) j++;
+                const run = timeList.slice(i, j);
+                const groupKey = `${run[0]}~${run[run.length - 1]}`;
+                // Chỉ coi là "đang gộp" khi nhóm có từ 2 khung giờ trở lên VÀ học viên chưa bấm mở
+                if (run.length > 1 && !collapsedEmptyGroupsExpanded.has(groupKey)) {
+                    run.forEach(t => collapsedTimes.add(t));
+                }
+                i = j;
+            }
+            return collapsedTimes;
+        }
+
+        // Vẽ 1 khối đã gộp (đè lên các ô .slot tương ứng, gộp thành 1 vùng liền)
+        // [MỚI] Màu của ô phụ thuộc vào người đang xem:
+        //  - Ô chưa có ghi chú -> luôn mặc định (xanh lá nhạt, chữ nghiêng "Chạm để ghi chú") cho mọi người
+        //  - Đang ở chế độ chỉnh sửa (isAdmin) hoặc là giảng viên -> thấy màu trung tính như cũ để dễ quản lý
+        //  - Học viên xem (không chỉnh sửa): ô ghi chú gán đúng email của mình -> XANH LÁ
+        //  - Học viên xem, ô ghi chú gán cho học viên khác -> XÁM, NHƯNG nếu khung giờ đó đang nằm
+        //    trong vùng bị gộp ("Không có lịch — bấm để xem") thì tạm thời không vẽ ở đây; khối sẽ
+        //    tự hiện ra khi học viên bấm mở rộng nhóm đó (xem computeCollapsedTimes + redrawBlocks).
+        function renderBlock(block, collapsedTimes) {
+            const times = block.times.slice().sort();
+            block.times = times;
+            const startRow = timeRowIndex[times[0]];
+            const endRow = timeRowIndex[times[times.length - 1]] + 1;
+            if (startRow == null || endRow == null) return; // dữ liệu cũ không khớp khung giờ hiện tại
+
+            const hasNote = block.note && block.note.trim();
+            const emailList = Array.isArray(block.studentEmails) ? block.studentEmails.filter(Boolean) : [];
+            const isOwn = currentEmail && emailList.some(e => e && e.trim().toLowerCase() === currentEmail.trim().toLowerCase());
+            const isOtherStudent = !isAdmin && !isTeacher && hasNote && emailList.length && !isOwn;
+
+            if (isOtherStudent && times.every(t => collapsedTimes.has(t))) {
+                return; // đang nằm gọn trong vùng "Không có lịch (bấm để xem)" -> chưa vẽ vội
+            }
+
+            cellsOfBlock(block).forEach(el => el.classList.add('available'));
+
+            let extraClass = '';
+            if (!hasNote) {
+                extraClass = 'empty-note';
+            } else if (isAdmin || isTeacher) {
+                extraClass = ''; // giảng viên luôn thấy màu trung tính, không phân biệt xanh/xám
+            } else if (isOwn) {
+                extraClass = 'own-note';
+            } else {
+                extraClass = 'other-note';
+            }
+
+            const div = document.createElement('div');
+            div.className = 'schedule-block' + (extraClass ? ' ' + extraClass : '');
+            div.dataset.blockId = block.id;
+            div.style.gridColumn = String(block.day + 2);
+            div.style.gridRow = `${startRow} / ${endRow}`;
+            div.textContent = hasNote ? block.note : 'Chạm để ghi chú';
+            // [MỚI] Giảng viên (hoặc đang ở chế độ chỉnh sửa) thấy thêm danh sách email học viên
+            // được giao khung giờ này trong tooltip, để dễ kiểm tra đã gán đúng nhóm chưa.
+            div.title = `${times[0]} - ${times[times.length - 1]}` +
+                ((isAdmin || isTeacher) && emailList.length ? `\nHọc viên (${emailList.length}): ${emailList.join(', ')}` : '');
+            div.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (!isAdmin) return;
+                editBlock(block);
+            });
+            grid.appendChild(div);
+        }
+
+        function redrawBlocks() {
+            grid.querySelectorAll('.schedule-block').forEach(el => el.remove());
+            grid.querySelectorAll('.slot.available').forEach(el => el.classList.remove('available'));
+            const collapsedTimes = computeCollapsedTimes();
+            scheduleBlocks.forEach(b => renderBlock(b, collapsedTimes));
+            updateEmptyRowCollapsing(); // [MỚI] thu gọn các khung giờ trống (chỉ áp dụng bên học viên)
+        }
+
+        // [MỚI] Ghi nhớ các nhóm khung giờ trống mà học viên đã chủ động bấm mở ra xem
+        // (để khi vẽ lại lịch — VD sau khi giảng viên sửa 1 ô khác — nhóm đó vẫn giữ trạng thái mở).
+        const collapsedEmptyGroupsExpanded = new Set();
+
+        // [MỚI] Thu gọn các khung giờ HOÀN TOÀN TRỐNG (không có ô ghi chú nào ở bất kỳ ngày nào
+        // trong tuần) thành 1 hàng gọn duy nhất để bảng lịch bên học viên đỡ dài, dễ nhìn tổng
+        // quan. Bấm vào hàng gọn đó để mở ra xem chi tiết từng khung giờ trống; khi đã mở, bấm
+        // vào ô giờ đầu tiên của nhóm đó để thu gọn lại. Giảng viên (kể cả lúc không chỉnh sửa)
+        // luôn thấy đầy đủ mọi hàng để còn kéo-chọn khi cần chỉnh sửa lịch.
+        function updateEmptyRowCollapsing() {
+            // Dọn dẹp trạng thái của lần thu/mở trước đó trước khi tính lại từ đầu
+            grid.querySelectorAll('.row-collapse-summary').forEach(el => el.remove());
+            grid.querySelectorAll('.time-cell').forEach(el => {
+                el.classList.remove('row-collapse-toggle');
+                el.onclick = null;
+                el.style.display = '';
+            });
+            grid.querySelectorAll('.slot').forEach(el => { el.style.display = ''; });
+
+            if (isTeacher) return; // giảng viên luôn xem đầy đủ, không thu gọn
+
+            // [CẬP NHẬT] Khung giờ nào có ít nhất 1 khối LỊCH LIÊN QUAN đến học viên đang xem
+            // (của chính học viên đó, hoặc chưa gán học viên nào) ở bất kỳ ngày nào -> coi là
+            // "có lịch". Khối thuộc về (các) học viên KHÁC — không liên quan tới người đang xem —
+            // được coi như KHÔNG có lịch và gộp chung vào phần trống, để bảng lịch bên học viên
+            // gọn hơn, chỉ nổi bật đúng khung giờ của mình.
+            const occupied = {};
+            timeList.forEach(t => { occupied[t] = false; });
+            scheduleBlocks.forEach(block => {
+                const emails = Array.isArray(block.studentEmails) ? block.studentEmails.filter(Boolean) : [];
+                const isRelevant = !emails.length ||
+                    (currentEmail && emails.some(e => e.trim().toLowerCase() === currentEmail.trim().toLowerCase()));
+                if (!isRelevant) return; // của học viên khác -> bỏ qua, không tính là "có lịch"
+                block.times.forEach(t => { occupied[t] = true; });
+            });
+
+            let i = 0;
+            while (i < timeList.length) {
+                if (occupied[timeList[i]]) { i++; continue; }
+                let j = i;
+                while (j < timeList.length && !occupied[timeList[j]]) j++;
+                const run = timeList.slice(i, j); // các mốc giờ trống liên tiếp
+                const groupKey = `${run[0]}~${run[run.length - 1]}`;
+
+                if (collapsedEmptyGroupsExpanded.has(groupKey)) {
+                    // Nhóm này học viên đã bấm mở -> để nguyên các ô, chỉ gắn NÚT thu gọn
+                    // vào ô giờ đầu tiên của nhóm để có thể bấm thu gọn lại (xem CSS
+                    // .time-cell.row-collapse-toggle để thấy kiểu nút bấm rõ ràng hơn).
+                    const startCell = grid.querySelector(`.time-cell[data-time="${run[0]}"]`);
+                    if (startCell) {
+                        startCell.classList.add('row-collapse-toggle');
+                        startCell.title = 'Bấm để thu gọn lại';
+                        startCell.onclick = () => {
+                            collapsedEmptyGroupsExpanded.delete(groupKey);
+                            redrawBlocks();
+                        };
+                    }
+                } else if (run.length > 1) {
+                    // Chỉ thu gọn khi có TỪ 2 khung giờ trống liên tiếp trở lên (1 khung lẻ thì
+                    // để nguyên cho đỡ rối vì thu gọn 1 hàng cũng không giúp gọn hơn bao nhiêu).
+                    run.forEach(t => {
+                        grid.querySelectorAll(`.time-cell[data-time="${t}"], .slot[data-time="${t}"]`)
+                            .forEach(el => { el.style.display = 'none'; });
+                    });
+                    const startRow = timeRowIndex[run[0]];
+                    const endRow = timeRowIndex[run[run.length - 1]] + 1;
+                    const summary = document.createElement('div');
+                    summary.className = 'row-collapse-summary';
+                    summary.style.gridColumn = '1 / -1';
+                    summary.style.gridRow = `${startRow} / ${endRow}`;
+                    summary.textContent = `⋯ ${run[0]} - ${run[run.length - 1]} — Không có lịch (bấm để xem) ⋯`;
+                    summary.addEventListener('click', () => {
+                        collapsedEmptyGroupsExpanded.add(groupKey);
+                        redrawBlocks();
+                    });
+                    grid.appendChild(summary);
+                }
+                i = j;
+            }
+        }
+
+        // [MỚI] Cho phép gọi lại việc vẽ lịch (kèm thu/mở hàng trống) từ bên ngoài closure này —
+        // dùng khi trạng thái đăng nhập (isTeacher) thay đổi, để cập nhật đúng chế độ xem.
+        window.__lichHocRedraw = redrawBlocks;
+
+        // Sửa/xoá ghi chú của 1 vùng đã gộp
+        // [MỚI] Sau khi đặt ghi chú, hỏi thêm email tài khoản học viên sở hữu ô này
+        // (dùng để tô đúng màu xanh lá khi chính học viên đó xem lịch, màu xám cho học viên khác).
+        function editBlock(block) {
+            const result = prompt(
+                "Ghi chú cho khung giờ này (VD: tên học viên) — xoá hết chữ rồi bấm OK để bỏ gộp vùng này:",
+                block.note || ''
+            );
+            if (result === null) return; // bấm Huỷ -> giữ nguyên
+            if (result.trim() === '') {
+                if (confirm("Xoá vùng đã gộp này khỏi lịch?")) {
+                    scheduleBlocks = scheduleBlocks.filter(b => b.id !== block.id);
+                    redrawBlocks();
+                }
+                return;
+            }
+            block.note = result.trim();
+
+            const emailResult = prompt(
+                "Email tài khoản của (các) học viên sở hữu khung giờ này — cách nhau bằng dấu phẩy nếu giao cho nhiều học viên (để hệ thống tô đúng màu xanh lá khi (các) học viên đó xem lịch; để trống nếu không cần gán):",
+                (block.studentEmails || []).join(', ')
+            );
+            if (emailResult !== null) {
+                block.studentEmails = emailResult.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+            }
+
+            redrawBlocks();
+        }
+
+        // [MỚI] Đặt lại tất cả các ô/vùng ĐANG CHƯA CÓ GHI CHÚ về mặc định (nền trắng):
+        // tức là xoá hẳn các vùng đã tô nhưng chưa từng được ghi chú ra khỏi lịch,
+        // trả các ô .slot bên dưới về màu nền trắng mặc định (bỏ class 'available').
+        window.xuLyDatLaiOTrong = function() {
+            if (!isAdmin) { alert("Vui lòng mở khóa trước!"); return; }
+            const emptyIds = new Set(
+                scheduleBlocks.filter(b => !b.note || !b.note.trim()).map(b => b.id)
+            );
+            if (!emptyIds.size) { alert("Không có ô nào đang trống ghi chú."); return; }
+            if (!confirm(`Đặt lại ${emptyIds.size} vùng chưa có ghi chú về mặc định (nền trắng)? Các vùng này sẽ bị xoá khỏi lịch.`)) return;
+            scheduleBlocks = scheduleBlocks.filter(b => !emptyIds.has(b.id));
+            redrawBlocks();
+            alert("Đã đặt lại xong! Đừng quên bấm 'Lưu lịch' để lưu thay đổi lên hệ thống.");
+        };
+
+        // Khi thả chuột/tay ra sau khi tô: gộp các ô vừa tô (theo từng ngày, từng vùng liền kề) thành khối + hỏi ghi chú
+        function finishDrag() {
+            isDragging = false;
+            dragMode = null;
+            const touched = dragTouchedCells;
+            dragTouchedCells = [];
+            if (!touched.length) return;
+
+            const byDay = {};
+            touched.forEach(el => {
+                const d = el.dataset.day;
+                (byDay[d] = byDay[d] || []).push(el.dataset.time);
+            });
+
+            Object.keys(byDay).forEach(d => {
+                const times = [...new Set(byDay[d])].sort();
+                let runStart = 0;
+                for (let i = 1; i <= times.length; i++) {
+                    const prevIdx = timeList.indexOf(times[i - 1]);
+                    const curIdx = i < times.length ? timeList.indexOf(times[i]) : -1;
+                    if (curIdx !== prevIdx + 1) {
+                        const runTimes = times.slice(runStart, i);
+                        const dayLabel = grid.querySelectorAll('.header')[Number(d) + 1]?.textContent || '';
+                        const note = prompt(
+                            `Ghi chú cho ${dayLabel} ${runTimes[0]} - ${runTimes[runTimes.length - 1]} (VD: tên học viên):`, ''
+                        );
+                        if (note === null) {
+                            // Huỷ -> bỏ tô các ô vừa chọn trong vùng này
+                            runTimes.forEach(t => {
+                                const el = grid.querySelector(`.slot[data-day="${d}"][data-time="${t}"]`);
+                                if (el) el.classList.remove('available');
+                            });
+                        } else {
+                            // [MỚI] Nếu có ghi chú, hỏi thêm email (các) học viên sở hữu ô này để tô đúng màu.
+                            // Có thể nhập nhiều email cách nhau bằng dấu phẩy để giao 1 khung giờ cho cả nhóm.
+                            let studentEmails = [];
+                            if (note.trim()) {
+                                const emailInput = prompt(
+                                    "Email tài khoản của (các) học viên sở hữu khung giờ này — cách nhau bằng dấu phẩy nếu giao cho nhiều học viên (để tô đúng màu xanh lá khi (các) học viên đó xem lịch; để trống nếu không cần gán):", ''
+                                );
+                                studentEmails = (emailInput || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+                            }
+                            scheduleBlocks.push({
+                                id: `b-${d}-${runTimes[0]}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+                                day: Number(d),
+                                times: runTimes,
+                                note: note.trim(),
+                                studentEmails
+                            });
+                        }
+                        runStart = i;
+                    }
+                }
+            });
+            redrawBlocks();
         }
 
         function paint(el) {
             if (!isAdmin || !el || !el.classList.contains('slot')) return;
-            if (dragMode === 'add') el.classList.add('available');
-            else if (dragMode === 'remove') el.classList.remove('available');
+            if (dragMode === 'add') {
+                if (!el.classList.contains('available')) {
+                    el.classList.add('available');
+                    dragTouchedCells.push(el);
+                }
+            } else if (dragMode === 'remove') {
+                el.classList.remove('available');
+            }
         }
 
         // Mouse drag
@@ -3453,6 +3790,7 @@ function toggleCompletion(symbolElement) {
             if (!isAdmin || !e.target.classList.contains('slot')) return;
             e.preventDefault();
             isDragging = true;
+            dragTouchedCells = [];
             dragMode = e.target.classList.contains('available') ? 'remove' : 'add';
             paint(e.target);
         });
@@ -3460,7 +3798,7 @@ function toggleCompletion(symbolElement) {
             if (!isDragging) return;
             paint(document.elementFromPoint(e.clientX, e.clientY));
         });
-        window.addEventListener('mouseup', () => { isDragging = false; dragMode = null; });
+        window.addEventListener('mouseup', () => { if (isDragging) finishDrag(); });
 
         // Touch drag
         grid.addEventListener('touchstart', e => {
@@ -3470,6 +3808,7 @@ function toggleCompletion(symbolElement) {
             if (!el || !el.classList.contains('slot')) return;
             e.preventDefault();
             isDragging = true;
+            dragTouchedCells = [];
             dragMode = el.classList.contains('available') ? 'remove' : 'add';
             paint(el);
         }, { passive: false });
@@ -3479,15 +3818,23 @@ function toggleCompletion(symbolElement) {
             const t = e.touches[0];
             paint(document.elementFromPoint(t.clientX, t.clientY));
         }, { passive: false });
-        grid.addEventListener('touchend', () => { isDragging = false; dragMode = null; });
+        grid.addEventListener('touchend', () => { if (isDragging) finishDrag(); });
 
-        // Tải dữ liệu
+        // Tải dữ liệu đã lưu (tương thích cả dữ liệu cũ dạng {day,time} đơn lẻ chưa gộp)
         sb.from('schedule_data').select('slots').eq('id', 1).single().then(({ data }) => {
             if (data && data.slots) {
-                data.slots.forEach(s => {
-                    const el = grid.querySelector(`.slot[data-day="${s.day}"][data-time="${s.time}"]`);
-                    if (el) el.classList.add('available');
+                // [MỚI] Tương thích ngược: lịch cũ lưu 1 email duy nhất ở "studentEmail" (chuỗi),
+                // lịch mới lưu nhiều email ở "studentEmails" (mảng). Ưu tiên mảng mới nếu có.
+                scheduleBlocks = data.slots.map((s, i) => {
+                    const studentEmails = Array.isArray(s.studentEmails)
+                        ? s.studentEmails.filter(Boolean)
+                        : (s.studentEmail ? [s.studentEmail] : []);
+                    if (s.times) {
+                        return { id: `load-${i}`, day: Number(s.day), times: s.times, note: s.note || '', studentEmails };
+                    }
+                    return { id: `load-${i}`, day: Number(s.day), times: [s.time], note: '', studentEmails };
                 });
+                redrawBlocks();
             }
         });
     })();
@@ -12088,15 +12435,45 @@ function toggleCompletion(symbolElement) {
         return { displayHtml: container.innerHTML, blanks };
     }
 
-    function ctestImageField(initialUrl) {
+    function ctestImageField(initialUrl, initialWidth) {
         const wrap = document.createElement('div');
         wrap.className = 'ctest-image-field';
+        wrap.dataset.customWidth = initialWidth ? String(initialWidth) : '';
         wrap.innerHTML =
             '<label class="news-quiz-edit-label">Link hình minh hoạ (URL — tuỳ chọn)</label>' +
             '<input type="text" class="news-edit-input ctest-image-url-input" placeholder="https://..." value="' + ctestEscape(initialUrl || '') + '">' +
+            '<div class="ctest-image-scale-row">' +
+                '<span class="ctest-image-scale-label">Kích thước ảnh:</span>' +
+                '<input type="range" class="ctest-image-scale-slider" min="60" max="900" step="10" value="' + (initialWidth || 300) + '">' +
+                '<span class="ctest-image-scale-value"></span>' +
+                '<button type="button" class="ctest-image-scale-reset">↺ Mặc định</button>' +
+            '</div>' +
             '<img class="ctest-image-preview" style="display:none;">';
         const input = wrap.querySelector('.ctest-image-url-input');
         const preview = wrap.querySelector('.ctest-image-preview');
+        const slider = wrap.querySelector('.ctest-image-scale-slider');
+        const valueLabel = wrap.querySelector('.ctest-image-scale-value');
+        const resetBtn = wrap.querySelector('.ctest-image-scale-reset');
+        // [MỚI] Cho phép giảng viên tự kéo thanh trượt để chỉnh kích thước ảnh (px) khi soạn
+        // câu hỏi — áp dụng cho cả khung xem trước ở đây lẫn màn hình học viên làm bài/xem
+        // kết quả (xem hàm ctestApplyImageWidth bên dưới). Không chỉnh gì thì ảnh vẫn hiện
+        // theo cỡ mặc định như cũ (không lưu image_width, giữ tương thích bài cũ).
+        function applySizeToPreview() {
+            if (wrap.dataset.customWidth) {
+                preview.style.width = wrap.dataset.customWidth + 'px';
+                // [SỬA] Vẫn giữ maxWidth 100% (không phải 'none') để trên màn hình hẹp
+                // (mobile) ảnh tự co lại vừa khung thay vì tràn ra ngoài — kích thước
+                // giảng viên chọn chỉ là mức TỐI ĐA khi đủ chỗ hiển thị.
+                preview.style.maxWidth = '100%';
+                preview.style.height = 'auto';
+                valueLabel.textContent = wrap.dataset.customWidth + 'px';
+            } else {
+                preview.style.width = '';
+                preview.style.maxWidth = '';
+                preview.style.height = '';
+                valueLabel.textContent = 'Mặc định';
+            }
+        }
         function refreshPreview() {
             const url = input.value.trim();
             if (url) { preview.src = url; preview.style.display = 'block'; }
@@ -12104,12 +12481,42 @@ function toggleCompletion(symbolElement) {
         }
         input.addEventListener('input', refreshPreview);
         input.addEventListener('input', () => wrap.dispatchEvent(new Event('ctest-changed', { bubbles: true })));
+        slider.addEventListener('input', () => {
+            wrap.dataset.customWidth = slider.value;
+            applySizeToPreview();
+            wrap.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
+        });
+        resetBtn.addEventListener('click', () => {
+            wrap.dataset.customWidth = '';
+            applySizeToPreview();
+            wrap.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
+        });
+        applySizeToPreview();
         refreshPreview();
         return wrap;
     }
     function ctestImageUrl(wrap) {
         const input = wrap && wrap.querySelector ? wrap.querySelector('.ctest-image-url-input') : null;
         return input ? input.value.trim() : '';
+    }
+    // [MỚI] Đọc kích thước ảnh (px) giảng viên đã chỉnh bằng thanh trượt ở trên — trả về
+    // null nếu chưa từng chỉnh (giữ nguyên hành vi mặc định cũ).
+    function ctestImageWidth(wrap) {
+        const w = wrap && wrap.dataset ? wrap.dataset.customWidth : '';
+        return w ? parseInt(w, 10) : null;
+    }
+    // [MỚI] Ghi đè kích thước <img> hiển thị cho học viên (màn hình làm bài + màn hình xem
+    // kết quả) theo đúng kích thước giảng viên đã chọn khi soạn bài — nếu không chỉnh gì thì
+    // giữ nguyên cỡ mặc định theo CSS (.ctest-take-image) như trước.
+    function ctestApplyImageWidth(img, width) {
+        if (width) {
+            img.style.width = width + 'px';
+            // [SỬA] maxWidth 100% (không phải 'none') — kích thước giảng viên chọn chỉ là
+            // mức TỐI ĐA; trên khung làm bài hẹp hơn (mobile), ảnh tự co lại vừa khung thay
+            // vì tràn/lòi ra ngoài. object-fit + contain đảm bảo không méo ảnh khi co lại.
+            img.style.maxWidth = '100%';
+            img.style.height = 'auto';
+        }
     }
 
     // =====================================================================
@@ -12220,7 +12627,7 @@ function toggleCompletion(symbolElement) {
         const promptWrap = ctestCreateRichEditor(q.prompt || '', 'Nhập câu hỏi...', 'Bôi đen rồi bấm B/U/I để định dạng.');
         promptWrap.classList.add('ctest-qprompt-editor');
         card.appendChild(promptWrap);
-        const imgField = ctestImageField(q.image_url);
+        const imgField = ctestImageField(q.image_url, q.image_width);
         card.appendChild(imgField);
         const optBox = ctestOptionsEditor(q.options, q.correct);
         card.appendChild(optBox);
@@ -12232,6 +12639,7 @@ function toggleCompletion(symbolElement) {
             type: 'mcq',
             prompt: ctestRichHtml(card.querySelector(':scope > .ctest-qprompt-editor')),
             image_url: ctestImageUrl(card.querySelector(':scope > .ctest-image-field')),
+            image_width: ctestImageWidth(card.querySelector(':scope > .ctest-image-field')),
             options, correct
         };
     }
@@ -12242,7 +12650,7 @@ function toggleCompletion(symbolElement) {
         const editor = ctestCreateRichEditor(q.html || '', 'Nhập câu đầy đủ...', 'Bôi đen từ cần ẩn rồi bấm <b>B</b> để biến thành chỗ trống.');
         editor.classList.add('ctest-fillblank-editor');
         card.appendChild(editor);
-        const imgField = ctestImageField(q.image_url);
+        const imgField = ctestImageField(q.image_url, q.image_width);
         card.appendChild(imgField);
         return card;
     }
@@ -12250,7 +12658,8 @@ function toggleCompletion(symbolElement) {
         return {
             type: 'fill_blank',
             html: ctestRichHtml(card.querySelector(':scope > .ctest-fillblank-editor')),
-            image_url: ctestImageUrl(card.querySelector(':scope > .ctest-image-field'))
+            image_url: ctestImageUrl(card.querySelector(':scope > .ctest-image-field')),
+            image_width: ctestImageWidth(card.querySelector(':scope > .ctest-image-field'))
         };
     }
 
@@ -12275,7 +12684,7 @@ function toggleCompletion(symbolElement) {
         const passageWrap = ctestCreateRichEditor(q.passage || '', 'Dán/nhập đoạn văn...', 'Bôi đen rồi bấm B/U/I để định dạng.');
         passageWrap.classList.add('ctest-reading-passage-editor');
         card.appendChild(passageWrap);
-        const imgField = ctestImageField(q.image_url);
+        const imgField = ctestImageField(q.image_url, q.image_width);
         card.appendChild(imgField);
 
         const subListLabel = document.createElement('label');
@@ -12309,6 +12718,7 @@ function toggleCompletion(symbolElement) {
             type: 'reading',
             passage: ctestRichHtml(card.querySelector(':scope > .ctest-reading-passage-editor')),
             image_url: ctestImageUrl(card.querySelector(':scope > .ctest-image-field')),
+            image_width: ctestImageWidth(card.querySelector(':scope > .ctest-image-field')),
             sub_questions: subQuestions
         };
     }
@@ -12381,7 +12791,7 @@ function toggleCompletion(symbolElement) {
         const promptWrap = ctestCreateRichEditor(q.prompt || '', 'Nhập câu hỏi tự luận...', '');
         promptWrap.classList.add('ctest-essay-prompt-editor');
         card.appendChild(promptWrap);
-        const imgField = ctestImageField(q.image_url);
+        const imgField = ctestImageField(q.image_url, q.image_width);
         card.appendChild(imgField);
 
         const label2 = document.createElement('label');
@@ -12403,6 +12813,7 @@ function toggleCompletion(symbolElement) {
             type: 'essay',
             prompt: ctestRichHtml(card.querySelector(':scope > .ctest-essay-prompt-editor')),
             image_url: ctestImageUrl(card.querySelector(':scope > .ctest-image-field')),
+            image_width: ctestImageWidth(card.querySelector(':scope > .ctest-image-field')),
             answer: card.querySelector(':scope > .ctest-essay-answer-input').value.trim()
         };
     }
@@ -12437,7 +12848,7 @@ function toggleCompletion(symbolElement) {
 
     function buildMatchingEditor(q) {
         const card = ctestQcardShell('matching');
-        const imgField = ctestImageField(q.image_url);
+        const imgField = ctestImageField(q.image_url, q.image_width);
         card.appendChild(imgField);
 
         const colsWrap = document.createElement('div');
@@ -12545,6 +12956,7 @@ function toggleCompletion(symbolElement) {
         return {
             type: 'matching',
             image_url: ctestImageUrl(card.querySelector(':scope > .ctest-image-field')),
+            image_width: ctestImageWidth(card.querySelector(':scope > .ctest-image-field')),
             left, right, right_ids: rightIds, correct_pairs: correctPairs
         };
     }
@@ -13069,6 +13481,7 @@ function toggleCompletion(symbolElement) {
             const img = document.createElement('img');
             img.className = 'ctest-take-image';
             img.src = q.image_url;
+            ctestApplyImageWidth(img, q.image_width);
             block.appendChild(img);
         }
         const optWrap = document.createElement('div');
@@ -13124,6 +13537,7 @@ function toggleCompletion(symbolElement) {
             const img = document.createElement('img');
             img.className = 'ctest-take-image';
             img.src = q.image_url;
+            ctestApplyImageWidth(img, q.image_width);
             block.appendChild(img);
         }
         const { el } = renderTakeFillBlank(q.html, keyBase);
@@ -13198,6 +13612,7 @@ function toggleCompletion(symbolElement) {
             const img = document.createElement('img');
             img.className = 'ctest-take-image';
             img.src = q.image_url;
+            ctestApplyImageWidth(img, q.image_width);
             block.appendChild(img);
         }
         const passage = document.createElement('div');
@@ -13221,6 +13636,7 @@ function toggleCompletion(symbolElement) {
             const img = document.createElement('img');
             img.className = 'ctest-take-image';
             img.src = part.image_url;
+            ctestApplyImageWidth(img, part.image_width);
             block.appendChild(img);
         }
         const textarea = document.createElement('textarea');
@@ -13259,6 +13675,7 @@ function toggleCompletion(symbolElement) {
             const img = document.createElement('img');
             img.className = 'ctest-take-image';
             img.src = q.image_url;
+            ctestApplyImageWidth(img, q.image_width);
             block.appendChild(img);
         }
         const wrap = document.createElement('div');
@@ -13627,6 +14044,7 @@ function toggleCompletion(symbolElement) {
             const img = document.createElement('img');
             img.className = 'ctest-take-image';
             img.src = q.image_url;
+            ctestApplyImageWidth(img, q.image_width);
             block.appendChild(img);
         }
         const given = answers[keyBase];
@@ -13652,6 +14070,7 @@ function toggleCompletion(symbolElement) {
             const img = document.createElement('img');
             img.className = 'ctest-take-image';
             img.src = q.image_url;
+            ctestApplyImageWidth(img, q.image_width);
             block.appendChild(img);
         }
         const { el, correct, total } = ctestBlankResultNode(q.html, keyBase, answers);
@@ -13681,6 +14100,7 @@ function toggleCompletion(symbolElement) {
             const img = document.createElement('img');
             img.className = 'ctest-take-image';
             img.src = q.image_url;
+            ctestApplyImageWidth(img, q.image_width);
             block.appendChild(img);
         }
         const passage = document.createElement('div');
@@ -13702,6 +14122,7 @@ function toggleCompletion(symbolElement) {
             const img = document.createElement('img');
             img.className = 'ctest-take-image';
             img.src = part.image_url;
+            ctestApplyImageWidth(img, part.image_width);
             block.appendChild(img);
         }
         const given = answers[keyBase] || '';
@@ -13733,6 +14154,7 @@ function toggleCompletion(symbolElement) {
             const img = document.createElement('img');
             img.className = 'ctest-take-image';
             img.src = q.image_url;
+            ctestApplyImageWidth(img, q.image_width);
             block.appendChild(img);
         }
         const pairs = answers[keyBase + ':pairs'] || {};
