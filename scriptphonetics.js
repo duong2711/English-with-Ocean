@@ -7726,6 +7726,13 @@ function toggleCompletion(symbolElement) {
         // phải lỗi do học viên) thì tự động bỏ chặn cho thẻ đó, tránh kẹt cứng không qua được.
         let kidFlashAttemptCount = 0;
         const KF_MAX_ATTEMPTS = 4;
+        // [SỬA LỖI] Tập hợp chỉ số các thẻ đã được "bỏ qua" yêu cầu đọc đúng vì học viên thử
+        // sai quá KF_MAX_ATTEMPTS lần trên CHÍNH thẻ đó — CHỈ áp dụng cho thẻ đó, không áp
+        // dụng cho các thẻ khác. (Trước đây dùng chung biến kidFlashMicBlocked với lỗi kỹ
+        // thuật/mất mạng ở dưới nên hễ 1 thẻ bị bỏ qua là TOÀN BỘ các thẻ còn lại trong chủ đề
+        // cũng tự động mất luôn yêu cầu đọc, dù không hề gặp lỗi gì.) Reset mỗi khi mở lại chủ
+        // đề — xem initFlashcards.
+        let kidFlashAutoSkippedSet = new Set();
 
         // ================== [MỚI] ẢNH DỰ PHÒNG TỰ ĐỘNG QUA PIXABAY API ==================
         // Khi ảnh gốc của 1 từ vựng bị lỗi (404, mất link...), hệ thống sẽ tự động gọi
@@ -7890,6 +7897,10 @@ function toggleCompletion(symbolElement) {
         }
 
         async function kidSaveTopicProgress(topic, patch) {
+            // [SỬA LỖI] Lưu lại trạng thái TRƯỚC khi gộp patch, để có thể phục hồi nếu lưu lên
+            // Supabase thất bại — tránh giao diện hiện "đã hoàn thành" giả (sẽ biến mất khi tải
+            // lại trang) trong khi thực ra chưa lưu được gì lên server.
+            const beforePatch = Object.assign({}, kidTopicProgress);
             Object.assign(kidTopicProgress, patch); // cập nhật cache ngay để UI phản hồi tức thì
             if (!currentUserId) return;
             const key = kidTopicKey(topic);
@@ -7903,13 +7914,29 @@ function toggleCompletion(symbolElement) {
                 const { error } = await sb
                     .from('kid_topic_progress')
                     .upsert(payload, { onConflict: 'user_id, topic_key' });
-                if (error) console.error('Lỗi khi lưu tiến độ chủ đề (kiểm tra RLS trên bảng kid_topic_progress):', error);
-                else {
+                if (error) {
+                    console.error('Lỗi khi lưu tiến độ chủ đề (kiểm tra RLS/UNIQUE constraint trên bảng kid_topic_progress):', error);
+                    // In thêm dạng JSON chữ thuần (dễ copy trong Console hơn object thu gọn) để dễ debug.
+                    try { console.error('Chi tiết lỗi (copy dòng này gửi để debug):', JSON.stringify({ message: error.message, code: error.code, details: error.details, hint: error.hint }, null, 2)); } catch (e2) {}
+                    // [SỬA LỖI] Trước đây lỗi này chỉ nằm im trong console — học viên không hề
+                    // biết tiến độ KHÔNG được lưu, nên tưởng nhầm là "tự nhiên bị mất" khi mở lại
+                    // trang sau đó. Báo trực tiếp cho học viên ngay khi lưu thất bại, đồng thời
+                    // phục hồi lại trạng thái cũ (không giữ dấu "hoàn thành" giả trên giao diện).
+                    Object.assign(kidTopicProgress, beforePatch);
+                    if (window.vocabTap && window.vocabTap.toast) {
+                        window.vocabTap.toast('⚠️ Lưu tiến độ thất bại (lỗi kết nối/máy chủ). Tiến độ có thể mất khi tải lại trang, hãy thử lại.', 'info');
+                    }
+                } else {
                     kidProgressMap[key] = payload; // [MỚI] cập nhật luôn cache danh sách chủ đề, khỏi cần tải lại từ Supabase
                     renderProfileAchievements(); // [MỚI] cập nhật ngay điểm chuyên cần, không cần đợi mở hồ sơ
                 }
             } catch (err) {
                 console.error('Lỗi ngoại lệ khi lưu tiến độ chủ đề:', err.message);
+                try { console.error('Chi tiết lỗi ngoại lệ (copy dòng này gửi để debug):', JSON.stringify({ message: err.message, name: err.name, stack: err.stack }, null, 2)); } catch (e2) {}
+                Object.assign(kidTopicProgress, beforePatch);
+                if (window.vocabTap && window.vocabTap.toast) {
+                    window.vocabTap.toast('⚠️ Lưu tiến độ thất bại (lỗi kết nối/máy chủ). Tiến độ có thể mất khi tải lại trang, hãy thử lại.', 'info');
+                }
             }
         }
 
@@ -8464,6 +8491,7 @@ function toggleCompletion(symbolElement) {
             kidFlashVisitedSet = new Set();
             kidFlashCompleteNotified = false;
             kidFlashMicBlocked = false;
+            kidFlashAutoSkippedSet = new Set(); // [SỬA LỖI] reset danh sách thẻ được bỏ qua mỗi khi mở lại chủ đề
             renderFlashcard();
 
             const notice = document.getElementById('kid-flash-lock-notice');
@@ -8555,6 +8583,15 @@ function toggleCompletion(symbolElement) {
                 kidFlashPronounceStatus.className = 'kf-pronounce-status';
                 return;
             }
+            // [SỬA LỖI] Thẻ NÀY đã bị bỏ qua do đọc sai quá nhiều lần — chỉ ảnh hưởng đúng thẻ
+            // này, các thẻ khác vẫn yêu cầu đọc bình thường (khác với kidFlashMicBlocked ở trên).
+            if (!done && kidFlashAutoSkippedSet.has(flashIndex)) {
+                kidFlashMicBtn.style.display = '';
+                if (label) label.textContent = '🎤 Đọc to từ này (có thể bấm "Sau" để qua)';
+                kidFlashPronounceStatus.textContent = '👍 Bạn đã thử nhiều lần — có thể bấm "Sau" để qua thẻ này, hoặc thử đọc lại.';
+                kidFlashPronounceStatus.className = 'kf-pronounce-status';
+                return;
+            }
             kidFlashMicBtn.style.display = '';
             if (done) {
                 if (label) label.textContent = 'Đã đọc đúng ✓ (đọc lại)';
@@ -8607,8 +8644,12 @@ function toggleCompletion(symbolElement) {
                         if (typeof playKidWrongSound === 'function') playKidWrongSound();
                         kidFlashAttemptCount++;
                         if (kidFlashAttemptCount >= KF_MAX_ATTEMPTS) {
-                            kidFlashMicBlocked = true;
-                            kidFlashPronounceStatus.textContent = '👍 Bạn đã thử nhiều lần, tạm bỏ qua yêu cầu đọc đúng để không bị kẹt — cứ bấm "Sau" để tiếp tục nhé!';
+                            // [SỬA LỖI] Chỉ bỏ qua yêu cầu đọc cho ĐÚNG thẻ này (đọc sai nhiều lần
+                            // là do từ khó/học viên chưa đọc được, không phải lỗi kỹ thuật) — KHÔNG
+                            // set kidFlashMicBlocked (biến đó dành riêng cho lỗi kỹ thuật thật sự ở
+                            // dưới, ảnh hưởng đến TẤT CẢ các thẻ còn lại).
+                            kidFlashAutoSkippedSet.add(flashIndex);
+                            kidFlashPronounceStatus.textContent = '👍 Bạn đã thử nhiều lần, tạm bỏ qua yêu cầu đọc đúng thẻ này để không bị kẹt — cứ bấm "Sau" để tiếp tục nhé!';
                             kidFlashPronounceStatus.className = 'kf-pronounce-status';
                         } else {
                             kidFlashPronounceStatus.textContent = heard
@@ -8634,8 +8675,11 @@ function toggleCompletion(symbolElement) {
                         }
                         kidFlashAttemptCount++;
                         if (kidFlashAttemptCount >= KF_MAX_ATTEMPTS) {
-                            kidFlashMicBlocked = true;
-                            kidFlashPronounceStatus.textContent = '👍 Bạn đã thử nhiều lần, tạm bỏ qua yêu cầu đọc đúng để không bị kẹt — cứ bấm "Sau" để tiếp tục nhé!';
+                            // [SỬA LỖI] Tương tự onMismatch ở trên: lỗi "chưa nghe thấy gì"/nhận
+                            // dạng lặp lại nhiều lần trên 1 thẻ chỉ nên bỏ qua yêu cầu cho ĐÚNG thẻ
+                            // đó, không ảnh hưởng các thẻ còn lại.
+                            kidFlashAutoSkippedSet.add(flashIndex);
+                            kidFlashPronounceStatus.textContent = '👍 Bạn đã thử nhiều lần, tạm bỏ qua yêu cầu đọc đúng thẻ này để không bị kẹt — cứ bấm "Sau" để tiếp tục nhé!';
                             kidFlashPronounceStatus.className = 'kf-pronounce-status';
                             return;
                         }
@@ -8655,6 +8699,9 @@ function toggleCompletion(symbolElement) {
         function kidCanAdvanceFlashcard() {
             if (!window.pronounceGate || !window.pronounceGate.supported) return true;
             if (kidFlashMicBlocked) return true;
+            // [SỬA LỖI] Thẻ này đã được bỏ qua riêng (đọc sai quá nhiều lần trên chính thẻ này)
+            // -> cho qua thẻ này, nhưng KHÔNG ảnh hưởng đến yêu cầu đọc của các thẻ tiếp theo.
+            if (kidFlashAutoSkippedSet.has(flashIndex)) return true;
             return kidFlashPronouncedSet.has(flashIndex);
         }
 
