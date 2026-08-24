@@ -2793,7 +2793,7 @@ async function loadCompletionStatus(user) {
         try {
             const { error } = await sb
                 .from('ipa_completions')
-                .upsert(statusData, { onConflict: 'user_id, symbol' }); 
+                .upsert(statusData, { onConflict: 'user_id,symbol' }); 
 
             if (error) {
                 console.error('Lỗi khi lưu trạng thái hoàn thành vào Supabase (Kiểm tra chính sách RLS UPDATE/INSERT trên ipa_completions):', error);
@@ -3951,7 +3951,7 @@ function toggleCompletion(symbolElement) {
                         user_id: currentUserId,
                         article_id: articleId,
                         completed_at: new Date().toISOString()
-                    }, { onConflict: 'user_id, article_id' });
+                    }, { onConflict: 'user_id,article_id' });
                 if (error) throw error;
                 renderProfileAchievements(); // [MỚI] cập nhật ngay điểm chuyên cần, không cần đợi mở hồ sơ
             } catch (err) {
@@ -5432,7 +5432,7 @@ function toggleCompletion(symbolElement) {
                     user_id: currentUserId,
                     folder_id: folderId,
                     updated_at: new Date().toISOString()
-                }, patch), { onConflict: 'user_id, folder_id' });
+                }, patch), { onConflict: 'user_id,folder_id' });
                 if (error) {
                     console.error('Lỗi khi lưu tiến độ ngữ pháp:', error.message);
                     grammarProgressSentThisSession[cacheKey] = false; // cho phép thử lại
@@ -7913,7 +7913,7 @@ function toggleCompletion(symbolElement) {
                 delete payload.id;
                 const { error } = await sb
                     .from('kid_topic_progress')
-                    .upsert(payload, { onConflict: 'user_id, topic_key' });
+                    .upsert(payload, { onConflict: 'user_id,topic_key' });
                 if (error) {
                     console.error('Lỗi khi lưu tiến độ chủ đề (kiểm tra RLS/UNIQUE constraint trên bảng kid_topic_progress):', error);
                     // In thêm dạng JSON chữ thuần (dễ copy trong Console hơn object thu gọn) để dễ debug.
@@ -8183,8 +8183,11 @@ function toggleCompletion(symbolElement) {
             const patch = isCompletedNow
                 ? kidEmptyProgress()
                 : {
-                    batch1_match: true, batch1_crossword: true, batch1_story: true, batch1_game: true,
-                    batch2_match: true, batch2_crossword: true, batch2_story: true, batch2_game: true
+                    // [SỬA LỖI] Bổ sung batch1_flashcard/batch2_flashcard: từ khi Flashcard trở
+                    // thành 1 điều kiện bắt buộc (xem kidIsBatch1Done/kidIsBatch2Done), nút này
+                    // quên bật 2 cờ đó nên "đánh dấu hoàn thành" không còn tác dụng thật sự.
+                    batch1_flashcard: true, batch1_match: true, batch1_crossword: true, batch1_story: true, batch1_game: true,
+                    batch2_flashcard: true, batch2_match: true, batch2_crossword: true, batch2_story: true, batch2_game: true
                 };
 
             await kidSaveTopicProgress(topic, patch);
@@ -10016,7 +10019,7 @@ function toggleCompletion(symbolElement) {
                 };
                 const { error } = await sb
                     .from('thcs_unit_progress')
-                    .upsert(payload, { onConflict: 'user_id, grade, unit_id' });
+                    .upsert(payload, { onConflict: 'user_id,grade,unit_id' });
                 if (error) {
                     console.error('Lỗi khi lưu tiến độ Unit (THCS/THPT — kiểm tra RLS/UNIQUE constraint trên bảng thcs_unit_progress):', error);
                     // [MỚI] In thêm dạng JSON chữ thuần (dễ copy trong Console hơn object thu gọn).
@@ -10782,7 +10785,7 @@ function toggleCompletion(symbolElement) {
             }, fields);
             const { data, error } = await sb
                 .from('thcs_story_frames')
-                .upsert(payload, { onConflict: 'grade, unit_id, frame_index' })
+                .upsert(payload, { onConflict: 'grade,unit_id,frame_index' })
                 .select()
                 .single();
             if (error) throw error;
@@ -10843,7 +10846,7 @@ function toggleCompletion(symbolElement) {
                 };
                 const { error } = await sb
                     .from('thcs_story_frame_progress')
-                    .upsert(payload, { onConflict: 'user_id, grade, unit_id, frame_index' });
+                    .upsert(payload, { onConflict: 'user_id,grade,unit_id,frame_index' });
                 if (error) console.error('Lỗi khi lưu tiến độ khung truyện:', error);
             } catch (err) {
                 console.error('Lỗi ngoại lệ khi lưu tiến độ khung truyện:', err.message);
