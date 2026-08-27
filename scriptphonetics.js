@@ -787,6 +787,11 @@ document.addEventListener('DOMContentLoaded', () => {
             // tự động dẫn đi 1 vòng tham quan nhanh qua các mục chính trên web (xem định
             // nghĩa maybeStartOnboardTour/ONBOARD_STEPS ở phía trên).
             maybeStartOnboardTour(user);
+
+            // [MỚI] Kiểm tra xem giảng viên vừa thêm bài tin (tin ngắn) mới nào trong mục Từ
+            // vựng hay chưa để báo cho học viên — chỉ báo 1 lần duy nhất, không lặp lại ở các
+            // lần đăng nhập sau (xem checkNewNewsNotification() trong khối "LOGIC TIN NGẮN").
+            if (typeof window.checkNewNewsNotification === 'function') window.checkNewNewsNotification();
             
             // [CẬP NHẬT] Hiển thị Menu và xóa trạng thái ẩn của các Tab
             if (mainMenu) mainMenu.style.display = 'flex';
@@ -1575,13 +1580,43 @@ document.addEventListener('DOMContentLoaded', () => {
             // ----- 3) Chủ đề từ vựng (mục "Cho bé"): đã hoàn thành / 20 chủ đề -----
             let totalTopics = 20;
             let completedTopics = 0;
+            let topicRedoCount = 0; // [MỚI] số lần hoàn thành LẠI (sau khi bị mất hoàn thành), dùng để cộng điểm thưởng bên dưới
             if (window.kidTopicsAPI) {
                 await window.kidTopicsAPI.ensureProgressMapLoaded();
                 const topics = window.kidTopicsAPI.getTopics() || [];
                 if (topics.length) totalTopics = topics.length;
                 completedTopics = topics.filter(t => window.kidTopicsAPI.isTopicCompleted(t)).length;
+                topicRedoCount = window.kidTopicsAPI.getTotalRedoCount ? window.kidTopicsAPI.getTotalRedoCount() : 0;
             }
             const topicsPct = totalTopics ? Math.round((completedTopics / totalTopics) * 100) : 0;
+            // [MỚI] Điểm thưởng "làm lại": mỗi lần học viên hoàn thành lại 1 chủ đề đã từng bị
+            // mất trạng thái hoàn thành thì được cộng thêm số điểm này (đọc qua kidTopicsAPI vì
+            // hằng số KID_TOPIC_REDO_BONUS_POINTS nằm trong 1 IIFE riêng, hàm này ở phạm vi
+            // global không đọc thẳng được). Đây là điểm CỘNG THÊM, không nằm trong các yếu tố
+            // chia đều bên dưới, để không làm loãng tỷ trọng của các yếu tố khác.
+            const kidRedoBonusPerTime = (window.kidTopicsAPI && window.kidTopicsAPI.REDO_BONUS_POINTS) || 0;
+            const topicRedoBonusPoints = topicRedoCount * kidRedoBonusPerTime;
+
+            // ----- 3c) [MỚI] Từ vựng THCS/THPT: Unit đã hoàn thành / tổng số Unit (mọi khối lớp
+            // 6-12) — tương tự mục "Cho bé" ở trên, kèm điểm thưởng "làm lại" riêng.
+            let totalThcsUnits = 0;
+            let completedThcsUnits = 0;
+            let thcsRedoCount = 0;
+            if (window.thcsUnitsAPI) {
+                await window.thcsUnitsAPI.ensureProgressLoaded();
+                const thcsUnits = window.thcsUnitsAPI.getAllUnits() || [];
+                totalThcsUnits = thcsUnits.length;
+                completedThcsUnits = thcsUnits.filter(u => window.thcsUnitsAPI.isUnitCompleted(u.gradeNum, u.unit)).length;
+                thcsRedoCount = window.thcsUnitsAPI.getTotalRedoCount ? window.thcsUnitsAPI.getTotalRedoCount() : 0;
+            }
+            const thcsPct = totalThcsUnits ? Math.round((completedThcsUnits / totalThcsUnits) * 100) : 0;
+            const thcsRedoBonusPerTime = (window.thcsUnitsAPI && window.thcsUnitsAPI.REDO_BONUS_POINTS) || 0;
+            const thcsRedoBonusPoints = thcsRedoCount * thcsRedoBonusPerTime;
+
+            // [MỚI] Tổng điểm thưởng "làm lại" từ cả 2 nguồn (Cho bé + THCS/THPT), dùng chung
+            // khi cộng vào diligenceScore và khi hiện thẻ Thành tựu bên dưới.
+            const totalRedoCount = topicRedoCount + thcsRedoCount;
+            const totalRedoBonusPoints = topicRedoBonusPoints + thcsRedoBonusPoints;
 
             // ----- 3b) [MỚI] Ngữ pháp: 1 folder được tính "đã hoàn thành" khi học viên đã bấm
             // PHÁT video bài học VÀ đã bấm nút "Làm bài kiểm tra" của folder đó -----
@@ -1649,17 +1684,18 @@ document.addEventListener('DOMContentLoaded', () => {
             const totalStudyMinutes = Math.round(totalStudySeconds / 60);
             const timePct = Math.min(100, Math.round((totalStudyMinutes / DILIGENCE_TOTAL_TIME_TARGET_MINUTES) * 100));
 
-            // ----- [SỬA] Điểm chăm chỉ tổng hợp: chia ĐỀU cho 7 yếu tố (mỗi yếu tố ~14.29%,
-            // tức 100%/7) — Phiên âm, Tin ngắn, Chủ đề từ vựng, Ngữ pháp, Kho từ vựng, Điểm TB
-            // bài kiểm tra, Thời gian học. Trước đây chỉ tính 5/7 yếu tố (bỏ sót Ngữ pháp và
-            // Điểm TB kiểm tra dù đã có sẵn dữ liệu) và trọng số không đều. Nếu học viên CHƯA
-            // nộp bài kiểm tra nào (avgTestScorePct == null) thì phần này tính là 0% — vẫn giữ
-            // nguyên yếu tố trong công thức (chia cho 7) thay vì loại hẳn ra, để không làm lệch
-            // tỷ trọng của các yếu tố còn lại. -----
+            // ----- [SỬA] Điểm chăm chỉ tổng hợp: chia ĐỀU cho 8 yếu tố (mỗi yếu tố = 12.5%,
+            // tức 100%/8) — Phiên âm, Tin ngắn, Chủ đề từ vựng (Cho bé), Từ vựng THCS/THPT,
+            // Ngữ pháp, Kho từ vựng, Điểm TB bài kiểm tra, Thời gian học. [MỚI] Bổ sung thêm
+            // yếu tố "Từ vựng THCS/THPT" (trước đây phần này hoàn toàn không được tính vào điểm
+            // chăm chỉ dù học viên có hoàn thành bao nhiêu Unit cũng không ảnh hưởng điểm).
+            // Nếu học viên CHƯA nộp bài kiểm tra nào (avgTestScorePct == null) thì phần này tính
+            // là 0% — vẫn giữ nguyên yếu tố trong công thức (chia cho 8) thay vì loại hẳn ra, để
+            // không làm lệch tỷ trọng của các yếu tố còn lại. -----
             const testPctForScore = avgTestScorePct != null ? avgTestScorePct : 0;
             const diligenceScore = Math.round(
-                (phoneticsPct + newsPct + topicsPct + grammarPct + vocabPct + testPctForScore + timePct) / 7
-            );
+                (phoneticsPct + newsPct + topicsPct + thcsPct + grammarPct + vocabPct + testPctForScore + timePct) / 8
+            ) + totalRedoBonusPoints; // [MỚI] cộng thêm điểm thưởng "làm lại" (Cho bé + THCS/THPT — xem phần tính ở trên)
 
             // ----- [SỬA] KHÔNG RESET ĐIỂM CHUYÊN CẦN THEO THÁNG NỮA -----
             // Trước đây mỗi khi sang tháng mới, hệ thống tự "chốt mốc" (baseline_score) rồi chỉ
@@ -1700,6 +1736,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 desc: `${completedTopics}/${totalTopics} chủ đề đã hoàn thành`,
                 progress: topicsPct
             });
+            badges.push({
+                icon: '🏫',
+                title: 'Từ vựng THCS/THPT',
+                desc: `${completedThcsUnits}/${totalThcsUnits} Unit đã hoàn thành`,
+                progress: thcsPct
+            });
+            // [MỚI] Chỉ hiện thẻ thưởng "làm lại" khi học viên đã từng được thưởng (từ cả 2
+            // nguồn: chủ đề "Cho bé" và Unit THCS/THPT), tránh làm rối danh sách Thành tựu với
+            // những học viên chưa từng bị mất hoàn thành mục nào.
+            if (totalRedoCount > 0) {
+                badges.push({
+                    icon: '🔥',
+                    title: 'Điểm thưởng làm lại',
+                    desc: `Đã hoàn thành lại ${totalRedoCount} lượt mục bị mất hoàn thành (+${totalRedoBonusPoints} điểm)`,
+                    progress: 100,
+                    special: true
+                });
+            }
             badges.push({
                 icon: '📖',
                 title: 'Ngữ pháp đã hoàn thành',
@@ -1751,10 +1805,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     phonetics_pct: phoneticsPct,
                     news_pct: newsPct,
                     topics_pct: topicsPct,
+                    thcs_pct: thcsPct, // [MỚI] % Unit THCS/THPT đã hoàn thành — xem cột mới trong diligence_scores_redo_bonus_setup.sql
                     grammar_pct: grammarPct,
                     vocab_pct: vocabPct,
                     test_pct: testPctForScore,
                     time_pct: timePct,
+                    redo_bonus_points: totalRedoBonusPoints, // [MỚI] tổng điểm thưởng "làm lại" (Cho bé + THCS/THPT) — xem cột mới trong diligence_scores_redo_bonus_setup.sql
                     diligence_score: monthlyDiligenceScore,
                     updated_at: new Date().toISOString()
                 }, { onConflict: 'user_id' });
@@ -3859,6 +3915,14 @@ function toggleCompletion(symbolElement) {
             return `${d} ${months[m - 1]}, ${y}`;
         }
 
+        // [MỚI] Bài tin có chữ "level 1" trong TIÊU ĐỀ (không phân biệt hoa/thường, có/không
+        // khoảng trắng giữa "level" và "1") là tin cơ bản, KHÔNG cần phần trắc nghiệm.
+        // Các bài KHÔNG có "level 1" (level 2, level 3...) mới cần phần trắc nghiệm.
+        // Dùng \b sau số 1 để KHÔNG khớp nhầm "level 10", "level 12"...
+        function newsTitleNeedsQuiz(title) {
+            return !/\blevel\s*1\b/i.test(title || '');
+        }
+
         // Dữ liệu tin tức giờ được tải động từ bảng "news_articles" trên Supabase
         // (xem file SQL "news_articles_setup.sql" để tạo bảng + chèn 6 bài mẫu ban đầu).
         // Chỉ tài khoản trong TEACHER_EMAILS (giangvien@gmail.com) mới có quyền
@@ -3880,7 +3944,8 @@ function toggleCompletion(symbolElement) {
                     title: row.title,
                     thumb: row.thumb,
                     content: row.content,
-                    quiz: Array.isArray(row.quiz) ? row.quiz : []
+                    quiz: Array.isArray(row.quiz) ? row.quiz : [],
+                    created_at: row.created_at || null
                 }));
             } catch (err) {
                 console.error('Lỗi khi tải danh sách tin tức:', err.message);
@@ -3958,6 +4023,68 @@ function toggleCompletion(symbolElement) {
                 console.error('Lỗi khi ghi nhận hoàn thành tin ngắn:', err.message);
             }
         }
+
+        // ===== [MỚI] THÔNG BÁO "CÓ TIN TỨC MỚI" CHO HỌC VIÊN =====
+        // Khi giảng viên bấm "➕ Thêm bài tin mới" trong mục Từ vựng → 📁 từ vựng (Tin ngắn),
+        // TẤT CẢ học viên sẽ được báo bằng 1 toast ngay ở lần đăng nhập kế tiếp của họ.
+        // Mốc "đã biết tin mới nhất tới đâu" được lưu VĨNH VIỄN vào tài khoản
+        // (user_metadata.last_seen_news_created_at) — giống hệt cách làm với
+        // has_seen_onboarding_tour — nên sẽ KHÔNG bị thông báo lại ở các lần đăng nhập sau,
+        // kể cả khi đổi máy/trình duyệt khác.
+        // ⚠️ CẦN bảng "news_articles" có cột "created_at timestamptz default now()" (đa số
+        // bảng trong hệ thống đã có sẵn cột này). Nếu bảng CHƯA có cột này, hãy chạy:
+        //   ALTER TABLE news_articles ADD COLUMN created_at timestamptz NOT NULL DEFAULT now();
+        // trên Supabase SQL Editor rồi mới dùng được tính năng thông báo này (lỗi thiếu cột
+        // sẽ chỉ im lặng ghi log ở Console, không làm hỏng phần còn lại của web).
+        async function checkNewNewsNotification() {
+            if (!currentUserId || isTeacher || isImpersonating) return;
+            try {
+                const { data, error } = await sb
+                    .from('news_articles')
+                    .select('id, created_at')
+                    .order('created_at', { ascending: false })
+                    .limit(1);
+                if (error) throw error;
+                if (!data || !data.length || !data[0].created_at) return; // chưa có bài tin nào (hoặc chưa có cột created_at)
+                const latestCreatedAt = data[0].created_at;
+
+                // Hỏi thẳng Supabase Auth server để chắc chắn lấy đúng user_metadata mới nhất
+                // (không dùng dữ liệu phiên cũ có thể chưa được làm mới) — giống cách
+                // maybeStartOnboardTour() đang làm ở trên.
+                let freshUser = null;
+                try {
+                    const { data: userData, error: userErr } = await sb.auth.getUser();
+                    if (!userErr && userData) freshUser = userData.user;
+                } catch (err) {
+                    console.error('Lỗi khi kiểm tra tin tức mới (tạm bỏ qua):', err.message);
+                    return;
+                }
+                if (!freshUser) return;
+
+                const lastSeen = freshUser.user_metadata ? freshUser.user_metadata.last_seen_news_created_at : null;
+
+                if (!lastSeen) {
+                    // Lần đầu tiên bật tính năng này trên tài khoản này: chỉ ghi nhận mốc hiện
+                    // tại, KHÔNG hiện thông báo cho những bài tin đã có sẵn từ trước đó.
+                    sb.auth.updateUser({ data: { last_seen_news_created_at: latestCreatedAt } })
+                        .then(({ error: e2 }) => { if (e2) console.error('Lỗi khi lưu mốc tin tức đã xem:', e2.message); })
+                        .catch(err => console.error('Lỗi ngoại lệ khi lưu mốc tin tức đã xem:', err.message));
+                    return;
+                }
+
+                if (new Date(latestCreatedAt).getTime() > new Date(lastSeen).getTime()) {
+                    if (window.vocabTap && window.vocabTap.toast) {
+                        window.vocabTap.toast('📰 Có tin tức mới trong mục Từ vựng → 📁 từ vựng (Tin ngắn)! Vào xem ngay nhé.', 'info');
+                    }
+                    sb.auth.updateUser({ data: { last_seen_news_created_at: latestCreatedAt } })
+                        .then(({ error: e2 }) => { if (e2) console.error('Lỗi khi lưu mốc tin tức đã xem:', e2.message); })
+                        .catch(err => console.error('Lỗi ngoại lệ khi lưu mốc tin tức đã xem:', err.message));
+                }
+            } catch (err) {
+                console.error('Lỗi khi kiểm tra tin tức mới (có thể do bảng "news_articles" chưa có cột "created_at"):', err.message);
+            }
+        }
+        window.checkNewNewsNotification = checkNewNewsNotification; // để updateUIForUser() gọi ngay sau khi đăng nhập
 
         const newsFolderCard  = document.getElementById('news-folder-card');
         const vocabFolderGrid = document.getElementById('vocab-folder-grid');
@@ -4566,6 +4693,17 @@ function toggleCompletion(symbolElement) {
         let titleSaveTimer = null;
         newsArticleTitle.addEventListener('input', () => {
             if (!isTeacher || currentArticleId === null) return;
+
+            // [MỚI] Hiện/ẩn ngay khung chỉnh sửa trắc nghiệm theo tiêu đề đang gõ (có "level 1"
+            // hay không), không cần đợi lưu xong hay thoát ra vào lại bài mới thấy thay đổi.
+            const needsQuizNow = newsTitleNeedsQuiz(newsArticleTitle.textContent);
+            const wasHidden = newsQuizEditSection.style.display === 'none';
+            if (needsQuizNow && wasHidden) {
+                const art = NEWS_DATA.find(a => String(a.id) === String(currentArticleId));
+                if (art) renderQuizEditor(art);
+            }
+            newsQuizEditSection.style.display = needsQuizNow ? 'block' : 'none';
+
             newsEditMetaStatus.textContent = 'Đang gõ...';
             clearTimeout(titleSaveTimer);
             titleSaveTimer = setTimeout(async () => {
@@ -4713,14 +4851,17 @@ function toggleCompletion(symbolElement) {
             initTranslateSection(article);
 
             // ----- Trắc nghiệm: học viên làm bài / giảng viên chỉnh sửa + thấy đáp án -----
+            // [MỚI] Bài có chữ "level 1" trong tiêu đề (tin cơ bản) sẽ ẨN khung trắc nghiệm.
+            // Các bài KHÔNG có "level 1" (level 2, level 3...) mới cần phần trắc nghiệm này.
+            const needsQuiz = newsTitleNeedsQuiz(article.title);
             if (isTeacher) {
                 newsQuizSection.style.display = 'none';
-                newsQuizEditSection.style.display = 'block';
-                renderQuizEditor(article);
+                newsQuizEditSection.style.display = needsQuiz ? 'block' : 'none';
+                if (needsQuiz) renderQuizEditor(article);
             } else {
-                newsQuizSection.style.display = 'block';
+                newsQuizSection.style.display = needsQuiz ? 'block' : 'none';
                 newsQuizEditSection.style.display = 'none';
-                renderStudentQuiz(article);
+                if (needsQuiz) renderStudentQuiz(article);
             }
         }
 
@@ -7819,6 +7960,95 @@ function toggleCompletion(symbolElement) {
         const KID_BATCH1_RANGES = { match: [0, 5],  crossword: [5, 10],  story: [10, 15], game: [15, 25] };
         const KID_BATCH2_RANGES = { match: [25, 30], crossword: [30, 35], story: [35, 40], game: [40, Infinity] };
 
+        // [MỚI] ĐIỂM THƯỞNG "LÀM LẠI": khi một chủ đề đã từng hoàn thành nhưng sau đó bị mất
+        // trạng thái hoàn thành (ví dụ giáo viên/admin bấm giữ 5 giây để bỏ đánh dấu, yêu cầu
+        // học viên ôn lại), rồi học viên hoàn thành lại TOÀN BỘ chủ đề đó lần nữa, thì được
+        // cộng thêm số điểm chăm chỉ này (xem kidHandlePhaseCompleted và tính diligenceScore
+        // trong renderProfileAchievements). Chỉnh số này để tăng/giảm mức thưởng.
+        const KID_TOPIC_REDO_BONUS_POINTS = 5;
+
+        // [MỚI] CƠ CHẾ TỰ ĐỘNG BỎ HOÀN THÀNH THEO THỜI GIAN (yêu cầu ôn tập định kỳ):
+        //   - Hoàn thành LẦN 1        -> 7  ngày sau TỰ ĐỘNG mất hoàn thành, bắt học lại
+        //   - Hoàn thành LẦN 2 (làm lại) -> 14 ngày sau TỰ ĐỘNG mất hoàn thành
+        //   - Hoàn thành LẦN 3 trở đi -> GIỮ VĨNH VIỄN, không bao giờ tự mất nữa
+        // Việc kiểm tra chạy ở PHÍA TRÌNH DUYỆT mỗi khi tải danh sách tiến độ
+        // (kidEnsureProgressMapLoaded) — tức mỗi khi học viên mở lại app / vào mục "Cho bé" /
+        // xem Thành tựu — KHÔNG cần cài thêm gì trên Supabase (không dùng pg_cron/Edge
+        // Function). Vì vậy nếu học viên không mở app trong nhiều ngày liền, việc "mất hoàn
+        // thành" chỉ thực sự áp dụng (và ảnh hưởng điểm chăm chỉ) ngay khi họ mở app trở lại —
+        // không có gì chạy ngầm khi tắt app/đóng trình duyệt.
+        function kidGetAutoExpireDays(timesCompleted) {
+            if (timesCompleted <= 1) return 7;
+            if (timesCompleted === 2) return 14;
+            return null; // >= 3 lần hoàn thành: vĩnh viễn, không tự mất nữa
+        }
+
+        // [MỚI] Ghi thẳng xuống Supabase + cập nhật cache "kidProgressMap" cho ĐÚNG 1 chủ đề cụ
+        // thể. KHÔNG dùng kidSaveTopicProgress() ở đây vì hàm đó thao tác trên biến toàn cục
+        // "kidTopicProgress" (đại diện cho CHỦ ĐỀ ĐANG MỞ) — gọi nhầm cho 1 chủ đề khác đang
+        // KHÔNG mở sẽ ghi đè sai cache của chủ đề đang mở. Hàm riêng này an toàn khi rà soát
+        // MỌI chủ đề trong kidCheckAndExpireCompletions() bên dưới.
+        async function kidExpireTopicProgress(topic) {
+            const key = kidTopicKey(topic);
+            // Bỏ hết cờ hoàn thành (bắt học lại từ đầu) nhưng GIỮ NGUYÊN times_completed (không
+            // có trong patch này) để lần hoàn thành lại sau vẫn tính đúng bậc thưởng/thời hạn kế.
+            const resetPatch = Object.assign(kidEmptyProgress(), { completed_at: null });
+            const existing = kidProgressMap[key] || {};
+            const merged = Object.assign({}, existing, resetPatch);
+            kidProgressMap[key] = merged;
+
+            // Nếu đúng chủ đề này đang mở (panel chi tiết) -> đồng bộ luôn giao diện cho khớp
+            if (typeof currentTopic !== 'undefined' && currentTopic && kidTopicKey(currentTopic) === key) {
+                kidTopicProgress = merged;
+                kidUpdateSubtabIndicators(topic);
+                initFlashcards(topic);
+                initMatchGame(topic);
+                initCrossword(topic);
+                initStory(topic);
+                initGame(topic);
+            }
+
+            if (!currentUserId) return;
+            try {
+                const payload = Object.assign(
+                    { user_id: currentUserId, topic_key: key, updated_at: new Date().toISOString() },
+                    kidEmptyProgress(),
+                    merged
+                );
+                delete payload.id;
+                const { error } = await sb.from('kid_topic_progress').upsert(payload, { onConflict: 'user_id,topic_key' });
+                if (error) console.error('Lỗi khi tự động bỏ hoàn thành (hết hạn) chủ đề "Cho bé":', error);
+            } catch (err) {
+                console.error('Lỗi ngoại lệ khi tự động bỏ hoàn thành chủ đề "Cho bé":', err.message);
+            }
+        }
+
+        // [MỚI] Rà soát toàn bộ chủ đề đã hoàn thành của học viên hiện tại, tự động bỏ đánh dấu
+        // những chủ đề đã "hết hạn ôn tập" theo lịch ở kidGetAutoExpireDays(). Gọi ngay sau khi
+        // kidProgressMap được tải xong (xem kidEnsureProgressMapLoaded).
+        async function kidCheckAndExpireCompletions() {
+            const topics = (typeof KID_TOPICS !== 'undefined') ? KID_TOPICS : [];
+            const now = Date.now();
+            const expiredTitles = [];
+            for (const topic of topics) {
+                const key = kidTopicKey(topic);
+                const progress = kidProgressMap[key];
+                if (!progress || kidGetStage(topic, progress) !== 'free') continue; // chưa hoàn thành -> bỏ qua
+                const timesCompleted = progress.times_completed || 0;
+                const expireDays = kidGetAutoExpireDays(timesCompleted);
+                if (expireDays == null) continue; // hoàn thành >=3 lần -> vĩnh viễn
+                if (!progress.completed_at) continue; // hoàn thành từ TRƯỚC khi có tính năng này -> không có mốc để tính, bỏ qua an toàn
+                const completedAtMs = new Date(progress.completed_at).getTime();
+                if (isNaN(completedAtMs) || now < completedAtMs + expireDays * 24 * 60 * 60 * 1000) continue; // chưa hết hạn
+                await kidExpireTopicProgress(topic);
+                expiredTitles.push(topic.title);
+            }
+            if (expiredTitles.length && window.vocabTap && window.vocabTap.toast) {
+                const shown = expiredTitles.slice(0, 3).join(', ') + (expiredTitles.length > 3 ? ` và ${expiredTitles.length - 3} chủ đề khác` : '');
+                window.vocabTap.toast(`⏰ Đã quá hạn ôn tập, tự động bỏ đánh dấu hoàn thành: ${shown}. Hãy học lại nhé!`, 'info');
+            }
+        }
+
         function kidTopicKey(topic) {
             return String(topic.title || 'topic').trim().toLowerCase()
                 .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // bỏ dấu tiếng Việt cho khóa gọn, an toàn
@@ -7866,12 +8096,26 @@ function toggleCompletion(symbolElement) {
                 kidProgressMap = {};
             }
             kidProgressMapLoadedForUser = currentUserId;
+            await kidCheckAndExpireCompletions(); // [MỚI] tự động bỏ hoàn thành các chủ đề đã hết hạn ôn tập
         }
 
         // 1 chủ đề được coi là "đã hoàn thành" khi đã xong toàn bộ lộ trình (giai đoạn 'free')
         function kidIsTopicCompleted(topic) {
             const progress = kidProgressMap[kidTopicKey(topic)] || kidEmptyProgress();
             return kidGetStage(topic, progress) === 'free';
+        }
+
+        // [MỚI] Tổng số LẦN HOÀN THÀNH LẠI (không tính lần hoàn thành đầu tiên) cộng dồn trên
+        // TẤT CẢ chủ đề của học viên này — dùng để cộng điểm chăm chỉ thưởng trong
+        // renderProfileAchievements(). Ví dụ 1 chủ đề có times_completed = 3 (hoàn thành lần
+        // đầu + 2 lần làm lại sau khi bị mất trạng thái hoàn thành) thì tính là 2 lần làm lại.
+        function kidGetTotalRedoCount() {
+            let total = 0;
+            Object.keys(kidProgressMap).forEach(key => {
+                const timesCompleted = kidProgressMap[key].times_completed || 0;
+                if (timesCompleted > 1) total += (timesCompleted - 1);
+            });
+            return total;
         }
 
         async function kidLoadTopicProgress(topic) {
@@ -8127,6 +8371,19 @@ function toggleCompletion(symbolElement) {
                 kidNotifyUnlocked('🎉 Bạn đã hoàn thành 25 từ đầu tiên! Toàn bộ từ vựng của chủ đề đã được mở khóa.');
                 kidShowBatch1CompletedPopup(topic); // [MỚI] popup nhắc nhở giữa màn hình: đã xong 25 từ, hãy học nốt phần còn lại
             } else if (stageAfter === 'free') {
+                // [MỚI] ĐIỂM THƯỞNG "LÀM LẠI": nếu chủ đề này đã từng được hoàn thành ít nhất 1
+                // lần trước đó (times_completed > 0) rồi bị mất trạng thái hoàn thành (bị bỏ
+                // đánh dấu để bắt học lại), thì lần hoàn thành lại này được cộng thêm điểm chăm
+                // chỉ thưởng — xem KID_TOPIC_REDO_BONUS_POINTS và renderProfileAchievements().
+                // Cột "times_completed" đếm số lần chủ đề được hoàn thành trọn vẹn trong suốt
+                // quá trình học (không bị reset khi admin bỏ đánh dấu — xem kidAdminToggleTopicCompletion).
+                const timesCompletedBefore = kidTopicProgress.times_completed || 0;
+                // [MỚI] Ghi lại mốc thời gian hoàn thành (completed_at) để kidCheckAndExpireCompletions()
+                // tính đúng khi nào tự động hết hạn (7 ngày/14 ngày — xem kidGetAutoExpireDays).
+                await kidSaveTopicProgress(topic, { times_completed: timesCompletedBefore + 1, completed_at: new Date().toISOString() });
+                if (timesCompletedBefore > 0) {
+                    kidNotifyUnlocked(`🔥 Bạn đã hoàn thành lại chủ đề "${topic.title}"! +${KID_TOPIC_REDO_BONUS_POINTS} điểm chăm chỉ thưởng.`);
+                }
                 // [MỚI] Hoàn thành toàn bộ lộ trình -> hiện hộp thoại chúc mừng + chủ đề chuyển xanh lá trong danh sách
                 kidShowTopicCompletedDialog(topic);
                 renderTopicGrid();
@@ -9859,7 +10116,9 @@ function toggleCompletion(symbolElement) {
         window.kidTopicsAPI = {
             getTopics: () => (typeof KID_TOPICS !== 'undefined' ? KID_TOPICS : []),
             isTopicCompleted: kidIsTopicCompleted,
-            ensureProgressMapLoaded: kidEnsureProgressMapLoaded
+            ensureProgressMapLoaded: kidEnsureProgressMapLoaded,
+            getTotalRedoCount: kidGetTotalRedoCount, // [MỚI] dùng cho điểm thưởng "làm lại" trong Thành tựu
+            REDO_BONUS_POINTS: KID_TOPIC_REDO_BONUS_POINTS // [MỚI] renderProfileAchievements() ở phạm vi global không đọc được hằng số khai báo trong IIFE này, nên phải xuất ra qua đây
         };
 
     })();
@@ -9920,6 +10179,57 @@ function toggleCompletion(symbolElement) {
         // thêm cột "story_done boolean default false" vào bảng "thcs_unit_progress" nếu bảng
         // đã được tạo từ trước khi có điều kiện thứ 3 này.)
         // ===================================================================
+        // [MỚI] ĐIỂM THƯỞNG "LÀM LẠI": giống hệt cơ chế bên "Cho bé" — xem
+        // KID_TOPIC_REDO_BONUS_POINTS. Khi 1 Unit đã từng hoàn thành nhưng bị admin bỏ đánh
+        // dấu (giữ 5 giây vào thẻ Unit -> nhập mật khẩu) để bắt học lại, rồi học viên hoàn
+        // thành lại TOÀN BỘ Unit đó lần nữa, thì được cộng thêm số điểm chăm chỉ này.
+        const THCS_UNIT_REDO_BONUS_POINTS = 5;
+
+        // [MỚI] CƠ CHẾ TỰ ĐỘNG BỎ HOÀN THÀNH THEO THỜI GIAN — giống hệt bên "Cho bé" (xem
+        // kidGetAutoExpireDays):
+        //   - Hoàn thành LẦN 1        -> 7  ngày sau TỰ ĐỘNG mất hoàn thành, bắt học lại
+        //   - Hoàn thành LẦN 2 (làm lại) -> 14 ngày sau TỰ ĐỘNG mất hoàn thành
+        //   - Hoàn thành LẦN 3 trở đi -> GIỮ VĨNH VIỄN, không bao giờ tự mất nữa
+        // Kiểm tra ở PHÍA TRÌNH DUYỆT mỗi khi tải tiến độ (thcsEnsureProgressLoaded) — không cần
+        // cài thêm gì trên Supabase (không dùng pg_cron/Edge Function).
+        function thcsGetAutoExpireDays(timesCompleted) {
+            if (timesCompleted <= 1) return 7;
+            if (timesCompleted === 2) return 14;
+            return null; // >= 3 lần hoàn thành: vĩnh viễn, không tự mất nữa
+        }
+
+        // [MỚI] Rà soát toàn bộ Unit (mọi khối lớp 6-12) đã hoàn thành của học viên hiện tại, tự
+        // động bỏ đánh dấu những Unit đã "hết hạn ôn tập". Gọi ngay sau khi thcsProgressMap được
+        // tải xong (xem thcsEnsureProgressLoaded). Dùng thẳng thcsSaveProgress() vì hàm đó nhận
+        // gradeNum/unitId tường minh (không như bên "Cho bé"), nên an toàn khi gọi cho bất kỳ
+        // Unit nào, kể cả Unit đang KHÔNG mở.
+        async function thcsCheckAndExpireCompletions() {
+            const now = Date.now();
+            const expiredTitles = [];
+            for (let g = 6; g <= 12; g++) {
+                const units = thcsGetGradeUnits(g);
+                if (!units) continue;
+                for (const unit of units) {
+                    const progress = thcsGetProgress(g, unit.id);
+                    if (!progress.completed) continue; // chưa hoàn thành -> bỏ qua
+                    const timesCompleted = progress.times_completed || 0;
+                    const expireDays = thcsGetAutoExpireDays(timesCompleted);
+                    if (expireDays == null) continue; // hoàn thành >=3 lần -> vĩnh viễn
+                    if (!progress.completed_at) continue; // hoàn thành từ TRƯỚC khi có tính năng này -> bỏ qua an toàn
+                    const completedAtMs = new Date(progress.completed_at).getTime();
+                    if (isNaN(completedAtMs) || now < completedAtMs + expireDays * 24 * 60 * 60 * 1000) continue; // chưa hết hạn
+                    await thcsSaveProgress(g, unit.id, { flashcard_done: false, translate_done: false, story_done: false, completed_at: null });
+                    if (currentUnit && currentUnit.id === unit.id && currentGradeNum === g) {
+                        thcsUpdateSubtabIndicators(unit);
+                    }
+                    expiredTitles.push(`Unit ${unit.number}`);
+                }
+            }
+            if (expiredTitles.length && window.vocabTap && window.vocabTap.toast) {
+                const shown = expiredTitles.slice(0, 3).join(', ') + (expiredTitles.length > 3 ? ` và ${expiredTitles.length - 3} Unit khác` : '');
+                window.vocabTap.toast(`⏰ Đã quá hạn ôn tập, tự động bỏ đánh dấu hoàn thành: ${shown}. Hãy học lại nhé!`, 'info');
+            }
+        }
         let thcsProgressMap = {};             // "grade::unitId" -> {flashcard_done, translate_done, story_done, completed}
         let thcsProgressLoadedForUser = null; // userId đã tải xong — tránh gọi Supabase lặp lại
 
@@ -9932,7 +10242,7 @@ function toggleCompletion(symbolElement) {
             try {
                 const { data, error } = await sb
                     .from('thcs_unit_progress')
-                    .select('grade, unit_id, flashcard_done, translate_done, story_done, completed')
+                    .select('grade, unit_id, flashcard_done, translate_done, story_done, completed, times_completed, completed_at')
                     .eq('user_id', currentUserId);
                 if (error) throw error;
                 thcsProgressMap = {};
@@ -9954,8 +10264,12 @@ function toggleCompletion(symbolElement) {
                         flashcard_done: !!(existing.flashcard_done || row.flashcard_done),
                         translate_done: !!(existing.translate_done || row.translate_done),
                         story_done: !!(existing.story_done || row.story_done),
-                        completed: !!(existing.completed || row.completed)
-                    } : row;
+                        completed: !!(existing.completed || row.completed),
+                        // [MỚI] Lấy giá trị LỚN HƠN giữa các dòng trùng (phòng trường hợp bảng
+                        // thiếu UNIQUE constraint như mô tả ở trên), để không bị mất lượt đã đếm.
+                        times_completed: Math.max(existing.times_completed || 0, row.times_completed || 0),
+                        completed_at: existing.completed_at || row.completed_at || null // [MỚI]
+                    } : Object.assign({ times_completed: 0, completed_at: null }, row);
                 });
                 // Vẫn còn nhiều dòng trùng (user_id, grade, unit_id) cho cùng 1 Unit -> bảng chắc
                 // chắn đang thiếu ràng buộc UNIQUE cần thiết để onConflict hoạt động đúng. Báo rõ
@@ -9988,18 +10302,24 @@ function toggleCompletion(symbolElement) {
             if (thcsProgressLoadedForUser === currentUserId) return;
             await thcsLoadProgress();
             thcsProgressLoadedForUser = currentUserId;
+            await thcsCheckAndExpireCompletions(); // [MỚI] tự động bỏ hoàn thành các Unit đã hết hạn ôn tập
         }
 
         function thcsGetProgress(gradeNum, unitId) {
-            return thcsProgressMap[thcsProgressKey(gradeNum, unitId)] || { flashcard_done: false, translate_done: false, story_done: false, completed: false };
+            return thcsProgressMap[thcsProgressKey(gradeNum, unitId)] || { flashcard_done: false, translate_done: false, story_done: false, completed: false, times_completed: 0, completed_at: null };
         }
 
         // Lưu (upsert) tiến độ của 1 Unit — patch chỉ chứa các cờ cần cập nhật.
         // Trả về bản ghi tiến độ đầy đủ sau khi gộp (đã tính lại completed).
+        // LƯU Ý: hàm này CHỈ ghi lại đúng những gì được truyền vào patch — không tự ý tăng
+        // "times_completed" (việc phát hiện "vừa hoàn thành lần đầu/lần lại" và tăng đếm được
+        // xử lý riêng ở thcsHandleUnitJustCompleted, do 3 nơi gọi hàm này — Flashcard/Dịch câu/
+        // Câu chuyện — dùng chung; tách riêng để nút admin "Cho làm lại"/"Đánh dấu hoàn thành"
+        // (thcsAdminToggleUnitCompletion) không vô tình cộng nhầm điểm thưởng).
         async function thcsSaveProgress(gradeNum, unitId, patch) {
             if (!gradeNum || !unitId) return null;
             const key = thcsProgressKey(gradeNum, unitId);
-            const existing = thcsProgressMap[key] || { flashcard_done: false, translate_done: false, story_done: false, completed: false };
+            const existing = thcsProgressMap[key] || { flashcard_done: false, translate_done: false, story_done: false, completed: false, times_completed: 0, completed_at: null };
             const merged = Object.assign({}, existing, patch);
             merged.completed = !!(merged.flashcard_done && merged.translate_done && merged.story_done);
             thcsProgressMap[key] = merged; // cập nhật cache ngay để UI phản hồi tức thì
@@ -10015,6 +10335,8 @@ function toggleCompletion(symbolElement) {
                     translate_done: merged.translate_done,
                     story_done: merged.story_done,
                     completed: merged.completed,
+                    times_completed: merged.times_completed || 0,
+                    completed_at: merged.completed_at || null, // [MỚI] mốc thời gian hoàn thành, dùng để tự động hết hạn
                     updated_at: new Date().toISOString()
                 };
                 const { error } = await sb
@@ -10054,6 +10376,22 @@ function toggleCompletion(symbolElement) {
         function thcsNotifyUnitCompleted() {
             if (window.vocabTap && window.vocabTap.toast) {
                 window.vocabTap.toast('🎉 Chúc mừng! Bạn đã hoàn thành Unit này. Unit tiếp theo đã được mở khóa.', 'success');
+            }
+        }
+
+        // [MỚI] Gọi ngay khi phát hiện 1 Unit VỪA chuyển từ "chưa hoàn thành" sang "đã hoàn
+        // thành" (dùng chung cho cả 3 hành động Flashcard/Dịch câu/Câu chuyện — mỗi nơi tự so
+        // sánh trạng thái "completed" TRƯỚC và SAU khi lưu để biết có nên gọi hàm này không).
+        // Nếu Unit này đã từng hoàn thành ít nhất 1 lần trước đó (bị admin bỏ đánh dấu để bắt
+        // học lại — xem thcsAdminToggleUnitCompletion) thì lần hoàn thành lại này được cộng
+        // thêm điểm chăm chỉ thưởng, giống hệt cơ chế bên "Cho bé" (KID_TOPIC_REDO_BONUS_POINTS).
+        async function thcsHandleUnitJustCompleted(gradeNum, unitId, mergedBeforeCountIncrement) {
+            const timesCompletedBefore = mergedBeforeCountIncrement.times_completed || 0;
+            // [MỚI] Ghi lại mốc thời gian hoàn thành (completed_at) để thcsCheckAndExpireCompletions()
+            // tính đúng khi nào tự động hết hạn (7 ngày/14 ngày — xem thcsGetAutoExpireDays).
+            await thcsSaveProgress(gradeNum, unitId, { times_completed: timesCompletedBefore + 1, completed_at: new Date().toISOString() });
+            if (timesCompletedBefore > 0 && window.vocabTap && window.vocabTap.toast) {
+                window.vocabTap.toast(`🔥 Bạn đã hoàn thành lại Unit đã từng bị mất hoàn thành! +${THCS_UNIT_REDO_BONUS_POINTS} điểm chăm chỉ thưởng.`, 'success');
             }
         }
         function thcsNotifyLoginToSave() {
@@ -10186,6 +10524,68 @@ function toggleCompletion(symbolElement) {
             thcsPanel.style.display = 'block';
         });
 
+        // [MỚI] Giữ chuột/chạm 5 giây vào thẻ Unit -> mở hộp thoại nhập mật khẩu Admin để bật/tắt
+        // trạng thái hoàn thành, dùng để bắt học viên học lại 1 Unit — giống hệt cơ chế
+        // kidAttachAdminHoldToggle bên "Cho bé".
+        function thcsAttachAdminHoldToggle(el, onTrigger) {
+            const THCS_ADMIN_HOLD_MS = 5000;
+            let holdTimer = null;
+            const startHold = () => {
+                if (holdTimer) clearTimeout(holdTimer);
+                holdTimer = setTimeout(() => {
+                    holdTimer = null;
+                    onTrigger();
+                }, THCS_ADMIN_HOLD_MS);
+            };
+            const cancelHold = () => {
+                if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+            };
+            el.addEventListener('mousedown', startHold);
+            el.addEventListener('mouseup', cancelHold);
+            el.addEventListener('mouseleave', cancelHold);
+            el.addEventListener('touchstart', startHold, { passive: true });
+            el.addEventListener('touchend', cancelHold);
+            el.addEventListener('touchcancel', cancelHold);
+        }
+
+        // [MỚI] Bật/tắt trạng thái hoàn thành 1 Unit (yêu cầu mật khẩu Admin) — giống hệt
+        // kidAdminToggleTopicCompletion bên "Cho bé". LƯU Ý: nhánh "đánh dấu hoàn thành" ở đây
+        // KHÔNG cộng điểm thưởng làm lại (times_completed không tăng) — điểm thưởng chỉ tính khi
+        // chính học viên tự hoàn thành lại qua thcsHandleUnitJustCompleted, để tránh admin lỡ
+        // tay cộng nhầm điểm cho học viên.
+        async function thcsAdminToggleUnitCompletion(gradeNum, unit) {
+            if (!currentUserId) {
+                alert('Vui lòng đăng nhập trước khi dùng chức năng này!');
+                return;
+            }
+            const pass = prompt('Nhập mật khẩu Admin để bật/tắt trạng thái hoàn thành Unit:');
+            if (pass === null) return; // bấm Cancel
+            if (pass !== ADMIN_PASSWORD) {
+                alert('Sai mật khẩu!');
+                return;
+            }
+
+            const isCompletedNow = !!thcsGetProgress(gradeNum, unit.id).completed;
+            // Đánh dấu hoàn thành -> bật cả 3 cờ. Bỏ hoàn thành -> tắt cả 3, bắt học lại từ đầu.
+            // (times_completed KHÔNG nằm trong patch này nên luôn được giữ nguyên — xem
+            // thcsSaveProgress.)
+            const patch = isCompletedNow
+                ? { flashcard_done: false, translate_done: false, story_done: false }
+                : { flashcard_done: true, translate_done: true, story_done: true };
+
+            await thcsSaveProgress(gradeNum, unit.id, patch);
+            renderUnitGrid();
+
+            // Nếu đúng Unit này đang mở sẵn -> cập nhật lại chỉ báo các tab con cho khớp
+            if (currentUnit && currentUnit.id === unit.id && currentGradeNum === gradeNum) {
+                thcsUpdateSubtabIndicators(unit);
+            }
+
+            alert(isCompletedNow
+                ? `⬜ Đã BỎ đánh dấu hoàn thành Unit ${unit.number}: "${unit.titleVi}".`
+                : `✅ Đã đánh dấu HOÀN THÀNH Unit ${unit.number}: "${unit.titleVi}".`);
+        }
+
         // ---------- Bước 2: Danh sách Unit của khối lớp đang chọn ----------
         async function renderUnitGrid() {
             await thcsEnsureProgressLoaded();
@@ -10207,6 +10607,7 @@ function toggleCompletion(symbolElement) {
                 } else {
                     card.title = 'Hoàn thành Unit trước đó để mở khóa Unit này!';
                 }
+                thcsAttachAdminHoldToggle(card, () => thcsAdminToggleUnitCompletion(currentGradeNum, unit)); // [MỚI]
                 thcsUnitGrid.appendChild(card);
             });
         }
@@ -10494,10 +10895,12 @@ function toggleCompletion(symbolElement) {
             if (!currentUnit) return;
             const already = thcsGetProgress(currentGradeNum, currentUnit.id).flashcard_done;
             if (already) return; // đã ghi nhận rồi, không cần lưu lại
+            const wasCompletedBefore = !!thcsGetProgress(currentGradeNum, currentUnit.id).completed; // [MỚI]
             const merged = await thcsSaveProgress(currentGradeNum, currentUnit.id, { flashcard_done: true });
             thcsUpdateSubtabIndicators(currentUnit);
             if (merged && merged.completed) {
                 thcsNotifyUnitCompleted();
+                if (!wasCompletedBefore) await thcsHandleUnitJustCompleted(currentGradeNum, currentUnit.id, merged); // [MỚI]
             } else if (!currentUserId) {
                 thcsNotifyLoginToSave();
             }
@@ -10705,10 +11108,12 @@ function toggleCompletion(symbolElement) {
 
         async function thcsHandleTranslateCompleted() {
             if (!currentUnit) return;
+            const wasCompletedBefore = !!thcsGetProgress(currentGradeNum, currentUnit.id).completed; // [MỚI]
             const merged = await thcsSaveProgress(currentGradeNum, currentUnit.id, { translate_done: true });
             thcsUpdateSubtabIndicators(currentUnit);
             if (merged && merged.completed) {
                 thcsNotifyUnitCompleted();
+                if (!wasCompletedBefore) await thcsHandleUnitJustCompleted(currentGradeNum, currentUnit.id, merged); // [MỚI]
             } else if (!currentUserId) {
                 thcsNotifyLoginToSave();
             }
@@ -11000,10 +11405,12 @@ function toggleCompletion(symbolElement) {
             if (!currentUnit) return;
             const already = thcsGetProgress(currentGradeNum, currentUnit.id).story_done;
             if (already) return; // đã ghi nhận rồi, không cần lưu lại
+            const wasCompletedBefore = !!thcsGetProgress(currentGradeNum, currentUnit.id).completed; // [MỚI]
             const merged = await thcsSaveProgress(currentGradeNum, currentUnit.id, { story_done: true });
             thcsUpdateSubtabIndicators(currentUnit);
             if (merged && merged.completed) {
                 thcsNotifyUnitCompleted();
+                if (!wasCompletedBefore) await thcsHandleUnitJustCompleted(currentGradeNum, currentUnit.id, merged); // [MỚI]
             } else if (!currentUserId) {
                 thcsNotifyLoginToSave();
             }
@@ -11573,7 +11980,19 @@ function toggleCompletion(symbolElement) {
                 return list;
             },
             ensureProgressLoaded: thcsEnsureProgressLoaded,
-            isUnitCompleted: (gradeNum, unit) => !!thcsGetProgress(gradeNum, unit.id).completed
+            isUnitCompleted: (gradeNum, unit) => !!thcsGetProgress(gradeNum, unit.id).completed,
+            // [MỚI] Tổng số LẦN HOÀN THÀNH LẠI (không tính lần hoàn thành đầu tiên) cộng dồn
+            // trên TẤT CẢ Unit (mọi khối lớp 6-12) của học viên này — dùng để cộng điểm chăm
+            // chỉ thưởng trong renderProfileAchievements(), giống hệt kidTopicsAPI.getTotalRedoCount.
+            getTotalRedoCount: () => {
+                let total = 0;
+                Object.keys(thcsProgressMap).forEach(key => {
+                    const timesCompleted = thcsProgressMap[key].times_completed || 0;
+                    if (timesCompleted > 1) total += (timesCompleted - 1);
+                });
+                return total;
+            },
+            REDO_BONUS_POINTS: THCS_UNIT_REDO_BONUS_POINTS // [MỚI] để renderProfileAchievements() tính điểm thưởng đồng bộ với thông báo ở trên
         };
 
     })();
@@ -13357,7 +13776,7 @@ function toggleCompletion(symbolElement) {
     if (editorBackBtn) editorBackBtn.addEventListener('click', () => { showView('list'); loadAndRenderList(); });
     const takeBackBtn = document.getElementById('ctest-take-back-btn');
     if (takeBackBtn) takeBackBtn.addEventListener('click', () => {
-        if (!confirm('Thoát khỏi bài làm? Tiến độ hiện tại đã được lưu, bạn có thể quay lại làm tiếp sau.')) return;
+        if (!confirm('Thoát khỏi bài làm? Tiến độ hiện tại đã được lưu, nhưng ĐỒNG HỒ ĐẾM GIỜ VẪN TIẾP TỤC CHẠY dù bạn không ở trong bài — hãy quay lại sớm để không bị hết giờ.')) return;
         showView('list'); loadAndRenderList();
     });
     const resultBackBtn = document.getElementById('ctest-result-back-btn');
@@ -13467,7 +13886,20 @@ function toggleCompletion(symbolElement) {
                 let badge;
                 if (!sub) badge = '<span class="ctest-status-badge ctest-status-not-started">Chưa làm</span>';
                 else if (sub.status === 'submitted') badge = '<span class="ctest-status-badge ctest-status-submitted">Đã nộp — ' + sub.score_correct + '/' + sub.score_total + '</span>';
-                else badge = '<span class="ctest-status-badge ctest-status-in-progress">Đang làm dở</span>';
+                else {
+                    // [MỚI] Đồng hồ đếm giờ chạy theo started_at, không dừng khi thoát ra ngoài,
+                    // nên hiển thị rõ thời gian còn lại để học viên biết trước khi bấm vào làm tiếp,
+                    // tránh trường hợp mở lại và bị tự động nộp gần như ngay lập tức mà không hiểu vì sao.
+                    let remainLabel = 'Đang làm dở';
+                    if (test.duration_minutes && sub.started_at) {
+                        const elapsedSec = Math.floor((Date.now() - new Date(sub.started_at).getTime()) / 1000);
+                        const remainSec = test.duration_minutes * 60 - elapsedSec;
+                        remainLabel = remainSec > 0
+                            ? 'Đang làm dở — còn ' + Math.ceil(remainSec / 60) + ' phút'
+                            : 'Đang làm dở — đã hết giờ, sẽ tự nộp khi mở lại';
+                    }
+                    badge = '<span class="ctest-status-badge ctest-status-in-progress">' + remainLabel + '</span>';
+                }
                 const main = document.createElement('div');
                 main.className = 'ctest-test-row-main';
                 main.innerHTML =
@@ -13896,14 +14328,22 @@ function toggleCompletion(symbolElement) {
         }
     }
 
+    // [SỬA LỖI] Trước đây CHỈ CẦN document bị "hidden" rồi "visible" lại — dù chỉ
+    // trong tích tắc (do thông báo hệ thống, popup xin quyền, trình quản lý mật
+    // khẩu tự bật lên, chuyển app rồi quay lại ngay trên điện thoại...) — là đã
+    // bị tính 1 lần vi phạm ngay lập tức. Vì vậy có thể bị "TỰ ĐỘNG NỘP" bài dù
+    // học viên không hề chủ động chuyển tab/cửa sổ. Nay chỉ tính là vi phạm nếu
+    // thời gian bị ẩn đi >= CTEST_HIDDEN_GRACE_MS (mặc định 1.5 giây).
+    const CTEST_HIDDEN_GRACE_MS = 1500;
     function ctestOnVisibilityChange() {
         if (document.hidden) {
             hiddenSinceMs = Date.now();
         } else if (hiddenSinceMs !== null) {
+            const hiddenDurationMs = Date.now() - hiddenSinceMs;
             let wasReload = false;
             try { wasReload = sessionStorage.getItem(CTEST_RELOAD_FLAG_KEY) === '1'; } catch (e) {}
             hiddenSinceMs = null;
-            if (!wasReload) ctestRecordViolation('chuyển sang tab/cửa sổ khác');
+            if (!wasReload && hiddenDurationMs >= CTEST_HIDDEN_GRACE_MS) ctestRecordViolation('chuyển sang tab/cửa sổ khác');
             try { sessionStorage.removeItem(CTEST_RELOAD_FLAG_KEY); } catch (e) {}
         }
     }
@@ -14038,6 +14478,19 @@ function toggleCompletion(symbolElement) {
         } catch (err) {
             alert('Không thể mở bài kiểm tra: ' + err.message);
             return;
+        }
+        // [MỚI] Đồng hồ đếm giờ tính theo started_at (thời điểm MỞ ĐẦU TIÊN), không dừng khi
+        // thoát ra ngoài. Nếu học viên từng mở bài này trước đó rồi thoát ra, phần lớn (hoặc
+        // toàn bộ) thời gian có thể đã trôi qua trong lúc họ không ở trong bài — báo rõ điều
+        // này để tránh cảm giác "vừa mới làm đã tự động nộp" mà không hiểu vì sao.
+        if (existingSubmission && test.duration_minutes) {
+            const elapsedSec = Math.floor((Date.now() - new Date(currentSubmission.started_at).getTime()) / 1000);
+            const remainSec = test.duration_minutes * 60 - elapsedSec;
+            if (remainSec <= 0) {
+                alert('⏰ Bạn đã mở bài này trước đó và thời gian làm bài (' + test.duration_minutes + ' phút) đã hết trong lúc bạn không ở trong bài. Bài sẽ được tự động nộp ngay bây giờ.');
+            } else if (remainSec <= 120) {
+                alert('⚠️ Bạn đã mở bài này trước đó — chỉ còn khoảng ' + Math.ceil(remainSec / 60) + ' phút trước khi hết giờ (đồng hồ vẫn chạy cả lúc bạn không ở trong bài).');
+            }
         }
         showView('take');
         renderTakeSections(test);
@@ -15881,14 +16334,18 @@ function toggleCompletion(symbolElement) {
             violationBanner.textContent = '⚠️ Cảnh báo vi phạm lần ' + iltViolationCount + '/3 (' + reason + '). Vi phạm lần thứ 3, bài sẽ tự động được nộp.';
         }
     }
+    // [SỬA LỖI] Chỉ tính là vi phạm nếu bị ẩn đi >= ngưỡng thời gian tối thiểu,
+    // tránh nộp bài oan vì mất focus tức thời (thông báo, popup xin quyền...).
+    const ILT_HIDDEN_GRACE_MS = 1500;
     function iltOnVisibilityChange() {
         if (document.hidden) {
             iltHiddenSinceMs = Date.now();
         } else if (iltHiddenSinceMs !== null) {
+            const hiddenDurationMs = Date.now() - iltHiddenSinceMs;
             let wasReload = false;
             try { wasReload = sessionStorage.getItem(ILT_RELOAD_FLAG_KEY) === '1'; } catch (e) {}
             iltHiddenSinceMs = null;
-            if (!wasReload) iltRecordViolation('chuyển sang tab/cửa sổ khác');
+            if (!wasReload && hiddenDurationMs >= ILT_HIDDEN_GRACE_MS) iltRecordViolation('chuyển sang tab/cửa sổ khác');
             try { sessionStorage.removeItem(ILT_RELOAD_FLAG_KEY); } catch (e) {}
         }
     }
@@ -16421,6 +16878,7 @@ function toggleCompletion(symbolElement) {
     const answerSheetGrid = document.getElementById('irt-answer-sheet-grid');
     const answerSheetToggleBtn = document.getElementById('irt-answer-sheet-toggle');
     const answerSheetCloseBtn  = document.getElementById('irt-answer-sheet-close');
+    const focusToggleBtn       = document.getElementById('irt-focus-toggle-btn'); // [MỚI] nút bật/tắt chế độ tập trung
 
     const readyModal     = document.getElementById('irt-ready-modal');
     const readyModalText = document.getElementById('irt-ready-modal-text');
@@ -16436,6 +16894,7 @@ function toggleCompletion(symbolElement) {
     let currentAnswers       = {};
     let currentMode          = 'take'; // 'take' | 'preview' | 'result'
     let currentTakeTest      = null;
+    let iltFocusMode         = true; // [MỚI] chế độ tập trung — mặc định BẬT khi vào làm bài thật
 
     // [MỚI] state phục vụ: làm bài thật có chống gian lận (chuyển tab/chuyển trang) +
     // đếm giờ + lưu tiến độ dở dang (giữ nguyên khi tải lại trang) + bôi đen (highlight)
@@ -18138,7 +18597,19 @@ function toggleCompletion(symbolElement) {
         currentPartIdx = idx;
         if (takeBodyEl) {
             takeBodyEl.querySelectorAll('.irt-render-part').forEach(el => {
-                el.style.display = (Number(el.dataset.partIdx) === idx) ? 'block' : 'none';
+                // [MỚI] 'flex' thay vì 'block' — .irt-render-part giờ là 1 khung flex-column
+                // (xem CSS .irt-render-part + #irt-take-view.irt-focus-active .irt-render-part)
+                // để 2 khung con (passage/câu hỏi) bên trong co giãn lấp đầy chiều cao còn lại
+                // và tự cuộn riêng thay vì cuộn cả .irt-take-main.
+                const isActive = Number(el.dataset.partIdx) === idx;
+                el.style.display = isActive ? 'flex' : 'none';
+                if (isActive) {
+                    // Cuộn về đầu cả 2 khung (passage + câu hỏi) mỗi khi đổi Passage.
+                    const pCol = el.querySelector('.irt-render-passage-col');
+                    const qCol = el.querySelector('.irt-render-questions-col');
+                    if (pCol) pCol.scrollTop = 0;
+                    if (qCol) qCol.scrollTop = 0;
+                }
             });
         }
         if (partNavEl) {
@@ -18199,6 +18670,7 @@ function toggleCompletion(symbolElement) {
             setTimeout(() => elm.classList.remove('irt-jump-flash'), 1200);
         });
         if (answerSheetEl) answerSheetEl.classList.remove('is-open'); // đóng lại khung đáp án trên di động sau khi bấm
+        if (answerSheetToggleBtn) answerSheetToggleBtn.classList.remove('is-hidden'); // [MỚI] hiện lại nút 📝 Đáp án
     }
     function iltNotifyAnswerChanged(elm) {
         const qn = elm && elm.dataset ? elm.dataset.qnum : null;
@@ -18249,14 +18721,20 @@ function toggleCompletion(symbolElement) {
             violationBanner.textContent = '⚠️ Cảnh báo vi phạm lần ' + iltViolationCount + '/3 (' + reason + '). Vi phạm lần thứ 3, bài sẽ tự động được nộp.';
         }
     }
+    // [SỬA LỖI] Chỉ tính là vi phạm nếu bị ẩn đi >= ngưỡng thời gian tối thiểu,
+    // tránh nộp bài oan vì mất focus tức thời (thông báo, popup xin quyền...).
+    // Module này không có kiểm tra copy/phím tắt nào khác — visibilitychange là
+    // nguồn vi phạm DUY NHẤT, nên đây là nơi dễ bị nộp oan nhất trong 3 module.
+    const IRT_HIDDEN_GRACE_MS = 1500;
     function iltOnVisibilityChange() {
         if (document.hidden) {
             iltHiddenSinceMs = Date.now();
         } else if (iltHiddenSinceMs !== null) {
+            const hiddenDurationMs = Date.now() - iltHiddenSinceMs;
             let wasReload = false;
             try { wasReload = sessionStorage.getItem(IRT_RELOAD_FLAG_KEY) === '1'; } catch (e) {}
             iltHiddenSinceMs = null;
-            if (!wasReload) iltRecordViolation('chuyển sang tab/cửa sổ khác');
+            if (!wasReload && hiddenDurationMs >= IRT_HIDDEN_GRACE_MS) iltRecordViolation('chuyển sang tab/cửa sổ khác');
             try { sessionStorage.removeItem(IRT_RELOAD_FLAG_KEY); } catch (e) {}
         }
     }
@@ -18386,8 +18864,11 @@ function toggleCompletion(symbolElement) {
         takeBodyEl.appendChild(el);
         iltBuildPartNav();
         iltShowPart(0);
-        if (answerSheetEl) answerSheetEl.style.display = '';
-        if (answerSheetToggleBtn) answerSheetToggleBtn.style.display = '';
+        // [MỚI] Reset lại trạng thái mở/ẩn của Bảng câu trả lời + nút nổi 📝 Đáp án mỗi
+        // khi bắt đầu 1 bài mới — tránh trường hợp thoát dở dang lúc bảng đang mở rồi
+        // vào bài khác thì bảng/nút bị kẹt sai trạng thái từ lần trước.
+        if (answerSheetEl) { answerSheetEl.style.display = ''; answerSheetEl.classList.remove('is-open'); }
+        if (answerSheetToggleBtn) { answerSheetToggleBtn.style.display = ''; answerSheetToggleBtn.classList.remove('is-hidden'); }
         iltBuildAnswerSheet(total);
         // Khôi phục lại các highlight đã lưu (nếu học viên lỡ tải lại trang giữa chừng).
         takeBodyEl.querySelectorAll('.irt-render-part').forEach(partEl => {
@@ -18407,6 +18888,9 @@ function toggleCompletion(symbolElement) {
         violationBanner.style.display = iltViolationCount > 0 ? 'block' : 'none';
         if (iltViolationCount > 0) violationBanner.textContent = '⚠️ Bạn đã vi phạm ' + iltViolationCount + '/3 lần trước đó trong bài này.';
         showView('take');
+        // [MỚI] Mặc định mở bài đọc thật ở chế độ tập trung (focus mode) — học viên
+        // có thể bấm nút ⛶ trong Bảng câu trả lời để thoát ra bất cứ lúc nào.
+        iltSetFocusMode(true);
 
         iltSetupAntiCheat();
         iltStartTimer(test.duration_minutes, currentSubmission ? currentSubmission.started_at : null);
@@ -18509,6 +18993,8 @@ function toggleCompletion(symbolElement) {
         if (takeTimerEl) takeTimerEl.style.display = 'none';
         submitBtn.style.display = 'none';
         showView('take');
+        // [MỚI] Xem thử không cần chế độ tập trung (không có Bảng câu trả lời).
+        iltSetFocusMode(false);
     }
     function computeScore(test, answers) {
         currentAnswers = answers;
@@ -18589,6 +19075,29 @@ function toggleCompletion(symbolElement) {
     }
 
     // =====================================================================
+    // ===== [MỚI] CHẾ ĐỘ TẬP TRUNG (FOCUS MODE) khi làm bài đọc thật ======
+    // Mặc định BẬT ngay khi mở bài (xem iltStartRealTake) — chỉ còn phần
+    // đọc bài/trả lời câu hỏi (irt-render-root bên trong .irt-take-main) +
+    // Bảng câu trả lời (.irt-answer-sheet, đã gộp chung đồng hồ + nút Nộp
+    // bài) gộp lại chiếm trọn 100% màn hình. Học viên bấm nút ⛶ để thoát
+    // ra giao diện bình thường (hiện lại header "← Quay lại" + tiêu đề),
+    // và có thể bấm lại để bật lại focus bất cứ lúc nào.
+    // =====================================================================
+    function iltSetFocusMode(active) {
+        iltFocusMode = active;
+        if (takeView) takeView.classList.toggle('irt-focus-active', active);
+        document.body.classList.toggle('irt-focus-body-lock', active);
+        if (focusToggleBtn) {
+            focusToggleBtn.textContent = active ? '✕' : '⛶';
+            focusToggleBtn.title = active ? 'Thoát chế độ tập trung' : 'Bật chế độ tập trung (toàn màn hình)';
+            focusToggleBtn.classList.toggle('is-active', active);
+        }
+    }
+    if (focusToggleBtn) {
+        focusToggleBtn.addEventListener('click', () => iltSetFocusMode(!iltFocusMode));
+    }
+
+    // =====================================================================
     // ===== CHUYỂN ĐỔI MÀN HÌNH / MỞ - ĐÓNG FOLDER ========================
     // =====================================================================
     function showView(name) {
@@ -18596,6 +19105,9 @@ function toggleCompletion(symbolElement) {
         editorView.style.display = name === 'editor' ? 'block' : 'none';
         takeView.style.display   = name === 'take'   ? 'block' : 'none';
         resultView.style.display = name === 'result' ? 'block' : 'none';
+        // [MỚI] rời khỏi màn hình "take" thì luôn tắt chế độ tập trung (focus mode)
+        // để lần sau quay lại danh sách/khung soạn bài không còn bị full-screen dở dang.
+        if (name !== 'take') iltSetFocusMode(false);
         // Dọn cây DOM của phần làm bài khi rời khỏi màn hình "take" — tránh trùng id
         // irt-q-N với màn hình kết quả (nội dung sẽ được dựng lại mới mỗi lần vào làm bài).
         if (name !== 'take' && takeBodyEl) takeBodyEl.innerHTML = '';
@@ -18649,10 +19161,19 @@ function toggleCompletion(symbolElement) {
     if (resultBackBtn) resultBackBtn.addEventListener('click', () => { showView('list'); loadTests(); });
 
     if (answerSheetToggleBtn && answerSheetEl) {
-        answerSheetToggleBtn.addEventListener('click', () => { answerSheetEl.classList.toggle('is-open'); });
+        answerSheetToggleBtn.addEventListener('click', () => {
+            answerSheetEl.classList.toggle('is-open');
+            // [MỚI] Ẩn luôn nút nổi 📝 Đáp án trong lúc khung đáp án đang mở, tránh nó
+            // đè lên nút Nộp bài/legend bên trong khung (2 thứ này chồng nhau ở cùng
+            // vùng góc dưới màn hình khi khung đáp án trượt lên).
+            answerSheetToggleBtn.classList.toggle('is-hidden', answerSheetEl.classList.contains('is-open'));
+        });
     }
     if (answerSheetCloseBtn && answerSheetEl) {
-        answerSheetCloseBtn.addEventListener('click', () => { answerSheetEl.classList.remove('is-open'); });
+        answerSheetCloseBtn.addEventListener('click', () => {
+            answerSheetEl.classList.remove('is-open');
+            if (answerSheetToggleBtn) answerSheetToggleBtn.classList.remove('is-hidden');
+        });
     }
 
     // Chuyển sang mục khác trong ứng dụng (vd "Từ vựng", "Ngữ pháp"...) khi đang làm bài

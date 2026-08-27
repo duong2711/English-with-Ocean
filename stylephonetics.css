@@ -6422,7 +6422,28 @@ mark.ilt-highlight { background: #fff59d; padding: 0 1px; border-radius: 2px; cu
     font-weight: 800; color: var(--primary-dark); margin-bottom: 10px;
     display: flex; align-items: center; justify-content: space-between;
 }
+.irt-answer-sheet-title-text { display: flex; align-items: center; gap: 7px; }
 .irt-answer-sheet-close { display: none; border: none; background: none; font-size: 1rem; cursor: pointer; color: var(--text-muted); }
+
+/* ---- [MỚI] Nút bật/tắt "chế độ tập trung" (focus mode) — nằm ngay trong
+   tiêu đề Bảng câu trả lời, cạnh nút Nộp bài (nằm chung .irt-answer-sheet) ---- */
+.irt-focus-toggle-btn {
+    border: 1.5px solid var(--border-strong); background: var(--surface); color: var(--text-muted);
+    border-radius: 7px; width: 26px; height: 26px; flex-shrink: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; line-height: 1; cursor: pointer;
+}
+.irt-focus-toggle-btn:hover { border-color: var(--primary); color: var(--primary-dark); }
+.irt-focus-toggle-btn.is-active { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+/* Đồng hồ đếm giờ được gộp vào trong Bảng câu trả lời (thay vì neo fixed trên
+   header như trước) — dùng lại class .ctest-take-timer (đổi màu khi sắp hết giờ...)
+   nhưng ghi đè phần định vị "fixed" vì giờ nó nằm cố định bên trong sidebar rồi. */
+#irt-take-timer.irt-take-timer-inline {
+    position: static; top: auto; right: auto; z-index: auto;
+    display: inline-block; width: 100%; text-align: center;
+    margin: 0 0 10px; box-shadow: none;
+}
 .irt-answer-sheet-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 12px; }
 .irt-answer-sheet-item {
     border: 1.5px solid var(--border-strong); background: var(--surface); border-radius: 7px;
@@ -6441,6 +6462,22 @@ mark.ilt-highlight { background: #fff59d; padding: 0 1px; border-radius: 2px; cu
     border: none; border-radius: 999px; padding: 12px 20px; background: var(--primary); color: #fff;
     font-weight: 700; font-size: 0.88rem; box-shadow: 0 8px 20px rgba(0,0,0,.25); cursor: pointer;
 }
+/* [FIX] O che do tap trung (focus mode), .irt-take-layout phong to z-index:3000
+   phu kin man hinh -> nut nay (z-index:500 cu) bi de khuat phia duoi, khien hoc
+   vien KHONG MO duoc Bang cau tra loi / KHONG THAY duoc nut Nop bai. Nang rieng
+   z-index cua nut nay len tren layout do, va ne vung an toan (home indicator) tren
+   iPhone bang env(safe-area-inset-bottom). */
+#irt-take-view.irt-focus-active .irt-answer-sheet-toggle {
+    z-index: 3500;
+    bottom: max(16px, env(safe-area-inset-bottom, 16px));
+}
+/* An nut bam mo di trong luc Bang cau tra loi dang mo san (tranh de len nut Nop bai ben trong). */
+.irt-answer-sheet-toggle.is-hidden { display: none !important; }
+
+/* [MỚI] Nút "Nộp bài" giờ nằm chung trong .irt-answer-sheet (thay vì tách riêng
+   bên khối nội dung bài đọc) — dùng lại .ctest-submit-btn (width:100%...), chỉ
+   thêm khoảng cách với phần trên (legend). */
+.irt-answer-sheet-submit-btn { margin-top: 14px; flex-shrink: 0; }
 
 /* Nhấp nháy nhẹ khi bấm từ Bảng câu trả lời để nhảy tới đúng câu hỏi */
 .irt-jump-flash { animation: irtJumpFlash 1.2s ease; border-radius: 4px; }
@@ -6464,6 +6501,127 @@ mark.irt-highlight { background: #fff59d; padding: 0 1px; border-radius: 2px; cu
     .irt-answer-sheet-toggle { display: inline-flex; align-items: center; gap: 6px; }
 }
 
+/* =====================================================================
+   [MỚI] CHẾ ĐỘ TẬP TRUNG (FOCUS MODE) khi làm bài đọc IELTS thật
+   Mặc định BẬT ngay khi vào làm bài (gắn class "irt-focus-active" lên
+   #irt-take-view bằng JS — hàm iltSetFocusMode). Khi bật: ẩn phần khung
+   ứng dụng (header "← Quay lại" + tiêu đề bài) và .irt-take-layout (gồm
+   irt-render-root bên trong .irt-take-main + .irt-answer-sheet) được
+   phóng to chiếm trọn 100% chiều rộng/chiều cao màn hình, đè lên trên mọi
+   thứ khác. Học viên bấm nút ⛶ trong Bảng câu trả lời để thoát ra lại
+   giao diện bình thường bất cứ lúc nào.
+   ===================================================================== */
+#irt-take-view.irt-focus-active .ctest-take-header { display: none; }
+#irt-take-view.irt-focus-active .irt-take-layout {
+    position: fixed;
+    inset: 0;
+    z-index: 3000;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh; /* [FIX] dvh chinh xac hon 100vh tren di dong (tru thanh dia chi trinh
+                        duyet an/hien khi cuon), giup giao dien nam von ven dung trong 100%
+                        chieu cao man hinh that thay vi bi tran/hut mot khoang. */
+    max-width: 100vw;
+    margin: 0;
+    background: var(--bg);
+    padding: 12px 14px;
+    box-sizing: border-box;
+    align-items: stretch; /* thêm dòng này */
+}
+/* [MỚI] .irt-take-main không tự cuộn nữa (bỏ overflow-y:auto) — nó chỉ còn là
+   1 khung flex-column co giãn vừa đúng phần còn lại của màn hình. Thanh cuộn
+   thật sự giờ nằm ở TỪNG CỘT bên trong (.irt-render-passage-col và
+   .irt-render-questions-col — xem khối "Bố cục Passage / Câu hỏi" bên dưới),
+   mỗi cột tự cuộn riêng, độc lập với nhau.
+   Dưới tablet (điện thoại): 2 cột đó xếp thành đúng "2 khung trên/dưới", mỗi
+   khung có thanh cuộn của chính nó, tất cả gói gọn trong 100dvh — không cuộn
+   cả trang nữa. */
+#irt-take-view.irt-focus-active .irt-take-main {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+#irt-take-view.irt-focus-active #irt-violation-banner,
+#irt-take-view.irt-focus-active .irt-part-nav {
+    flex-shrink: 0;
+}
+#irt-take-view.irt-focus-active #irt-take-body,
+#irt-take-view.irt-focus-active .irt-render-root,
+#irt-take-view.irt-focus-active .irt-render-part {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+#irt-take-view.irt-focus-active .irt-render-split {
+    flex: 1 1 auto;
+    min-height: 0;
+}
+/* Dưới tablet (điện thoại, <768px): khung passage ở TRÊN (~40% chiều cao) +
+   khung câu hỏi ở DƯỚI (~60%, phần còn lại) — mỗi khung cuộn riêng bằng
+   overflow-y:auto của chính nó, có viền phân cách rõ ràng giữa 2 khung. */
+#irt-take-view.irt-focus-active .irt-render-passage-col {
+    flex: 0 1 40%;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    border-bottom: 2px solid var(--border-strong);
+    padding-bottom: 14px;
+    margin-bottom: 12px;
+}
+#irt-take-view.irt-focus-active .irt-render-questions-col {
+    flex: 1 1 60%;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 56px; /* chừa chỗ cho nút nổi "📝 Đáp án" ở góc dưới, khỏi che câu cuối */
+}
+/* Từ tablet trở lên (>=768px): quay lại bố cục trái (passage) / phải (câu hỏi)
+   như .irt-render-split gốc, nhưng đổi từ "sticky + cuộn cả .irt-take-main"
+   sang mỗi cột tự cuộn trong đúng chiều cao cố định (khớp với .irt-take-main
+   không còn cuộn nữa ở trên) — dùng viền dọc để phân tách 2 khung thay cho
+   viền ngang lúc xếp chồng trên di động. */
+@media (min-width: 768px) {
+    #irt-take-view.irt-focus-active .irt-render-split { align-items: stretch; }
+    #irt-take-view.irt-focus-active .irt-render-passage-col,
+    #irt-take-view.irt-focus-active .irt-render-questions-col {
+        flex: 1 1 50%;
+        position: static;
+        max-height: none;
+    }
+    #irt-take-view.irt-focus-active .irt-render-passage-col {
+        border-bottom: none;
+        border-right: 2px solid var(--border-strong);
+        padding-bottom: 0;
+        padding-right: 18px;
+        margin-bottom: 0;
+    }
+}
+/* Từ tablet trở lên: sidebar Bảng câu trả lời cũng cao trọn 100% (thay vì
+   sticky/max-height như chế độ bình thường) để "gộp lại" với nội dung bài
+   đọc thành một khối duy nhất chiếm hết màn hình. Dưới tablet vẫn giữ
+   nguyên kiểu "bottom sheet" trượt lên (đã có sẵn ở @media 900px phía trên)
+   để không phá vỡ thao tác chạm quen thuộc trên điện thoại. Từ mốc này trở
+   lên nút "📝 Đáp án" nổi cũng không cần thiết nữa (sidebar luôn hiện sẵn)
+   nên không cần chừa padding-bottom cho .irt-render-questions-col.
+   */
+@media (min-width: 901px) {
+    #irt-take-view.irt-focus-active .irt-answer-sheet {
+        position: static;
+        top: auto;
+        height: 100%;
+        max-height: none;
+        display: flex;
+        flex-direction: column;
+    }
+    #irt-take-view.irt-focus-active .irt-answer-sheet-grid { overflow-y: auto; }
+    #irt-take-view.irt-focus-active .irt-render-questions-col { padding-bottom: 0; }
+}
+/* Khoá cuộn nền trang khi đang ở chế độ tập trung để tránh 2 thanh cuộn chồng nhau. */
+body.irt-focus-body-lock { overflow: hidden; }
+
 /* ---- Hộp thoại "sẵn sàng làm bài chưa" ---- */
 .irt-ready-modal-overlay {
     position: fixed; inset: 0; background: rgba(15,23,42,.6); z-index: 9999;
@@ -6486,6 +6644,13 @@ mark.irt-highlight { background: #fff59d; padding: 0 1px; border-radius: 2px; cu
 }
 .irt-render-passage-image { max-width: 100%; border-radius: 8px; margin-bottom: 10px; display: block; }
 .irt-render-passage-text { line-height: 1.85; color: var(--text); }
+
+/* [MỚI] .irt-render-part giờ được JS bật/tắt bằng display:flex (thay vì
+   block trước đây) để dùng chung được với bố cục 2 khung cuộn riêng ở chế độ
+   tập trung (focus mode) bên dưới — vẫn xếp dọc y hệt như block cũ (tiêu đề
+   trên, nội dung dưới), không đổi gì về mặt hiển thị ở các chế độ khác. */
+.irt-render-part { display: flex; flex-direction: column; }
+.irt-render-part-title { flex-shrink: 0; }
 
 /* ---- Bố cục Passage / Câu hỏi khi làm bài (mô phỏng màn hình thi IELTS thật) ----
    - Từ tablet trở lên (>=768px): chia đôi trái/phải — passage bên trái (cuộn riêng,

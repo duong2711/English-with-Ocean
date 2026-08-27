@@ -899,31 +899,44 @@
             </div>
 
             <!-- ---- 3) LÀM BÀI / XEM THỬ ---- -->
+            <!-- [MỚI] Mặc định vào làm bài thật sẽ ở "chế độ tập trung" (focus mode):
+                 chỉ còn .irt-take-main (chứa irt-render-root) + .irt-answer-sheet gộp lại,
+                 chiếm trọn 100% chiều rộng/chiều cao màn hình (ẩn header app, thanh
+                 tiêu đề...). Bấm nút ⛶ trong Bảng câu trả lời để thoát/bật lại focus
+                 bất cứ lúc nào. Đồng hồ đếm giờ + nút Nộp bài được gộp chung vào
+                 .irt-answer-sheet theo đúng yêu cầu. Xem class "irt-focus-active"
+                 (gắn/gỡ bằng JS ở hàm iltSetFocusMode) và CSS tương ứng. -->
             <div id="irt-take-view" style="display:none;">
                 <div class="ctest-take-header">
                     <div>
                         <button class="grammar-back-btn" id="irt-take-back-btn">← Quay lại</button>
                         <h3 id="irt-take-title" style="display:inline-block; margin-left:8px;"></h3>
                     </div>
-                    <div class="ctest-take-timer" id="irt-take-timer" style="display:none;"></div>
                 </div>
-                <div id="irt-violation-banner" class="ctest-violation-banner" style="display:none;"></div>
-                <div class="irt-part-nav" id="irt-part-nav"></div>
                 <div class="irt-take-layout">
                     <div class="irt-take-main">
+                        <div id="irt-violation-banner" class="ctest-violation-banner" style="display:none;"></div>
+                        <div class="irt-part-nav" id="irt-part-nav"></div>
                         <div id="irt-take-body"></div>
-                        <button type="button" id="irt-submit-btn" class="grammar-admin-btn grammar-admin-btn-primary ctest-submit-btn">✅ Nộp bài</button>
                     </div>
                     <aside class="irt-answer-sheet" id="irt-answer-sheet">
-                        <div class="irt-answer-sheet-title">📝 Bảng câu trả lời<button type="button" id="irt-answer-sheet-close" class="irt-answer-sheet-close">✕</button></div>
+                        <div class="irt-answer-sheet-title">
+                            <span class="irt-answer-sheet-title-text">
+                                <button type="button" id="irt-focus-toggle-btn" class="irt-focus-toggle-btn" title="Thoát chế độ tập trung">⛶</button>
+                                📝 Bảng câu trả lời
+                            </span>
+                            <button type="button" id="irt-answer-sheet-close" class="irt-answer-sheet-close">✕</button>
+                        </div>
+                        <div class="ctest-take-timer irt-take-timer-inline" id="irt-take-timer" style="display:none;"></div>
                         <div class="irt-answer-sheet-grid" id="irt-answer-sheet-grid"></div>
                         <div class="irt-answer-sheet-legend">
                             <span class="irt-legend-item"><i class="irt-legend-dot irt-legend-answered"></i>Đã trả lời</span>
                             <span class="irt-legend-item"><i class="irt-legend-dot irt-legend-unanswered"></i>Chưa trả lời</span>
                         </div>
+                        <button type="button" id="irt-submit-btn" class="grammar-admin-btn grammar-admin-btn-primary ctest-submit-btn irt-answer-sheet-submit-btn">✅ Nộp bài</button>
                     </aside>
                 </div>
-                <button type="button" id="irt-answer-sheet-toggle" class="irt-answer-sheet-toggle">📝 Đáp án</button>
+                <button type="button" id="irt-answer-sheet-toggle" class="irt-answer-sheet-toggle">📝 Nộp bài</button>
             </div>
 
             <!-- ---- Hộp thoại "sẵn sàng làm bài chưa" ---- -->
