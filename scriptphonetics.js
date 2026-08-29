@@ -788,10 +788,11 @@ document.addEventListener('DOMContentLoaded', () => {
             // nghĩa maybeStartOnboardTour/ONBOARD_STEPS ở phía trên).
             maybeStartOnboardTour(user);
 
-            // [MỚI] Kiểm tra xem giảng viên vừa thêm bài tin (tin ngắn) mới nào trong mục Từ
-            // vựng hay chưa để báo cho học viên — chỉ báo 1 lần duy nhất, không lặp lại ở các
-            // lần đăng nhập sau (xem checkNewNewsNotification() trong khối "LOGIC TIN NGẮN").
-            if (typeof window.checkNewNewsNotification === 'function') window.checkNewNewsNotification();
+            // [MỚI] Kiểm tra ngay số bài tin (tin ngắn) HỌC VIÊN CHƯA ĐỌC để hiện badge số +
+            // thông báo (xem refreshNewsUnreadBadge() trong khối "LOGIC TIN NGẮN").
+            lastKnownNewsUnreadCount = null; // mỗi lần đăng nhập mới, tính lại từ đầu
+            newsUnreadToastShownThisSession = false; // [MỚI] cho phép toast hiện lại đúng 1 lần ở phiên đăng nhập mới này
+            if (typeof window.refreshNewsUnreadBadge === 'function') window.refreshNewsUnreadBadge();
             
             // [CẬP NHẬT] Hiển thị Menu và xóa trạng thái ẩn của các Tab
             if (mainMenu) mainMenu.style.display = 'flex';
@@ -856,6 +857,10 @@ document.addEventListener('DOMContentLoaded', () => {
             // [MỚI] Không còn đăng nhập -> ẩn badge + bảng "ghi âm đang chờ chấm", tính lại từ đầu lần sau
             lastKnownPendingGradingCount = null;
             setPhonamGradingBadgeCount(0);
+            // [MỚI] Không còn đăng nhập -> ẩn badge "tin ngắn chưa đọc", tính lại từ đầu lần sau
+            lastKnownNewsUnreadCount = null;
+            newsUnreadToastShownThisSession = false;
+            if (typeof window.setNewsUnreadBadgeCount === 'function') window.setNewsUnreadBadgeCount(0);
             if (phonamGradingPanel) phonamGradingPanel.style.display = 'none';
             if (typeof window.refreshSpeakingGradingBadge === 'function') window.refreshSpeakingGradingBadge();
             authContainer.style.display = 'block';
@@ -2256,6 +2261,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const kiemtraTabBadgeEl  = document.getElementById('kiemtra-tab-badge');
     const ctestFolderBadgeEl = document.getElementById('ctest-folder-badge');
     let lastKnownUnfinishedCtestCount = null; // null = chưa tính lần nào trong phiên này
+    let lastKnownNewsUnreadCount = null; // [MỚI] null = chưa tính lần nào trong phiên này (badge "tin ngắn chưa đọc")
+    let newsUnreadToastShownThisSession = false; // [MỚI] chỉ hiện toast "tin tức chưa đọc" 1 LẦN DUY NHẤT mỗi phiên đăng nhập
 
     function setCtestBadgeCount(n) {
         [kiemtraTabBadgeEl, ctestFolderBadgeEl].forEach(el => {
@@ -3342,6 +3349,24 @@ function toggleCompletion(symbolElement) {
                     data.is_correct = isCorrect;
                     if (feedbackText) data.text = feedbackText;
 
+                    // [MỚI] Giảng viên duyệt ĐÚNG -> tự động tick "hoàn thành" ký tự này cho
+                    // học viên luôn (bảng ipa_completions), để "Thành tựu → Bảng phiên âm" của
+                    // học viên tăng ngay lập tức, không cần học viên tự tay tick lại. Trước đây
+                    // 2 bảng này không liên thông nên duyệt đúng rồi mà thành tựu vẫn không tăng.
+                    if (isCorrect && data.user_id && data.symbol) {
+                        try {
+                            const { error: compErr } = await sb.from('ipa_completions').upsert({
+                                user_id: data.user_id,
+                                symbol: data.symbol,
+                                completed: true,
+                                updated_at: new Date().toISOString()
+                            }, { onConflict: 'user_id,symbol' });
+                            if (compErr) console.error('Lỗi khi tự động tick hoàn thành sau khi duyệt đúng:', compErr.message);
+                        } catch (compErrEx) {
+                            console.error('Lỗi ngoại lệ khi tự động tick hoàn thành sau khi duyệt đúng:', compErrEx.message);
+                        }
+                    }
+
                     commentDiv.classList.remove('comment-item-pending-grading');
                     commentDiv.classList.add(isCorrect ? 'comment-item-graded' : 'comment-item-needs-redo');
 
@@ -4024,67 +4049,124 @@ function toggleCompletion(symbolElement) {
             }
         }
 
-        // ===== [MỚI] THÔNG BÁO "CÓ TIN TỨC MỚI" CHO HỌC VIÊN =====
-        // Khi giảng viên bấm "➕ Thêm bài tin mới" trong mục Từ vựng → 📁 từ vựng (Tin ngắn),
-        // TẤT CẢ học viên sẽ được báo bằng 1 toast ngay ở lần đăng nhập kế tiếp của họ.
-        // Mốc "đã biết tin mới nhất tới đâu" được lưu VĨNH VIỄN vào tài khoản
-        // (user_metadata.last_seen_news_created_at) — giống hệt cách làm với
-        // has_seen_onboarding_tour — nên sẽ KHÔNG bị thông báo lại ở các lần đăng nhập sau,
-        // kể cả khi đổi máy/trình duyệt khác.
-        // ⚠️ CẦN bảng "news_articles" có cột "created_at timestamptz default now()" (đa số
-        // bảng trong hệ thống đã có sẵn cột này). Nếu bảng CHƯA có cột này, hãy chạy:
-        //   ALTER TABLE news_articles ADD COLUMN created_at timestamptz NOT NULL DEFAULT now();
-        // trên Supabase SQL Editor rồi mới dùng được tính năng thông báo này (lỗi thiếu cột
-        // sẽ chỉ im lặng ghi log ở Console, không làm hỏng phần còn lại của web).
-        async function checkNewNewsNotification() {
-            if (!currentUserId || isTeacher || isImpersonating) return;
+        // ===== [MỚI] BADGE "SỐ BÀI TIN CHƯA ĐỌC" CHO HỌC VIÊN =====
+        // Mỗi khi học viên MỞ 1 bài tin ra xem (openArticle), bài đó được ghi nhận là "đã đọc"
+        // vào bảng "news_reads". Badge đỏ trên tab "Từ vựng" và trên thẻ folder "Tin ngắn" luôn
+        // hiện ĐÚNG số bài tin học viên đó CHƯA từng mở ra xem — kể cả bài tin cũ (nếu học viên
+        // chưa từng đọc) lẫn bài vừa được giảng viên thêm mới. Vì đây là SỐ ĐANG CHƯA ĐỌC (khác
+        // với cơ chế "chỉ báo 1 lần" của bài kiểm tra), badge/toast này SẼ hiện lại ở lần đăng
+        // nhập sau nếu học viên vẫn còn bài chưa đọc — và chỉ tự ẩn khi mở bài đó ra xem.
+        //
+        // ⚠️ CẦN TẠO BẢNG "news_reads" TRÊN SUPABASE TRƯỚC (chạy đoạn SQL sau trong SQL Editor):
+        //
+        //   create table if not exists news_reads (
+        //     user_id uuid not null references auth.users(id) on delete cascade,
+        //     article_id bigint not null references news_articles(id) on delete cascade,
+        //     read_at timestamptz not null default now(),
+        //     primary key (user_id, article_id)
+        //   );
+        //   alter table news_reads enable row level security;
+        //   create policy "Học viên tự thêm/xem lượt đọc của mình"
+        //     on news_reads for all
+        //     using (auth.uid() = user_id)
+        //     with check (auth.uid() = user_id);
+        //
+        // (Nếu cột "id" của bảng "news_articles" là kiểu uuid thay vì bigint, đổi "article_id
+        // bigint" ở trên thành "article_id uuid" cho khớp.) Nếu chưa tạo bảng này, badge sẽ
+        // luôn hiện ẩn (lỗi được ghi vào Console, không ảnh hưởng phần còn lại của web).
+        const newsTabBadgeEl    = document.getElementById('news-tab-badge');
+        const newsFolderBadgeEl = document.getElementById('news-folder-badge');
+        let newsReadSetupWarned = false; // chỉ cảnh báo thiếu bảng "news_reads" 1 lần / phiên, tránh spam
+
+        function setNewsUnreadBadgeCount(n) {
+            [newsTabBadgeEl, newsFolderBadgeEl].forEach(el => {
+                if (!el) return;
+                if (n > 0) { el.textContent = n > 99 ? '99+' : String(n); el.style.display = 'inline-flex'; }
+                else { el.style.display = 'none'; }
+            });
+        }
+        window.setNewsUnreadBadgeCount = setNewsUnreadBadgeCount; // để updateUIForUser() ẩn badge lúc đăng xuất
+
+        // Tính lại số bài tin chưa đọc + hiện badge, và (tuỳ chọn) hiện toast — CHỈ hiện toast
+        // ĐÚNG 1 LẦN cho mỗi phiên đăng nhập (kể cả nếu số chưa đọc tăng thêm về sau trong lúc
+        // đang dùng web, sẽ không toast lại nữa) — badge số vẫn luôn cập nhật đúng bình thường.
+        async function refreshNewsUnreadBadge(opts) {
+            const notify = !opts || opts.notify !== false;
+            if (!currentUserId || isTeacher || isImpersonating) { setNewsUnreadBadgeCount(0); return; }
             try {
-                const { data, error } = await sb
-                    .from('news_articles')
-                    .select('id, created_at')
-                    .order('created_at', { ascending: false })
-                    .limit(1);
-                if (error) throw error;
-                if (!data || !data.length || !data[0].created_at) return; // chưa có bài tin nào (hoặc chưa có cột created_at)
-                const latestCreatedAt = data[0].created_at;
+                const { data: allArticles, error: e1 } = await sb.from('news_articles').select('id');
+                if (e1) throw e1;
+                const total = (allArticles || []).length;
+                if (!total) { setNewsUnreadBadgeCount(0); lastKnownNewsUnreadCount = 0; return; }
 
-                // Hỏi thẳng Supabase Auth server để chắc chắn lấy đúng user_metadata mới nhất
-                // (không dùng dữ liệu phiên cũ có thể chưa được làm mới) — giống cách
-                // maybeStartOnboardTour() đang làm ở trên.
-                let freshUser = null;
-                try {
-                    const { data: userData, error: userErr } = await sb.auth.getUser();
-                    if (!userErr && userData) freshUser = userData.user;
-                } catch (err) {
-                    console.error('Lỗi khi kiểm tra tin tức mới (tạm bỏ qua):', err.message);
-                    return;
+                const { data: readsData, error: e2 } = await sb
+                    .from('news_reads')
+                    .select('article_id')
+                    .eq('user_id', currentUserId);
+                if (e2) throw e2;
+                const readSet = new Set((readsData || []).map(r => String(r.article_id)));
+                const unread = allArticles.filter(a => !readSet.has(String(a.id))).length;
+
+                setNewsUnreadBadgeCount(unread);
+
+                if (notify && !newsUnreadToastShownThisSession && unread > 0 && window.vocabTap && window.vocabTap.toast) {
+                    window.vocabTap.toast('📰 Bạn có ' + unread + ' bài tin tức chưa đọc trong mục Từ vựng.', 'info');
+                    newsUnreadToastShownThisSession = true;
                 }
-                if (!freshUser) return;
-
-                const lastSeen = freshUser.user_metadata ? freshUser.user_metadata.last_seen_news_created_at : null;
-
-                if (!lastSeen) {
-                    // Lần đầu tiên bật tính năng này trên tài khoản này: chỉ ghi nhận mốc hiện
-                    // tại, KHÔNG hiện thông báo cho những bài tin đã có sẵn từ trước đó.
-                    sb.auth.updateUser({ data: { last_seen_news_created_at: latestCreatedAt } })
-                        .then(({ error: e2 }) => { if (e2) console.error('Lỗi khi lưu mốc tin tức đã xem:', e2.message); })
-                        .catch(err => console.error('Lỗi ngoại lệ khi lưu mốc tin tức đã xem:', err.message));
-                    return;
-                }
-
-                if (new Date(latestCreatedAt).getTime() > new Date(lastSeen).getTime()) {
-                    if (window.vocabTap && window.vocabTap.toast) {
-                        window.vocabTap.toast('📰 Có tin tức mới trong mục Từ vựng → 📁 từ vựng (Tin ngắn)! Vào xem ngay nhé.', 'info');
-                    }
-                    sb.auth.updateUser({ data: { last_seen_news_created_at: latestCreatedAt } })
-                        .then(({ error: e2 }) => { if (e2) console.error('Lỗi khi lưu mốc tin tức đã xem:', e2.message); })
-                        .catch(err => console.error('Lỗi ngoại lệ khi lưu mốc tin tức đã xem:', err.message));
-                }
+                lastKnownNewsUnreadCount = unread;
             } catch (err) {
-                console.error('Lỗi khi kiểm tra tin tức mới (có thể do bảng "news_articles" chưa có cột "created_at"):', err.message);
+                console.error('Lỗi khi kiểm tra số tin tức chưa đọc (có thể do bảng "news_reads" chưa được tạo):', err.message);
+                const msg = (err && err.message) ? err.message.toLowerCase() : '';
+                const missingTable = msg.includes('news_reads') && (msg.includes('does not exist') || msg.includes('relation') || msg.includes('42p01'));
+                if (missingTable && !newsReadSetupWarned) {
+                    newsReadSetupWarned = true;
+                    console.warn('⚠️ Chưa bật được badge "tin tức chưa đọc": hãy tạo bảng "news_reads" trên Supabase trước (xem chú thích ngay phía trên hàm refreshNewsUnreadBadge trong scriptphonetics.js).');
+                }
             }
         }
-        window.checkNewNewsNotification = checkNewNewsNotification; // để updateUIForUser() gọi ngay sau khi đăng nhập
+        window.refreshNewsUnreadBadge = refreshNewsUnreadBadge; // để updateUIForUser() gọi ngay sau khi đăng nhập
+
+        // Kiểm tra định kỳ (mỗi 90 giây) để phát hiện bài tin mới ngay trong lúc học viên đang
+        // dùng web, không cần tải lại trang hay đăng nhập lại — giống hệt cơ chế của badge
+        // "bài kiểm tra chưa làm" (xem setInterval refreshCtestBadge() ở phía trên).
+        setInterval(() => {
+            if (currentUserId && !isTeacher && !isImpersonating && document.visibilityState === 'visible') {
+                refreshNewsUnreadBadge();
+            }
+        }, 90 * 1000);
+
+        // Đánh dấu 1 bài tin đã được học viên MỞ RA XEM — gọi ngay trong openArticle() bên dưới.
+        // Bấm lại nhiều lần / mở lại bài cũ không tạo dòng trùng lặp (nhờ upsert).
+        async function markNewsArticleRead(articleId) {
+            if (!currentUserId || isTeacher || articleId === null || articleId === undefined) return;
+            try {
+                const { error } = await sb
+                    .from('news_reads')
+                    .upsert({
+                        user_id: currentUserId,
+                        article_id: articleId,
+                        read_at: new Date().toISOString()
+                    }, { onConflict: 'user_id,article_id' });
+                if (error) throw error;
+                refreshNewsUnreadBadge({ notify: false }); // cập nhật ngay badge, không cần đợi đăng nhập lại
+
+                // [MỚI] Tô ngay thẻ bài tin này sang nền xanh lá + gắn nhãn "✓ Đã đọc" trong
+                // danh sách (nếu đang hiển thị), không cần vẽ lại toàn bộ danh sách.
+                const cardEl = newsCardsGrid.querySelector('.news-card[data-article-id="' + articleId + '"]');
+                if (cardEl && !cardEl.classList.contains('news-card-read')) {
+                    cardEl.classList.add('news-card-read');
+                    const thumbWrap = cardEl.querySelector('.news-card-thumb-wrap');
+                    if (thumbWrap && !thumbWrap.querySelector('.news-card-read-badge')) {
+                        const badge = document.createElement('span');
+                        badge.className = 'news-card-read-badge';
+                        badge.textContent = '✓ Đã đọc';
+                        thumbWrap.appendChild(badge);
+                    }
+                }
+            } catch (err) {
+                console.error('Lỗi khi đánh dấu đã đọc tin tức (có thể do bảng "news_reads" chưa được tạo):', err.message);
+            }
+        }
 
         const newsFolderCard  = document.getElementById('news-folder-card');
         const vocabFolderGrid = document.getElementById('vocab-folder-grid');
@@ -4496,6 +4578,22 @@ function toggleCompletion(symbolElement) {
 
             await loadNewsArticlesFromDB();
 
+            // [MỚI] Học viên: tải trước danh sách bài tin ĐÃ ĐỌC để tô nền xanh lá ngay khi vẽ
+            // danh sách (giảng viên không có khái niệm "đã đọc" nên bỏ qua, giữ nguyên readSet rỗng).
+            let readSet = new Set();
+            if (!isTeacher && currentUserId) {
+                try {
+                    const { data: readsData, error: readsErr } = await sb
+                        .from('news_reads')
+                        .select('article_id')
+                        .eq('user_id', currentUserId);
+                    if (readsErr) throw readsErr;
+                    readSet = new Set((readsData || []).map(r => String(r.article_id)));
+                } catch (err) {
+                    console.error('Lỗi khi tải danh sách bài tin đã đọc (có thể do bảng "news_reads" chưa được tạo):', err.message);
+                }
+            }
+
             newsCardsGrid.innerHTML = '';
             if (NEWS_DATA.length === 0) {
                 newsCardsGrid.innerHTML = '<p class="news-empty-msg">Chưa có bài tin nào.</p>';
@@ -4503,10 +4601,15 @@ function toggleCompletion(symbolElement) {
             }
 
             NEWS_DATA.forEach(article => {
+                const isRead = readSet.has(String(article.id));
                 const card = document.createElement('div');
-                card.className = 'news-card';
+                card.className = 'news-card' + (isRead ? ' news-card-read' : '');
+                card.dataset.articleId = article.id; // [MỚI] để markNewsArticleRead() tìm lại đúng thẻ này mà tô xanh ngay, không cần vẽ lại cả danh sách
                 card.innerHTML = `
-                    <img class="news-card-thumb" src="${article.thumb}" alt="${escapeHtmlNews(article.title)}" loading="lazy" onerror="this.style.background='var(--surface-2)';this.style.minHeight='120px'">
+                    <div class="news-card-thumb-wrap" style="position:relative;">
+                        <img class="news-card-thumb" src="${article.thumb}" alt="${escapeHtmlNews(article.title)}" loading="lazy" onerror="this.style.background='var(--surface-2)';this.style.minHeight='120px'">
+                        ${isRead ? '<span class="news-card-read-badge">✓ Đã đọc</span>' : ''}
+                    </div>
                     ${isTeacher ? `<button type="button" class="news-card-delete-btn" data-article-id="${article.id}" title="Xóa bài tin này">🗑️</button>` : ''}
                     <div class="news-card-title">${escapeHtmlNews(article.title)}</div>
                     <div class="news-card-date">📅 ${formatDate(article.date)}</div>
@@ -4801,6 +4904,11 @@ function toggleCompletion(symbolElement) {
             newsPanel.style.display = 'none';
             newsArticlePanel.style.display = 'block';
             currentArticleId = article.id;
+
+            // [MỚI] Học viên mở bài tin ra xem -> ghi nhận "đã đọc" ngay để cập nhật badge số
+            // bài chưa đọc trên tab "Từ vựng" + thẻ folder "Tin ngắn" (không áp dụng cho giảng
+            // viên, vì giảng viên không có khái niệm "đọc" bài do chính mình soạn).
+            if (!isTeacher) markNewsArticleRead(article.id);
 
             // ----- Tiêu đề -----
             newsArticleTitle.textContent = article.title;

@@ -2985,6 +2985,33 @@ h3 { font-size:0.95rem; font-weight:600; color:var(--text); margin:0 0 8px; }
     font-weight: 500;
 }
 
+/* [MỚI] Bài tin ngắn HỌC VIÊN đã mở ra đọc rồi -> nền xanh lá nhạt, viền xanh lá, kèm nhãn
+   "✓ Đã đọc" ở góc trên bên trái ảnh thumbnail — cùng tông màu "đã hoàn thành" đang dùng cho
+   bảng phiên âm (.ipa-symbol.completed) và các nơi khác trong hệ thống. */
+.news-card.news-card-read {
+    background: var(--success-light);
+    border-color: var(--success);
+}
+.news-card.news-card-read:hover {
+    border-color: var(--success-dark);
+}
+.news-card.news-card-read .news-card-thumb {
+    position: relative;
+}
+.news-card-read-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: var(--success);
+    color: #fff;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 999px;
+    box-shadow: var(--shadow-xs);
+    z-index: 1;
+}
+
 /* Panel bài báo chi tiết */
 .news-article-body {
     animation: grammarSlideIn 0.25s ease;
