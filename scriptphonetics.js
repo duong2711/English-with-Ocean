@@ -1385,10 +1385,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- [MỚI] THÀNH TỰU: tổng hợp tiến độ học tập từ mọi khu vực của web + tính "điểm
-    // chăm chỉ" tổng hợp để xếp hạng. Các mốc "100%" cho Kho từ vựng và Thời gian học (2
-    // phần vốn không có giới hạn trên tự nhiên) được đặt tạm ở VOCAB_TARGET / TIME_TARGET_MINUTES
-    // bên dưới — có thể chỉnh 2 con số này bất cứ lúc nào mà không ảnh hưởng chỗ khác.
-    const DILIGENCE_VOCAB_TARGET = 50;       // 50 từ đã lưu = 100% cho phần "kho từ vựng"
+    // chăm chỉ" tổng hợp để xếp hạng. Mốc "100%" cho Thời gian học (phần vốn không có giới
+    // hạn trên tự nhiên) được đặt tạm ở TIME_TARGET_MINUTES bên dưới — có thể chỉnh số này
+    // bất cứ lúc nào mà không ảnh hưởng chỗ khác. [SỬA] "Kho từ vựng" không còn tính theo %
+    // (số từ đã lưu) nữa — xem vocabTestPoints (điểm bài kiểm tra từ vựng hàng tuần) thay thế.
     // [SỬA] Trước đây tính "phút/ngày" (chia trung bình theo số ngày có log) — nay đổi thành
     // TỔNG số phút học cộng dồn từ trước đến nay (không chia theo ngày nữa). 1200 phút = 20
     // giờ tổng cộng = 100%; chỉnh số này bất cứ lúc nào cho phù hợp.
@@ -1638,14 +1638,51 @@ document.addEventListener('DOMContentLoaded', () => {
             const completedGrammarFolders = (grammarProgressRows || []).filter(r => r.quiz_opened && r.quiz_engaged).length;
             const grammarPct = totalGrammarFolders ? Math.round((completedGrammarFolders / totalGrammarFolders) * 100) : 0;
 
-            // ----- 4) Kho từ vựng của tôi: tổng số từ đã lưu -----
-            const { count: vocabCountRaw, error: e4 } = await sb
-                .from('user_vocabulary')
-                .select('id', { count: 'exact', head: true })
-                .eq('user_id', currentUserId);
-            if (e4) throw e4;
-            const vocabCount = vocabCountRaw || 0;
-            const vocabPct = Math.min(100, Math.round((vocabCount / DILIGENCE_VOCAB_TARGET) * 100));
+            // ----- 4) [SỬA] KHÔNG còn tính % theo số từ đã lưu trong "Kho từ vựng của tôi" nữa
+            // (đã bỏ vocabPct khỏi công thức điểm chăm chỉ). Thay bằng ĐIỂM CỘNG DỒN dựa trên
+            // kết quả BÀI KIỂM TRA TỪ VỰNG HÀNG TUẦN:
+            //   +2 điểm / mỗi từ đã "đã học" (hoàn thành đúng liên tiếp 3 lần)
+            //   +1 điểm / mỗi LƯỢT trả lời ĐÚNG trong bất kỳ bài kiểm tra hàng tuần nào (cộng
+            //     dồn theo từng lượt, không chỉ tính lượt cuối cùng khi từ đạt "đã học")
+            //   -0.5 điểm / mỗi lượt trả lời SAI khi bấm vào 1 từ ĐÃ HỌC để ôn lại nghĩa (trong
+            //     "Kho từ vựng của tôi") — xem openVocabWordReviewCheck() bên dưới.
+            // Điểm này được CỘNG THẲNG vào điểm chăm chỉ (giống điểm thưởng "làm lại"), không
+            // phải % nên không nằm trong công thức chia đều 7 yếu tố còn lại.
+            // Điểm này được CỘNG THẲNG vào điểm chăm chỉ (giống điểm thưởng "làm lại"), không
+            // phải % nên không nằm trong công thức chia đều 7 yếu tố còn lại.
+            // [MỚI] Bọc riêng try/catch: nếu 1 trong các bảng liên quan (đặc biệt bảng mới
+            // "vocab_review_checks") CHƯA được tạo trên Supabase, chỉ phần điểm này về 0 —
+            // không làm hỏng toàn bộ trang Thành tựu.
+            let learnedWordCount = 0, correctAnswerCount = 0, reviewWrongCount = 0;
+            try {
+                const { count: learnedWordCountRaw, error: eVw1 } = await sb
+                    .from('vocab_word_progress')
+                    .select('vocab_id', { count: 'exact', head: true })
+                    .eq('user_id', currentUserId)
+                    .eq('learned', true);
+                if (eVw1) throw eVw1;
+                learnedWordCount = learnedWordCountRaw || 0;
+
+                const { count: correctAnswerCountRaw, error: eVw2 } = await sb
+                    .from('vocab_weekly_test_items')
+                    .select('id', { count: 'exact', head: true })
+                    .eq('user_id', currentUserId)
+                    .eq('is_correct', true);
+                if (eVw2) throw eVw2;
+                correctAnswerCount = correctAnswerCountRaw || 0;
+
+                const { count: reviewWrongCountRaw, error: eVw3 } = await sb
+                    .from('vocab_review_checks')
+                    .select('id', { count: 'exact', head: true })
+                    .eq('user_id', currentUserId)
+                    .eq('is_correct', false);
+                if (eVw3) throw eVw3;
+                reviewWrongCount = reviewWrongCountRaw || 0;
+            } catch (errVw) {
+                console.error('Lỗi khi tính điểm bài kiểm tra từ vựng (có thể do bảng "vocab_review_checks" chưa được tạo — xem SQL bàn giao):', errVw.message);
+            }
+
+            const vocabTestPoints = (learnedWordCount * 2) + (correctAnswerCount * 1) - (reviewWrongCount * 0.5);
 
             // ----- 5) Điểm trung bình bài kiểm tra: CHỈ tính những bài đang giao (hiện) cho
             // học viên này (status = published + có tên trong student_emails), và chỉ tính
@@ -1689,18 +1726,20 @@ document.addEventListener('DOMContentLoaded', () => {
             const totalStudyMinutes = Math.round(totalStudySeconds / 60);
             const timePct = Math.min(100, Math.round((totalStudyMinutes / DILIGENCE_TOTAL_TIME_TARGET_MINUTES) * 100));
 
-            // ----- [SỬA] Điểm chăm chỉ tổng hợp: chia ĐỀU cho 8 yếu tố (mỗi yếu tố = 12.5%,
-            // tức 100%/8) — Phiên âm, Tin ngắn, Chủ đề từ vựng (Cho bé), Từ vựng THCS/THPT,
-            // Ngữ pháp, Kho từ vựng, Điểm TB bài kiểm tra, Thời gian học. [MỚI] Bổ sung thêm
-            // yếu tố "Từ vựng THCS/THPT" (trước đây phần này hoàn toàn không được tính vào điểm
-            // chăm chỉ dù học viên có hoàn thành bao nhiêu Unit cũng không ảnh hưởng điểm).
+            // ----- [SỬA] Điểm chăm chỉ tổng hợp: chia ĐỀU cho 7 yếu tố % (mỗi yếu tố ~14.3%) —
+            // Phiên âm, Tin ngắn, Chủ đề từ vựng (Cho bé), Từ vựng THCS/THPT, Ngữ pháp, Điểm TB
+            // bài kiểm tra, Thời gian học. [SỬA] "Kho từ vựng" (vocabPct) KHÔNG còn nằm trong
+            // công thức % này nữa — thay vào đó, kết quả BÀI KIỂM TRA TỪ VỰNG HÀNG TUẦN được
+            // cộng THẲNG vào điểm chăm chỉ dưới dạng điểm số (vocabTestPoints, xem tính ở trên),
+            // y hệt cách "điểm thưởng làm lại" (totalRedoBonusPoints) đang được cộng.
             // Nếu học viên CHƯA nộp bài kiểm tra nào (avgTestScorePct == null) thì phần này tính
-            // là 0% — vẫn giữ nguyên yếu tố trong công thức (chia cho 8) thay vì loại hẳn ra, để
+            // là 0% — vẫn giữ nguyên yếu tố trong công thức (chia cho 7) thay vì loại hẳn ra, để
             // không làm lệch tỷ trọng của các yếu tố còn lại. -----
             const testPctForScore = avgTestScorePct != null ? avgTestScorePct : 0;
             const diligenceScore = Math.round(
-                (phoneticsPct + newsPct + topicsPct + thcsPct + grammarPct + vocabPct + testPctForScore + timePct) / 8
-            ) + totalRedoBonusPoints; // [MỚI] cộng thêm điểm thưởng "làm lại" (Cho bé + THCS/THPT — xem phần tính ở trên)
+                (phoneticsPct + newsPct + topicsPct + thcsPct + grammarPct + testPctForScore + timePct) / 7
+                + totalRedoBonusPoints + vocabTestPoints
+            ); // [MỚI] cộng thêm điểm thưởng "làm lại" + điểm bài kiểm tra từ vựng hàng tuần
 
             // ----- [SỬA] KHÔNG RESET ĐIỂM CHUYÊN CẦN THEO THÁNG NỮA -----
             // Trước đây mỗi khi sang tháng mới, hệ thống tự "chốt mốc" (baseline_score) rồi chỉ
@@ -1767,9 +1806,10 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             badges.push({
                 icon: '📒',
-                title: 'Kho từ vựng của tôi',
-                desc: `${vocabCount} từ đã lưu`,
-                progress: vocabPct
+                title: 'Điểm bài kiểm tra từ vựng',
+                desc: `${learnedWordCount} từ đã học (+${learnedWordCount * 2}đ) · ${correctAnswerCount} lượt trả lời đúng (+${correctAnswerCount}đ)${reviewWrongCount ? ` · ${reviewWrongCount} lượt ôn sai (-${(reviewWrongCount * 0.5).toFixed(1)}đ)` : ''} → +${vocabTestPoints.toFixed(1)} điểm`,
+                progress: 100,
+                special: true
             });
             badges.push({
                 icon: '🎯',
@@ -1812,7 +1852,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     topics_pct: topicsPct,
                     thcs_pct: thcsPct, // [MỚI] % Unit THCS/THPT đã hoàn thành — xem cột mới trong diligence_scores_redo_bonus_setup.sql
                     grammar_pct: grammarPct,
-                    vocab_pct: vocabPct,
+                    // [SỬA] Cột "vocab_pct" giờ lưu ĐIỂM (không còn là %) từ bài kiểm tra từ
+                    // vựng hàng tuần — giữ tên cột cũ để khỏi phải đổi schema, không ảnh hưởng
+                    // gì vì cột này chưa được đọc/hiển thị ở đâu khác ngoài đây.
+                    vocab_pct: Math.round(vocabTestPoints),
                     test_pct: testPctForScore,
                     time_pct: timePct,
                     redo_bonus_points: totalRedoBonusPoints, // [MỚI] tổng điểm thưởng "làm lại" (Cho bé + THCS/THPT) — xem cột mới trong diligence_scores_redo_bonus_setup.sql
@@ -3919,13 +3962,61 @@ function toggleCompletion(symbolElement) {
             }
         });
     })();
-// --- XỬ LÝ MỞ TRANG WEB TỪ VỰNG TRONG TAB KIỂM TRA (MỞ TAB MỚI) ---
-    const vocabTestFolder = document.getElementById('vocab-test-folder');
+// --- [MỚI] FOLDER "📁 từ vựng" TRONG TAB KIỂM TRA — HỌC VIÊN: mở bài kiểm tra từ vựng
+// hàng tuần của chính mình (dựa trên "Kho từ vựng của tôi"); GIẢNG VIÊN: giữ nguyên hành
+// vi cũ, mở trang web tham khảo ngoài. Các hàm checkVocabWeeklyTestState()/openVocabWeeklyTest()
+// được định nghĩa bên trong khối "LOGIC TIN NGẮN" phía dưới và phơi ra qua window.* (IIFE đó
+// chạy đồng bộ ngay khi trang tải, nên tới lúc học viên bấm vào folder này, window.* đã sẵn sàng).
+    const vocabTestFolder      = document.getElementById('vocab-test-folder');
+    const kiemtraFolderGridTV  = document.getElementById('kiemtra-folder-grid');
+    const vocabOwnTestPanel    = document.getElementById('vocab-own-test-panel');
+    const vocabOwnTestBackBtn  = document.getElementById('vocab-own-test-back-btn');
+    const vocabOwnTestStatusEl = document.getElementById('vocab-own-test-status');
+
+    async function renderVocabOwnTestPanel() {
+        if (!vocabOwnTestStatusEl) return;
+        vocabOwnTestStatusEl.innerHTML = '<p class="news-loading-msg">Đang kiểm tra...</p>';
+        if (typeof window.checkVocabWeeklyTestState !== 'function') {
+            vocabOwnTestStatusEl.innerHTML = '<p class="news-empty-msg">Không thể tải bài kiểm tra từ vựng lúc này. Hãy thử tải lại trang.</p>';
+            return;
+        }
+        const status = await window.checkVocabWeeklyTestState();
+        if (status.pendingTestId) {
+            vocabOwnTestStatusEl.innerHTML = `
+                <div class="vocab-weekly-banner" style="margin-top:0;">
+                    <span>📝 Bạn có bài kiểm tra từ vựng mới! Ôn lại 20 từ để đánh dấu "đã học" nhé.</span>
+                    <button type="button" id="vocab-own-test-start-btn" class="vocab-weekly-start-btn">Làm bài kiểm tra</button>
+                </div>`;
+            const btn = document.getElementById('vocab-own-test-start-btn');
+            if (btn) btn.addEventListener('click', () => window.openVocabWeeklyTest(status.pendingTestId));
+        } else if (status.daysUntilNextTest) {
+            vocabOwnTestStatusEl.innerHTML = `<p class="kid-hint">✅ Bạn đã hoàn thành bài kiểm tra từ vựng gần đây nhất. Bài tiếp theo sẽ có sau khoảng ${status.daysUntilNextTest} ngày nữa.</p>`;
+        } else {
+            const size = window.VOCAB_TEST_SIZE || 20;
+            vocabOwnTestStatusEl.innerHTML = `<p class="kid-hint">Bạn cần có ít nhất <strong>${size}</strong> từ (tiếng Anh khác nhau) đang "chưa học" trong <strong>Kho từ vựng của tôi</strong> để có bài kiểm tra định kỳ.<br>Hiện tại bạn có <strong>${status.notLearnedCount}/${size}</strong> từ chưa học. Hãy chạm vào nhiều từ hơn khi luyện dịch bài đọc (mục "Tin ngắn") nhé!</p>`;
+        }
+    }
+    function renderVocabOwnTestPanelIfOpen() {
+        if (vocabOwnTestPanel && vocabOwnTestPanel.style.display !== 'none') renderVocabOwnTestPanel();
+    }
+    window.refreshVocabOwnTestPanelIfOpen = renderVocabOwnTestPanelIfOpen; // để đóng bài kiểm tra xong tự cập nhật lại trạng thái ở đây
 
     if (vocabTestFolder) {
         vocabTestFolder.addEventListener('click', () => {
-            // Mở trang web trong một tab mới hoàn toàn mượt mà
-            window.open("https://www.testlanguages.com/", "_blank");
+            if (isTeacher) {
+                // Giữ nguyên hành vi cũ cho giảng viên: mở trang web tham khảo ngoài
+                window.open("https://www.testlanguages.com/", "_blank");
+                return;
+            }
+            if (kiemtraFolderGridTV) kiemtraFolderGridTV.style.display = 'none';
+            if (vocabOwnTestPanel) vocabOwnTestPanel.style.display = 'block';
+            renderVocabOwnTestPanel();
+        });
+    }
+    if (vocabOwnTestBackBtn) {
+        vocabOwnTestBackBtn.addEventListener('click', () => {
+            vocabOwnTestPanel.style.display = 'none';
+            if (kiemtraFolderGridTV) kiemtraFolderGridTV.style.display = '';
         });
     }
 
@@ -4992,6 +5083,12 @@ function toggleCompletion(symbolElement) {
         let myVocabLoadedForUser = null;  // userId đã tải xong — tránh gọi Supabase lặp lại không cần thiết
         let wordLookupSeq = 0;            // chống việc chạm từ khác trong lúc AI đang trả lời từ trước
 
+        // [MỚI] BÀI KIỂM TRA TỪ VỰNG HÀNG TUẦN — theo dõi từ nào đã "đã học" (kiểm đúng liên
+        // tiếp 3 lần) để: (1) tô xanh lá trong "Kho từ vựng của tôi", (2) tô VÀNG (thay vì xanh
+        // lá mặc định) khi gặp lại từ đó trong lúc đọc bài ở nơi khác.
+        let vocabWordProgressMap = {};     // vocab_id (string) -> { attempts, correct_streak, learned }
+        let vocabLearnedNormSet = new Set(); // các từ (đã chuẩn hoá) đã "đã học" — dùng tô vàng khi gặp lại
+
         // Chuẩn hóa 1 từ để so sánh/lưu (chữ thường, bỏ khoảng trắng thừa)
         function normalizeWord(w) {
             return String(w || '').toLowerCase().trim();
@@ -5020,11 +5117,41 @@ function toggleCompletion(symbolElement) {
 
         // Chỉ tải lại khi đổi tài khoản, để không gọi Supabase mỗi lần chạm từ
         async function ensureMyVocabLoaded() {
-            if (!currentUserId) { myVocabList = []; myVocabNormSet = new Set(); myVocabLoadedForUser = null; return; }
+            if (!currentUserId) { myVocabList = []; myVocabNormSet = new Set(); myVocabLoadedForUser = null; vocabWordProgressMap = {}; vocabLearnedNormSet = new Set(); return; }
             if (myVocabLoadedForUser === currentUserId) return;
             await loadMyVocabulary();
             rebuildVocabNormSet();
+            await loadVocabWordProgress(); // [MỚI] tải luôn tiến độ "đã học" của từng từ
             myVocabLoadedForUser = currentUserId;
+        }
+
+        // [MỚI] Tải tiến độ học từng từ (bảng "vocab_word_progress") của học viên đang đăng
+        // nhập, rồi dựng lại "vocabLearnedNormSet" (dùng để tô VÀNG khi gặp lại từ đã học).
+        // ⚠️ CẦN TẠO BẢNG "vocab_word_progress" TRÊN SUPABASE TRƯỚC — xem SQL đầy đủ trong chú
+        // thích ngay phía trên hàm checkVocabWeeklyTestState() bên dưới.
+        async function loadVocabWordProgress() {
+            vocabWordProgressMap = {};
+            vocabLearnedNormSet = new Set();
+            if (!currentUserId) return;
+            try {
+                const { data, error } = await sb
+                    .from('vocab_word_progress')
+                    .select('vocab_id, attempts, correct_streak, learned')
+                    .eq('user_id', currentUserId);
+                if (error) throw error;
+                (data || []).forEach(row => { vocabWordProgressMap[String(row.vocab_id)] = row; });
+                myVocabList.forEach(v => {
+                    const p = vocabWordProgressMap[String(v.id)];
+                    if (p && p.learned) vocabLearnedNormSet.add(normalizeWord(v.word_norm || v.word));
+                });
+            } catch (err) {
+                console.error('Lỗi khi tải tiến độ học từ vựng (có thể do bảng "vocab_word_progress" chưa được tạo):', err.message);
+            }
+        }
+
+        function isVocabWordLearned(vocabId) {
+            const p = vocabWordProgressMap[String(vocabId)];
+            return !!(p && p.learned);
         }
 
         // Kiểm tra 1 từ (cùng nghĩa + cùng loại từ) đã có trong danh sách chưa
@@ -5107,10 +5234,13 @@ function toggleCompletion(symbolElement) {
                 if (!m) return escapeHtmlNews(token);
                 const [, lead, core, trail] = m;
                 const norm = normalizeWord(core);
+                // [MỚI] Từ đã "đã học" (streak 3 lần đúng) -> tô VÀNG; từ đã lưu nhưng chưa
+                // "đã học" -> giữ nguyên tô xanh lá mặc định (known-word).
                 const knownCls = myVocabNormSet.has(norm) ? ' known-word' : '';
+                const learnedCls = vocabLearnedNormSet.has(norm) ? ' word-learned' : '';
                 const safeCore = escapeHtmlNews(core);
                 return escapeHtmlNews(lead) +
-                    `<span class="tappable-word${knownCls}" data-word="${safeCore}">${safeCore}</span>` +
+                    `<span class="tappable-word${knownCls}${learnedCls}" data-word="${safeCore}">${safeCore}</span>` +
                     escapeHtmlNews(trail);
             }).join('');
         }
@@ -5124,12 +5254,14 @@ function toggleCompletion(symbolElement) {
             return parts.map(part => (/^<[^>]+>$/.test(part) ? part : wrapWordsForTap(part))).join('');
         }
 
-        // Cập nhật lại lớp "known-word" trên các từ đang hiển thị, không cần render lại toàn bộ câu.
-        // Dùng chung cho mọi khu vực có từ tappable (Tin ngắn, THCS/THPT: Dịch câu, Câu chuyện...).
+        // Cập nhật lại lớp "known-word"/"word-learned" trên các từ đang hiển thị, không cần
+        // render lại toàn bộ câu. Dùng chung cho mọi khu vực có từ tappable (Tin ngắn,
+        // THCS/THPT: Dịch câu, Câu chuyện...).
         function markKnownWordsInDom() {
             document.querySelectorAll('.tappable-word').forEach(el => {
                 const norm = normalizeWord(el.dataset.word);
                 el.classList.toggle('known-word', myVocabNormSet.has(norm));
+                el.classList.toggle('word-learned', vocabLearnedNormSet.has(norm));
             });
         }
 
@@ -5529,10 +5661,16 @@ function toggleCompletion(symbolElement) {
                 myVocabListEl.innerHTML = '<p class="news-empty-msg">Bạn chưa lưu từ vựng nào. Hãy chạm vào một từ trong lúc luyện dịch bài đọc (mục "Tin ngắn") để tự động lưu vào đây nhé!</p>';
                 return;
             }
-            myVocabListEl.innerHTML = myVocabList.map(v => `
-                <div class="myvocab-item">
+            myVocabListEl.innerHTML = myVocabList.map(v => {
+                // [MỚI] Từ đã "đã học" (kiểm đúng liên tiếp 3 lần trong bài kiểm tra hàng tuần)
+                // -> nền xanh lá + nhãn "✓ Đã học" + có thể BẤM VÀO để ôn lại nghĩa (sai thì
+                // trừ 0.5 điểm chăm chỉ — xem openVocabWordReviewCheck() bên dưới).
+                const learned = isVocabWordLearned(v.id);
+                return `
+                <div class="myvocab-item${learned ? ' myvocab-item-learned' : ''}" data-vocab-id="${v.id}">
                     <div class="myvocab-item-top">
                         <span class="myvocab-word">${escapeHtmlNews(v.word)}</span>
+                        ${learned ? '<span class="myvocab-learned-badge">✓ Đã học</span>' : ''}
                         ${v.word_type ? `<span class="myvocab-tag">${escapeHtmlNews(v.word_type)}</span>` : ''}
                         <button type="button" class="myvocab-delete-btn" data-vocab-id="${v.id}" title="Xóa từ này">🗑️</button>
                     </div>
@@ -5543,13 +5681,501 @@ function toggleCompletion(symbolElement) {
                         <div>→ ${escapeHtmlNews(v.example_vi || '')}</div>
                     </div>` : ''}
                     ${v.source_title ? `<div class="myvocab-source">📰 Gặp trong bài: ${escapeHtmlNews(v.source_title)}</div>` : ''}
+                    ${learned ? '<div class="myvocab-review-hint">👆 Bấm vào để ôn lại nghĩa</div>' : ''}
                 </div>
-            `).join('');
+            `;
+            }).join('');
         }
 
         function renderMyVocabIfOpen() {
             if (myVocabPanel && myVocabPanel.style.display !== 'none') renderMyVocabPanel();
         }
+
+        // ===================================================================
+        // ===== [MỚI] BÀI KIỂM TRA TỪ VỰNG HÀNG TUẦN =======================
+        // Điều kiện: khi "Kho từ vựng của tôi" có ÍT NHẤT 20 từ tiếng Anh KHÁC NHAU (không
+        // trùng) đang ở trạng thái "chưa học", thì mỗi TUẦN (7 ngày/lần) sẽ tạo 1 bài kiểm tra
+        // gồm đúng 20 từ đó (ưu tiên các từ đang ở ĐẦU danh sách hiển thị — tức mới lưu gần đây
+        // nhất, đúng thứ tự "Kho từ vựng của tôi" đang hiển thị). Mỗi từ được kiểm theo 1 trong
+        // 2 cách, CHỌN NGẪU NHIÊN khi tạo bài:
+        //   Cách 1: điền từ tiếng Anh vào chỗ trống của câu ví dụ đã lưu kèm từ đó (có kèm nghĩa
+        //           tiếng Việt để gợi ý) — chỉ dùng được nếu từ đó thực sự xuất hiện trong câu
+        //           ví dụ đã lưu, nếu không sẽ tự chuyển sang Cách 2.
+        //   Cách 2: viết ra 1 nghĩa tiếng Việt của từ đó (từ có nhiều nghĩa, cách nhau bởi dấu
+        //           phẩy/chấm phẩy/gạch chéo, thì viết ĐÚNG 1 nghĩa trong số đó là được).
+        // Một từ cần kiểm ĐÚNG LIÊN TIẾP 3 LẦN (sai 1 lần trong quá trình đó sẽ bị tính lại từ
+        // đầu) thì mới chính thức được đánh dấu "đã học" — lúc đó nền của từ đó trong "Kho từ
+        // vựng của tôi" sẽ chuyển XANH LÁ, và khi gặp lại từ đó lúc đọc bài ở nơi khác sẽ được
+        // tô VÀNG (thay vì xanh lá mặc định của từ mới lưu/còn đang học).
+        //
+        // ⚠️ CẦN TẠO 3 BẢNG SAU TRÊN SUPABASE TRƯỚC KHI DÙNG (chạy trong SQL Editor):
+        //
+        //   create table if not exists vocab_word_progress (
+        //     vocab_id bigint primary key references user_vocabulary(id) on delete cascade,
+        //     user_id uuid not null references auth.users(id) on delete cascade,
+        //     attempts int not null default 0,
+        //     correct_streak int not null default 0,
+        //     learned boolean not null default false,
+        //     last_tested_at timestamptz,
+        //     updated_at timestamptz not null default now()
+        //   );
+        //   alter table vocab_word_progress enable row level security;
+        //   create policy "Học viên tự quản lý tiến độ từ vựng của mình"
+        //     on vocab_word_progress for all
+        //     using (auth.uid() = user_id) with check (auth.uid() = user_id);
+        //
+        //   create table if not exists vocab_weekly_tests (
+        //     id bigint generated by default as identity primary key,
+        //     user_id uuid not null references auth.users(id) on delete cascade,
+        //     created_at timestamptz not null default now(),
+        //     status text not null default 'pending'
+        //   );
+        //   alter table vocab_weekly_tests enable row level security;
+        //   create policy "Học viên tự quản lý bài kiểm tra từ vựng của mình"
+        //     on vocab_weekly_tests for all
+        //     using (auth.uid() = user_id) with check (auth.uid() = user_id);
+        //
+        //   create table if not exists vocab_weekly_test_items (
+        //     id bigint generated by default as identity primary key,
+        //     test_id bigint not null references vocab_weekly_tests(id) on delete cascade,
+        //     vocab_id bigint not null references user_vocabulary(id) on delete cascade,
+        //     user_id uuid not null references auth.users(id) on delete cascade,
+        //     question_type smallint not null,
+        //     answered boolean not null default false,
+        //     is_correct boolean,
+        //     answered_at timestamptz
+        //   );
+        //   alter table vocab_weekly_test_items enable row level security;
+        //   create policy "Học viên tự quản lý câu hỏi kiểm tra từ vựng của mình"
+        //     on vocab_weekly_test_items for all
+        //     using (auth.uid() = user_id) with check (auth.uid() = user_id);
+        // (Nếu cột "id" của bảng "user_vocabulary" không phải kiểu bigint, đổi "vocab_id bigint"
+        // ở cả 2 bảng trên cho khớp kiểu.)
+        // ===================================================================
+
+        const VOCAB_TEST_SIZE = 20;
+        const VOCAB_TEST_MASTERY_STREAK = 3;
+        const VOCAB_TEST_INTERVAL_DAYS = 2; // [SỬA] trước là 7 (hàng tuần), giờ 2 ngày/lần
+
+        const vocabWeeklyBannerEl    = document.getElementById('vocab-weekly-test-banner');
+        const vocabWeeklyStartBtn    = document.getElementById('vocab-weekly-test-start-btn');
+        const vocabWeeklyOverlay     = document.getElementById('vocab-weekly-test-overlay');
+        const vocabWeeklyCloseBtn    = document.getElementById('vocab-weekly-close-btn');
+        const vocabWeeklyProgressEl  = document.getElementById('vocab-weekly-progress');
+        const vocabWeeklyBodyEl      = document.getElementById('vocab-weekly-question-body');
+
+        let currentWeeklyTest = null;      // { id, items: [{ id, vocab_id, question_type, answered, is_correct, vocab }] }
+        let currentWeeklyTestIndex = 0;
+
+        function escapeRegexNews(s) {
+            return String(s || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        // Cách 1 chỉ dùng được nếu từ đó THỰC SỰ xuất hiện (nguyên từ, không phân biệt hoa/thường)
+        // trong câu ví dụ đã lưu kèm theo — nếu không sẽ tự chuyển sang Cách 2.
+        function canFillBlankForVocab(v) {
+            if (!v.example_en) return false;
+            const word = v.word_norm || v.word;
+            if (!word) return false;
+            const re = new RegExp('\\b' + escapeRegexNews(word) + '\\b', 'i');
+            return re.test(v.example_en);
+        }
+
+        function fillBlankForWord(sentence, word) {
+            const re = new RegExp('\\b' + escapeRegexNews(word) + '\\b', 'i');
+            return String(sentence || '').replace(re, '_____');
+        }
+
+        function normalizeViText(s) {
+            return String(s || '').toLowerCase().trim().replace(/\s+/g, ' ');
+        }
+
+        // [MỚI] Từ có nhiều nghĩa (cách nhau bởi dấu phẩy/chấm phẩy/gạch chéo) -> chỉ cần
+        // HỌC VIÊN VIẾT ĐÚNG 1 CHỮ (1 từ) nằm trong bất kỳ nghĩa nào đã lưu là được tính đúng,
+        // không bắt buộc phải viết khớp NGUYÊN CỤM từ đầy đủ.
+        function checkMeaningAnswer(answer, meaningField) {
+            const meaningWords = new Set();
+            String(meaningField || '').split(/[,;\/]/).forEach(part => {
+                normalizeViText(part).split(/\s+/).forEach(w => { if (w) meaningWords.add(w); });
+            });
+            const answerWords = normalizeViText(answer).split(/\s+/).filter(Boolean);
+            if (!answerWords.length || !meaningWords.size) return false;
+            return answerWords.some(w => meaningWords.has(w));
+        }
+
+        function showVocabWeeklyTestBanner(testId) {
+            if (!vocabWeeklyBannerEl) return;
+            vocabWeeklyBannerEl.style.display = 'flex';
+            vocabWeeklyBannerEl.dataset.testId = testId;
+        }
+        function hideVocabWeeklyTestBanner() {
+            if (!vocabWeeklyBannerEl) return;
+            vocabWeeklyBannerEl.style.display = 'none';
+            delete vocabWeeklyBannerEl.dataset.testId;
+        }
+
+        // [MỚI] Hàm dùng CHUNG cho cả 2 nơi hiển thị bài kiểm tra từ vựng hàng tuần:
+        //   (1) banner trong "Kho từ vựng của tôi" (mục Từ vựng)
+        //   (2) panel "📁 từ vựng" trong tab Kiểm tra (nơi học viên thực sự vào làm bài)
+        // Kiểm tra điều kiện + (nếu đủ điều kiện và tới hạn 1 tuần) TỰ TẠO bài kiểm tra mới,
+        // rồi trả về trạng thái hiện tại: { pendingTestId, notLearnedCount, daysUntilNextTest }
+        //   - pendingTestId: có giá trị nếu đang có bài kiểm tra sẵn sàng để làm (mới tạo hoặc làm dở)
+        //   - notLearnedCount: số từ tiếng Anh KHÁC NHAU đang "chưa học" (để báo còn thiếu bao nhiêu)
+        //   - daysUntilNextTest: còn bao nhiêu ngày nữa mới tới hạn tạo bài tiếp theo (null nếu
+        //     chưa từng có bài kiểm tra nào, hoặc đã tới hạn nhưng chưa đủ 20 từ chưa học)
+        async function checkVocabWeeklyTestState() {
+            const result = { pendingTestId: null, notLearnedCount: 0, daysUntilNextTest: null };
+            if (!currentUserId || isTeacher || isImpersonating) return result;
+            try {
+                await ensureMyVocabLoaded();
+
+                const seenNormCount = new Set();
+                for (const v of myVocabList) {
+                    if (isVocabWordLearned(v.id)) continue;
+                    const norm = normalizeWord(v.word_norm || v.word);
+                    if (norm) seenNormCount.add(norm);
+                }
+                result.notLearnedCount = seenNormCount.size;
+
+                const { data: pendingTests, error: ePending } = await sb
+                    .from('vocab_weekly_tests')
+                    .select('id')
+                    .eq('user_id', currentUserId)
+                    .eq('status', 'pending')
+                    .order('created_at', { ascending: false })
+                    .limit(1);
+                if (ePending) throw ePending;
+                if (pendingTests && pendingTests.length) {
+                    result.pendingTestId = pendingTests[0].id;
+                    return result;
+                }
+
+                const { data: lastTests, error: eLast } = await sb
+                    .from('vocab_weekly_tests')
+                    .select('id, created_at')
+                    .eq('user_id', currentUserId)
+                    .order('created_at', { ascending: false })
+                    .limit(1);
+                if (eLast) throw eLast;
+                if (lastTests && lastTests.length) {
+                    const daysSince = (Date.now() - new Date(lastTests[0].created_at).getTime()) / (1000 * 60 * 60 * 24);
+                    if (daysSince < VOCAB_TEST_INTERVAL_DAYS) {
+                        result.daysUntilNextTest = Math.max(1, Math.ceil(VOCAB_TEST_INTERVAL_DAYS - daysSince));
+                        return result;
+                    }
+                }
+
+                // Lọc các từ CHƯA HỌC, loại trùng từ tiếng Anh (word_norm), giữ đúng thứ tự đang
+                // hiển thị trong "Kho từ vựng của tôi" (mới nhất trước).
+                const seenNorm = new Set();
+                const candidates = [];
+                for (const v of myVocabList) {
+                    if (isVocabWordLearned(v.id)) continue;
+                    const norm = normalizeWord(v.word_norm || v.word);
+                    if (!norm || seenNorm.has(norm)) continue;
+                    seenNorm.add(norm);
+                    candidates.push(v);
+                }
+                if (candidates.length < VOCAB_TEST_SIZE) return result; // chưa đủ 20 từ chưa học
+
+                const selected = candidates.slice(0, VOCAB_TEST_SIZE);
+
+                const { data: newTest, error: eNew } = await sb
+                    .from('vocab_weekly_tests')
+                    .insert({ user_id: currentUserId, status: 'pending' })
+                    .select()
+                    .single();
+                if (eNew) throw eNew;
+
+                const itemsPayload = selected.map(v => {
+                    let qType = Math.random() < 0.5 ? 1 : 2;
+                    if (qType === 1 && !canFillBlankForVocab(v)) qType = 2;
+                    return { test_id: newTest.id, user_id: currentUserId, vocab_id: v.id, question_type: qType };
+                });
+                const { error: eItems } = await sb.from('vocab_weekly_test_items').insert(itemsPayload);
+                if (eItems) throw eItems;
+
+                result.pendingTestId = newTest.id;
+                return result;
+            } catch (err) {
+                console.error('Lỗi khi kiểm tra/tạo bài kiểm tra từ vựng hàng tuần (có thể do các bảng "vocab_word_progress"/"vocab_weekly_tests"/"vocab_weekly_test_items" chưa được tạo — xem chú thích SQL phía trên):', err.message);
+                return result;
+            }
+        }
+        window.checkVocabWeeklyTestState = checkVocabWeeklyTestState; // để folder "📁 từ vựng" (tab Kiểm tra) gọi được
+        window.VOCAB_TEST_SIZE = VOCAB_TEST_SIZE;
+
+        // Cập nhật banner trong "Kho từ vựng của tôi" dựa trên trạng thái dùng chung ở trên.
+        async function refreshVocabWeeklyBanner() {
+            const status = await checkVocabWeeklyTestState();
+            if (status.pendingTestId) showVocabWeeklyTestBanner(status.pendingTestId);
+            else hideVocabWeeklyTestBanner();
+        }
+
+        async function openVocabWeeklyTest(testId) {
+            try {
+                const { data: items, error } = await sb
+                    .from('vocab_weekly_test_items')
+                    .select('id, vocab_id, question_type, answered, is_correct')
+                    .eq('test_id', testId)
+                    .order('id', { ascending: true });
+                if (error) throw error;
+
+                const enriched = (items || []).map(it => ({
+                    ...it,
+                    vocab: myVocabList.find(v => String(v.id) === String(it.vocab_id))
+                })).filter(it => it.vocab); // bỏ qua câu nào ứng với từ đã bị xoá khỏi kho từ vựng
+
+                if (!enriched.length) {
+                    await sb.from('vocab_weekly_tests').update({ status: 'completed' }).eq('id', testId);
+                    hideVocabWeeklyTestBanner();
+                    alert('Bài kiểm tra này không còn câu hỏi hợp lệ (từ đã bị xoá khỏi kho từ vựng).');
+                    return;
+                }
+
+                currentWeeklyTest = { id: testId, items: enriched };
+                const firstUnanswered = enriched.findIndex(it => !it.answered);
+                currentWeeklyTestIndex = firstUnanswered === -1 ? 0 : firstUnanswered;
+
+                vocabWeeklyOverlay.style.display = 'flex';
+                renderVocabWeeklyQuestion();
+            } catch (err) {
+                alert('Không thể mở bài kiểm tra: ' + err.message);
+            }
+        }
+        window.openVocabWeeklyTest = openVocabWeeklyTest; // để folder "📁 từ vựng" (tab Kiểm tra) gọi được
+
+        function renderVocabWeeklyQuestion() {
+            const test = currentWeeklyTest;
+            if (!test) return;
+            const idx = currentWeeklyTestIndex;
+            const total = test.items.length;
+
+            if (idx >= total) { renderVocabWeeklySummary(); return; }
+
+            const item = test.items[idx];
+            const v = item.vocab;
+            vocabWeeklyProgressEl.textContent = `Câu ${idx + 1}/${total}`;
+
+            let questionHtml;
+            if (item.question_type === 1 && canFillBlankForVocab(v)) {
+                const blankSentence = fillBlankForWord(v.example_en, v.word_norm || v.word);
+                questionHtml = `
+                    <p class="vocab-weekly-instruction">Điền từ tiếng Anh còn thiếu vào câu sau:</p>
+                    <p class="vocab-weekly-sentence">${escapeHtmlNews(blankSentence)}</p>
+                    <p class="vocab-weekly-meaning-hint">Nghĩa: <strong>${escapeHtmlNews(v.meaning || '')}</strong></p>
+                    <input type="text" id="vocab-weekly-answer-input" class="vocab-weekly-input" placeholder="Nhập từ tiếng Anh..." autocomplete="off">
+                `;
+            } else {
+                questionHtml = `
+                    <p class="vocab-weekly-instruction">Viết nghĩa tiếng Việt của từ sau:</p>
+                    <p class="vocab-weekly-word">${escapeHtmlNews(v.word)}</p>
+                    <input type="text" id="vocab-weekly-answer-input" class="vocab-weekly-input" placeholder="Nhập nghĩa tiếng Việt..." autocomplete="off">
+                `;
+            }
+
+            vocabWeeklyBodyEl.innerHTML = questionHtml + `
+                <div class="vocab-weekly-actions">
+                    <button type="button" id="vocab-weekly-submit-btn" class="vocab-weekly-submit-btn">Kiểm tra</button>
+                </div>
+                <div id="vocab-weekly-feedback" class="vocab-weekly-feedback" style="display:none;"></div>
+            `;
+
+            const input = document.getElementById('vocab-weekly-answer-input');
+            const submitBtn = document.getElementById('vocab-weekly-submit-btn');
+            input.focus();
+            input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); submitBtn.click(); } });
+
+            submitBtn.addEventListener('click', async () => {
+                const answer = input.value.trim();
+                if (!answer) { input.focus(); return; }
+                submitBtn.disabled = true;
+                input.disabled = true;
+
+                const isFillBlank = item.question_type === 1 && canFillBlankForVocab(v);
+                const isCorrect = isFillBlank
+                    ? normalizeWord(answer) === normalizeWord(v.word_norm || v.word)
+                    : checkMeaningAnswer(answer, v.meaning);
+
+                await submitVocabWeeklyAnswer(item, isCorrect);
+
+                const feedbackEl = document.getElementById('vocab-weekly-feedback');
+                feedbackEl.style.display = 'block';
+                feedbackEl.className = 'vocab-weekly-feedback ' + (isCorrect ? 'vocab-weekly-feedback-correct' : 'vocab-weekly-feedback-wrong');
+                // [MỚI] Luôn hiện đáp án đúng, kể cả khi học viên trả lời ĐÚNG (trước đây chỉ
+                // hiện đáp án khi trả lời sai).
+                const refAnswer = escapeHtmlNews(isFillBlank ? (v.word_norm || v.word) : (v.meaning || ''));
+                feedbackEl.innerHTML = isCorrect
+                    ? `✅ Chính xác! Đáp án: <strong>${refAnswer}</strong>`
+                    : `❌ Chưa đúng. Đáp án đúng: <strong>${refAnswer}</strong>`;
+
+                const nextBtn = document.createElement('button');
+                nextBtn.type = 'button';
+                nextBtn.className = 'vocab-weekly-next-btn';
+                nextBtn.textContent = (idx + 1 < total) ? 'Câu tiếp theo →' : 'Xem kết quả';
+                nextBtn.addEventListener('click', () => {
+                    currentWeeklyTestIndex++;
+                    renderVocabWeeklyQuestion();
+                });
+                vocabWeeklyBodyEl.appendChild(nextBtn);
+                nextBtn.focus();
+            });
+        }
+
+        async function submitVocabWeeklyAnswer(item, isCorrect) {
+            try {
+                const { error: e1 } = await sb.from('vocab_weekly_test_items')
+                    .update({ answered: true, is_correct: isCorrect, answered_at: new Date().toISOString() })
+                    .eq('id', item.id);
+                if (e1) console.error('Lỗi khi lưu kết quả câu hỏi:', e1.message);
+                item.answered = true;
+                item.is_correct = isCorrect;
+
+                const vocabId = item.vocab_id;
+                const prev = vocabWordProgressMap[String(vocabId)] || { attempts: 0, correct_streak: 0, learned: false };
+                const newAttempts = (prev.attempts || 0) + 1;
+                const newStreak = isCorrect ? (prev.correct_streak || 0) + 1 : 0;
+                const newLearned = newStreak >= VOCAB_TEST_MASTERY_STREAK;
+
+                const { error: e2 } = await sb.from('vocab_word_progress').upsert({
+                    vocab_id: vocabId,
+                    user_id: currentUserId,
+                    attempts: newAttempts,
+                    correct_streak: newStreak,
+                    learned: newLearned,
+                    last_tested_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                }, { onConflict: 'vocab_id' });
+                if (e2) console.error('Lỗi khi cập nhật tiến độ học từ:', e2.message);
+
+                vocabWordProgressMap[String(vocabId)] = { attempts: newAttempts, correct_streak: newStreak, learned: newLearned };
+                if (newLearned && item.vocab) {
+                    vocabLearnedNormSet.add(normalizeWord(item.vocab.word_norm || item.vocab.word));
+                }
+
+                const allAnswered = currentWeeklyTest.items.every(it => it.answered);
+                if (allAnswered) {
+                    const { error: e3 } = await sb.from('vocab_weekly_tests').update({ status: 'completed' }).eq('id', currentWeeklyTest.id);
+                    if (e3) console.error('Lỗi khi đóng bài kiểm tra:', e3.message);
+                }
+
+                renderMyVocabIfOpen(); // cập nhật ngay nền xanh lá trong danh sách nếu đang mở
+                markKnownWordsInDom(); // cập nhật ngay màu vàng/xanh khi gặp lại từ ở bài đọc khác
+            } catch (err) {
+                console.error('Lỗi ngoại lệ khi lưu kết quả bài kiểm tra từ vựng:', err.message);
+            }
+        }
+
+        function renderVocabWeeklySummary() {
+            const total = currentWeeklyTest.items.length;
+            const correctCount = currentWeeklyTest.items.filter(it => it.is_correct).length;
+            const learnedNow = currentWeeklyTest.items.filter(it => {
+                const p = vocabWordProgressMap[String(it.vocab_id)];
+                return p && p.learned;
+            }).length;
+            vocabWeeklyProgressEl.textContent = 'Hoàn thành';
+            vocabWeeklyBodyEl.innerHTML = `
+                <div class="vocab-weekly-summary">
+                    <div class="vocab-weekly-summary-icon">🎉</div>
+                    <h3>Đã hoàn thành bài kiểm tra!</h3>
+                    <p>Đúng ${correctCount}/${total} câu.</p>
+                    <p>${learnedNow} từ đã chính thức "đã học" (đúng liên tiếp ${VOCAB_TEST_MASTERY_STREAK} lần).</p>
+                    <button type="button" id="vocab-weekly-done-btn" class="vocab-weekly-submit-btn">Đóng</button>
+                </div>
+            `;
+            document.getElementById('vocab-weekly-done-btn').addEventListener('click', () => {
+                vocabWeeklyOverlay.style.display = 'none';
+                currentWeeklyTest = null;
+                hideVocabWeeklyTestBanner();
+                refreshVocabWeeklyBanner(); // cập nhật banner trong "Kho từ vựng của tôi" nếu đang mở
+                if (typeof window.refreshVocabOwnTestPanelIfOpen === 'function') window.refreshVocabOwnTestPanelIfOpen(); // và panel bên tab Kiểm tra nếu đang mở
+            });
+        }
+
+        // ===================================================================
+        // [MỚI] ÔN LẠI NGHĨA CỦA 1 TỪ ĐÃ HỌC — bấm vào 1 từ đã "đã học" trong "Kho từ vựng của
+        // tôi" sẽ mở khung yêu cầu viết lại nghĩa tiếng Việt (dùng lại đúng overlay của bài
+        // kiểm tra hàng tuần cho gọn). Trả lời ĐÚNG thì không có gì thay đổi; trả lời SAI thì
+        // trừ 0.5 điểm chăm chỉ (xem vocab_review_checks + vocabTestPoints trong
+        // renderProfileAchievements()).
+        // ⚠️ CẦN TẠO BẢNG "vocab_review_checks" TRÊN SUPABASE — xem SQL bàn giao kèm theo.
+        function openVocabWordReviewCheck(vocabId) {
+            const v = myVocabList.find(x => String(x.id) === String(vocabId));
+            if (!v) return;
+            currentWeeklyTest = null; // đảm bảo không lẫn với luồng bài kiểm tra tuần đang làm dở
+
+            vocabWeeklyProgressEl.textContent = 'Ôn lại từ đã học';
+            vocabWeeklyBodyEl.innerHTML = `
+                <p class="vocab-weekly-instruction">Từ này bạn đã "đã học" — viết lại nghĩa tiếng Việt để ôn tập nhé:</p>
+                <p class="vocab-weekly-word">${escapeHtmlNews(v.word)}</p>
+                <input type="text" id="vocab-weekly-answer-input" class="vocab-weekly-input" placeholder="Nhập nghĩa tiếng Việt..." autocomplete="off">
+                <div class="vocab-weekly-actions">
+                    <button type="button" id="vocab-weekly-submit-btn" class="vocab-weekly-submit-btn">Kiểm tra</button>
+                </div>
+                <div id="vocab-weekly-feedback" class="vocab-weekly-feedback" style="display:none;"></div>
+            `;
+            vocabWeeklyOverlay.style.display = 'flex';
+
+            const input = document.getElementById('vocab-weekly-answer-input');
+            const submitBtn = document.getElementById('vocab-weekly-submit-btn');
+            input.focus();
+            input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); submitBtn.click(); } });
+
+            submitBtn.addEventListener('click', async () => {
+                const answer = input.value.trim();
+                if (!answer) { input.focus(); return; }
+                submitBtn.disabled = true;
+                input.disabled = true;
+
+                const isCorrect = checkMeaningAnswer(answer, v.meaning);
+                await recordVocabWordReviewCheck(v.id, isCorrect);
+
+                const feedbackEl = document.getElementById('vocab-weekly-feedback');
+                feedbackEl.style.display = 'block';
+                feedbackEl.className = 'vocab-weekly-feedback ' + (isCorrect ? 'vocab-weekly-feedback-correct' : 'vocab-weekly-feedback-wrong');
+                feedbackEl.innerHTML = isCorrect
+                    ? `✅ Chính xác! Đáp án: <strong>${escapeHtmlNews(v.meaning || '')}</strong>`
+                    : `❌ Chưa đúng (-0.5 điểm chăm chỉ). Đáp án đúng: <strong>${escapeHtmlNews(v.meaning || '')}</strong>`;
+
+                const closeBtn = document.createElement('button');
+                closeBtn.type = 'button';
+                closeBtn.className = 'vocab-weekly-next-btn';
+                closeBtn.textContent = 'Đóng';
+                closeBtn.addEventListener('click', () => { vocabWeeklyOverlay.style.display = 'none'; });
+                vocabWeeklyBodyEl.appendChild(closeBtn);
+                closeBtn.focus();
+            });
+        }
+
+        async function recordVocabWordReviewCheck(vocabId, isCorrect) {
+            try {
+                const { error } = await sb.from('vocab_review_checks').insert({
+                    user_id: currentUserId,
+                    vocab_id: vocabId,
+                    is_correct: isCorrect
+                });
+                if (error) throw error;
+                if (!isCorrect) renderProfileAchievements(); // cập nhật ngay điểm chăm chỉ (trừ 0.5đ)
+            } catch (err) {
+                console.error('Lỗi khi ghi nhận lượt ôn lại từ đã học (có thể do bảng "vocab_review_checks" chưa được tạo):', err.message);
+            }
+        }
+        // ===================================================================
+
+        if (vocabWeeklyStartBtn) {
+            vocabWeeklyStartBtn.addEventListener('click', () => {
+                const testId = vocabWeeklyBannerEl.dataset.testId;
+                if (testId) openVocabWeeklyTest(/^\d+$/.test(testId) ? Number(testId) : testId);
+            });
+        }
+        if (vocabWeeklyCloseBtn) {
+            vocabWeeklyCloseBtn.addEventListener('click', () => {
+                if (currentWeeklyTest && !confirm('Thoát bài kiểm tra? Các câu đã trả lời vẫn được lưu, bạn có thể làm tiếp sau.')) return;
+                vocabWeeklyOverlay.style.display = 'none';
+                currentWeeklyTest = null;
+            });
+        }
+        // ===================================================================
 
         if (myVocabFolderCard && myVocabPanel && myVocabBackBtn && myVocabListEl) {
             myVocabFolderCard.addEventListener('click', async () => {
@@ -5558,6 +6184,7 @@ function toggleCompletion(symbolElement) {
                 myVocabListEl.innerHTML = '<p class="news-loading-msg">Đang tải danh sách từ vựng...</p>';
                 await ensureMyVocabLoaded();
                 renderMyVocabPanel();
+                refreshVocabWeeklyBanner(); // [MỚI] kiểm tra/tạo bài kiểm tra tuần này nếu đủ điều kiện
             });
 
             myVocabBackBtn.addEventListener('click', () => {
@@ -5566,20 +6193,31 @@ function toggleCompletion(symbolElement) {
             });
 
             myVocabListEl.addEventListener('click', async (e) => {
-                const btn = e.target.closest('.myvocab-delete-btn');
-                if (!btn) return;
-                const idAttr = btn.dataset.vocabId;
-                const id = /^\d+$/.test(idAttr) ? Number(idAttr) : idAttr;
-                if (!confirm('Xóa từ này khỏi danh sách từ vựng của bạn?')) return;
-                btn.disabled = true;
-                try {
-                    await deleteVocabEntry(id);
-                    rebuildVocabNormSet();
-                    markKnownWordsInDom();
-                    renderMyVocabPanel();
-                } catch (err) {
-                    alert('Xóa từ vựng thất bại: ' + err.message);
-                    btn.disabled = false;
+                const delBtn = e.target.closest('.myvocab-delete-btn');
+                if (delBtn) {
+                    const idAttr = delBtn.dataset.vocabId;
+                    const id = /^\d+$/.test(idAttr) ? Number(idAttr) : idAttr;
+                    if (!confirm('Xóa từ này khỏi danh sách từ vựng của bạn?')) return;
+                    delBtn.disabled = true;
+                    try {
+                        await deleteVocabEntry(id);
+                        rebuildVocabNormSet();
+                        markKnownWordsInDom();
+                        renderMyVocabPanel();
+                    } catch (err) {
+                        alert('Xóa từ vựng thất bại: ' + err.message);
+                        delBtn.disabled = false;
+                    }
+                    return;
+                }
+
+                // [MỚI] Bấm vào 1 từ ĐÃ HỌC (nền xanh lá) -> mở khung ôn lại nghĩa; sai thì
+                // trừ 0.5 điểm chăm chỉ (xem openVocabWordReviewCheck() bên dưới).
+                const learnedItem = e.target.closest('.myvocab-item.myvocab-item-learned');
+                if (learnedItem) {
+                    const idAttr = learnedItem.dataset.vocabId;
+                    const id = /^\d+$/.test(idAttr) ? Number(idAttr) : idAttr;
+                    openVocabWordReviewCheck(id);
                 }
             });
         }

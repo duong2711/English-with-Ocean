@@ -968,6 +968,18 @@
             </div>
 
         </div>
+
+        <!-- [MỚI] KIỂM TRA TỪ VỰNG CỦA TÔI — bài kiểm tra hàng tuần dựa trên "Kho từ vựng của
+             tôi" (chỉ dành cho học viên; giảng viên bấm vào folder "📁 từ vựng" ở trên vẫn mở
+             trang web tham khảo ngoài như cũ, không đổi). -->
+        <div id="vocab-own-test-panel" style="display:none;">
+            <div class="grammar-panel-header">
+                <button class="grammar-back-btn" id="vocab-own-test-back-btn">← Quay lại</button>
+                <h3 style="margin:0;">📁 Kiểm tra từ vựng của tôi</h3>
+            </div>
+            <p class="kid-hint">Bài kiểm tra định kỳ (mỗi 2 ngày/lần) lấy từ các từ bạn đã lưu trong "Kho từ vựng của tôi" (mục Từ vựng) — kiểm đúng liên tiếp 3 lần thì từ đó được đánh dấu "đã học".</p>
+            <div id="vocab-own-test-status"></div>
+        </div>
     </div>
 
     <div id="tab-tu-vung" class="main-tab-content">
@@ -989,6 +1001,13 @@
                 </div>
             </div>
             <p class="kid-hint">Đây là những từ bạn đã chạm vào để tra nghĩa trong lúc luyện dịch bài đọc (mục "Tin ngắn"). Danh sách này được lưu lại cho riêng bạn và không mất khi tải lại trang.</p>
+
+            <!-- [MỚI] Banner báo có bài kiểm tra từ vựng mới (chỉ hiện khi đủ điều kiện) -->
+            <div id="vocab-weekly-test-banner" class="vocab-weekly-banner" style="display:none;">
+                <span>📝 Bạn có bài kiểm tra từ vựng mới! Ôn lại 20 từ để đánh dấu "đã học" nhé.</span>
+                <button type="button" id="vocab-weekly-test-start-btn" class="vocab-weekly-start-btn">Làm bài kiểm tra</button>
+            </div>
+
             <div id="myvocab-list" class="myvocab-list"></div>
         </div>
 
@@ -8094,6 +8113,20 @@
                 </button>
                 <div class="word-lookup-pronounce-status" id="word-lookup-pronounce-status"></div>
             </div>
+        </div>
+    </div>
+
+    <!-- [MỚI] Overlay làm bài kiểm tra từ vựng hàng tuần — ĐẶT Ở NGOÀI mọi ".main-tab-content"
+         (giống word-lookup-popup ở trên) để luôn hiện được bất kể học viên đang đứng ở tab nào
+         khi bấm "Làm bài kiểm tra" (trước đây bị lồng trong tab "Từ vựng" nên bấm ở tab "Kiểm
+         tra" sẽ bị tab cha che mất, JS chạy đúng nhưng không thấy gì). -->
+    <div id="vocab-weekly-test-overlay" class="vocab-weekly-overlay" style="display:none;">
+        <div class="vocab-weekly-modal">
+            <div class="vocab-weekly-modal-header">
+                <span id="vocab-weekly-progress">Câu 1/20</span>
+                <button type="button" id="vocab-weekly-close-btn" class="vocab-weekly-close-btn" title="Thoát">✕</button>
+            </div>
+            <div id="vocab-weekly-question-body" class="vocab-weekly-question-body"></div>
         </div>
     </div>
 

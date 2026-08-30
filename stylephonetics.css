@@ -4786,6 +4786,13 @@ h3.news-editable:focus,
     background: var(--success-light);
     color: #065f46;
 }
+/* [MỚI] Nếu từ đó đã "đã học" (kiểm đúng liên tiếp 3 lần trong bài kiểm tra hàng tuần) ->
+   đổi sang tô VÀNG khi gặp lại trong bài đọc, để phân biệt với từ mới lưu/còn đang học (xanh lá). */
+.tappable-word.known-word.word-learned {
+    border-bottom-color: #d97706;
+    background: #fef3c7;
+    color: #92400e;
+}
 
 /* --- Popup hiện nghĩa của từ khi chạm vào --- */
 .word-lookup-popup {
@@ -5072,6 +5079,175 @@ h3.news-editable:focus,
     color: var(--text-light);
     font-style: italic;
 }
+
+/* [MỚI] Từ đã "đã học" (kiểm đúng liên tiếp 3 lần trong bài kiểm tra hàng tuần) -> nền xanh
+   lá trong danh sách "Kho từ vựng của tôi", cùng tông với các trạng thái "hoàn thành" khác
+   trong hệ thống (ipa-symbol.completed, grammar-folder-done...). */
+.myvocab-item.myvocab-item-learned {
+    background: var(--success-light);
+    border-color: var(--success);
+    cursor: pointer;
+}
+.myvocab-item.myvocab-item-learned:hover { border-color: var(--success-dark); }
+.myvocab-review-hint {
+    margin-top: 8px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #065f46;
+    opacity: 0.75;
+}
+.myvocab-learned-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #fff;
+    background: var(--success);
+    border-radius: 20px;
+    padding: 2px 10px;
+    white-space: nowrap;
+}
+
+/* [MỚI] Banner báo có bài kiểm tra từ vựng hàng tuần, trong panel "Kho từ vựng của tôi" */
+.vocab-weekly-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    background: linear-gradient(135deg, var(--primary-light), #fff);
+    border: 1.5px solid var(--primary);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    margin: 14px 0 0;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--primary-dark);
+}
+.vocab-weekly-start-btn {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 8px 18px;
+    font-size: 0.86rem;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: opacity 0.15s;
+}
+.vocab-weekly-start-btn:hover { opacity: 0.88; }
+
+/* [MỚI] Overlay làm bài kiểm tra từ vựng hàng tuần */
+.vocab-weekly-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(30, 42, 69, 0.5);
+    z-index: 2100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+.vocab-weekly-modal {
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg, 0 10px 40px rgba(0,0,0,0.25));
+    width: 100%;
+    max-width: 480px;
+    max-height: 88vh;
+    overflow-y: auto;
+    padding: 0 0 20px;
+}
+.vocab-weekly-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    border-bottom: 1.5px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: var(--surface);
+    border-radius: var(--radius) var(--radius) 0 0;
+    font-weight: 700;
+    color: var(--primary-dark);
+}
+.vocab-weekly-close-btn {
+    background: none;
+    border: none;
+    font-size: 1.1rem;
+    cursor: pointer;
+    color: var(--text-muted);
+    padding: 2px 6px;
+    border-radius: 6px;
+}
+.vocab-weekly-close-btn:hover { background: var(--surface-2); }
+.vocab-weekly-question-body { padding: 18px; }
+.vocab-weekly-instruction {
+    font-size: 0.86rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+.vocab-weekly-sentence {
+    font-size: 1.02rem;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.6;
+    background: var(--surface-2);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    margin-bottom: 10px;
+}
+.vocab-weekly-word {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--primary-dark);
+    text-align: center;
+    padding: 10px 0;
+    margin-bottom: 10px;
+}
+.vocab-weekly-meaning-hint {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+}
+.vocab-weekly-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 14px;
+    font-size: 0.96rem;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    margin-bottom: 14px;
+}
+.vocab-weekly-input:focus { outline: none; border-color: var(--primary); }
+.vocab-weekly-actions { display: flex; }
+.vocab-weekly-submit-btn, .vocab-weekly-next-btn {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 10px 20px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    width: 100%;
+}
+.vocab-weekly-submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.vocab-weekly-next-btn { margin-top: 12px; }
+.vocab-weekly-feedback {
+    margin-top: 14px;
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+.vocab-weekly-feedback-correct { background: var(--success-light); color: #065f46; border: 1.5px solid var(--success); }
+.vocab-weekly-feedback-wrong   { background: #fee2e2; color: #991b1b; border: 1.5px solid #ef4444; }
+.vocab-weekly-summary { text-align: center; padding: 10px 0; }
+.vocab-weekly-summary-icon { font-size: 2.6rem; margin-bottom: 8px; }
+.vocab-weekly-summary h3 { margin: 0 0 10px; color: var(--primary-dark); }
+.vocab-weekly-summary p { margin: 4px 0; color: var(--text-muted); font-size: 0.92rem; }
+.vocab-weekly-summary .vocab-weekly-submit-btn { margin-top: 14px; }
 
 @media (min-width: 600px) {
     .word-lookup-popup { align-items: center; }
