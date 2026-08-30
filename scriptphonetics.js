@@ -793,6 +793,10 @@ document.addEventListener('DOMContentLoaded', () => {
             lastKnownNewsUnreadCount = null; // mỗi lần đăng nhập mới, tính lại từ đầu
             newsUnreadToastShownThisSession = false; // [MỚI] cho phép toast hiện lại đúng 1 lần ở phiên đăng nhập mới này
             if (typeof window.refreshNewsUnreadBadge === 'function') window.refreshNewsUnreadBadge();
+
+            // [MỚI] Kiểm tra ngay xem có bài kiểm tra từ vựng nào đang chờ làm để hiện badge số
+            // trên thẻ "📁 từ vựng" (tab Kiểm tra) — không cần mở panel ra mới thấy được báo.
+            if (typeof window.checkVocabWeeklyTestState === 'function') window.checkVocabWeeklyTestState();
             
             // [CẬP NHẬT] Hiển thị Menu và xóa trạng thái ẩn của các Tab
             if (mainMenu) mainMenu.style.display = 'flex';
@@ -861,6 +865,8 @@ document.addEventListener('DOMContentLoaded', () => {
             lastKnownNewsUnreadCount = null;
             newsUnreadToastShownThisSession = false;
             if (typeof window.setNewsUnreadBadgeCount === 'function') window.setNewsUnreadBadgeCount(0);
+            // [MỚI] Không còn đăng nhập -> ẩn badge bài kiểm tra từ vựng
+            setVocabTestFolderBadge(false);
             if (phonamGradingPanel) phonamGradingPanel.style.display = 'none';
             if (typeof window.refreshSpeakingGradingBadge === 'function') window.refreshSpeakingGradingBadge();
             authContainer.style.display = 'block';
@@ -2303,17 +2309,42 @@ document.addEventListener('DOMContentLoaded', () => {
     //    hoặc nếu số bài chưa làm tăng lên so với lần kiểm tra gần nhất (tức vừa có bài mới).
     const kiemtraTabBadgeEl  = document.getElementById('kiemtra-tab-badge');
     const ctestFolderBadgeEl = document.getElementById('ctest-folder-badge');
+    const vocabTestFolderBadgeEl = document.getElementById('vocab-test-folder-badge'); // [MỚI] badge bài kiểm tra từ vựng
     let lastKnownUnfinishedCtestCount = null; // null = chưa tính lần nào trong phiên này
     let lastKnownNewsUnreadCount = null; // [MỚI] null = chưa tính lần nào trong phiên này (badge "tin ngắn chưa đọc")
     let newsUnreadToastShownThisSession = false; // [MỚI] chỉ hiện toast "tin tức chưa đọc" 1 LẦN DUY NHẤT mỗi phiên đăng nhập
+    let ctestUnfinishedCountCache = 0;   // [MỚI] tách riêng để cộng chung với badge bài kiểm tra từ vựng ở tab "Kiểm tra"
+    let vocabTestPendingCountCache = 0;  // [MỚI] 0 hoặc 1 — có đang có bài kiểm tra từ vựng chờ làm hay không
+
+    // [MỚI] Badge trên tab "Kiểm tra" = TỔNG số bài kiểm tra riêng chưa làm + (1 nếu đang có
+    // bài kiểm tra từ vựng chờ làm) — cho học viên biết ngay cả 2 loại bài kiểm tra cộng lại.
+    function updateKiemtraTabBadgeTotal() {
+        if (!kiemtraTabBadgeEl) return;
+        const total = ctestUnfinishedCountCache + vocabTestPendingCountCache;
+        if (total > 0) { kiemtraTabBadgeEl.textContent = total > 99 ? '99+' : String(total); kiemtraTabBadgeEl.style.display = 'inline-flex'; }
+        else { kiemtraTabBadgeEl.style.display = 'none'; }
+    }
 
     function setCtestBadgeCount(n) {
-        [kiemtraTabBadgeEl, ctestFolderBadgeEl].forEach(el => {
-            if (!el) return;
-            if (n > 0) { el.textContent = n > 99 ? '99+' : String(n); el.style.display = 'inline-flex'; }
-            else { el.style.display = 'none'; }
-        });
+        ctestUnfinishedCountCache = n;
+        if (ctestFolderBadgeEl) {
+            if (n > 0) { ctestFolderBadgeEl.textContent = n > 99 ? '99+' : String(n); ctestFolderBadgeEl.style.display = 'inline-flex'; }
+            else { ctestFolderBadgeEl.style.display = 'none'; }
+        }
+        updateKiemtraTabBadgeTotal();
     }
+
+    // [MỚI] Bật/tắt badge số trên thẻ "📁 từ vựng" (tab Kiểm tra) khi có/không có bài kiểm
+    // tra từ vựng đang chờ làm. Được gọi từ checkVocabWeeklyTestState() (khối "LOGIC TIN NGẮN").
+    function setVocabTestFolderBadge(hasPending) {
+        vocabTestPendingCountCache = hasPending ? 1 : 0;
+        if (vocabTestFolderBadgeEl) {
+            if (hasPending) { vocabTestFolderBadgeEl.textContent = '1'; vocabTestFolderBadgeEl.style.display = 'inline-flex'; }
+            else { vocabTestFolderBadgeEl.style.display = 'none'; }
+        }
+        updateKiemtraTabBadgeTotal();
+    }
+    window.setVocabTestFolderBadge = setVocabTestFolderBadge;
 
     async function refreshCtestBadge(opts) {
         const notify = !opts || opts.notify !== false;
@@ -2546,6 +2577,9 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(() => {
         if (currentUserId && document.visibilityState === 'visible') {
             renderProfileAchievements();
+            // [MỚI] Cùng lúc kiểm tra luôn xem có bài kiểm tra từ vựng mới đến hạn không, để
+            // badge trên thẻ "📁 từ vựng" (tab Kiểm tra) tự cập nhật mà không cần tải lại trang.
+            if (typeof window.checkVocabWeeklyTestState === 'function') window.checkVocabWeeklyTestState();
         }
     }, 5 * 60 * 1000);
 
@@ -5824,6 +5858,14 @@ function toggleCompletion(symbolElement) {
         //   - daysUntilNextTest: còn bao nhiêu ngày nữa mới tới hạn tạo bài tiếp theo (null nếu
         //     chưa từng có bài kiểm tra nào, hoặc đã tới hạn nhưng chưa đủ 20 từ chưa học)
         async function checkVocabWeeklyTestState() {
+            const result = await computeVocabWeeklyTestStateInternal();
+            // [MỚI] Mỗi khi tính lại trạng thái, đồng thời cập nhật luôn badge số trên thẻ
+            // "📁 từ vựng" (tab Kiểm tra) — báo ngay cho học viên biết đang có bài kiểm tra
+            // sẵn sàng để làm, không cần mở panel ra mới thấy.
+            if (typeof window.setVocabTestFolderBadge === 'function') window.setVocabTestFolderBadge(!!result.pendingTestId);
+            return result;
+        }
+        async function computeVocabWeeklyTestStateInternal() {
             const result = { pendingTestId: null, notLearnedCount: 0, daysUntilNextTest: null };
             if (!currentUserId || isTeacher || isImpersonating) return result;
             try {
