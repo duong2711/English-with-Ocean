@@ -2321,8 +2321,11 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateKiemtraTabBadgeTotal() {
         if (!kiemtraTabBadgeEl) return;
         const total = ctestUnfinishedCountCache + vocabTestPendingCountCache;
-        if (total > 0) { kiemtraTabBadgeEl.textContent = total > 99 ? '99+' : String(total); kiemtraTabBadgeEl.style.display = 'inline-flex'; }
-        else { kiemtraTabBadgeEl.style.display = 'none'; }
+        // [MỚI] Tab CHA ("Kiểm tra") chỉ hiện CHẤM TRÒN (không số) — số cụ thể đã hiện sẵn ở
+        // từng thẻ folder con (ctest-folder-badge / vocab-test-folder-badge) rồi, không lặp lại.
+        kiemtraTabBadgeEl.classList.add('tab-badge-dot');
+        kiemtraTabBadgeEl.textContent = '';
+        kiemtraTabBadgeEl.style.display = total > 0 ? 'inline-flex' : 'none';
     }
 
     function setCtestBadgeCount(n) {
@@ -2399,11 +2402,34 @@ document.addEventListener('DOMContentLoaded', () => {
     let lastKnownPendingGradingCount = null; // null = chưa tính lần nào trong phiên này
     let phonamGradingSetupWarned = false; // chỉ cảnh báo thiếu cột "graded" 1 lần / phiên, tránh spam
 
+    // [MỚI] Badge "chấm tròn" cho nút DROPDOWN CHA-CỦA-CHA ("Nền tảng ▾", "Luyện kỹ năng ▾") —
+    // hiện chấm khi BẤT KỲ tab con nào bên trong dropdown đó đang có badge (số hoặc chấm).
+    // Không tự tính toán gì cả, chỉ ĐỌC LẠI trạng thái hiện có của các badge con trên DOM, nên
+    // có thể gọi lại thoải mái từ bất cứ đâu (kể cả từ các IIFE khác) mà không cần truyền số.
+    function updateDropdownGroupBadges() {
+        const isBadgeOn = (id) => {
+            const el = document.getElementById(id);
+            return !!(el && el.style.display !== 'none');
+        };
+        const nenTangBadgeEl = document.getElementById('nen-tang-dropdown-badge');
+        if (nenTangBadgeEl) {
+            const on = isBadgeOn('phonam-tab-badge') || isBadgeOn('news-tab-badge');
+            nenTangBadgeEl.style.display = on ? 'inline-flex' : 'none';
+        }
+        const luyenKyNangBadgeEl = document.getElementById('luyen-ky-nang-dropdown-badge');
+        if (luyenKyNangBadgeEl) {
+            const on = isBadgeOn('speaking-tab-badge');
+            luyenKyNangBadgeEl.style.display = on ? 'inline-flex' : 'none';
+        }
+    }
+    window.updateDropdownGroupBadges = updateDropdownGroupBadges;
+
     function setPhonamGradingBadgeCount(n) {
         if (phonamTabBadgeEl) {
             if (n > 0) { phonamTabBadgeEl.textContent = n > 99 ? '99+' : String(n); phonamTabBadgeEl.style.display = 'inline-flex'; }
             else { phonamTabBadgeEl.style.display = 'none'; }
         }
+        updateDropdownGroupBadges();
     }
 
     async function refreshPhoneticsGradingBadge(opts) {
@@ -4204,11 +4230,19 @@ function toggleCompletion(symbolElement) {
         let newsReadSetupWarned = false; // chỉ cảnh báo thiếu bảng "news_reads" 1 lần / phiên, tránh spam
 
         function setNewsUnreadBadgeCount(n) {
-            [newsTabBadgeEl, newsFolderBadgeEl].forEach(el => {
-                if (!el) return;
-                if (n > 0) { el.textContent = n > 99 ? '99+' : String(n); el.style.display = 'inline-flex'; }
-                else { el.style.display = 'none'; }
-            });
+            // Thẻ folder CON ("Tin ngắn") vẫn hiện ĐÚNG SỐ như trước.
+            if (newsFolderBadgeEl) {
+                if (n > 0) { newsFolderBadgeEl.textContent = n > 99 ? '99+' : String(n); newsFolderBadgeEl.style.display = 'inline-flex'; }
+                else { newsFolderBadgeEl.style.display = 'none'; }
+            }
+            // [MỚI] Tab CHA ("Từ vựng") chỉ hiện CHẤM TRÒN (không số) khi mục con có badge số —
+            // tránh lặp lại đúng con số đã hiện ở thẻ folder con.
+            if (newsTabBadgeEl) {
+                newsTabBadgeEl.classList.add('tab-badge-dot');
+                newsTabBadgeEl.textContent = '';
+                newsTabBadgeEl.style.display = n > 0 ? 'inline-flex' : 'none';
+            }
+            if (typeof window.updateDropdownGroupBadges === 'function') window.updateDropdownGroupBadges();
         }
         window.setNewsUnreadBadgeCount = setNewsUnreadBadgeCount; // để updateUIForUser() ẩn badge lúc đăng xuất
 
@@ -4668,8 +4702,12 @@ function toggleCompletion(symbolElement) {
                 } else {
                     newsSentenceQuestion.style.display = 'none';
                     newsSentenceDone.style.display = 'block';
-                    // [MỚI] Tin ngắn được tính là "đã xem" khi học viên hoàn thành phần dịch
-                    // (xong hết mọi câu) — ghi nhận lên Supabase để tính vào Thành tựu.
+                    // [SỬA] "Đã đọc" (tô xanh + trừ khỏi badge số chưa đọc) giờ chỉ được tính
+                    // khi học viên dịch xong HẾT mọi câu trong bài (đây đúng lúc là câu cuối
+                    // cùng) — trước đây bị tính ngay từ lúc chỉ MỞ bài ra xem.
+                    if (!isTeacher) markNewsArticleRead(currentArticleId);
+                    // Tin ngắn được tính là "đã xem" khi học viên hoàn thành phần dịch (xong
+                    // hết mọi câu) — ghi nhận lên Supabase để tính vào Thành tựu.
                     markNewsArticleCompleted(currentArticleId);
                 }
 
@@ -5030,10 +5068,10 @@ function toggleCompletion(symbolElement) {
             newsArticlePanel.style.display = 'block';
             currentArticleId = article.id;
 
-            // [MỚI] Học viên mở bài tin ra xem -> ghi nhận "đã đọc" ngay để cập nhật badge số
-            // bài chưa đọc trên tab "Từ vựng" + thẻ folder "Tin ngắn" (không áp dụng cho giảng
-            // viên, vì giảng viên không có khái niệm "đọc" bài do chính mình soạn).
-            if (!isTeacher) markNewsArticleRead(article.id);
+            // [SỬA] Trước đây "đã đọc" được tính ngay khi MỞ bài ra xem — giờ đổi lại: phải
+            // DỊCH XONG HẾT mọi câu trong bài (isLast, xem chỗ gọi markNewsArticleCompleted())
+            // thì mới được tính "đã đọc" (mới tô xanh + trừ khỏi badge số bài chưa đọc). Mở bài
+            // ra xem mà chưa dịch xong thì bài đó vẫn tính là "chưa đọc" như cũ.
 
             // ----- Tiêu đề -----
             newsArticleTitle.textContent = article.title;
@@ -10924,6 +10962,7 @@ function toggleCompletion(symbolElement) {
         // (const/let ở top-level không gắn vào window, nên phải kiểm tra bằng typeof thay vì window[...]).
         function thcsGetGradeUnits(gradeNum) {
             switch (gradeNum) {
+                case 4: return (typeof GRADE4_UNITS !== 'undefined') ? GRADE4_UNITS : null;
                 case 6: return (typeof GRADE6_UNITS !== 'undefined') ? GRADE6_UNITS : null;
                 case 7: return (typeof GRADE7_UNITS !== 'undefined') ? GRADE7_UNITS : null;
                 case 8: return (typeof GRADE8_UNITS !== 'undefined') ? GRADE8_UNITS : null;
@@ -10986,7 +11025,7 @@ function toggleCompletion(symbolElement) {
             return null; // >= 3 lần hoàn thành: vĩnh viễn, không tự mất nữa
         }
 
-        // [MỚI] Rà soát toàn bộ Unit (mọi khối lớp 6-12) đã hoàn thành của học viên hiện tại, tự
+        // [MỚI] Rà soát toàn bộ Unit (mọi khối lớp 4-12) đã hoàn thành của học viên hiện tại, tự
         // động bỏ đánh dấu những Unit đã "hết hạn ôn tập". Gọi ngay sau khi thcsProgressMap được
         // tải xong (xem thcsEnsureProgressLoaded). Dùng thẳng thcsSaveProgress() vì hàm đó nhận
         // gradeNum/unitId tường minh (không như bên "Cho bé"), nên an toàn khi gọi cho bất kỳ
@@ -10994,7 +11033,7 @@ function toggleCompletion(symbolElement) {
         async function thcsCheckAndExpireCompletions() {
             const now = Date.now();
             const expiredTitles = [];
-            for (let g = 6; g <= 12; g++) {
+            for (let g = 4; g <= 12; g++) {
                 const units = thcsGetGradeUnits(g);
                 if (!units) continue;
                 for (const unit of units) {
@@ -11265,10 +11304,10 @@ function toggleCompletion(symbolElement) {
             notes.forEach((freq, i) => thcsPlayTone(freq, i * 0.16, 0.24, 'sawtooth', 0.16));
         }
 
-        // ---------- Bước 1: Danh sách khối lớp (6 -> 12) ----------
+        // ---------- Bước 1: Danh sách khối lớp (4 -> 12) ----------
         function renderGradeGrid() {
             thcsGradeGrid.innerHTML = '';
-            for (let g = 6; g <= 12; g++) {
+            for (let g = 4; g <= 12; g++) {
                 const gradeUnits = thcsGetGradeUnits(g);
                 const isReady = !!gradeUnits;
                 const card = document.createElement('div');
@@ -12756,12 +12795,12 @@ function toggleCompletion(symbolElement) {
         if (thcsGrade6BackBtn) thcsGrade6BackBtn.addEventListener('click', thcsPauseGame);
 
         // [MỚI] Xuất API dùng chung để mục "Luyện nghe" (tab Luyện kỹ năng) lấy được từ vựng
-        // của tất cả Unit THCS/THPT (mọi khối lớp 6-12) mà học viên đã hoàn thành, dùng làm
+        // của tất cả Unit Tiểu học/THCS/THPT (mọi khối lớp 4-12) mà học viên đã hoàn thành, dùng làm
         // kho từ vựng luyện nghe — theo đúng cách window.kidTopicsAPI đã làm cho "Cho bé".
         window.thcsUnitsAPI = {
             getAllUnits: () => {
                 const list = [];
-                for (let g = 6; g <= 12; g++) {
+                for (let g = 4; g <= 12; g++) {
                     const units = thcsGetGradeUnits(g);
                     if (units) units.forEach(unit => list.push({ gradeNum: g, unit }));
                 }
@@ -12770,7 +12809,7 @@ function toggleCompletion(symbolElement) {
             ensureProgressLoaded: thcsEnsureProgressLoaded,
             isUnitCompleted: (gradeNum, unit) => !!thcsGetProgress(gradeNum, unit.id).completed,
             // [MỚI] Tổng số LẦN HOÀN THÀNH LẠI (không tính lần hoàn thành đầu tiên) cộng dồn
-            // trên TẤT CẢ Unit (mọi khối lớp 6-12) của học viên này — dùng để cộng điểm chăm
+            // trên TẤT CẢ Unit (mọi khối lớp 4-12) của học viên này — dùng để cộng điểm chăm
             // chỉ thưởng trong renderProfileAchievements(), giống hệt kidTopicsAPI.getTotalRedoCount.
             getTotalRedoCount: () => {
                 let total = 0;
@@ -25362,6 +25401,7 @@ function toggleCompletion(symbolElement) {
             if (n > 0) { spkTabBadgeEl.textContent = n > 99 ? '99+' : String(n); spkTabBadgeEl.style.display = 'inline-flex'; }
             else { spkTabBadgeEl.style.display = 'none'; }
         }
+        if (typeof window.updateDropdownGroupBadges === 'function') window.updateDropdownGroupBadges();
     }
 
     async function refreshSpeakingGradingBadge(opts) {

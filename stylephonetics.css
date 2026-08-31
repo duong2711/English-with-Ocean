@@ -2334,6 +2334,16 @@ h3 { font-size:0.95rem; font-weight:600; color:var(--text); margin:0 0 8px; }
     right: 8px;
     margin-left: 0;
 }
+/* [MỚI] Badge "chấm tròn" (không số) — dùng cho tab CHA khi 1 trong các mục CON của nó đang
+   có badge số, để báo "có gì đó cần chú ý bên trong" mà không lặp lại đúng con số ở tab cha. */
+.tab-badge-dot {
+    min-width: 9px;
+    width: 9px;
+    height: 9px;
+    padding: 0;
+    font-size: 0;
+    line-height: 0;
+}
 
 /* =====================================================
    TABLET (≥ 600px)
