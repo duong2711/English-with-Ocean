@@ -13823,6 +13823,7 @@ function toggleCompletion(symbolElement) {
 
     const CTEST_TYPE_LABELS = {
         mcq: 'Trắc nghiệm',
+        mcq_multi: 'Trắc nghiệm (nhiều đáp án đúng)',
         fill_blank: 'Điền vào chỗ trống',
         reorder: 'Sắp xếp câu',
         reading: 'Bài đọc + trắc nghiệm',
@@ -13833,7 +13834,21 @@ function toggleCompletion(symbolElement) {
         essay: 'Tự luận'
     };
     // Các dạng hiện ra làm nút "+ Thêm câu hỏi" cấp PHẦN.
-    const CTEST_TOP_LEVEL_TYPES = ['mcq', 'fill_blank', 'reorder', 'reading', 'mixed', 'matching', 'wordbank', 'listening', 'essay'];
+    const CTEST_TOP_LEVEL_TYPES = ['mcq', 'mcq_multi', 'fill_blank', 'reorder', 'reading', 'mixed', 'matching', 'wordbank', 'listening', 'essay'];
+
+    // Di chuyển 1 phần tử lên/xuống trong danh sách các phần tử anh em cùng cấp
+    // (dùng chung cho cả "di chuyển câu hỏi" và "di chuyển phần lớn") — chỉ đổi
+    // vị trí trong DOM, không cần lưu thêm trường "thứ tự" nào vì lúc lưu bài,
+    // dữ liệu luôn được đọc lại đúng theo thứ tự hiện có trong DOM.
+    function ctestMoveSibling(el, direction) {
+        if (direction < 0) {
+            const prev = el.previousElementSibling;
+            if (prev) el.parentElement.insertBefore(el, prev);
+        } else {
+            const next = el.nextElementSibling;
+            if (next) el.parentElement.insertBefore(next, el);
+        }
+    }
 
     function ctestQcardShell(type, removeLabel) {
         const card = document.createElement('div');
@@ -13842,6 +13857,8 @@ function toggleCompletion(symbolElement) {
         card.innerHTML =
             '<div class="ctest-qcard-header">' +
                 '<span class="ctest-qcard-type-label">' + (CTEST_TYPE_LABELS[type] || type) + '</span>' +
+                '<button type="button" class="ctest-qcard-move-up-btn" title="Chuyển câu này lên trên">▲</button>' +
+                '<button type="button" class="ctest-qcard-move-down-btn" title="Chuyển câu này xuống dưới">▼</button>' +
                 '<button type="button" class="ctest-qcard-remove-btn">🗑️ ' + (removeLabel || 'Xoá câu này') + '</button>' +
             '</div>';
         return card;
@@ -13940,6 +13957,90 @@ function toggleCompletion(symbolElement) {
         };
     }
 
+    // ---- 1b) Trắc nghiệm NHIỀU đáp án đúng (checkbox) ----
+    // Giống hệt ctestOptionsEditor ở trên nhưng dùng checkbox (tick được nhiều ô)
+    // thay vì radio (chỉ chọn được 1 ô) — nên KHÔNG cần "groupName" loại trừ lẫn nhau.
+    function ctestOptionsEditorMulti(options, correctIndices) {
+        const box = document.createElement('div');
+        box.className = 'ctest-options-editor ctest-options-editor-multi';
+        const correctSet = new Set(Array.isArray(correctIndices) ? correctIndices : []);
+        (options && options.length ? options : ['', '']).forEach((opt, i) => {
+            box.appendChild(ctestOptionRowMulti(opt, correctSet.has(i)));
+        });
+        const addBtn = document.createElement('button');
+        addBtn.type = 'button';
+        addBtn.className = 'ctest-add-option-btn';
+        addBtn.textContent = '+ Thêm đáp án';
+        addBtn.addEventListener('click', () => {
+            box.insertBefore(ctestOptionRowMulti('', false), addBtn);
+            box.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
+        });
+        box.appendChild(addBtn);
+        return box;
+
+        function ctestOptionRowMulti(text, isCorrect) {
+            const row = document.createElement('div');
+            row.className = 'ctest-option-row';
+            const check = document.createElement('input');
+            check.type = 'checkbox';
+            check.className = 'ctest-option-correct-radio ctest-option-correct-checkbox';
+            check.checked = !!isCorrect;
+            check.title = 'Đánh dấu là (một trong các) đáp án đúng';
+            check.addEventListener('click', () => {
+                box.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
+            });
+            const richWrap = ctestCreateRichEditor(text || '', 'Nhập đáp án...', '', true);
+            const rm = document.createElement('button');
+            rm.type = 'button';
+            rm.className = 'ctest-row-remove-btn';
+            rm.textContent = '✕';
+            rm.addEventListener('click', () => {
+                if (box.querySelectorAll('.ctest-option-row').length <= 2) {
+                    alert('Cần ít nhất 2 đáp án.');
+                    return;
+                }
+                row.remove();
+                box.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
+            });
+            row.appendChild(check);
+            row.appendChild(richWrap);
+            row.appendChild(rm);
+            return row;
+        }
+    }
+    function ctestCollectOptionsMulti(box) {
+        const rows = Array.from(box.querySelectorAll(':scope > .ctest-option-row'));
+        const options = rows.map(r => ctestRichHtml(r.querySelector('.ctest-rich-wrap')));
+        const correct = [];
+        rows.forEach((r, i) => { if (r.querySelector('.ctest-option-correct-checkbox').checked) correct.push(i); });
+        return { options, correct };
+    }
+    function buildMcqMultiEditor(q) {
+        const card = ctestQcardShell('mcq_multi');
+        const hint = document.createElement('div');
+        hint.className = 'ctest-multi-editor-hint';
+        hint.textContent = '☑️ Tick vào ô trước MỖI đáp án đúng (được phép tick nhiều ô). Học viên phải chọn đúng TẤT CẢ và không chọn thừa đáp án nào thì mới được điểm câu này.';
+        card.appendChild(hint);
+        const promptWrap = ctestCreateRichEditor(q.prompt || '', 'Nhập câu hỏi...', 'Bôi đen rồi bấm B/U/I để định dạng.');
+        promptWrap.classList.add('ctest-qprompt-editor');
+        card.appendChild(promptWrap);
+        const imgField = ctestImageField(q.image_url, q.image_width);
+        card.appendChild(imgField);
+        const optBox = ctestOptionsEditorMulti(q.options, q.correct);
+        card.appendChild(optBox);
+        return card;
+    }
+    function collectMcqMulti(card) {
+        const { options, correct } = ctestCollectOptionsMulti(card.querySelector(':scope > .ctest-options-editor'));
+        return {
+            type: 'mcq_multi',
+            prompt: ctestRichHtml(card.querySelector(':scope > .ctest-qprompt-editor')),
+            image_url: ctestImageUrl(card.querySelector(':scope > .ctest-image-field')),
+            image_width: ctestImageWidth(card.querySelector(':scope > .ctest-image-field')),
+            options, correct
+        };
+    }
+
     // ---- 2) Điền vào chỗ trống ----
     function buildFillBlankEditor(q) {
         const card = ctestQcardShell('fill_blank');
@@ -14024,9 +14125,9 @@ function toggleCompletion(symbolElement) {
     // Mỗi "phần" bên trong có thể là bất kỳ dạng nào trong: trắc nghiệm, điền
     // khuyết, sắp xếp câu, nối từ, chọn từ trong khung, hoặc tự luận — thêm
     // bao nhiêu phần tuỳ thích, dạng nào cũng có thể lặp lại nhiều lần.
-    const CTEST_MIXED_PART_TYPES = ['mcq', 'fill_blank', 'reorder', 'matching', 'wordbank', 'essay'];
+    const CTEST_MIXED_PART_TYPES = ['mcq', 'mcq_multi', 'fill_blank', 'reorder', 'matching', 'wordbank', 'essay'];
     const CTEST_MIXED_PART_LABELS = {
-        mcq: 'Trắc nghiệm', fill_blank: 'Điền vào chỗ trống', reorder: 'Sắp xếp câu',
+        mcq: 'Trắc nghiệm', mcq_multi: 'Trắc nghiệm (nhiều đáp án đúng)', fill_blank: 'Điền vào chỗ trống', reorder: 'Sắp xếp câu',
         matching: 'Nối từ', wordbank: 'Chọn từ trong khung', essay: 'Tự luận'
     };
 
@@ -14326,17 +14427,18 @@ function toggleCompletion(symbolElement) {
     }
 
     const CTEST_BUILDERS = {
-        mcq: buildMcqEditor, fill_blank: buildFillBlankEditor, reorder: buildReorderEditor,
+        mcq: buildMcqEditor, mcq_multi: buildMcqMultiEditor, fill_blank: buildFillBlankEditor, reorder: buildReorderEditor,
         reading: buildReadingEditor, mixed: buildMixedEditor, matching: buildMatchingEditor,
         wordbank: buildWordbankEditor, listening: buildListeningEditor, essay: buildEssayEditor
     };
     const CTEST_COLLECTORS = {
-        mcq: collectMcq, fill_blank: collectFillBlank, reorder: collectReorder,
+        mcq: collectMcq, mcq_multi: collectMcqMulti, fill_blank: collectFillBlank, reorder: collectReorder,
         reading: collectReading, mixed: collectMixed, matching: collectMatching,
         wordbank: collectWordbank, listening: collectListening, essay: collectEssay
     };
     const CTEST_DEFAULTS = {
         mcq: () => ({ prompt: '', options: ['', ''], correct: 0 }),
+        mcq_multi: () => ({ prompt: '', options: ['', ''], correct: [] }),
         fill_blank: () => ({ html: '', image_url: '' }),
         reorder: () => ({ sentence: '' }),
         reading: () => ({ passage: '', sub_questions: [{ prompt: '', options: ['', ''], correct: 0 }] }),
@@ -14358,6 +14460,14 @@ function toggleCompletion(symbolElement) {
             }
             card.remove();
             list.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
+        });
+        card.querySelector(':scope > .ctest-qcard-header > .ctest-qcard-move-up-btn').addEventListener('click', () => {
+            ctestMoveSibling(card, -1);
+            card.parentElement.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
+        });
+        card.querySelector(':scope > .ctest-qcard-header > .ctest-qcard-move-down-btn').addEventListener('click', () => {
+            ctestMoveSibling(card, 1);
+            card.parentElement.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
         });
         return card;
     }
@@ -14383,6 +14493,24 @@ function toggleCompletion(symbolElement) {
         titleInputEl.className = 'news-edit-input ctest-section-title-input';
         titleInputEl.placeholder = 'Tên phần (VD: Phần 1 - Ngữ pháp)';
         titleInputEl.value = section.title || '';
+        const moveUpBtn = document.createElement('button');
+        moveUpBtn.type = 'button';
+        moveUpBtn.className = 'ctest-section-move-up-btn';
+        moveUpBtn.title = 'Chuyển cả phần này lên trên';
+        moveUpBtn.textContent = '▲';
+        moveUpBtn.addEventListener('click', () => {
+            ctestMoveSibling(card, -1);
+            scheduleAutosave();
+        });
+        const moveDownBtn = document.createElement('button');
+        moveDownBtn.type = 'button';
+        moveDownBtn.className = 'ctest-section-move-down-btn';
+        moveDownBtn.title = 'Chuyển cả phần này xuống dưới';
+        moveDownBtn.textContent = '▼';
+        moveDownBtn.addEventListener('click', () => {
+            ctestMoveSibling(card, 1);
+            scheduleAutosave();
+        });
         const removeBtn = document.createElement('button');
         removeBtn.type = 'button';
         removeBtn.className = 'ctest-section-remove-btn';
@@ -14397,6 +14525,8 @@ function toggleCompletion(symbolElement) {
             scheduleAutosave();
         });
         headerRow.appendChild(titleInputEl);
+        headerRow.appendChild(moveUpBtn);
+        headerRow.appendChild(moveDownBtn);
         headerRow.appendChild(removeBtn);
         card.appendChild(headerRow);
 
@@ -14814,6 +14944,46 @@ function toggleCompletion(symbolElement) {
         return block;
     }
 
+    function renderTakeMcqMulti(q, keyBase, labelPrefix) {
+        const block = document.createElement('div');
+        block.className = 'ctest-take-qblock';
+        const promptHtml = '<span class="ctest-take-qnum">' + labelPrefix + '</span>' + (q.prompt || '');
+        block.innerHTML = '<div class="ctest-take-qprompt">' + promptHtml + '</div>' +
+            '<div class="ctest-multi-take-hint">👉 Câu này có thể có nhiều đáp án đúng — chọn tất cả đáp án em cho là đúng.</div>';
+        if (q.image_url) {
+            const img = document.createElement('img');
+            img.className = 'ctest-take-image';
+            img.src = q.image_url;
+            ctestApplyImageWidth(img, q.image_width);
+            block.appendChild(img);
+        }
+        const optWrap = document.createElement('div');
+        optWrap.className = 'ctest-take-options';
+        const saved = Array.isArray(currentAnswers[keyBase]) ? currentAnswers[keyBase] : [];
+        const selectedSet = new Set(saved.map(Number));
+        (q.options || []).forEach((opt, i) => {
+            const label = document.createElement('label');
+            label.className = 'ctest-take-option-label';
+            const check = document.createElement('input');
+            check.type = 'checkbox';
+            check.value = String(i);
+            check.checked = selectedSet.has(i);
+            check.addEventListener('change', () => {
+                const cur = new Set((Array.isArray(currentAnswers[keyBase]) ? currentAnswers[keyBase] : []).map(Number));
+                if (check.checked) cur.add(i); else cur.delete(i);
+                currentAnswers[keyBase] = Array.from(cur).sort((a, b) => a - b);
+                scheduleAnswerAutosave();
+            });
+            const span = document.createElement('span');
+            span.innerHTML = opt;
+            label.appendChild(check);
+            label.appendChild(span);
+            optWrap.appendChild(label);
+        });
+        block.appendChild(optWrap);
+        return block;
+    }
+
     function renderTakeFillBlank(html, keyBase) {
         const { displayHtml, blanks } = ctestParseBlanks(html);
         const holder = document.createElement('div');
@@ -15119,6 +15289,7 @@ function toggleCompletion(symbolElement) {
 
     function renderTakeQuestion(q, keyBase, labelPrefix) {
         switch (q.type) {
+            case 'mcq_multi': return renderTakeMcqMulti(q, keyBase, labelPrefix);
             case 'fill_blank': return renderTakeFillBlankBlock(q, keyBase, labelPrefix);
             case 'reorder': return renderTakeReorder(q, keyBase, labelPrefix);
             case 'reading': return renderTakeReading(q, keyBase, labelPrefix);
@@ -15394,6 +15565,41 @@ function toggleCompletion(symbolElement) {
         return { el: block, correct: isCorrect ? 1 : 0, total: 1 };
     }
 
+    // Chấm điểm kiểu "tất cả hoặc không": học viên phải chọn ĐÚNG và ĐỦ mọi đáp án
+    // đúng, không thừa không thiếu, thì mới được 1 điểm cho cả câu (giống cách câu
+    // trắc nghiệm 1 đáp án luôn tính 1 điểm/câu bất kể có bao nhiêu lựa chọn).
+    function ctestResultMcqMulti(q, keyBase, answers, labelPrefix) {
+        const block = ctestResultQBlock(labelPrefix, q.prompt);
+        if (q.image_url) {
+            const img = document.createElement('img');
+            img.className = 'ctest-take-image';
+            img.src = q.image_url;
+            ctestApplyImageWidth(img, q.image_width);
+            block.appendChild(img);
+        }
+        const given = Array.isArray(answers[keyBase]) ? answers[keyBase].map(Number) : [];
+        const givenSet = new Set(given);
+        const correctArr = Array.isArray(q.correct) ? q.correct.map(Number) : [];
+        const correctSetIdx = new Set(correctArr);
+        const isCorrect = givenSet.size === correctSetIdx.size && correctArr.every(i => givenSet.has(i));
+        const optWrap = document.createElement('div');
+        optWrap.className = 'ctest-take-options';
+        (q.options || []).forEach((opt, i) => {
+            const row = document.createElement('div');
+            row.className = 'ctest-take-option-label';
+            const wasGiven = givenSet.has(i);
+            const shouldBeCorrect = correctSetIdx.has(i);
+            let html = opt;
+            if (wasGiven && !shouldBeCorrect) html = '<span class="ctest-result-item-wrong">' + opt + '</span>';
+            else if (wasGiven && shouldBeCorrect && !isCorrect) html = '<span class="ctest-result-item-wrong">' + opt + '</span>';
+            if (!isCorrect && shouldBeCorrect) html += '<span class="ctest-result-correct-tag">← đáp án đúng</span>';
+            row.innerHTML = html;
+            optWrap.appendChild(row);
+        });
+        block.appendChild(optWrap);
+        return { el: block, correct: isCorrect ? 1 : 0, total: 1 };
+    }
+
     function ctestResultFillBlank(q, keyBase, answers, labelPrefix) {
         const block = ctestResultQBlock(labelPrefix, 'Điền vào chỗ trống:');
         if (q.image_url) {
@@ -15536,6 +15742,7 @@ function toggleCompletion(symbolElement) {
 
     function ctestResultQuestion(q, keyBase, answers, labelPrefix) {
         switch (q.type) {
+            case 'mcq_multi': return ctestResultMcqMulti(q, keyBase, answers, labelPrefix);
             case 'fill_blank': return ctestResultFillBlank(q, keyBase, answers, labelPrefix);
             case 'reorder': return ctestResultReorder(q, keyBase, answers, labelPrefix);
             case 'reading': return ctestResultReading(q, keyBase, answers, labelPrefix);

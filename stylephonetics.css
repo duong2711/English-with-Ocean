@@ -5859,6 +5859,27 @@ h3.news-editable:focus,
 }
 .ctest-section-remove-btn:hover, .ctest-qcard-remove-btn:hover, .ctest-row-remove-btn:hover { background: #fee2e2; }
 
+/* [MỚI] Nút "▲ / ▼" đảo thứ tự — dùng chung style nhẹ nhàng hơn nút xoá (không phải
+   thao tác nguy hiểm), cho cả cấp "phần lớn" và cấp "từng câu hỏi". */
+.ctest-section-move-up-btn, .ctest-section-move-down-btn,
+.ctest-qcard-move-up-btn, .ctest-qcard-move-down-btn {
+    border: 1px solid var(--border-strong);
+    color: var(--text-muted);
+    background: var(--surface);
+    border-radius: 8px;
+    padding: 5px 9px;
+    cursor: pointer;
+    font-size: 0.78rem;
+    flex-shrink: 0;
+    line-height: 1;
+}
+.ctest-section-move-up-btn:hover, .ctest-section-move-down-btn:hover,
+.ctest-qcard-move-up-btn:hover, .ctest-qcard-move-down-btn:hover {
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    border-color: var(--primary);
+}
+
 .ctest-question-list, .ctest-subq-list { display: flex; flex-direction: column; gap: 12px; }
 .ctest-subq-list { margin-top: 10px; padding: 10px; border-left: 3px solid var(--primary-light); background: var(--surface); border-radius: 8px; }
 
@@ -5888,7 +5909,7 @@ h3.news-editable:focus,
 .ctest-qcard-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    gap: 6px;
     margin-bottom: 8px;
 }
 .ctest-qcard-type-label {
@@ -5900,6 +5921,7 @@ h3.news-editable:focus,
     background: var(--primary-light);
     padding: 2px 9px;
     border-radius: 20px;
+    margin-right: auto;
 }
 
 .ctest-image-field { margin-top: 8px; }
@@ -6098,6 +6120,22 @@ h3.news-editable:focus,
 }
 .ctest-take-option-label:hover { background: var(--primary-light); }
 .ctest-take-option-label input { margin-top: 3px; }
+
+/* [MỚI] Dạng "Trắc nghiệm nhiều đáp án đúng" (checkbox) trong Bài kiểm tra riêng */
+.ctest-multi-editor-hint {
+    font-size: 0.82rem;
+    color: var(--primary-dark);
+    background: var(--primary-light);
+    border-radius: 6px;
+    padding: 6px 10px;
+    margin-bottom: 8px;
+}
+.ctest-multi-take-hint {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    font-style: italic;
+    margin: -4px 0 10px;
+}
 
 .ctest-reorder-strip, .ctest-reorder-pool {
     display: flex;
