@@ -1885,6 +1885,73 @@ h3 { font-size:0.95rem; font-weight:600; color:var(--text); margin:0 0 8px; }
 #record-status     { font-size: 0.84rem; color: var(--danger); font-weight: 500; min-height: 1.2em; }
 #recording-preview { width: 100%; display: none; border-radius: var(--radius-sm); }
 
+/* [MỚI] Lựa chọn "dán link ghi âm" (VD: SoundCloud) thay vì thu âm trực tiếp — Phiên âm */
+#comment-link-toggle-row { display: flex; }
+#comment-link-toggle-btn {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--primary-dark);
+    background: var(--primary-light);
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius-sm);
+    padding: 6px 10px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+}
+#comment-link-toggle-btn:hover { background: #dde7ff; border-color: var(--primary); }
+#comment-link-form {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px 10px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+}
+#comment-link-input {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    font-size: 0.84rem;
+    font-family: inherit;
+    color: var(--text);
+    background: var(--surface);
+}
+#comment-link-input:focus { outline: none; border-color: var(--primary); }
+#comment-link-send-btn {
+    align-self: flex-start;
+    padding: 7px 14px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    cursor: pointer;
+}
+#comment-link-send-btn:hover:not(:disabled) { box-shadow: 0 3px 10px var(--primary-glow); }
+#comment-link-send-btn:disabled { opacity: 0.6; cursor: default; }
+#comment-link-status { font-size: 0.78rem; color: var(--text-muted); min-height: 1.1em; }
+
+/* [MỚI] Khung nhúng SoundCloud + nút mở link ngoài dự phòng — dùng chung cho Phiên âm & Nói */
+.soundcloud-embed-wrap { width: 100%; border-radius: var(--radius-sm); overflow: hidden; margin-top: 4px; }
+.soundcloud-embed-wrap iframe { display: block; border: 0; }
+.audio-link-fallback {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 4px;
+    padding: 6px 12px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--primary-dark);
+    background: var(--primary-light);
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+}
+.audio-link-fallback:hover { background: #dde7ff; }
+
 #comments-list {
     margin-top: 10px;
     display: flex;
@@ -5740,6 +5807,16 @@ h3.news-editable:focus,
 .ctest-status-in-progress { background: var(--warning-light); color: #92400e; }
 .ctest-status-submitted   { background: var(--success-light); color: var(--success-dark); }
 .ctest-status-draft       { background: var(--primary-light); color: var(--primary-dark); }
+/* [MỚI] Huy hiệu điểm số có thể bấm vào để giảng viên xem & chấm lại bài đã nộp */
+.ctest-status-badge-clickable {
+    cursor: pointer;
+    border: none;
+    font-family: inherit;
+    text-decoration: underline dotted;
+    text-underline-offset: 2px;
+    transition: filter 0.15s, transform 0.15s;
+}
+.ctest-status-badge-clickable:hover { filter: brightness(0.95); transform: translateY(-1px); }
 
 .ctest-student-status-list {
     margin-top: 10px;
@@ -6206,6 +6283,58 @@ h3.news-editable:focus,
 }
 .ctest-result-item-wrong { color: var(--danger-dark); font-weight: 700; }
 .ctest-result-correct-tag { color: var(--success-dark); font-weight: 700; margin-left: 6px; }
+
+/* [MỚI] Giảng viên xem & CHẤM LẠI bài đã nộp ============================================ */
+.ctest-teacher-grading-banner {
+    background: var(--warning-light);
+    color: #92400e;
+    font-size: 0.86rem;
+    font-weight: 600;
+    line-height: 1.5;
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 16px;
+    border: 1px solid #f5d59a;
+}
+.ctest-q-excluded { opacity: 0.55; }
+
+.ctest-override-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--border);
+}
+.ctest-override-state { font-size: 0.76rem; font-weight: 700; color: var(--text-muted); margin-right: 4px; }
+.ctest-override-btns { display: inline-flex; gap: 4px; flex-wrap: wrap; }
+.ctest-ov-btn {
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 20px;
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.ctest-ov-btn:hover { background: var(--surface-2); }
+.ctest-ov-btn.ctest-ov-active-correct { background: var(--success-light); border-color: var(--success); color: var(--success-dark); }
+.ctest-ov-btn.ctest-ov-active-wrong { background: #fee2e2; border-color: var(--danger); color: var(--danger-dark); }
+.ctest-ov-btn.ctest-ov-active-exclude { background: var(--border); border-color: var(--text-muted); color: var(--text); }
+.ctest-ov-btn.ctest-ov-reset { border-style: dashed; color: var(--text-muted); }
+
+/* Bản gọn (icon) dùng ngay bên trong 1 chỗ trống / 1 cặp nối từ */
+.ctest-override-compact { display: inline-flex; margin: 0 0 0 6px; padding: 0; border: none; vertical-align: middle; }
+.ctest-override-compact .ctest-override-btns { gap: 2px; }
+.ctest-override-compact .ctest-ov-btn { padding: 1px 6px; font-size: 0.76rem; border-radius: 10px; }
+
+.ctest-blank-wrap { display: inline-flex; align-items: center; }
+.ctest-blank-result.ctest-excluded { background: var(--border); color: var(--text-muted); text-decoration: line-through; }
+
+.ctest-match-result-row { margin-bottom: 6px; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
 
 @media (max-width: 700px) {
     .ctest-match-cols-editor, .ctest-match-take-wrap { flex-direction: column; }
@@ -7734,6 +7863,57 @@ body.irt-focus-body-lock { overflow: hidden; }
 .spk-item-comments { text-align: left; margin-top: 10px; display: flex; flex-direction: column; gap: 8px; }
 .spk-item-comments:empty { margin-top: 0; }
 .spk-comment-meta { font-size: 0.78rem; font-weight: 600; color: var(--text-light); margin: 0 0 6px; }
+
+/* [MỚI] Lựa chọn "dán link ghi âm" (VD: SoundCloud) thay vì thu âm trực tiếp — tab Nói,
+   dùng chung cho cả 5 dạng bài (chèn tự động ngay sau nút "Gửi cho giảng viên chấm"). */
+.spk-link-paste-block { margin-top: 6px; display: flex; flex-direction: column; gap: 6px; }
+.spk-link-toggle-btn {
+    align-self: flex-start;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--primary-dark);
+    background: var(--primary-light);
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius-sm);
+    padding: 6px 10px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+}
+.spk-link-toggle-btn:hover { background: #dde7ff; border-color: var(--primary); }
+.spk-link-form {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px 10px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+}
+.spk-link-input {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    font-size: 0.84rem;
+    font-family: inherit;
+    color: var(--text);
+    background: var(--surface);
+}
+.spk-link-input:focus { outline: none; border-color: var(--primary); }
+.spk-link-send-btn {
+    align-self: flex-start;
+    padding: 7px 14px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    cursor: pointer;
+}
+.spk-link-send-btn:hover:not(:disabled) { box-shadow: 0 3px 10px var(--primary-glow); }
+.spk-link-send-btn:disabled { opacity: 0.6; cursor: default; }
+.spk-link-status { font-size: 0.78rem; color: var(--text-muted); min-height: 1.1em; }
 
 /* ===================================================================
    ===== GIAI ĐOẠN 2 — "Shadowing" & "Miêu tả sự việc" =====

@@ -156,6 +156,17 @@
 
                     <audio id="recording-preview" controls></audio>
                     <div id="record-status"></div>
+
+                    <!-- [MỚI] Lựa chọn dán link ghi âm (VD: SoundCloud) thay vì thu âm trực tiếp
+                         trên trình duyệt — hữu ích khi học viên đã có sẵn bản ghi âm ở nơi khác. -->
+                    <div id="comment-link-toggle-row">
+                        <button type="button" id="comment-link-toggle-btn">🔗 Hoặc dán link ghi âm (SoundCloud...)</button>
+                    </div>
+                    <div id="comment-link-form" style="display:none;">
+                        <input type="text" id="comment-link-input" placeholder="Dán link SoundCloud (hoặc link ghi âm khác) vào đây...">
+                        <button type="button" id="comment-link-send-btn">Gửi Link</button>
+                        <div id="comment-link-status"></div>
+                    </div>
                 </div>
 
                 <div id="comments-list">

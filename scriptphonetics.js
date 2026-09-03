@@ -421,6 +421,51 @@ document.addEventListener('DOMContentLoaded', () => {
         return 'webm';
     }
 
+    // [MỚI] Học viên có thể GỬI GHI ÂM bằng cách dán link ngoài (VD: SoundCloud) thay vì thu âm
+    // trực tiếp trên trình duyệt — dùng chung cho cả "Phiên âm" và "Nói". Cột "audio_url" trên
+    // các bảng liên quan giờ có thể chứa: (a) URL file lưu trên Supabase Storage như trước, hoặc
+    // (b) 1 link SoundCloud, hoặc (c) 1 link audio trực tiếp khác (.mp3/.wav/...). 3 hàm dưới đây
+    // nhận diện loại link và dựng đúng phần tử để phát (audio thường / khung nhúng SoundCloud /
+    // nút mở link dự phòng nếu không chắc phát được).
+    function isSoundCloudLink(url) {
+        return /(^|\/\/)([a-z0-9-]+\.)?soundcloud\.com\//i.test(String(url || ''));
+    }
+    function isDirectAudioLink(url) {
+        const clean = String(url || '').split('?')[0].split('#')[0];
+        return /\.(mp3|wav|ogg|m4a|aac|webm|flac)$/i.test(clean);
+    }
+    function buildAudioPlaybackEl(url) {
+        if (!url) return null;
+        if (isSoundCloudLink(url)) {
+            const wrap = document.createElement('div');
+            wrap.className = 'soundcloud-embed-wrap';
+            const iframe = document.createElement('iframe');
+            iframe.width = '100%';
+            iframe.height = '166';
+            iframe.scrolling = 'no';
+            iframe.frameBorder = 'no';
+            iframe.allow = 'autoplay';
+            iframe.src = 'https://w.soundcloud.com/player/?url=' + encodeURIComponent(url) +
+                '&color=%23ff5500&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=true&visual=false';
+            wrap.appendChild(iframe);
+            return wrap;
+        }
+        if (isDirectAudioLink(url) || url.includes('/storage/v1/object/public/')) {
+            const audioEl = document.createElement('audio');
+            audioEl.controls = true;
+            audioEl.src = url;
+            return audioEl;
+        }
+        // Link lạ không rõ định dạng — hiện nút mở trong tab mới thay vì <audio> có thể không phát được.
+        const link = document.createElement('a');
+        link.href = url;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.className = 'audio-link-fallback';
+        link.textContent = '🔗 Mở bản ghi âm (link ngoài)';
+        return link;
+    }
+
     const commentSymbolDisplay = document.getElementById('comment-symbol-display');
     const commentsList = document.getElementById('comments-list');
     // [MỚI] Các phần tử cho bảng thông báo "ghi âm đang chờ chấm" (chỉ giảng viên thấy)
@@ -434,6 +479,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const sendCommentButton = document.getElementById('send-comment-button');
     const recordingPreview = document.getElementById('recording-preview');
     const recordStatus = document.getElementById('record-status');
+    // [MỚI] Các phần tử cho lựa chọn "dán link ghi âm" (VD: SoundCloud) thay vì thu âm trực tiếp.
+    const commentLinkToggleBtn = document.getElementById('comment-link-toggle-btn');
+    const commentLinkForm = document.getElementById('comment-link-form');
+    const commentLinkInput = document.getElementById('comment-link-input');
+    const commentLinkSendBtn = document.getElementById('comment-link-send-btn');
+    const commentLinkStatus = document.getElementById('comment-link-status');
     const commentToggleHeader = document.getElementById('comment-toggle-header');
     const commentContentWrapper = document.getElementById('comment-content-wrapper');
     const authContainer = document.getElementById('auth-container');
@@ -3183,6 +3234,63 @@ function toggleCompletion(symbolElement) {
         }
     });
 
+    // 3b. [MỚI] GỬI GHI ÂM BẰNG LINK DÁN VÀO (VD: SoundCloud) — thay thế cho việc thu âm trực
+    // tiếp trên trình duyệt. Bấm nút bật/tắt để hiện ô dán link; khi gửi, link được lưu thẳng
+    // vào đúng cột "audio_url" của bảng "comments" (không upload lên Storage) — nên phần hiển
+    // thị (xem hàm displayComment bên dưới) cần nhận diện & phát đúng loại link này.
+    if (commentLinkToggleBtn && commentLinkForm) {
+        commentLinkToggleBtn.addEventListener('click', () => {
+            const showing = commentLinkForm.style.display !== 'none';
+            commentLinkForm.style.display = showing ? 'none' : 'block';
+        });
+    }
+    if (commentLinkSendBtn) {
+        commentLinkSendBtn.addEventListener('click', async () => {
+            const link = (commentLinkInput.value || '').trim();
+            if (!currentUserId) {
+                commentLinkStatus.textContent = 'Vui lòng đăng nhập để gửi ghi âm.';
+                return;
+            }
+            if (!link) {
+                commentLinkStatus.textContent = 'Vui lòng dán link ghi âm trước khi gửi.';
+                return;
+            }
+            if (!/^https?:\/\//i.test(link)) {
+                commentLinkStatus.textContent = 'Link không hợp lệ (phải bắt đầu bằng http:// hoặc https://).';
+                return;
+            }
+            commentLinkSendBtn.disabled = true;
+            commentLinkStatus.textContent = 'Đang gửi...';
+            try {
+                const { error: dbError } = await sb.from('comments').insert([{
+                    symbol: currentSymbol,
+                    audio_url: link,
+                    user_id: currentUserId,
+                    created_at: new Date().toISOString()
+                }]);
+                if (dbError) throw dbError;
+
+                commentLinkStatus.textContent = '✅ Đã gửi link cho giảng viên chấm!';
+                commentLinkInput.value = '';
+                commentLinkForm.style.display = 'none';
+                loadComments(currentSymbol);
+
+                // Giống hệt cách xử lý khi gửi ghi âm thu trực tiếp: chuyển ô ký tự sang trạng
+                // thái "chờ chấm" (vàng) nếu chưa được tick hoàn thành.
+                const activeSymbolEl = document.querySelector(`.ipa-symbol[data-symbol="${currentSymbol}"]`);
+                if (activeSymbolEl && !activeSymbolEl.classList.contains('completed')) {
+                    activeSymbolEl.classList.remove('graded-done', 'needs-redo');
+                    activeSymbolEl.classList.add('submitted');
+                }
+            } catch (err) {
+                console.error("Lỗi khi gửi link ghi âm (Kiểm tra RLS INSERT trên bảng comments):", err.message);
+                commentLinkStatus.textContent = `Gửi thất bại: ${err.message}`;
+            } finally {
+                commentLinkSendBtn.disabled = false;
+            }
+        });
+    }
+
     // 4. HÀM TẢI ghi âm TỪ SUPABASE (Đã bỏ chặn kiểm tra đăng nhập)
     async function loadComments(symbol) {
         
@@ -3349,29 +3457,29 @@ function toggleCompletion(symbolElement) {
             commentDiv.appendChild(textEl);
         }
 
-        // [QUAN TRỌNG] Logic hiển thị audio
+        // [QUAN TRỌNG] Logic hiển thị audio — [MỚI] dùng chung hàm buildAudioPlaybackEl() để hỗ
+        // trợ cả file thu trực tiếp (audio thường) LẪN link dán vào (VD: khung nhúng SoundCloud).
         if (data.audio_url) {
-            const audioEl = document.createElement('audio');
-            audioEl.controls = true;
-            audioEl.src = data.audio_url; 
-            
-            // [MỚI] Khi bấm nghe ghi âm này, tự động phát luôn video hướng dẫn phát âm
-            // (nếu ký tự IPA đang chọn có sẵn video) để học viên vừa nghe vừa xem hướng dẫn —
-            // NHƯNG nếu người dùng đã chủ động bấm "Dừng" video trước đó thì KHÔNG tự phát lại
-            // nữa, tôn trọng thao tác dừng của họ cho tới khi họ chủ động bấm "Tiếp tục".
-            audioEl.addEventListener('play', () => {
-                if (currentVideoSrc && !videoManuallyPaused) {
-                    vimeoPlayerContainer.classList.remove('video-hidden');
-                    loadOrUpdateIframe(currentVideoSrc, '1');
-                    videoPlaceholder.style.display = 'none';
-                    videoPlayBtn.disabled = true;
-                    videoPauseBtn.disabled = false;
-                }
-            });
-            
-            // Kiểm tra URL có bị hỏng không (tùy chọn)
             if (data.audio_url.length > 5) {
-                commentDiv.appendChild(audioEl);
+                const audioNode = buildAudioPlaybackEl(data.audio_url);
+                // [MỚI] Khi bấm nghe ghi âm này (chỉ áp dụng cho ghi âm dạng file <audio> thật,
+                // không áp dụng cho khung nhúng SoundCloud/link ngoài), tự động phát luôn video
+                // hướng dẫn phát âm (nếu ký tự IPA đang chọn có sẵn video) để học viên vừa nghe
+                // vừa xem hướng dẫn — NHƯNG nếu người dùng đã chủ động bấm "Dừng" video trước đó
+                // thì KHÔNG tự phát lại nữa, tôn trọng thao tác dừng của họ cho tới khi họ chủ
+                // động bấm "Tiếp tục".
+                if (audioNode && audioNode.tagName === 'AUDIO') {
+                    audioNode.addEventListener('play', () => {
+                        if (currentVideoSrc && !videoManuallyPaused) {
+                            vimeoPlayerContainer.classList.remove('video-hidden');
+                            loadOrUpdateIframe(currentVideoSrc, '1');
+                            videoPlaceholder.style.display = 'none';
+                            videoPlayBtn.disabled = true;
+                            videoPauseBtn.disabled = false;
+                        }
+                    });
+                }
+                if (audioNode) commentDiv.appendChild(audioNode);
             } else {
                  // Ghi nhận lỗi hiển thị audio
                  const errorEl = document.createElement('div');
@@ -14791,22 +14899,53 @@ function toggleCompletion(symbolElement) {
                         const sub = studentSubs.find(s => s.student_email === email);
                         const item = document.createElement('div');
                         item.className = 'ctest-student-status-item';
-                        let badge, retryBtn = '';
-                        if (!sub) badge = '<span class="ctest-status-badge ctest-status-not-started">Chưa làm</span>';
-                        else if (sub.status === 'submitted') {
-                            badge = '<span class="ctest-status-badge ctest-status-submitted">Đã nộp — ' + sub.score_correct + '/' + sub.score_total + '</span>';
-                            retryBtn = '<button type="button" class="ctest-retry-btn">🔄 Cho làm lại</button>';
-                        } else badge = '<span class="ctest-status-badge ctest-status-in-progress">Đang làm bài</span>';
-                        item.innerHTML = '<span class="ctest-student-email">' + ctestEscape(email) + '</span>' +
-                            '<span>' + badge + retryBtn + '</span>';
-                        if (retryBtn) {
-                            item.querySelector('.ctest-retry-btn').addEventListener('click', async (e) => {
+
+                        const emailEl = document.createElement('span');
+                        emailEl.className = 'ctest-student-email';
+                        emailEl.textContent = email;
+                        item.appendChild(emailEl);
+
+                        const rightWrap = document.createElement('span');
+
+                        let badgeEl;
+                        if (!sub) {
+                            badgeEl = document.createElement('span');
+                            badgeEl.className = 'ctest-status-badge ctest-status-not-started';
+                            badgeEl.textContent = 'Chưa làm';
+                        } else if (sub.status === 'submitted') {
+                            // [MỚI] Bấm vào huy hiệu điểm số để giảng viên xem chi tiết bài làm +
+                            // chấm lại từng câu (sửa Đúng/Sai hoặc loại câu khỏi bài chấm).
+                            badgeEl = document.createElement('button');
+                            badgeEl.type = 'button';
+                            badgeEl.className = 'ctest-status-badge ctest-status-submitted ctest-status-badge-clickable';
+                            badgeEl.textContent = 'Đã nộp — ' + sub.score_correct + '/' + sub.score_total + (sub.teacher_graded_at ? ' 👨‍🏫' : '');
+                            badgeEl.title = 'Bấm để xem & chấm lại bài này';
+                            badgeEl.addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                openResultView(test, sub, { editable: true });
+                            });
+                        } else {
+                            badgeEl = document.createElement('span');
+                            badgeEl.className = 'ctest-status-badge ctest-status-in-progress';
+                            badgeEl.textContent = 'Đang làm bài';
+                        }
+                        rightWrap.appendChild(badgeEl);
+
+                        if (sub && sub.status === 'submitted') {
+                            const retryBtn = document.createElement('button');
+                            retryBtn.type = 'button';
+                            retryBtn.className = 'ctest-retry-btn';
+                            retryBtn.textContent = '🔄 Cho làm lại';
+                            retryBtn.addEventListener('click', async (e) => {
                                 e.stopPropagation();
                                 if (!confirm('Cho phép ' + email + ' làm lại bài này? Kết quả cũ sẽ bị xoá.')) return;
                                 await sb.from('custom_test_submissions').delete().eq('id', sub.id);
                                 renderTeacherList();
                             });
+                            rightWrap.appendChild(retryBtn);
                         }
+
+                        item.appendChild(rightWrap);
                         statusList.appendChild(item);
                     });
                     row.appendChild(statusList);
@@ -15508,25 +15647,90 @@ function toggleCompletion(symbolElement) {
     // Quy ước hiển thị (theo đúng yêu cầu): đáp án SAI → chữ đỏ + hiện đáp
     // án đúng kế bên; đáp án ĐÚNG → không cần hiện thêm gì.
     // =====================================================================
-    function ctestBlankResultNode(html, keyBase, answers) {
+    // [MỚI] HỆ THỐNG GIẢNG VIÊN CHẤM LẠI TỪNG CÂU (sau khi học viên đã nộp bài) ================
+    // "ctx" (nếu có) mang theo:
+    //   - overrides: map { [key]: 'force_correct' | 'force_wrong' | 'excluded' } — các chỉnh sửa
+    //     giảng viên đã áp cho từng câu/ý nhỏ (key trùng với khoá đáp án dùng để chấm tự động).
+    //   - editable: true khi đang ở màn hình GIẢNG VIÊN xem & chấm lại (ẩn khi học viên tự xem).
+    //   - onOverrideChange(key, value): gọi khi giảng viên bấm 1 trong các nút chỉnh sửa.
+    // key dùng ĐÚNG cấp độ nhỏ nhất đang được tính điểm (1 câu trắc nghiệm, 1 chỗ trống, 1 cặp
+    // nối từ...) — nhờ vậy các câu dạng "gộp" (Bài đọc/Bài nghe/Câu hỏi hỗn hợp) tự động có luôn
+    // nút chỉnh sửa cho từng ý nhỏ bên trong vì chúng gọi lại đúng các hàm chấm-lá bên dưới.
+    function ctestApplyOverride(key, ctx, naturalOk) {
+        const ov = ctx && ctx.overrides ? ctx.overrides[key] : null;
+        if (ov === 'excluded') return { ok: naturalOk, excluded: true };
+        if (ov === 'force_correct') return { ok: true, excluded: false };
+        if (ov === 'force_wrong') return { ok: false, excluded: false };
+        return { ok: naturalOk, excluded: false };
+    }
+
+    function ctestOverrideControl(key, ctx, compact) {
+        if (!ctx || !ctx.editable) return null;
+        const ov = (ctx.overrides || {})[key] || null;
+        const wrap = document.createElement('span');
+        wrap.className = 'ctest-override-row' + (compact ? ' ctest-override-compact' : '');
+        if (!compact) {
+            const stateEl = document.createElement('div');
+            stateEl.className = 'ctest-override-state';
+            stateEl.textContent = ov === 'excluded' ? '🗑️ Đã loại khỏi bài chấm'
+                : ov === 'force_correct' ? '✅ Giảng viên sửa: Đúng'
+                : ov === 'force_wrong' ? '❌ Giảng viên sửa: Sai'
+                : '🤖 Đang chấm tự động';
+            wrap.appendChild(stateEl);
+        }
+        const btnRow = document.createElement('span');
+        btnRow.className = 'ctest-override-btns';
+        [
+            { act: 'force_correct', label: compact ? '✅' : 'Đánh dấu Đúng', title: 'Đánh dấu câu này là ĐÚNG', cls: 'ctest-ov-active-correct' },
+            { act: 'force_wrong',   label: compact ? '❌' : 'Đánh dấu Sai',  title: 'Đánh dấu câu này là SAI',  cls: 'ctest-ov-active-wrong' },
+            { act: 'excluded',      label: compact ? '🗑️' : 'Bỏ câu này',   title: 'Loại câu này khỏi bài chấm (không tính vào tổng điểm)', cls: 'ctest-ov-active-exclude' }
+        ].forEach(b => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'ctest-ov-btn' + (ov === b.act ? ' ' + b.cls : '');
+            btn.title = b.title;
+            btn.textContent = b.label;
+            btn.addEventListener('click', () => ctx.onOverrideChange(key, b.act));
+            btnRow.appendChild(btn);
+        });
+        if (ov) {
+            const resetBtn = document.createElement('button');
+            resetBtn.type = 'button';
+            resetBtn.className = 'ctest-ov-btn ctest-ov-reset';
+            resetBtn.title = 'Bỏ chỉnh sửa, quay về chấm tự động';
+            resetBtn.textContent = compact ? '↺' : '↺ Tự động';
+            resetBtn.addEventListener('click', () => ctx.onOverrideChange(key, null));
+            btnRow.appendChild(resetBtn);
+        }
+        wrap.appendChild(btnRow);
+        return wrap;
+    }
+
+    function ctestBlankResultNode(html, keyBase, answers, ctx) {
         const { displayHtml, blanks } = ctestParseBlanks(html);
         const holder = document.createElement('div');
         holder.className = 'ctest-blank-render';
         holder.innerHTML = displayHtml;
-        let correct = 0;
+        let correct = 0, total = 0;
         holder.querySelectorAll('.ctest-blank-slot').forEach(slot => {
             const idx = Number(slot.getAttribute('data-blank-idx'));
             const key = keyBase + ':blank:' + idx;
             const given = answers[key] || '';
             const correctWord = blanks[idx];
-            const ok = ctestNormalize(given) === ctestNormalize(correctWord);
-            if (ok) correct++;
+            const naturalOk = ctestNormalize(given) === ctestNormalize(correctWord);
+            const { ok, excluded } = ctestApplyOverride(key, ctx, naturalOk);
+            if (!excluded) { total++; if (ok) correct++; }
             const span = document.createElement('span');
-            span.className = 'ctest-blank-result ' + (ok ? 'ctest-ok' : 'ctest-wrong');
-            span.textContent = ok ? given : (given ? given : '(bỏ trống)') + ' → ' + correctWord;
-            slot.replaceWith(span);
+            span.className = 'ctest-blank-result ' + (excluded ? 'ctest-excluded' : (ok ? 'ctest-ok' : 'ctest-wrong'));
+            span.textContent = ok ? (given || correctWord) : ((given ? given : '(bỏ trống)') + ' → ' + correctWord);
+            const wrap = document.createElement('span');
+            wrap.className = 'ctest-blank-wrap';
+            wrap.appendChild(span);
+            const ctrl = ctestOverrideControl(key, ctx, true);
+            if (ctrl) wrap.appendChild(ctrl);
+            slot.replaceWith(wrap);
         });
-        return { el: holder, correct, total: blanks.length };
+        return { el: holder, correct, total };
     }
 
     function ctestResultQBlock(labelPrefix, promptHtml) {
@@ -15539,7 +15743,7 @@ function toggleCompletion(symbolElement) {
         return block;
     }
 
-    function ctestResultMcq(q, keyBase, answers, labelPrefix) {
+    function ctestResultMcq(q, keyBase, answers, labelPrefix, ctx) {
         const block = ctestResultQBlock(labelPrefix, q.prompt);
         if (q.image_url) {
             const img = document.createElement('img');
@@ -15549,7 +15753,8 @@ function toggleCompletion(symbolElement) {
             block.appendChild(img);
         }
         const given = answers[keyBase];
-        const isCorrect = given !== undefined && Number(given) === Number(q.correct);
+        const naturalOk = given !== undefined && Number(given) === Number(q.correct);
+        const { ok: isCorrect, excluded } = ctestApplyOverride(keyBase, ctx, naturalOk);
         const optWrap = document.createElement('div');
         optWrap.className = 'ctest-take-options';
         (q.options || []).forEach((opt, i) => {
@@ -15562,13 +15767,16 @@ function toggleCompletion(symbolElement) {
             optWrap.appendChild(row);
         });
         block.appendChild(optWrap);
-        return { el: block, correct: isCorrect ? 1 : 0, total: 1 };
+        if (excluded) block.classList.add('ctest-q-excluded');
+        const ctrl = ctestOverrideControl(keyBase, ctx);
+        if (ctrl) block.appendChild(ctrl);
+        return { el: block, correct: excluded ? 0 : (isCorrect ? 1 : 0), total: excluded ? 0 : 1 };
     }
 
     // Chấm điểm kiểu "tất cả hoặc không": học viên phải chọn ĐÚNG và ĐỦ mọi đáp án
     // đúng, không thừa không thiếu, thì mới được 1 điểm cho cả câu (giống cách câu
     // trắc nghiệm 1 đáp án luôn tính 1 điểm/câu bất kể có bao nhiêu lựa chọn).
-    function ctestResultMcqMulti(q, keyBase, answers, labelPrefix) {
+    function ctestResultMcqMulti(q, keyBase, answers, labelPrefix, ctx) {
         const block = ctestResultQBlock(labelPrefix, q.prompt);
         if (q.image_url) {
             const img = document.createElement('img');
@@ -15581,7 +15789,8 @@ function toggleCompletion(symbolElement) {
         const givenSet = new Set(given);
         const correctArr = Array.isArray(q.correct) ? q.correct.map(Number) : [];
         const correctSetIdx = new Set(correctArr);
-        const isCorrect = givenSet.size === correctSetIdx.size && correctArr.every(i => givenSet.has(i));
+        const naturalOk = givenSet.size === correctSetIdx.size && correctArr.every(i => givenSet.has(i));
+        const { ok: isCorrect, excluded } = ctestApplyOverride(keyBase, ctx, naturalOk);
         const optWrap = document.createElement('div');
         optWrap.className = 'ctest-take-options';
         (q.options || []).forEach((opt, i) => {
@@ -15597,10 +15806,13 @@ function toggleCompletion(symbolElement) {
             optWrap.appendChild(row);
         });
         block.appendChild(optWrap);
-        return { el: block, correct: isCorrect ? 1 : 0, total: 1 };
+        if (excluded) block.classList.add('ctest-q-excluded');
+        const ctrl = ctestOverrideControl(keyBase, ctx);
+        if (ctrl) block.appendChild(ctrl);
+        return { el: block, correct: excluded ? 0 : (isCorrect ? 1 : 0), total: excluded ? 0 : 1 };
     }
 
-    function ctestResultFillBlank(q, keyBase, answers, labelPrefix) {
+    function ctestResultFillBlank(q, keyBase, answers, labelPrefix, ctx) {
         const block = ctestResultQBlock(labelPrefix, 'Điền vào chỗ trống:');
         if (q.image_url) {
             const img = document.createElement('img');
@@ -15609,28 +15821,32 @@ function toggleCompletion(symbolElement) {
             ctestApplyImageWidth(img, q.image_width);
             block.appendChild(img);
         }
-        const { el, correct, total } = ctestBlankResultNode(q.html, keyBase, answers);
+        const { el, correct, total } = ctestBlankResultNode(q.html, keyBase, answers, ctx);
         block.appendChild(el);
         return { el: block, correct, total };
     }
 
-    function ctestResultReorder(q, keyBase, answers, labelPrefix) {
+    function ctestResultReorder(q, keyBase, answers, labelPrefix, ctx) {
         const block = ctestResultQBlock(labelPrefix, 'Sắp xếp câu:');
         const tokens = ctestTokenize(q.sentence);
         const order = Array.isArray(answers[keyBase + ':order']) ? answers[keyBase + ':order'] : [];
-        const isCorrect = order.length === tokens.length && order.every((v, i) => v === i);
+        const naturalOk = order.length === tokens.length && order.every((v, i) => v === i);
+        const { ok: isCorrect, excluded } = ctestApplyOverride(keyBase, ctx, naturalOk);
         const given = document.createElement('div');
         if (isCorrect) {
-            given.textContent = order.map(i => tokens[i]).join(' ');
+            given.textContent = order.length ? order.map(i => tokens[i]).join(' ') : '(chưa sắp xếp)';
         } else {
             given.innerHTML = '<span class="ctest-result-item-wrong">' + (order.length ? order.map(i => tokens[i]).join(' ') : '(chưa sắp xếp)') + '</span>' +
                 '<span class="ctest-result-correct-tag">← đáp án đúng: ' + tokens.join(' ') + '</span>';
         }
         block.appendChild(given);
-        return { el: block, correct: isCorrect ? 1 : 0, total: 1 };
+        if (excluded) block.classList.add('ctest-q-excluded');
+        const ctrl = ctestOverrideControl(keyBase, ctx);
+        if (ctrl) block.appendChild(ctrl);
+        return { el: block, correct: excluded ? 0 : (isCorrect ? 1 : 0), total: excluded ? 0 : 1 };
     }
 
-    function ctestResultReading(q, keyBase, answers, labelPrefix) {
+    function ctestResultReading(q, keyBase, answers, labelPrefix, ctx) {
         const block = ctestResultQBlock(labelPrefix, 'Bài đọc:');
         if (q.image_url) {
             const img = document.createElement('img');
@@ -15645,14 +15861,14 @@ function toggleCompletion(symbolElement) {
         block.appendChild(passage);
         let correct = 0, total = 0;
         (q.sub_questions || []).forEach((sq, i) => {
-            const sub = ctestResultMcq(sq, keyBase + ':sub:' + i, answers, labelPrefix.replace(/\.$/, '') + String.fromCharCode(97 + i) + ') ');
+            const sub = ctestResultMcq(sq, keyBase + ':sub:' + i, answers, labelPrefix.replace(/\.$/, '') + String.fromCharCode(97 + i) + ') ', ctx);
             block.appendChild(sub.el);
             correct += sub.correct; total += sub.total;
         });
         return { el: block, correct, total };
     }
 
-    function ctestResultEssay(part, keyBase, answers, labelPrefix) {
+    function ctestResultEssay(part, keyBase, answers, labelPrefix, ctx) {
         const block = ctestResultQBlock(labelPrefix, part.prompt);
         if (part.image_url) {
             const img = document.createElement('img');
@@ -15662,29 +15878,33 @@ function toggleCompletion(symbolElement) {
             block.appendChild(img);
         }
         const given = answers[keyBase] || '';
-        const ok = ctestNormalize(given) === ctestNormalize(part.answer);
+        const naturalOk = ctestNormalize(given) === ctestNormalize(part.answer);
+        const { ok, excluded } = ctestApplyOverride(keyBase, ctx, naturalOk);
         const el = document.createElement('div');
         el.innerHTML = ok
             ? ctestEscape(given)
             : '<span class="ctest-result-item-wrong">' + ctestEscape(given || '(bỏ trống)') + '</span><span class="ctest-result-correct-tag">← đáp án đúng: ' + ctestEscape(part.answer) + '</span>';
         block.appendChild(el);
-        return { el: block, correct: ok ? 1 : 0, total: 1 };
+        if (excluded) block.classList.add('ctest-q-excluded');
+        const ctrl = ctestOverrideControl(keyBase, ctx);
+        if (ctrl) block.appendChild(ctrl);
+        return { el: block, correct: excluded ? 0 : (ok ? 1 : 0), total: excluded ? 0 : 1 };
     }
 
-    function ctestResultMixed(q, keyBase, answers, labelPrefix) {
+    function ctestResultMixed(q, keyBase, answers, labelPrefix, ctx) {
         const block = ctestResultQBlock(labelPrefix, 'Câu hỏi hỗn hợp:');
         let correct = 0, total = 0;
         ctestNormalizeMixedParts(q).forEach((part, i) => {
             const subKey = keyBase + ':part:' + i;
             const subLabel = labelPrefix.replace(/\.$/, '') + String.fromCharCode(97 + i) + ') ';
-            const r = ctestResultQuestion(part, subKey, answers, subLabel);
+            const r = ctestResultQuestion(part, subKey, answers, subLabel, ctx);
             block.appendChild(r.el);
             correct += r.correct; total += r.total;
         });
         return { el: block, correct, total };
     }
 
-    function ctestResultMatching(q, keyBase, answers, labelPrefix) {
+    function ctestResultMatching(q, keyBase, answers, labelPrefix, ctx) {
         const block = ctestResultQBlock(labelPrefix, 'Nối từ:');
         if (q.image_url) {
             const img = document.createElement('img');
@@ -15694,32 +15914,36 @@ function toggleCompletion(symbolElement) {
             block.appendChild(img);
         }
         const pairs = answers[keyBase + ':pairs'] || {};
-        let correct = 0;
+        let correct = 0, total = 0;
         (q.left || []).forEach((text, i) => {
+            const key = keyBase + ':pair:' + i;
             const chosenIdx = pairs[i];
             const correctIdx = (q.correct_pairs || [])[i];
-            const ok = chosenIdx !== undefined && Number(chosenIdx) === Number(correctIdx);
-            if (ok) correct++;
+            const naturalOk = chosenIdx !== undefined && Number(chosenIdx) === Number(correctIdx);
+            const { ok, excluded } = ctestApplyOverride(key, ctx, naturalOk);
+            if (!excluded) { total++; if (ok) correct++; }
             const row = document.createElement('div');
-            row.style.marginBottom = '4px';
+            row.className = 'ctest-match-result-row' + (excluded ? ' ctest-q-excluded' : '');
             const chosenText = chosenIdx !== undefined ? (q.right || [])[chosenIdx] : null;
             const correctText = (q.right || [])[correctIdx];
             row.innerHTML = (i + 1) + '. ' + text + ' — ' +
                 (ok ? ctestEscape(chosenText || '')
                     : '<span class="ctest-result-item-wrong">' + ctestEscape(chosenText || '(chưa nối)') + '</span><span class="ctest-result-correct-tag">← đáp án đúng: ' + ctestEscape(correctText || '') + '</span>');
+            const ctrl = ctestOverrideControl(key, ctx, true);
+            if (ctrl) row.appendChild(ctrl);
             block.appendChild(row);
         });
-        return { el: block, correct, total: (q.left || []).length };
+        return { el: block, correct, total };
     }
 
-    function ctestResultWordbank(q, keyBase, answers, labelPrefix) {
+    function ctestResultWordbank(q, keyBase, answers, labelPrefix, ctx) {
         const block = ctestResultQBlock(labelPrefix, 'Chọn từ trong khung điền vào đoạn văn:');
-        const { el, correct, total } = ctestBlankResultNode(q.html, keyBase, answers);
+        const { el, correct, total } = ctestBlankResultNode(q.html, keyBase, answers, ctx);
         block.appendChild(el);
         return { el: block, correct, total };
     }
 
-    function ctestResultListening(q, keyBase, answers, labelPrefix) {
+    function ctestResultListening(q, keyBase, answers, labelPrefix, ctx) {
         const block = ctestResultQBlock(labelPrefix, 'Bài nghe:');
         if (q.audio_url) {
             const audio = document.createElement('audio');
@@ -15733,34 +15957,35 @@ function toggleCompletion(symbolElement) {
         (q.sub_questions || []).forEach((sq, i) => {
             const subLabel = labelPrefix.replace(/\.$/, '') + String.fromCharCode(97 + i) + ') ';
             const subKey = keyBase + ':sub:' + i;
-            const sub = sq.type === 'fill_blank' ? ctestResultFillBlank(sq, subKey, answers, subLabel) : ctestResultMcq(sq, subKey, answers, subLabel);
+            const sub = sq.type === 'fill_blank' ? ctestResultFillBlank(sq, subKey, answers, subLabel, ctx) : ctestResultMcq(sq, subKey, answers, subLabel, ctx);
             block.appendChild(sub.el);
             correct += sub.correct; total += sub.total;
         });
         return { el: block, correct, total };
     }
 
-    function ctestResultQuestion(q, keyBase, answers, labelPrefix) {
+    function ctestResultQuestion(q, keyBase, answers, labelPrefix, ctx) {
         switch (q.type) {
-            case 'mcq_multi': return ctestResultMcqMulti(q, keyBase, answers, labelPrefix);
-            case 'fill_blank': return ctestResultFillBlank(q, keyBase, answers, labelPrefix);
-            case 'reorder': return ctestResultReorder(q, keyBase, answers, labelPrefix);
-            case 'reading': return ctestResultReading(q, keyBase, answers, labelPrefix);
-            case 'mixed': return ctestResultMixed(q, keyBase, answers, labelPrefix);
-            case 'matching': return ctestResultMatching(q, keyBase, answers, labelPrefix);
-            case 'wordbank': return ctestResultWordbank(q, keyBase, answers, labelPrefix);
-            case 'listening': return ctestResultListening(q, keyBase, answers, labelPrefix);
-            case 'essay': return ctestResultEssay(q, keyBase, answers, labelPrefix);
-            default: return ctestResultMcq(q, keyBase, answers, labelPrefix);
+            case 'mcq_multi': return ctestResultMcqMulti(q, keyBase, answers, labelPrefix, ctx);
+            case 'fill_blank': return ctestResultFillBlank(q, keyBase, answers, labelPrefix, ctx);
+            case 'reorder': return ctestResultReorder(q, keyBase, answers, labelPrefix, ctx);
+            case 'reading': return ctestResultReading(q, keyBase, answers, labelPrefix, ctx);
+            case 'mixed': return ctestResultMixed(q, keyBase, answers, labelPrefix, ctx);
+            case 'matching': return ctestResultMatching(q, keyBase, answers, labelPrefix, ctx);
+            case 'wordbank': return ctestResultWordbank(q, keyBase, answers, labelPrefix, ctx);
+            case 'listening': return ctestResultListening(q, keyBase, answers, labelPrefix, ctx);
+            case 'essay': return ctestResultEssay(q, keyBase, answers, labelPrefix, ctx);
+            default: return ctestResultMcq(q, keyBase, answers, labelPrefix, ctx);
         }
     }
 
-    function gradeWholeTest(test, answers) {
+    function gradeWholeTest(test, answers, overrides) {
         let correct = 0, total = 0;
+        const ctx = { overrides: overrides || {} };
         (test.sections || []).forEach(section => {
             (section.questions || []).forEach(q => {
                 const keyBase = keyFor(section.id, q.id);
-                const r = ctestResultQuestion(q, keyBase, answers, 'x');
+                const r = ctestResultQuestion(q, keyBase, answers, 'x', ctx);
                 correct += r.correct; total += r.total;
             });
         });
@@ -15790,11 +16015,57 @@ function toggleCompletion(symbolElement) {
         openResultView(currentTest, currentSubmission);
     }
 
-    function openResultView(test, submission) {
+    // [MỚI] opts.editable = true -> mở ở CHẾ ĐỘ GIẢNG VIÊN CHẤM LẠI (chỉ giảng viên gọi, từ
+    // renderTeacherList bên dưới): mỗi câu có thêm nút "Đánh dấu Đúng/Sai/Bỏ câu này". Mỗi lần
+    // bấm, điểm được tính lại NGAY (tính cả các chỉnh sửa trước đó) và lưu thẳng vào 2 cột
+    // "score_correct"/"score_total" của bài nộp — nhờ vậy học viên cũng thấy điểm mới ngay khi
+    // họ tự mở lại kết quả, và mục "Thành tựu" > "Điểm trung bình bài kiểm tra" cũng tự cập nhật
+    // theo vì đọc thẳng 2 cột điểm này (xem renderProfileAchievements, mục 5).
+    // ⚠️ CẦN CHẠY FILE SQL "custom_test_teacher_grading_setup.sql" ĐI KÈM trên Supabase trước
+    // (để tạo cột "teacher_overrides" trên bảng "custom_test_submissions" + policy cho phép
+    // giảng viên UPDATE bài nộp của học viên khác).
+    function openResultView(test, submission, opts) {
+        opts = opts || {};
+        const editable = !!opts.editable;
         showView('result');
         resultTitleEl.textContent = test.title || '';
         resultScoreEl.textContent = 'Điểm: ' + (submission.score_correct != null ? submission.score_correct : 0) + ' / ' + (submission.score_total != null ? submission.score_total : 0);
         resultSectionsEl.innerHTML = '';
+
+        if (editable) {
+            const banner = document.createElement('div');
+            banner.className = 'ctest-teacher-grading-banner';
+            banner.textContent = '👨‍🏫 Chế độ chấm lại: bấm vào từng câu bên dưới để đánh dấu lại Đúng/Sai hoặc loại câu khỏi bài chấm. Điểm sẽ tự cập nhật ngay và học viên cũng sẽ thấy điểm mới.';
+            resultSectionsEl.appendChild(banner);
+        }
+
+        const overrides = Object.assign({}, submission.teacher_overrides || {});
+        let savingNow = false;
+        const ctx = {
+            editable: editable,
+            overrides: overrides,
+            onOverrideChange: async (key, value) => {
+                if (savingNow) return;
+                savingNow = true;
+                if (value) overrides[key] = value; else delete overrides[key];
+                const { correct, total } = gradeWholeTest(test, submission.answers || {}, overrides);
+                try {
+                    const { data, error } = await sb.from('custom_test_submissions').update({
+                        teacher_overrides: overrides,
+                        score_correct: correct,
+                        score_total: total,
+                        teacher_graded_at: new Date().toISOString()
+                    }).eq('id', submission.id).select().single();
+                    if (error) throw error;
+                    openResultView(test, data, opts); // vẽ lại toàn bộ với dữ liệu (và điểm) mới nhất
+                } catch (err) {
+                    console.error('Lỗi khi lưu chỉnh sửa chấm bài (kiểm tra đã chạy custom_test_teacher_grading_setup.sql chưa):', err.message);
+                    alert('Lưu chỉnh sửa thất bại: ' + err.message);
+                    savingNow = false;
+                }
+            }
+        };
+
         let qNum = 0;
         (test.sections || []).forEach(section => {
             const secEl = document.createElement('div');
@@ -15809,7 +16080,7 @@ function toggleCompletion(symbolElement) {
             (section.questions || []).forEach(q => {
                 qNum++;
                 const keyBase = keyFor(section.id, q.id);
-                const r = ctestResultQuestion(q, keyBase, submission.answers || {}, 'Câu ' + qNum + '. ');
+                const r = ctestResultQuestion(q, keyBase, submission.answers || {}, 'Câu ' + qNum + '. ', ctx);
                 secEl.appendChild(r.el);
             });
             resultSectionsEl.appendChild(secEl);
@@ -25351,6 +25622,23 @@ function toggleCompletion(symbolElement) {
         if (typeof window.refreshSpeakingGradingBadge === 'function') window.refreshSpeakingGradingBadge({ notify: false });
     }
 
+    // [MỚI] GỬI GHI ÂM BẰNG LINK DÁN VÀO (VD: SoundCloud) — thay thế cho việc thu âm trực tiếp,
+    // dùng chung cho cả 5 dạng bài Nói. Không upload lên Storage — lưu thẳng link vào "audio_url".
+    async function spkSubmitLink({ itemType, itemKey, itemLabel, link }) {
+        if (!currentUserId) throw new Error('Vui lòng đăng nhập để gửi ghi âm.');
+        if (!link) throw new Error('Vui lòng dán link ghi âm.');
+        const { error: dbError } = await sb.from(SPK_TABLE).insert([{
+            item_type: itemType,
+            item_key: String(itemKey),
+            item_label: (itemLabel || '').toString().slice(0, 300),
+            audio_url: link,
+            user_id: currentUserId,
+            created_at: new Date().toISOString()
+        }]);
+        if (dbError) throw dbError;
+        if (typeof window.refreshSpeakingGradingBadge === 'function') window.refreshSpeakingGradingBadge({ notify: false });
+    }
+
     // ---------- 1 THẺ GHI ÂM (dùng chung: trong từng bài luyện & trong bảng chờ chấm) ----------
     function spkBuildCard(data, opts) {
         opts = opts || {};
@@ -25434,11 +25722,11 @@ function toggleCompletion(symbolElement) {
             card.appendChild(textEl);
         }
 
+        // [MỚI] dùng chung hàm buildAudioPlaybackEl() để hỗ trợ cả file thu trực tiếp lẫn link
+        // dán vào (VD: khung nhúng SoundCloud) — xem hàm định nghĩa ở đầu file.
         if (data.audio_url) {
-            const audioEl = document.createElement('audio');
-            audioEl.controls = true;
-            audioEl.src = data.audio_url;
-            card.appendChild(audioEl);
+            const audioNode = buildAudioPlaybackEl(data.audio_url);
+            if (audioNode) card.appendChild(audioNode);
         }
 
         if (data.created_at) {
@@ -25584,6 +25872,62 @@ function toggleCompletion(symbolElement) {
             }
         });
         if (commentsEl) spkLoadComments(commentsEl, itemType, itemKey);
+
+        // [MỚI] Lựa chọn "dán link ghi âm" (VD: SoundCloud) thay vì thu âm trực tiếp — dùng
+        // chung cho cả 5 dạng bài Nói vì mọi dạng đều gọi qua đúng hàm này.
+        spkAttachLinkPasteUI({ itemType, itemKey, itemLabel, sendBtn, commentsEl });
+    }
+
+    // [MỚI] Chèn (1 lần duy nhất cho mỗi nút gửi) khối "dán link ghi âm" ngay sau nút gửi ghi âm
+    // thu trực tiếp. Vì spkAttachSubmitUI có thể được gọi lại nhiều lần cho CÙNG 1 nút gửi (mỗi
+    // khi học viên được rút 1 câu/đề mới), hàm này kiểm tra khối đã tồn tại chưa trước khi tạo
+    // mới — tránh chèn trùng lặp — và chỉ cập nhật lại itemType/itemKey/itemLabel cho lượt mới.
+    function spkAttachLinkPasteUI({ itemType, itemKey, itemLabel, sendBtn, commentsEl }) {
+        if (!sendBtn || !sendBtn.parentNode || !sendBtn.id) return;
+        const blockId = sendBtn.id + '-link-block';
+        let block = document.getElementById(blockId);
+        if (!block) {
+            block = document.createElement('div');
+            block.id = blockId;
+            block.className = 'spk-link-paste-block';
+            block.innerHTML =
+                '<button type="button" class="spk-link-toggle-btn">🔗 Hoặc dán link ghi âm (SoundCloud...)</button>' +
+                '<div class="spk-link-form" style="display:none;">' +
+                    '<input type="text" class="spk-link-input" placeholder="Dán link SoundCloud (hoặc link ghi âm khác) vào đây...">' +
+                    '<button type="button" class="spk-link-send-btn">Gửi Link</button>' +
+                    '<div class="spk-link-status"></div>' +
+                '</div>';
+            sendBtn.parentNode.insertBefore(block, sendBtn.nextSibling);
+            block.querySelector('.spk-link-toggle-btn').addEventListener('click', () => {
+                const form = block.querySelector('.spk-link-form');
+                form.style.display = form.style.display === 'none' ? 'block' : 'none';
+            });
+        }
+        // Gán lại onclick (thay vì addEventListener) để lượt câu/đề mới nhất luôn thắng, không
+        // cộng dồn nhiều trình xử lý cũ từ những lần rút câu trước đó cho cùng 1 nút.
+        const input = block.querySelector('.spk-link-input');
+        const sendLinkBtn = block.querySelector('.spk-link-send-btn');
+        const linkStatus = block.querySelector('.spk-link-status');
+        sendLinkBtn.onclick = async () => {
+            const link = (input.value || '').trim();
+            if (!currentUserId) { linkStatus.textContent = 'Vui lòng đăng nhập để gửi ghi âm.'; return; }
+            if (!link) { linkStatus.textContent = 'Vui lòng dán link ghi âm trước khi gửi.'; return; }
+            if (!/^https?:\/\//i.test(link)) { linkStatus.textContent = 'Link không hợp lệ (phải bắt đầu bằng http:// hoặc https://).'; return; }
+            sendLinkBtn.disabled = true;
+            linkStatus.textContent = 'Đang gửi...';
+            try {
+                await spkSubmitLink({ itemType, itemKey, itemLabel, link });
+                linkStatus.textContent = '✅ Đã gửi link cho giảng viên chấm!';
+                input.value = '';
+                block.querySelector('.spk-link-form').style.display = 'none';
+                if (commentsEl) spkLoadComments(commentsEl, itemType, itemKey);
+            } catch (err) {
+                console.error('Lỗi khi gửi link ghi âm luyện nói:', err.message);
+                linkStatus.textContent = `❌ Gửi thất bại: ${err.message}`;
+            } finally {
+                sendLinkBtn.disabled = false;
+            }
+        };
     }
 
     window.speakingGrading = {
