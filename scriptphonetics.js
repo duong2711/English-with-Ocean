@@ -38,6 +38,24 @@ document.addEventListener('DOMContentLoaded', () => {
     // đổi giao diện trang bất kỳ lúc nào có thể khiến việc cào bị hỏng). Xem file
     // "cambridge-audio-lookup-edge-function.ts" để triển khai + hiểu rõ rủi ro này.
     const CAMBRIDGE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/cambridge-audio-lookup`;
+    // [MỚI] Edge Function xác thực "Gmail liên kết" khi học viên đăng nhập trên một thiết bị/
+    // trình duyệt MỚI (chưa từng đăng nhập tài khoản này) — cần triển khai trên Supabase (xem
+    // file "verify-device-edge-function.ts" + "verified_devices_setup.sql" đi kèm hướng dẫn).
+    const VERIFY_DEVICE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/verify-device`;
+    // [MỚI] Google OAuth Client ID dùng riêng cho bước "Xác thực thiết bị mới" bên dưới (khác
+    // với việc bật provider Google cho nút "Đăng nhập bằng Google" ở màn đăng nhập chính — 2 cái
+    // không liên quan tới nhau, có thể dùng chung 1 Client ID nếu muốn).
+    // Cách lấy: Google Cloud Console -> APIs & Services -> Credentials -> Create Credentials ->
+    // OAuth client ID -> loại "Web application" -> thêm domain đang host trang này (vd:
+    // https://tencuaban.com, hoặc https://tencuaban.github.io) vào mục "Authorized JavaScript
+    // origins" (KHÔNG cần "Authorized redirect URIs" cho cách dùng ở đây).
+    // ⚠️ Bắt buộc dán đúng giá trị thật vào đây thì bước xác thực thiết bị mới mới hoạt động —
+    // để nguyên chuỗi mẫu bên dưới sẽ báo lỗi khi học viên đăng nhập trên thiết bị mới.
+    const GOOGLE_CLIENT_ID = '893907165732-23koh2sder945jeu8dpqgkt1r914f12r.apps.googleusercontent.com';
+    // [MỚI] Tiền tố khoá lưu trong localStorage của trình duyệt — mỗi tài khoản học viên có 1
+    // "device_token" riêng trên mỗi thiết bị/trình duyệt, dùng để các lần đăng nhập SAU trên
+    // đúng thiết bị đó không phải xác thực Gmail lại nữa. Không giới hạn số thiết bị được lưu.
+    const DEVICE_TOKEN_STORAGE_PREFIX = 'ldd_device_token::';
     const { createClient } = supabase;
     const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     // ------------------------------------------
@@ -857,11 +875,15 @@ document.addEventListener('DOMContentLoaded', () => {
             <div style="background:#fff; color:#222; border-radius:14px; padding:22px; max-width:480px; width:92%; max-height:80vh; overflow-y:auto;">
                 <h3 style="margin-top:0;">🔑 Quản lý quyền đăng nhập</h3>
                 <p style="font-size:13px; opacity:.75;">Chỉ email trong danh sách này mới đăng nhập được vào hệ thống.</p>
-                <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px;">
-                    <input type="email" id="allowlist-new-email" placeholder="email@gmail.com" style="flex:1; min-width:160px; padding:8px; border-radius:8px; border:1px solid #ccc;">
+                <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:6px;">
+                    <input type="email" id="allowlist-new-email" placeholder="email@gmail.com (tài khoản đăng nhập)" style="flex:1; min-width:160px; padding:8px; border-radius:8px; border:1px solid #ccc;">
                     <input type="text" id="allowlist-new-note" placeholder="Ghi chú (vd: học viên)" style="flex:1; min-width:120px; padding:8px; border-radius:8px; border:1px solid #ccc;">
-                    <button type="button" id="allowlist-add-btn" class="kid-btn kid-btn-primary">Thêm</button>
                 </div>
+                <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px;">
+                    <input type="email" id="allowlist-new-gmail" placeholder="Gmail liên kết (để xác thực thiết bị mới)" style="flex:1; min-width:160px; padding:8px; border-radius:8px; border:1px solid #ccc;">
+                    <button type="button" id="allowlist-add-btn" class="kid-btn kid-btn-primary">Thêm / Cập nhật</button>
+                </div>
+                <p style="font-size:12px; opacity:.65; margin:-4px 0 12px;">"Gmail liên kết" là Gmail cá nhân của học viên (khác email đăng nhập hệ thống) — dùng để xác thực khi học viên đăng nhập trên thiết bị mới. Để trống nếu chưa dùng tính năng này.</p>
                 <p id="allowlist-status" style="font-size:13px; min-height:18px;"></p>
                 <div id="allowlist-list"></div>
                 <button type="button" id="allowlist-close-btn" class="kid-btn" style="margin-top:14px;">Đóng</button>
@@ -889,7 +911,7 @@ document.addEventListener('DOMContentLoaded', () => {
         listEl.innerHTML = 'Đang tải...';
         const { data, error } = await sb
             .from('allowed_signup_emails')
-            .select('id, email, note, created_at')
+            .select('id, email, note, linked_gmail, created_at')
             .order('created_at', { ascending: false });
 
         if (error) {
@@ -908,41 +930,62 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div>
                     <div style="font-weight:600;">${row.email}</div>
                     ${row.note ? `<div style="font-size:12px; opacity:.65;">${row.note}</div>` : ''}
+                    <div style="font-size:12px; opacity:.65;">${row.linked_gmail ? '🔐 Gmail liên kết: ' + row.linked_gmail : '⚠️ Chưa gán Gmail liên kết'}</div>
                 </div>
-                <button type="button" class="kid-btn allowlist-remove-btn" data-id="${row.id}" style="padding:4px 10px; font-size:12px; flex-shrink:0;">Xoá</button>
+                <div style="display:flex; gap:6px; flex-shrink:0;">
+                    <button type="button" class="kid-btn allowlist-edit-btn" data-email="${row.email}" data-note="${row.note || ''}" data-gmail="${row.linked_gmail || ''}" style="padding:4px 10px; font-size:12px;">Sửa</button>
+                    <button type="button" class="kid-btn allowlist-remove-btn" data-id="${row.id}" style="padding:4px 10px; font-size:12px;">Xoá</button>
+                </div>
             </div>
         `).join('');
 
         listEl.querySelectorAll('.allowlist-remove-btn').forEach(btn => {
             btn.addEventListener('click', () => removeAllowlistEmail(btn.dataset.id));
         });
+        // [MỚI] "Sửa" chỉ đổ dữ liệu dòng đó lên 3 ô nhập phía trên — bấm lại "Thêm / Cập nhật"
+        // sẽ upsert (onConflict theo email) nên coi như sửa tại chỗ, không tạo dòng trùng.
+        listEl.querySelectorAll('.allowlist-edit-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.getElementById('allowlist-new-email').value = btn.dataset.email || '';
+                document.getElementById('allowlist-new-note').value = btn.dataset.note || '';
+                document.getElementById('allowlist-new-gmail').value = btn.dataset.gmail || '';
+                document.getElementById('allowlist-new-email').focus();
+            });
+        });
     }
 
     async function addAllowlistEmail() {
         const emailInput = document.getElementById('allowlist-new-email');
         const noteInput = document.getElementById('allowlist-new-note');
+        const gmailInput = document.getElementById('allowlist-new-gmail');
         const statusEl = document.getElementById('allowlist-status');
         const email = emailInput.value.trim().toLowerCase();
         const note = noteInput.value.trim();
+        const linkedGmail = gmailInput.value.trim().toLowerCase();
 
         if (!email || !email.includes('@')) {
             statusEl.textContent = 'Vui lòng nhập email hợp lệ.';
             return;
         }
+        if (linkedGmail && !linkedGmail.includes('@')) {
+            statusEl.textContent = 'Gmail liên kết không hợp lệ.';
+            return;
+        }
 
-        statusEl.textContent = 'Đang thêm...';
+        statusEl.textContent = 'Đang lưu...';
         const { error } = await sb
             .from('allowed_signup_emails')
-            .upsert({ email, note: note || null }, { onConflict: 'email' });
+            .upsert({ email, note: note || null, linked_gmail: linkedGmail || null }, { onConflict: 'email' });
 
         if (error) {
             statusEl.textContent = 'Lỗi: ' + error.message;
             return;
         }
 
-        statusEl.textContent = `✅ Đã cấp quyền đăng nhập cho ${email}.`;
+        statusEl.textContent = `✅ Đã lưu quyền đăng nhập cho ${email}.`;
         emailInput.value = '';
         noteInput.value = '';
+        gmailInput.value = '';
         loadAllowlist();
     }
 
@@ -1151,13 +1194,241 @@ document.addEventListener('DOMContentLoaded', () => {
         updateCommentFormVisibility(user); 
     }
 
+    // ================== [MỚI] XÁC THỰC THIẾT BỊ MỚI BẰNG "GMAIL LIÊN KẾT" ==================
+    // Mục tiêu: hạn chế việc 1 tài khoản học viên bị chia sẻ cho nhiều người dùng chung. Lần
+    // đăng nhập ĐẦU TIÊN của 1 tài khoản trên 1 thiết bị/trình duyệt cụ thể sẽ bị giữ lại, yêu
+    // cầu đăng nhập thêm đúng Gmail cá nhân mà giáo viên đã gán sẵn cho học viên đó (cột
+    // "linked_gmail" trong bảng allowed_signup_emails, xem khối "Quản lý quyền đăng nhập" phía
+    // trên). Nếu khớp, thiết bị này được ghi nhận là "đã xác thực" (lưu 1 device_token ngẫu
+    // nhiên vào localStorage + vào bảng verified_devices trên Supabase) và những lần đăng nhập
+    // SAU trên đúng thiết bị này sẽ không hỏi lại nữa. KHÔNG giới hạn số thiết bị được xác thực
+    // cho 1 tài khoản — học viên có thể xác thực trên nhiều máy (máy nhà, điện thoại,...), mỗi
+    // máy chỉ cần xác thực đúng 1 lần.
+    //
+    // Việc so khớp Gmail được thực hiện Ở PHÍA SERVER (Edge Function "verify-device"), KHÔNG
+    // phải ở JS này — vì JS chạy trên trình duyệt của học viên nên không thể tin tưởng được
+    // (học viên rành kỹ thuật có thể mở DevTools tự sửa biến). Xem file
+    // "verify-device-edge-function.ts" + "verified_devices_setup.sql" để triển khai phần server.
+    // Giảng viên (TEACHER_EMAILS) và trường hợp giảng viên đang "xem như học viên"
+    // (isImpersonating) được bỏ qua bước này — xem hàm handleSessionChange bên dưới.
+    let deviceGateOverlayEl = null;
+    let deviceGateGoogleButtonReady = false;
+    let pendingGateUser = null;   // user Supabase đang chờ qua cổng xác thực thiết bị
+    let pendingGateEmail = '';    // cache email chữ thường của user ở trên, dùng nhiều nơi
+
+    // Tạo khung giao diện cổng xác thực (1 lần duy nhất), gắn thẳng vào <body> — không cần
+    // sửa gì trong index.html. Overlay này phủ kín toàn màn hình, đè lên cả form đăng nhập lẫn
+    // toàn bộ nội dung web nên học viên không thao tác được gì cho tới khi qua được bước này.
+    function ensureDeviceGateUI() {
+        if (deviceGateOverlayEl) return;
+        deviceGateOverlayEl = document.createElement('div');
+        deviceGateOverlayEl.id = 'device-gate-overlay';
+        deviceGateOverlayEl.style.cssText = 'display:none; position:fixed; inset:0; background:#101820; z-index:999999; align-items:center; justify-content:center; padding:16px;';
+        deviceGateOverlayEl.innerHTML = `
+            <div style="background:#fff; color:#222; border-radius:16px; padding:30px 24px; max-width:420px; width:100%; text-align:center; box-shadow:0 10px 40px rgba(0,0,0,.35); font-family:inherit;">
+                <div style="font-size:40px; margin-bottom:6px;">🔐</div>
+                <h2 style="margin:0 0 10px; font-size:20px;">Xác thực thiết bị mới</h2>
+                <p style="font-size:14px; color:#555; margin:0 0 14px;">Tài khoản: <strong id="device-gate-email"></strong></p>
+                <p id="device-gate-explain" style="font-size:13.5px; color:#666; line-height:1.55; margin:0 0 20px;">
+                    Đây là lần đầu bạn đăng nhập tài khoản này trên thiết bị/trình duyệt này.
+                    Vui lòng đăng nhập bằng <strong>Gmail đã đăng ký với giáo viên</strong> để xác nhận.
+                    Từ lần sau, đăng nhập trên đúng thiết bị này sẽ không cần bước này nữa.
+                </p>
+                <p id="device-gate-checking" style="font-size:14px; color:#777; margin:0 0 6px;">⏳ Đang kiểm tra thiết bị...</p>
+                <div id="device-gate-google-btn" style="display:none; justify-content:center; margin-bottom:8px;"></div>
+                <p id="device-gate-status" style="font-size:13px; min-height:18px; color:#c0392b; margin:6px 0 0;"></p>
+                <button type="button" id="device-gate-logout-btn" style="margin-top:16px; background:none; border:none; color:#888; text-decoration:underline; font-size:13px; cursor:pointer;">Đăng xuất, dùng tài khoản khác</button>
+            </div>
+        `;
+        document.body.appendChild(deviceGateOverlayEl);
+        document.getElementById('device-gate-logout-btn').addEventListener('click', async () => {
+            hideDeviceGateUI();
+            await sb.auth.signOut();
+        });
+    }
+
+    function showDeviceGateOverlay() {
+        ensureDeviceGateUI();
+        deviceGateOverlayEl.style.display = 'flex';
+    }
+    function hideDeviceGateUI() {
+        if (deviceGateOverlayEl) deviceGateOverlayEl.style.display = 'none';
+    }
+    // Trạng thái "đang hỏi Supabase xem thiết bị này đã từng xác thực chưa" (thường chỉ mất
+    // chưa tới 1 giây, nhưng vẫn cần khoá màn hình trong lúc chờ để tránh học viên thao tác hụt).
+    function showDeviceGateChecking() {
+        showDeviceGateOverlay();
+        document.getElementById('device-gate-checking').style.display = 'block';
+        document.getElementById('device-gate-google-btn').style.display = 'none';
+        document.getElementById('device-gate-status').textContent = '';
+    }
+    // Trạng thái "thiết bị chưa được xác thực -> hiện nút đăng nhập Gmail".
+    function showDeviceGateForm(email) {
+        showDeviceGateOverlay();
+        document.getElementById('device-gate-email').textContent = email;
+        document.getElementById('device-gate-checking').style.display = 'none';
+        document.getElementById('device-gate-google-btn').style.display = 'flex';
+        document.getElementById('device-gate-status').textContent = '';
+        ensureGoogleGateButton();
+    }
+
+    // Thư viện Google Identity Services (nạp qua thẻ <script> trong index.html) tải bất đồng bộ
+    // nên cần chờ tới khi sẵn sàng thay vì gọi ngay — tránh lỗi "google is not defined" nếu học
+    // viên vào bước xác thực này quá nhanh (mạng chậm).
+    function waitForGoogleIdentity(timeoutMs = 10000) {
+        return new Promise((resolve, reject) => {
+            const start = Date.now();
+            (function poll() {
+                if (window.google && window.google.accounts && window.google.accounts.id) {
+                    resolve();
+                } else if (Date.now() - start > timeoutMs) {
+                    reject(new Error('Không tải được thư viện đăng nhập Google. Vui lòng kiểm tra kết nối mạng rồi tải lại trang.'));
+                } else {
+                    setTimeout(poll, 150);
+                }
+            })();
+        });
+    }
+
+    // Khởi tạo + vẽ nút "Đăng nhập bằng Google" cho MÀN XÁC THỰC THIẾT BỊ (khác nút đăng nhập
+    // Google ở màn hình đăng nhập chính). Chỉ cần initialize() 1 lần cho cả phiên làm việc.
+    async function ensureGoogleGateButton() {
+        const statusEl = document.getElementById('device-gate-status');
+        if (deviceGateGoogleButtonReady) return;
+        if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID.indexOf('DÁN_GOOGLE_CLIENT_ID') === 0) {
+            statusEl.textContent = 'Hệ thống chưa được cấu hình GOOGLE_CLIENT_ID — vui lòng báo giảng viên/người quản trị.';
+            return;
+        }
+        try {
+            await waitForGoogleIdentity();
+        } catch (err) {
+            statusEl.textContent = err.message;
+            return;
+        }
+        google.accounts.id.initialize({
+            client_id: GOOGLE_CLIENT_ID,
+            callback: onDeviceGateGoogleCredential
+        });
+        google.accounts.id.renderButton(
+            document.getElementById('device-gate-google-btn'),
+            { theme: 'outline', size: 'large', text: 'continue_with', width: 280 }
+        );
+        deviceGateGoogleButtonReady = true;
+    }
+
+    // Gọi Edge Function "verify-device" — dùng chung 1 hàm cho cả 2 việc: (1) "check" xem
+    // device_token đã lưu sẵn trong localStorage còn hợp lệ không, và (2) "verify" xác nhận
+    // idToken Google vừa đăng nhập có khớp Gmail liên kết của tài khoản hay không.
+    async function callVerifyDeviceFunction(body, session) {
+        try {
+            const resp = await fetch(VERIFY_DEVICE_FUNCTION_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`,
+                    'apikey': SUPABASE_ANON_KEY
+                },
+                body: JSON.stringify(body)
+            });
+            const result = await resp.json().catch(() => ({}));
+            if (!resp.ok) {
+                return { error: (result && result.error) || 'Có lỗi xảy ra, vui lòng thử lại.' };
+            }
+            return result;
+        } catch (err) {
+            return { error: 'Không thể kết nối máy chủ: ' + err.message };
+        }
+    }
+
+    // Được gọi khi học viên chọn xong tài khoản Gmail ở nút đăng nhập Google trên màn xác thực.
+    async function onDeviceGateGoogleCredential(response) {
+        const statusEl = document.getElementById('device-gate-status');
+        statusEl.style.color = '#555';
+        statusEl.textContent = 'Đang xác thực...';
+        try {
+            const { data: sessionData } = await sb.auth.getSession();
+            const session = sessionData && sessionData.session;
+            if (!session) {
+                statusEl.style.color = '#c0392b';
+                statusEl.textContent = 'Phiên đăng nhập đã hết hạn, vui lòng tải lại trang và đăng nhập lại.';
+                return;
+            }
+            const result = await callVerifyDeviceFunction({ mode: 'verify', idToken: response.credential }, session);
+            if (!result || result.error) {
+                statusEl.style.color = '#c0392b';
+                statusEl.textContent = (result && result.error) || 'Xác thực thất bại, vui lòng thử lại.';
+                // Cho phép chọn lại Gmail khác ở lần bấm nút tiếp theo, phòng trường hợp Google
+                // tự động chọn nhầm tài khoản do trình duyệt đang đăng nhập sẵn Gmail khác.
+                if (window.google && google.accounts && google.accounts.id) google.accounts.id.disableAutoSelect();
+                return;
+            }
+            // Khớp Gmail liên kết -> lưu device_token, mở khoá app ngay.
+            localStorage.setItem(DEVICE_TOKEN_STORAGE_PREFIX + pendingGateEmail, result.deviceToken);
+            hideDeviceGateUI();
+            updateUIForUser(pendingGateUser);
+        } catch (err) {
+            statusEl.style.color = '#c0392b';
+            statusEl.textContent = 'Lỗi: ' + (err.message || 'không xác định');
+        }
+    }
+
+    // Hàm điều phối chính: quyết định thiết bị này đã được xác thực chưa, và mở cổng xác thực
+    // nếu chưa. Gọi thay cho updateUIForUser(user) mỗi khi có user học viên đăng nhập.
+    async function gateDeviceOrProceed(user, session) {
+        pendingGateUser = user;
+        pendingGateEmail = (user.email || '').toLowerCase();
+        const tokenKey = DEVICE_TOKEN_STORAGE_PREFIX + pendingGateEmail;
+        let localToken = null;
+        try { localToken = localStorage.getItem(tokenKey); } catch (e) { /* bỏ qua nếu localStorage bị chặn */ }
+
+        showDeviceGateChecking();
+
+        if (localToken) {
+            const result = await callVerifyDeviceFunction({ mode: 'check', deviceToken: localToken }, session);
+            if (result && result.trusted) {
+                hideDeviceGateUI();
+                updateUIForUser(user);
+                return;
+            }
+            // Token cũ không còn hợp lệ nữa (vd: giảng viên đã xoá bản ghi trong verified_devices
+            // để buộc xác thực lại) -> dọn token cũ, rơi xuống yêu cầu xác thực lại bên dưới.
+            try { localStorage.removeItem(tokenKey); } catch (e) { /* bỏ qua */ }
+        }
+
+        showDeviceGateForm(user.email || '');
+    }
+
+    // Điểm vào duy nhất mỗi khi trạng thái đăng nhập thay đổi (đăng nhập/đăng xuất/khôi phục
+    // phiên) — thay thế việc gọi thẳng updateUIForUser(session?.user) như trước đây.
+    async function handleSessionChange(session) {
+        const user = session && session.user;
+        if (!user) {
+            pendingGateUser = null;
+            pendingGateEmail = '';
+            hideDeviceGateUI();
+            updateUIForUser(null);
+            return;
+        }
+        const emailLower = (user.email || '').toLowerCase();
+        const loggedInIsTeacher = TEACHER_EMAILS.includes(emailLower);
+        // Giảng viên đăng nhập thật, HOẶC đang trong phiên "xem như học viên" do giảng viên chủ
+        // động bấm (đã tự xác thực từ trước) -> bỏ qua cổng, vào thẳng như bình thường.
+        if (loggedInIsTeacher || isImpersonating) {
+            hideDeviceGateUI();
+            updateUIForUser(user);
+            return;
+        }
+        await gateDeviceOrProceed(user, session);
+    }
+    // ================== [KẾT THÚC] XÁC THỰC THIẾT BỊ MỚI ==================
+
     /**
      * @description Lắng nghe sự thay đổi trạng thái xác thực để cập nhật giao diện.
      * (Đây là cách Supabase khuyến nghị để kiểm tra session khi tải trang/refresh)
      */
     sb.auth.onAuthStateChange((event, session) => {
         if (event === 'SIGNED_OUT' || event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
-             updateUIForUser(session?.user);
+             handleSessionChange(session);
         }
     });
 
@@ -3826,7 +4097,7 @@ function toggleCompletion(symbolElement) {
     // Giữ lại hàm initialLoad nhưng đảm bảo nó được gọi.
     async function initialLoad() {
         const { data: { session } } = await sb.auth.getSession();
-        updateUIForUser(session?.user);
+        handleSessionChange(session);
     }
 
     // --- LOGIC TAB/SWIPE NGANG (MOBILE) ---
