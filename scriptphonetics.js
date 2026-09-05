@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Email của (các) giảng viên — được quyền xem mọi bài dịch và để lại nhận xét.
     // ⚠️ Sửa danh sách này thành email thật của giảng viên (đúng email dùng để đăng nhập).
     // Nhớ cập nhật CÙNG danh sách này trong policy RLS ở Supabase (xem hướng dẫn SQL).
-    const TEACHER_EMAILS = ['giangvien@gmail.com'];
+    const TEACHER_EMAILS = ['lddbaiu@gmail.com'];
     // [MỚI] Edge Function xử lý việc giảng viên "xem như học viên" — cần triển khai trên
     // Supabase (xem file "impersonate-student-edge-function.ts" + hướng dẫn đi kèm).
     const IMPERSONATE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/impersonate-student`;
@@ -421,12 +421,13 @@ document.addEventListener('DOMContentLoaded', () => {
         return 'webm';
     }
 
-    // [MỚI] Học viên có thể GỬI GHI ÂM bằng cách dán link ngoài (VD: SoundCloud) thay vì thu âm
-    // trực tiếp trên trình duyệt — dùng chung cho cả "Phiên âm" và "Nói". Cột "audio_url" trên
-    // các bảng liên quan giờ có thể chứa: (a) URL file lưu trên Supabase Storage như trước, hoặc
-    // (b) 1 link SoundCloud, hoặc (c) 1 link audio trực tiếp khác (.mp3/.wav/...). 3 hàm dưới đây
-    // nhận diện loại link và dựng đúng phần tử để phát (audio thường / khung nhúng SoundCloud /
-    // nút mở link dự phòng nếu không chắc phát được).
+    // [MỚI] Ở phần "Nói" (5 dạng bài luyện nói), giảng viên đã có sẵn ô dán link để gắn ÂM THANH
+    // MẪU cho học viên nghe (VD: câu hỏi mẫu, đoạn hội thoại mẫu...) — trước đây ô này chỉ chạy
+    // đúng với link file audio trực tiếp (.mp3/.wav/...) vì được phát bằng thẻ <audio> thường.
+    // 3 hàm dưới đây nhận diện khi link dán vào là 1 link SoundCloud (hoặc link lạ khác không
+    // phải file audio trực tiếp) để dựng đúng phần tử phát: audio thường / khung nhúng SoundCloud
+    // / nút mở link dự phòng nếu không chắc phát được. Xem hàm syncModelAudioEmbed() ngay bên
+    // dưới — đây là nơi thực sự gắn khung nhúng này vào giao diện luyện nói.
     function isSoundCloudLink(url) {
         return /(^|\/\/)([a-z0-9-]+\.)?soundcloud\.com\//i.test(String(url || ''));
     }
@@ -434,8 +435,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const clean = String(url || '').split('?')[0].split('#')[0];
         return /\.(mp3|wav|ogg|m4a|aac|webm|flac)$/i.test(clean);
     }
-    function buildAudioPlaybackEl(url) {
+    function buildAudioPlaybackEl(url, opts) {
         if (!url) return null;
+        opts = opts || {};
         if (isSoundCloudLink(url)) {
             const wrap = document.createElement('div');
             wrap.className = 'soundcloud-embed-wrap';
@@ -446,7 +448,8 @@ document.addEventListener('DOMContentLoaded', () => {
             iframe.frameBorder = 'no';
             iframe.allow = 'autoplay';
             iframe.src = 'https://w.soundcloud.com/player/?url=' + encodeURIComponent(url) +
-                '&color=%23ff5500&auto_play=false&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=true&visual=false';
+                '&color=%23ff5500&auto_play=' + (opts.autoplay ? 'true' : 'false') +
+                '&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=true&visual=false';
             wrap.appendChild(iframe);
             return wrap;
         }
@@ -454,6 +457,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const audioEl = document.createElement('audio');
             audioEl.controls = true;
             audioEl.src = url;
+            if (opts.autoplay) audioEl.autoplay = true;
             return audioEl;
         }
         // Link lạ không rõ định dạng — hiện nút mở trong tab mới thay vì <audio> có thể không phát được.
@@ -464,6 +468,50 @@ document.addEventListener('DOMContentLoaded', () => {
         link.className = 'audio-link-fallback';
         link.textContent = '🔗 Mở bản ghi âm (link ngoài)';
         return link;
+    }
+
+    // [MỚI] Hiện (hoặc ẩn) khung nhúng phát "âm thanh mẫu" ngay CẠNH 1 vị trí neo có sẵn (trước
+    // đây là nút "Nghe...", giờ nhiều nơi đã bỏ nút và tự động phát nên vị trí neo có thể chỉ là
+    // 1 khối trống làm chỗ chèn khung nhúng) — dùng cho các dạng bài Nói: khi giảng viên dán link
+    // SoundCloud (hoặc link lạ khác không phải file audio trực tiếp) vào ô link mẫu, phần phát
+    // bằng thẻ <audio> thường sẽ không phát được link đó — nên hàm này tự chèn thêm khung nhúng
+    // để học viên vẫn nghe được. Với link .mp3/.wav trực tiếp (cách dùng cũ), không có gì thay đổi.
+    // - anchorId: id của khối sẽ chèn khung nhúng ngay sau nó.
+    // - url: giá trị "audio_url" giảng viên đã dán (có thể rỗng).
+    // - note: dòng ghi chú nhỏ hiện phía trên khung nhúng (tuỳ chọn, VD: nhắc không chỉnh được
+    //   tốc độ chậm/nhanh với link ngoài ở bài Shadowing).
+    // - opts.autoplay: true để khung nhúng SoundCloud tự phát ngay khi hiện ra (không cần bấm
+    //   play trong khung) — chỉ nên bật khi hàm này được gọi trong luồng do người dùng vừa bấm
+    //   (chuyển câu, bắt đầu luyện tập...), vì trình duyệt chỉ cho tự phát có tiếng khi có thao
+    //   tác của người dùng ngay trước đó.
+    function syncModelAudioEmbed(anchorId, url, note, opts) {
+        opts = opts || {};
+        const anchor = document.getElementById(anchorId);
+        if (!anchor || !anchor.parentNode) return;
+        const boxId = anchorId + '-embed-box';
+        let box = document.getElementById(boxId);
+        const needsEmbed = !!url && !isDirectAudioLink(url) && !url.includes('/storage/v1/object/public/');
+        if (needsEmbed) {
+            if (!box) {
+                box = document.createElement('div');
+                box.id = boxId;
+                box.className = 'spk-model-embed-box';
+                anchor.parentNode.insertBefore(box, anchor.nextSibling);
+            }
+            box.innerHTML = '';
+            if (note) {
+                const noteEl = document.createElement('div');
+                noteEl.className = 'spk-model-embed-note';
+                noteEl.textContent = note;
+                box.appendChild(noteEl);
+            }
+            const node = buildAudioPlaybackEl(url, { autoplay: opts.autoplay });
+            if (node) box.appendChild(node);
+            box.style.display = '';
+        } else if (box) {
+            box.style.display = 'none';
+            box.innerHTML = '';
+        }
     }
 
     const commentSymbolDisplay = document.getElementById('comment-symbol-display');
@@ -479,12 +527,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const sendCommentButton = document.getElementById('send-comment-button');
     const recordingPreview = document.getElementById('recording-preview');
     const recordStatus = document.getElementById('record-status');
-    // [MỚI] Các phần tử cho lựa chọn "dán link ghi âm" (VD: SoundCloud) thay vì thu âm trực tiếp.
-    const commentLinkToggleBtn = document.getElementById('comment-link-toggle-btn');
-    const commentLinkForm = document.getElementById('comment-link-form');
-    const commentLinkInput = document.getElementById('comment-link-input');
-    const commentLinkSendBtn = document.getElementById('comment-link-send-btn');
-    const commentLinkStatus = document.getElementById('comment-link-status');
     const commentToggleHeader = document.getElementById('comment-toggle-header');
     const commentContentWrapper = document.getElementById('comment-content-wrapper');
     const authContainer = document.getElementById('auth-container');
@@ -761,6 +803,25 @@ document.addEventListener('DOMContentLoaded', () => {
         await sb.auth.signOut();
     }
 
+    // [MỚI] Đăng nhập bằng Google (OAuth) — trình duyệt sẽ chuyển sang trang đăng nhập Google,
+    // sau khi xong sẽ tự quay lại đúng trang này với phiên đăng nhập đã sẵn sàng. isTeacher vẫn
+    // được xác định như cũ dựa trên email (TEACHER_EMAILS), không cần sửa gì thêm ở đó — dù đăng
+    // nhập bằng mật khẩu hay bằng Google, hễ đúng email trong danh sách là được coi là giảng viên.
+    // ⚠️ Cần bật provider "Google" trong Supabase Dashboard (Authentication → Providers → Google,
+    // dán Client ID/Client Secret lấy từ Google Cloud Console) thì nút này mới đăng nhập được.
+    async function handleGoogleLogin() {
+        authStatus.textContent = 'Đang chuyển sang trang đăng nhập Google...';
+        const { error } = await sb.auth.signInWithOAuth({
+            provider: 'google',
+            options: { redirectTo: window.location.origin + window.location.pathname }
+        });
+        if (error) {
+            authStatus.textContent = `Lỗi đăng nhập Google: ${error.message}`;
+        }
+        // Không cần xử lý gì thêm sau dòng này — trình duyệt sẽ điều hướng sang Google ngay lập
+        // tức nếu không có lỗi, rồi quay lại trang với phiên đăng nhập đã có qua onAuthStateChange.
+    }
+
     function updateCommentFormVisibility(user) {
         const commentForm = document.getElementById('new-comment-form');
         if (commentForm) {
@@ -964,6 +1025,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     loginForm.addEventListener('submit', handleLogin);
     logoutBtn.addEventListener('click', handleLogout);
+    const googleLoginBtn = document.getElementById('google-login-btn');
+    if (googleLoginBtn) googleLoginBtn.addEventListener('click', handleGoogleLogin);
 
     // --- KẾT THÚC LOGIC XÁC THỰC ---
 
@@ -3172,6 +3235,20 @@ function toggleCompletion(symbolElement) {
         
         const safeSymbolName = getSafeSymbolName(currentSymbol); 
 
+        // [MỚI] Ghi âm LẠI cho CÙNG 1 ký tự phiên âm: ghi nhớ trước các bản ghi âm CŨ của CHÍNH
+        // học viên này cho ký tự này, để dọn đi SAU KHI bản mới gửi thành công (không dọn trước,
+        // để nếu bước gửi bản mới bị lỗi thì học viên không bị mất trắng bản ghi âm cũ).
+        let oldRowsToClean = [];
+        try {
+            const { data: oldRows } = await sb
+                .from('comments')
+                .select('id, audio_url')
+                .eq('symbol', currentSymbol)
+                .eq('user_id', currentUserId)
+                .not('audio_url', 'is', null);
+            oldRowsToClean = oldRows || [];
+        } catch (e) { /* không chặn luồng gửi ghi âm nếu bước này lỗi */ }
+
         try {
             const fileExt = extFromAudioMime(recordedAudioMime);
             const uniqueFileName = `${currentUserId.substring(0, 8)}_${Date.now()}.${fileExt}`; 
@@ -3212,6 +3289,27 @@ function toggleCompletion(symbolElement) {
 
             recordStatus.textContent = "Gửi thành công!";
             resetCommentForm();
+
+            // [MỚI] Bản mới đã gửi thành công — giờ mới dọn các bản ghi âm CŨ (đã ghi nhớ ở
+            // trên) của CHÍNH học viên này cho CÙNG ký tự này: xóa cả dòng trong bảng "comments"
+            // lẫn file trong Storage, để chỉ còn đúng 1 bản ghi âm đang hoạt động — tránh dồn
+            // nhiều bản cũ gây rối và làm sai trạng thái "đã hoàn thành / chưa hoàn thành".
+            if (oldRowsToClean.length) {
+                try {
+                    const oldPaths = oldRowsToClean
+                        .map(r => {
+                            const marker = `/public/${AUDIO_BUCKET_NAME}/`;
+                            const idx = (r.audio_url || '').indexOf(marker);
+                            return idx !== -1 ? r.audio_url.substring(idx + marker.length) : null;
+                        })
+                        .filter(Boolean);
+                    if (oldPaths.length) await sb.storage.from(AUDIO_BUCKET_NAME).remove(oldPaths);
+                    await sb.from('comments').delete().in('id', oldRowsToClean.map(r => r.id));
+                } catch (cleanupErr) {
+                    console.error('Lỗi khi dọn bản ghi âm cũ (không ảnh hưởng bản MỚI vừa gửi):', cleanupErr.message);
+                }
+            }
+
             loadComments(currentSymbol); 
 
             // [THÊM MỚI] Đổi màu vàng nhạt nếu chưa được tick hoàn thành — ghi âm vừa gửi luôn
@@ -3233,63 +3331,6 @@ function toggleCompletion(symbolElement) {
             }
         }
     });
-
-    // 3b. [MỚI] GỬI GHI ÂM BẰNG LINK DÁN VÀO (VD: SoundCloud) — thay thế cho việc thu âm trực
-    // tiếp trên trình duyệt. Bấm nút bật/tắt để hiện ô dán link; khi gửi, link được lưu thẳng
-    // vào đúng cột "audio_url" của bảng "comments" (không upload lên Storage) — nên phần hiển
-    // thị (xem hàm displayComment bên dưới) cần nhận diện & phát đúng loại link này.
-    if (commentLinkToggleBtn && commentLinkForm) {
-        commentLinkToggleBtn.addEventListener('click', () => {
-            const showing = commentLinkForm.style.display !== 'none';
-            commentLinkForm.style.display = showing ? 'none' : 'block';
-        });
-    }
-    if (commentLinkSendBtn) {
-        commentLinkSendBtn.addEventListener('click', async () => {
-            const link = (commentLinkInput.value || '').trim();
-            if (!currentUserId) {
-                commentLinkStatus.textContent = 'Vui lòng đăng nhập để gửi ghi âm.';
-                return;
-            }
-            if (!link) {
-                commentLinkStatus.textContent = 'Vui lòng dán link ghi âm trước khi gửi.';
-                return;
-            }
-            if (!/^https?:\/\//i.test(link)) {
-                commentLinkStatus.textContent = 'Link không hợp lệ (phải bắt đầu bằng http:// hoặc https://).';
-                return;
-            }
-            commentLinkSendBtn.disabled = true;
-            commentLinkStatus.textContent = 'Đang gửi...';
-            try {
-                const { error: dbError } = await sb.from('comments').insert([{
-                    symbol: currentSymbol,
-                    audio_url: link,
-                    user_id: currentUserId,
-                    created_at: new Date().toISOString()
-                }]);
-                if (dbError) throw dbError;
-
-                commentLinkStatus.textContent = '✅ Đã gửi link cho giảng viên chấm!';
-                commentLinkInput.value = '';
-                commentLinkForm.style.display = 'none';
-                loadComments(currentSymbol);
-
-                // Giống hệt cách xử lý khi gửi ghi âm thu trực tiếp: chuyển ô ký tự sang trạng
-                // thái "chờ chấm" (vàng) nếu chưa được tick hoàn thành.
-                const activeSymbolEl = document.querySelector(`.ipa-symbol[data-symbol="${currentSymbol}"]`);
-                if (activeSymbolEl && !activeSymbolEl.classList.contains('completed')) {
-                    activeSymbolEl.classList.remove('graded-done', 'needs-redo');
-                    activeSymbolEl.classList.add('submitted');
-                }
-            } catch (err) {
-                console.error("Lỗi khi gửi link ghi âm (Kiểm tra RLS INSERT trên bảng comments):", err.message);
-                commentLinkStatus.textContent = `Gửi thất bại: ${err.message}`;
-            } finally {
-                commentLinkSendBtn.disabled = false;
-            }
-        });
-    }
 
     // 4. HÀM TẢI ghi âm TỪ SUPABASE (Đã bỏ chặn kiểm tra đăng nhập)
     async function loadComments(symbol) {
@@ -3457,29 +3498,29 @@ function toggleCompletion(symbolElement) {
             commentDiv.appendChild(textEl);
         }
 
-        // [QUAN TRỌNG] Logic hiển thị audio — [MỚI] dùng chung hàm buildAudioPlaybackEl() để hỗ
-        // trợ cả file thu trực tiếp (audio thường) LẪN link dán vào (VD: khung nhúng SoundCloud).
+        // [QUAN TRỌNG] Logic hiển thị audio
         if (data.audio_url) {
-            if (data.audio_url.length > 5) {
-                const audioNode = buildAudioPlaybackEl(data.audio_url);
-                // [MỚI] Khi bấm nghe ghi âm này (chỉ áp dụng cho ghi âm dạng file <audio> thật,
-                // không áp dụng cho khung nhúng SoundCloud/link ngoài), tự động phát luôn video
-                // hướng dẫn phát âm (nếu ký tự IPA đang chọn có sẵn video) để học viên vừa nghe
-                // vừa xem hướng dẫn — NHƯNG nếu người dùng đã chủ động bấm "Dừng" video trước đó
-                // thì KHÔNG tự phát lại nữa, tôn trọng thao tác dừng của họ cho tới khi họ chủ
-                // động bấm "Tiếp tục".
-                if (audioNode && audioNode.tagName === 'AUDIO') {
-                    audioNode.addEventListener('play', () => {
-                        if (currentVideoSrc && !videoManuallyPaused) {
-                            vimeoPlayerContainer.classList.remove('video-hidden');
-                            loadOrUpdateIframe(currentVideoSrc, '1');
-                            videoPlaceholder.style.display = 'none';
-                            videoPlayBtn.disabled = true;
-                            videoPauseBtn.disabled = false;
-                        }
-                    });
+            const audioEl = document.createElement('audio');
+            audioEl.controls = true;
+            audioEl.src = data.audio_url; 
+            
+            // [MỚI] Khi bấm nghe ghi âm này, tự động phát luôn video hướng dẫn phát âm
+            // (nếu ký tự IPA đang chọn có sẵn video) để học viên vừa nghe vừa xem hướng dẫn —
+            // NHƯNG nếu người dùng đã chủ động bấm "Dừng" video trước đó thì KHÔNG tự phát lại
+            // nữa, tôn trọng thao tác dừng của họ cho tới khi họ chủ động bấm "Tiếp tục".
+            audioEl.addEventListener('play', () => {
+                if (currentVideoSrc && !videoManuallyPaused) {
+                    vimeoPlayerContainer.classList.remove('video-hidden');
+                    loadOrUpdateIframe(currentVideoSrc, '1');
+                    videoPlaceholder.style.display = 'none';
+                    videoPlayBtn.disabled = true;
+                    videoPauseBtn.disabled = false;
                 }
-                if (audioNode) commentDiv.appendChild(audioNode);
+            });
+            
+            // Kiểm tra URL có bị hỏng không (tùy chọn)
+            if (data.audio_url.length > 5) {
+                commentDiv.appendChild(audioEl);
             } else {
                  // Ghi nhận lỗi hiển thị audio
                  const errorEl = document.createElement('div');
@@ -4209,7 +4250,7 @@ function toggleCompletion(symbolElement) {
 
         // Dữ liệu tin tức giờ được tải động từ bảng "news_articles" trên Supabase
         // (xem file SQL "news_articles_setup.sql" để tạo bảng + chèn 6 bài mẫu ban đầu).
-        // Chỉ tài khoản trong TEACHER_EMAILS (giangvien@gmail.com) mới có quyền
+        // Chỉ tài khoản trong TEACHER_EMAILS (lddbaiu@gmail.com) mới có quyền
         // thêm / sửa / xóa — quyền này được chặn ở CẢ giao diện lẫn RLS trên Supabase.
         let NEWS_DATA = [];
 
@@ -6480,7 +6521,7 @@ function toggleCompletion(symbolElement) {
 
         // Dữ liệu folder ngữ pháp giờ được tải động từ bảng "grammar_folders" trên Supabase
         // (xem file SQL "grammar_folders_setup.sql" để tạo bảng + chèn 4 folder mẫu ban đầu).
-        // Chỉ tài khoản trong TEACHER_EMAILS (giangvien@gmail.com) mới có quyền
+        // Chỉ tài khoản trong TEACHER_EMAILS (lddbaiu@gmail.com) mới có quyền
         // thêm / sửa / xóa — quyền này được chặn ở CẢ giao diện lẫn RLS trên Supabase.
         let GRAMMAR_DATA = [];
         let currentFolderId = null;
@@ -7493,7 +7534,7 @@ function toggleCompletion(symbolElement) {
     // ===== LỒNG TIẾNG (tab Giải trí) =====
     // Bảng Supabase "dubbing_content" (1 dòng, id = 1) lưu link YouTube +
     // kịch bản thoại kèm mốc thời gian. Xem file SQL "dubbing_content_setup.sql".
-    // Chỉ tài khoản trong TEACHER_EMAILS (giangvien@gmail.com) mới được sửa
+    // Chỉ tài khoản trong TEACHER_EMAILS (lddbaiu@gmail.com) mới được sửa
     // link video / kịch bản — quyền này được chặn ở CẢ giao diện lẫn RLS.
     // =====================================================================
     (function initDubbingFeature() {
@@ -12062,7 +12103,7 @@ function toggleCompletion(symbolElement) {
         });
 
         // ---------- 3. CÂU CHUYỆN: tối đa 4 khung ảnh 16:9 + câu điền từ khóa ----------
-        // Nội dung (ảnh + đoạn văn có từ khóa in đậm) do tài khoản giangvien@gmail.com
+        // Nội dung (ảnh + đoạn văn có từ khóa in đậm) do tài khoản lddbaiu@gmail.com
         // biên soạn và lưu chung trên Supabase (bảng "thcs_story_frames") — mọi học viên
         // đều thấy cùng 1 nội dung. Tiến độ MỞ từng khung ảnh thì lưu RIÊNG cho từng học
         // viên (bảng "thcs_story_frame_progress"). Xem file "thcs_story_frames_setup.sql".
@@ -13711,7 +13752,7 @@ function toggleCompletion(symbolElement) {
 
 // =====================================================================
 // ===== BÀI KIỂM TRA RIÊNG (CUSTOM TEST MODULE) ======================
-// Giảng viên (giangvien@gmail.com) soạn bài kiểm tra riêng cho từng học
+// Giảng viên (lddbaiu@gmail.com) soạn bài kiểm tra riêng cho từng học
 // viên: nhiều phần, nhiều dạng câu hỏi, giới hạn thời gian, chống gian
 // lận (chụp màn hình / copy / chuyển tab), tự động chấm điểm khi nộp.
 // Dữ liệu lưu ở bảng "custom_tests" / "custom_test_submissions" trên
@@ -25591,6 +25632,22 @@ function toggleCompletion(symbolElement) {
         if (blob.size > SPK_MAX_FILE_SIZE_BYTES) {
             throw new Error(`File ghi âm quá lớn (${(blob.size / 1024).toFixed(1)} KB). Kích thước tối đa là ${(SPK_MAX_FILE_SIZE_BYTES / 1024).toFixed(0)} KB — hãy ghi âm ngắn gọn hơn.`);
         }
+
+        // [MỚI] Ghi âm LẠI cho CÙNG 1 câu hỏi/tình huống (cùng itemType + itemKey): ghi nhớ
+        // trước các bản ghi âm CŨ của CHÍNH học viên này cho đúng câu này, để dọn đi SAU KHI bản
+        // mới gửi thành công (không dọn trước, để nếu bước gửi bản mới bị lỗi thì học viên không
+        // bị mất trắng bản ghi âm cũ).
+        let oldRowsToClean = [];
+        try {
+            const { data: oldRows } = await sb
+                .from(SPK_TABLE)
+                .select('id, audio_url')
+                .eq('item_type', itemType)
+                .eq('item_key', String(itemKey))
+                .eq('user_id', currentUserId);
+            oldRowsToClean = oldRows || [];
+        } catch (e) { /* không chặn luồng gửi ghi âm nếu bước này lỗi */ }
+
         const fileExt = extFromAudioMime(mime);
         const uniqueFileName = `${currentUserId.substring(0, 8)}_${Date.now()}.${fileExt}`;
         // Dùng chung bucket "audio_comments" với Phiên âm, chỉ khác thư mục con "speaking/..."
@@ -25619,23 +25676,27 @@ function toggleCompletion(symbolElement) {
             sb.storage.from(AUDIO_BUCKET_NAME).remove([storagePath]);
             throw dbError;
         }
-        if (typeof window.refreshSpeakingGradingBadge === 'function') window.refreshSpeakingGradingBadge({ notify: false });
-    }
 
-    // [MỚI] GỬI GHI ÂM BẰNG LINK DÁN VÀO (VD: SoundCloud) — thay thế cho việc thu âm trực tiếp,
-    // dùng chung cho cả 5 dạng bài Nói. Không upload lên Storage — lưu thẳng link vào "audio_url".
-    async function spkSubmitLink({ itemType, itemKey, itemLabel, link }) {
-        if (!currentUserId) throw new Error('Vui lòng đăng nhập để gửi ghi âm.');
-        if (!link) throw new Error('Vui lòng dán link ghi âm.');
-        const { error: dbError } = await sb.from(SPK_TABLE).insert([{
-            item_type: itemType,
-            item_key: String(itemKey),
-            item_label: (itemLabel || '').toString().slice(0, 300),
-            audio_url: link,
-            user_id: currentUserId,
-            created_at: new Date().toISOString()
-        }]);
-        if (dbError) throw dbError;
+        // [MỚI] Bản mới đã gửi thành công — giờ mới dọn các bản ghi âm CŨ (đã ghi nhớ ở trên) của
+        // CHÍNH học viên này cho CÙNG câu hỏi này: xóa cả dòng trong bảng "speaking_comments" lẫn
+        // file trong Storage, để chỉ còn đúng 1 bản ghi âm đang hoạt động — tránh dồn nhiều bản
+        // cũ gây rối và làm sai trạng thái "đã hoàn thành / chưa hoàn thành".
+        if (oldRowsToClean.length) {
+            try {
+                const oldPaths = oldRowsToClean
+                    .map(r => {
+                        const marker = `/public/${AUDIO_BUCKET_NAME}/`;
+                        const idx = (r.audio_url || '').indexOf(marker);
+                        return idx !== -1 ? r.audio_url.substring(idx + marker.length) : null;
+                    })
+                    .filter(Boolean);
+                if (oldPaths.length) await sb.storage.from(AUDIO_BUCKET_NAME).remove(oldPaths);
+                await sb.from(SPK_TABLE).delete().in('id', oldRowsToClean.map(r => r.id));
+            } catch (cleanupErr) {
+                console.error('Lỗi khi dọn bản ghi âm luyện nói cũ (không ảnh hưởng bản MỚI vừa gửi):', cleanupErr.message);
+            }
+        }
+
         if (typeof window.refreshSpeakingGradingBadge === 'function') window.refreshSpeakingGradingBadge({ notify: false });
     }
 
@@ -25722,11 +25783,11 @@ function toggleCompletion(symbolElement) {
             card.appendChild(textEl);
         }
 
-        // [MỚI] dùng chung hàm buildAudioPlaybackEl() để hỗ trợ cả file thu trực tiếp lẫn link
-        // dán vào (VD: khung nhúng SoundCloud) — xem hàm định nghĩa ở đầu file.
         if (data.audio_url) {
-            const audioNode = buildAudioPlaybackEl(data.audio_url);
-            if (audioNode) card.appendChild(audioNode);
+            const audioEl = document.createElement('audio');
+            audioEl.controls = true;
+            audioEl.src = data.audio_url;
+            card.appendChild(audioEl);
         }
 
         if (data.created_at) {
@@ -25872,69 +25933,20 @@ function toggleCompletion(symbolElement) {
             }
         });
         if (commentsEl) spkLoadComments(commentsEl, itemType, itemKey);
-
-        // [MỚI] Lựa chọn "dán link ghi âm" (VD: SoundCloud) thay vì thu âm trực tiếp — dùng
-        // chung cho cả 5 dạng bài Nói vì mọi dạng đều gọi qua đúng hàm này.
-        spkAttachLinkPasteUI({ itemType, itemKey, itemLabel, sendBtn, commentsEl });
-    }
-
-    // [MỚI] Chèn (1 lần duy nhất cho mỗi nút gửi) khối "dán link ghi âm" ngay sau nút gửi ghi âm
-    // thu trực tiếp. Vì spkAttachSubmitUI có thể được gọi lại nhiều lần cho CÙNG 1 nút gửi (mỗi
-    // khi học viên được rút 1 câu/đề mới), hàm này kiểm tra khối đã tồn tại chưa trước khi tạo
-    // mới — tránh chèn trùng lặp — và chỉ cập nhật lại itemType/itemKey/itemLabel cho lượt mới.
-    function spkAttachLinkPasteUI({ itemType, itemKey, itemLabel, sendBtn, commentsEl }) {
-        if (!sendBtn || !sendBtn.parentNode || !sendBtn.id) return;
-        const blockId = sendBtn.id + '-link-block';
-        let block = document.getElementById(blockId);
-        if (!block) {
-            block = document.createElement('div');
-            block.id = blockId;
-            block.className = 'spk-link-paste-block';
-            block.innerHTML =
-                '<button type="button" class="spk-link-toggle-btn">🔗 Hoặc dán link ghi âm (SoundCloud...)</button>' +
-                '<div class="spk-link-form" style="display:none;">' +
-                    '<input type="text" class="spk-link-input" placeholder="Dán link SoundCloud (hoặc link ghi âm khác) vào đây...">' +
-                    '<button type="button" class="spk-link-send-btn">Gửi Link</button>' +
-                    '<div class="spk-link-status"></div>' +
-                '</div>';
-            sendBtn.parentNode.insertBefore(block, sendBtn.nextSibling);
-            block.querySelector('.spk-link-toggle-btn').addEventListener('click', () => {
-                const form = block.querySelector('.spk-link-form');
-                form.style.display = form.style.display === 'none' ? 'block' : 'none';
-            });
-        }
-        // Gán lại onclick (thay vì addEventListener) để lượt câu/đề mới nhất luôn thắng, không
-        // cộng dồn nhiều trình xử lý cũ từ những lần rút câu trước đó cho cùng 1 nút.
-        const input = block.querySelector('.spk-link-input');
-        const sendLinkBtn = block.querySelector('.spk-link-send-btn');
-        const linkStatus = block.querySelector('.spk-link-status');
-        sendLinkBtn.onclick = async () => {
-            const link = (input.value || '').trim();
-            if (!currentUserId) { linkStatus.textContent = 'Vui lòng đăng nhập để gửi ghi âm.'; return; }
-            if (!link) { linkStatus.textContent = 'Vui lòng dán link ghi âm trước khi gửi.'; return; }
-            if (!/^https?:\/\//i.test(link)) { linkStatus.textContent = 'Link không hợp lệ (phải bắt đầu bằng http:// hoặc https://).'; return; }
-            sendLinkBtn.disabled = true;
-            linkStatus.textContent = 'Đang gửi...';
-            try {
-                await spkSubmitLink({ itemType, itemKey, itemLabel, link });
-                linkStatus.textContent = '✅ Đã gửi link cho giảng viên chấm!';
-                input.value = '';
-                block.querySelector('.spk-link-form').style.display = 'none';
-                if (commentsEl) spkLoadComments(commentsEl, itemType, itemKey);
-            } catch (err) {
-                console.error('Lỗi khi gửi link ghi âm luyện nói:', err.message);
-                linkStatus.textContent = `❌ Gửi thất bại: ${err.message}`;
-            } finally {
-                sendLinkBtn.disabled = false;
-            }
-        };
     }
 
     window.speakingGrading = {
         attachSubmitUI: spkAttachSubmitUI,
         submit: spkSubmit,
         loadComments: spkLoadComments,
-        typeLabels: SPK_TYPE_LABELS
+        typeLabels: SPK_TYPE_LABELS,
+        // [MỚI] Lộ thêm bảng dữ liệu + hàm dựng thẻ ghi âm, để mục "Ghi âm của bạn" ở từng dạng
+        // bài (ls1/ls2/lssh/lsmt/lsarea — mỗi dạng là 1 IIFE RIÊNG, không tự thấy được biến nội
+        // bộ "SPK_TABLE"/"spkBuildCard" khai báo trong initSpeakingGradingModule() này) có thể
+        // dùng lại được, thay vì gọi thẳng "SPK_TABLE"/"spkBuildCard" (sẽ báo lỗi vì không tồn
+        // tại trong phạm vi của các IIFE đó).
+        table: SPK_TABLE,
+        buildCard: spkBuildCard
     };
 
     // ---------- BADGE + BẢNG "GHI ÂM LUYỆN NÓI ĐANG CHỜ CHẤM" (chỉ giảng viên) trên tab Nói ----------
@@ -26087,6 +26099,12 @@ function toggleCompletion(symbolElement) {
     const ls1ItemCountEl  = document.getElementById('ls1-item-count');
     const ls1StartCard    = document.getElementById('ls1-start-card');
     const ls1StartCountEl = document.getElementById('ls1-start-count');
+    // [MỚI] Thẻ + panel "Ghi âm của bạn" — xem lại các câu đã ghi âm đã duyệt/đang chờ chấm.
+    const ls1ReviewCard    = document.getElementById('ls1-review-card');
+    const ls1ReviewCountEl = document.getElementById('ls1-review-count');
+    const ls1ReviewPanel   = document.getElementById('ls1-review-panel');
+    const ls1ReviewBackBtn = document.getElementById('ls1-review-back-btn');
+    const ls1ReviewListEl  = document.getElementById('ls1-review-list');
 
     const ls1ManagePanel    = document.getElementById('ls1-manage-panel');
     const ls1ManageBackBtn  = document.getElementById('ls1-manage-back-btn');
@@ -26109,7 +26127,6 @@ function toggleCompletion(symbolElement) {
 
     const LS1_TABLE = 'speaking_lv1_qa_items';
     const LS1_TOTAL_QUESTIONS = 20;
-    const LS1_MIN_ITEMS = 4; // số câu tối thiểu trong ngân hàng để cho phép bắt đầu luyện tập
     const LS1_TYPE_META = {
         dien:        { label: 'Điền đáp án mẫu', icon: '📝' },
         trac_nghiem: { label: 'Chọn đáp án mẫu', icon: '☑️' }
@@ -26205,14 +26222,17 @@ function toggleCompletion(symbolElement) {
     }
     function ls1PlayItemAudio(item) {
         const url = ((item && item.audio_url) || '').trim();
-        if (url) {
+        if (url && (isDirectAudioLink(url) || url.includes('/storage/v1/object/public/'))) {
             const audio = ls1GetAudioEl();
             if (audio.src !== url) audio.src = url;
             audio.currentTime = 0;
             audio.play().catch(err => console.error('Lỗi khi phát file mp3 Nói — Hỏi-đáp:', err.message));
-        } else {
+        } else if (!url) {
             ls1Speak(item ? item.question_text : '');
         }
+        // Nếu có url nhưng không phải file audio trực tiếp (VD: link SoundCloud), không làm gì
+        // thêm ở đây — khung nhúng (đồng bộ qua syncModelAudioEmbed ngay khi câu hỏi hiện ra) đã
+        // sẵn sàng để học viên tự bấm nghe.
     }
     function ls1StopAudio() {
         if ('speechSynthesis' in window) window.speechSynthesis.cancel();
@@ -26369,18 +26389,108 @@ function toggleCompletion(symbolElement) {
         if (stage1Panel) stage1Panel.style.display = 'block';
     });
 
+    // [MỚI] Map: item_key (string id câu hỏi) -> 'approved' | 'needs_redo' | 'pending', tính theo
+    // ghi âm CỦA CHÍNH học viên đang đăng nhập (bảng speaking_comments, item_type = 'ls1_qa').
+    // Dùng window.speakingGrading.table thay vì "SPK_TABLE" — biến đó khai báo riêng bên trong
+    // initSpeakingGradingModule() (1 IIFE khác), module này không thấy được trực tiếp.
+    let ls1GradingMap = new Map();
+    async function ls1GetGradingMap() {
+        if (!currentUserId || !window.speakingGrading) return new Map();
+        const map = new Map();
+        try {
+            const { data, error } = await sb.from(window.speakingGrading.table)
+                .select('item_key, graded, is_correct')
+                .eq('item_type', 'ls1_qa')
+                .eq('user_id', currentUserId);
+            if (!error && data) {
+                data.forEach(row => {
+                    const state = !row.graded ? 'pending' : (row.is_correct === false ? 'needs_redo' : 'approved');
+                    const prev = map.get(row.item_key);
+                    if (!prev || state === 'approved') map.set(row.item_key, state);
+                });
+            }
+        } catch (e) { /* không chặn màn hình giới thiệu nếu bước này lỗi */ }
+        return map;
+    }
+
+    // [MỚI] Panel "Ghi âm của bạn": chỉ liệt kê câu ĐÃ DUYỆT hoặc ĐANG CHỜ CHẤM — câu bị yêu
+    // cầu ghi âm lại sẽ không hiện ở đây mà quay về vòng luyện tập (xem ls1StartQuiz()).
+    async function ls1LoadMyRecordings() {
+        ls1ReviewListEl.innerHTML = '<p class="kid-hint">Đang tải...</p>';
+        if (!currentUserId) {
+            ls1ReviewListEl.innerHTML = '<p class="kid-hint">Vui lòng đăng nhập để xem ghi âm của bạn.</p>';
+            return;
+        }
+        if (!window.speakingGrading) {
+            ls1ReviewListEl.innerHTML = '<p class="kid-hint">Lỗi: chưa tải xong hệ thống chấm ghi âm, hãy tải lại trang.</p>';
+            return;
+        }
+        const { data, error } = await sb.from(window.speakingGrading.table)
+            .select('*')
+            .eq('item_type', 'ls1_qa')
+            .eq('user_id', currentUserId)
+            .order('created_at', { ascending: false });
+        if (error) {
+            ls1ReviewListEl.innerHTML = `<p class="kid-hint">Lỗi khi tải: ${ls1Esc(error.message)}</p>`;
+            return;
+        }
+        const visibleRows = (data || []).filter(row => !row.graded || row.is_correct !== false);
+        ls1ReviewListEl.innerHTML = '';
+        if (!visibleRows.length) {
+            ls1ReviewListEl.innerHTML = '<p class="kid-hint">Bạn chưa có ghi âm nào đã duyệt hoặc đang chờ chấm cho phần này.</p>';
+            return;
+        }
+        visibleRows.forEach(row => {
+            const wrap = document.createElement('div');
+            wrap.className = 'spk-review-item';
+            const titleEl = document.createElement('div');
+            titleEl.className = 'spk-review-item-title';
+            titleEl.textContent = '💬 ' + (row.item_label || 'Phản xạ hỏi–đáp');
+            wrap.appendChild(titleEl);
+            wrap.appendChild(window.speakingGrading.buildCard(row));
+            ls1ReviewListEl.appendChild(wrap);
+        });
+    }
+
     async function ls1RefreshIntro() {
         ls1ManageBtn.style.display = isTeacher ? 'inline-block' : 'none';
         await ls1LoadItems();
         if (ls1ItemCountEl) ls1ItemCountEl.textContent = String(ls1Items.length);
         if (ls1StartCountEl) {
-            ls1StartCountEl.textContent = ls1Items.length >= LS1_MIN_ITEMS
+            ls1StartCountEl.textContent = ls1Items.length
                 ? `Ngẫu nhiên ${Math.min(LS1_TOTAL_QUESTIONS, ls1Items.length)} / ${ls1Items.length} câu đã soạn`
-                : `Chưa đủ câu hỏi (${ls1Items.length}/${LS1_MIN_ITEMS} tối thiểu) — hãy quay lại sau`;
+                : 'Chưa có câu hỏi nào — hãy quay lại sau';
+        }
+        // [MỚI] Thẻ "Ghi âm của bạn" chỉ hiện khi có ít nhất 1 câu đã duyệt hoặc đang chờ chấm.
+        ls1GradingMap = await ls1GetGradingMap();
+        if (ls1ReviewCard) {
+            const states = [...ls1GradingMap.values()];
+            const approvedCount = states.filter(v => v === 'approved').length;
+            const pendingCount = states.filter(v => v === 'pending').length;
+            if (approvedCount + pendingCount > 0) {
+                ls1ReviewCard.style.display = '';
+                if (ls1ReviewCountEl) ls1ReviewCountEl.textContent = `${approvedCount} đã duyệt, ${pendingCount} đang chờ chấm`;
+            } else {
+                ls1ReviewCard.style.display = 'none';
+            }
         }
     }
 
     ls1StartCard.addEventListener('click', ls1StartQuiz);
+    if (ls1ReviewCard) {
+        ls1ReviewCard.addEventListener('click', () => {
+            ls1Panel.style.display = 'none';
+            ls1ReviewPanel.style.display = 'block';
+            ls1LoadMyRecordings();
+        });
+    }
+    if (ls1ReviewBackBtn) {
+        ls1ReviewBackBtn.addEventListener('click', () => {
+            ls1ReviewPanel.style.display = 'none';
+            ls1Panel.style.display = 'block';
+            ls1RefreshIntro();
+        });
+    }
 
     // ---------- Khu vực giảng viên soạn nội dung ----------
     let ls1CurrentType = 'dien';
@@ -26413,8 +26523,8 @@ function toggleCompletion(symbolElement) {
 
     const LS1_AUDIO_FIELD_HTML = `
         <div class="ln2-field">
-            <label>Link file .mp3 câu hỏi (tuỳ chọn). Để trống nếu muốn dùng giọng đọc tự động.</label>
-            <input type="text" id="ls1-f-audio-url" class="news-edit-input" placeholder="VD: https://.../cau-hoi-1.mp3">
+            <label>Link file .mp3 câu hỏi, hoặc link SoundCloud (tuỳ chọn). Để trống nếu muốn dùng giọng đọc tự động.</label>
+            <input type="text" id="ls1-f-audio-url" class="news-edit-input" placeholder="VD: https://.../cau-hoi-1.mp3 hoặc link SoundCloud">
         </div>
     `;
 
@@ -26633,7 +26743,7 @@ function toggleCompletion(symbolElement) {
             return `
                 <div class="ln2-item-row" data-item-id="${item.id}">
                     <span class="ln2-item-type-badge">${meta.icon} ${ls1Esc(meta.label)}</span>
-                    ${item.audio_url ? '<span class="ln2-item-audio-badge" title="Đã gắn link .mp3">🎵</span>' : ''}
+                    ${item.audio_url ? '<span class="ln2-item-audio-badge" title="Đã gắn link âm thanh mẫu (mp3/SoundCloud)">🎵</span>' : ''}
                     <span class="ln2-item-preview">${ls1Esc(item.question_text)}</span>
                     <div class="ln2-item-actions">
                         <button type="button" class="ln2-item-edit-btn" data-id="${item.id}" title="Sửa">✏️</button>
@@ -26682,12 +26792,24 @@ function toggleCompletion(symbolElement) {
         ls1QuizFeedback.className = 'thcs-translate-feedback';
 
         await ls1LoadItems();
-        if (ls1Items.length < LS1_MIN_ITEMS) {
-            ls1QuizBody.innerHTML = `<p class="kid-hint">⚠️ Kho câu hỏi chưa đủ để luyện tập (cần ít nhất ${LS1_MIN_ITEMS} câu). Hãy quay lại sau khi giảng viên soạn thêm câu hỏi nhé!</p>`;
+        if (!ls1Items.length) {
+            ls1QuizBody.innerHTML = `<p class="kid-hint">⚠️ Kho câu hỏi hiện chưa có câu nào. Hãy quay lại sau khi giảng viên soạn nội dung nhé!</p>`;
             return;
         }
 
-        const picked = ls1Shuffle(ls1Items).slice(0, Math.min(LS1_TOTAL_QUESTIONS, ls1Items.length));
+        // [MỚI] Bỏ qua câu đã DUYỆT hoặc ĐANG CHỜ CHẤM — học viên có thể xem lại trong mục
+        // "Ghi âm của bạn". Câu bị yêu cầu ghi âm lại vẫn ở trong vòng luyện tập để làm lại.
+        ls1GradingMap = await ls1GetGradingMap();
+        const availableQuestions = ls1Items.filter(it => {
+            const state = ls1GradingMap.get(String(it.id));
+            return state !== 'approved' && state !== 'pending';
+        });
+        if (!availableQuestions.length) {
+            ls1QuizBody.innerHTML = '<p class="kid-hint">🎉 Bạn đã ghi âm hết tất cả câu hỏi hiện có! Xem lại trong mục "Ghi âm của bạn", hoặc quay lại sau khi giảng viên soạn thêm.</p>';
+            return;
+        }
+
+        const picked = ls1Shuffle(availableQuestions).slice(0, Math.min(LS1_TOTAL_QUESTIONS, availableQuestions.length));
         ls1State = { questions: picked, index: 0, score: 0, busy: false };
         ls1RenderQuestion();
     }
@@ -26721,13 +26843,14 @@ function toggleCompletion(symbolElement) {
                 ls1State.blankAnswer = q.blank_key || '';
             }
             ls1QuizBody.innerHTML = `
-                <div class="ln-play-row">
-                    <button type="button" class="kid-btn kid-btn-primary" id="ls1-play-btn">🔊 Nghe câu hỏi</button>
-                </div>
+                <div class="ln-play-row" id="ls1-play-row"></div>
                 <p class="ln2-mc-question">${ls1Esc(q.question_text)}</p>
                 <div class="thcs-translate-sentence">${sentenceHtml}</div>
             `;
-            document.getElementById('ls1-play-btn').addEventListener('click', () => ls1PlayItemAudio(q));
+            // [MỚI] Bỏ nút "🔊 Nghe câu hỏi" — câu hỏi tự động phát ngay khi hiện ra (file .mp3
+            // trực tiếp phát thẳng; link SoundCloud tự phát qua khung nhúng bên dưới).
+            ls1PlayItemAudio(q);
+            syncModelAudioEmbed('ls1-play-row', (q.audio_url || '').trim(), null, { autoplay: true });
             ls1QuizControls.innerHTML = `<button type="button" class="kid-btn kid-btn-primary" id="ls1-check-btn">✔️ Kiểm tra</button>`;
             const input = document.getElementById('ls1-blank-input');
             input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); ls1CheckAnswer(); } });
@@ -26737,9 +26860,7 @@ function toggleCompletion(symbolElement) {
             const options = q.options || [];
             const optOrder = ls1Shuffle(options.map((_, i) => i));
             ls1QuizBody.innerHTML = `
-                <div class="ln-play-row">
-                    <button type="button" class="kid-btn kid-btn-primary" id="ls1-play-btn">🔊 Nghe câu hỏi</button>
-                </div>
+                <div class="ln-play-row" id="ls1-play-row"></div>
                 <p class="ln2-mc-question">${ls1Esc(q.question_text)}</p>
                 <div class="ln2-mc-grid" id="ls1-mc-grid">
                     ${optOrder.map((origIdx, pos) => `
@@ -26750,7 +26871,10 @@ function toggleCompletion(symbolElement) {
                     `).join('')}
                 </div>
             `;
-            document.getElementById('ls1-play-btn').addEventListener('click', () => ls1PlayItemAudio(q));
+            // [MỚI] Bỏ nút "🔊 Nghe câu hỏi" — câu hỏi tự động phát ngay khi hiện ra (file .mp3
+            // trực tiếp phát thẳng; link SoundCloud tự phát qua khung nhúng bên dưới).
+            ls1PlayItemAudio(q);
+            syncModelAudioEmbed('ls1-play-row', (q.audio_url || '').trim(), null, { autoplay: true });
             ls1State.mcSelected = null;
             document.getElementById('ls1-mc-grid').addEventListener('click', (e) => {
                 const btn = e.target.closest('.ln2-mc-option');
@@ -26866,6 +26990,12 @@ function toggleCompletion(symbolElement) {
     const ls2ItemCountEl  = document.getElementById('ls2-item-count');
     const ls2StartCard    = document.getElementById('ls2-start-card');
     const ls2StartCountEl = document.getElementById('ls2-start-count');
+    // [MỚI] Thẻ + panel "Ghi âm của bạn" — xem lại các tình huống đã ghi âm đã duyệt/đang chờ chấm.
+    const ls2ReviewCard    = document.getElementById('ls2-review-card');
+    const ls2ReviewCountEl = document.getElementById('ls2-review-count');
+    const ls2ReviewPanel   = document.getElementById('ls2-review-panel');
+    const ls2ReviewBackBtn = document.getElementById('ls2-review-back-btn');
+    const ls2ReviewListEl  = document.getElementById('ls2-review-list');
 
     const ls2ManagePanel    = document.getElementById('ls2-manage-panel');
     const ls2ManageBackBtn  = document.getElementById('ls2-manage-back-btn');
@@ -26887,7 +27017,6 @@ function toggleCompletion(symbolElement) {
 
     const LS2_TABLE = 'speaking_lv1_opener_items';
     const LS2_TOTAL_QUESTIONS = 20;
-    const LS2_MIN_ITEMS = 4;
     const LS2_CONTEXT_META = {
         stranger:     { label: 'Người lạ', icon: '👤', cls: 'ls-tag-stranger' },
         acquaintance: { label: 'Người quen', icon: '🙋', cls: 'ls-tag-acquaintance' }
@@ -26954,14 +27083,16 @@ function toggleCompletion(symbolElement) {
     }
     function ls2PlayModelAudio(item, text) {
         const url = ((item && item.audio_url) || '').trim();
-        if (url) {
+        if (url && (isDirectAudioLink(url) || url.includes('/storage/v1/object/public/'))) {
             const audio = ls2GetAudioEl();
             if (audio.src !== url) audio.src = url;
             audio.currentTime = 0;
             audio.play().catch(err => console.error('Lỗi khi phát file mp3 Nói — Mở lời hội thoại:', err.message));
-        } else {
+        } else if (!url) {
             ls2Speak(text);
         }
+        // Link không phải file audio trực tiếp (VD: SoundCloud) → dựa vào khung nhúng đã đồng bộ
+        // qua syncModelAudioEmbed(), không cần làm gì thêm ở đây.
     }
     function ls2StopAudio() {
         if ('speechSynthesis' in window) window.speechSynthesis.cancel();
@@ -27049,7 +27180,10 @@ function toggleCompletion(symbolElement) {
             }
         });
 
-        if (modelBtn) modelBtn.addEventListener('click', () => ls2PlayModelAudio(item, targetText));
+        if (modelBtn) {
+            modelBtn.addEventListener('click', () => ls2PlayModelAudio(item, targetText));
+            syncModelAudioEmbed('ls2-rec-model-btn', ((item && item.audio_url) || '').trim());
+        }
 
         // [MỚI] Gửi ghi âm cho giảng viên chấm + hiện danh sách ghi âm/nhận xét đã có cho tình huống này.
         if (window.speakingGrading && item) {
@@ -27116,18 +27250,106 @@ function toggleCompletion(symbolElement) {
         if (stage1Panel) stage1Panel.style.display = 'block';
     });
 
+    // [MỚI] Map: item_key (string id tình huống) -> 'approved' | 'needs_redo' | 'pending', tính
+    // theo ghi âm CỦA CHÍNH học viên đang đăng nhập (item_type = 'ls1_opener').
+    let ls2GradingMap = new Map();
+    async function ls2GetGradingMap() {
+        if (!currentUserId || !window.speakingGrading) return new Map();
+        const map = new Map();
+        try {
+            const { data, error } = await sb.from(window.speakingGrading.table)
+                .select('item_key, graded, is_correct')
+                .eq('item_type', 'ls1_opener')
+                .eq('user_id', currentUserId);
+            if (!error && data) {
+                data.forEach(row => {
+                    const state = !row.graded ? 'pending' : (row.is_correct === false ? 'needs_redo' : 'approved');
+                    const prev = map.get(row.item_key);
+                    if (!prev || state === 'approved') map.set(row.item_key, state);
+                });
+            }
+        } catch (e) { /* không chặn màn hình giới thiệu nếu bước này lỗi */ }
+        return map;
+    }
+
+    // [MỚI] Panel "Ghi âm của bạn": chỉ liệt kê tình huống ĐÃ DUYỆT hoặc ĐANG CHỜ CHẤM — tình
+    // huống bị yêu cầu ghi âm lại sẽ quay về vòng luyện tập (xem ls2StartQuiz()).
+    async function ls2LoadMyRecordings() {
+        ls2ReviewListEl.innerHTML = '<p class="kid-hint">Đang tải...</p>';
+        if (!currentUserId) {
+            ls2ReviewListEl.innerHTML = '<p class="kid-hint">Vui lòng đăng nhập để xem ghi âm của bạn.</p>';
+            return;
+        }
+        if (!window.speakingGrading) {
+            ls2ReviewListEl.innerHTML = '<p class="kid-hint">Lỗi: chưa tải xong hệ thống chấm ghi âm, hãy tải lại trang.</p>';
+            return;
+        }
+        const { data, error } = await sb.from(window.speakingGrading.table)
+            .select('*')
+            .eq('item_type', 'ls1_opener')
+            .eq('user_id', currentUserId)
+            .order('created_at', { ascending: false });
+        if (error) {
+            ls2ReviewListEl.innerHTML = `<p class="kid-hint">Lỗi khi tải: ${ls2Esc(error.message)}</p>`;
+            return;
+        }
+        const visibleRows = (data || []).filter(row => !row.graded || row.is_correct !== false);
+        ls2ReviewListEl.innerHTML = '';
+        if (!visibleRows.length) {
+            ls2ReviewListEl.innerHTML = '<p class="kid-hint">Bạn chưa có ghi âm nào đã duyệt hoặc đang chờ chấm cho phần này.</p>';
+            return;
+        }
+        visibleRows.forEach(row => {
+            const wrap = document.createElement('div');
+            wrap.className = 'spk-review-item';
+            const titleEl = document.createElement('div');
+            titleEl.className = 'spk-review-item-title';
+            titleEl.textContent = '🗣️ ' + (row.item_label || 'Mở lời hội thoại');
+            wrap.appendChild(titleEl);
+            wrap.appendChild(window.speakingGrading.buildCard(row));
+            ls2ReviewListEl.appendChild(wrap);
+        });
+    }
+
     async function ls2RefreshIntro() {
         ls2ManageBtn.style.display = isTeacher ? 'inline-block' : 'none';
         await ls2LoadItems();
         if (ls2ItemCountEl) ls2ItemCountEl.textContent = String(ls2Items.length);
         if (ls2StartCountEl) {
-            ls2StartCountEl.textContent = ls2Items.length >= LS2_MIN_ITEMS
+            ls2StartCountEl.textContent = ls2Items.length
                 ? `Ngẫu nhiên ${Math.min(LS2_TOTAL_QUESTIONS, ls2Items.length)} / ${ls2Items.length} tình huống đã soạn`
-                : `Chưa đủ tình huống (${ls2Items.length}/${LS2_MIN_ITEMS} tối thiểu) — hãy quay lại sau`;
+                : 'Chưa có tình huống nào — hãy quay lại sau';
+        }
+        // [MỚI] Thẻ "Ghi âm của bạn" chỉ hiện khi có ít nhất 1 tình huống đã duyệt/đang chờ chấm.
+        ls2GradingMap = await ls2GetGradingMap();
+        if (ls2ReviewCard) {
+            const states = [...ls2GradingMap.values()];
+            const approvedCount = states.filter(v => v === 'approved').length;
+            const pendingCount = states.filter(v => v === 'pending').length;
+            if (approvedCount + pendingCount > 0) {
+                ls2ReviewCard.style.display = '';
+                if (ls2ReviewCountEl) ls2ReviewCountEl.textContent = `${approvedCount} đã duyệt, ${pendingCount} đang chờ chấm`;
+            } else {
+                ls2ReviewCard.style.display = 'none';
+            }
         }
     }
 
     ls2StartCard.addEventListener('click', ls2StartQuiz);
+    if (ls2ReviewCard) {
+        ls2ReviewCard.addEventListener('click', () => {
+            ls2Panel.style.display = 'none';
+            ls2ReviewPanel.style.display = 'block';
+            ls2LoadMyRecordings();
+        });
+    }
+    if (ls2ReviewBackBtn) {
+        ls2ReviewBackBtn.addEventListener('click', () => {
+            ls2ReviewPanel.style.display = 'none';
+            ls2Panel.style.display = 'block';
+            ls2RefreshIntro();
+        });
+    }
 
     // ---------- Khu vực giảng viên soạn tình huống ----------
     let ls2EditingId = null;
@@ -27235,8 +27457,8 @@ function toggleCompletion(symbolElement) {
                 <input type="text" id="ls2-f-vi" class="news-edit-input" placeholder="VD: Chào bạn, mình là hàng xóm mới ở tầng 3.">
             </div>
             <div class="ln2-field">
-                <label>Link file .mp3 (tuỳ chọn). Để trống nếu muốn dùng giọng đọc tự động.</label>
-                <input type="text" id="ls2-f-audio-url" class="news-edit-input" placeholder="VD: https://.../tinh-huong-1.mp3">
+                <label>Link file .mp3, hoặc link SoundCloud (tuỳ chọn). Để trống nếu muốn dùng giọng đọc tự động.</label>
+                <input type="text" id="ls2-f-audio-url" class="news-edit-input" placeholder="VD: https://.../tinh-huong-1.mp3 hoặc link SoundCloud">
             </div>
         `;
         ls2WireMcRemoveButtons();
@@ -27337,7 +27559,7 @@ function toggleCompletion(symbolElement) {
             return `
                 <div class="ln2-item-row" data-item-id="${item.id}">
                     <span class="ln2-item-type-badge">${ctxMeta.icon} ${ls2Esc(ctxMeta.label)}</span>
-                    ${item.audio_url ? '<span class="ln2-item-audio-badge" title="Đã gắn link .mp3">🎵</span>' : ''}
+                    ${item.audio_url ? '<span class="ln2-item-audio-badge" title="Đã gắn link âm thanh mẫu (mp3/SoundCloud)">🎵</span>' : ''}
                     <span class="ln2-item-preview">${ls2Esc(item.situation)}</span>
                     <div class="ln2-item-actions">
                         <button type="button" class="ln2-item-edit-btn" data-id="${item.id}" title="Sửa">✏️</button>
@@ -27386,12 +27608,24 @@ function toggleCompletion(symbolElement) {
         ls2QuizFeedback.className = 'thcs-translate-feedback';
 
         await ls2LoadItems();
-        if (ls2Items.length < LS2_MIN_ITEMS) {
-            ls2QuizBody.innerHTML = `<p class="kid-hint">⚠️ Kho tình huống chưa đủ để luyện tập (cần ít nhất ${LS2_MIN_ITEMS} tình huống). Hãy quay lại sau khi giảng viên soạn thêm nhé!</p>`;
+        if (!ls2Items.length) {
+            ls2QuizBody.innerHTML = `<p class="kid-hint">⚠️ Kho tình huống hiện chưa có tình huống nào. Hãy quay lại sau khi giảng viên soạn nội dung nhé!</p>`;
             return;
         }
 
-        const picked = ls2Shuffle(ls2Items).slice(0, Math.min(LS2_TOTAL_QUESTIONS, ls2Items.length));
+        // [MỚI] Bỏ qua tình huống đã DUYỆT hoặc ĐANG CHỜ CHẤM — xem lại trong "Ghi âm của bạn".
+        // Tình huống bị yêu cầu ghi âm lại vẫn ở trong vòng luyện tập để làm lại.
+        ls2GradingMap = await ls2GetGradingMap();
+        const availableQuestions = ls2Items.filter(it => {
+            const state = ls2GradingMap.get(String(it.id));
+            return state !== 'approved' && state !== 'pending';
+        });
+        if (!availableQuestions.length) {
+            ls2QuizBody.innerHTML = '<p class="kid-hint">🎉 Bạn đã ghi âm hết tất cả tình huống hiện có! Xem lại trong mục "Ghi âm của bạn", hoặc quay lại sau khi giảng viên soạn thêm.</p>';
+            return;
+        }
+
+        const picked = ls2Shuffle(availableQuestions).slice(0, Math.min(LS2_TOTAL_QUESTIONS, availableQuestions.length));
         ls2State = { questions: picked, index: 0, score: 0, busy: false };
         ls2RenderQuestion();
     }
@@ -27556,6 +27790,12 @@ function toggleCompletion(symbolElement) {
     const lsshItemCountEl  = document.getElementById('lssh-item-count');
     const lsshStartCard    = document.getElementById('lssh-start-card');
     const lsshStartCountEl = document.getElementById('lssh-start-count');
+    // [MỚI] Thẻ + panel "Ghi âm của bạn" — xem lại các đoạn đã ghi âm đã duyệt/đang chờ chấm.
+    const lsshReviewCard    = document.getElementById('lssh-review-card');
+    const lsshReviewCountEl = document.getElementById('lssh-review-count');
+    const lsshReviewPanel   = document.getElementById('lssh-review-panel');
+    const lsshReviewBackBtn = document.getElementById('lssh-review-back-btn');
+    const lsshReviewListEl  = document.getElementById('lssh-review-list');
 
     const lsshManagePanel    = document.getElementById('lssh-manage-panel');
     const lsshManageBackBtn  = document.getElementById('lssh-manage-back-btn');
@@ -27576,7 +27816,6 @@ function toggleCompletion(symbolElement) {
 
     const LSSH_TABLE = 'speaking_lv2_shadow_items';
     const LSSH_TOTAL_ITEMS = 15;
-    const LSSH_MIN_ITEMS = 3; // số đoạn tối thiểu trong ngân hàng để cho phép bắt đầu luyện tập
 
     // ---------- Tiện ích dùng chung ----------
     function lsshEsc(s) {
@@ -27609,15 +27848,17 @@ function toggleCompletion(symbolElement) {
     }
     function lsshPlayAt(item, rate) {
         const url = ((item && item.audio_url) || '').trim();
-        if (url) {
+        if (url && (isDirectAudioLink(url) || url.includes('/storage/v1/object/public/'))) {
             const audio = lsshGetAudioEl();
             if (audio.src !== url) audio.src = url;
             audio.currentTime = 0;
             audio.playbackRate = rate || 1;
             audio.play().catch(err => console.error('Lỗi khi phát file mp3 Shadowing:', err.message));
-        } else {
+        } else if (!url) {
             lsshSpeakAt(item ? item.text : '', rate);
         }
+        // Link không phải file audio trực tiếp (VD: SoundCloud) → không hỗ trợ chỉnh tốc độ, học
+        // viên nghe qua khung nhúng đã đồng bộ qua syncModelAudioEmbed() (xem lsshRenderItem()).
     }
     function lsshStopAudio() {
         if ('speechSynthesis' in window) window.speechSynthesis.cancel();
@@ -27762,18 +28003,106 @@ function toggleCompletion(symbolElement) {
         if (stage2Panel) stage2Panel.style.display = 'block';
     });
 
+    // [MỚI] Map: item_key (string id đoạn hội thoại) -> 'approved' | 'needs_redo' | 'pending',
+    // tính theo ghi âm CỦA CHÍNH học viên đang đăng nhập (item_type = 'ls2_shadow').
+    let lsshGradingMap = new Map();
+    async function lsshGetGradingMap() {
+        if (!currentUserId || !window.speakingGrading) return new Map();
+        const map = new Map();
+        try {
+            const { data, error } = await sb.from(window.speakingGrading.table)
+                .select('item_key, graded, is_correct')
+                .eq('item_type', 'ls2_shadow')
+                .eq('user_id', currentUserId);
+            if (!error && data) {
+                data.forEach(row => {
+                    const state = !row.graded ? 'pending' : (row.is_correct === false ? 'needs_redo' : 'approved');
+                    const prev = map.get(row.item_key);
+                    if (!prev || state === 'approved') map.set(row.item_key, state);
+                });
+            }
+        } catch (e) { /* không chặn màn hình giới thiệu nếu bước này lỗi */ }
+        return map;
+    }
+
+    // [MỚI] Panel "Ghi âm của bạn": chỉ liệt kê đoạn ĐÃ DUYỆT hoặc ĐANG CHỜ CHẤM — đoạn bị yêu
+    // cầu ghi âm lại sẽ quay về vòng luyện tập (xem lsshStartPractice()).
+    async function lsshLoadMyRecordings() {
+        lsshReviewListEl.innerHTML = '<p class="kid-hint">Đang tải...</p>';
+        if (!currentUserId) {
+            lsshReviewListEl.innerHTML = '<p class="kid-hint">Vui lòng đăng nhập để xem ghi âm của bạn.</p>';
+            return;
+        }
+        if (!window.speakingGrading) {
+            lsshReviewListEl.innerHTML = '<p class="kid-hint">Lỗi: chưa tải xong hệ thống chấm ghi âm, hãy tải lại trang.</p>';
+            return;
+        }
+        const { data, error } = await sb.from(window.speakingGrading.table)
+            .select('*')
+            .eq('item_type', 'ls2_shadow')
+            .eq('user_id', currentUserId)
+            .order('created_at', { ascending: false });
+        if (error) {
+            lsshReviewListEl.innerHTML = `<p class="kid-hint">Lỗi khi tải: ${lsshEsc(error.message)}</p>`;
+            return;
+        }
+        const visibleRows = (data || []).filter(row => !row.graded || row.is_correct !== false);
+        lsshReviewListEl.innerHTML = '';
+        if (!visibleRows.length) {
+            lsshReviewListEl.innerHTML = '<p class="kid-hint">Bạn chưa có ghi âm nào đã duyệt hoặc đang chờ chấm cho phần này.</p>';
+            return;
+        }
+        visibleRows.forEach(row => {
+            const wrap = document.createElement('div');
+            wrap.className = 'spk-review-item';
+            const titleEl = document.createElement('div');
+            titleEl.className = 'spk-review-item-title';
+            titleEl.textContent = '🎧 ' + (row.item_label || 'Shadowing');
+            wrap.appendChild(titleEl);
+            wrap.appendChild(window.speakingGrading.buildCard(row));
+            lsshReviewListEl.appendChild(wrap);
+        });
+    }
+
     async function lsshRefreshIntro() {
         lsshManageBtn.style.display = isTeacher ? 'inline-block' : 'none';
         await lsshLoadItems();
         if (lsshItemCountEl) lsshItemCountEl.textContent = String(lsshItems.length);
         if (lsshStartCountEl) {
-            lsshStartCountEl.textContent = lsshItems.length >= LSSH_MIN_ITEMS
+            lsshStartCountEl.textContent = lsshItems.length
                 ? `Ngẫu nhiên ${Math.min(LSSH_TOTAL_ITEMS, lsshItems.length)} / ${lsshItems.length} đoạn đã soạn`
-                : `Chưa đủ đoạn hội thoại (${lsshItems.length}/${LSSH_MIN_ITEMS} tối thiểu) — hãy quay lại sau`;
+                : 'Chưa có đoạn hội thoại nào — hãy quay lại sau';
+        }
+        // [MỚI] Thẻ "Ghi âm của bạn" chỉ hiện khi có ít nhất 1 đoạn đã duyệt/đang chờ chấm.
+        lsshGradingMap = await lsshGetGradingMap();
+        if (lsshReviewCard) {
+            const states = [...lsshGradingMap.values()];
+            const approvedCount = states.filter(v => v === 'approved').length;
+            const pendingCount = states.filter(v => v === 'pending').length;
+            if (approvedCount + pendingCount > 0) {
+                lsshReviewCard.style.display = '';
+                if (lsshReviewCountEl) lsshReviewCountEl.textContent = `${approvedCount} đã duyệt, ${pendingCount} đang chờ chấm`;
+            } else {
+                lsshReviewCard.style.display = 'none';
+            }
         }
     }
 
     lsshStartCard.addEventListener('click', lsshStartPractice);
+    if (lsshReviewCard) {
+        lsshReviewCard.addEventListener('click', () => {
+            lsshPanel.style.display = 'none';
+            lsshReviewPanel.style.display = 'block';
+            lsshLoadMyRecordings();
+        });
+    }
+    if (lsshReviewBackBtn) {
+        lsshReviewBackBtn.addEventListener('click', () => {
+            lsshReviewPanel.style.display = 'none';
+            lsshPanel.style.display = 'block';
+            lsshRefreshIntro();
+        });
+    }
 
     // ---------- Khu vực giảng viên soạn nội dung ----------
     let lsshEditingId = null;
@@ -27804,8 +28133,8 @@ function toggleCompletion(symbolElement) {
                 <textarea id="lssh-f-vi" class="news-edit-input" rows="2" placeholder="VD: Chào! Lâu rồi không gặp. Dạo này bạn thế nào?"></textarea>
             </div>
             <div class="ln2-field">
-                <label>Link file .mp3 giọng đọc tự nhiên (tuỳ chọn — nên có để luyện ngữ điệu thật; để trống thì dùng giọng đọc máy)</label>
-                <input type="text" id="lssh-f-audio-url" class="news-edit-input" placeholder="VD: https://.../doan-1.mp3">
+                <label>Link file .mp3 giọng đọc tự nhiên, hoặc link SoundCloud (tuỳ chọn — nên có để luyện ngữ điệu thật; để trống thì dùng giọng đọc máy). Lưu ý: link SoundCloud sẽ không chỉnh được tốc độ chậm/nhanh như file .mp3 trực tiếp.</label>
+                <input type="text" id="lssh-f-audio-url" class="news-edit-input" placeholder="VD: https://.../doan-1.mp3 hoặc link SoundCloud">
             </div>
         `;
     }
@@ -27883,7 +28212,7 @@ function toggleCompletion(symbolElement) {
         }
         lsshItemListEl.innerHTML = lsshItems.map(item => `
             <div class="ln2-item-row" data-item-id="${item.id}">
-                ${item.audio_url ? '<span class="ln2-item-audio-badge" title="Đã gắn link .mp3">🎵</span>' : '<span class="ln2-item-type-badge">🤖 Giọng máy</span>'}
+                ${item.audio_url ? '<span class="ln2-item-audio-badge" title="Đã gắn link âm thanh mẫu (mp3/SoundCloud)">🎵</span>' : '<span class="ln2-item-type-badge">🤖 Giọng máy</span>'}
                 <span class="ln2-item-preview">${lsshEsc(item.text)}</span>
                 <div class="ln2-item-actions">
                     <button type="button" class="ln2-item-edit-btn" data-id="${item.id}" title="Sửa">✏️</button>
@@ -27929,11 +28258,22 @@ function toggleCompletion(symbolElement) {
         lsshPracticeControls.innerHTML = '';
 
         await lsshLoadItems();
-        if (lsshItems.length < LSSH_MIN_ITEMS) {
-            lsshPracticeBody.innerHTML = `<p class="kid-hint">⚠️ Kho đoạn hội thoại chưa đủ để luyện tập (cần ít nhất ${LSSH_MIN_ITEMS} đoạn). Hãy quay lại sau khi giảng viên soạn thêm nhé!</p>`;
+        if (!lsshItems.length) {
+            lsshPracticeBody.innerHTML = `<p class="kid-hint">⚠️ Kho đoạn hội thoại hiện chưa có đoạn nào. Hãy quay lại sau khi giảng viên soạn nội dung nhé!</p>`;
             return;
         }
-        const picked = lsshShuffle(lsshItems).slice(0, Math.min(LSSH_TOTAL_ITEMS, lsshItems.length));
+        // [MỚI] Bỏ qua đoạn đã DUYỆT hoặc ĐANG CHỜ CHẤM — xem lại trong "Ghi âm của bạn". Đoạn
+        // bị yêu cầu ghi âm lại vẫn ở trong vòng luyện tập để làm lại.
+        lsshGradingMap = await lsshGetGradingMap();
+        const availableItems = lsshItems.filter(it => {
+            const state = lsshGradingMap.get(String(it.id));
+            return state !== 'approved' && state !== 'pending';
+        });
+        if (!availableItems.length) {
+            lsshPracticeBody.innerHTML = '<p class="kid-hint">🎉 Bạn đã ghi âm hết tất cả đoạn hội thoại hiện có! Xem lại trong mục "Ghi âm của bạn", hoặc quay lại sau khi giảng viên soạn thêm.</p>';
+            return;
+        }
+        const picked = lsshShuffle(availableItems).slice(0, Math.min(LSSH_TOTAL_ITEMS, availableItems.length));
         lsshState = { items: picked, index: 0 };
         lsshRenderItem();
     }
@@ -27949,7 +28289,7 @@ function toggleCompletion(symbolElement) {
                 <div class="lssh-text-main">${lsshEsc(q.text)}</div>
                 ${q.vi ? `<div class="lssh-text-vi">${lsshEsc(q.vi)}</div>` : ''}
             </div>
-            <div class="lssh-speed-row">
+            <div class="lssh-speed-row" id="lssh-speed-row">
                 <button type="button" class="kid-btn kid-btn-primary" id="lssh-play-1">🔊 Nghe tốc độ gốc</button>
                 <button type="button" class="kid-btn" id="lssh-play-075">🐢 Nghe chậm (0.75x)</button>
                 <button type="button" class="kid-btn" id="lssh-play-05">🐌 Rất chậm (0.5x)</button>
@@ -27959,6 +28299,11 @@ function toggleCompletion(symbolElement) {
         document.getElementById('lssh-play-1').addEventListener('click', () => lsshPlayAt(q, 1));
         document.getElementById('lssh-play-075').addEventListener('click', () => lsshPlayAt(q, 0.75));
         document.getElementById('lssh-play-05').addEventListener('click', () => lsshPlayAt(q, 0.5));
+        // [MỚI] Nếu giảng viên dán link SoundCloud (không phải file .mp3 trực tiếp) làm đoạn hội
+        // thoại mẫu, hiện khung nhúng để nghe — nhưng link ngoài dạng này sẽ KHÔNG chỉnh được tốc
+        // độ chậm/nhanh như 3 nút trên, nên thêm ghi chú nhắc giảng viên/học viên biết trước.
+        syncModelAudioEmbed('lssh-speed-row', (q.audio_url || '').trim(),
+            '🎧 Link ngoài (không chỉnh được tốc độ chậm/nhanh) — bấm nghe bên dưới:');
         lsshWireRecordBox(q);
 
         const isLast = lsshState.index + 1 >= lsshState.items.length;
@@ -28025,6 +28370,13 @@ function toggleCompletion(symbolElement) {
     const lsmtItemCountEl  = document.getElementById('lsmt-item-count');
     const lsmtStartCard    = document.getElementById('lsmt-start-card');
     const lsmtStartCountEl = document.getElementById('lsmt-start-count');
+    // [MỚI] Thẻ + panel "Ghi âm của bạn" — xem lại các chuỗi đã ghi âm và trạng thái giảng viên
+    // duyệt (xanh lá = đã duyệt, đỏ = cần ghi âm lại).
+    const lsmtReviewCard    = document.getElementById('lsmt-review-card');
+    const lsmtReviewCountEl = document.getElementById('lsmt-review-count');
+    const lsmtReviewPanel   = document.getElementById('lsmt-review-panel');
+    const lsmtReviewBackBtn = document.getElementById('lsmt-review-back-btn');
+    const lsmtReviewListEl  = document.getElementById('lsmt-review-list');
 
     const lsmtManagePanel    = document.getElementById('lsmt-manage-panel');
     const lsmtManageBackBtn  = document.getElementById('lsmt-manage-back-btn');
@@ -28045,7 +28397,6 @@ function toggleCompletion(symbolElement) {
 
     const LSMT_TABLE = 'speaking_lv2_narrate_items';
     const LSMT_TOTAL_ITEMS = 15;
-    const LSMT_MIN_ITEMS = 3;
     const LSMT_STEP_MIN = 3;
     const LSMT_STEP_MAX = 6;
     const LSMT_CONNECTORS = ['first', 'then', 'after that', 'next', 'because', 'so', 'finally'];
@@ -28079,14 +28430,16 @@ function toggleCompletion(symbolElement) {
     }
     function lsmtPlayModel(item) {
         const url = ((item && item.audio_url) || '').trim();
-        if (url) {
+        if (url && (isDirectAudioLink(url) || url.includes('/storage/v1/object/public/'))) {
             const audio = lsmtGetAudioEl();
             if (audio.src !== url) audio.src = url;
             audio.currentTime = 0;
             audio.play().catch(err => console.error('Lỗi khi phát file mp3 Miêu tả sự việc:', err.message));
-        } else {
+        } else if (!url) {
             lsmtSpeak(item.sample_narration);
         }
+        // Link không phải file audio trực tiếp (VD: SoundCloud) → dựa vào khung nhúng đã đồng bộ
+        // qua syncModelAudioEmbed() (xem lsmtRenderItem()), không cần làm gì thêm ở đây.
     }
     function lsmtStopAudio() {
         if ('speechSynthesis' in window) window.speechSynthesis.cancel();
@@ -28212,17 +28565,112 @@ function toggleCompletion(symbolElement) {
         if (stage2Panel) stage2Panel.style.display = 'block';
     });
 
+    // [MỚI] Map: item_key (string id của chuỗi sự việc) -> 'approved' | 'needs_redo' | 'pending',
+    // tính theo ghi âm CỦA CHÍNH học viên đang đăng nhập (bảng speaking_comments, item_type =
+    // 'ls2_narrate' — tên nội bộ cũ của "Miêu tả sự việc", không đổi để không vỡ dữ liệu cũ).
+    let lsmtGradingMap = new Map();
+    async function lsmtGetGradingMap() {
+        if (!currentUserId || !window.speakingGrading) return new Map();
+        const map = new Map();
+        try {
+            const { data, error } = await sb.from(window.speakingGrading.table)
+                .select('item_key, graded, is_correct')
+                .eq('item_type', 'ls2_narrate')
+                .eq('user_id', currentUserId);
+            if (!error && data) {
+                data.forEach(row => {
+                    const state = !row.graded ? 'pending' : (row.is_correct === false ? 'needs_redo' : 'approved');
+                    const prev = map.get(row.item_key);
+                    if (!prev || state === 'approved') map.set(row.item_key, state);
+                });
+            }
+        } catch (e) { /* không chặn màn hình giới thiệu nếu bước này lỗi */ }
+        return map;
+    }
+
+    // [MỚI] Panel "Ghi âm của bạn": liệt kê MỌI chuỗi học viên đã ghi âm (bất kể đã chấm hay
+    // chưa), dùng lại spkBuildCard() để hiện đúng ghi âm + nhãn trạng thái (⏳/🔴/✅) như mọi nơi
+    // khác trong "Nói".
+    async function lsmtLoadMyRecordings() {
+        lsmtReviewListEl.innerHTML = '<p class="kid-hint">Đang tải...</p>';
+        if (!currentUserId) {
+            lsmtReviewListEl.innerHTML = '<p class="kid-hint">Vui lòng đăng nhập để xem ghi âm của bạn.</p>';
+            return;
+        }
+        if (!window.speakingGrading) {
+            lsmtReviewListEl.innerHTML = '<p class="kid-hint">Lỗi: chưa tải xong hệ thống chấm ghi âm, hãy tải lại trang.</p>';
+            return;
+        }
+        const { data, error } = await sb.from(window.speakingGrading.table)
+            .select('*')
+            .eq('item_type', 'ls2_narrate')
+            .eq('user_id', currentUserId)
+            .order('created_at', { ascending: false });
+        if (error) {
+            lsmtReviewListEl.innerHTML = `<p class="kid-hint">Lỗi khi tải: ${lsmtEsc(error.message)}</p>`;
+            return;
+        }
+        // [MỚI] "Ghi âm của bạn" chỉ hiện các chuỗi ĐÃ DUYỆT hoặc ĐANG CHỜ CHẤM — chuỗi bị yêu
+        // cầu ghi âm lại (cần làm lại) sẽ không hiện ở đây nữa, mà quay về vòng luyện tập ngẫu
+        // nhiên để học viên ghi âm lại (xem lsmtStartPractice()).
+        const visibleRows = (data || []).filter(row => !row.graded || row.is_correct !== false);
+        lsmtReviewListEl.innerHTML = '';
+        if (!visibleRows.length) {
+            lsmtReviewListEl.innerHTML = '<p class="kid-hint">Bạn chưa có ghi âm nào đã duyệt hoặc đang chờ chấm cho phần này.</p>';
+            return;
+        }
+        visibleRows.forEach(row => {
+            const wrap = document.createElement('div');
+            wrap.className = 'spk-review-item';
+            const titleEl = document.createElement('div');
+            titleEl.className = 'spk-review-item-title';
+            titleEl.textContent = '📖 ' + (row.item_label || 'Miêu tả sự việc');
+            wrap.appendChild(titleEl);
+            wrap.appendChild(window.speakingGrading.buildCard(row));
+            lsmtReviewListEl.appendChild(wrap);
+        });
+    }
+
     async function lsmtRefreshIntro() {
         lsmtManageBtn.style.display = isTeacher ? 'inline-block' : 'none';
         await lsmtLoadItems();
         if (lsmtItemCountEl) lsmtItemCountEl.textContent = String(lsmtItems.length);
         if (lsmtStartCountEl) {
-            lsmtStartCountEl.textContent = lsmtItems.length >= LSMT_MIN_ITEMS
+            lsmtStartCountEl.textContent = lsmtItems.length
                 ? `Ngẫu nhiên ${Math.min(LSMT_TOTAL_ITEMS, lsmtItems.length)} / ${lsmtItems.length} chuỗi đã soạn`
-                : `Chưa đủ chuỗi sự việc (${lsmtItems.length}/${LSMT_MIN_ITEMS} tối thiểu) — hãy quay lại sau`;
+                : 'Chưa có chuỗi sự việc nào — hãy quay lại sau';
+        }
+        // [MỚI] Thẻ "Ghi âm của bạn" chỉ hiện khi học viên có ít nhất 1 ghi âm ĐÃ DUYỆT hoặc
+        // ĐANG CHỜ CHẤM (chuỗi cần làm lại không tính, vì đã quay về vòng luyện tập).
+        lsmtGradingMap = await lsmtGetGradingMap();
+        if (lsmtReviewCard) {
+            const states = [...lsmtGradingMap.values()];
+            const approvedCount = states.filter(v => v === 'approved').length;
+            const pendingCount = states.filter(v => v === 'pending').length;
+            const total = approvedCount + pendingCount;
+            if (total > 0) {
+                lsmtReviewCard.style.display = '';
+                if (lsmtReviewCountEl) lsmtReviewCountEl.textContent = `${approvedCount} đã duyệt, ${pendingCount} đang chờ chấm`;
+            } else {
+                lsmtReviewCard.style.display = 'none';
+            }
         }
     }
     lsmtStartCard.addEventListener('click', lsmtStartPractice);
+    if (lsmtReviewCard) {
+        lsmtReviewCard.addEventListener('click', () => {
+            lsmtPanel.style.display = 'none';
+            lsmtReviewPanel.style.display = 'block';
+            lsmtLoadMyRecordings();
+        });
+    }
+    if (lsmtReviewBackBtn) {
+        lsmtReviewBackBtn.addEventListener('click', () => {
+            lsmtReviewPanel.style.display = 'none';
+            lsmtPanel.style.display = 'block';
+            lsmtRefreshIntro();
+        });
+    }
 
     // ---------- Khu vực giảng viên soạn nội dung ----------
     let lsmtEditingId = null;
@@ -28301,8 +28749,8 @@ function toggleCompletion(symbolElement) {
                 <textarea id="lsmt-f-sample-vi" class="news-edit-input" rows="4"></textarea>
             </div>
             <div class="ln2-field">
-                <label>Link file .mp3 đọc đoạn mẫu (tuỳ chọn — để trống thì dùng giọng đọc máy)</label>
-                <input type="text" id="lsmt-f-audio-url" class="news-edit-input" placeholder="VD: https://.../mau-1.mp3">
+                <label>Link file .mp3 đọc đoạn mẫu, hoặc link SoundCloud (tuỳ chọn — để trống thì dùng giọng đọc máy)</label>
+                <input type="text" id="lsmt-f-audio-url" class="news-edit-input" placeholder="VD: https://.../mau-1.mp3 hoặc link SoundCloud">
             </div>
         `;
         lsmtSetStepsAndRender([
@@ -28404,7 +28852,7 @@ function toggleCompletion(symbolElement) {
             return `
                 <div class="ln2-item-row" data-item-id="${item.id}">
                     <span class="ln2-item-type-badge">📖 ${(item.steps || []).length} bước</span>
-                    ${item.audio_url ? '<span class="ln2-item-audio-badge" title="Đã gắn link .mp3">🎵</span>' : ''}
+                    ${item.audio_url ? '<span class="ln2-item-audio-badge" title="Đã gắn link âm thanh mẫu (mp3/SoundCloud)">🎵</span>' : ''}
                     <span class="ln2-item-preview">${lsmtEsc(preview)}</span>
                     <div class="ln2-item-actions">
                         <button type="button" class="ln2-item-edit-btn" data-id="${item.id}" title="Sửa">✏️</button>
@@ -28451,11 +28899,21 @@ function toggleCompletion(symbolElement) {
         lsmtPracticeControls.innerHTML = '';
 
         await lsmtLoadItems();
-        if (lsmtItems.length < LSMT_MIN_ITEMS) {
-            lsmtPracticeBody.innerHTML = `<p class="kid-hint">⚠️ Kho chuỗi sự việc chưa đủ để luyện tập (cần ít nhất ${LSMT_MIN_ITEMS} chuỗi). Hãy quay lại sau khi giảng viên soạn thêm nhé!</p>`;
+        // [MỚI] Bỏ qua các chuỗi đã được giảng viên DUYỆT (is_correct = true) — học viên không
+        // cần luyện lại chuỗi đã hoàn thành tốt, chỉ tập trung vào chuỗi mới hoặc cần làm lại.
+        // Học viên có thể xem lại các chuỗi đã duyệt/đang chờ chấm trong thẻ "Ghi âm của bạn".
+        lsmtGradingMap = await lsmtGetGradingMap();
+        const availableItems = lsmtItems.filter(it => {
+            const state = lsmtGradingMap.get(String(it.id));
+            return state !== 'approved' && state !== 'pending';
+        });
+        if (!availableItems.length) {
+            lsmtPracticeBody.innerHTML = lsmtItems.length
+                ? '<p class="kid-hint">🎉 Bạn đã ghi âm hết tất cả chuỗi sự việc hiện có! Xem lại trong mục "Ghi âm của bạn", hoặc quay lại sau khi giảng viên soạn thêm.</p>'
+                : '<p class="kid-hint">⚠️ Kho chuỗi sự việc hiện chưa có chuỗi nào. Hãy quay lại sau khi giảng viên soạn nội dung nhé!</p>';
             return;
         }
-        const picked = lsmtShuffle(lsmtItems).slice(0, Math.min(LSMT_TOTAL_ITEMS, lsmtItems.length));
+        const picked = lsmtShuffle(availableItems).slice(0, Math.min(LSMT_TOTAL_ITEMS, availableItems.length));
         lsmtState = { items: picked, index: 0 };
         lsmtRenderItem();
     }
@@ -28499,9 +28957,6 @@ function toggleCompletion(symbolElement) {
                 <div id="lsmt-sample-box" style="display:none; margin-top:10px;" class="ls-situation-box">
                     <div class="ls-situation-text">${lsmtEsc(q.sample_narration)}</div>
                     ${q.sample_vi ? `<div class="lssh-text-vi">${lsmtEsc(q.sample_vi)}</div>` : ''}
-                    <div class="ls-record-controls" style="margin-top:10px;">
-                        <button type="button" class="kid-btn" id="lsmt-play-sample-btn">🔊 Nghe đoạn mẫu</button>
-                    </div>
                 </div>
             </div>
         `;
@@ -28509,8 +28964,11 @@ function toggleCompletion(symbolElement) {
         document.getElementById('lsmt-reveal-btn').addEventListener('click', () => {
             document.getElementById('lsmt-sample-box').style.display = 'block';
             document.getElementById('lsmt-reveal-btn').style.display = 'none';
+            // [MỚI] Bỏ nút "🔊 Nghe đoạn mẫu" — tự động phát đoạn mẫu ngay khi hiện ra, học viên
+            // không cần bấm thêm 1 nút riêng để nghe nữa.
+            lsmtPlayModel(q);
+            syncModelAudioEmbed('lsmt-sample-box', (q.audio_url || '').trim());
         });
-        document.getElementById('lsmt-play-sample-btn').addEventListener('click', () => lsmtPlayModel(q));
 
         const isLast = lsmtState.index + 1 >= lsmtState.items.length;
         lsmtPracticeControls.innerHTML = `<button type="button" class="kid-btn kid-btn-primary" id="lsmt-next-btn">${isLast ? '🏁 Hoàn thành' : '➡️ Chuỗi tiếp theo'}</button>`;
@@ -28582,6 +29040,12 @@ function toggleCompletion(symbolElement) {
     const lsareaItemCountEl  = document.getElementById('lsarea-item-count');
     const lsareaStartCard    = document.getElementById('lsarea-start-card');
     const lsareaStartCountEl = document.getElementById('lsarea-start-count');
+    // [MỚI] Thẻ + panel "Ghi âm của bạn" — xem lại các đề đã ghi âm đã duyệt/đang chờ chấm.
+    const lsareaReviewCard    = document.getElementById('lsarea-review-card');
+    const lsareaReviewCountEl = document.getElementById('lsarea-review-count');
+    const lsareaReviewPanel   = document.getElementById('lsarea-review-panel');
+    const lsareaReviewBackBtn = document.getElementById('lsarea-review-back-btn');
+    const lsareaReviewListEl  = document.getElementById('lsarea-review-list');
 
     const lsareaManagePanel    = document.getElementById('lsarea-manage-panel');
     const lsareaManageBackBtn  = document.getElementById('lsarea-manage-back-btn');
@@ -28602,7 +29066,6 @@ function toggleCompletion(symbolElement) {
 
     const LSAREA_TABLE = 'speaking_lv3_topics';
     const LSAREA_TOTAL_ITEMS = 10;
-    const LSAREA_MIN_ITEMS = 2;
     const LSAREA_CUE_MAX = 5;
     const LSAREA_PREP_SECONDS = 60;
     const LSAREA_LINKERS = {
@@ -28670,17 +29133,105 @@ function toggleCompletion(symbolElement) {
         if (stageFolderGrid) stageFolderGrid.style.display = '';
     });
 
+    // [MỚI] Map: item_key (string id đề bài) -> 'approved' | 'needs_redo' | 'pending', tính theo
+    // ghi âm CỦA CHÍNH học viên đang đăng nhập (item_type = 'ls3_topic').
+    let lsareaGradingMap = new Map();
+    async function lsareaGetGradingMap() {
+        if (!currentUserId || !window.speakingGrading) return new Map();
+        const map = new Map();
+        try {
+            const { data, error } = await sb.from(window.speakingGrading.table)
+                .select('item_key, graded, is_correct')
+                .eq('item_type', 'ls3_topic')
+                .eq('user_id', currentUserId);
+            if (!error && data) {
+                data.forEach(row => {
+                    const state = !row.graded ? 'pending' : (row.is_correct === false ? 'needs_redo' : 'approved');
+                    const prev = map.get(row.item_key);
+                    if (!prev || state === 'approved') map.set(row.item_key, state);
+                });
+            }
+        } catch (e) { /* không chặn màn hình giới thiệu nếu bước này lỗi */ }
+        return map;
+    }
+
+    // [MỚI] Panel "Ghi âm của bạn": chỉ liệt kê đề ĐÃ DUYỆT hoặc ĐANG CHỜ CHẤM — đề bị yêu cầu
+    // ghi âm lại sẽ quay về vòng luyện tập (xem lsareaStartPractice()).
+    async function lsareaLoadMyRecordings() {
+        lsareaReviewListEl.innerHTML = '<p class="kid-hint">Đang tải...</p>';
+        if (!currentUserId) {
+            lsareaReviewListEl.innerHTML = '<p class="kid-hint">Vui lòng đăng nhập để xem ghi âm của bạn.</p>';
+            return;
+        }
+        if (!window.speakingGrading) {
+            lsareaReviewListEl.innerHTML = '<p class="kid-hint">Lỗi: chưa tải xong hệ thống chấm ghi âm, hãy tải lại trang.</p>';
+            return;
+        }
+        const { data, error } = await sb.from(window.speakingGrading.table)
+            .select('*')
+            .eq('item_type', 'ls3_topic')
+            .eq('user_id', currentUserId)
+            .order('created_at', { ascending: false });
+        if (error) {
+            lsareaReviewListEl.innerHTML = `<p class="kid-hint">Lỗi khi tải: ${lsareaEsc(error.message)}</p>`;
+            return;
+        }
+        const visibleRows = (data || []).filter(row => !row.graded || row.is_correct !== false);
+        lsareaReviewListEl.innerHTML = '';
+        if (!visibleRows.length) {
+            lsareaReviewListEl.innerHTML = '<p class="kid-hint">Bạn chưa có ghi âm nào đã duyệt hoặc đang chờ chấm cho phần này.</p>';
+            return;
+        }
+        visibleRows.forEach(row => {
+            const wrap = document.createElement('div');
+            wrap.className = 'spk-review-item';
+            const titleEl = document.createElement('div');
+            titleEl.className = 'spk-review-item-title';
+            titleEl.textContent = '🗨️ ' + (row.item_label || 'Chủ đề tự do');
+            wrap.appendChild(titleEl);
+            wrap.appendChild(window.speakingGrading.buildCard(row));
+            lsareaReviewListEl.appendChild(wrap);
+        });
+    }
+
     async function lsareaRefreshIntro() {
         lsareaManageBtn.style.display = isTeacher ? 'inline-block' : 'none';
         await lsareaLoadItems();
         if (lsareaItemCountEl) lsareaItemCountEl.textContent = String(lsareaItems.length);
         if (lsareaStartCountEl) {
-            lsareaStartCountEl.textContent = lsareaItems.length >= LSAREA_MIN_ITEMS
+            lsareaStartCountEl.textContent = lsareaItems.length
                 ? `Ngẫu nhiên ${Math.min(LSAREA_TOTAL_ITEMS, lsareaItems.length)} / ${lsareaItems.length} đề đã soạn`
-                : `Chưa đủ đề bài (${lsareaItems.length}/${LSAREA_MIN_ITEMS} tối thiểu) — hãy quay lại sau`;
+                : 'Chưa có đề bài nào — hãy quay lại sau';
+        }
+        // [MỚI] Thẻ "Ghi âm của bạn" chỉ hiện khi có ít nhất 1 đề đã duyệt/đang chờ chấm.
+        lsareaGradingMap = await lsareaGetGradingMap();
+        if (lsareaReviewCard) {
+            const states = [...lsareaGradingMap.values()];
+            const approvedCount = states.filter(v => v === 'approved').length;
+            const pendingCount = states.filter(v => v === 'pending').length;
+            if (approvedCount + pendingCount > 0) {
+                lsareaReviewCard.style.display = '';
+                if (lsareaReviewCountEl) lsareaReviewCountEl.textContent = `${approvedCount} đã duyệt, ${pendingCount} đang chờ chấm`;
+            } else {
+                lsareaReviewCard.style.display = 'none';
+            }
         }
     }
     lsareaStartCard.addEventListener('click', lsareaStartPractice);
+    if (lsareaReviewCard) {
+        lsareaReviewCard.addEventListener('click', () => {
+            lsareaPanel.style.display = 'none';
+            lsareaReviewPanel.style.display = 'block';
+            lsareaLoadMyRecordings();
+        });
+    }
+    if (lsareaReviewBackBtn) {
+        lsareaReviewBackBtn.addEventListener('click', () => {
+            lsareaReviewPanel.style.display = 'none';
+            lsareaPanel.style.display = 'block';
+            lsareaRefreshIntro();
+        });
+    }
 
     // ---------- Khu vực giảng viên soạn đề bài ----------
     let lsareaEditingId = null;
@@ -28972,11 +29523,22 @@ function toggleCompletion(symbolElement) {
         lsareaPracticeControls.innerHTML = '';
 
         await lsareaLoadItems();
-        if (lsareaItems.length < LSAREA_MIN_ITEMS) {
-            lsareaPracticeBody.innerHTML = `<p class="kid-hint">⚠️ Kho đề bài chưa đủ để luyện tập (cần ít nhất ${LSAREA_MIN_ITEMS} đề). Hãy quay lại sau khi giảng viên soạn thêm nhé!</p>`;
+        if (!lsareaItems.length) {
+            lsareaPracticeBody.innerHTML = `<p class="kid-hint">⚠️ Kho đề bài hiện chưa có đề nào. Hãy quay lại sau khi giảng viên soạn nội dung nhé!</p>`;
             return;
         }
-        const picked = lsareaShuffle(lsareaItems).slice(0, Math.min(LSAREA_TOTAL_ITEMS, lsareaItems.length));
+        // [MỚI] Bỏ qua đề đã DUYỆT hoặc ĐANG CHỜ CHẤM — xem lại trong "Ghi âm của bạn". Đề bị
+        // yêu cầu ghi âm lại vẫn ở trong vòng luyện tập để làm lại.
+        lsareaGradingMap = await lsareaGetGradingMap();
+        const availableItems = lsareaItems.filter(it => {
+            const state = lsareaGradingMap.get(String(it.id));
+            return state !== 'approved' && state !== 'pending';
+        });
+        if (!availableItems.length) {
+            lsareaPracticeBody.innerHTML = '<p class="kid-hint">🎉 Bạn đã ghi âm hết tất cả đề bài hiện có! Xem lại trong mục "Ghi âm của bạn", hoặc quay lại sau khi giảng viên soạn thêm.</p>';
+            return;
+        }
+        const picked = lsareaShuffle(availableItems).slice(0, Math.min(LSAREA_TOTAL_ITEMS, availableItems.length));
         lsareaState = { items: picked, index: 0 };
         lsareaRenderItem();
     }

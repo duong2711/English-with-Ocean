@@ -1560,6 +1560,33 @@ h3 { font-size:0.95rem; font-weight:600; color:var(--text); margin:0 0 8px; }
     transform: translateY(-1px);
     box-shadow: 0 6px 20px rgba(79,110,247,0.35);
 }
+/* [MỚI] Nút "Đăng nhập bằng Google" */
+.google-login-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    max-width: 340px;
+    margin: 0 auto;
+    padding: 11px 14px;
+    background: var(--surface);
+    color: var(--text);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 0.92rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+}
+.google-login-btn:hover {
+    border-color: var(--border-strong);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transform: translateY(-1px);
+}
+.google-login-btn svg { flex-shrink: 0; }
+
 #auth-container p { font-size: 0.82rem; color: var(--text-muted); margin-top: 10px; line-height: 1.5; }
 #auth-container a { color: var(--primary); font-weight: 600; text-decoration: none; }
 #auth-container a:hover { text-decoration: underline; }
@@ -1885,56 +1912,7 @@ h3 { font-size:0.95rem; font-weight:600; color:var(--text); margin:0 0 8px; }
 #record-status     { font-size: 0.84rem; color: var(--danger); font-weight: 500; min-height: 1.2em; }
 #recording-preview { width: 100%; display: none; border-radius: var(--radius-sm); }
 
-/* [MỚI] Lựa chọn "dán link ghi âm" (VD: SoundCloud) thay vì thu âm trực tiếp — Phiên âm */
-#comment-link-toggle-row { display: flex; }
-#comment-link-toggle-btn {
-    font-size: 0.78rem;
-    font-weight: 600;
-    color: var(--primary-dark);
-    background: var(--primary-light);
-    border: 1px dashed var(--border-strong);
-    border-radius: var(--radius-sm);
-    padding: 6px 10px;
-    cursor: pointer;
-    transition: background 0.15s, border-color 0.15s;
-}
-#comment-link-toggle-btn:hover { background: #dde7ff; border-color: var(--primary); }
-#comment-link-form {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding: 8px 10px;
-    background: var(--surface-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-}
-#comment-link-input {
-    width: 100%;
-    padding: 8px 10px;
-    border: 1px solid var(--border-strong);
-    border-radius: 6px;
-    font-size: 0.84rem;
-    font-family: inherit;
-    color: var(--text);
-    background: var(--surface);
-}
-#comment-link-input:focus { outline: none; border-color: var(--primary); }
-#comment-link-send-btn {
-    align-self: flex-start;
-    padding: 7px 14px;
-    font-size: 0.82rem;
-    font-weight: 600;
-    border: none;
-    border-radius: var(--radius-sm);
-    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-    color: #fff;
-    cursor: pointer;
-}
-#comment-link-send-btn:hover:not(:disabled) { box-shadow: 0 3px 10px var(--primary-glow); }
-#comment-link-send-btn:disabled { opacity: 0.6; cursor: default; }
-#comment-link-status { font-size: 0.78rem; color: var(--text-muted); min-height: 1.1em; }
-
-/* [MỚI] Khung nhúng SoundCloud + nút mở link ngoài dự phòng — dùng chung cho Phiên âm & Nói */
+/* [MỚI] Khung nhúng SoundCloud + nút mở link ngoài dự phòng — dùng cho "audio mẫu" trong Nói */
 .soundcloud-embed-wrap { width: 100%; border-radius: var(--radius-sm); overflow: hidden; margin-top: 4px; }
 .soundcloud-embed-wrap iframe { display: block; border: 0; }
 .audio-link-fallback {
@@ -7864,56 +7842,22 @@ body.irt-focus-body-lock { overflow: hidden; }
 .spk-item-comments:empty { margin-top: 0; }
 .spk-comment-meta { font-size: 0.78rem; font-weight: 600; color: var(--text-light); margin: 0 0 6px; }
 
-/* [MỚI] Lựa chọn "dán link ghi âm" (VD: SoundCloud) thay vì thu âm trực tiếp — tab Nói,
-   dùng chung cho cả 5 dạng bài (chèn tự động ngay sau nút "Gửi cho giảng viên chấm"). */
-.spk-link-paste-block { margin-top: 6px; display: flex; flex-direction: column; gap: 6px; }
-.spk-link-toggle-btn {
-    align-self: flex-start;
-    font-size: 0.78rem;
-    font-weight: 600;
-    color: var(--primary-dark);
-    background: var(--primary-light);
-    border: 1px dashed var(--border-strong);
-    border-radius: var(--radius-sm);
-    padding: 6px 10px;
-    cursor: pointer;
-    transition: background 0.15s, border-color 0.15s;
-}
-.spk-link-toggle-btn:hover { background: #dde7ff; border-color: var(--primary); }
-.spk-link-form {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding: 8px 10px;
-    background: var(--surface-2);
+/* [MỚI] Khung nhúng phát "âm thanh mẫu" khi giảng viên dán link SoundCloud (thay vì file .mp3
+   trực tiếp) vào ô link có sẵn — tự hiện ngay cạnh nút "Nghe..." tương ứng, dùng chung cho cả
+   5 dạng bài Nói (Hỏi-đáp, Mở lời hội thoại, Shadowing, Miêu tả sự việc). */
+.spk-model-embed-box { margin-top: 10px; max-width: 420px; }
+.spk-model-embed-note { font-size: 0.76rem; color: var(--text-muted); margin-bottom: 4px; font-style: italic; }
+
+/* [MỚI] Danh sách "Ghi âm của bạn" — mỗi mục là 1 câu hỏi/chuỗi học viên đã ghi âm, kèm nhãn
+   trạng thái duyệt (dùng lại spkBuildCard() nên tự có màu vàng/đỏ/xanh theo trạng thái chấm). */
+#lsmt-review-list { display: flex; flex-direction: column; gap: 14px; }
+.spk-review-item {
     border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-}
-.spk-link-input {
-    width: 100%;
-    padding: 8px 10px;
-    border: 1px solid var(--border-strong);
-    border-radius: 6px;
-    font-size: 0.84rem;
-    font-family: inherit;
-    color: var(--text);
+    border-radius: var(--radius);
+    padding: 14px;
     background: var(--surface);
 }
-.spk-link-input:focus { outline: none; border-color: var(--primary); }
-.spk-link-send-btn {
-    align-self: flex-start;
-    padding: 7px 14px;
-    font-size: 0.82rem;
-    font-weight: 600;
-    border: none;
-    border-radius: var(--radius-sm);
-    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-    color: #fff;
-    cursor: pointer;
-}
-.spk-link-send-btn:hover:not(:disabled) { box-shadow: 0 3px 10px var(--primary-glow); }
-.spk-link-send-btn:disabled { opacity: 0.6; cursor: default; }
-.spk-link-status { font-size: 0.78rem; color: var(--text-muted); min-height: 1.1em; }
+.spk-review-item-title { font-weight: 700; margin-bottom: 10px; color: var(--text); }
 
 /* ===================================================================
    ===== GIAI ĐOẠN 2 — "Shadowing" & "Miêu tả sự việc" =====
