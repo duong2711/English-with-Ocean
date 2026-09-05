@@ -830,6 +830,140 @@ document.addEventListener('DOMContentLoaded', () => {
         recordStatus.textContent = user ? '' : 'Vui lòng đăng nhập để gửi ghi âm.';
     }
 
+    // ================== [MỚI] Giảng viên quản lý quyền đăng nhập (allowed_signup_emails) ==================
+    // Nút nổi (chỉ giảng viên thấy) mở bảng thêm/xoá email được phép đăng nhập. HTML được tạo
+    // hoàn toàn bằng JS (không cần sửa file index.html). Quyền thật sự nằm ở policy RLS trên
+    // Supabase (bảng allowed_signup_emails, policy cho phép đúng email giảng viên đọc/ghi) —
+    // xem SQL "teacher_manage_allowlist" đi kèm hướng dẫn. Nút này chỉ ẩn/hiện giao diện, không
+    // tự cấp quyền gì cả, nên an toàn kể cả nếu ai đó cố tình hiện nút lên bằng DevTools.
+    let allowlistBtn = null;
+    let allowlistModal = null;
+
+    function ensureAllowlistUI() {
+        if (allowlistBtn) return; // đã tạo rồi, không tạo lại
+
+        allowlistBtn = document.createElement('button');
+        allowlistBtn.id = 'allowlist-manager-btn';
+        allowlistBtn.textContent = '🔑 Quyền đăng nhập';
+        allowlistBtn.className = 'kid-btn';
+        allowlistBtn.style.cssText = 'position:fixed; bottom:16px; right:16px; z-index:9998; display:none; box-shadow:0 2px 10px rgba(0,0,0,.25);';
+        allowlistBtn.addEventListener('click', openAllowlistModal);
+        document.body.appendChild(allowlistBtn);
+
+        allowlistModal = document.createElement('div');
+        allowlistModal.id = 'allowlist-manager-modal';
+        allowlistModal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:9999; align-items:center; justify-content:center;';
+        allowlistModal.innerHTML = `
+            <div style="background:#fff; color:#222; border-radius:14px; padding:22px; max-width:480px; width:92%; max-height:80vh; overflow-y:auto;">
+                <h3 style="margin-top:0;">🔑 Quản lý quyền đăng nhập</h3>
+                <p style="font-size:13px; opacity:.75;">Chỉ email trong danh sách này mới đăng nhập được vào hệ thống.</p>
+                <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px;">
+                    <input type="email" id="allowlist-new-email" placeholder="email@gmail.com" style="flex:1; min-width:160px; padding:8px; border-radius:8px; border:1px solid #ccc;">
+                    <input type="text" id="allowlist-new-note" placeholder="Ghi chú (vd: học viên)" style="flex:1; min-width:120px; padding:8px; border-radius:8px; border:1px solid #ccc;">
+                    <button type="button" id="allowlist-add-btn" class="kid-btn kid-btn-primary">Thêm</button>
+                </div>
+                <p id="allowlist-status" style="font-size:13px; min-height:18px;"></p>
+                <div id="allowlist-list"></div>
+                <button type="button" id="allowlist-close-btn" class="kid-btn" style="margin-top:14px;">Đóng</button>
+            </div>
+        `;
+        document.body.appendChild(allowlistModal);
+
+        document.getElementById('allowlist-close-btn').addEventListener('click', closeAllowlistModal);
+        document.getElementById('allowlist-add-btn').addEventListener('click', addAllowlistEmail);
+    }
+
+    function openAllowlistModal() {
+        ensureAllowlistUI();
+        allowlistModal.style.display = 'flex';
+        loadAllowlist();
+    }
+
+    function closeAllowlistModal() {
+        if (allowlistModal) allowlistModal.style.display = 'none';
+    }
+
+    async function loadAllowlist() {
+        const listEl = document.getElementById('allowlist-list');
+        const statusEl = document.getElementById('allowlist-status');
+        listEl.innerHTML = 'Đang tải...';
+        const { data, error } = await sb
+            .from('allowed_signup_emails')
+            .select('id, email, note, created_at')
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            listEl.innerHTML = '';
+            statusEl.textContent = 'Lỗi tải danh sách: ' + error.message;
+            return;
+        }
+
+        if (!data.length) {
+            listEl.innerHTML = '<p style="opacity:.6;">Danh sách trống.</p>';
+            return;
+        }
+
+        listEl.innerHTML = data.map(row => `
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 0; border-bottom:1px solid #eee;">
+                <div>
+                    <div style="font-weight:600;">${row.email}</div>
+                    ${row.note ? `<div style="font-size:12px; opacity:.65;">${row.note}</div>` : ''}
+                </div>
+                <button type="button" class="kid-btn allowlist-remove-btn" data-id="${row.id}" style="padding:4px 10px; font-size:12px; flex-shrink:0;">Xoá</button>
+            </div>
+        `).join('');
+
+        listEl.querySelectorAll('.allowlist-remove-btn').forEach(btn => {
+            btn.addEventListener('click', () => removeAllowlistEmail(btn.dataset.id));
+        });
+    }
+
+    async function addAllowlistEmail() {
+        const emailInput = document.getElementById('allowlist-new-email');
+        const noteInput = document.getElementById('allowlist-new-note');
+        const statusEl = document.getElementById('allowlist-status');
+        const email = emailInput.value.trim().toLowerCase();
+        const note = noteInput.value.trim();
+
+        if (!email || !email.includes('@')) {
+            statusEl.textContent = 'Vui lòng nhập email hợp lệ.';
+            return;
+        }
+
+        statusEl.textContent = 'Đang thêm...';
+        const { error } = await sb
+            .from('allowed_signup_emails')
+            .upsert({ email, note: note || null }, { onConflict: 'email' });
+
+        if (error) {
+            statusEl.textContent = 'Lỗi: ' + error.message;
+            return;
+        }
+
+        statusEl.textContent = `✅ Đã cấp quyền đăng nhập cho ${email}.`;
+        emailInput.value = '';
+        noteInput.value = '';
+        loadAllowlist();
+    }
+
+    async function removeAllowlistEmail(id) {
+        if (!confirm('Xoá quyền đăng nhập của email này? Người này sẽ không đăng nhập được nữa (ngay khi phiên hiện tại của họ hết hạn).')) return;
+        const statusEl = document.getElementById('allowlist-status');
+        statusEl.textContent = 'Đang xoá...';
+        const { error } = await sb
+            .from('allowed_signup_emails')
+            .delete()
+            .eq('id', id);
+
+        if (error) {
+            statusEl.textContent = 'Lỗi: ' + error.message;
+            return;
+        }
+        statusEl.textContent = '✅ Đã xoá quyền đăng nhập.';
+        loadAllowlist();
+    }
+    // ================== [KẾT THÚC] Quản lý quyền đăng nhập ==================
+
     /**
      * @description Cập nhật giao diện người dùng dựa trên trạng thái đăng nhập.
      * @param {object | null} user - Đối tượng người dùng Supabase
@@ -867,6 +1001,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // đang tự mình bị "xem" — trường hợp này không xảy ra vì isTeacher sẽ là false
             // ngay khi phiên đăng nhập là của học viên đang bị xem).
             if (teacherImpersonateBtn) teacherImpersonateBtn.style.display = isTeacher ? 'block' : 'none';
+            // [MỚI] Nút "Quyền đăng nhập" — chỉ giảng viên thấy, xem khối "Quản lý quyền đăng nhập" ở trên
+            ensureAllowlistUI();
+            if (allowlistBtn) allowlistBtn.style.display = isTeacher ? 'block' : 'none';
             // [MỚI] Học viên: ẩn hẳn cụm nút Mở khóa/Lưu lịch/Đặt lại ô trống + badge
             // trạng thái (CHỈ XEM / ĐANG CHỈNH SỬA) — các điều khiển này chỉ giảng viên dùng.
             if (lichHocAdminControls) lichHocAdminControls.style.display = isTeacher ? 'flex' : 'none';
@@ -941,6 +1078,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentAccountCreatedAt = null;
             isTeacher = false;
             if (teacherImpersonateBtn) teacherImpersonateBtn.style.display = 'none';
+            if (allowlistBtn) { allowlistBtn.style.display = 'none'; closeAllowlistModal(); }
             if (lichHocAdminControls) lichHocAdminControls.style.display = 'none';
             if (lichHocStatusBadge) lichHocStatusBadge.style.display = 'none';
             if (typeof window.__lichHocRedraw === 'function') window.__lichHocRedraw();

@@ -7845,7 +7845,7 @@ body.irt-focus-body-lock { overflow: hidden; }
 /* [MỚI] Khung nhúng phát "âm thanh mẫu" khi giảng viên dán link SoundCloud (thay vì file .mp3
    trực tiếp) vào ô link có sẵn — tự hiện ngay cạnh nút "Nghe..." tương ứng, dùng chung cho cả
    5 dạng bài Nói (Hỏi-đáp, Mở lời hội thoại, Shadowing, Miêu tả sự việc). */
-.spk-model-embed-box { margin-top: 10px; max-width: 420px; }
+.spk-model-embed-box { margin: 10px auto 0; max-width: 420px; }
 .spk-model-embed-note { font-size: 0.76rem; color: var(--text-muted); margin-bottom: 4px; font-style: italic; }
 
 /* [MỚI] Danh sách "Ghi âm của bạn" — mỗi mục là 1 câu hỏi/chuỗi học viên đã ghi âm, kèm nhãn
