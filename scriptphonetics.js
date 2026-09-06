@@ -4930,7 +4930,7 @@ function toggleCompletion(symbolElement) {
         const GEMINI_API_KEY  = 'AQ.Ab8RN6KkxLevhsTgNNIHs016D87KBSifdDDjs_mX_LyQgUiyJQ';
         const GEMINI_MODEL    = 'gemini-2.5-flash';
 
-        const MISTRAL_API_KEY = 'ddkIaJqJgZVLPxprrF3ESBpYegqfEbqt';
+        const MISTRAL_API_KEY = 'kUXSyVuNj8cwNidGNbESC9amy6F4xBGF';
         const MISTRAL_MODEL   = 'mistral-small-latest';
 
         function geminiConfigured() {
