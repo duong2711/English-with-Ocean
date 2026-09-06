@@ -453,6 +453,74 @@ document.addEventListener('DOMContentLoaded', () => {
         const clean = String(url || '').split('?')[0].split('#')[0];
         return /\.(mp3|wav|ogg|m4a|aac|webm|flac)$/i.test(clean);
     }
+
+    // ================== [MỚI] Kiểm soát băng thông cho MỌI audio phát từ Storage ==================
+    // Trước đây chỉ audio ở khung "Bình luận của giảng viên" (bên dưới, hàm loadComments) mới đi
+    // qua Edge Function get-secure-media để kiểm tra/cộng dồn 200MB egress mỗi tuần — mọi audio
+    // khác (câu hỏi luyện Nói/Nghe, bài nghe IELTS, giọng mẫu...) phát THẲNG link public, không hề
+    // được tính vào băng thông. 2 hàm dùng chung dưới đây được gọi ở TẤT CẢ các nơi phát audio từ
+    // chính Storage của hệ thống, để số liệu ở nút "📊 Băng thông" phản ánh đúng mức dùng thật.
+    //
+    // fetchSecureMediaUrl: gọi Edge Function, trả về Signed URL nếu còn hạn mức; nếm lỗi (kèm
+    // thông báo tiếng Việt, vd hết 200MB/tuần) nếu bị từ chối.
+    async function fetchSecureMediaUrl(publicUrl) {
+        const { data: { session } } = await sb.auth.getSession();
+        if (!session) throw new Error('Vui lòng đăng nhập để nghe file này.');
+        const resp = await fetch(`${SUPABASE_URL}/functions/v1/get-secure-media`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.access_token}`,
+                'apikey': SUPABASE_ANON_KEY
+            },
+            body: JSON.stringify({ publicUrl })
+        });
+        const result = await resp.json();
+        if (!resp.ok) throw new Error(result.error || 'Không thể phát file này.');
+        if (result.warning) {
+            if (window.vocabTap && window.vocabTap.toast) {
+                window.vocabTap.toast('⚠️ ' + result.warning, 'warning');
+            } else {
+                alert(result.warning);
+            }
+        }
+        return result.signedUrl;
+    }
+    // resolvePlayableAudioUrl: dùng cho các Audio() thuần JS (không có control giao diện) — link
+    // KHÔNG phải Storage public (từ điển, SoundCloud, link ngoài giảng viên dán tay...) được trả về
+    // y nguyên, không cần qua bước kiểm tra băng thông.
+    async function resolvePlayableAudioUrl(rawUrl) {
+        if (!rawUrl || !rawUrl.includes('/storage/v1/object/public/')) return rawUrl;
+        return await fetchSecureMediaUrl(rawUrl);
+    }
+    // wireSecureAudioEl: dùng cho các thẻ <audio controls> hiển thị cho học viên tự bấm nghe. Giữ
+    // nguyên cách cũ — gán link public làm src NGAY để trình duyệt hiện khung phát bình thường —
+    // nhưng bật preload="none" (không tải trước) và chặn ngay lúc bấm Play để đổi sang Signed URL
+    // (đã qua kiểm tra băng thông) rồi mới thật sự phát. Y hệt cơ chế đã dùng ổn cho audio bình
+    // luận của giảng viên (xem loadComments bên dưới), gắn 1 LẦN DUY NHẤT ngay khi tạo phần tử.
+    function wireSecureAudioEl(audioEl) {
+        if (!audioEl || audioEl.dataset.secureWired) return audioEl;
+        audioEl.dataset.secureWired = '1';
+        audioEl.preload = 'none';
+        let swappedFor = null;
+        audioEl.addEventListener('play', (e) => {
+            const rawSrc = audioEl.getAttribute('src') || '';
+            if (!rawSrc.includes('/storage/v1/object/public/')) return; // link ngoài — phát thẳng
+            if (swappedFor === rawSrc) return; // đã đổi Signed URL cho đúng link này rồi
+            e.preventDefault();
+            audioEl.pause();
+            fetchSecureMediaUrl(rawSrc).then(signedUrl => {
+                swappedFor = rawSrc;
+                audioEl.src = signedUrl;
+                audioEl.play().catch(() => {});
+            }).catch(err => {
+                alert(err.message || 'Không thể phát file này.');
+            });
+        });
+        return audioEl;
+    }
+    // ================================================================================================
+
     function buildAudioPlaybackEl(url, opts) {
         if (!url) return null;
         opts = opts || {};
@@ -474,6 +542,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isDirectAudioLink(url) || url.includes('/storage/v1/object/public/')) {
             const audioEl = document.createElement('audio');
             audioEl.controls = true;
+            wireSecureAudioEl(audioEl); // [MỚI] gắn TRƯỚC khi set src — kiểm tra băng thông lúc bấm Play
             audioEl.src = url;
             if (opts.autoplay) audioEl.autoplay = true;
             return audioEl;
@@ -862,7 +931,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         allowlistBtn = document.createElement('button');
         allowlistBtn.id = 'allowlist-manager-btn';
-        allowlistBtn.textContent = '🔑 Cấp quyền';
+        allowlistBtn.textContent = '🔑 Quyền đăng nhập';
         allowlistBtn.className = 'kid-btn';
         allowlistBtn.style.cssText = 'position:fixed; bottom:16px; right:16px; z-index:9998; display:none; box-shadow:0 2px 10px rgba(0,0,0,.25);';
         allowlistBtn.addEventListener('click', openAllowlistModal);
@@ -15987,6 +16056,7 @@ function toggleCompletion(symbolElement) {
         if (q.audio_url) {
             const audio = document.createElement('audio');
             audio.controls = true;
+            wireSecureAudioEl(audio); // [MỚI] kiểm tra băng thông lúc bấm Play
             audio.src = q.audio_url;
             audio.style.width = '100%';
             audio.style.marginBottom = '10px';
@@ -16523,6 +16593,7 @@ function toggleCompletion(symbolElement) {
         if (q.audio_url) {
             const audio = document.createElement('audio');
             audio.controls = true;
+            wireSecureAudioEl(audio); // [MỚI] kiểm tra băng thông lúc bấm Play
             audio.src = q.audio_url;
             audio.style.width = '100%';
             audio.style.marginBottom = '10px';
@@ -18310,27 +18381,35 @@ function toggleCompletion(symbolElement) {
     // "Không hiện audio": dùng đối tượng Audio() thuần JS, KHÔNG gắn thẻ
     // <audio> nào lên giao diện nên học viên không thấy/điều khiển được.
     // =====================================================================
-    function iltStartAudioPlayback(url) {
+    function iltStartAudioPlayback(rawUrl) {
         if (iltAudioEl) { try { iltAudioEl.pause(); } catch (e) {} iltAudioEl = null; }
-        if (!url) return;
-        const audio = new Audio(url);
-        audio.preload = 'auto';
-        let allowPause = false; // chỉ bật true khi bài đã nộp / rời trang để việc dừng audio là hợp lệ
-        audio.addEventListener('loadedmetadata', () => {
-            if (iltAudioPosition > 0 && isFinite(audio.duration) && iltAudioPosition < audio.duration) {
-                try { audio.currentTime = iltAudioPosition; } catch (e) {}
-            }
-            audio.play().catch(() => { iltShowManualPlayFallback(audio); });
+        if (!rawUrl) return;
+        // [MỚI] Lấy Signed URL đã qua kiểm tra băng thông TRƯỚC khi dựng đối tượng Audio — vì
+        // audio này tự phát ngay (preload='auto' + gọi load() ngay bên dưới) nên không thể chặn
+        // lúc bấm Play như các nơi khác (lúc đó trình duyệt đã có thể tải link public rồi).
+        resolvePlayableAudioUrl(rawUrl).then(url => {
+            const audio = new Audio(url);
+            audio.preload = 'auto';
+            let allowPause = false; // chỉ bật true khi bài đã nộp / rời trang để việc dừng audio là hợp lệ
+            audio.addEventListener('loadedmetadata', () => {
+                if (iltAudioPosition > 0 && isFinite(audio.duration) && iltAudioPosition < audio.duration) {
+                    try { audio.currentTime = iltAudioPosition; } catch (e) {}
+                }
+                audio.play().catch(() => { iltShowManualPlayFallback(audio); });
+            });
+            audio.addEventListener('timeupdate', () => { iltAudioPosition = audio.currentTime; });
+            audio.addEventListener('pause', () => {
+                // Không cho phép tạm dừng — nếu bị hệ thống/tai nghe ngắt giữa chừng thì tự phát tiếp ngay.
+                if (!allowPause && !audio.ended) { audio.play().catch(() => {}); }
+            });
+            audio.addEventListener('ended', () => { allowPause = true; });
+            audio._setAllowPause = () => { allowPause = true; };
+            iltAudioEl = audio;
+            audio.load();
+        }).catch(err => {
+            console.error('Lỗi khi lấy audio bài nghe IELTS:', err.message);
+            alert(err.message || 'Không thể tải file audio bài nghe.');
         });
-        audio.addEventListener('timeupdate', () => { iltAudioPosition = audio.currentTime; });
-        audio.addEventListener('pause', () => {
-            // Không cho phép tạm dừng — nếu bị hệ thống/tai nghe ngắt giữa chừng thì tự phát tiếp ngay.
-            if (!allowPause && !audio.ended) { audio.play().catch(() => {}); }
-        });
-        audio.addEventListener('ended', () => { allowPause = true; });
-        audio._setAllowPause = () => { allowPause = true; };
-        iltAudioEl = audio;
-        audio.load();
     }
     function iltShowManualPlayFallback(audio) {
         // Một vài trình duyệt vẫn chặn autoplay dù đã có thao tác bấm trước đó — hiện 1 nút
@@ -21757,9 +21836,17 @@ function toggleCompletion(symbolElement) {
         const url = ((item && item.audio_url) || '').trim();
         if (url) {
             const audio = ln2GetAudioEl();
-            if (audio.src !== url) audio.src = url;
-            audio.currentTime = 0;
-            audio.play().catch(err => console.error('Lỗi khi phát file mp3 Nghe lv2:', err.message));
+            (async () => {
+                try {
+                    const playUrl = await resolvePlayableAudioUrl(url);
+                    if (audio.dataset.rawSrc !== url) { audio.src = playUrl; audio.dataset.rawSrc = url; }
+                    audio.currentTime = 0;
+                    await audio.play();
+                } catch (err) {
+                    console.error('Lỗi khi phát file mp3 Nghe lv2:', err.message);
+                    if (err && /băng thông|đăng nhập/.test(err.message || '')) alert(err.message);
+                }
+            })();
         } else {
             ln2Speak(item ? item.content : '');
         }
@@ -23201,9 +23288,17 @@ function toggleCompletion(symbolElement) {
         const url = ((item && item.audio_url) || '').trim();
         if (!url) return;
         const audio = ln3GetAudioEl();
-        if (audio.src !== url) audio.src = url;
-        audio.currentTime = 0;
-        audio.play().catch(err => console.error('Lỗi khi phát file mp3 Nghe lv3:', err.message));
+        (async () => {
+            try {
+                const playUrl = await resolvePlayableAudioUrl(url);
+                if (audio.dataset.rawSrc !== url) { audio.src = playUrl; audio.dataset.rawSrc = url; }
+                audio.currentTime = 0;
+                await audio.play();
+            } catch (err) {
+                console.error('Lỗi khi phát file mp3 Nghe lv3:', err.message);
+                if (err && /băng thông|đăng nhập/.test(err.message || '')) alert(err.message);
+            }
+        })();
     }
     function ln3StopAudio() {
         if (ln3AudioEl) ln3AudioEl.pause();
@@ -24082,9 +24177,17 @@ function toggleCompletion(symbolElement) {
             const url = (item.audio_url || '').trim();
             if (url) {
                 const a = getAudioEl();
-                if (a.src !== url) a.src = url;
-                a.currentTime = 0;
-                a.play().catch(err => console.error(`Lỗi phát audio Giai đoạn ${cfg.stage}:`, err.message));
+                (async () => {
+                    try {
+                        const playUrl = await resolvePlayableAudioUrl(url);
+                        if (a.dataset.rawSrc !== url) { a.src = playUrl; a.dataset.rawSrc = url; }
+                        a.currentTime = 0;
+                        await a.play();
+                    } catch (err) {
+                        console.error(`Lỗi phát audio Giai đoạn ${cfg.stage}:`, err.message);
+                        if (err && /băng thông|đăng nhập/.test(err.message || '')) alert(err.message);
+                    }
+                })();
             } else if (item.transcript) {
                 phoneticsSpeakWebSpeechFallback(item.transcript, 0.9, null);
             }
@@ -26811,9 +26914,17 @@ function toggleCompletion(symbolElement) {
         const url = ((item && item.audio_url) || '').trim();
         if (url && (isDirectAudioLink(url) || url.includes('/storage/v1/object/public/'))) {
             const audio = ls1GetAudioEl();
-            if (audio.src !== url) audio.src = url;
-            audio.currentTime = 0;
-            audio.play().catch(err => console.error('Lỗi khi phát file mp3 Nói — Hỏi-đáp:', err.message));
+            (async () => {
+                try {
+                    const playUrl = await resolvePlayableAudioUrl(url);
+                    if (audio.dataset.rawSrc !== url) { audio.src = playUrl; audio.dataset.rawSrc = url; }
+                    audio.currentTime = 0;
+                    await audio.play();
+                } catch (err) {
+                    console.error('Lỗi khi phát file mp3 Nói — Hỏi-đáp:', err.message);
+                    if (err && /băng thông|đăng nhập/.test(err.message || '')) alert(err.message);
+                }
+            })();
         } else if (!url) {
             ls1Speak(item ? item.question_text : '');
         }
@@ -27686,9 +27797,17 @@ function toggleCompletion(symbolElement) {
         const url = ((item && item.audio_url) || '').trim();
         if (url && (isDirectAudioLink(url) || url.includes('/storage/v1/object/public/'))) {
             const audio = ls2GetAudioEl();
-            if (audio.src !== url) audio.src = url;
-            audio.currentTime = 0;
-            audio.play().catch(err => console.error('Lỗi khi phát file mp3 Nói — Mở lời hội thoại:', err.message));
+            (async () => {
+                try {
+                    const playUrl = await resolvePlayableAudioUrl(url);
+                    if (audio.dataset.rawSrc !== url) { audio.src = playUrl; audio.dataset.rawSrc = url; }
+                    audio.currentTime = 0;
+                    await audio.play();
+                } catch (err) {
+                    console.error('Lỗi khi phát file mp3 Nói — Mở lời hội thoại:', err.message);
+                    if (err && /băng thông|đăng nhập/.test(err.message || '')) alert(err.message);
+                }
+            })();
         } else if (!url) {
             ls2Speak(text);
         }
@@ -28463,10 +28582,18 @@ function toggleCompletion(symbolElement) {
         const url = ((item && item.audio_url) || '').trim();
         if (url && (isDirectAudioLink(url) || url.includes('/storage/v1/object/public/'))) {
             const audio = lsshGetAudioEl();
-            if (audio.src !== url) audio.src = url;
-            audio.currentTime = 0;
-            audio.playbackRate = rate || 1;
-            audio.play().catch(err => console.error('Lỗi khi phát file mp3 Shadowing:', err.message));
+            (async () => {
+                try {
+                    const playUrl = await resolvePlayableAudioUrl(url);
+                    if (audio.dataset.rawSrc !== url) { audio.src = playUrl; audio.dataset.rawSrc = url; }
+                    audio.currentTime = 0;
+                    audio.playbackRate = rate || 1;
+                    await audio.play();
+                } catch (err) {
+                    console.error('Lỗi khi phát file mp3 Shadowing:', err.message);
+                    if (err && /băng thông|đăng nhập/.test(err.message || '')) alert(err.message);
+                }
+            })();
         } else if (!url) {
             lsshSpeakAt(item ? item.text : '', rate);
         }
@@ -29049,9 +29176,17 @@ function toggleCompletion(symbolElement) {
         const url = ((item && item.audio_url) || '').trim();
         if (url && (isDirectAudioLink(url) || url.includes('/storage/v1/object/public/'))) {
             const audio = lsmtGetAudioEl();
-            if (audio.src !== url) audio.src = url;
-            audio.currentTime = 0;
-            audio.play().catch(err => console.error('Lỗi khi phát file mp3 Miêu tả sự việc:', err.message));
+            (async () => {
+                try {
+                    const playUrl = await resolvePlayableAudioUrl(url);
+                    if (audio.dataset.rawSrc !== url) { audio.src = playUrl; audio.dataset.rawSrc = url; }
+                    audio.currentTime = 0;
+                    await audio.play();
+                } catch (err) {
+                    console.error('Lỗi khi phát file mp3 Miêu tả sự việc:', err.message);
+                    if (err && /băng thông|đăng nhập/.test(err.message || '')) alert(err.message);
+                }
+            })();
         } else if (!url) {
             lsmtSpeak(item.sample_narration);
         }
