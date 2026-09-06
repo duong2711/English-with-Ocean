@@ -4347,18 +4347,13 @@ function toggleCompletion(symbolElement) {
 
             if (isTeacher) return; // giảng viên luôn xem đầy đủ, không thu gọn
 
-            // [CẬP NHẬT] Khung giờ nào có ít nhất 1 khối LỊCH LIÊN QUAN đến học viên đang xem
-            // (của chính học viên đó, hoặc chưa gán học viên nào) ở bất kỳ ngày nào -> coi là
-            // "có lịch". Khối thuộc về (các) học viên KHÁC — không liên quan tới người đang xem —
-            // được coi như KHÔNG có lịch và gộp chung vào phần trống, để bảng lịch bên học viên
-            // gọn hơn, chỉ nổi bật đúng khung giờ của mình.
+            // [CẬP NHẬT] Hàng chỉ thu gọn khi KHÔNG AI có lịch gì ở khung giờ đó (bất kỳ ngày nào).
+            // Việc ẨN RIÊNG từng ô của học viên khác (thành "Không có lịch — bấm để xem") đã được
+            // renderBlock() xử lý theo TỪNG Ô, độc lập với việc thu gọn cả hàng ở đây — để tránh vẽ
+            // chồng 2 lớp "Không có lịch" (1 theo hàng, 1 theo ô) lên nhau.
             const occupied = {};
             timeList.forEach(t => { occupied[t] = false; });
             scheduleBlocks.forEach(block => {
-                const emails = Array.isArray(block.studentEmails) ? block.studentEmails.filter(Boolean) : [];
-                const isRelevant = !emails.length ||
-                    (currentEmail && emails.some(e => e.trim().toLowerCase() === currentEmail.trim().toLowerCase()));
-                if (!isRelevant) return; // của học viên khác -> bỏ qua, không tính là "có lịch"
                 block.times.forEach(t => { occupied[t] = true; });
             });
 
@@ -4927,95 +4922,36 @@ function toggleCompletion(symbolElement) {
         //
         // - Gemini:  lấy key MIỄN PHÍ tại https://aistudio.google.com/apikey
         // - Mistral: lấy key MIỄN PHÍ (gói "Experiment") tại https://console.mistral.ai
-        const GEMINI_API_KEY  = 'AQ.Ab8RN6KkxLevhsTgNNIHs016D87KBSifdDDjs_mX_LyQgUiyJQ';
-        const GEMINI_MODEL    = 'gemini-2.5-flash';
+        // [BẢO MẬT] Không còn giữ API key Gemini/Mistral ở đây nữa — 2 key thật nằm trong
+        // secrets của Edge Function "ai-proxy" (server), trình duyệt chỉ gọi qua proxy này
+        // kèm access_token đăng nhập, không bao giờ cầm key thật nữa.
+        const AI_PROXY_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/ai-proxy`;
 
-        const MISTRAL_API_KEY = 'ddkIaJqJgZVLPxprrF3ESBpYegqfEbqt';
-        const MISTRAL_MODEL   = 'mistral-small-latest';
-
-        function geminiConfigured() {
-            return !!GEMINI_API_KEY && GEMINI_API_KEY !== 'YOUR_GEMINI_API_KEY_HERE';
-        }
-        function mistralConfigured() {
-            return !!MISTRAL_API_KEY && MISTRAL_API_KEY !== 'YOUR_MISTRAL_API_KEY_HERE';
-        }
-        // Còn ít nhất 1 trong 2 provider được cấu hình thì tính năng AI vẫn dùng được
+        // Server tự quyết định Gemini/Mistral cái nào khả dụng, nên phía client luôn coi
+        // như "đã cấu hình" — nếu cả 2 đều chưa cấu hình secret, proxy sẽ trả lỗi rõ ràng.
         function aiConfigured() {
-            return geminiConfigured() || mistralConfigured();
+            return true;
         }
 
-        async function callGeminiJSON(prompt) {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
-            const res = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }],
-                    generationConfig: { responseMimeType: 'application/json', temperature: 0.4 }
-                })
-            });
-            if (!res.ok) {
-                const errText = await res.text().catch(() => '');
-                throw new Error('Gemini API lỗi (' + res.status + '): ' + errText.slice(0, 200));
-            }
-            const data = await res.json();
-            const parts = (data && data.candidates && data.candidates[0] &&
-                data.candidates[0].content && data.candidates[0].content.parts) || [];
-            const text = parts.map(p => p.text || '').join('');
-            const cleaned = text.replace(/```json|```/g, '').trim();
-            return JSON.parse(cleaned);
-        }
-
-        // Mistral dùng API dạng OpenAI-compatible (chat/completions), có hỗ trợ
-        // response_format json_object để buộc trả về JSON hợp lệ.
-        async function callMistralJSON(prompt) {
-            const url = 'https://api.mistral.ai/v1/chat/completions';
-            const res = await fetch(url, {
+        // Gọi AI qua ai-proxy (server tự thử Gemini -> Mistral, học viên hầu như không nhận
+        // ra có sự cố, trừ khi CẢ 2 đều lỗi — giữ nguyên trải nghiệm như code cũ).
+        async function callAIJSON(prompt) {
+            const { data: { session } } = await sb.auth.getSession();
+            if (!session) throw new Error('Vui lòng đăng nhập lại.');
+            const resp = await fetch(AI_PROXY_FUNCTION_URL, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + MISTRAL_API_KEY
+                    'Authorization': 'Bearer ' + session.access_token,
+                    'apikey': SUPABASE_ANON_KEY
                 },
-                body: JSON.stringify({
-                    model: MISTRAL_MODEL,
-                    messages: [{ role: 'user', content: prompt }],
-                    temperature: 0.4,
-                    response_format: { type: 'json_object' }
-                })
+                body: JSON.stringify({ prompt })
             });
-            if (!res.ok) {
-                const errText = await res.text().catch(() => '');
-                throw new Error('Mistral API lỗi (' + res.status + '): ' + errText.slice(0, 200));
+            const result = await resp.json().catch(() => ({}));
+            if (!resp.ok || result.error) {
+                throw new Error(result.error || ('AI proxy lỗi (' + resp.status + ')'));
             }
-            const data = await res.json();
-            const text = (data && data.choices && data.choices[0] &&
-                data.choices[0].message && data.choices[0].message.content) || '';
-            const cleaned = text.replace(/```json|```/g, '').trim();
-            return JSON.parse(cleaned);
-        }
-
-        // Gọi AI theo thứ tự ưu tiên: Gemini -> Mistral. Nếu provider hiện tại
-        // lỗi (hết quota/429, mất mạng, key sai...) thì tự động thử provider kế
-        // tiếp — học viên hầu như không nhận ra có sự cố, trừ khi CẢ 2 đều lỗi.
-        async function callAIJSON(prompt) {
-            const providers = [];
-            if (geminiConfigured())  providers.push({ name: 'Gemini',  fn: callGeminiJSON });
-            if (mistralConfigured()) providers.push({ name: 'Mistral', fn: callMistralJSON });
-
-            if (providers.length === 0) {
-                throw new Error('Chưa có provider AI nào được cấu hình.');
-            }
-
-            let lastErr = null;
-            for (const provider of providers) {
-                try {
-                    return await provider.fn(prompt);
-                } catch (err) {
-                    console.warn('[AI] ' + provider.name + ' lỗi, thử provider dự phòng kế tiếp:', err.message);
-                    lastErr = err;
-                }
-            }
-            throw lastErr || new Error('Tất cả provider AI đều lỗi.');
+            return result.result;
         }
 
         // Chuyển nội dung HTML của bài báo thành văn bản thuần, giữ khoảng trắng giữa các đoạn/dòng
@@ -9262,15 +9198,13 @@ function toggleCompletion(symbolElement) {
         // Pixabay API để tìm 1 ảnh khác PHÙ HỢP VỚI CHÍNH TỪ ĐÓ (vd "Cat" -> ảnh con mèo),
         // thay vì chỉ hiện 1 icon chung chung cho mọi trường hợp.
         //
-        // ⚠️ BẠN CẦN TỰ ĐĂNG KÝ API KEY (miễn phí) TẠI: https://pixabay.com/api/docs/
-        // rồi dán vào biến PIXABAY_API_KEY bên dưới. Vì đây là web app chạy hoàn toàn
-        // phía trình duyệt (không có server riêng), API key sẽ lộ ra nếu ai đó xem
-        // mã nguồn trang (View Source). Với gói Pixabay miễn phí thì rủi ro thấp (chỉ bị
-        // giới hạn số lượt gọi/giờ nếu bị lạm dụng, không tốn phí), nhưng bạn nên biết điều này.
-        const PIXABAY_API_KEY = '56544847-409d66abd567108a329537591';
+        // [BẢO MẬT] Không còn giữ API key Pixabay ở đây nữa — key thật nằm trong secrets của
+        // Edge Function "pixabay-image" (server), trình duyệt chỉ gọi qua proxy này kèm
+        // access_token đăng nhập, không bao giờ cầm key thật nữa.
+        const PIXABAY_PROXY_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/pixabay-image`;
 
         // Ảnh dự phòng "cuối cùng" (icon hình ảnh trung tính) - chỉ dùng khi:
-        //   - chưa cấu hình PIXABAY_API_KEY, HOẶC
+        //   - server chưa cấu hình PIXABAY_API_KEY, HOẶC
         //   - gọi API cũng thất bại / không tìm thấy kết quả nào
         const KID_IMG_FALLBACK = 'https://pixabay.com/get/g35bba82e19b67f01c030530e510650a0f492021083641f5b76f475ca52ccb857865f553ffb533dd6a508974fe7b3b661_1920.png?longlived=';
 
@@ -9282,20 +9216,26 @@ function toggleCompletion(symbolElement) {
             return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
         }
 
-        // Gọi Pixabay API tìm ảnh theo từ khoá tiếng Anh, có cache + fallback an toàn
+        // Gọi Pixabay qua Edge Function proxy để tìm ảnh theo từ khoá tiếng Anh, có cache +
+        // fallback an toàn y hệt trước, chỉ khác là không còn gọi thẳng Pixabay bằng key lộ.
         async function kidFetchPixabayImage(term) {
             if (kidPixabayCache[term] !== undefined) return kidPixabayCache[term];
-            if (!PIXABAY_API_KEY || PIXABAY_API_KEY === 'YOUR_PIXABAY_API_KEY_HERE') {
-                return null; // chưa cấu hình key -> để hàm gọi dùng ảnh dự phòng chung
-            }
             try {
-                const url = `https://pixabay.com/api/?key=${encodeURIComponent(PIXABAY_API_KEY)}&q=${encodeURIComponent(term)}&image_type=photo&safesearch=true&per_page=3`;
-                const res = await fetch(url);
+                const { data: { session } } = await sb.auth.getSession();
+                if (!session) return null;
+                const res = await fetch(PIXABAY_PROXY_FUNCTION_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + session.access_token,
+                        'apikey': SUPABASE_ANON_KEY
+                    },
+                    body: JSON.stringify({ term })
+                });
                 if (!res.ok) throw new Error('HTTP ' + res.status);
                 const data = await res.json();
-                const found = (data.hits && data.hits.length > 0) ? data.hits[0].webformatURL : null;
-                kidPixabayCache[term] = found;
-                return found;
+                kidPixabayCache[term] = data.url || null;
+                return kidPixabayCache[term];
             } catch (err) {
                 console.warn(`[Pixabay] Không lấy được ảnh cho từ "${term}":`, err);
                 kidPixabayCache[term] = null;
@@ -24693,7 +24633,7 @@ function toggleCompletion(symbolElement) {
                 return Promise.reject(new Error('Chưa sẵn sàng module AI dùng chung.'));
             }
             if (!window.aiHelper.aiConfigured()) {
-                return Promise.reject(new Error('Chưa cấu hình AI (GEMINI_API_KEY / MISTRAL_API_KEY).'));
+                return Promise.reject(new Error('Chưa cấu hình AI trên server (ai-proxy).'));
             }
             return window.aiHelper.callAIJSON(prompt);
         }
