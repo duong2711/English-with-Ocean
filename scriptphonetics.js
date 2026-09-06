@@ -1007,6 +1007,95 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     // ================== [KẾT THÚC] Quản lý quyền đăng nhập ==================
 
+    // ================== [MỚI] Giảng viên theo dõi Egress (Băng thông) ==================
+    let bandwidthBtn = null;
+    let bandwidthModal = null;
+
+    function ensureBandwidthUI() {
+        if (bandwidthBtn) return; // đã tạo rồi thì bỏ qua
+
+        // 1. Tạo nút nổi
+        bandwidthBtn = document.createElement('button');
+        bandwidthBtn.id = 'bandwidth-manager-btn';
+        bandwidthBtn.textContent = '📊 Băng thông';
+        bandwidthBtn.className = 'kid-btn';
+        // Đặt nút này ở góc dưới bên phải, dịch sang trái một chút để không đè lên nút Quyền đăng nhập
+        bandwidthBtn.style.cssText = 'position:fixed; bottom:16px; right:160px; z-index:9998; display:none; box-shadow:0 2px 10px rgba(0,0,0,.25);';
+        bandwidthBtn.addEventListener('click', openBandwidthModal);
+        document.body.appendChild(bandwidthBtn);
+
+        // 2. Tạo khung Modal (Popup)
+        bandwidthModal = document.createElement('div');
+        bandwidthModal.id = 'bandwidth-manager-modal';
+        bandwidthModal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:9999; align-items:center; justify-content:center;';
+        bandwidthModal.innerHTML = `
+            <div style="background:#fff; color:#222; border-radius:14px; padding:22px; max-width:500px; width:92%; max-height:80vh; overflow-y:auto; font-family:inherit;">
+                <h3 style="margin-top:0; color:var(--primary-dark);">📊 Băng thông học viên (Tuần)</h3>
+                <p style="font-size:13px; color:#555; margin-bottom:14px;">Hiển thị lượng Egress (tải audio) học viên đã dùng. Cập nhật theo thời gian thực (Giới hạn: 200MB/tuần).</p>
+                <div id="bandwidth-list" style="display:flex; flex-direction:column; gap:10px;"></div>
+                <button type="button" id="bandwidth-close-btn" class="kid-btn" style="margin-top:16px; width:100%;">Đóng</button>
+            </div>
+        `;
+        document.body.appendChild(bandwidthModal);
+
+        document.getElementById('bandwidth-close-btn').addEventListener('click', () => {
+            bandwidthModal.style.display = 'none';
+        });
+    }
+
+    async function openBandwidthModal() {
+        ensureBandwidthUI();
+        bandwidthModal.style.display = 'flex';
+        const listEl = document.getElementById('bandwidth-list');
+        listEl.innerHTML = '<p style="text-align:center; opacity:0.7;">⏳ Đang tải dữ liệu...</p>';
+
+        try {
+            // Lấy dữ liệu từ bảng user_bandwidth, xếp người dùng nhiều nhất lên đầu
+            const { data, error } = await sb.from('user_bandwidth')
+                                            .select('*')
+                                            .order('used_bytes', { ascending: false });
+            if (error) throw error;
+
+            if (!data || data.length === 0) {
+                listEl.innerHTML = '<p style="text-align:center; opacity:0.6;">Chưa có dữ liệu tải file của học viên nào.</p>';
+                return;
+            }
+
+            // Vẽ danh sách
+            listEl.innerHTML = data.map(row => {
+                const usedMB = (row.used_bytes / (1024 * 1024)).toFixed(2);
+                const limitMB = (row.limit_bytes / (1024 * 1024)).toFixed(0);
+                const pct = Math.min(100, Math.round((row.used_bytes / row.limit_bytes) * 100));
+
+                let color = 'var(--success)';
+                if (pct >= 100) color = 'var(--danger)';
+                else if (pct >= 75) color = '#ea580c'; // Cam đậm
+                else if (pct >= 50) color = 'var(--warning)';
+
+                const startDate = new Date(row.week_start).toLocaleDateString('vi-VN');
+
+                return `
+                    <div style="padding:12px; border:1px solid var(--border); border-radius:10px; background:var(--surface-2);">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-weight:700; font-size:14px; color:var(--text);">
+                            <span>${row.email}</span>
+                            <span style="color:${color}">${usedMB} / ${limitMB} MB</span>
+                        </div>
+                        <div style="height:8px; background:var(--border-strong); border-radius:4px; overflow:hidden;">
+                            <div style="height:100%; width:${pct}%; background:${color}; transition: width 0.3s ease;"></div>
+                        </div>
+                        <div style="font-size:11.5px; color:var(--text-muted); margin-top:6px; display:flex; justify-content:space-between;">
+                            <span>Đã dùng: ${pct}%</span>
+                            <span>Chu kỳ từ: ${startDate}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        } catch (err) {
+            listEl.innerHTML = '<p style="color:red; text-align:center;">Lỗi: ' + err.message + '</p>';
+        }
+    }
+    // ==================================================================================
+
     /**
      * @description Cập nhật giao diện người dùng dựa trên trạng thái đăng nhập.
      * @param {object | null} user - Đối tượng người dùng Supabase
@@ -1047,6 +1136,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // [MỚI] Nút "Quyền đăng nhập" — chỉ giảng viên thấy, xem khối "Quản lý quyền đăng nhập" ở trên
             ensureAllowlistUI();
             if (allowlistBtn) allowlistBtn.style.display = isTeacher ? 'block' : 'none';
+            // [MỚI] Nút Quản lý Băng thông Egress
+            ensureBandwidthUI();
+            if (bandwidthBtn) bandwidthBtn.style.display = isTeacher ? 'block' : 'none';
             // [MỚI] Học viên: ẩn hẳn cụm nút Mở khóa/Lưu lịch/Đặt lại ô trống + badge
             // trạng thái (CHỈ XEM / ĐANG CHỈNH SỬA) — các điều khiển này chỉ giảng viên dùng.
             if (lichHocAdminControls) lichHocAdminControls.style.display = isTeacher ? 'flex' : 'none';
@@ -1122,6 +1214,7 @@ document.addEventListener('DOMContentLoaded', () => {
             isTeacher = false;
             if (teacherImpersonateBtn) teacherImpersonateBtn.style.display = 'none';
             if (allowlistBtn) { allowlistBtn.style.display = 'none'; closeAllowlistModal(); }
+            if (bandwidthBtn) { bandwidthBtn.style.display = 'none'; if (bandwidthModal) bandwidthModal.style.display = 'none'; }
             if (lichHocAdminControls) lichHocAdminControls.style.display = 'none';
             if (lichHocStatusBadge) lichHocStatusBadge.style.display = 'none';
             if (typeof window.__lichHocRedraw === 'function') window.__lichHocRedraw();
@@ -3961,22 +4054,59 @@ function toggleCompletion(symbolElement) {
         }
 
         // [QUAN TRỌNG] Logic hiển thị audio
+        // [QUAN TRỌNG] Logic hiển thị audio (Có kiểm soát Egress)
         if (data.audio_url) {
             const audioEl = document.createElement('audio');
             audioEl.controls = true;
-            audioEl.src = data.audio_url; 
+            audioEl.src = data.audio_url; // Giữ tạm URL public để trình duyệt render cái khung audio
+            audioEl.preload = "none";     // Chặn tải file trước khi bấm Play
             
-            // [MỚI] Khi bấm nghe ghi âm này, tự động phát luôn video hướng dẫn phát âm
-            // (nếu ký tự IPA đang chọn có sẵn video) để học viên vừa nghe vừa xem hướng dẫn —
-            // NHƯNG nếu người dùng đã chủ động bấm "Dừng" video trước đó thì KHÔNG tự phát lại
-            // nữa, tôn trọng thao tác dừng của họ cho tới khi họ chủ động bấm "Tiếp tục".
-            audioEl.addEventListener('play', () => {
-                if (currentVideoSrc && !videoManuallyPaused) {
-                    vimeoPlayerContainer.classList.remove('video-hidden');
-                    loadOrUpdateIframe(currentVideoSrc, '1');
-                    videoPlaceholder.style.display = 'none';
-                    videoPlayBtn.disabled = true;
-                    videoPauseBtn.disabled = false;
+            audioEl.addEventListener('play', async (e) => {
+                // Nếu file chưa được xác thực Signed URL
+                if (!audioEl.dataset.loaded) {
+                    e.preventDefault(); // Chặn việc phát nhạc
+                    audioEl.pause();    // Dừng ngay lập tức
+                    try {
+                        const { data: { session } } = await sb.auth.getSession();
+                        const resp = await fetch(`${SUPABASE_URL}/functions/v1/get-secure-media`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${session.access_token}`,
+                                'apikey': SUPABASE_ANON_KEY
+                            },
+                            body: JSON.stringify({ publicUrl: data.audio_url })
+                        });
+                        const result = await resp.json();
+                        
+                        if (!resp.ok) throw new Error(result.error);
+                        
+                        // Nếu server trả về cảnh báo (50% hoặc 75%), hiện thông báo cho học viên
+                        if (result.warning) {
+                            if (window.vocabTap && window.vocabTap.toast) {
+                                window.vocabTap.toast('⚠️ ' + result.warning, 'warning');
+                            } else {
+                                alert(result.warning);
+                            }
+                        }
+
+                        // Thay link cũ bằng Signed URL an toàn và tự động phát
+                        audioEl.src = result.signedUrl;
+                        audioEl.dataset.loaded = 'true'; // Đánh dấu là đã xác thực
+                        audioEl.play();
+                    } catch (err) {
+                        alert(err.message); // Hiển thị lỗi nếu hết 100% dung lượng
+                    }
+                } else {
+                    // [MỚI] Khi bấm nghe ghi âm này, tự động phát luôn video hướng dẫn phát âm
+                    // (Chỉ chạy khi audio đã được load thành công qua bước kiểm duyệt)
+                    if (currentVideoSrc && !videoManuallyPaused) {
+                        vimeoPlayerContainer.classList.remove('video-hidden');
+                        loadOrUpdateIframe(currentVideoSrc, '1');
+                        videoPlaceholder.style.display = 'none';
+                        videoPlayBtn.disabled = true;
+                        videoPauseBtn.disabled = false;
+                    }
                 }
             });
             
