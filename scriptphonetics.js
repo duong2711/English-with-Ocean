@@ -3822,8 +3822,10 @@ function toggleCompletion(symbolElement) {
 
         // [MỚI] Nhãn "⏳ Chờ chấm" / "🔴 Cần ghi âm lại" / "✅ Đã chấm" — chỉ hiện với ghi âm
         // (không hiện với ghi chú chữ)
+        let gradeTag = null;
+        let undoGradeBtn = null;
         if (data.audio_url) {
-            const gradeTag = document.createElement('span');
+            gradeTag = document.createElement('span');
             if (isPendingGrading) {
                 gradeTag.className = 'phonam-grade-tag phonam-grade-tag-pending';
                 gradeTag.textContent = '⏳ Chờ chấm';
@@ -3835,6 +3837,57 @@ function toggleCompletion(symbolElement) {
                 gradeTag.textContent = '✅ Đã chấm';
             }
             headerRow.appendChild(gradeTag);
+            // [MỚI] Ghi âm đã chấm xong rồi -> hiện nút "↺ Chấm lại" phòng khi giảng viên lỡ
+            // bấm nhầm Đúng/Sai. Không hiện lúc còn "Chờ chấm" (lúc đó đã có sẵn 2 nút chấm rồi).
+            if (isTeacher && !isPendingGrading) addUndoGradeButton();
+        }
+
+        // [MỚI] Nút "↺ Chấm lại" — bấm vào sẽ đưa ghi âm về trạng thái "Chờ chấm" (xoá is_correct
+        // vừa chấm) và hiện lại khung 2 nút Đúng/Cần ghi âm lại để giảng viên chấm lại từ đầu.
+        // Tách thành hàm riêng vì cần gọi được cả lúc hiển thị ban đầu (ghi âm đã có sẵn trạng
+        // thái chấm) lẫn ngay sau khi vừa chấm xong trong phiên hiện tại (xem renderReviewBox).
+        function addUndoGradeButton() {
+            if (undoGradeBtn) return; // đã có sẵn rồi, tránh tạo trùng
+            undoGradeBtn = document.createElement('button');
+            undoGradeBtn.type = 'button';
+            undoGradeBtn.className = 'phonam-undo-grade-btn';
+            undoGradeBtn.title = 'Hoàn tác lượt chấm trước đó để chấm lại';
+            undoGradeBtn.textContent = '↺ Chấm lại';
+            undoGradeBtn.style.marginLeft = '6px';
+            undoGradeBtn.addEventListener('click', async () => {
+                if (!confirm('Chấm lại ghi âm này? Trạng thái sẽ quay về "Chờ chấm" để bạn chọn lại Đúng/Sai.')) return;
+                undoGradeBtn.disabled = true;
+                undoGradeBtn.textContent = 'Đang hoàn tác...';
+                try {
+                    const { error } = await sb
+                        .from('comments')
+                        .update({ graded: false, is_correct: null, graded_at: null, graded_by: null })
+                        .eq('id', data.id);
+                    if (error) throw error;
+
+                    data.graded = false;
+                    data.is_correct = null;
+
+                    commentDiv.classList.remove('comment-item-graded', 'comment-item-needs-redo');
+                    commentDiv.classList.add('comment-item-pending-grading');
+                    if (gradeTag) {
+                        gradeTag.className = 'phonam-grade-tag phonam-grade-tag-pending';
+                        gradeTag.textContent = '⏳ Chờ chấm';
+                    }
+                    undoGradeBtn.remove();
+                    undoGradeBtn = null;
+                    renderReviewBox();
+                    if (typeof refreshPhoneticsGradingBadge === 'function') refreshPhoneticsGradingBadge({ notify: false });
+                } catch (err) {
+                    console.error('Lỗi khi hoàn tác chấm ghi âm (kiểm tra cột "graded"/"is_correct" trên bảng "comments"):', err.message);
+                    alert(`Không thể hoàn tác: ${err.message}`);
+                    if (undoGradeBtn) {
+                        undoGradeBtn.disabled = false;
+                        undoGradeBtn.textContent = '↺ Chấm lại';
+                    }
+                }
+            });
+            headerRow.appendChild(undoGradeBtn);
         }
 
         // [MỚI] Nút xóa ghi âm — chỉ xóa được khi nhập đúng mật khẩu Admin
@@ -3955,7 +4008,10 @@ function toggleCompletion(symbolElement) {
         //   ô phiên âm của học viên đó chuyển XANH LÁ.
         // ⚠️ CẦN CHẠY FILE SQL "comments_teacher_feedback_setup.sql" ĐI KÈM trên Supabase trước
         // (để tạo cột "is_correct" trên bảng "comments", cùng cột "text" nếu bảng chưa có sẵn).
-        if (isTeacher && isPendingGrading) {
+        // [MỚI] Khung chấm (nhận xét + 2 nút Đúng/Cần ghi âm lại) — tách thành hàm riêng để có
+        // thể gọi lại sau khi giảng viên bấm "↺ Chấm lại" (undo) ở trên, chứ không chỉ hiện
+        // đúng 1 lần lúc ghi âm còn "Chờ chấm" như trước đây.
+        function renderReviewBox() {
             const reviewBox = document.createElement('div');
             reviewBox.className = 'phonam-review-box';
 
@@ -4031,14 +4087,13 @@ function toggleCompletion(symbolElement) {
                     commentDiv.classList.remove('comment-item-pending-grading');
                     commentDiv.classList.add(isCorrect ? 'comment-item-graded' : 'comment-item-needs-redo');
 
-                    const tagEl = headerRow.querySelector('.phonam-grade-tag');
-                    if (tagEl) {
+                    if (gradeTag) {
                         if (isCorrect) {
-                            tagEl.className = 'phonam-grade-tag phonam-grade-tag-done';
-                            tagEl.textContent = '✅ Đã chấm';
+                            gradeTag.className = 'phonam-grade-tag phonam-grade-tag-done';
+                            gradeTag.textContent = '✅ Đã chấm';
                         } else {
-                            tagEl.className = 'phonam-grade-tag phonam-grade-tag-needs-redo';
-                            tagEl.textContent = '🔴 Cần ghi âm lại';
+                            gradeTag.className = 'phonam-grade-tag phonam-grade-tag-needs-redo';
+                            gradeTag.textContent = '🔴 Cần ghi âm lại';
                         }
                     }
 
@@ -4053,6 +4108,7 @@ function toggleCompletion(symbolElement) {
                     }
 
                     reviewBox.remove();
+                    addUndoGradeButton(); // [MỚI] Vừa chấm xong -> hiện luôn nút "↺ Chấm lại" phòng khi bấm nhầm
                     // Cập nhật lại badge + danh sách "đang chờ chấm" ngay lập tức, không cần toast.
                     if (typeof refreshPhoneticsGradingBadge === 'function') refreshPhoneticsGradingBadge({ notify: false });
                 } catch (err) {
@@ -4072,6 +4128,7 @@ function toggleCompletion(symbolElement) {
             reviewBox.appendChild(btnRow);
             commentDiv.appendChild(reviewBox);
         }
+        if (isTeacher && isPendingGrading) renderReviewBox();
 
         if (data.audio_url || (data.text && data.text.trim() !== "")) {
              commentsList.appendChild(commentDiv);
@@ -26082,6 +26139,55 @@ function toggleCompletion(symbolElement) {
         }
         headerRow.appendChild(gradeTag);
 
+        // [MỚI] Ghi âm đã chấm xong rồi -> hiện nút "↺ Chấm lại" phòng khi giảng viên lỡ bấm
+        // nhầm Đúng/Sai, y hệt cơ chế bên "Phiên âm" (displayComment). Không hiện lúc còn
+        // "Chờ chấm" vì lúc đó đã có sẵn 2 nút chấm ở khung bên dưới rồi.
+        let undoGradeBtn = null;
+        if (isTeacher && !isPendingGrading) addUndoGradeButton();
+
+        function addUndoGradeButton() {
+            if (undoGradeBtn) return; // đã có sẵn rồi, tránh tạo trùng
+            undoGradeBtn = document.createElement('button');
+            undoGradeBtn.type = 'button';
+            undoGradeBtn.className = 'phonam-undo-grade-btn';
+            undoGradeBtn.title = 'Hoàn tác lượt chấm trước đó để chấm lại';
+            undoGradeBtn.textContent = '↺ Chấm lại';
+            undoGradeBtn.style.marginLeft = '6px';
+            undoGradeBtn.addEventListener('click', async () => {
+                if (!confirm('Chấm lại ghi âm này? Trạng thái sẽ quay về "Chờ chấm" để bạn chọn lại Đúng/Sai.')) return;
+                undoGradeBtn.disabled = true;
+                undoGradeBtn.textContent = 'Đang hoàn tác...';
+                try {
+                    const { error } = await sb
+                        .from(SPK_TABLE)
+                        .update({ graded: false, is_correct: null, graded_at: null, graded_by: null })
+                        .eq('id', data.id);
+                    if (error) throw error;
+
+                    data.graded = false;
+                    data.is_correct = null;
+
+                    card.classList.remove('comment-item-graded', 'comment-item-needs-redo');
+                    card.classList.add('comment-item-pending-grading');
+                    gradeTag.className = 'phonam-grade-tag phonam-grade-tag-pending';
+                    gradeTag.textContent = '⏳ Chờ chấm';
+                    undoGradeBtn.remove();
+                    undoGradeBtn = null;
+                    renderReviewBox();
+                    if (typeof window.refreshSpeakingGradingBadge === 'function') window.refreshSpeakingGradingBadge({ notify: false });
+                    if (typeof opts.onGraded === 'function') opts.onGraded(data);
+                } catch (err) {
+                    console.error('Lỗi khi hoàn tác chấm ghi âm luyện nói (kiểm tra cột "graded"/"is_correct" trên bảng "speaking_comments"):', err.message);
+                    alert(`Không thể hoàn tác: ${err.message}`);
+                    if (undoGradeBtn) {
+                        undoGradeBtn.disabled = false;
+                        undoGradeBtn.textContent = '↺ Chấm lại';
+                    }
+                }
+            });
+            headerRow.appendChild(undoGradeBtn);
+        }
+
         // Nút xóa — chỉ xóa được khi nhập đúng mật khẩu Admin, y hệt bảng "comments" của Phiên âm.
         const deleteBtn = document.createElement('button');
         deleteBtn.type = 'button';
@@ -26144,8 +26250,10 @@ function toggleCompletion(symbolElement) {
             card.appendChild(timeEl);
         }
 
-        // Chỉ giảng viên mới thấy khung chấm này, và chỉ khi ghi âm còn đang "chờ chấm".
-        if (isTeacher && isPendingGrading) {
+        // [MỚI] Khung chấm (nhận xét + 2 nút Đúng/Cần nói lại) — tách thành hàm riêng để có thể
+        // gọi lại sau khi giảng viên bấm "↺ Chấm lại" (undo) ở trên, chứ không chỉ hiện đúng 1
+        // lần lúc ghi âm còn "Chờ chấm" như trước đây. Chỉ giảng viên mới thấy khung này.
+        function renderReviewBox() {
             const reviewBox = document.createElement('div');
             reviewBox.className = 'phonam-review-box';
 
@@ -26212,6 +26320,7 @@ function toggleCompletion(symbolElement) {
                     }
 
                     reviewBox.remove();
+                    addUndoGradeButton(); // [MỚI] Vừa chấm xong -> hiện luôn nút "↺ Chấm lại" phòng khi bấm nhầm
                     if (typeof window.refreshSpeakingGradingBadge === 'function') window.refreshSpeakingGradingBadge({ notify: false });
                     if (typeof opts.onGraded === 'function') opts.onGraded(data);
                 } catch (err) {
@@ -26231,6 +26340,7 @@ function toggleCompletion(symbolElement) {
             reviewBox.appendChild(btnRow);
             card.appendChild(reviewBox);
         }
+        if (isTeacher && isPendingGrading) renderReviewBox();
 
         return card;
     }

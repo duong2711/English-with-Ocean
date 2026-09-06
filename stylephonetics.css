@@ -2060,6 +2060,31 @@ h3 { font-size:0.95rem; font-weight:600; color:var(--text); margin:0 0 8px; }
 .phonam-redo-btn:active { transform: scale(0.96); }
 .phonam-redo-btn:disabled { opacity: 0.6; cursor: default; }
 
+/* [MỚI] Nút "↺ Chấm lại" — nằm cạnh nhãn trạng thái, chỉ hiện khi ghi âm ĐÃ chấm xong. Giảng
+   viên bấm vào để hoàn tác lượt chấm trước đó (lỡ bấm nhầm Đúng/Sai) và đưa ghi âm về lại
+   "Chờ chấm" để chấm lại từ đầu. Cố tình để kiểu "mờ/nhạt" (viền đứt nét, chữ xám) như nút
+   "↺ Tự động" bên module bài kiểm tra, vì đây là thao tác phụ chứ không phải hành động chính. */
+.phonam-undo-grade-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    margin-left: 6px;
+    padding: 2px 9px;
+    border-radius: 999px;
+    border: 1px dashed var(--border-strong);
+    background: var(--surface);
+    color: var(--text-muted);
+    font-size: 0.68rem;
+    font-weight: 700;
+    line-height: 1.6;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;
+}
+.phonam-undo-grade-btn:hover { background: var(--warning-light); border-color: var(--warning); color: #92650c; }
+.phonam-undo-grade-btn:active { transform: scale(0.94); }
+.phonam-undo-grade-btn:disabled { opacity: 0.6; cursor: default; }
+
 /* [MỚI] Ghi âm chưa được chấm -> nền vàng; giảng viên yêu cầu ghi âm lại -> nền đỏ; đã chấm
    đúng/hoàn thành -> nền xanh lá — học viên nhìn vào là biết ngay bài của mình đang ở đâu. */
 .comment-item-pending-grading { border-color: var(--warning); background: var(--warning-light); }
