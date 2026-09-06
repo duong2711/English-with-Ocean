@@ -3822,10 +3822,8 @@ function toggleCompletion(symbolElement) {
 
         // [MỚI] Nhãn "⏳ Chờ chấm" / "🔴 Cần ghi âm lại" / "✅ Đã chấm" — chỉ hiện với ghi âm
         // (không hiện với ghi chú chữ)
-        let gradeTag = null;
-        let undoGradeBtn = null;
         if (data.audio_url) {
-            gradeTag = document.createElement('span');
+            const gradeTag = document.createElement('span');
             if (isPendingGrading) {
                 gradeTag.className = 'phonam-grade-tag phonam-grade-tag-pending';
                 gradeTag.textContent = '⏳ Chờ chấm';
@@ -3837,57 +3835,6 @@ function toggleCompletion(symbolElement) {
                 gradeTag.textContent = '✅ Đã chấm';
             }
             headerRow.appendChild(gradeTag);
-            // [MỚI] Ghi âm đã chấm xong rồi -> hiện nút "↺ Chấm lại" phòng khi giảng viên lỡ
-            // bấm nhầm Đúng/Sai. Không hiện lúc còn "Chờ chấm" (lúc đó đã có sẵn 2 nút chấm rồi).
-            if (isTeacher && !isPendingGrading) addUndoGradeButton();
-        }
-
-        // [MỚI] Nút "↺ Chấm lại" — bấm vào sẽ đưa ghi âm về trạng thái "Chờ chấm" (xoá is_correct
-        // vừa chấm) và hiện lại khung 2 nút Đúng/Cần ghi âm lại để giảng viên chấm lại từ đầu.
-        // Tách thành hàm riêng vì cần gọi được cả lúc hiển thị ban đầu (ghi âm đã có sẵn trạng
-        // thái chấm) lẫn ngay sau khi vừa chấm xong trong phiên hiện tại (xem renderReviewBox).
-        function addUndoGradeButton() {
-            if (undoGradeBtn) return; // đã có sẵn rồi, tránh tạo trùng
-            undoGradeBtn = document.createElement('button');
-            undoGradeBtn.type = 'button';
-            undoGradeBtn.className = 'phonam-undo-grade-btn';
-            undoGradeBtn.title = 'Hoàn tác lượt chấm trước đó để chấm lại';
-            undoGradeBtn.textContent = '↺ Chấm lại';
-            undoGradeBtn.style.marginLeft = '6px';
-            undoGradeBtn.addEventListener('click', async () => {
-                if (!confirm('Chấm lại ghi âm này? Trạng thái sẽ quay về "Chờ chấm" để bạn chọn lại Đúng/Sai.')) return;
-                undoGradeBtn.disabled = true;
-                undoGradeBtn.textContent = 'Đang hoàn tác...';
-                try {
-                    const { error } = await sb
-                        .from('comments')
-                        .update({ graded: false, is_correct: null, graded_at: null, graded_by: null })
-                        .eq('id', data.id);
-                    if (error) throw error;
-
-                    data.graded = false;
-                    data.is_correct = null;
-
-                    commentDiv.classList.remove('comment-item-graded', 'comment-item-needs-redo');
-                    commentDiv.classList.add('comment-item-pending-grading');
-                    if (gradeTag) {
-                        gradeTag.className = 'phonam-grade-tag phonam-grade-tag-pending';
-                        gradeTag.textContent = '⏳ Chờ chấm';
-                    }
-                    undoGradeBtn.remove();
-                    undoGradeBtn = null;
-                    renderReviewBox();
-                    if (typeof refreshPhoneticsGradingBadge === 'function') refreshPhoneticsGradingBadge({ notify: false });
-                } catch (err) {
-                    console.error('Lỗi khi hoàn tác chấm ghi âm (kiểm tra cột "graded"/"is_correct" trên bảng "comments"):', err.message);
-                    alert(`Không thể hoàn tác: ${err.message}`);
-                    if (undoGradeBtn) {
-                        undoGradeBtn.disabled = false;
-                        undoGradeBtn.textContent = '↺ Chấm lại';
-                    }
-                }
-            });
-            headerRow.appendChild(undoGradeBtn);
         }
 
         // [MỚI] Nút xóa ghi âm — chỉ xóa được khi nhập đúng mật khẩu Admin
@@ -4008,10 +3955,7 @@ function toggleCompletion(symbolElement) {
         //   ô phiên âm của học viên đó chuyển XANH LÁ.
         // ⚠️ CẦN CHẠY FILE SQL "comments_teacher_feedback_setup.sql" ĐI KÈM trên Supabase trước
         // (để tạo cột "is_correct" trên bảng "comments", cùng cột "text" nếu bảng chưa có sẵn).
-        // [MỚI] Khung chấm (nhận xét + 2 nút Đúng/Cần ghi âm lại) — tách thành hàm riêng để có
-        // thể gọi lại sau khi giảng viên bấm "↺ Chấm lại" (undo) ở trên, chứ không chỉ hiện
-        // đúng 1 lần lúc ghi âm còn "Chờ chấm" như trước đây.
-        function renderReviewBox() {
+        if (isTeacher && isPendingGrading) {
             const reviewBox = document.createElement('div');
             reviewBox.className = 'phonam-review-box';
 
@@ -4087,13 +4031,14 @@ function toggleCompletion(symbolElement) {
                     commentDiv.classList.remove('comment-item-pending-grading');
                     commentDiv.classList.add(isCorrect ? 'comment-item-graded' : 'comment-item-needs-redo');
 
-                    if (gradeTag) {
+                    const tagEl = headerRow.querySelector('.phonam-grade-tag');
+                    if (tagEl) {
                         if (isCorrect) {
-                            gradeTag.className = 'phonam-grade-tag phonam-grade-tag-done';
-                            gradeTag.textContent = '✅ Đã chấm';
+                            tagEl.className = 'phonam-grade-tag phonam-grade-tag-done';
+                            tagEl.textContent = '✅ Đã chấm';
                         } else {
-                            gradeTag.className = 'phonam-grade-tag phonam-grade-tag-needs-redo';
-                            gradeTag.textContent = '🔴 Cần ghi âm lại';
+                            tagEl.className = 'phonam-grade-tag phonam-grade-tag-needs-redo';
+                            tagEl.textContent = '🔴 Cần ghi âm lại';
                         }
                     }
 
@@ -4108,7 +4053,6 @@ function toggleCompletion(symbolElement) {
                     }
 
                     reviewBox.remove();
-                    addUndoGradeButton(); // [MỚI] Vừa chấm xong -> hiện luôn nút "↺ Chấm lại" phòng khi bấm nhầm
                     // Cập nhật lại badge + danh sách "đang chờ chấm" ngay lập tức, không cần toast.
                     if (typeof refreshPhoneticsGradingBadge === 'function') refreshPhoneticsGradingBadge({ notify: false });
                 } catch (err) {
@@ -4128,7 +4072,6 @@ function toggleCompletion(symbolElement) {
             reviewBox.appendChild(btnRow);
             commentDiv.appendChild(reviewBox);
         }
-        if (isTeacher && isPendingGrading) renderReviewBox();
 
         if (data.audio_url || (data.text && data.text.trim() !== "")) {
              commentsList.appendChild(commentDiv);
@@ -4404,13 +4347,18 @@ function toggleCompletion(symbolElement) {
 
             if (isTeacher) return; // giảng viên luôn xem đầy đủ, không thu gọn
 
-            // [CẬP NHẬT] Hàng chỉ thu gọn khi KHÔNG AI có lịch gì ở khung giờ đó (bất kỳ ngày nào).
-            // Việc ẨN RIÊNG từng ô của học viên khác (thành "Không có lịch — bấm để xem") đã được
-            // renderBlock() xử lý theo TỪNG Ô, độc lập với việc thu gọn cả hàng ở đây — để tránh vẽ
-            // chồng 2 lớp "Không có lịch" (1 theo hàng, 1 theo ô) lên nhau.
+            // [CẬP NHẬT] Khung giờ nào có ít nhất 1 khối LỊCH LIÊN QUAN đến học viên đang xem
+            // (của chính học viên đó, hoặc chưa gán học viên nào) ở bất kỳ ngày nào -> coi là
+            // "có lịch". Khối thuộc về (các) học viên KHÁC — không liên quan tới người đang xem —
+            // được coi như KHÔNG có lịch và gộp chung vào phần trống, để bảng lịch bên học viên
+            // gọn hơn, chỉ nổi bật đúng khung giờ của mình.
             const occupied = {};
             timeList.forEach(t => { occupied[t] = false; });
             scheduleBlocks.forEach(block => {
+                const emails = Array.isArray(block.studentEmails) ? block.studentEmails.filter(Boolean) : [];
+                const isRelevant = !emails.length ||
+                    (currentEmail && emails.some(e => e.trim().toLowerCase() === currentEmail.trim().toLowerCase()));
+                if (!isRelevant) return; // của học viên khác -> bỏ qua, không tính là "có lịch"
                 block.times.forEach(t => { occupied[t] = true; });
             });
 
@@ -4979,36 +4927,95 @@ function toggleCompletion(symbolElement) {
         //
         // - Gemini:  lấy key MIỄN PHÍ tại https://aistudio.google.com/apikey
         // - Mistral: lấy key MIỄN PHÍ (gói "Experiment") tại https://console.mistral.ai
-        // [BẢO MẬT] Không còn giữ API key Gemini/Mistral ở đây nữa — 2 key thật nằm trong
-        // secrets của Edge Function "ai-proxy" (server), trình duyệt chỉ gọi qua proxy này
-        // kèm access_token đăng nhập, không bao giờ cầm key thật nữa.
-        const AI_PROXY_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/ai-proxy`;
+        const GEMINI_API_KEY  = 'AQ.Ab8RN6KkxLevhsTgNNIHs016D87KBSifdDDjs_mX_LyQgUiyJQ';
+        const GEMINI_MODEL    = 'gemini-2.5-flash';
 
-        // Server tự quyết định Gemini/Mistral cái nào khả dụng, nên phía client luôn coi
-        // như "đã cấu hình" — nếu cả 2 đều chưa cấu hình secret, proxy sẽ trả lỗi rõ ràng.
+        const MISTRAL_API_KEY = 'NqY5rCZC7rrhudm0JIMnC9wwmRlOqtzO';
+        const MISTRAL_MODEL   = 'mistral-small-2603';
+
+        function geminiConfigured() {
+            return !!GEMINI_API_KEY && GEMINI_API_KEY !== 'YOUR_GEMINI_API_KEY_HERE';
+        }
+        function mistralConfigured() {
+            return !!MISTRAL_API_KEY && MISTRAL_API_KEY !== 'YOUR_MISTRAL_API_KEY_HERE';
+        }
+        // Còn ít nhất 1 trong 2 provider được cấu hình thì tính năng AI vẫn dùng được
         function aiConfigured() {
-            return true;
+            return geminiConfigured() || mistralConfigured();
         }
 
-        // Gọi AI qua ai-proxy (server tự thử Gemini -> Mistral, học viên hầu như không nhận
-        // ra có sự cố, trừ khi CẢ 2 đều lỗi — giữ nguyên trải nghiệm như code cũ).
-        async function callAIJSON(prompt) {
-            const { data: { session } } = await sb.auth.getSession();
-            if (!session) throw new Error('Vui lòng đăng nhập lại.');
-            const resp = await fetch(AI_PROXY_FUNCTION_URL, {
+        async function callGeminiJSON(prompt) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }],
+                    generationConfig: { responseMimeType: 'application/json', temperature: 0.4 }
+                })
+            });
+            if (!res.ok) {
+                const errText = await res.text().catch(() => '');
+                throw new Error('Gemini API lỗi (' + res.status + '): ' + errText.slice(0, 200));
+            }
+            const data = await res.json();
+            const parts = (data && data.candidates && data.candidates[0] &&
+                data.candidates[0].content && data.candidates[0].content.parts) || [];
+            const text = parts.map(p => p.text || '').join('');
+            const cleaned = text.replace(/```json|```/g, '').trim();
+            return JSON.parse(cleaned);
+        }
+
+        // Mistral dùng API dạng OpenAI-compatible (chat/completions), có hỗ trợ
+        // response_format json_object để buộc trả về JSON hợp lệ.
+        async function callMistralJSON(prompt) {
+            const url = 'https://api.mistral.ai/v1/chat/completions';
+            const res = await fetch(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + session.access_token,
-                    'apikey': SUPABASE_ANON_KEY
+                    'Authorization': 'Bearer ' + MISTRAL_API_KEY
                 },
-                body: JSON.stringify({ prompt })
+                body: JSON.stringify({
+                    model: MISTRAL_MODEL,
+                    messages: [{ role: 'user', content: prompt }],
+                    temperature: 0.4,
+                    response_format: { type: 'json_object' }
+                })
             });
-            const result = await resp.json().catch(() => ({}));
-            if (!resp.ok || result.error) {
-                throw new Error(result.error || ('AI proxy lỗi (' + resp.status + ')'));
+            if (!res.ok) {
+                const errText = await res.text().catch(() => '');
+                throw new Error('Mistral API lỗi (' + res.status + '): ' + errText.slice(0, 200));
             }
-            return result.result;
+            const data = await res.json();
+            const text = (data && data.choices && data.choices[0] &&
+                data.choices[0].message && data.choices[0].message.content) || '';
+            const cleaned = text.replace(/```json|```/g, '').trim();
+            return JSON.parse(cleaned);
+        }
+
+        // Gọi AI theo thứ tự ưu tiên: Gemini -> Mistral. Nếu provider hiện tại
+        // lỗi (hết quota/429, mất mạng, key sai...) thì tự động thử provider kế
+        // tiếp — học viên hầu như không nhận ra có sự cố, trừ khi CẢ 2 đều lỗi.
+        async function callAIJSON(prompt) {
+            const providers = [];
+            if (geminiConfigured())  providers.push({ name: 'Gemini',  fn: callGeminiJSON });
+            if (mistralConfigured()) providers.push({ name: 'Mistral', fn: callMistralJSON });
+
+            if (providers.length === 0) {
+                throw new Error('Chưa có provider AI nào được cấu hình.');
+            }
+
+            let lastErr = null;
+            for (const provider of providers) {
+                try {
+                    return await provider.fn(prompt);
+                } catch (err) {
+                    console.warn('[AI] ' + provider.name + ' lỗi, thử provider dự phòng kế tiếp:', err.message);
+                    lastErr = err;
+                }
+            }
+            throw lastErr || new Error('Tất cả provider AI đều lỗi.');
         }
 
         // Chuyển nội dung HTML của bài báo thành văn bản thuần, giữ khoảng trắng giữa các đoạn/dòng
@@ -9255,13 +9262,15 @@ function toggleCompletion(symbolElement) {
         // Pixabay API để tìm 1 ảnh khác PHÙ HỢP VỚI CHÍNH TỪ ĐÓ (vd "Cat" -> ảnh con mèo),
         // thay vì chỉ hiện 1 icon chung chung cho mọi trường hợp.
         //
-        // [BẢO MẬT] Không còn giữ API key Pixabay ở đây nữa — key thật nằm trong secrets của
-        // Edge Function "pixabay-image" (server), trình duyệt chỉ gọi qua proxy này kèm
-        // access_token đăng nhập, không bao giờ cầm key thật nữa.
-        const PIXABAY_PROXY_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/pixabay-image`;
+        // ⚠️ BẠN CẦN TỰ ĐĂNG KÝ API KEY (miễn phí) TẠI: https://pixabay.com/api/docs/
+        // rồi dán vào biến PIXABAY_API_KEY bên dưới. Vì đây là web app chạy hoàn toàn
+        // phía trình duyệt (không có server riêng), API key sẽ lộ ra nếu ai đó xem
+        // mã nguồn trang (View Source). Với gói Pixabay miễn phí thì rủi ro thấp (chỉ bị
+        // giới hạn số lượt gọi/giờ nếu bị lạm dụng, không tốn phí), nhưng bạn nên biết điều này.
+        const PIXABAY_API_KEY = '56544847-409d66abd567108a329537591';
 
         // Ảnh dự phòng "cuối cùng" (icon hình ảnh trung tính) - chỉ dùng khi:
-        //   - server chưa cấu hình PIXABAY_API_KEY, HOẶC
+        //   - chưa cấu hình PIXABAY_API_KEY, HOẶC
         //   - gọi API cũng thất bại / không tìm thấy kết quả nào
         const KID_IMG_FALLBACK = 'https://pixabay.com/get/g35bba82e19b67f01c030530e510650a0f492021083641f5b76f475ca52ccb857865f553ffb533dd6a508974fe7b3b661_1920.png?longlived=';
 
@@ -9273,26 +9282,20 @@ function toggleCompletion(symbolElement) {
             return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
         }
 
-        // Gọi Pixabay qua Edge Function proxy để tìm ảnh theo từ khoá tiếng Anh, có cache +
-        // fallback an toàn y hệt trước, chỉ khác là không còn gọi thẳng Pixabay bằng key lộ.
+        // Gọi Pixabay API tìm ảnh theo từ khoá tiếng Anh, có cache + fallback an toàn
         async function kidFetchPixabayImage(term) {
             if (kidPixabayCache[term] !== undefined) return kidPixabayCache[term];
+            if (!PIXABAY_API_KEY || PIXABAY_API_KEY === 'YOUR_PIXABAY_API_KEY_HERE') {
+                return null; // chưa cấu hình key -> để hàm gọi dùng ảnh dự phòng chung
+            }
             try {
-                const { data: { session } } = await sb.auth.getSession();
-                if (!session) return null;
-                const res = await fetch(PIXABAY_PROXY_FUNCTION_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + session.access_token,
-                        'apikey': SUPABASE_ANON_KEY
-                    },
-                    body: JSON.stringify({ term })
-                });
+                const url = `https://pixabay.com/api/?key=${encodeURIComponent(PIXABAY_API_KEY)}&q=${encodeURIComponent(term)}&image_type=photo&safesearch=true&per_page=3`;
+                const res = await fetch(url);
                 if (!res.ok) throw new Error('HTTP ' + res.status);
                 const data = await res.json();
-                kidPixabayCache[term] = data.url || null;
-                return kidPixabayCache[term];
+                const found = (data.hits && data.hits.length > 0) ? data.hits[0].webformatURL : null;
+                kidPixabayCache[term] = found;
+                return found;
             } catch (err) {
                 console.warn(`[Pixabay] Không lấy được ảnh cho từ "${term}":`, err);
                 kidPixabayCache[term] = null;
@@ -24690,7 +24693,7 @@ function toggleCompletion(symbolElement) {
                 return Promise.reject(new Error('Chưa sẵn sàng module AI dùng chung.'));
             }
             if (!window.aiHelper.aiConfigured()) {
-                return Promise.reject(new Error('Chưa cấu hình AI trên server (ai-proxy).'));
+                return Promise.reject(new Error('Chưa cấu hình AI (GEMINI_API_KEY / MISTRAL_API_KEY).'));
             }
             return window.aiHelper.callAIJSON(prompt);
         }
@@ -26139,55 +26142,6 @@ function toggleCompletion(symbolElement) {
         }
         headerRow.appendChild(gradeTag);
 
-        // [MỚI] Ghi âm đã chấm xong rồi -> hiện nút "↺ Chấm lại" phòng khi giảng viên lỡ bấm
-        // nhầm Đúng/Sai, y hệt cơ chế bên "Phiên âm" (displayComment). Không hiện lúc còn
-        // "Chờ chấm" vì lúc đó đã có sẵn 2 nút chấm ở khung bên dưới rồi.
-        let undoGradeBtn = null;
-        if (isTeacher && !isPendingGrading) addUndoGradeButton();
-
-        function addUndoGradeButton() {
-            if (undoGradeBtn) return; // đã có sẵn rồi, tránh tạo trùng
-            undoGradeBtn = document.createElement('button');
-            undoGradeBtn.type = 'button';
-            undoGradeBtn.className = 'phonam-undo-grade-btn';
-            undoGradeBtn.title = 'Hoàn tác lượt chấm trước đó để chấm lại';
-            undoGradeBtn.textContent = '↺ Chấm lại';
-            undoGradeBtn.style.marginLeft = '6px';
-            undoGradeBtn.addEventListener('click', async () => {
-                if (!confirm('Chấm lại ghi âm này? Trạng thái sẽ quay về "Chờ chấm" để bạn chọn lại Đúng/Sai.')) return;
-                undoGradeBtn.disabled = true;
-                undoGradeBtn.textContent = 'Đang hoàn tác...';
-                try {
-                    const { error } = await sb
-                        .from(SPK_TABLE)
-                        .update({ graded: false, is_correct: null, graded_at: null, graded_by: null })
-                        .eq('id', data.id);
-                    if (error) throw error;
-
-                    data.graded = false;
-                    data.is_correct = null;
-
-                    card.classList.remove('comment-item-graded', 'comment-item-needs-redo');
-                    card.classList.add('comment-item-pending-grading');
-                    gradeTag.className = 'phonam-grade-tag phonam-grade-tag-pending';
-                    gradeTag.textContent = '⏳ Chờ chấm';
-                    undoGradeBtn.remove();
-                    undoGradeBtn = null;
-                    renderReviewBox();
-                    if (typeof window.refreshSpeakingGradingBadge === 'function') window.refreshSpeakingGradingBadge({ notify: false });
-                    if (typeof opts.onGraded === 'function') opts.onGraded(data);
-                } catch (err) {
-                    console.error('Lỗi khi hoàn tác chấm ghi âm luyện nói (kiểm tra cột "graded"/"is_correct" trên bảng "speaking_comments"):', err.message);
-                    alert(`Không thể hoàn tác: ${err.message}`);
-                    if (undoGradeBtn) {
-                        undoGradeBtn.disabled = false;
-                        undoGradeBtn.textContent = '↺ Chấm lại';
-                    }
-                }
-            });
-            headerRow.appendChild(undoGradeBtn);
-        }
-
         // Nút xóa — chỉ xóa được khi nhập đúng mật khẩu Admin, y hệt bảng "comments" của Phiên âm.
         const deleteBtn = document.createElement('button');
         deleteBtn.type = 'button';
@@ -26250,10 +26204,8 @@ function toggleCompletion(symbolElement) {
             card.appendChild(timeEl);
         }
 
-        // [MỚI] Khung chấm (nhận xét + 2 nút Đúng/Cần nói lại) — tách thành hàm riêng để có thể
-        // gọi lại sau khi giảng viên bấm "↺ Chấm lại" (undo) ở trên, chứ không chỉ hiện đúng 1
-        // lần lúc ghi âm còn "Chờ chấm" như trước đây. Chỉ giảng viên mới thấy khung này.
-        function renderReviewBox() {
+        // Chỉ giảng viên mới thấy khung chấm này, và chỉ khi ghi âm còn đang "chờ chấm".
+        if (isTeacher && isPendingGrading) {
             const reviewBox = document.createElement('div');
             reviewBox.className = 'phonam-review-box';
 
@@ -26320,7 +26272,6 @@ function toggleCompletion(symbolElement) {
                     }
 
                     reviewBox.remove();
-                    addUndoGradeButton(); // [MỚI] Vừa chấm xong -> hiện luôn nút "↺ Chấm lại" phòng khi bấm nhầm
                     if (typeof window.refreshSpeakingGradingBadge === 'function') window.refreshSpeakingGradingBadge({ notify: false });
                     if (typeof opts.onGraded === 'function') opts.onGraded(data);
                 } catch (err) {
@@ -26340,7 +26291,6 @@ function toggleCompletion(symbolElement) {
             reviewBox.appendChild(btnRow);
             card.appendChild(reviewBox);
         }
-        if (isTeacher && isPendingGrading) renderReviewBox();
 
         return card;
     }
