@@ -4083,6 +4083,31 @@ h3.news-editable:focus,
 
 .kid-btn{padding:9px 16px;border-radius:10px;border:1px solid var(--border,#e2e2e6);background:var(--surface,#fff);cursor:pointer;font-size:14px;}
 .kid-btn-primary{background:var(--accent,#6d5bff);color:#fff;border-color:var(--accent,#6d5bff);}
+
+/* [MỚI] Nút nổi "📊 Băng thông" (giảng viên) — JS đặt sẵn right:160px để né nút
+   "🔑 Quyền đăng nhập", nhưng vì độ dài chữ hai nút không cố định (đặc biệt trên
+   điện thoại/màn hẹp) nên vẫn đè lên nhau. Ở đây xếp CHỒNG THEO CHIỀU DỌC, cùng
+   một mép phải với nút Quyền đăng nhập, để không bao giờ đụng ngang bất kể độ
+   dài chữ. Dùng !important vì JS gán style trực tiếp (inline) nên có độ ưu tiên
+   cao hơn CSS thường. */
+#bandwidth-manager-btn{
+    right:16px !important;
+    left:auto !important;
+    bottom:64px !important; /* nằm ngay phía trên nút Quyền đăng nhập (bottom:16px + chiều cao nút + khoảng cách) */
+    white-space:nowrap;
+}
+#allowlist-manager-btn{ white-space:nowrap; }
+
+@media (max-width:480px){
+    #allowlist-manager-btn,
+    #bandwidth-manager-btn{
+        right:10px !important;
+        font-size:12.5px;
+        padding:8px 12px;
+    }
+    #bandwidth-manager-btn{ bottom:58px !important; }
+}
+
 .kid-hint{font-size:13px;opacity:.65;margin-bottom:12px;}
 
 /* Flashcard */
