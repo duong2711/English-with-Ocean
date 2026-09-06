@@ -26828,8 +26828,10 @@ function toggleCompletion(symbolElement) {
         return map;
     }
 
-    // [MỚI] Panel "Ghi âm của bạn": chỉ liệt kê câu ĐÃ DUYỆT hoặc ĐANG CHỜ CHẤM — câu bị yêu
-    // cầu ghi âm lại sẽ không hiện ở đây mà quay về vòng luyện tập (xem ls1StartQuiz()).
+    // [MỚI] Panel "Ghi âm của bạn": liệt kê MỌI câu học viên đã ghi âm — kể cả câu ĐÃ DUYỆT,
+    // ĐANG CHỜ CHẤM, và câu BỊ YÊU CẦU GHI ÂM LẠI (hiện kèm nhận xét của giảng viên qua
+    // spkBuildCard()) — để học viên không bỏ lỡ nhận xét, dù câu đó vẫn quay lại vòng luyện tập
+    // để ghi âm lại (xem ls1StartQuiz()).
     async function ls1LoadMyRecordings() {
         ls1ReviewListEl.innerHTML = '<p class="kid-hint">Đang tải...</p>';
         if (!currentUserId) {
@@ -26849,10 +26851,10 @@ function toggleCompletion(symbolElement) {
             ls1ReviewListEl.innerHTML = `<p class="kid-hint">Lỗi khi tải: ${ls1Esc(error.message)}</p>`;
             return;
         }
-        const visibleRows = (data || []).filter(row => !row.graded || row.is_correct !== false);
+        const visibleRows = data || [];
         ls1ReviewListEl.innerHTML = '';
         if (!visibleRows.length) {
-            ls1ReviewListEl.innerHTML = '<p class="kid-hint">Bạn chưa có ghi âm nào đã duyệt hoặc đang chờ chấm cho phần này.</p>';
+            ls1ReviewListEl.innerHTML = '<p class="kid-hint">Bạn chưa gửi ghi âm nào cho phần này.</p>';
             return;
         }
         visibleRows.forEach(row => {
@@ -26876,15 +26878,17 @@ function toggleCompletion(symbolElement) {
                 ? `Ngẫu nhiên ${Math.min(LS1_TOTAL_QUESTIONS, ls1Items.length)} / ${ls1Items.length} câu đã soạn`
                 : 'Chưa có câu hỏi nào — hãy quay lại sau';
         }
-        // [MỚI] Thẻ "Ghi âm của bạn" chỉ hiện khi có ít nhất 1 câu đã duyệt hoặc đang chờ chấm.
+        // [MỚI] Thẻ "Ghi âm của bạn" hiện khi có ít nhất 1 câu đã ghi âm — kể cả câu cần ghi âm
+        // lại, để học viên không bỏ lỡ nhận xét của giảng viên.
         ls1GradingMap = await ls1GetGradingMap();
         if (ls1ReviewCard) {
             const states = [...ls1GradingMap.values()];
             const approvedCount = states.filter(v => v === 'approved').length;
             const pendingCount = states.filter(v => v === 'pending').length;
-            if (approvedCount + pendingCount > 0) {
+            const needsRedoCount = states.filter(v => v === 'needs_redo').length;
+            if (approvedCount + pendingCount + needsRedoCount > 0) {
                 ls1ReviewCard.style.display = '';
-                if (ls1ReviewCountEl) ls1ReviewCountEl.textContent = `${approvedCount} đã duyệt, ${pendingCount} đang chờ chấm`;
+                if (ls1ReviewCountEl) ls1ReviewCountEl.textContent = `${approvedCount} đã duyệt, ${pendingCount} đang chờ chấm, ${needsRedoCount} cần ghi âm lại`;
             } else {
                 ls1ReviewCard.style.display = 'none';
             }
@@ -27695,8 +27699,10 @@ function toggleCompletion(symbolElement) {
         return map;
     }
 
-    // [MỚI] Panel "Ghi âm của bạn": chỉ liệt kê tình huống ĐÃ DUYỆT hoặc ĐANG CHỜ CHẤM — tình
-    // huống bị yêu cầu ghi âm lại sẽ quay về vòng luyện tập (xem ls2StartQuiz()).
+    // [MỚI] Panel "Ghi âm của bạn": liệt kê MỌI tình huống học viên đã ghi âm — kể cả tình huống
+    // ĐÃ DUYỆT, ĐANG CHỜ CHẤM, và BỊ YÊU CẦU GHI ÂM LẠI (hiện kèm nhận xét của giảng viên qua
+    // spkBuildCard()) — để học viên không bỏ lỡ nhận xét, dù tình huống đó vẫn quay lại vòng
+    // luyện tập để ghi âm lại (xem ls2StartQuiz()).
     async function ls2LoadMyRecordings() {
         ls2ReviewListEl.innerHTML = '<p class="kid-hint">Đang tải...</p>';
         if (!currentUserId) {
@@ -27716,10 +27722,10 @@ function toggleCompletion(symbolElement) {
             ls2ReviewListEl.innerHTML = `<p class="kid-hint">Lỗi khi tải: ${ls2Esc(error.message)}</p>`;
             return;
         }
-        const visibleRows = (data || []).filter(row => !row.graded || row.is_correct !== false);
+        const visibleRows = data || [];
         ls2ReviewListEl.innerHTML = '';
         if (!visibleRows.length) {
-            ls2ReviewListEl.innerHTML = '<p class="kid-hint">Bạn chưa có ghi âm nào đã duyệt hoặc đang chờ chấm cho phần này.</p>';
+            ls2ReviewListEl.innerHTML = '<p class="kid-hint">Bạn chưa gửi ghi âm nào cho phần này.</p>';
             return;
         }
         visibleRows.forEach(row => {
@@ -27743,15 +27749,17 @@ function toggleCompletion(symbolElement) {
                 ? `Ngẫu nhiên ${Math.min(LS2_TOTAL_QUESTIONS, ls2Items.length)} / ${ls2Items.length} tình huống đã soạn`
                 : 'Chưa có tình huống nào — hãy quay lại sau';
         }
-        // [MỚI] Thẻ "Ghi âm của bạn" chỉ hiện khi có ít nhất 1 tình huống đã duyệt/đang chờ chấm.
+        // [MỚI] Thẻ "Ghi âm của bạn" hiện khi có ít nhất 1 tình huống đã ghi âm — kể cả tình
+        // huống cần ghi âm lại, để học viên không bỏ lỡ nhận xét của giảng viên.
         ls2GradingMap = await ls2GetGradingMap();
         if (ls2ReviewCard) {
             const states = [...ls2GradingMap.values()];
             const approvedCount = states.filter(v => v === 'approved').length;
             const pendingCount = states.filter(v => v === 'pending').length;
-            if (approvedCount + pendingCount > 0) {
+            const needsRedoCount = states.filter(v => v === 'needs_redo').length;
+            if (approvedCount + pendingCount + needsRedoCount > 0) {
                 ls2ReviewCard.style.display = '';
-                if (ls2ReviewCountEl) ls2ReviewCountEl.textContent = `${approvedCount} đã duyệt, ${pendingCount} đang chờ chấm`;
+                if (ls2ReviewCountEl) ls2ReviewCountEl.textContent = `${approvedCount} đã duyệt, ${pendingCount} đang chờ chấm, ${needsRedoCount} cần ghi âm lại`;
             } else {
                 ls2ReviewCard.style.display = 'none';
             }
@@ -28450,8 +28458,10 @@ function toggleCompletion(symbolElement) {
         return map;
     }
 
-    // [MỚI] Panel "Ghi âm của bạn": chỉ liệt kê đoạn ĐÃ DUYỆT hoặc ĐANG CHỜ CHẤM — đoạn bị yêu
-    // cầu ghi âm lại sẽ quay về vòng luyện tập (xem lsshStartPractice()).
+    // [MỚI] Panel "Ghi âm của bạn": liệt kê MỌI đoạn học viên đã ghi âm — kể cả đoạn ĐÃ DUYỆT,
+    // ĐANG CHỜ CHẤM, và BỊ YÊU CẦU GHI ÂM LẠI (hiện kèm nhận xét của giảng viên qua
+    // spkBuildCard()) — để học viên không bỏ lỡ nhận xét, dù đoạn đó vẫn quay lại vòng luyện tập
+    // để ghi âm lại (xem lsshStartPractice()).
     async function lsshLoadMyRecordings() {
         lsshReviewListEl.innerHTML = '<p class="kid-hint">Đang tải...</p>';
         if (!currentUserId) {
@@ -28471,10 +28481,10 @@ function toggleCompletion(symbolElement) {
             lsshReviewListEl.innerHTML = `<p class="kid-hint">Lỗi khi tải: ${lsshEsc(error.message)}</p>`;
             return;
         }
-        const visibleRows = (data || []).filter(row => !row.graded || row.is_correct !== false);
+        const visibleRows = data || [];
         lsshReviewListEl.innerHTML = '';
         if (!visibleRows.length) {
-            lsshReviewListEl.innerHTML = '<p class="kid-hint">Bạn chưa có ghi âm nào đã duyệt hoặc đang chờ chấm cho phần này.</p>';
+            lsshReviewListEl.innerHTML = '<p class="kid-hint">Bạn chưa gửi ghi âm nào cho phần này.</p>';
             return;
         }
         visibleRows.forEach(row => {
@@ -28498,15 +28508,17 @@ function toggleCompletion(symbolElement) {
                 ? `Ngẫu nhiên ${Math.min(LSSH_TOTAL_ITEMS, lsshItems.length)} / ${lsshItems.length} đoạn đã soạn`
                 : 'Chưa có đoạn hội thoại nào — hãy quay lại sau';
         }
-        // [MỚI] Thẻ "Ghi âm của bạn" chỉ hiện khi có ít nhất 1 đoạn đã duyệt/đang chờ chấm.
+        // [MỚI] Thẻ "Ghi âm của bạn" hiện khi có ít nhất 1 đoạn đã ghi âm — kể cả đoạn cần ghi
+        // âm lại, để học viên không bỏ lỡ nhận xét của giảng viên.
         lsshGradingMap = await lsshGetGradingMap();
         if (lsshReviewCard) {
             const states = [...lsshGradingMap.values()];
             const approvedCount = states.filter(v => v === 'approved').length;
             const pendingCount = states.filter(v => v === 'pending').length;
-            if (approvedCount + pendingCount > 0) {
+            const needsRedoCount = states.filter(v => v === 'needs_redo').length;
+            if (approvedCount + pendingCount + needsRedoCount > 0) {
                 lsshReviewCard.style.display = '';
-                if (lsshReviewCountEl) lsshReviewCountEl.textContent = `${approvedCount} đã duyệt, ${pendingCount} đang chờ chấm`;
+                if (lsshReviewCountEl) lsshReviewCountEl.textContent = `${approvedCount} đã duyệt, ${pendingCount} đang chờ chấm, ${needsRedoCount} cần ghi âm lại`;
             } else {
                 lsshReviewCard.style.display = 'none';
             }
@@ -29013,9 +29025,9 @@ function toggleCompletion(symbolElement) {
         return map;
     }
 
-    // [MỚI] Panel "Ghi âm của bạn": liệt kê MỌI chuỗi học viên đã ghi âm (bất kể đã chấm hay
-    // chưa), dùng lại spkBuildCard() để hiện đúng ghi âm + nhãn trạng thái (⏳/🔴/✅) như mọi nơi
-    // khác trong "Nói".
+    // Panel "Ghi âm của bạn": liệt kê MỌI chuỗi học viên đã ghi âm (bất kể đã chấm hay chưa,
+    // kể cả chuỗi bị yêu cầu ghi âm lại), dùng lại spkBuildCard() để hiện đúng ghi âm + nhãn
+    // trạng thái (⏳/🔴/✅) + nhận xét của giảng viên (nếu có) như mọi nơi khác trong "Nói".
     async function lsmtLoadMyRecordings() {
         lsmtReviewListEl.innerHTML = '<p class="kid-hint">Đang tải...</p>';
         if (!currentUserId) {
@@ -29035,13 +29047,14 @@ function toggleCompletion(symbolElement) {
             lsmtReviewListEl.innerHTML = `<p class="kid-hint">Lỗi khi tải: ${lsmtEsc(error.message)}</p>`;
             return;
         }
-        // [MỚI] "Ghi âm của bạn" chỉ hiện các chuỗi ĐÃ DUYỆT hoặc ĐANG CHỜ CHẤM — chuỗi bị yêu
-        // cầu ghi âm lại (cần làm lại) sẽ không hiện ở đây nữa, mà quay về vòng luyện tập ngẫu
-        // nhiên để học viên ghi âm lại (xem lsmtStartPractice()).
-        const visibleRows = (data || []).filter(row => !row.graded || row.is_correct !== false);
+        // [MỚI] "Ghi âm của bạn" hiện MỌI chuỗi đã ghi âm — kể cả chuỗi ĐÃ DUYỆT, ĐANG CHỜ CHẤM,
+        // và BỊ YÊU CẦU GHI ÂM LẠI (hiện kèm nhận xét của giảng viên qua spkBuildCard()) — để học
+        // viên không bỏ lỡ nhận xét, dù chuỗi đó vẫn quay lại vòng luyện tập ngẫu nhiên để ghi âm
+        // lại (xem lsmtStartPractice()).
+        const visibleRows = data || [];
         lsmtReviewListEl.innerHTML = '';
         if (!visibleRows.length) {
-            lsmtReviewListEl.innerHTML = '<p class="kid-hint">Bạn chưa có ghi âm nào đã duyệt hoặc đang chờ chấm cho phần này.</p>';
+            lsmtReviewListEl.innerHTML = '<p class="kid-hint">Bạn chưa gửi ghi âm nào cho phần này.</p>';
             return;
         }
         visibleRows.forEach(row => {
@@ -29065,17 +29078,18 @@ function toggleCompletion(symbolElement) {
                 ? `Ngẫu nhiên ${Math.min(LSMT_TOTAL_ITEMS, lsmtItems.length)} / ${lsmtItems.length} chuỗi đã soạn`
                 : 'Chưa có chuỗi sự việc nào — hãy quay lại sau';
         }
-        // [MỚI] Thẻ "Ghi âm của bạn" chỉ hiện khi học viên có ít nhất 1 ghi âm ĐÃ DUYỆT hoặc
-        // ĐANG CHỜ CHẤM (chuỗi cần làm lại không tính, vì đã quay về vòng luyện tập).
+        // [MỚI] Thẻ "Ghi âm của bạn" hiện khi học viên có ít nhất 1 ghi âm — kể cả chuỗi cần
+        // ghi âm lại, để học viên không bỏ lỡ nhận xét của giảng viên.
         lsmtGradingMap = await lsmtGetGradingMap();
         if (lsmtReviewCard) {
             const states = [...lsmtGradingMap.values()];
             const approvedCount = states.filter(v => v === 'approved').length;
             const pendingCount = states.filter(v => v === 'pending').length;
-            const total = approvedCount + pendingCount;
+            const needsRedoCount = states.filter(v => v === 'needs_redo').length;
+            const total = approvedCount + pendingCount + needsRedoCount;
             if (total > 0) {
                 lsmtReviewCard.style.display = '';
-                if (lsmtReviewCountEl) lsmtReviewCountEl.textContent = `${approvedCount} đã duyệt, ${pendingCount} đang chờ chấm`;
+                if (lsmtReviewCountEl) lsmtReviewCountEl.textContent = `${approvedCount} đã duyệt, ${pendingCount} đang chờ chấm, ${needsRedoCount} cần ghi âm lại`;
             } else {
                 lsmtReviewCard.style.display = 'none';
             }
@@ -29580,8 +29594,10 @@ function toggleCompletion(symbolElement) {
         return map;
     }
 
-    // [MỚI] Panel "Ghi âm của bạn": chỉ liệt kê đề ĐÃ DUYỆT hoặc ĐANG CHỜ CHẤM — đề bị yêu cầu
-    // ghi âm lại sẽ quay về vòng luyện tập (xem lsareaStartPractice()).
+    // [MỚI] Panel "Ghi âm của bạn": liệt kê MỌI đề học viên đã ghi âm — kể cả đề ĐÃ DUYỆT, ĐANG
+    // CHỜ CHẤM, và BỊ YÊU CẦU GHI ÂM LẠI (hiện kèm nhận xét của giảng viên qua spkBuildCard()) —
+    // để học viên không bỏ lỡ nhận xét, dù đề đó vẫn quay lại vòng luyện tập để ghi âm lại (xem
+    // lsareaStartPractice()).
     async function lsareaLoadMyRecordings() {
         lsareaReviewListEl.innerHTML = '<p class="kid-hint">Đang tải...</p>';
         if (!currentUserId) {
@@ -29601,10 +29617,10 @@ function toggleCompletion(symbolElement) {
             lsareaReviewListEl.innerHTML = `<p class="kid-hint">Lỗi khi tải: ${lsareaEsc(error.message)}</p>`;
             return;
         }
-        const visibleRows = (data || []).filter(row => !row.graded || row.is_correct !== false);
+        const visibleRows = data || [];
         lsareaReviewListEl.innerHTML = '';
         if (!visibleRows.length) {
-            lsareaReviewListEl.innerHTML = '<p class="kid-hint">Bạn chưa có ghi âm nào đã duyệt hoặc đang chờ chấm cho phần này.</p>';
+            lsareaReviewListEl.innerHTML = '<p class="kid-hint">Bạn chưa gửi ghi âm nào cho phần này.</p>';
             return;
         }
         visibleRows.forEach(row => {
@@ -29628,15 +29644,17 @@ function toggleCompletion(symbolElement) {
                 ? `Ngẫu nhiên ${Math.min(LSAREA_TOTAL_ITEMS, lsareaItems.length)} / ${lsareaItems.length} đề đã soạn`
                 : 'Chưa có đề bài nào — hãy quay lại sau';
         }
-        // [MỚI] Thẻ "Ghi âm của bạn" chỉ hiện khi có ít nhất 1 đề đã duyệt/đang chờ chấm.
+        // [MỚI] Thẻ "Ghi âm của bạn" hiện khi có ít nhất 1 đề đã ghi âm — kể cả đề cần ghi âm
+        // lại, để học viên không bỏ lỡ nhận xét của giảng viên.
         lsareaGradingMap = await lsareaGetGradingMap();
         if (lsareaReviewCard) {
             const states = [...lsareaGradingMap.values()];
             const approvedCount = states.filter(v => v === 'approved').length;
             const pendingCount = states.filter(v => v === 'pending').length;
-            if (approvedCount + pendingCount > 0) {
+            const needsRedoCount = states.filter(v => v === 'needs_redo').length;
+            if (approvedCount + pendingCount + needsRedoCount > 0) {
                 lsareaReviewCard.style.display = '';
-                if (lsareaReviewCountEl) lsareaReviewCountEl.textContent = `${approvedCount} đã duyệt, ${pendingCount} đang chờ chấm`;
+                if (lsareaReviewCountEl) lsareaReviewCountEl.textContent = `${approvedCount} đã duyệt, ${pendingCount} đang chờ chấm, ${needsRedoCount} cần ghi âm lại`;
             } else {
                 lsareaReviewCard.style.display = 'none';
             }
