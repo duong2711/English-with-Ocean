@@ -26665,9 +26665,17 @@ function toggleCompletion(symbolElement) {
         ls1Recording = false;
     }
 
+    // [FIX] Khung ghi âm được chèn bằng insertAdjacentHTML('afterend', ...) ngay sau ô feedback
+    // nên KHÔNG nằm trong vùng bị xoá mỗi khi đổi câu (ls1QuizBody/ls1QuizFeedback.innerHTML = '').
+    // Gắn id cố định để luôn dọn được khung cũ trước khi chèn khung mới, tránh cộng dồn nhiều
+    // ls-record-box của các câu trước đó khi chuyển sang câu tiếp theo.
+    function ls1RemoveRecordBox() {
+        const old = document.getElementById('ls1-record-box-wrap');
+        if (old) old.remove();
+    }
     function ls1RenderRecordBox(targetText) {
         return `
-            <div class="ls-record-box">
+            <div class="ls-record-box" id="ls1-record-box-wrap">
                 <p class="ls-record-hint">🎙️ Đến lượt bạn — bấm ghi âm rồi nói lại câu trả lời mẫu:</p>
                 <div class="ls-record-target">${ls1Esc(targetText)}</div>
                 <div class="ls-record-controls">
@@ -27226,6 +27234,7 @@ function toggleCompletion(symbolElement) {
         ls1State.busy = false;
         ls1StopRecordingHard();
         ls1StopAudio();
+        ls1RemoveRecordBox();
         ls1QuizFeedback.innerHTML = '';
         ls1QuizFeedback.className = 'thcs-translate-feedback';
         ls1QuizControls.innerHTML = '';
@@ -27328,6 +27337,7 @@ function toggleCompletion(symbolElement) {
 
         // Dù đúng hay sai, luôn mời học viên ghi âm nói lại câu trả lời mẫu trước khi
         // qua câu tiếp theo — đây chính là bước "phản xạ nói" của Giai đoạn 1.
+        ls1RemoveRecordBox();
         ls1QuizFeedback.insertAdjacentHTML('afterend', ls1RenderRecordBox(correctText));
         ls1WireRecordBox(q, correctText);
 
@@ -27523,9 +27533,15 @@ function toggleCompletion(symbolElement) {
         ls2Recording = false;
     }
 
+    // [FIX] Cùng lỗi như ls1: khung ghi âm chèn bằng insertAdjacentHTML('afterend', ...) nằm
+    // ngoài vùng bị xoá khi đổi tình huống, nên phải chủ động dọn khung cũ trước khi chèn mới.
+    function ls2RemoveRecordBox() {
+        const old = document.getElementById('ls2-record-box-wrap');
+        if (old) old.remove();
+    }
     function ls2RenderRecordBox(targetText) {
         return `
-            <div class="ls-record-box">
+            <div class="ls-record-box" id="ls2-record-box-wrap">
                 <p class="ls-record-hint">🎙️ Đến lượt bạn — bấm ghi âm rồi nói lại câu mở lời:</p>
                 <div class="ls-record-target">${ls2Esc(targetText)}</div>
                 <div class="ls-record-controls">
@@ -28042,6 +28058,7 @@ function toggleCompletion(symbolElement) {
         ls2State.busy = false;
         ls2StopRecordingHard();
         ls2StopAudio();
+        ls2RemoveRecordBox();
         ls2QuizFeedback.innerHTML = '';
         ls2QuizFeedback.className = 'thcs-translate-feedback';
         ls2QuizControls.innerHTML = '';
@@ -28103,6 +28120,7 @@ function toggleCompletion(symbolElement) {
 
         // Dù đúng hay sai, luôn mời học viên ghi âm nói lại câu mở lời đúng trước khi
         // qua tình huống tiếp theo.
+        ls2RemoveRecordBox();
         ls2QuizFeedback.insertAdjacentHTML('afterend', ls2RenderRecordBox(correctText));
         ls2WireRecordBox(q, correctText);
 
