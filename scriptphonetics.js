@@ -4242,11 +4242,7 @@ function toggleCompletion(symbolElement) {
             const occupied = {};
             timeList.forEach(t => { occupied[t] = false; });
             scheduleBlocks.forEach(block => {
-                const emails = Array.isArray(block.studentEmails) ? block.studentEmails.filter(Boolean) : [];
-                const isRelevant = !emails.length ||
-                    (currentEmail && emails.some(e => e.trim().toLowerCase() === currentEmail.trim().toLowerCase()));
-                if (!isRelevant) return; // của học viên khác -> bỏ qua, không tính là "có lịch"
-                block.times.forEach(t => { occupied[t] = true; });
+            block.times.forEach(t => { occupied[t] = true; }); // có block của bất kỳ ai -> hàng này không thu gọn cả hàng
             });
 
             let i = 0;
@@ -4274,51 +4270,53 @@ function toggleCompletion(symbolElement) {
         //    trong vùng bị gộp ("Không có lịch — bấm để xem") thì tạm thời không vẽ ở đây; khối sẽ
         //    tự hiện ra khi học viên bấm mở rộng nhóm đó (xem computeCollapsedTimes + redrawBlocks).
         function renderBlock(block, collapsedTimes) {
-            const times = block.times.slice().sort();
-            block.times = times;
-            const startRow = timeRowIndex[times[0]];
-            const endRow = timeRowIndex[times[times.length - 1]] + 1;
-            if (startRow == null || endRow == null) return; // dữ liệu cũ không khớp khung giờ hiện tại
+    const times = block.times.slice().sort();
+    block.times = times;
+    const startRow = timeRowIndex[times[0]];
+    const endRow = timeRowIndex[times[times.length - 1]] + 1;
+    if (startRow == null || endRow == null) return;
 
-            const hasNote = block.note && block.note.trim();
-            const emailList = Array.isArray(block.studentEmails) ? block.studentEmails.filter(Boolean) : [];
-            const isOwn = currentEmail && emailList.some(e => e && e.trim().toLowerCase() === currentEmail.trim().toLowerCase());
-            const isOtherStudent = !isAdmin && !isTeacher && hasNote && emailList.length && !isOwn;
+    const hasNote = block.note && block.note.trim();
+    const emailList = Array.isArray(block.studentEmails) ? block.studentEmails.filter(Boolean) : [];
+    const isOwn = currentEmail && emailList.some(e => e && e.trim().toLowerCase() === currentEmail.trim().toLowerCase());
+    const isOtherStudent = !isAdmin && !isTeacher && hasNote && emailList.length && !isOwn;
+    const isHidden = isOtherStudent && !expandedOtherBlocks.has(block.id);
 
-            if (isOtherStudent && times.every(t => collapsedTimes.has(t))) {
-                return; // đang nằm gọn trong vùng "Không có lịch (bấm để xem)" -> chưa vẽ vội
-            }
+    cellsOfBlock(block).forEach(el => el.classList.add('available'));
 
-            cellsOfBlock(block).forEach(el => el.classList.add('available'));
+    let extraClass = '';
+    if (isHidden) {
+        extraClass = 'other-hidden';
+    } else if (!hasNote) {
+        extraClass = 'empty-note';
+    } else if (isAdmin || isTeacher) {
+        extraClass = '';
+    } else if (isOwn) {
+        extraClass = 'own-note';
+    } else {
+        extraClass = 'other-note';
+    }
 
-            let extraClass = '';
-            if (!hasNote) {
-                extraClass = 'empty-note';
-            } else if (isAdmin || isTeacher) {
-                extraClass = ''; // giảng viên luôn thấy màu trung tính, không phân biệt xanh/xám
-            } else if (isOwn) {
-                extraClass = 'own-note';
-            } else {
-                extraClass = 'other-note';
-            }
-
-            const div = document.createElement('div');
-            div.className = 'schedule-block' + (extraClass ? ' ' + extraClass : '');
-            div.dataset.blockId = block.id;
-            div.style.gridColumn = String(block.day + 2);
-            div.style.gridRow = `${startRow} / ${endRow}`;
-            div.textContent = hasNote ? block.note : 'Chạm để ghi chú';
-            // [MỚI] Giảng viên (hoặc đang ở chế độ chỉnh sửa) thấy thêm danh sách email học viên
-            // được giao khung giờ này trong tooltip, để dễ kiểm tra đã gán đúng nhóm chưa.
-            div.title = `${times[0]} - ${times[times.length - 1]}` +
-                ((isAdmin || isTeacher) && emailList.length ? `\nHọc viên (${emailList.length}): ${emailList.join(', ')}` : '');
-            div.addEventListener('click', (e) => {
-                e.stopPropagation();
-                if (!isAdmin) return;
-                editBlock(block);
-            });
-            grid.appendChild(div);
+    const div = document.createElement('div');
+    div.className = 'schedule-block' + (extraClass ? ' ' + extraClass : '');
+    div.dataset.blockId = block.id;
+    div.style.gridColumn = String(block.day + 2);
+    div.style.gridRow = `${startRow} / ${endRow}`;
+    div.textContent = isHidden ? 'Không có lịch (bấm để xem)' : (hasNote ? block.note : 'Chạm để ghi chú');
+    div.title = isHidden ? '' : (`${times[0]} - ${times[times.length - 1]}` +
+        ((isAdmin || isTeacher) && emailList.length ? `\nHọc viên (${emailList.length}): ${emailList.join(', ')}` : ''));
+    div.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (isHidden) {
+            expandedOtherBlocks.add(block.id);
+            redrawBlocks();
+            return;
         }
+        if (!isAdmin) return;
+        editBlock(block);
+    });
+    grid.appendChild(div);
+}
 
         function redrawBlocks() {
             grid.querySelectorAll('.schedule-block').forEach(el => el.remove());
@@ -4331,7 +4329,7 @@ function toggleCompletion(symbolElement) {
         // [MỚI] Ghi nhớ các nhóm khung giờ trống mà học viên đã chủ động bấm mở ra xem
         // (để khi vẽ lại lịch — VD sau khi giảng viên sửa 1 ô khác — nhóm đó vẫn giữ trạng thái mở).
         const collapsedEmptyGroupsExpanded = new Set();
-
+        const expandedOtherBlocks = new Set(); // block.id của lịch-học-viên-khác mà người xem đã bấm mở riêng
         // [MỚI] Thu gọn các khung giờ HOÀN TOÀN TRỐNG (không có ô ghi chú nào ở bất kỳ ngày nào
         // trong tuần) thành 1 hàng gọn duy nhất để bảng lịch bên học viên đỡ dài, dễ nhìn tổng
         // quan. Bấm vào hàng gọn đó để mở ra xem chi tiết từng khung giờ trống; khi đã mở, bấm
