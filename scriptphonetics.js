@@ -862,7 +862,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         allowlistBtn = document.createElement('button');
         allowlistBtn.id = 'allowlist-manager-btn';
-        allowlistBtn.textContent = '🔑 Quyền đăng nhập';
+        allowlistBtn.textContent = '🔑 Cấp quyền';
         allowlistBtn.className = 'kid-btn';
         allowlistBtn.style.cssText = 'position:fixed; bottom:16px; right:16px; z-index:9998; display:none; box-shadow:0 2px 10px rgba(0,0,0,.25);';
         allowlistBtn.addEventListener('click', openAllowlistModal);
