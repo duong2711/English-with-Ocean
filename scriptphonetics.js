@@ -4563,11 +4563,11 @@ function toggleCompletion(symbolElement) {
         grid.addEventListener('touchend', () => { if (isDragging) finishDrag(); });
 
         // Tải dữ liệu đã lưu (tương thích cả dữ liệu cũ dạng {day,time} đơn lẻ chưa gộp)
-        sb.from('schedule_data').select('slots').eq('id', 1).single().then(({ data }) => {
-            if (data && data.slots) {
-                // [MỚI] Tương thích ngược: lịch cũ lưu 1 email duy nhất ở "studentEmail" (chuỗi),
-                // lịch mới lưu nhiều email ở "studentEmails" (mảng). Ưu tiên mảng mới nếu có.
-                scheduleBlocks = data.slots.map((s, i) => {
+        sb.rpc('get_my_schedule').then(({ data }) => {
+    if (data) {
+        // [MỚI] Tương thích ngược: lịch cũ lưu 1 email duy nhất ở "studentEmail" (chuỗi),
+        // lịch mới lưu nhiều email ở "studentEmails" (mảng). Ưu tiên mảng mới nếu có.
+        scheduleBlocks = data.map((s, i) => {
                     const studentEmails = Array.isArray(s.studentEmails)
                         ? s.studentEmails.filter(Boolean)
                         : (s.studentEmail ? [s.studentEmail] : []);
