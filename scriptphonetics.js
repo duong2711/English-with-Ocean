@@ -463,7 +463,21 @@ document.addEventListener('DOMContentLoaded', () => {
     //
     // fetchSecureMediaUrl: gọi Edge Function, trả về Signed URL nếu còn hạn mức; nếm lỗi (kèm
     // thông báo tiếng Việt, vd hết 200MB/tuần) nếu bị từ chối.
+    //
+    // [MỚI] CACHE Signed URL trong bộ nhớ (chỉ tồn tại trong phiên tab hiện tại): Signed URL do
+    // Edge Function cấp có hạn dùng 3600 giây (1 tiếng), nhưng MỖI LẦN gọi lại sinh ra 1 chuỗi
+    // token khác nhau cho cùng 1 file — mà trình duyệt cache theo đúng từng URL (kể cả token), nên
+    // nếu cứ gọi Edge Function mới cho mỗi lượt phát thì y hệt 1 URL khác hoàn toàn, cache KHÔNG
+    // BAO GIỜ trúng, tốn egress lại từ đầu dù phát đi phát lại đúng 1 file. Giữ nguyên đúng chuỗi
+    // Signed URL cũ (miễn còn hạn) để dùng lại — lúc đó trình duyệt/CDN mới nhận ra đã gặp URL này
+    // rồi và lấy từ cache thay vì tải lại từ Storage.
+    const _secureUrlCache = new Map(); // publicUrl -> { signedUrl, expiresAt }
+    const SECURE_URL_CACHE_MS = 50 * 60 * 1000; // 50 phút — chừa 10 phút an toàn so với hạn 60 phút của Signed URL
+
     async function fetchSecureMediaUrl(publicUrl) {
+        const cached = _secureUrlCache.get(publicUrl);
+        if (cached && cached.expiresAt > Date.now()) return cached.signedUrl; // dùng lại, không gọi lại Edge Function
+
         const { data: { session } } = await sb.auth.getSession();
         if (!session) throw new Error('Vui lòng đăng nhập để nghe file này.');
         const resp = await fetch(`${SUPABASE_URL}/functions/v1/get-secure-media`, {
@@ -484,6 +498,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert(result.warning);
             }
         }
+        _secureUrlCache.set(publicUrl, { signedUrl: result.signedUrl, expiresAt: Date.now() + SECURE_URL_CACHE_MS });
         return result.signedUrl;
     }
     // resolvePlayableAudioUrl: dùng cho các Audio() thuần JS (không có control giao diện) — link
@@ -3519,6 +3534,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // chừng, phải làm lại từ câu đầu tiên khi quay lại, giống hệt khi chuyển tab/subtab trong
     // chính trang này. Dùng Page Visibility API (document.hidden) vì đây là cách chuẩn và đáng
     // tin cậy nhất để phát hiện việc rời khỏi tab trình duyệt hiện tại.
+    // [SỬA] Trước đây cứ mỗi lần quay lại tab là gọi lại NGAY LẬP TỨC, dù mới rời đi 1-2 giây —
+    // đổi tab qua lại nhanh nhiều lần (vd bấm sang xem gmail rồi quay lại) sẽ gọi query lặp đi
+    // lặp lại không cần thiết. Thêm mốc thời gian, chỉ thực sự gọi lại nếu đã CÁCH LẦN KIỂM TRA
+    // GẦN NHẤT ít nhất 20 giây — vẫn giữ được lợi ích "quay lại sau một lúc thấy số mới ngay",
+    // chỉ bỏ bớt các lần gọi lại dư thừa khi đổi tab dồn dập.
+    const VISIBILITY_REFRESH_MIN_GAP_MS = 20 * 1000;
+    let lastGradingBadgeRefreshAt = 0;
     document.addEventListener('visibilitychange', () => {
         if (document.hidden && typeof window.thcsResetTranslateIfMidProgress === 'function') {
             window.thcsResetTranslateIfMidProgress();
@@ -3526,11 +3548,14 @@ document.addEventListener('DOMContentLoaded', () => {
         // [MỚI] Vừa quay lại tab trình duyệt này (ví dụ vừa chuyển qua ứng dụng khác rồi quay
         // lại) -> kiểm tra ngay số ghi âm phiên âm đang chờ chấm, thay vì phải đợi tới lượt
         // quét định kỳ tiếp theo (tối đa 90 giây) mới thấy số mới nhất.
-        if (!document.hidden && typeof window.refreshPhoneticsGradingBadge === 'function') {
-            refreshPhoneticsGradingBadge();
-        }
-        if (!document.hidden && typeof window.refreshSpeakingGradingBadge === 'function') {
-            window.refreshSpeakingGradingBadge();
+        if (!document.hidden && Date.now() - lastGradingBadgeRefreshAt >= VISIBILITY_REFRESH_MIN_GAP_MS) {
+            lastGradingBadgeRefreshAt = Date.now();
+            if (typeof window.refreshPhoneticsGradingBadge === 'function') {
+                refreshPhoneticsGradingBadge();
+            }
+            if (typeof window.refreshSpeakingGradingBadge === 'function') {
+                window.refreshSpeakingGradingBadge();
+            }
         }
     });
 
@@ -3811,14 +3836,20 @@ function toggleCompletion(symbolElement) {
         // để nếu bước gửi bản mới bị lỗi thì học viên không bị mất trắng bản ghi âm cũ).
         let oldRowsToClean = [];
         try {
-            const { data: oldRows } = await sb
+            const { data: oldRows, error: oldRowsErr } = await sb
                 .from('comments')
                 .select('id, audio_url')
                 .eq('symbol', currentSymbol)
                 .eq('user_id', currentUserId)
                 .not('audio_url', 'is', null);
+            // [SỬA LỖI] Trước đây không kiểm tra "error" ở bước này — nếu bị lỗi (mạng, RLS...)
+            // sẽ ÂM THẦM bỏ qua việc dọn bản cũ mà không ai biết, khiến bản ghi âm cũ tích tụ dần
+            // theo thời gian dù có logic tự dọn. Giờ ghi log rõ ràng để dễ phát hiện nếu tái diễn.
+            if (oldRowsErr) throw oldRowsErr;
             oldRowsToClean = oldRows || [];
-        } catch (e) { /* không chặn luồng gửi ghi âm nếu bước này lỗi */ }
+        } catch (e) {
+            console.error('Lỗi khi tìm bản ghi âm phiên âm cũ để dọn (KHÔNG chặn việc gửi bản ghi âm mới, nhưng bản cũ có thể chưa được dọn):', e.message);
+        }
 
         try {
             const fileExt = extFromAudioMime(recordedAudioMime);
@@ -26276,14 +26307,19 @@ function toggleCompletion(symbolElement) {
         // bị mất trắng bản ghi âm cũ).
         let oldRowsToClean = [];
         try {
-            const { data: oldRows } = await sb
+            const { data: oldRows, error: oldRowsErr } = await sb
                 .from(SPK_TABLE)
                 .select('id, audio_url')
                 .eq('item_type', itemType)
                 .eq('item_key', String(itemKey))
                 .eq('user_id', currentUserId);
+            // [SỬA LỖI] Trước đây không kiểm tra "error" ở bước này — xem chú thích tương tự ở
+            // phần Phiên âm (hàm gửi ghi âm phía trên) để biết lý do.
+            if (oldRowsErr) throw oldRowsErr;
             oldRowsToClean = oldRows || [];
-        } catch (e) { /* không chặn luồng gửi ghi âm nếu bước này lỗi */ }
+        } catch (e) {
+            console.error('Lỗi khi tìm bản ghi âm Luyện nói cũ để dọn (KHÔNG chặn việc gửi bản ghi âm mới, nhưng bản cũ có thể chưa được dọn):', e.message);
+        }
 
         const fileExt = extFromAudioMime(mime);
         const uniqueFileName = `${currentUserId.substring(0, 8)}_${Date.now()}.${fileExt}`;
