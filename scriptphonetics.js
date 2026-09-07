@@ -166,9 +166,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Trình duyệt (chỉ Chrome/Edge/Cốc Cốc... hỗ trợ tốt — Safari/iOS KHÔNG hỗ trợ) có sẵn
     // SpeechRecognition, chuyển giọng nói của học viên thành văn bản; ta so khớp (fuzzy —
     // cho phép lệch nhẹ do trình duyệt nghe chưa chuẩn) với từ mục tiêu để báo đúng/sai.
-    // Dùng CHUNG cho: Flashcard "Cho bé" (20 chủ đề), Flashcard THCS/THPT, và khung tra
-    // nhanh 1 từ (word-lookup-popup) khi mở từ 2 khu vực trên. Gắn vào window.pronounceGate
-    // để mọi khối code khác trong file (đều nằm trong các IIFE riêng) gọi được.
+    // Dùng cho: Flashcard "Cho bé" (20 chủ đề) và Flashcard THCS/THPT (lật thẻ để xem nghĩa).
+    // [SỬA - Cloudflare Workers AI] Khung tra nhanh 1 từ (word-lookup-popup) KHÔNG còn dùng
+    // engine này nữa — đã chuyển sang chấm bằng Cloudflare Workers AI (xem
+    // runCFPronunciationAttempt trong khối code của word-lookup-popup) để hoạt động được cả
+    // trên Safari/iOS và có điểm % thay vì chỉ đúng/sai. Gắn vào window.pronounceGate để mọi
+    // khối code khác trong file (đều nằm trong các IIFE riêng) gọi được.
     // ================================================================================
     (() => {
         const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -5987,7 +5990,7 @@ function toggleCompletion(symbolElement) {
             try {
                 const { data, error } = await sb
                     .from('vocab_word_progress')
-                    .select('vocab_id, attempts, correct_streak, learned')
+                    .select('vocab_id, attempts, correct_streak, learned, pron_score, pron_tier_required, pron_passed_count, pron_first_checked')
                     .eq('user_id', currentUserId);
                 if (error) throw error;
                 (data || []).forEach(row => { vocabWordProgressMap[String(row.vocab_id)] = row; });
@@ -6157,46 +6160,245 @@ function toggleCompletion(symbolElement) {
         const wordLookupBody     = document.getElementById('word-lookup-body');
         const wordLookupCloseBtn = document.getElementById('word-lookup-close');
 
-        // ===== [MỚI] CHẤM PHÁT ÂM TỰ ĐỘNG khi tra từ — CHỈ áp dụng khi bấm vào từ trong khu
-        // vực Flashcard "Cho bé" (20 chủ đề) / THCS-THPT (xem wordLookupIsGatedContext bên
-        // dưới) — các khu vực khác (Tin ngắn, IELTS, Nghe...) vẫn đóng hộp thoại tự do như cũ.
+        // ===================================================================
+        // ===== [MỚI] CHẤM PHÁT ÂM BẰNG CLOUDFLARE WORKERS AI ==============
+        // Dùng chung cho: (1) khung "tra từ" bắt buộc đọc, (2) bước đọc bắt buộc trong bài
+        // kiểm tra từ vựng hàng tuần. Quy trình: ghi âm ngắn (~2.6 giây) bằng MediaRecorder ->
+        // gửi lên Edge Function "cloudflare-pronounce-score" (chuyển giọng nói thành văn bản
+        // bằng model Whisper của Cloudflare Workers AI rồi so khớp với từ mục tiêu) -> nhận về
+        // điểm 0-100%.
+        //
+        // ⚠️ CẦN TẠO/CHỈNH SỬA TRÊN SUPABASE + CLOUDFLARE TRƯỚC KHI DÙNG — xem hướng dẫn triển
+        // khai đầy đủ (SQL + code Edge Function + cách lấy Account ID/API Token Cloudflare)
+        // trong tài liệu bàn giao đi kèm.
+        //
+        //   alter table vocab_word_progress
+        //     add column if not exists pron_score numeric,
+        //     add column if not exists pron_tier_required smallint,
+        //     add column if not exists pron_passed_count smallint not null default 0,
+        //     add column if not exists pron_first_checked boolean not null default false;
+        //
+        //   create table if not exists cloudflare_speech_usage (
+        //     usage_date date primary key,
+        //     request_count integer not null default 0,
+        //     updated_at timestamptz not null default now()
+        //   );
+        //   alter table cloudflare_speech_usage enable row level security;
+        //   -- Không cần policy: chỉ Edge Function (dùng service role) mới đọc/ghi bảng này.
+        // ===================================================================
+
+        function isMicRecordingSupported() {
+            return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
+        }
+
+        // Ghi âm tối đa maxMs mili-giây (mặc định ~2.6s — đủ cho 1-2 từ tiếng Anh), tự dừng và
+        // trả về { blob, mimeType }. Từ chối (reject) nếu không xin được quyền micro/không có mic.
+        function recordShortClip(maxMs) {
+            return new Promise((resolve, reject) => {
+                navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+                    try {
+                        let mimeType = '';
+                        if (window.MediaRecorder && MediaRecorder.isTypeSupported) {
+                            if (MediaRecorder.isTypeSupported('audio/webm')) mimeType = 'audio/webm';
+                            else if (MediaRecorder.isTypeSupported('audio/mp4')) mimeType = 'audio/mp4';
+                        }
+                        const rec = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+                        const chunks = [];
+                        let done = false;
+                        rec.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunks.push(e.data); };
+                        rec.onerror = (e) => {
+                            if (done) return;
+                            done = true;
+                            stream.getTracks().forEach(t => t.stop());
+                            reject((e && e.error) || new Error('recorder-error'));
+                        };
+                        rec.onstop = () => {
+                            if (done) return;
+                            done = true;
+                            stream.getTracks().forEach(t => t.stop());
+                            resolve({ blob: new Blob(chunks, { type: rec.mimeType || mimeType || 'audio/webm' }), mimeType: rec.mimeType || mimeType || 'audio/webm' });
+                        };
+                        rec.start();
+                        setTimeout(() => { try { if (rec.state !== 'inactive') rec.stop(); } catch (err) {} }, maxMs || 2600);
+                    } catch (err) {
+                        stream.getTracks().forEach(t => t.stop());
+                        reject(err);
+                    }
+                }).catch(reject);
+            });
+        }
+
+        function blobToBase64(blob) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    const result = String(reader.result || '');
+                    const idx = result.indexOf(',');
+                    resolve(idx >= 0 ? result.slice(idx + 1) : result);
+                };
+                reader.onerror = () => reject(reader.error || new Error('read-error'));
+                reader.readAsDataURL(blob);
+            });
+        }
+
+        const CLOUDFLARE_PRONOUNCE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/cloudflare-pronounce-score`;
+
+        async function scorePronunciationCF(targetWord, audioBase64, mimeType) {
+            const { data: sessionData } = await sb.auth.getSession();
+            const session = sessionData && sessionData.session;
+            if (!session) throw new Error('Vui lòng đăng nhập lại.');
+            const resp = await fetch(CLOUDFLARE_PRONOUNCE_FUNCTION_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + session.access_token,
+                    'apikey': SUPABASE_ANON_KEY
+                },
+                body: JSON.stringify({ word: targetWord, audio: audioBase64, mimeType })
+            });
+            const result = await resp.json().catch(() => ({}));
+            if (!resp.ok || result.error) {
+                throw new Error(result.error || ('Lỗi chấm phát âm (mã ' + resp.status + ')'));
+            }
+            return result; // { score: 0-100, transcript: '...' }
+        }
+
+        // Chạy 1 lượt: ghi âm -> gửi Cloudflare Workers AI chấm -> trả { score, transcript }.
+        // callbacks: onStart, onProcessing, onTechError(code), onDone(score, transcript).
+        // "onTechError" CHỈ dùng cho lỗi kỹ thuật (không có mic/mất mạng/lỗi server) — điểm
+        // thấp KHÔNG phải lỗi kỹ thuật, luôn đi vào onDone như bình thường.
+        async function runCFPronunciationAttempt(targetWord, callbacks) {
+            callbacks = callbacks || {};
+            if (!isMicRecordingSupported()) { callbacks.onTechError && callbacks.onTechError('unsupported'); return null; }
+            let clip;
+            try {
+                callbacks.onStart && callbacks.onStart();
+                clip = await recordShortClip(2600);
+            } catch (err) {
+                const name = err && err.name;
+                const code = name === 'NotAllowedError' ? 'denied' : (name === 'NotFoundError' ? 'no-mic' : 'error');
+                callbacks.onTechError && callbacks.onTechError(code);
+                return null;
+            }
+            try {
+                callbacks.onProcessing && callbacks.onProcessing();
+                const base64 = await blobToBase64(clip.blob);
+                const result = await scorePronunciationCF(targetWord, base64, clip.mimeType);
+                const score = Math.max(0, Math.min(100, Math.round(Number(result.score) || 0)));
+                callbacks.onDone && callbacks.onDone(score, result.transcript || '');
+                return { score, transcript: result.transcript || '' };
+            } catch (err) {
+                console.error('Lỗi khi chấm phát âm (Cloudflare):', err.message);
+                callbacks.onTechError && callbacks.onTechError('network');
+                return null;
+            }
+        }
+
+        // [CÓ THỂ CHỈNH] % tối thiểu để 1 lần đọc được tính là "đạt" (dùng cả ở khung tra từ
+        // lẫn bước đọc bắt buộc trong bài kiểm tra từ vựng).
+        const VOCAB_PRON_PASS_THRESHOLD = 60;
+
+        // Hạng (tier) = số lần đọc ĐẠT còn cần thêm để 1 từ được tính là "đã học", CHỐT dựa
+        // trên điểm của LẦN ĐỌC ĐẦU TIÊN của từ đó (không đổi lại ở các lần đọc sau).
+        function pronTierForScore(score) {
+            if (score < 50) return 3;
+            if (score < 75) return 2;
+            return 1;
+        }
+
+        // Lưu 1 lần đọc mới vào tiến độ học từ (vocab_word_progress). Lần đọc ĐẦU TIÊN của mỗi
+        // từ sẽ chốt "hạng" (tier); mọi lần đọc ĐẠT (kể cả lần đầu) đều được cộng dồn vào
+        // pron_passed_count (tối đa = tier). "đã học" (learned) chỉ = true khi ĐỦ CẢ 2: đúng
+        // liên tiếp VOCAB_TEST_MASTERY_STREAK lần dịch/điền từ VÀ đủ số lần đọc đạt theo tier.
+        async function recordPronunciationAttempt(vocabId, score) {
+            if (!currentUserId || vocabId == null) return null;
+            const key = String(vocabId);
+            const prev = vocabWordProgressMap[key] || { attempts: 0, correct_streak: 0, learned: false, pron_score: null, pron_tier_required: null, pron_passed_count: 0, pron_first_checked: false };
+            const isFirst = !prev.pron_first_checked;
+            const tier = isFirst ? pronTierForScore(score) : (prev.pron_tier_required || pronTierForScore(score));
+            const passed = score >= VOCAB_PRON_PASS_THRESHOLD;
+            const newPassedCount = Math.min(tier, (prev.pron_passed_count || 0) + (passed ? 1 : 0));
+            const newLearned = (prev.correct_streak || 0) >= VOCAB_TEST_MASTERY_STREAK && newPassedCount >= tier;
+            const payload = {
+                vocab_id: vocabId,
+                user_id: currentUserId,
+                attempts: prev.attempts || 0,
+                correct_streak: prev.correct_streak || 0,
+                learned: newLearned,
+                pron_score: score,
+                pron_tier_required: tier,
+                pron_passed_count: newPassedCount,
+                pron_first_checked: true,
+                last_tested_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            };
+            try {
+                const { error } = await sb.from('vocab_word_progress').upsert(payload, { onConflict: 'vocab_id' });
+                if (error) console.error('Lỗi khi lưu tiến độ phát âm:', error.message);
+            } catch (err) {
+                console.error('Lỗi ngoại lệ khi lưu tiến độ phát âm:', err.message);
+            }
+            vocabWordProgressMap[key] = payload;
+            if (newLearned) {
+                const v = myVocabList.find(x => String(x.id) === key);
+                if (v) vocabLearnedNormSet.add(normalizeWord(v.word_norm || v.word));
+            }
+            renderMyVocabIfOpen();
+            markKnownWordsInDom();
+            return payload;
+        }
+
+        // ===== [SỬA - Cloudflare Workers AI] CHẤM PHÁT ÂM khi tra từ =====
+        // Trước đây dùng Web Speech API (chỉ đúng/sai, chạy hoàn toàn trên trình duyệt, không
+        // hoạt động trên Safari/iOS). Giờ chuyển sang chấm bằng Cloudflare Workers AI (model
+        // Whisper, qua Edge Function "cloudflare-pronounce-score"): học viên đọc 1 lần duy nhất
+        // là đóng được hộp thoại (dù đạt hay không), điểm % của lần đọc ĐẦU TIÊN quyết định
+        // "hạng" (tier) — tức còn cần thêm bao nhiêu lần đọc ĐẠT nữa thì từ đó mới được đánh
+        // dấu "đã học" trong bài kiểm tra từ vựng (xem recordPronunciationAttempt bên dưới).
+        //
+        // Bắt buộc đọc khi tra từ trong 2 trường hợp:
+        //  1) Từ nằm trong Flashcard/Câu chuyện/Dịch câu của khu vực "Cho bé" hoặc "THCS/THPT"
+        //     (giữ nguyên phạm vi cũ — xem wordLookupIsGatedContext bên dưới).
+        //  2) Từ ĐÃ CÓ trong "Kho từ vựng của tôi" nhưng CHƯA "đã học" — dù đang tra ở khu vực
+        //     nào (Tin ngắn, IELTS...), vì đây là những từ học viên đang thực sự cần luyện đọc.
         const wordLookupPronounceRow    = document.getElementById('word-lookup-pronounce-row');
         const wordLookupMicBtn          = document.getElementById('word-lookup-mic-btn');
         const wordLookupPronounceStatus = document.getElementById('word-lookup-pronounce-status');
-        let wordLookupPronounceRequired = false; // popup lần mở này có bắt buộc đọc đúng mới đóng được không
-        let wordLookupPronounceWord     = '';    // từ cần đọc đúng (chính là từ vừa chạm vào)
-        let wordLookupPronounceDone     = false; // đã đọc đúng trong lần mở popup này chưa
-        let wordLookupMicBlocked        = false; // trình duyệt không hỗ trợ/từ chối micro -> bỏ chặn
-        // [MỚI] Đếm số lần thử (sai hoặc lỗi) trên MỖI lần mở popup — quá nhiều lần vẫn không
-        // được (kể cả do lỗi mạng chập chờn khi gọi server nhận dạng giọng nói, KHÔNG phải lỗi
-        // của học viên) thì tự động bỏ chặn, tránh kẹt cứng không đóng được hộp thoại (đây chính
-        // là nguyên nhân khiến "hoàn thành Dịch câu/Câu chuyện" bị mất — học viên bị kẹt ở đây,
-        // phải tải lại trang để thoát, mà tải lại giữa chừng thì tiến độ Dịch câu bị reset).
-        let wordLookupAttemptCount = 0;
-        const WL_MAX_ATTEMPTS = 4;
+        let wordLookupPronounceRequired = false; // popup lần mở này có bắt buộc đọc mới đóng được không
+        let wordLookupPronounceWord     = '';    // từ cần đọc (chính là từ vừa chạm vào)
+        let wordLookupPronounceDone     = false; // đã đọc XONG 1 lần trong lần mở popup này chưa (dù đạt hay không)
+        let wordLookupMicBlocked        = false; // trình duyệt không hỗ trợ/từ chối micro/lỗi liên tục -> bỏ chặn
+        let wordLookupTechErrorCount    = 0;     // đếm lỗi KỸ THUẬT (mất mạng, lỗi server...), KHÔNG tính điểm thấp là lỗi
+        const WL_MAX_TECH_ERRORS = 3;
+        let wordLookupPronounceVocabId  = null;  // vocab_id để lưu điểm phát âm (null nếu từ MỚI, chưa lưu vào "Từ vựng của tôi")
+        let wordLookupPendingScore      = null;  // điểm vừa chấm được của từ MỚI, chờ gắn vocab_id sau khi lưu xong (xem runFreshWordLookup)
 
-        // Chỉ bắt buộc đọc đúng khi từ được chạm nằm trong Flashcard/Câu chuyện/Dịch câu của
-        // khu vực "Cho bé" (#kid-topic-panel) hoặc "THCS/THPT" (#thcs-unit-panel).
-        function wordLookupIsGatedContext(wordEl) {
-            return !!(wordEl && wordEl.closest && wordEl.closest('#kid-topic-panel, #thcs-unit-panel'));
+        // Chỉ bắt buộc đọc khi từ được chạm nằm trong Flashcard/Câu chuyện/Dịch câu của khu vực
+        // "Cho bé" (#kid-topic-panel)/"THCS/THPT" (#thcs-unit-panel), HOẶC từ đó đã có trong
+        // "Từ vựng của tôi" nhưng chưa "đã học" (norm: từ đã chuẩn hoá, xem normalizeWord()).
+        function wordLookupIsGatedContext(wordEl, norm) {
+            if (wordEl && wordEl.closest && wordEl.closest('#kid-topic-panel, #thcs-unit-panel')) return true;
+            if (norm) {
+                const entry = myVocabList.find(v => normalizeWord(v.word_norm || v.word) === norm);
+                if (entry && !isVocabWordLearned(entry.id)) return true;
+            }
+            return false;
         }
 
         function wordLookupUpdatePronounceUI() {
             if (!wordLookupPronounceRow || !wordLookupMicBtn || !wordLookupPronounceStatus) return;
-            if (!wordLookupPronounceRequired || !window.pronounceGate || !window.pronounceGate.supported) {
+            if (!wordLookupPronounceRequired) {
                 wordLookupPronounceRow.style.display = 'none';
                 return;
             }
-            // [SỬA LỖI] CSS mặc định của .word-lookup-pronounce-row là display:none (để ẩn ở
-            // mọi nơi khác ngoài Cho bé/THCS-THPT) — gán style.display = '' chỉ xoá override
-            // inline chứ KHÔNG hiện được hàng này lên (nó rơi về lại display:none của class),
-            // khiến nút micro không bao giờ hiện ra. Phải gán rõ 'flex' mới đúng.
+            // [LƯU Ý] CSS mặc định của .word-lookup-pronounce-row là display:none — phải gán rõ
+            // 'flex' (gán '' chỉ xoá override inline chứ không hiện được hàng này lên).
             wordLookupPronounceRow.style.display = 'flex';
             wordLookupMicBtn.classList.remove('kf-mic-listening');
             wordLookupMicBtn.classList.toggle('kf-mic-done', wordLookupPronounceDone);
-            // [MỚI] Nếu gặp lỗi không thể khắc phục được (mất mạng, trình duyệt không hỗ trợ,
-            // bị từ chối quyền mic, không có mic) -> bỏ hẳn yêu cầu đọc, ẩn nút micro, chỉ báo
-            // 1 dòng thông báo trung lập, không bắt học viên thử lại vô ích nữa.
+            // Nếu gặp lỗi không thể khắc phục được (mất mạng nhiều lần, trình duyệt không hỗ
+            // trợ ghi âm, bị từ chối quyền mic, không có mic) -> bỏ hẳn yêu cầu đọc, ẩn nút
+            // micro, chỉ báo 1 dòng thông báo trung lập, không bắt học viên thử lại vô ích nữa.
             if (wordLookupMicBlocked) {
                 wordLookupMicBtn.style.display = 'none';
                 wordLookupPronounceStatus.textContent = 'ℹ️ Không thể chấm phát âm lúc này — đã bỏ qua yêu cầu, bạn có thể đóng hộp thoại bình thường.';
@@ -6204,12 +6406,9 @@ function toggleCompletion(symbolElement) {
                 return;
             }
             wordLookupMicBtn.style.display = '';
-            wordLookupMicBtn.disabled = false;
-            if (wordLookupPronounceDone) {
-                wordLookupPronounceStatus.textContent = '✅ Phát âm đúng! Giờ bạn có thể đóng hộp thoại này.';
-                wordLookupPronounceStatus.className = 'word-lookup-pronounce-status word-lookup-pronounce-correct';
-            } else {
-                wordLookupPronounceStatus.textContent = '🎙️ Đọc to từ này để đóng hộp thoại.';
+            wordLookupMicBtn.disabled = wordLookupPronounceDone; // đọc xong 1 lần rồi thì khỏi đọc lại (đóng được luôn)
+            if (!wordLookupPronounceDone) {
+                wordLookupPronounceStatus.textContent = '🎤 Đọc to từ này để đóng hộp thoại.';
                 wordLookupPronounceStatus.className = 'word-lookup-pronounce-status';
             }
         }
@@ -6217,54 +6416,49 @@ function toggleCompletion(symbolElement) {
         if (wordLookupMicBtn) {
             wordLookupMicBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                if (!window.pronounceGate || !window.pronounceGate.supported || !wordLookupPronounceWord) return;
-                wordLookupMicBtn.classList.add('kf-mic-listening');
+                if (!wordLookupPronounceWord || wordLookupPronounceDone) return;
                 wordLookupMicBtn.disabled = true;
-                wordLookupPronounceStatus.textContent = '🔴 Đang nghe... hãy đọc to "' + wordLookupPronounceWord + '"';
-                wordLookupPronounceStatus.className = 'word-lookup-pronounce-status word-lookup-pronounce-listening';
-                window.pronounceGate.listen(wordLookupPronounceWord, {
-                    onMatch: () => {
-                        wordLookupPronounceDone = true;
-                        wordLookupAttemptCount = 0;
-                        wordLookupUpdatePronounceUI();
+                runCFPronunciationAttempt(wordLookupPronounceWord, {
+                    onStart: () => {
+                        wordLookupMicBtn.classList.add('kf-mic-listening');
+                        wordLookupPronounceStatus.textContent = '🔴 Đang nghe... hãy đọc to "' + wordLookupPronounceWord + '"';
+                        wordLookupPronounceStatus.className = 'word-lookup-pronounce-status word-lookup-pronounce-listening';
                     },
-                    onMismatch: (heard) => {
-                        wordLookupAttemptCount++;
-                        if (wordLookupAttemptCount >= WL_MAX_ATTEMPTS) {
+                    onProcessing: () => {
+                        wordLookupMicBtn.classList.remove('kf-mic-listening');
+                        wordLookupPronounceStatus.textContent = '⏳ Đang chấm phát âm...';
+                        wordLookupPronounceStatus.className = 'word-lookup-pronounce-status';
+                    },
+                    onTechError: (code) => {
+                        wordLookupMicBtn.classList.remove('kf-mic-listening');
+                        wordLookupTechErrorCount++;
+                        // Không hỗ trợ ghi âm / bị từ chối quyền mic / không có mic -> học viên
+                        // không có cách nào tự khắc phục được, bỏ chặn NGAY.
+                        if (code === 'unsupported' || code === 'denied' || code === 'no-mic' || wordLookupTechErrorCount >= WL_MAX_TECH_ERRORS) {
                             wordLookupMicBlocked = true;
-                            wordLookupUpdatePronounceUI(); // hiện thông báo "đã bỏ qua" + ẩn nút micro
-                        } else {
-                            wordLookupPronounceStatus.textContent = heard
-                                ? '❌ Chưa đúng (nghe được: "' + heard + '"), thử lại nhé!'
-                                : '❌ Chưa đúng, thử lại nhé!';
-                            wordLookupPronounceStatus.className = 'word-lookup-pronounce-status word-lookup-pronounce-wrong';
-                        }
-                    },
-                    onError: (code) => {
-                        let msg = '⚠️ Có lỗi khi nhận dạng giọng nói, hãy bấm micro và thử lại.';
-                        if (code === 'no-speech') msg = '🔇 Chưa nghe thấy gì — hãy bấm micro rồi đọc to, rõ hơn nhé!';
-                        // [SỬA LỖI] Mất mạng / trình duyệt không hỗ trợ -> học viên không có cách
-                        // nào tự khắc phục được, bỏ chặn NGAY (không bắt thử nhiều lần vô ích).
-                        else if (code === 'network') { wordLookupMicBlocked = true; }
-                        else if (code === 'denied') { wordLookupMicBlocked = true; }
-                        else if (code === 'no-mic') { wordLookupMicBlocked = true; }
-                        else if (code === 'unsupported') { wordLookupMicBlocked = true; }
-                        if (wordLookupMicBlocked) {
                             wordLookupUpdatePronounceUI(); // hiện thông báo "đã bỏ qua" + ẩn nút micro
                             return;
                         }
-                        wordLookupAttemptCount++;
-                        if (wordLookupAttemptCount >= WL_MAX_ATTEMPTS) {
-                            wordLookupMicBlocked = true;
-                            wordLookupUpdatePronounceUI();
-                            return;
-                        }
-                        wordLookupPronounceStatus.textContent = msg;
+                        wordLookupMicBtn.disabled = false;
+                        wordLookupPronounceStatus.textContent = '⚠️ Có lỗi khi chấm phát âm, hãy bấm micro và thử lại.';
                         wordLookupPronounceStatus.className = 'word-lookup-pronounce-status word-lookup-pronounce-wrong';
                     },
-                    onEnd: () => {
+                    onDone: (score) => {
                         wordLookupMicBtn.classList.remove('kf-mic-listening');
-                        wordLookupMicBtn.disabled = false;
+                        wordLookupPronounceDone = true; // đọc xong 1 lần là đóng được, dù đạt hay không
+                        const passed = score >= VOCAB_PRON_PASS_THRESHOLD;
+                        wordLookupPronounceStatus.textContent = passed
+                            ? `✅ Đạt (${score}%)! Giờ bạn có thể đóng hộp thoại này.`
+                            : `📝 Điểm: ${score}% (chưa đạt) — vẫn đóng được, cứ luyện thêm lần sau nhé!`;
+                        wordLookupPronounceStatus.className = 'word-lookup-pronounce-status ' + (passed ? 'word-lookup-pronounce-correct' : 'word-lookup-pronounce-wrong');
+                        if (wordLookupPronounceVocabId != null) {
+                            recordPronunciationAttempt(wordLookupPronounceVocabId, score);
+                        } else {
+                            // Từ MỚI, chưa có vocab_id (chưa lưu xong vào "Từ vựng của tôi") ->
+                            // lưu tạm điểm, gắn vào tiến độ ngay sau khi lưu xong (runFreshWordLookup).
+                            wordLookupPendingScore = score;
+                        }
+                        wordLookupUpdatePronounceUI();
                     }
                 });
             });
@@ -6272,14 +6466,15 @@ function toggleCompletion(symbolElement) {
 
         // force=true dùng nội bộ (vd: học viên bấm "Tra lại") để đóng không cần điều kiện gì.
         function closeWordLookupPopup(force) {
+            // [SỬA - Cloudflare Workers AI] Chỉ cần đọc XONG 1 lần (dù đạt hay không) là đóng
+            // được — xem wordLookupPronounceDone trong runCFPronunciationAttempt().
             if (!force && wordLookupPronounceRequired && !wordLookupPronounceDone
-                && window.pronounceGate && window.pronounceGate.supported && !wordLookupMicBlocked) {
-                wordLookupPronounceStatus.textContent = '🎙️ Hãy đọc đúng từ "' + wordLookupPronounceWord + '" để đóng hộp thoại này.';
+                && isMicRecordingSupported() && !wordLookupMicBlocked) {
+                wordLookupPronounceStatus.textContent = '🎤 Hãy đọc to từ "' + wordLookupPronounceWord + '" để đóng hộp thoại này.';
                 wordLookupPronounceStatus.className = 'word-lookup-pronounce-status word-lookup-pronounce-wrong';
-                if (window.vocabTap && window.vocabTap.toast) window.vocabTap.toast('🎙️ Đọc đúng từ để đóng hộp thoại chú thích nhé!', 'info');
+                if (window.vocabTap && window.vocabTap.toast) window.vocabTap.toast('🎤 Đọc từ để đóng hộp thoại chú thích nhé!', 'info');
                 return;
             }
-            if (window.pronounceGate) window.pronounceGate.stop();
             if (wordLookupPopup) wordLookupPopup.style.display = 'none';
         }
         if (wordLookupCloseBtn) wordLookupCloseBtn.addEventListener('click', () => closeWordLookupPopup(false));
@@ -6318,13 +6513,22 @@ function toggleCompletion(symbolElement) {
             wordLookupWordEl.textContent = rawWord;
             wordLookupPopup.style.display = 'flex';
 
-            // [MỚI] Chỉ bắt buộc đọc đúng phát âm mới được đóng hộp thoại khi từ này nằm trong
-            // khu vực Flashcard/Câu chuyện "Cho bé" (20 chủ đề) hoặc THCS/THPT.
-            wordLookupPronounceRequired = wordLookupIsGatedContext(wordEl);
+            // QUAN TRỌNG: nếu từ này (không phân biệt hoa/thường) đã có sẵn trong "Từ vựng của
+            // tôi" thì lấy sẵn ra đây (tính SỚM hơn vị trí cũ) để vừa biết vocab_id (dùng lưu
+            // điểm phát âm) vừa biết từ này đã "đã học" hay chưa (dùng xác định có bắt đọc
+            // không — xem wordLookupIsGatedContext).
+            const existingEntries = myVocabList.filter(v => normalizeWord(v.word_norm || v.word) === norm);
+
+            // [SỬA - Cloudflare Workers AI] Bắt buộc đọc mới được đóng hộp thoại khi từ này nằm
+            // trong khu vực Flashcard/Câu chuyện "Cho bé"/THCS-THPT, HOẶC đã có trong "Từ vựng
+            // của tôi" nhưng chưa "đã học" (xem wordLookupIsGatedContext).
+            wordLookupPronounceRequired = wordLookupIsGatedContext(wordEl, norm);
             wordLookupPronounceWord = rawWord;
             wordLookupPronounceDone = false;
             wordLookupMicBlocked = false;
-            wordLookupAttemptCount = 0;
+            wordLookupTechErrorCount = 0;
+            wordLookupPendingScore = null;
+            wordLookupPronounceVocabId = existingEntries.length > 0 ? existingEntries[0].id : null;
             wordLookupUpdatePronounceUI();
 
             // Tự động phát âm ngay khi học viên chạm vào từ (gọi NGAY, đồng bộ, không
@@ -6349,7 +6553,6 @@ function toggleCompletion(symbolElement) {
             // (AI trả lời tự do bằng văn bản nên mỗi lần tra có thể ra chữ hơi khác
             //  nhau dù cùng 1 nghĩa — nếu cứ tra lại rồi so khớp chuỗi thì sẽ bị lưu
             //  trùng. Cách chắc chắn nhất là KHÔNG tra lại khi từ đã biết rồi.)
-            const existingEntries = myVocabList.filter(v => normalizeWord(v.word_norm || v.word) === norm);
             if (existingEntries.length > 0) {
                 renderKnownWordPopup(rawWord, existingEntries, norm, contextSentence, sourceTitle);
                 return;
@@ -6387,6 +6590,42 @@ function toggleCompletion(symbolElement) {
                     runFreshWordLookup(rawWord, norm, contextSentence, sourceTitle);
                 }, { once: true });
             }
+        }
+
+        // [MỚI - Cloudflare Workers AI] Mở lại hộp thoại tra từ cho 1 từ ĐÃ LƯU nhưng CHƯA
+        // "đã học", khi học viên chủ động bấm vào từ đó trong "Kho từ vựng của tôi" — giúp
+        // luyện đọc thêm ngay mà không cần chờ gặp lại từ đó ở 1 bài đọc khác. Dùng lại đúng
+        // khung + logic chấm phát âm của khung tra từ bình thường (wordLookupIsGatedContext
+        // sẽ tự bắt buộc đọc vì từ này chưa "đã học").
+        function openMyVocabPracticePopup(vocabId) {
+            if (!wordLookupPopup || !wordLookupBody || !wordLookupWordEl) return;
+            const entry = myVocabList.find(v => String(v.id) === String(vocabId));
+            if (!entry) return;
+            const rawWord = entry.word;
+            const norm = normalizeWord(entry.word_norm || entry.word);
+            const entries = myVocabList.filter(v => normalizeWord(v.word_norm || v.word) === norm);
+
+            wordLookupWordEl.textContent = rawWord;
+            wordLookupPopup.style.display = 'flex';
+
+            wordLookupPronounceRequired = true; // đang chủ động luyện từ chưa học -> luôn bắt đọc
+            wordLookupPronounceWord = rawWord;
+            wordLookupPronounceDone = false;
+            wordLookupMicBlocked = false;
+            wordLookupTechErrorCount = 0;
+            wordLookupPendingScore = null;
+            wordLookupPronounceVocabId = entry.id;
+            wordLookupUpdatePronounceUI();
+
+            if (typeof window.speakEnglishWord === 'function') window.speakEnglishWord(rawWord);
+            if (wordLookupSpeakBtn) {
+                wordLookupSpeakBtn.onclick = () => {
+                    if (typeof window.speakEnglishWord === 'function') window.speakEnglishWord(rawWord);
+                };
+            }
+            if (wordLookupPhoneticEl) wordLookupPhoneticEl.textContent = '';
+
+            renderKnownWordPopup(rawWord, entries, norm, rawWord, entry.source_title || '');
         }
 
         // Gọi AI tra nghĩa thật (chỉ dùng cho từ CHƯA có trong danh sách, hoặc khi
@@ -6449,6 +6688,15 @@ function toggleCompletion(symbolElement) {
                 rebuildVocabNormSet();
                 markKnownWordsInDom();
                 renderMyVocabIfOpen();
+
+                // [MỚI] Nếu học viên vừa đọc để chấm phát âm (bắt buộc vì đang tra ở khu vực
+                // Cho bé/THCS-THPT) TRƯỚC KHI từ này có vocab_id (vì lúc đó còn là từ MỚI,
+                // chưa lưu xong) — giờ đã lưu xong, gắn điểm đã chấm vào đúng từ này.
+                if (result.added && result.entry && wordLookupPendingScore != null && normalizeWord(rawWord) === norm) {
+                    wordLookupPronounceVocabId = result.entry.id;
+                    recordPronunciationAttempt(result.entry.id, wordLookupPendingScore);
+                    wordLookupPendingScore = null;
+                }
 
                 const statusEl = document.getElementById('word-lookup-save-status');
                 if (result.added) {
@@ -6517,11 +6765,19 @@ function toggleCompletion(symbolElement) {
                 // -> nền xanh lá + nhãn "✓ Đã học" + có thể BẤM VÀO để ôn lại nghĩa (sai thì
                 // trừ 0.5 điểm chăm chỉ — xem openVocabWordReviewCheck() bên dưới).
                 const learned = isVocabWordLearned(v.id);
+                // [MỚI - Cloudflare Workers AI] Từ CHƯA "đã học" -> hiện số lần đọc đạt/hạng
+                // (tier) nếu đã từng đọc, + có thể BẤM VÀO để chủ động luyện đọc thêm ngay
+                // (mở lại hộp thoại tra từ) — xem openMyVocabPracticePopup() bên dưới.
+                const pronProg = vocabWordProgressMap[String(v.id)];
+                const pronBadge = (!learned && pronProg && pronProg.pron_first_checked)
+                    ? `<span class="myvocab-pron-badge">🎤 ${pronProg.pron_passed_count || 0}/${pronProg.pron_tier_required || '?'}</span>`
+                    : '';
                 return `
                 <div class="myvocab-item${learned ? ' myvocab-item-learned' : ''}" data-vocab-id="${v.id}">
                     <div class="myvocab-item-top">
                         <span class="myvocab-word">${escapeHtmlNews(v.word)}</span>
                         ${learned ? '<span class="myvocab-learned-badge">✓ Đã học</span>' : ''}
+                        ${pronBadge}
                         ${v.word_type ? `<span class="myvocab-tag">${escapeHtmlNews(v.word_type)}</span>` : ''}
                         <button type="button" class="myvocab-delete-btn" data-vocab-id="${v.id}" title="Xóa từ này">🗑️</button>
                     </div>
@@ -6532,7 +6788,7 @@ function toggleCompletion(symbolElement) {
                         <div>→ ${escapeHtmlNews(v.example_vi || '')}</div>
                     </div>` : ''}
                     ${v.source_title ? `<div class="myvocab-source">📰 Gặp trong bài: ${escapeHtmlNews(v.source_title)}</div>` : ''}
-                    ${learned ? '<div class="myvocab-review-hint">👆 Bấm vào để ôn lại nghĩa</div>' : ''}
+                    ${learned ? '<div class="myvocab-review-hint">👆 Bấm vào để ôn lại nghĩa</div>' : '<div class="myvocab-practice-hint">🎤 Bấm vào để luyện đọc</div>'}
                 </div>
             `;
             }).join('');
@@ -6545,7 +6801,7 @@ function toggleCompletion(symbolElement) {
         // ===================================================================
         // ===== [MỚI] BÀI KIỂM TRA TỪ VỰNG HÀNG TUẦN =======================
         // Điều kiện: khi "Kho từ vựng của tôi" có ÍT NHẤT 20 từ tiếng Anh KHÁC NHAU (không
-        // trùng) đang ở trạng thái "chưa học", thì mỗi TUẦN (7 ngày/lần) sẽ tạo 1 bài kiểm tra
+        // trùng) đang ở trạng thái "chưa học", thì mỗi 2 NGÀY sẽ tạo 1 bài kiểm tra
         // gồm đúng 20 từ đó (ưu tiên các từ đang ở ĐẦU danh sách hiển thị — tức mới lưu gần đây
         // nhất, đúng thứ tự "Kho từ vựng của tôi" đang hiển thị). Mỗi từ được kiểm theo 1 trong
         // 2 cách, CHỌN NGẪU NHIÊN khi tạo bài:
@@ -6555,11 +6811,13 @@ function toggleCompletion(symbolElement) {
         //   Cách 2: viết ra 1 nghĩa tiếng Việt của từ đó (từ có nhiều nghĩa, cách nhau bởi dấu
         //           phẩy/chấm phẩy/gạch chéo, thì viết ĐÚNG 1 nghĩa trong số đó là được).
         // Một từ cần kiểm ĐÚNG LIÊN TIẾP 3 LẦN (sai 1 lần trong quá trình đó sẽ bị tính lại từ
-        // đầu) thì mới chính thức được đánh dấu "đã học" — lúc đó nền của từ đó trong "Kho từ
-        // vựng của tôi" sẽ chuyển XANH LÁ, và khi gặp lại từ đó lúc đọc bài ở nơi khác sẽ được
-        // tô VÀNG (thay vì xanh lá mặc định của từ mới lưu/còn đang học).
+        // đầu) VÀ [SỬA - Cloudflare Workers AI] đọc ĐẠT đủ số lần theo "hạng" (tier) của từ đó
+        // (1-3 lần, tùy điểm của lần đọc ĐẦU TIÊN khi tra từ — xem recordPronunciationAttempt())
+        // thì mới chính thức được đánh dấu "đã học" — lúc đó nền của từ đó trong "Kho từ vựng
+        // của tôi" sẽ chuyển XANH LÁ, và khi gặp lại từ đó lúc đọc bài ở nơi khác sẽ được tô
+        // VÀNG (thay vì xanh lá mặc định của từ mới lưu/còn đang học).
         //
-        // ⚠️ CẦN TẠO 3 BẢNG SAU TRÊN SUPABASE TRƯỚC KHI DÙNG (chạy trong SQL Editor):
+        // ⚠️ CẦN TẠO CÁC BẢNG SAU TRÊN SUPABASE TRƯỚC KHI DÙNG (chạy trong SQL Editor):
         //
         //   create table if not exists vocab_word_progress (
         //     vocab_id bigint primary key references user_vocabulary(id) on delete cascade,
@@ -6567,9 +6825,20 @@ function toggleCompletion(symbolElement) {
         //     attempts int not null default 0,
         //     correct_streak int not null default 0,
         //     learned boolean not null default false,
+        //     -- [MỚI - Cloudflare Workers AI] theo dõi tiến độ ĐỌC của từ này:
+        //     pron_score numeric,                              -- điểm % của lần đọc gần nhất
+        //     pron_tier_required smallint,                     -- số lần đọc ĐẠT cần có (1-3, chốt ở lần đọc đầu)
+        //     pron_passed_count smallint not null default 0,   -- số lần đọc ĐẠT đã tích lũy được
+        //     pron_first_checked boolean not null default false, -- đã từng đọc lần nào chưa
         //     last_tested_at timestamptz,
         //     updated_at timestamptz not null default now()
         //   );
+        //   -- Nếu bảng đã tồn tại từ trước (chưa có 4 cột pron_*), chạy riêng:
+        //   -- alter table vocab_word_progress
+        //   --   add column if not exists pron_score numeric,
+        //   --   add column if not exists pron_tier_required smallint,
+        //   --   add column if not exists pron_passed_count smallint not null default 0,
+        //   --   add column if not exists pron_first_checked boolean not null default false;
         //   alter table vocab_word_progress enable row level security;
         //   create policy "Học viên tự quản lý tiến độ từ vựng của mình"
         //     on vocab_word_progress for all
@@ -6600,8 +6869,23 @@ function toggleCompletion(symbolElement) {
         //   create policy "Học viên tự quản lý câu hỏi kiểm tra từ vựng của mình"
         //     on vocab_weekly_test_items for all
         //     using (auth.uid() = user_id) with check (auth.uid() = user_id);
+        //
+        //   -- [MỚI - Cloudflare Workers AI] Bảng đếm quota gọi Cloudflare Workers AI theo NGÀY
+        //   -- (chỉ Edge Function "cloudflare-pronounce-score" đọc/ghi bảng này bằng service
+        //   -- role -> KHÔNG cần policy cho học viên truy cập trực tiếp).
+        //   create table if not exists cloudflare_speech_usage (
+        //     usage_date date primary key,
+        //     request_count integer not null default 0,
+        //     updated_at timestamptz not null default now()
+        //   );
+        //   alter table cloudflare_speech_usage enable row level security;
+        //
         // (Nếu cột "id" của bảng "user_vocabulary" không phải kiểu bigint, đổi "vocab_id bigint"
-        // ở cả 2 bảng trên cho khớp kiểu.)
+        // ở các bảng trên cho khớp kiểu.)
+        //
+        // Ngoài ra cần triển khai Edge Function "cloudflare-pronounce-score" trên Supabase +
+        // tạo tài khoản Cloudflare/lấy Account ID + API Token Workers AI — xem tài liệu bàn
+        // giao đi kèm để có đầy đủ code + hướng dẫn từng bước.
         // ===================================================================
 
         const VOCAB_TEST_SIZE = 20;
@@ -6868,16 +7152,87 @@ function toggleCompletion(symbolElement) {
                     ? `✅ Chính xác! Đáp án: <strong>${refAnswer}</strong>`
                     : `❌ Chưa đúng. Đáp án đúng: <strong>${refAnswer}</strong>`;
 
-                const nextBtn = document.createElement('button');
-                nextBtn.type = 'button';
-                nextBtn.className = 'vocab-weekly-next-btn';
-                nextBtn.textContent = (idx + 1 < total) ? 'Câu tiếp theo →' : 'Xem kết quả';
-                nextBtn.addEventListener('click', () => {
-                    currentWeeklyTestIndex++;
-                    renderVocabWeeklyQuestion();
+                // [SỬA - Cloudflare Workers AI] Nếu từ này còn thiếu lượt ĐỌC ĐẠT theo hạng
+                // (tier) đã chốt từ lần tra từ đầu tiên (hoặc chưa từng đọc lần nào) -> bắt
+                // buộc đọc thêm 1 lượt ngay tại đây trước khi cho sang câu tiếp theo. Đọc
+                // không đạt vẫn được đi tiếp (tích lũy dần qua các lần, không bắt đọc lại
+                // ngay — xem recordPronunciationAttempt()).
+                const pronProgress = vocabWordProgressMap[String(item.vocab_id)] || {};
+                const pronNeeded = !pronProgress.pron_first_checked || (pronProgress.pron_passed_count || 0) < (pronProgress.pron_tier_required || Infinity);
+                if (pronNeeded) {
+                    renderVocabWeeklyPronounceStep(item, v, idx, total);
+                } else {
+                    appendVocabWeeklyNextButton(idx, total);
+                }
+            });
+        }
+
+        // Nút "Câu tiếp theo"/"Xem kết quả" — tách riêng để dùng lại được sau cả câu trả lời
+        // dịch/điền từ VÀ sau bước đọc bắt buộc (renderVocabWeeklyPronounceStep).
+        function appendVocabWeeklyNextButton(idx, total) {
+            const nextBtn = document.createElement('button');
+            nextBtn.type = 'button';
+            nextBtn.className = 'vocab-weekly-next-btn';
+            nextBtn.textContent = (idx + 1 < total) ? 'Câu tiếp theo →' : 'Xem kết quả';
+            nextBtn.addEventListener('click', () => {
+                currentWeeklyTestIndex++;
+                renderVocabWeeklyQuestion();
+            });
+            vocabWeeklyBodyEl.appendChild(nextBtn);
+            nextBtn.focus();
+        }
+
+        // [MỚI] Bước đọc bắt buộc thêm (ngoài dịch/điền từ) trong bài kiểm tra từ vựng — chấm
+        // bằng Cloudflare Workers AI. Xuất hiện ngay sau khi trả lời xong câu dịch/điền từ,
+        // MIỄN LÀ từ này còn thiếu lượt đọc đạt theo hạng (tier) của nó.
+        function renderVocabWeeklyPronounceStep(item, v, idx, total) {
+            const progress = vocabWordProgressMap[String(item.vocab_id)] || {};
+            const tier = progress.pron_tier_required;
+            const passedCount = progress.pron_passed_count || 0;
+            const stepEl = document.createElement('div');
+            stepEl.className = 'vocab-weekly-pron-step';
+            stepEl.innerHTML = `
+                <p class="vocab-weekly-pron-instruction">🎤 Đọc to từ <strong>${escapeHtmlNews(v.word)}</strong> để luyện phát âm${tier ? ` (đã đạt ${passedCount}/${tier} lần)` : ''}:</p>
+                <button type="button" class="kf-mic-btn vocab-weekly-pron-mic-btn">
+                    <span class="kf-mic-icon">🎤</span><span class="kf-mic-label">Bắt đầu đọc</span>
+                </button>
+                <div class="vocab-weekly-pron-status word-lookup-pronounce-status"></div>
+            `;
+            vocabWeeklyBodyEl.appendChild(stepEl);
+            const micBtn = stepEl.querySelector('.vocab-weekly-pron-mic-btn');
+            const statusEl = stepEl.querySelector('.vocab-weekly-pron-status');
+
+            micBtn.addEventListener('click', () => {
+                micBtn.disabled = true;
+                runCFPronunciationAttempt(v.word, {
+                    onStart: () => {
+                        micBtn.classList.add('kf-mic-listening');
+                        statusEl.textContent = '🔴 Đang nghe... đọc to "' + v.word + '"';
+                        statusEl.className = 'vocab-weekly-pron-status word-lookup-pronounce-status word-lookup-pronounce-listening';
+                    },
+                    onProcessing: () => {
+                        micBtn.classList.remove('kf-mic-listening');
+                        statusEl.textContent = '⏳ Đang chấm phát âm...';
+                        statusEl.className = 'vocab-weekly-pron-status word-lookup-pronounce-status';
+                    },
+                    onTechError: () => {
+                        // Lỗi kỹ thuật (không có mic/mất mạng...) -> bỏ qua bước này NGAY, không
+                        // bắt học viên kẹt lại đây; sẽ tính lại ở bài kiểm tra lần sau.
+                        micBtn.classList.remove('kf-mic-listening');
+                        statusEl.textContent = 'ℹ️ Không thể chấm phát âm lúc này — bỏ qua, sẽ tính lại ở lần sau.';
+                        statusEl.className = 'vocab-weekly-pron-status word-lookup-pronounce-status';
+                        appendVocabWeeklyNextButton(idx, total);
+                    },
+                    onDone: async (score) => {
+                        micBtn.classList.remove('kf-mic-listening');
+                        const passed = score >= VOCAB_PRON_PASS_THRESHOLD;
+                        statusEl.textContent = passed ? `✅ Đạt (${score}%)!` : `📝 Điểm: ${score}% (chưa đạt, tính lại lần sau nhé)`;
+                        statusEl.className = 'vocab-weekly-pron-status word-lookup-pronounce-status ' + (passed ? 'word-lookup-pronounce-correct' : 'word-lookup-pronounce-wrong');
+                        micBtn.style.display = 'none';
+                        await recordPronunciationAttempt(item.vocab_id, score);
+                        appendVocabWeeklyNextButton(idx, total);
+                    }
                 });
-                vocabWeeklyBodyEl.appendChild(nextBtn);
-                nextBtn.focus();
             });
         }
 
@@ -6891,10 +7246,17 @@ function toggleCompletion(symbolElement) {
                 item.is_correct = isCorrect;
 
                 const vocabId = item.vocab_id;
-                const prev = vocabWordProgressMap[String(vocabId)] || { attempts: 0, correct_streak: 0, learned: false };
+                const prev = vocabWordProgressMap[String(vocabId)] || { attempts: 0, correct_streak: 0, learned: false, pron_score: null, pron_tier_required: null, pron_passed_count: 0, pron_first_checked: false };
                 const newAttempts = (prev.attempts || 0) + 1;
                 const newStreak = isCorrect ? (prev.correct_streak || 0) + 1 : 0;
-                const newLearned = newStreak >= VOCAB_TEST_MASTERY_STREAK;
+                // [SỬA - Cloudflare Workers AI] "đã học" giờ cần ĐỦ CẢ 2: đúng liên tiếp
+                // VOCAB_TEST_MASTERY_STREAK lần dịch/điền từ VÀ đủ số lần đọc đạt theo hạng
+                // (tier) đã chốt từ lần tra từ đầu tiên (xem recordPronunciationAttempt() —
+                // bước đọc bắt buộc thêm được thực hiện NGAY SAU câu này, xem
+                // renderVocabWeeklyPronounceStep()). Nếu chưa từng đọc lần nào (pron_first_checked
+                // = false) thì CHƯA thể "đã học" dù đã đúng đủ 3 lần dịch/điền từ.
+                const pronOk = !!prev.pron_first_checked && (prev.pron_passed_count || 0) >= (prev.pron_tier_required || 0);
+                const newLearned = (newStreak >= VOCAB_TEST_MASTERY_STREAK) && pronOk;
 
                 const { error: e2 } = await sb.from('vocab_word_progress').upsert({
                     vocab_id: vocabId,
@@ -6907,7 +7269,7 @@ function toggleCompletion(symbolElement) {
                 }, { onConflict: 'vocab_id' });
                 if (e2) console.error('Lỗi khi cập nhật tiến độ học từ:', e2.message);
 
-                vocabWordProgressMap[String(vocabId)] = { attempts: newAttempts, correct_streak: newStreak, learned: newLearned };
+                vocabWordProgressMap[String(vocabId)] = { ...prev, attempts: newAttempts, correct_streak: newStreak, learned: newLearned };
                 if (newLearned && item.vocab) {
                     vocabLearnedNormSet.add(normalizeWord(item.vocab.word_norm || item.vocab.word));
                 }
@@ -7077,6 +7439,16 @@ function toggleCompletion(symbolElement) {
                     const idAttr = learnedItem.dataset.vocabId;
                     const id = /^\d+$/.test(idAttr) ? Number(idAttr) : idAttr;
                     openVocabWordReviewCheck(id);
+                    return;
+                }
+
+                // [MỚI - Cloudflare Workers AI] Bấm vào 1 từ CHƯA học -> chủ động mở lại hộp
+                // thoại tra từ để luyện đọc thêm, không cần chờ gặp lại từ đó ở bài đọc khác.
+                const practiceItem = e.target.closest('.myvocab-item:not(.myvocab-item-learned)');
+                if (practiceItem) {
+                    const idAttr = practiceItem.dataset.vocabId;
+                    const id = /^\d+$/.test(idAttr) ? Number(idAttr) : idAttr;
+                    openMyVocabPracticePopup(id);
                 }
             });
         }

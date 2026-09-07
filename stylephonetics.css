@@ -5211,6 +5211,45 @@ h3.news-editable:focus,
     white-space: nowrap;
 }
 
+/* [MỚI - Cloudflare Workers AI] Từ CHƯA "đã học" -> bấm vào để chủ động luyện đọc thêm
+   (mở lại hộp thoại tra từ, xem openMyVocabPracticePopup trong scriptphonetics.js) */
+.myvocab-item:not(.myvocab-item-learned) { cursor: pointer; }
+.myvocab-item:not(.myvocab-item-learned):hover { border-color: var(--primary); }
+.myvocab-practice-hint {
+    margin-top: 8px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--primary-dark);
+    opacity: 0.75;
+}
+.myvocab-pron-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--primary-dark);
+    background: var(--primary-light);
+    border: 1.5px solid var(--primary);
+    border-radius: 20px;
+    padding: 2px 10px;
+    white-space: nowrap;
+}
+
+/* [MỚI - Cloudflare Workers AI] Bước đọc bắt buộc thêm trong bài kiểm tra từ vựng hàng tuần */
+.vocab-weekly-pron-step {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px dashed var(--border, #e5e7eb);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+.vocab-weekly-pron-instruction {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text);
+    text-align: center;
+}
+
 /* [MỚI] Banner báo có bài kiểm tra từ vựng hàng tuần, trong panel "Kho từ vựng của tôi" */
 .vocab-weekly-banner {
     display: flex;
