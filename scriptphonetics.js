@@ -6391,6 +6391,10 @@ function toggleCompletion(symbolElement) {
             }
             renderMyVocabIfOpen();
             markKnownWordsInDom();
+            // [MỚI] Cập nhật ngay điểm chăm chỉ (đã cộng pron_bonus_points ở trên) — không cần
+            // đợi học viên tự mở lại "Hồ sơ" mới thấy điểm mới, giống cách saveWordToVocab()
+            // đang làm khi vừa lưu 1 từ mới.
+            renderProfileAchievements();
             return payload;
         }
 
@@ -6729,13 +6733,20 @@ function toggleCompletion(symbolElement) {
                 markKnownWordsInDom();
                 renderMyVocabIfOpen();
 
-                // [MỚI] Nếu học viên vừa đọc để chấm phát âm (bắt buộc vì đang tra ở khu vực
-                // Cho bé/THCS-THPT) TRƯỚC KHI từ này có vocab_id (vì lúc đó còn là từ MỚI,
-                // chưa lưu xong) — giờ đã lưu xong, gắn điểm đã chấm vào đúng từ này.
-                if (result.added && result.entry && wordLookupPendingScore != null && normalizeWord(rawWord) === norm) {
+                // [SỬA] Gắn vocab_id NGAY khi lưu xong, bất kể học viên đã đọc trước đó chưa —
+                // trước đây chỉ gắn khi có sẵn điểm đang chờ (wordLookupPendingScore != null),
+                // nên nếu việc lưu từ + tra nghĩa AI xong TRƯỚC khi học viên kịp bấm mic đọc
+                // (trường hợp thường gặp nhất — lưu từ thường nhanh hơn thời gian học viên đọc)
+                // thì lúc đọc xong sau đó, điểm bị rơi vào "wordLookupPendingScore" một lần nữa
+                // nhưng không còn ai xử lý nó -> mất điểm, từ không được xếp hạng (tier) và
+                // không được cộng điểm chăm chỉ. Giờ luôn gắn vocab_id ngay khi lưu xong; nếu
+                // học viên ĐÃ đọc trước đó rồi (điểm đang chờ) thì gắn điểm luôn tại đây.
+                if (result.added && result.entry && normalizeWord(rawWord) === norm) {
                     wordLookupPronounceVocabId = result.entry.id;
-                    recordPronunciationAttempt(result.entry.id, wordLookupPendingScore);
-                    wordLookupPendingScore = null;
+                    if (wordLookupPendingScore != null) {
+                        recordPronunciationAttempt(result.entry.id, wordLookupPendingScore);
+                        wordLookupPendingScore = null;
+                    }
                 }
 
                 const statusEl = document.getElementById('word-lookup-save-status');
