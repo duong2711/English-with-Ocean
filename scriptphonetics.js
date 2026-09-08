@@ -6402,11 +6402,10 @@ function toggleCompletion(symbolElement) {
         // "hạng" (tier) — tức còn cần thêm bao nhiêu lần đọc ĐẠT nữa thì từ đó mới được đánh
         // dấu "đã học" trong bài kiểm tra từ vựng (xem recordPronunciationAttempt bên dưới).
         //
-        // Bắt buộc đọc khi tra từ trong 2 trường hợp:
-        //  1) Từ nằm trong Flashcard/Câu chuyện/Dịch câu của khu vực "Cho bé" hoặc "THCS/THPT"
-        //     (giữ nguyên phạm vi cũ — xem wordLookupIsGatedContext bên dưới).
-        //  2) Từ ĐÃ CÓ trong "Kho từ vựng của tôi" nhưng CHƯA "đã học" — dù đang tra ở khu vực
-        //     nào (Tin ngắn, IELTS...), vì đây là những từ học viên đang thực sự cần luyện đọc.
+        // [SỬA] Bắt buộc đọc ở MỌI hộp thoại tra từ, bất kể tra ở khu vực nào (Tin ngắn, IELTS,
+        // Cho bé, THCS/THPT...) và bất kể từ đó mới hay đã có sẵn trong "Từ vựng của tôi" — xem
+        // wordLookupIsGatedContext bên dưới (trước đây chỉ bắt ở Cho bé/THCS-THPT + từ đã lưu
+        // nhưng chưa chấm phát âm, giờ bỏ giới hạn phạm vi này theo yêu cầu).
         const wordLookupPronounceRow    = document.getElementById('word-lookup-pronounce-row');
         const wordLookupMicBtn          = document.getElementById('word-lookup-mic-btn');
         const wordLookupPronounceStatus = document.getElementById('word-lookup-pronounce-status');
@@ -6419,17 +6418,11 @@ function toggleCompletion(symbolElement) {
         let wordLookupPronounceVocabId  = null;  // vocab_id để lưu điểm phát âm (null nếu từ MỚI, chưa lưu vào "Từ vựng của tôi")
         let wordLookupPendingScore      = null;  // điểm vừa chấm được của từ MỚI, chờ gắn vocab_id sau khi lưu xong (xem runFreshWordLookup)
 
-        // [SỬA] Chỉ bắt buộc đọc khi từ được chạm nằm trong Flashcard/Câu chuyện/Dịch câu của
-        // khu vực "Cho bé" (#kid-topic-panel)/"THCS/THPT" (#thcs-unit-panel), HOẶC từ đó đã có
-        // trong "Từ vựng của tôi" nhưng CHƯA TỪNG được chấm phát âm — dù đã "đã học" hay chưa
-        // (norm: từ đã chuẩn hoá, xem normalizeWord()).
+        // [SỬA] Luôn bắt buộc đọc để chấm điểm, ở BẤT KỲ hộp thoại tra từ nào — không còn giới
+        // hạn theo khu vực (Cho bé/THCS-THPT) hay theo việc từ đã lưu/đã học hay chưa nữa.
+        // Giữ nguyên tham số (wordEl, norm) để không phải sửa các chỗ đang gọi hàm này.
         function wordLookupIsGatedContext(wordEl, norm) {
-            if (wordEl && wordEl.closest && wordEl.closest('#kid-topic-panel, #thcs-unit-panel')) return true;
-            if (norm) {
-                const entry = myVocabList.find(v => normalizeWord(v.word_norm || v.word) === norm);
-                if (entry && !isVocabWordPronounced(entry.id)) return true;
-            }
-            return false;
+            return true;
         }
 
         function wordLookupUpdatePronounceUI() {
