@@ -5233,6 +5233,30 @@ h3.news-editable:focus,
     white-space: nowrap;
 }
 
+/* [MỚI - Cloudflare Workers AI] Phiên âm IPA hiện cạnh từ trong "Kho từ vựng của tôi" */
+.myvocab-phonetic {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+/* [MỚI - Cloudflare Workers AI] Từ CHƯA từng được chấm phát âm (dù đã học hay chưa) -> badge
+   nổi bật + dòng nhắc màu đỏ, để học viên biết đây là việc bắt buộc phải làm trước */
+.myvocab-pron-missing-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--danger-dark);
+    background: #fee2e2;
+    border: 1.5px solid var(--danger-dark);
+    border-radius: 20px;
+    padding: 2px 10px;
+    white-space: nowrap;
+}
+.myvocab-practice-hint-required {
+    color: var(--danger-dark);
+    opacity: 1;
+}
+
 /* [MỚI - Cloudflare Workers AI] Bước đọc bắt buộc thêm trong bài kiểm tra từ vựng hàng tuần */
 .vocab-weekly-pron-step {
     margin-top: 16px;

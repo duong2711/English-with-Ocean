@@ -2362,7 +2362,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // [MỚI] Bọc riêng try/catch: nếu 1 trong các bảng liên quan (đặc biệt bảng mới
             // "vocab_review_checks") CHƯA được tạo trên Supabase, chỉ phần điểm này về 0 —
             // không làm hỏng toàn bộ trang Thành tựu.
-            let learnedWordCount = 0, correctAnswerCount = 0, reviewWrongCount = 0;
+            let learnedWordCount = 0, correctAnswerCount = 0, reviewWrongCount = 0, pronBonusPoints = 0;
             try {
                 const { count: learnedWordCountRaw, error: eVw1 } = await sb
                     .from('vocab_word_progress')
@@ -2387,11 +2387,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     .eq('is_correct', false);
                 if (eVw3) throw eVw3;
                 reviewWrongCount = reviewWrongCountRaw || 0;
+
+                // [MỚI - Cloudflare Workers AI] Điểm chăm chỉ thưởng từ LẦN ĐỌC ĐẦU TIÊN của
+                // mỗi từ (chốt 1 lần duy nhất/từ — xem pronBonusForScore() ở khối code chấm
+                // phát âm): <50% -> +0, 50-<75% -> +1, 75-100% -> +2.
+                const { data: pronBonusRows, error: eVw4 } = await sb
+                    .from('vocab_word_progress')
+                    .select('pron_bonus_points')
+                    .eq('user_id', currentUserId);
+                if (eVw4) throw eVw4;
+                pronBonusPoints = (pronBonusRows || []).reduce((sum, r) => sum + (r.pron_bonus_points || 0), 0);
             } catch (errVw) {
-                console.error('Lỗi khi tính điểm bài kiểm tra từ vựng (có thể do bảng "vocab_review_checks" chưa được tạo — xem SQL bàn giao):', errVw.message);
+                console.error('Lỗi khi tính điểm bài kiểm tra từ vựng (có thể do bảng "vocab_review_checks" chưa được tạo, hoặc cột "pron_bonus_points" chưa được tạo — xem SQL bàn giao):', errVw.message);
             }
 
-            const vocabTestPoints = (learnedWordCount * 2) + (correctAnswerCount * 1) - (reviewWrongCount * 0.5);
+            const vocabTestPoints = (learnedWordCount * 2) + (correctAnswerCount * 1) - (reviewWrongCount * 0.5) + pronBonusPoints;
 
             // ----- 5) Điểm trung bình bài kiểm tra: CHỈ tính những bài đang giao (hiện) cho
             // học viên này (status = published + có tên trong student_emails), và chỉ tính
@@ -5976,6 +5986,7 @@ function toggleCompletion(symbolElement) {
             await loadMyVocabulary();
             rebuildVocabNormSet();
             await loadVocabWordProgress(); // [MỚI] tải luôn tiến độ "đã học" của từng từ
+            updateMyVocabPronBadge(); // [MỚI] hiện số từ chưa chấm phát âm lên thẻ folder
             myVocabLoadedForUser = currentUserId;
         }
 
@@ -5990,7 +6001,7 @@ function toggleCompletion(symbolElement) {
             try {
                 const { data, error } = await sb
                     .from('vocab_word_progress')
-                    .select('vocab_id, attempts, correct_streak, learned, pron_score, pron_tier_required, pron_passed_count, pron_first_checked')
+                    .select('vocab_id, attempts, correct_streak, learned, pron_score, pron_tier_required, pron_passed_count, pron_first_checked, pron_bonus_points')
                     .eq('user_id', currentUserId);
                 if (error) throw error;
                 (data || []).forEach(row => { vocabWordProgressMap[String(row.vocab_id)] = row; });
@@ -6006,6 +6017,27 @@ function toggleCompletion(symbolElement) {
         function isVocabWordLearned(vocabId) {
             const p = vocabWordProgressMap[String(vocabId)];
             return !!(p && p.learned);
+        }
+
+        // [MỚI] Từ đã được CHẤM PHÁT ÂM ít nhất 1 lần chưa (không phân biệt đã "đã học" hay
+        // chưa) — dùng để xác định badge số + bắt buộc đọc trong "Kho từ vựng của tôi".
+        function isVocabWordPronounced(vocabId) {
+            const p = vocabWordProgressMap[String(vocabId)];
+            return !!(p && p.pron_first_checked);
+        }
+
+        // [MỚI] Badge số hiện trên thẻ "⭐ Từ vựng của tôi" (ở màn hình chọn mục "Từ vựng"),
+        // đếm số từ CHƯA từng được chấm phát âm — dù từ đó đã "đã học" hay chưa.
+        const myVocabFolderBadgeEl = document.getElementById('myvocab-folder-badge');
+        function updateMyVocabPronBadge() {
+            if (!myVocabFolderBadgeEl) return;
+            const n = myVocabList.filter(v => !isVocabWordPronounced(v.id)).length;
+            if (n > 0) {
+                myVocabFolderBadgeEl.textContent = n > 99 ? '99+' : String(n);
+                myVocabFolderBadgeEl.style.display = 'inline-flex';
+            } else {
+                myVocabFolderBadgeEl.style.display = 'none';
+            }
         }
 
         // Kiểm tra 1 từ (cùng nghĩa + cùng loại từ) đã có trong danh sách chưa
@@ -6306,16 +6338,29 @@ function toggleCompletion(symbolElement) {
             return 1;
         }
 
+        // [MỚI] Điểm CHĂM CHỈ thưởng thêm dựa trên điểm của LẦN ĐỌC ĐẦU TIÊN (chốt 1 lần duy
+        // nhất cho mỗi từ, giống lúc chốt tier — xem pronTierForScore ở trên): <50% -> +0,
+        // 50-<75% -> +1, 75-100% -> +2. Cộng thẳng vào điểm chăm chỉ (diligence_score), y hệt
+        // cách "điểm thưởng làm lại" (totalRedoBonusPoints) đang được cộng — xem chỗ tính
+        // diligenceScore (tìm "pronBonusPoints").
+        function pronBonusForScore(score) {
+            if (score < 50) return 0;
+            if (score < 75) return 1;
+            return 2;
+        }
+
         // Lưu 1 lần đọc mới vào tiến độ học từ (vocab_word_progress). Lần đọc ĐẦU TIÊN của mỗi
-        // từ sẽ chốt "hạng" (tier); mọi lần đọc ĐẠT (kể cả lần đầu) đều được cộng dồn vào
-        // pron_passed_count (tối đa = tier). "đã học" (learned) chỉ = true khi ĐỦ CẢ 2: đúng
-        // liên tiếp VOCAB_TEST_MASTERY_STREAK lần dịch/điền từ VÀ đủ số lần đọc đạt theo tier.
+        // từ sẽ chốt "hạng" (tier) + điểm chăm chỉ thưởng (pron_bonus_points); mọi lần đọc ĐẠT
+        // (kể cả lần đầu) đều được cộng dồn vào pron_passed_count (tối đa = tier). "đã học"
+        // (learned) chỉ = true khi ĐỦ CẢ 2: đúng liên tiếp VOCAB_TEST_MASTERY_STREAK lần
+        // dịch/điền từ VÀ đủ số lần đọc đạt theo tier.
         async function recordPronunciationAttempt(vocabId, score) {
             if (!currentUserId || vocabId == null) return null;
             const key = String(vocabId);
-            const prev = vocabWordProgressMap[key] || { attempts: 0, correct_streak: 0, learned: false, pron_score: null, pron_tier_required: null, pron_passed_count: 0, pron_first_checked: false };
+            const prev = vocabWordProgressMap[key] || { attempts: 0, correct_streak: 0, learned: false, pron_score: null, pron_tier_required: null, pron_passed_count: 0, pron_first_checked: false, pron_bonus_points: 0 };
             const isFirst = !prev.pron_first_checked;
             const tier = isFirst ? pronTierForScore(score) : (prev.pron_tier_required || pronTierForScore(score));
+            const bonusPoints = isFirst ? pronBonusForScore(score) : (prev.pron_bonus_points || 0);
             const passed = score >= VOCAB_PRON_PASS_THRESHOLD;
             const newPassedCount = Math.min(tier, (prev.pron_passed_count || 0) + (passed ? 1 : 0));
             const newLearned = (prev.correct_streak || 0) >= VOCAB_TEST_MASTERY_STREAK && newPassedCount >= tier;
@@ -6329,6 +6374,7 @@ function toggleCompletion(symbolElement) {
                 pron_tier_required: tier,
                 pron_passed_count: newPassedCount,
                 pron_first_checked: true,
+                pron_bonus_points: bonusPoints,
                 last_tested_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
             };
@@ -6373,14 +6419,15 @@ function toggleCompletion(symbolElement) {
         let wordLookupPronounceVocabId  = null;  // vocab_id để lưu điểm phát âm (null nếu từ MỚI, chưa lưu vào "Từ vựng của tôi")
         let wordLookupPendingScore      = null;  // điểm vừa chấm được của từ MỚI, chờ gắn vocab_id sau khi lưu xong (xem runFreshWordLookup)
 
-        // Chỉ bắt buộc đọc khi từ được chạm nằm trong Flashcard/Câu chuyện/Dịch câu của khu vực
-        // "Cho bé" (#kid-topic-panel)/"THCS/THPT" (#thcs-unit-panel), HOẶC từ đó đã có trong
-        // "Từ vựng của tôi" nhưng chưa "đã học" (norm: từ đã chuẩn hoá, xem normalizeWord()).
+        // [SỬA] Chỉ bắt buộc đọc khi từ được chạm nằm trong Flashcard/Câu chuyện/Dịch câu của
+        // khu vực "Cho bé" (#kid-topic-panel)/"THCS/THPT" (#thcs-unit-panel), HOẶC từ đó đã có
+        // trong "Từ vựng của tôi" nhưng CHƯA TỪNG được chấm phát âm — dù đã "đã học" hay chưa
+        // (norm: từ đã chuẩn hoá, xem normalizeWord()).
         function wordLookupIsGatedContext(wordEl, norm) {
             if (wordEl && wordEl.closest && wordEl.closest('#kid-topic-panel, #thcs-unit-panel')) return true;
             if (norm) {
                 const entry = myVocabList.find(v => normalizeWord(v.word_norm || v.word) === norm);
-                if (entry && !isVocabWordLearned(entry.id)) return true;
+                if (entry && !isVocabWordPronounced(entry.id)) return true;
             }
             return false;
         }
@@ -6762,20 +6809,31 @@ function toggleCompletion(symbolElement) {
             }
             myVocabListEl.innerHTML = myVocabList.map(v => {
                 // [MỚI] Từ đã "đã học" (kiểm đúng liên tiếp 3 lần trong bài kiểm tra hàng tuần)
-                // -> nền xanh lá + nhãn "✓ Đã học" + có thể BẤM VÀO để ôn lại nghĩa (sai thì
-                // trừ 0.5 điểm chăm chỉ — xem openVocabWordReviewCheck() bên dưới).
+                // -> nền xanh lá + nhãn "✓ Đã học".
                 const learned = isVocabWordLearned(v.id);
-                // [MỚI - Cloudflare Workers AI] Từ CHƯA "đã học" -> hiện số lần đọc đạt/hạng
-                // (tier) nếu đã từng đọc, + có thể BẤM VÀO để chủ động luyện đọc thêm ngay
-                // (mở lại hộp thoại tra từ) — xem openMyVocabPracticePopup() bên dưới.
+                // [SỬA - Cloudflare Workers AI] Bất kể đã học hay chưa: từ CHƯA từng chấm phát
+                // âm -> badge "Chưa đọc" (bắt buộc đọc khi bấm vào); từ ĐÃ chấm rồi -> hiện %
+                // điểm phát âm gần nhất (pron_score) thay vì số lần đạt như trước.
                 const pronProg = vocabWordProgressMap[String(v.id)];
-                const pronBadge = (!learned && pronProg && pronProg.pron_first_checked)
-                    ? `<span class="myvocab-pron-badge">🎤 ${pronProg.pron_passed_count || 0}/${pronProg.pron_tier_required || '?'}</span>`
+                const pronounced = !!(pronProg && pronProg.pron_first_checked);
+                const pronBadge = pronounced
+                    ? `<span class="myvocab-pron-badge">🎤 ${Math.round(pronProg.pron_score || 0)}%</span>`
+                    : '<span class="myvocab-pron-missing-badge">🎤 Chưa đọc</span>';
+                // [MỚI] Phiên âm IPA của từ (nếu có) — hiện ngay cạnh từ để học viên đọc chính
+                // xác hơn. Nhiều từ lưu TRƯỚC KHI có cột "phonetic" sẽ tạm thời không có, xem
+                // script bổ sung phiên âm hàng loạt gửi kèm (backfill-phonetics.mjs).
+                const phoneticHtml = v.phonetic
+                    ? `<span class="myvocab-phonetic">/${escapeHtmlNews(String(v.phonetic).replace(/^\/|\/$/g, ''))}/</span>`
                     : '';
+                let hintHtml;
+                if (!pronounced) hintHtml = '<div class="myvocab-practice-hint myvocab-practice-hint-required">🎤 Bấm vào để đọc (bắt buộc)</div>';
+                else if (learned) hintHtml = '<div class="myvocab-review-hint">👆 Bấm vào để ôn lại nghĩa</div>';
+                else hintHtml = '<div class="myvocab-practice-hint">🎤 Bấm vào để luyện đọc thêm</div>';
                 return `
                 <div class="myvocab-item${learned ? ' myvocab-item-learned' : ''}" data-vocab-id="${v.id}">
                     <div class="myvocab-item-top">
                         <span class="myvocab-word">${escapeHtmlNews(v.word)}</span>
+                        ${phoneticHtml}
                         ${learned ? '<span class="myvocab-learned-badge">✓ Đã học</span>' : ''}
                         ${pronBadge}
                         ${v.word_type ? `<span class="myvocab-tag">${escapeHtmlNews(v.word_type)}</span>` : ''}
@@ -6788,13 +6846,14 @@ function toggleCompletion(symbolElement) {
                         <div>→ ${escapeHtmlNews(v.example_vi || '')}</div>
                     </div>` : ''}
                     ${v.source_title ? `<div class="myvocab-source">📰 Gặp trong bài: ${escapeHtmlNews(v.source_title)}</div>` : ''}
-                    ${learned ? '<div class="myvocab-review-hint">👆 Bấm vào để ôn lại nghĩa</div>' : '<div class="myvocab-practice-hint">🎤 Bấm vào để luyện đọc</div>'}
+                    ${hintHtml}
                 </div>
             `;
             }).join('');
         }
 
         function renderMyVocabIfOpen() {
+            updateMyVocabPronBadge(); // [MỚI] luôn cập nhật badge, kể cả khi panel đang đóng
             if (myVocabPanel && myVocabPanel.style.display !== 'none') renderMyVocabPanel();
         }
 
@@ -6830,15 +6889,17 @@ function toggleCompletion(symbolElement) {
         //     pron_tier_required smallint,                     -- số lần đọc ĐẠT cần có (1-3, chốt ở lần đọc đầu)
         //     pron_passed_count smallint not null default 0,   -- số lần đọc ĐẠT đã tích lũy được
         //     pron_first_checked boolean not null default false, -- đã từng đọc lần nào chưa
+        //     pron_bonus_points smallint not null default 0,   -- điểm chăm chỉ thưởng (chốt ở lần đọc đầu: 0/1/2)
         //     last_tested_at timestamptz,
         //     updated_at timestamptz not null default now()
         //   );
-        //   -- Nếu bảng đã tồn tại từ trước (chưa có 4 cột pron_*), chạy riêng:
+        //   -- Nếu bảng đã tồn tại từ trước (chưa có đủ 5 cột pron_*), chạy riêng:
         //   -- alter table vocab_word_progress
         //   --   add column if not exists pron_score numeric,
         //   --   add column if not exists pron_tier_required smallint,
         //   --   add column if not exists pron_passed_count smallint not null default 0,
-        //   --   add column if not exists pron_first_checked boolean not null default false;
+        //   --   add column if not exists pron_first_checked boolean not null default false,
+        //   --   add column if not exists pron_bonus_points smallint not null default 0;
         //   alter table vocab_word_progress enable row level security;
         //   create policy "Học viên tự quản lý tiến độ từ vựng của mình"
         //     on vocab_word_progress for all
@@ -7432,23 +7493,21 @@ function toggleCompletion(symbolElement) {
                     return;
                 }
 
-                // [MỚI] Bấm vào 1 từ ĐÃ HỌC (nền xanh lá) -> mở khung ôn lại nghĩa; sai thì
-                // trừ 0.5 điểm chăm chỉ (xem openVocabWordReviewCheck() bên dưới).
-                const learnedItem = e.target.closest('.myvocab-item.myvocab-item-learned');
-                if (learnedItem) {
-                    const idAttr = learnedItem.dataset.vocabId;
+                // [SỬA] Ưu tiên CHƯA PHÁT ÂM lên trên hết: từ nào chưa từng được chấm phát âm
+                // (dù đã "đã học" hay chưa) -> LUÔN mở lại hộp thoại tra từ để bắt đọc trước.
+                // Chỉ khi đã phát âm rồi VÀ đã "đã học" thì mới mở khung ôn lại nghĩa (sai thì
+                // trừ 0.5 điểm chăm chỉ — xem openVocabWordReviewCheck() bên dưới); còn lại
+                // (đã phát âm nhưng chưa "đã học" — còn thiếu lượt đọc đạt hoặc thiếu streak
+                // dịch/điền từ) vẫn cho luyện đọc thêm qua openMyVocabPracticePopup().
+                const item = e.target.closest('.myvocab-item');
+                if (item) {
+                    const idAttr = item.dataset.vocabId;
                     const id = /^\d+$/.test(idAttr) ? Number(idAttr) : idAttr;
-                    openVocabWordReviewCheck(id);
-                    return;
-                }
-
-                // [MỚI - Cloudflare Workers AI] Bấm vào 1 từ CHƯA học -> chủ động mở lại hộp
-                // thoại tra từ để luyện đọc thêm, không cần chờ gặp lại từ đó ở bài đọc khác.
-                const practiceItem = e.target.closest('.myvocab-item:not(.myvocab-item-learned)');
-                if (practiceItem) {
-                    const idAttr = practiceItem.dataset.vocabId;
-                    const id = /^\d+$/.test(idAttr) ? Number(idAttr) : idAttr;
-                    openMyVocabPracticePopup(id);
+                    if (isVocabWordPronounced(id) && item.classList.contains('myvocab-item-learned')) {
+                        openVocabWordReviewCheck(id);
+                    } else {
+                        openMyVocabPracticePopup(id);
+                    }
                 }
             });
         }
