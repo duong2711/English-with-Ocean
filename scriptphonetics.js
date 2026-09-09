@@ -9980,7 +9980,7 @@ function toggleCompletion(symbolElement) {
         // 1 "đoạn script" hiển thị cho học viên (mỗi lần chỉ hiện 1 đoạn) mỗi khi đủ
         // BLANKS_PER_DISPLAY_SEGMENT từ khuyết — xem podBuildBlanks() và podGroupIntoChunks().
         const BLANK_WORD_RATE = 10;
-        const BLANKS_PER_DISPLAY_SEGMENT = 5;
+        const LINES_PER_DISPLAY_SEGMENT = 6; // [SỬA] gộp đúng 6 câu/dòng thành 1 "đoạn transcript" cho học viên (trước đây gộp theo số chỗ trống)
 
         let PODCASTS = [];
         let currentPodcast = null;
@@ -10114,6 +10114,7 @@ function toggleCompletion(symbolElement) {
                     index: i,
                     en: seg.en || '',
                     vi: seg.vi || '',
+                    speaker: seg.speaker || '', // [MỚI] tên người nói (tuỳ chọn) — chỉ hiển thị, không bị khuyết
                     startRaw: seg.start || '', // "mm:ss" do giảng viên nhập — dùng để đồng bộ audio
                     quiz: (seg.quiz && seg.quiz.question && Array.isArray(seg.quiz.options)) ? seg.quiz : null,
                     parts: built.parts,
@@ -10122,24 +10123,15 @@ function toggleCompletion(symbolElement) {
             });
         }
 
-        // [MỚI] Gộp các "dòng" liên tiếp lại thành từng "đoạn script" hiển thị cho học viên: cứ
-        // gom đủ (>=) BLANKS_PER_DISPLAY_SEGMENT chỗ trống thì chốt 1 đoạn (không cắt ngang giữa
-        // 1 dòng — dòng nào đẩy tổng vượt ngưỡng thì vẫn được tính trọn vẹn vào đoạn đó). Đoạn
-        // cuối cùng có thể có ít hơn 5 chỗ trống (hoặc 0) nếu script không chia hết.
+        // [SỬA] Gộp các "dòng" (câu) liên tiếp lại thành từng "đoạn transcript" hiển thị cho học
+        // viên: cứ ĐỦ ĐÚNG LINES_PER_DISPLAY_SEGMENT (6) câu thì chốt 1 đoạn. Đoạn cuối cùng có
+        // thể có ít hơn 6 câu nếu tổng số câu không chia hết cho 6.
         function podGroupIntoChunks(lines) {
             const chunks = [];
-            let cur = null;
-            (lines || []).forEach((line) => {
-                if (!cur) cur = { index: chunks.length, lines: [] };
-                cur.lines.push(line);
-                const totalBlanks = cur.lines.reduce((s, l) => s + l.blanks.length, 0);
-                if (totalBlanks >= BLANKS_PER_DISPLAY_SEGMENT) {
-                    chunks.push(cur);
-                    cur = null;
-                }
-            });
-            if (cur) chunks.push(cur);
-            chunks.forEach((c, i) => { c.index = i; });
+            const list = lines || [];
+            for (let i = 0; i < list.length; i += LINES_PER_DISPLAY_SEGMENT) {
+                chunks.push({ index: chunks.length, lines: list.slice(i, i + LINES_PER_DISPLAY_SEGMENT) });
+            }
             return chunks;
         }
 
@@ -10517,9 +10509,12 @@ function toggleCompletion(symbolElement) {
             sentenceEl.innerHTML = chunk.lines.map((line, lineI) => {
                 const lineHtml = podBuildLineHtml(line, lineI, currentStage);
                 const viText = (line.vi && line.vi.trim()) ? line.vi : '(Chưa có bản dịch cho dòng này)';
+                const speakerHtml = (line.speaker && line.speaker.trim())
+                    ? `<span class="pod-line-speaker">${escapeHtmlPod(line.speaker.trim())}:</span> `
+                    : '';
                 return `
                 <div class="pod-script-line">
-                    <span class="pod-line-text">${lineHtml}</span><button type="button" class="pod-line-vi-toggle" data-line-i="${lineI}" title="Xem bản dịch dòng này">🇻🇳</button>
+                    <span class="pod-line-text">${speakerHtml}${lineHtml}</span><button type="button" class="pod-line-vi-toggle" data-line-i="${lineI}" title="Xem bản dịch dòng này">🇻🇳</button>
                     <div class="pod-line-vi" data-line-i="${lineI}" style="display:none;">${escapeHtmlPod(viText)}</div>
                 </div>`;
             }).join('');
@@ -10786,32 +10781,41 @@ function toggleCompletion(symbolElement) {
             return String(raw || '').split(/\n\s*\n+/).map(s => s.trim()).filter(Boolean);
         }
 
-        // Tách script tiếng Anh theo mốc thời gian [mm:ss] đứng đầu mỗi đoạn. Nếu không có
-        // mốc thời gian nào -> coi như không đồng bộ audio, tách theo dòng trống như cũ.
-        function parseTimedScript(raw) {
+        // [SỬA] Tách transcript theo mốc thời gian ĐẦY ĐỦ dạng "giờ:phút:giây.mili" đứng đầu MỖI
+        // DÒNG (đúng định dạng tactiq.io / YouTube xuất ra), mỗi dòng = 1 câu. Có thể kèm tên
+        // người nói ngay sau mốc thời gian, trước dấu hai chấm — VD: "00:00:00.000 Georgie:
+        // Hello, I'm Georgie." (phần "Tên:" là TUỲ CHỌN). Dòng không có mốc thời gian sẽ được
+        // nối tiếp vào câu của dòng ngay trước đó (VD: 1 câu bị xuống dòng trong lúc xuất transcript).
+        // Nếu không dán dòng nào có mốc thời gian hợp lệ -> coi như không đồng bộ audio, tách theo
+        // dòng trống như cũ (để tương thích ngược với script không có mốc thời gian).
+        function parsePodcastTranscript(raw) {
             const text = String(raw || '').trim();
             if (!text) return [];
-            const re = /\[(\d{1,2}(?::\d{1,2}){1,2})\]/g;
-            const marks = [];
-            let m;
-            while ((m = re.exec(text))) marks.push({ index: m.index, len: m[0].length, time: m[1] });
-            if (!marks.length) {
-                return splitParagraphs(text).map(en => ({ en, start: '' }));
+            const lines = text.split(/\r?\n/);
+            const timeLineRe = /^(\d{1,2}):(\d{2}):(\d{2})(?:\.(\d{1,3}))?\s+(?:([^:\n]{1,40}):\s+)?(.+)$/;
+            const entries = [];
+            let current = null;
+            for (const rawLine of lines) {
+                const line = rawLine.trim();
+                if (!line || line.startsWith('#')) continue;
+                const m = line.match(timeLineRe);
+                if (m) {
+                    const h = Number(m[1]), mi = Number(m[2]), s = Number(m[3]);
+                    current = { start: podFormatSec(h * 3600 + mi * 60 + s), speaker: (m[5] || '').trim(), en: (m[6] || '').trim() };
+                    entries.push(current);
+                } else if (current) {
+                    current.en = (current.en + ' ' + line).trim();
+                }
             }
-            const segs = [];
-            for (let i = 0; i < marks.length; i++) {
-                const start = marks[i].index + marks[i].len;
-                const end = (i + 1 < marks.length) ? marks[i + 1].index : text.length;
-                const chunk = text.slice(start, end).trim();
-                if (chunk) segs.push({ en: chunk, start: marks[i].time });
-            }
-            return segs;
+            if (entries.length) return entries;
+            // Không có mốc thời gian nào -> tách theo dòng trống, không có audio đồng bộ/tên người nói.
+            return splitParagraphs(text).map(en => ({ en, start: '', speaker: '' }));
         }
 
         importBtn.addEventListener('click', async () => {
-            const enSegs = parseTimedScript(importEnInput.value);
+            const enSegs = parsePodcastTranscript(importEnInput.value);
             if (!enSegs.length) {
-                importStatus.textContent = '❌ Chưa dán script tiếng Anh.';
+                importStatus.textContent = '❌ Chưa dán transcript tiếng Anh.';
                 return;
             }
             const viParas = splitParagraphs(importViInput.value);
@@ -10819,7 +10823,7 @@ function toggleCompletion(symbolElement) {
                 const proceed = confirm('Thao tác này sẽ THAY THẾ toàn bộ ' + currentPodcast.segments.length + ' dòng hiện có bằng ' + enSegs.length + ' dòng vừa nhập. Tiếp tục?');
                 if (!proceed) return;
             }
-            currentPodcast.segments = enSegs.map((s, i) => ({ en: s.en, start: s.start || '', vi: viParas[i] || '', quiz: null }));
+            currentPodcast.segments = enSegs.map((s, i) => ({ en: s.en, start: s.start || '', speaker: s.speaker || '', vi: viParas[i] || '', quiz: null }));
             renderAdminSegments();
             importStatus.textContent = 'Đang lưu...';
             const ok = await savePodcastContent();
@@ -10845,6 +10849,8 @@ function toggleCompletion(symbolElement) {
                     <div class="pod-admin-seg-meta">
                         <label for="pod-seg-start-${i}">⏱ Thời điểm bắt đầu (mm:ss)</label>
                         <input type="text" id="pod-seg-start-${i}" class="news-edit-input pod-admin-seg-start" data-field="start" placeholder="00:00" value="${escapeHtmlPod(seg.start || '')}">
+                        <label for="pod-seg-speaker-${i}">🗣 Tên người nói (tuỳ chọn)</label>
+                        <input type="text" id="pod-seg-speaker-${i}" class="news-edit-input pod-admin-seg-speaker" data-field="speaker" placeholder="VD: Georgie" value="${escapeHtmlPod(seg.speaker || '')}">
                     </div>
                     <textarea class="news-edit-input dub-admin-import-textarea pod-admin-seg-en" data-field="en" placeholder="Script tiếng Anh của dòng này...">${escapeHtmlPod(seg.en || '')}</textarea>
                     <textarea class="news-edit-input dub-admin-import-textarea pod-admin-seg-vi" data-field="vi" placeholder="Bản dịch tiếng Việt của dòng này...">${escapeHtmlPod(seg.vi || '')}</textarea>
@@ -10864,7 +10870,7 @@ function toggleCompletion(symbolElement) {
 
         addSegmentBtn.addEventListener('click', async () => {
             currentPodcast.segments = currentPodcast.segments || [];
-            currentPodcast.segments.push({ en: '', vi: '', start: '', quiz: null });
+            currentPodcast.segments.push({ en: '', vi: '', start: '', speaker: '', quiz: null });
             renderAdminSegments();
             await savePodcastContent();
         });
@@ -10888,6 +10894,7 @@ function toggleCompletion(symbolElement) {
             if (field === 'en') seg.en = e.target.value;
             else if (field === 'vi') seg.vi = e.target.value;
             else if (field === 'start') seg.start = e.target.value.trim();
+            else if (field === 'speaker') seg.speaker = e.target.value.trim();
             else if (field === 'quiz-q') { seg.quiz = seg.quiz || { options: ['', '', '', ''], correct: 0 }; seg.quiz.question = e.target.value; }
             else if (field === 'quiz-opt') {
                 seg.quiz = seg.quiz || { options: ['', '', '', ''], correct: 0 };

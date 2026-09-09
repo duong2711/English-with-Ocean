@@ -5941,6 +5941,8 @@ h3.news-editable:focus,
 .pod-script-line { margin-bottom: 6px; }
 .pod-script-line:last-child { margin-bottom: 0; }
 .pod-line-text { }
+/* [MỚI] Tên người nói (tuỳ chọn) đứng trước mỗi câu — chỉ để hiển thị, không phải chỗ trống. */
+.pod-line-speaker { font-weight: 800; color: var(--primary-dark); }
 .pod-line-vi-toggle {
     display: inline-flex;
     align-items: center;
@@ -6089,9 +6091,10 @@ h3.news-editable:focus,
     color: var(--text);
 }
 .pod-admin-seg-en, .pod-admin-seg-vi { min-height: 70px; margin-bottom: 8px; }
-.pod-admin-seg-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.pod-admin-seg-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
 .pod-admin-seg-meta label { font-size: 0.78rem; color: var(--text-muted); white-space: nowrap; }
 .pod-admin-seg-start { width: 90px; flex: none; }
+.pod-admin-seg-speaker { width: 140px; flex: none; }
 .pod-admin-quiz { margin-top: 8px; }
 .pod-admin-quiz summary { cursor: pointer; font-size: 0.82rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 8px; }
 .pod-admin-quiz-opt-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
