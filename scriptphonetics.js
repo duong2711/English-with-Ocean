@@ -2403,6 +2403,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const vocabTestPoints = (learnedWordCount * 2) + (correctAnswerCount * 1) - (reviewWrongCount * 0.5) + pronBonusPoints;
 
+            // ----- [MỚI] 4b) Điểm từ mục "🎧 Podcast" (Từ vựng > Podcast — học từ vựng bằng
+            // dictation): mỗi Ô TRỐNG điền ĐÚNG trong bảng "podcast_fill_progress" được cộng
+            // +1đ nếu ở Giai đoạn 1 (có box gợi ý), +2đ nếu ở Giai đoạn 2 (tự điền, ẩn box) —
+            // đúng yêu cầu ban đầu. Cộng THẲNG vào điểm chăm chỉ, giống vocabTestPoints ở trên,
+            // không nằm trong công thức chia đều 7 yếu tố. Bọc try/catch riêng: nếu bảng
+            // "podcast_fill_progress" CHƯA được tạo trên Supabase thì phần điểm này về 0,
+            // không làm hỏng toàn bộ trang Thành tựu.
+            let podcastStage1Count = 0, podcastStage2Count = 0;
+            try {
+                const { data: podcastProgressRows, error: eVp } = await sb
+                    .from('podcast_fill_progress')
+                    .select('stage')
+                    .eq('user_id', currentUserId);
+                if (eVp) throw eVp;
+                (podcastProgressRows || []).forEach(r => {
+                    if (r.stage === 1) podcastStage1Count++;
+                    else if (r.stage === 2) podcastStage2Count++;
+                });
+            } catch (errVp) {
+                console.error('Lỗi khi tính điểm podcast dictation (có thể do bảng "podcast_fill_progress" chưa được tạo — xem file SQL "podcast_content_setup.sql"):', errVp.message);
+            }
+            const podcastPoints = (podcastStage1Count * 1) + (podcastStage2Count * 2);
+
             // ----- 5) Điểm trung bình bài kiểm tra: CHỈ tính những bài đang giao (hiện) cho
             // học viên này (status = published + có tên trong student_emails), và chỉ tính
             // những bài đã nộp (status = submitted) trong số đó -----
@@ -2457,8 +2480,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const testPctForScore = avgTestScorePct != null ? avgTestScorePct : 0;
             const diligenceScore = Math.round(
                 (phoneticsPct + newsPct + topicsPct + thcsPct + grammarPct + testPctForScore + timePct) / 7
-                + totalRedoBonusPoints + vocabTestPoints
-            ); // [MỚI] cộng thêm điểm thưởng "làm lại" + điểm bài kiểm tra từ vựng hàng tuần
+                + totalRedoBonusPoints + vocabTestPoints + podcastPoints
+            ); // [MỚI] cộng thêm điểm thưởng "làm lại" + điểm bài kiểm tra từ vựng hàng tuần + điểm podcast dictation
 
             // ----- [SỬA] KHÔNG RESET ĐIỂM CHUYÊN CẦN THEO THÁNG NỮA -----
             // Trước đây mỗi khi sang tháng mới, hệ thống tự "chốt mốc" (baseline_score) rồi chỉ
@@ -2530,6 +2553,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 progress: 100,
                 special: true
             });
+            // [MỚI] Chỉ hiện thẻ này khi học viên đã từng điền đúng ít nhất 1 ô trống trong
+            // mục Podcast, tránh làm rối danh sách Thành tựu với học viên chưa dùng mục này.
+            if (podcastStage1Count > 0 || podcastStage2Count > 0) {
+                badges.push({
+                    icon: '🎧',
+                    title: 'Podcast — Dictation',
+                    desc: `${podcastStage1Count} ô trống đúng ở Giai đoạn 1 (+${podcastStage1Count}đ) · ${podcastStage2Count} ô trống đúng ở Giai đoạn 2 (+${podcastStage2Count * 2}đ) → +${podcastPoints} điểm`,
+                    progress: 100,
+                    special: true
+                });
+            }
             badges.push({
                 icon: '🎯',
                 title: 'Điểm trung bình bài kiểm tra',
@@ -2578,6 +2612,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     test_pct: testPctForScore,
                     time_pct: timePct,
                     redo_bonus_points: totalRedoBonusPoints, // [MỚI] tổng điểm thưởng "làm lại" (Cho bé + THCS/THPT) — xem cột mới trong diligence_scores_redo_bonus_setup.sql
+                    podcast_points: Math.round(podcastPoints), // [MỚI] điểm từ mục Podcast dictation — cần cột mới, xem "podcast_content_setup.sql"
                     diligence_score: monthlyDiligenceScore,
                     updated_at: new Date().toISOString()
                 }, { onConflict: 'user_id' });
@@ -9859,6 +9894,787 @@ function toggleCompletion(symbolElement) {
 
     })();
     // ===== KẾT THÚC LỒNG TIẾNG =====
+
+    // =====================================================================
+    // ===== BẮT ĐẦU: PODCAST — HỌC TỪ VỰNG BẰNG DICTATION QUA PODCAST =====
+    // (mục "Từ vựng" > 🎧 Podcast)
+    // Bảng Supabase "podcast_content" (nhiều dòng) lưu tên, link video (Backblaze) +
+    // danh sách đoạn script (mỗi đoạn: text tiếng Anh, bản dịch tiếng Việt, câu hỏi
+    // trắc nghiệm tuỳ chọn). Xem file SQL "podcast_content_setup.sql".
+    // Bảng "podcast_fill_progress" lưu MỖI Ô TRỐNG đã điền ĐÚNG của MỖI học viên (theo
+    // từng giai đoạn 1/2) — dùng để: (1) khoá/mở Giai đoạn 2, (2) cộng điểm chăm chỉ
+    // (1đ/từ đúng ở Giai đoạn 1, 2đ/từ đúng ở Giai đoạn 2) trong renderProfileAchievements()
+    // ở phía trên file này.
+    // Chỉ tài khoản trong TEACHER_EMAILS mới được thêm/sửa/xoá nội dung — quyền này
+    // chặn ở CẢ giao diện lẫn RLS trên Supabase.
+    // =====================================================================
+    (function initPodcastFeature() {
+        const podcastFolderCard = document.getElementById('podcast-folder-card');
+        if (!podcastFolderCard) return;
+
+        const vocabFolderGrid = document.getElementById('vocab-folder-grid');
+        const podcastPanel    = document.getElementById('podcast-panel');
+        const podcastBackBtn  = document.getElementById('podcast-back-btn');
+
+        const listView      = document.getElementById('podcast-list-view');
+        const listAdminBar  = document.getElementById('podcast-list-admin-bar');
+        const addBtn        = document.getElementById('podcast-add-btn');
+        const grid          = document.getElementById('podcast-grid');
+
+        const detailView     = document.getElementById('podcast-detail-view');
+        const detailBackBtn  = document.getElementById('podcast-detail-back-btn');
+        const detailTitleEl  = document.getElementById('podcast-detail-title');
+        const deleteBtn      = document.getElementById('podcast-delete-btn');
+
+        const adminBar          = document.getElementById('podcast-admin-bar');
+        const adminTitleInput   = document.getElementById('podcast-admin-title-input');
+        const adminTitleSaveBtn = document.getElementById('podcast-admin-title-save-btn');
+        const adminVideoInput   = document.getElementById('podcast-admin-video-input');
+        const adminVideoSaveBtn = document.getElementById('podcast-admin-video-save-btn');
+        const adminVideoStatus  = document.getElementById('podcast-admin-video-status');
+        const importEnInput     = document.getElementById('podcast-admin-import-en');
+        const importViInput     = document.getElementById('podcast-admin-import-vi');
+        const importBtn         = document.getElementById('podcast-admin-import-btn');
+        const importStatus      = document.getElementById('podcast-admin-import-status');
+        const segmentsAdminEl   = document.getElementById('podcast-admin-segments');
+        const addSegmentBtn     = document.getElementById('podcast-admin-add-segment-btn');
+        const segmentsStatus    = document.getElementById('podcast-admin-segments-status');
+
+        const emptyMsg    = document.getElementById('podcast-empty-msg');
+        const studentView = document.getElementById('podcast-student-view');
+        const videoWrapEl = document.getElementById('podcast-video-wrapper');
+        const videoEl     = document.getElementById('podcast-player');
+
+        const stage1Btn    = document.getElementById('podcast-stage1-btn');
+        const stage2Btn    = document.getElementById('podcast-stage2-btn');
+        const stageHint    = document.getElementById('podcast-stage-hint');
+        const progressFill = document.getElementById('podcast-progress-fill');
+        const progressText = document.getElementById('podcast-progress-text');
+        const segPrevBtn   = document.getElementById('podcast-seg-prev');
+        const segNextBtn   = document.getElementById('podcast-seg-next');
+        const segIdxEl     = document.getElementById('podcast-seg-idx');
+        const sentenceEl   = document.getElementById('podcast-sentence');
+        const wordboxEl    = document.getElementById('podcast-wordbox');
+        const checkBtn     = document.getElementById('podcast-check-btn');
+        const translateToggleBtn = document.getElementById('podcast-translate-toggle-btn');
+        const translationEl      = document.getElementById('podcast-translation');
+        const feedbackEl         = document.getElementById('podcast-feedback');
+        const quizBox         = document.getElementById('podcast-quiz-box');
+        const quizQuestionEl  = document.getElementById('podcast-quiz-question');
+        const quizOptionsEl   = document.getElementById('podcast-quiz-options');
+        const quizFeedbackEl  = document.getElementById('podcast-quiz-feedback');
+
+        if (!podcastPanel || !detailView || !vocabFolderGrid) return;
+
+        let PODCASTS = [];
+        let currentPodcast = null;
+        let currentSegments = [];   // đã xử lý sẵn { parts, blanks, en, vi, quiz }
+        let currentSegIndex = 0;
+        let currentStage = 1;       // 1 hoặc 2
+        let stage1AllDone = false;  // toàn bộ ô trống Giai đoạn 1 của TOÀN BỘ podcast đang mở đã đúng hết chưa
+        let progressRows = [];      // các dòng podcast_fill_progress của học viên cho podcast đang mở
+        let selectedChipEl = null;  // chip đang được chọn (Giai đoạn 1), chờ bấm vào 1 ô trống để đặt
+        let podBusy = false;        // chặn bấm "Kiểm tra" nhiều lần liên tiếp
+
+        function escapeHtmlPod(str) {
+            return String(str == null ? '' : str).replace(/[&<>"']/g, ch => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[ch]));
+        }
+
+        // ---- Âm thanh phản hồi đúng/sai (tự tạo bằng WebAudio, không cần file mp3) ----
+        function podPlayTone(freq, delay, dur, type, vol) {
+            try {
+                const AC = window.AudioContext || window.webkitAudioContext;
+                if (!AC) return;
+                const ctx = podPlayTone._ctx || (podPlayTone._ctx = new AC());
+                const osc = ctx.createOscillator(); const gain = ctx.createGain();
+                osc.type = type || 'sine'; osc.frequency.value = freq;
+                osc.connect(gain); gain.connect(ctx.destination);
+                const t0 = ctx.currentTime + (delay || 0);
+                gain.gain.setValueAtTime(0, t0);
+                gain.gain.linearRampToValueAtTime(vol || 0.2, t0 + 0.02);
+                gain.gain.linearRampToValueAtTime(0, t0 + (dur || 0.2));
+                osc.start(t0); osc.stop(t0 + (dur || 0.2) + 0.02);
+            } catch (e) { /* bỏ qua nếu trình duyệt không hỗ trợ WebAudio */ }
+        }
+        function podPlayCorrect() { podPlayTone(523.25, 0, 0.16, 'sine', 0.22); podPlayTone(659.25, 0.12, 0.16, 'sine', 0.22); podPlayTone(783.99, 0.24, 0.22, 'sine', 0.22); }
+        function podPlayWrong()   { podPlayTone(180, 0, 0.18, 'square', 0.16); podPlayTone(140, 0.15, 0.22, 'square', 0.16); }
+
+        // ---- Chuẩn hoá 1 từ để so sánh đáp án (bỏ dấu câu, hoa/thường) ----
+        function podNormWord(s) {
+            return String(s || '').toLowerCase().replace(/[^a-z0-9']/g, '');
+        }
+
+        // ---- Số ngẫu nhiên "có thể lặp lại" (seeded) từ 1 chuỗi bất kỳ — để vị trí các ô
+        // trống của 1 đoạn KHÔNG đổi mỗi lần render lại (giữ nguyên giữa Giai đoạn 1 và
+        // Giai đoạn 2 — đúng yêu cầu "vẫn là các từ cũ" — và giữa các lần mở lại đoạn này). ----
+        function podSeedFromString(str) {
+            let h = 1779033703 ^ str.length;
+            for (let i = 0; i < str.length; i++) {
+                h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
+                h = (h << 13) | (h >>> 19);
+            }
+            return function () {
+                h = Math.imul(h ^ (h >>> 16), 2246822507);
+                h = Math.imul(h ^ (h >>> 13), 3266489909);
+                h ^= h >>> 16;
+                return (h >>> 0) / 4294967296;
+            };
+        }
+
+        // ---- Tách 1 đoạn văn tiếng Anh thành từng "phần" (parts), giữ nguyên khoảng
+        // trắng/dấu câu; mỗi phần là 1 từ thật thì tách riêng lead/core/trail (dấu câu
+        // dính trước/sau vẫn hiển thị bình thường, CHỈ phần "core" mới có thể bị khuyết) —
+        // rồi cứ mỗi 10 TỪ thì random khuyết 1 từ trong nhóm 10 từ đó. -----
+        function podBuildBlanks(text) {
+            const rawTokens = String(text || '').split(/(\s+)/);
+            const parts = rawTokens.map(tok => {
+                if (!tok || /^\s+$/.test(tok)) return { text: tok, isWord: false };
+                const m = tok.match(/^([^a-zA-Z']*)([a-zA-Z][a-zA-Z'-]*)([^a-zA-Z']*)$/);
+                if (!m) return { text: tok, isWord: false };
+                return { isWord: true, lead: m[1], core: m[2], trail: m[3] };
+            });
+
+            const wordIdx = [];
+            parts.forEach((p, i) => { if (p.isWord) wordIdx.push(i); });
+
+            const rand = podSeedFromString(text);
+            const blanks = [];
+            for (let start = 0; start < wordIdx.length; start += 10) {
+                const group = wordIdx.slice(start, start + 10);
+                // Ưu tiên từ có ít nhất 3 ký tự chữ cái, tránh khuyết mấy từ quá ngắn (a, is, to...)
+                const eligible = group.filter(i => parts[i].core.length >= 3);
+                const pool = eligible.length ? eligible : group;
+                if (!pool.length) continue;
+                const pick = pool[Math.floor(rand() * pool.length)];
+                blanks.push({ partIndex: pick, answer: parts[pick].core });
+            }
+            return { parts, blanks };
+        }
+
+        function podPrepareSegments(rawSegments) {
+            return (rawSegments || []).map((seg, i) => {
+                const built = podBuildBlanks(seg.en || '');
+                return {
+                    index: i,
+                    en: seg.en || '',
+                    vi: seg.vi || '',
+                    quiz: (seg.quiz && seg.quiz.question && Array.isArray(seg.quiz.options)) ? seg.quiz : null,
+                    parts: built.parts,
+                    blanks: built.blanks
+                };
+            });
+        }
+
+        // ================= SUPABASE: TẢI / LƯU / XOÁ NỘI DUNG =================
+        async function loadPodcastsFromDB() {
+            const { data, error } = await sb.from('podcast_content').select('*').order('id', { ascending: true });
+            if (error) throw error;
+            PODCASTS = data || [];
+        }
+        async function createPodcastDB() {
+            const payload = { title: 'Podcast mới (bấm vào tiêu đề để đổi tên)', video_url: '', segments: [], created_by: currentEmail };
+            const { data, error } = await sb.from('podcast_content').insert(payload).select().single();
+            if (error) throw error;
+            return data;
+        }
+        async function deletePodcastDB(id) {
+            const { error } = await sb.from('podcast_content').delete().eq('id', id);
+            if (error) throw error;
+        }
+        async function savePodcastContent() {
+            if (!currentPodcast) return false;
+            try {
+                const { error } = await sb.from('podcast_content').update({
+                    title: currentPodcast.title,
+                    video_url: currentPodcast.video_url,
+                    segments: currentPodcast.segments
+                }).eq('id', currentPodcast.id);
+                if (error) throw error;
+                return true;
+            } catch (err) {
+                console.error('Lỗi khi lưu nội dung podcast:', err.message);
+                return false;
+            }
+        }
+
+        // ================= DANH SÁCH PODCAST =================
+        async function renderPodcastGrid() {
+            grid.innerHTML = '<p class="grammar-loading-msg">Đang tải danh sách podcast...</p>';
+            try {
+                await loadPodcastsFromDB();
+            } catch (err) {
+                grid.innerHTML = '<p class="grammar-empty-msg">Lỗi tải danh sách: ' + escapeHtmlPod(err.message) + '</p>';
+                return;
+            }
+            grid.innerHTML = '';
+            if (!PODCASTS.length) {
+                grid.innerHTML = '<p class="grammar-empty-msg">' +
+                    (isTeacher ? 'Chưa có podcast nào — bấm "➕ Thêm podcast mới" ở trên để tạo.' : 'Giảng viên chưa thêm podcast nào.') +
+                    '</p>';
+                return;
+            }
+            PODCASTS.forEach(p => {
+                const card = document.createElement('div');
+                card.className = 'folder-card';
+                card.dataset.id = p.id;
+                const segCount = Array.isArray(p.segments) ? p.segments.length : 0;
+                card.innerHTML = '🎧 ' + escapeHtmlPod(p.title) +
+                    '<br><small style="font-weight:400;color:var(--text-muted);">' + segCount + ' đoạn</small>';
+                card.addEventListener('click', () => openPodcast(p));
+                grid.appendChild(card);
+            });
+        }
+
+        function showListView() {
+            listView.style.display = '';
+            detailView.style.display = 'none';
+            currentPodcast = null;
+        }
+
+        podcastFolderCard.addEventListener('click', async () => {
+            vocabFolderGrid.style.display = 'none';
+            podcastPanel.style.display = 'block';
+            listAdminBar.style.display = isTeacher ? '' : 'none';
+            showListView();
+            await renderPodcastGrid();
+        });
+        podcastBackBtn.addEventListener('click', () => {
+            podcastPanel.style.display = 'none';
+            vocabFolderGrid.style.display = '';
+        });
+        detailBackBtn.addEventListener('click', () => {
+            showListView();
+            renderPodcastGrid();
+        });
+
+        addBtn.addEventListener('click', async () => {
+            if (!isTeacher) return;
+            addBtn.disabled = true;
+            try {
+                const created = await createPodcastDB();
+                await openPodcast(created);
+            } catch (err) {
+                alert('Không tạo được podcast mới: ' + err.message);
+            } finally {
+                addBtn.disabled = false;
+            }
+        });
+
+        deleteBtn.addEventListener('click', async () => {
+            if (!isTeacher || !currentPodcast) return;
+            if (!confirm('Xoá hẳn podcast "' + currentPodcast.title + '"? Không thể hoàn tác.')) return;
+            try {
+                await deletePodcastDB(currentPodcast.id);
+                showListView();
+                await renderPodcastGrid();
+            } catch (err) {
+                alert('Xoá thất bại: ' + err.message);
+            }
+        });
+
+        // ================= MỞ 1 PODCAST =================
+        async function openPodcast(p) {
+            currentPodcast = p;
+            detailTitleEl.textContent = p.title;
+            listView.style.display = 'none';
+            detailView.style.display = '';
+            deleteBtn.style.display = isTeacher ? '' : 'none';
+            adminBar.style.display = isTeacher ? '' : 'none';
+
+            if (isTeacher) {
+                adminTitleInput.value = p.title || '';
+                adminVideoInput.value = p.video_url || '';
+                renderAdminSegments();
+            }
+
+            if (p.video_url) {
+                videoWrapEl.style.display = 'block';
+                videoEl.src = p.video_url;
+            } else {
+                videoWrapEl.style.display = 'none';
+                videoEl.removeAttribute('src');
+            }
+
+            const hasSegments = Array.isArray(p.segments) && p.segments.length > 0;
+            emptyMsg.style.display = hasSegments ? 'none' : 'block';
+            studentView.style.display = hasSegments ? '' : 'none';
+            if (!hasSegments) return;
+
+            currentSegments = podPrepareSegments(p.segments);
+            currentSegIndex = 0;
+            currentStage = 1;
+            selectedChipEl = null;
+            await loadProgressForPodcast();
+            renderStageButtons();
+            renderSegment();
+        }
+
+        // ================= TIẾN ĐỘ (điểm chăm chỉ) =================
+        // Bảng "podcast_fill_progress": mỗi dòng = 1 Ô TRỐNG đã điền ĐÚNG của 1 học viên, ở
+        // 1 giai đoạn cụ thể (1 hoặc 2). Ghi qua upsert (khoá duy nhất user_id+podcast_id+
+        // segment_index+blank_index+stage) nên điền đúng lại lần nữa KHÔNG cộng điểm thêm
+        // (idempotent) — đúng tinh thần "1 điểm chăm chỉ / mỗi từ đúng", không phải mỗi lượt bấm.
+        async function loadProgressForPodcast() {
+            progressRows = [];
+            if (!currentUserId || !currentPodcast) { recomputeStage1Done(); return; }
+            try {
+                const { data, error } = await sb.from('podcast_fill_progress')
+                    .select('segment_index, blank_index, stage')
+                    .eq('user_id', currentUserId)
+                    .eq('podcast_id', currentPodcast.id);
+                if (error) throw error;
+                progressRows = data || [];
+            } catch (err) {
+                console.error('Lỗi khi tải tiến độ podcast (có thể do bảng "podcast_fill_progress" chưa được tạo):', err.message);
+            }
+            recomputeStage1Done();
+        }
+
+        function isBlankDone(segIndex, blankIndex, stage) {
+            return progressRows.some(r => r.segment_index === segIndex && r.blank_index === blankIndex && r.stage === stage);
+        }
+
+        function recomputeStage1Done() {
+            const totalBlanks = currentSegments.reduce((sum, s) => sum + s.blanks.length, 0);
+            if (!totalBlanks) { stage1AllDone = false; return; }
+            const doneCount = progressRows.filter(r => r.stage === 1).length;
+            stage1AllDone = doneCount >= totalBlanks;
+        }
+
+        // Trả về true nếu đây là lần ĐẦU TIÊN ô này được ghi đúng (mới thực sự cộng điểm).
+        async function markBlankDone(segIndex, blankIndex, stage) {
+            if (isBlankDone(segIndex, blankIndex, stage)) return false;
+            progressRows.push({ segment_index: segIndex, blank_index: blankIndex, stage });
+            recomputeStage1Done();
+            if (!currentUserId || isTeacher) return true; // chưa đăng nhập / đang xem thử (giảng viên) -> không lưu lên Supabase
+            try {
+                const { error } = await sb.from('podcast_fill_progress').upsert({
+                    user_id: currentUserId,
+                    podcast_id: currentPodcast.id,
+                    segment_index: segIndex,
+                    blank_index: blankIndex,
+                    stage: stage,
+                    created_at: new Date().toISOString()
+                }, { onConflict: 'user_id,podcast_id,segment_index,blank_index,stage' });
+                if (error) throw error;
+            } catch (err) {
+                console.error('Lỗi khi lưu tiến độ podcast:', err.message);
+            }
+            return true;
+        }
+
+        // ================= GIAI ĐOẠN 1 / 2 =================
+        function renderStageButtons() {
+            stage1Btn.classList.toggle('active', currentStage === 1);
+            stage2Btn.classList.toggle('active', currentStage === 2);
+            stage2Btn.classList.toggle('pod-stage-locked', !stage1AllDone);
+            stage2Btn.innerHTML = stage1AllDone
+                ? 'Giai đoạn 2<br><small>Tự điền (ẩn box)</small>'
+                : 'Giai đoạn 2 🔒<br><small>Tự điền (ẩn box)</small>';
+            stageHint.style.display = stage1AllDone ? 'none' : '';
+        }
+        stage1Btn.addEventListener('click', () => {
+            if (currentStage === 1) return;
+            currentStage = 1;
+            selectedChipEl = null;
+            renderStageButtons();
+            renderSegment();
+        });
+        stage2Btn.addEventListener('click', () => {
+            if (!stage1AllDone) {
+                if (window.vocabTap && window.vocabTap.toast) {
+                    window.vocabTap.toast('🔒 Hoàn thành đúng hết Giai đoạn 1 để mở khoá Giai đoạn 2 nhé!', 'info');
+                }
+                return;
+            }
+            if (currentStage === 2) return;
+            currentStage = 2;
+            selectedChipEl = null;
+            renderStageButtons();
+            renderSegment();
+        });
+
+        // ================= HIỂN THỊ 1 ĐOẠN =================
+        function podTotalBlanksAllSegments() {
+            return currentSegments.reduce((sum, s) => sum + s.blanks.length, 0);
+        }
+        function podDoneBlanksForStage(stage) {
+            return progressRows.filter(r => r.stage === stage).length;
+        }
+        function renderProgressBar() {
+            const total = podTotalBlanksAllSegments();
+            const done = podDoneBlanksForStage(currentStage);
+            const pct = total ? Math.round((done / total) * 100) : 0;
+            progressFill.style.width = pct + '%';
+            progressText.textContent = done + '/' + total + ' ô trống đúng (Giai đoạn ' + currentStage + ')';
+        }
+
+        function podAllBlanksDoneInSegment(seg, stage) {
+            return seg.blanks.every((b, bi) => isBlankDone(seg.index, bi, stage));
+        }
+
+        function renderSegment() {
+            podBusy = false;
+            selectedChipEl = null;
+            const seg = currentSegments[currentSegIndex];
+            segIdxEl.textContent = 'Đoạn ' + (currentSegIndex + 1) + '/' + currentSegments.length;
+            segPrevBtn.disabled = currentSegIndex === 0;
+            segNextBtn.disabled = currentSegIndex === currentSegments.length - 1;
+            renderProgressBar();
+
+            translationEl.style.display = 'none';
+            translationEl.textContent = seg.vi || '(Chưa có bản dịch cho đoạn này)';
+            translateToggleBtn.textContent = '🇻🇳 Xem bản dịch';
+            feedbackEl.className = 'pod-feedback';
+            feedbackEl.innerHTML = '';
+            quizBox.style.display = 'none';
+            quizFeedbackEl.innerHTML = '';
+
+            const wrapFn = (window.vocabTap && window.vocabTap.wrap) ? window.vocabTap.wrap : escapeHtmlPod;
+            const blankByPart = {};
+            seg.blanks.forEach((b, bi) => { blankByPart[b.partIndex] = bi; });
+
+            let html = '';
+            seg.parts.forEach((p, pi) => {
+                if (!p.isWord) { html += escapeHtmlPod(p.text); return; }
+                if (blankByPart.hasOwnProperty(pi)) {
+                    const bi = blankByPart[pi];
+                    const done = isBlankDone(seg.index, bi, currentStage);
+                    const answer = p.core;
+                    html += escapeHtmlPod(p.lead);
+                    if (done) {
+                        html += `<span class="pod-blank pod-blank-correct" data-blank-i="${bi}">${escapeHtmlPod(answer)}</span>`;
+                    } else if (currentStage === 1) {
+                        html += `<span class="pod-blank" data-blank-i="${bi}" data-answer="${escapeHtmlPod(answer)}">＿＿＿</span>`;
+                    } else {
+                        const widthCh = Math.max(answer.length + 2, 4);
+                        html += `<input type="text" class="pod-blank-input" data-blank-i="${bi}" data-answer="${escapeHtmlPod(answer)}" style="width:${widthCh}ch" autocomplete="off" autocapitalize="off" spellcheck="false">`;
+                    }
+                    html += escapeHtmlPod(p.trail);
+                } else {
+                    html += wrapFn(p.lead + p.core + p.trail);
+                }
+            });
+            sentenceEl.innerHTML = html.replace(/\n/g, '<br>');
+            sentenceEl.dataset.vocabContext = seg.en;
+            sentenceEl.dataset.vocabSource = currentPodcast ? ('Podcast: ' + currentPodcast.title) : '';
+
+            if (currentStage === 1) {
+                wordboxEl.style.display = '';
+                const remainingWords = seg.blanks
+                    .filter((b, bi) => !isBlankDone(seg.index, bi, currentStage))
+                    .map(b => b.answer.trim());
+                const shuffled = remainingWords.slice().sort(() => Math.random() - 0.5);
+                wordboxEl.innerHTML = shuffled.length
+                    ? shuffled.map(w => `<button type="button" class="pod-chip">${escapeHtmlPod(w)}</button>`).join('')
+                    : '<span class="pod-wordbox-empty">✅ Đã điền đúng hết ô trống trong đoạn này!</span>';
+            } else {
+                wordboxEl.style.display = 'none';
+                wordboxEl.innerHTML = '';
+                // Giai đoạn 2: focus sẵn vào ô trống đầu tiên còn thiếu để gõ được ngay
+                const firstInput = sentenceEl.querySelector('.pod-blank-input');
+                if (firstInput) firstInput.focus();
+            }
+
+            maybeShowQuiz();
+        }
+
+        function maybeShowQuiz() {
+            const seg = currentSegments[currentSegIndex];
+            if (!seg.quiz) return;
+            if (!podAllBlanksDoneInSegment(seg, currentStage)) return;
+            quizBox.style.display = '';
+            quizQuestionEl.textContent = seg.quiz.question;
+            quizOptionsEl.innerHTML = seg.quiz.options.map((opt, oi) =>
+                `<button type="button" class="pod-quiz-opt" data-oi="${oi}">${escapeHtmlPod(opt)}</button>`
+            ).join('');
+        }
+
+        quizOptionsEl.addEventListener('click', (e) => {
+            const btn = e.target.closest('.pod-quiz-opt');
+            if (!btn) return;
+            const seg = currentSegments[currentSegIndex];
+            const oi = Number(btn.dataset.oi);
+            const isCorrect = oi === Number(seg.quiz.correct);
+            quizOptionsEl.querySelectorAll('.pod-quiz-opt').forEach(b => b.disabled = true);
+            btn.classList.add(isCorrect ? 'is-correct' : 'is-wrong');
+            if (!isCorrect) {
+                const correctBtn = quizOptionsEl.querySelector('[data-oi="' + seg.quiz.correct + '"]');
+                if (correctBtn) correctBtn.classList.add('is-correct');
+            }
+            isCorrect ? podPlayCorrect() : podPlayWrong();
+            quizFeedbackEl.textContent = isCorrect ? '✅ Chính xác!' : '❌ Chưa đúng — đáp án đúng đã được tô xanh.';
+            quizFeedbackEl.className = 'pod-quiz-feedback ' + (isCorrect ? 'is-correct' : 'is-wrong');
+        });
+
+        // ----- Chạm vào 1 từ (ngoài chỗ trống) để tra nghĩa + phát âm, dùng lại đúng 1 bộ
+        // máy đang chạy ở "Tin ngắn"/THCS-THPT (window.vocabTap) — KHÔNG viết trùng logic.
+        // Giai đoạn 1: bấm 1 từ trong box để CHỌN, rồi bấm vào 1 ô trống bất kỳ để đặt từ đó
+        // vào (học viên phải tự đoán đúng ô — đây mới là phần luyện tập). Bấm lại vào 1 ô đã
+        // đặt (nhưng chưa chấm đúng) để rút từ đó về lại hộp, sửa nếu đặt nhầm. -----
+        sentenceEl.addEventListener('click', (e) => {
+            const wordEl = e.target.closest('.tappable-word');
+            if (wordEl) {
+                if (window.vocabTap && window.vocabTap.handleTap) window.vocabTap.handleTap(wordEl);
+                return;
+            }
+            if (currentStage !== 1) return;
+
+            const emptySlot = e.target.closest('.pod-blank:not(.pod-blank-filled)');
+            if (emptySlot && selectedChipEl) {
+                emptySlot.textContent = selectedChipEl.textContent;
+                emptySlot.classList.add('pod-blank-filled');
+                selectedChipEl.remove();
+                selectedChipEl = null;
+                if (!wordboxEl.querySelector('.pod-chip')) {
+                    wordboxEl.innerHTML = '<span class="pod-wordbox-empty">Đã đặt hết từ — bấm "✔️ Kiểm tra" để chấm điểm.</span>';
+                }
+                return;
+            }
+
+            const filledSlot = e.target.closest('.pod-blank-filled:not(.pod-blank-correct)');
+            if (filledSlot) {
+                const word = filledSlot.textContent;
+                filledSlot.textContent = '＿＿＿';
+                filledSlot.classList.remove('pod-blank-filled', 'pod-blank-wrong');
+                const emptyMsgChip = wordboxEl.querySelector('.pod-wordbox-empty');
+                if (emptyMsgChip) emptyMsgChip.remove();
+                const chip = document.createElement('button');
+                chip.type = 'button';
+                chip.className = 'pod-chip';
+                chip.textContent = word;
+                wordboxEl.appendChild(chip);
+            }
+        });
+
+        wordboxEl.addEventListener('click', (e) => {
+            const chip = e.target.closest('.pod-chip');
+            if (!chip) return;
+            if (selectedChipEl === chip) {
+                chip.classList.remove('pod-chip-selected');
+                selectedChipEl = null;
+                return;
+            }
+            if (selectedChipEl) selectedChipEl.classList.remove('pod-chip-selected');
+            selectedChipEl = chip;
+            chip.classList.add('pod-chip-selected');
+        });
+
+        // Giai đoạn 2: bấm Enter ngay trong 1 ô để chấm luôn, khỏi phải với chuột tới nút
+        sentenceEl.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && e.target.classList.contains('pod-blank-input')) {
+                e.preventDefault();
+                checkBtn.click();
+            }
+        });
+
+        // ================= KIỂM TRA =================
+        checkBtn.addEventListener('click', async () => {
+            if (podBusy) return;
+            podBusy = true;
+            const seg = currentSegments[currentSegIndex];
+            let anyWrong = false, anyChecked = false, earnedAny = false;
+
+            if (currentStage === 1) {
+                const slots = sentenceEl.querySelectorAll('.pod-blank:not(.pod-blank-correct)');
+                for (const slot of slots) {
+                    if (!slot.classList.contains('pod-blank-filled')) { anyWrong = true; continue; }
+                    anyChecked = true;
+                    const bi = Number(slot.dataset.blankI);
+                    const expected = podNormWord(slot.dataset.answer);
+                    const given = podNormWord(slot.textContent);
+                    if (given === expected) {
+                        slot.classList.add('pod-blank-correct');
+                        slot.classList.remove('pod-blank-wrong');
+                        if (await markBlankDone(seg.index, bi, 1)) earnedAny = true;
+                    } else {
+                        slot.classList.add('pod-blank-wrong');
+                        anyWrong = true;
+                    }
+                }
+            } else {
+                const inputs = sentenceEl.querySelectorAll('.pod-blank-input');
+                for (const input of inputs) {
+                    anyChecked = true;
+                    const bi = Number(input.dataset.blankI);
+                    const expected = podNormWord(input.dataset.answer);
+                    const given = podNormWord(input.value);
+                    if (given && given === expected) {
+                        const span = document.createElement('span');
+                        span.className = 'pod-blank pod-blank-correct';
+                        span.dataset.blankI = String(bi);
+                        span.textContent = input.value.trim();
+                        input.replaceWith(span);
+                        if (await markBlankDone(seg.index, bi, 2)) earnedAny = true;
+                    } else {
+                        input.classList.add('pod-blank-wrong');
+                        anyWrong = true;
+                    }
+                }
+            }
+
+            podBusy = false;
+            if (!anyChecked) return; // chưa điền gì cả, không có gì để chấm
+
+            renderProgressBar();
+            renderStageButtons(); // [Giai đoạn 1] có thể vừa đủ điều kiện mở khoá Giai đoạn 2
+            if (anyWrong) {
+                podPlayWrong();
+                feedbackEl.className = 'pod-feedback is-wrong';
+                feedbackEl.textContent = '❌ Còn ô sai hoặc chưa điền — ô màu đỏ cần sửa lại rồi bấm "Kiểm tra" lần nữa.';
+            } else {
+                podPlayCorrect();
+                feedbackEl.className = 'pod-feedback is-correct';
+                feedbackEl.textContent = '✅ Đúng hết ô trống trong đoạn này!';
+                maybeShowQuiz();
+            }
+            if (earnedAny) renderProfileAchievements(); // cập nhật ngay điểm chăm chỉ, không cần đợi mở hồ sơ
+        });
+
+        translateToggleBtn.addEventListener('click', () => {
+            const showing = translationEl.style.display !== 'none';
+            translationEl.style.display = showing ? 'none' : '';
+            translateToggleBtn.textContent = showing ? '🇻🇳 Xem bản dịch' : '🙈 Ẩn bản dịch';
+        });
+
+        segPrevBtn.addEventListener('click', () => {
+            if (currentSegIndex > 0) { currentSegIndex--; renderSegment(); }
+        });
+        segNextBtn.addEventListener('click', () => {
+            if (currentSegIndex < currentSegments.length - 1) { currentSegIndex++; renderSegment(); }
+        });
+
+        // ================= KHUNG QUẢN TRỊ (GIẢNG VIÊN) =================
+        let podAdminSaveTimer = null;
+        function scheduleAdminSave(statusEl) {
+            statusEl.textContent = 'Đang gõ...';
+            clearTimeout(podAdminSaveTimer);
+            podAdminSaveTimer = setTimeout(async () => {
+                statusEl.textContent = 'Đang lưu...';
+                const ok = await savePodcastContent();
+                statusEl.textContent = ok ? '💾 Đã lưu.' : '❌ Lưu thất bại, thử lại.';
+            }, 800);
+        }
+
+        adminTitleSaveBtn.addEventListener('click', async () => {
+            const t = adminTitleInput.value.trim();
+            if (!t) return;
+            currentPodcast.title = t;
+            detailTitleEl.textContent = t;
+            const ok = await savePodcastContent();
+            if (ok) { const p = PODCASTS.find(x => x.id === currentPodcast.id); if (p) p.title = t; }
+        });
+
+        adminVideoSaveBtn.addEventListener('click', async () => {
+            const url = adminVideoInput.value.trim();
+            currentPodcast.video_url = url;
+            adminVideoStatus.textContent = 'Đang lưu...';
+            const ok = await savePodcastContent();
+            adminVideoStatus.textContent = ok ? '💾 Đã lưu link video.' : '❌ Lưu thất bại, thử lại.';
+            if (ok) {
+                if (url) { videoWrapEl.style.display = 'block'; videoEl.src = url; }
+                else { videoWrapEl.style.display = 'none'; videoEl.removeAttribute('src'); }
+            }
+        });
+
+        // Tách văn bản dài thành từng đoạn theo dòng trống (1 dòng trống trở lên)
+        function splitParagraphs(raw) {
+            return String(raw || '').split(/\n\s*\n+/).map(s => s.trim()).filter(Boolean);
+        }
+
+        importBtn.addEventListener('click', async () => {
+            const enParas = splitParagraphs(importEnInput.value);
+            if (!enParas.length) {
+                importStatus.textContent = '❌ Chưa dán script tiếng Anh.';
+                return;
+            }
+            const viParas = splitParagraphs(importViInput.value);
+            if (currentPodcast.segments && currentPodcast.segments.length) {
+                const proceed = confirm('Thao tác này sẽ THAY THẾ toàn bộ ' + currentPodcast.segments.length + ' đoạn hiện có bằng ' + enParas.length + ' đoạn vừa nhập. Tiếp tục?');
+                if (!proceed) return;
+            }
+            currentPodcast.segments = enParas.map((en, i) => ({ en, vi: viParas[i] || '', quiz: null }));
+            renderAdminSegments();
+            importStatus.textContent = 'Đang lưu...';
+            const ok = await savePodcastContent();
+            importStatus.textContent = ok ? ('💾 Đã nhập và lưu ' + enParas.length + ' đoạn.') : '❌ Lưu thất bại, thử lại.';
+            if (ok) { importEnInput.value = ''; importViInput.value = ''; }
+        });
+
+        function renderAdminSegments() {
+            const segs = currentPodcast.segments || [];
+            segmentsAdminEl.innerHTML = segs.map((seg, i) => {
+                const q = seg.quiz || {};
+                const opts = Array.isArray(q.options) ? q.options : ['', '', '', ''];
+                return `
+                <div class="pod-admin-segment" data-i="${i}">
+                    <div class="pod-admin-segment-head">
+                        <b>Đoạn ${i + 1}</b>
+                        <button type="button" class="dub-admin-row-del" data-act="del-seg" title="Xoá đoạn">🗑</button>
+                    </div>
+                    <textarea class="news-edit-input dub-admin-import-textarea pod-admin-seg-en" data-field="en" placeholder="Script tiếng Anh của đoạn này...">${escapeHtmlPod(seg.en || '')}</textarea>
+                    <textarea class="news-edit-input dub-admin-import-textarea pod-admin-seg-vi" data-field="vi" placeholder="Bản dịch tiếng Việt của đoạn này...">${escapeHtmlPod(seg.vi || '')}</textarea>
+                    <details class="pod-admin-quiz">
+                        <summary>✏️ Câu hỏi trắc nghiệm (tuỳ chọn)</summary>
+                        <input type="text" class="news-edit-input" data-field="quiz-q" placeholder="Câu hỏi..." value="${escapeHtmlPod(q.question || '')}">
+                        ${[0, 1, 2, 3].map(oi => `
+                            <div class="pod-admin-quiz-opt-row">
+                                <input type="radio" name="pod-quiz-correct-${i}" data-field="quiz-correct" value="${oi}" ${Number(q.correct) === oi ? 'checked' : ''}>
+                                <input type="text" class="news-edit-input" data-field="quiz-opt" data-oi="${oi}" placeholder="Đáp án ${oi + 1}" value="${escapeHtmlPod(opts[oi] || '')}">
+                            </div>
+                        `).join('')}
+                    </details>
+                </div>`;
+            }).join('') || '<p class="grammar-empty-msg">Chưa có đoạn nào — dùng khung "Nhập nhanh script" ở trên hoặc bấm "+ Thêm đoạn".</p>';
+        }
+
+        addSegmentBtn.addEventListener('click', async () => {
+            currentPodcast.segments = currentPodcast.segments || [];
+            currentPodcast.segments.push({ en: '', vi: '', quiz: null });
+            renderAdminSegments();
+            await savePodcastContent();
+        });
+
+        segmentsAdminEl.addEventListener('click', async (e) => {
+            if (e.target.dataset.act === 'del-seg') {
+                const i = Number(e.target.closest('.pod-admin-segment').dataset.i);
+                if (!confirm('Xoá đoạn ' + (i + 1) + '?')) return;
+                currentPodcast.segments.splice(i, 1);
+                renderAdminSegments();
+                await savePodcastContent();
+            }
+        });
+
+        segmentsAdminEl.addEventListener('input', (e) => {
+            const row = e.target.closest('.pod-admin-segment');
+            if (!row) return;
+            const i = Number(row.dataset.i);
+            const seg = currentPodcast.segments[i];
+            const field = e.target.dataset.field;
+            if (field === 'en') seg.en = e.target.value;
+            else if (field === 'vi') seg.vi = e.target.value;
+            else if (field === 'quiz-q') { seg.quiz = seg.quiz || { options: ['', '', '', ''], correct: 0 }; seg.quiz.question = e.target.value; }
+            else if (field === 'quiz-opt') {
+                seg.quiz = seg.quiz || { options: ['', '', '', ''], correct: 0 };
+                seg.quiz.options = seg.quiz.options || ['', '', '', ''];
+                seg.quiz.options[Number(e.target.dataset.oi)] = e.target.value;
+            }
+            scheduleAdminSave(segmentsStatus);
+        });
+        segmentsAdminEl.addEventListener('change', (e) => {
+            if (e.target.dataset.field !== 'quiz-correct') return;
+            const row = e.target.closest('.pod-admin-segment');
+            const i = Number(row.dataset.i);
+            const seg = currentPodcast.segments[i];
+            seg.quiz = seg.quiz || { options: ['', '', '', ''], correct: 0 };
+            seg.quiz.correct = Number(e.target.value);
+            scheduleAdminSave(segmentsStatus);
+        });
+
+    })();
+    // ===== KẾT THÚC PODCAST =====
 
     // ===================================================================
     // ===== BẮT ĐẦU: "CHO BÉ" — 50 CHỦ ĐỀ (flashcard / nối từ / câu chuyện) =====

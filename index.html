@@ -1010,6 +1010,7 @@
             <div class="folder-card" id="kid-folder-card">📁 Vận dụng (20 chủ đề)</div>
             <div class="folder-card" id="thcs-folder-card">📁 THCS/THPT (theo SGK Global success)</div>
             <div class="folder-card news-folder-trigger" id="news-folder-card">📁 Tin ngắn (nguồn newsinlevels)<span id="news-folder-badge" class="tab-badge-count tab-badge-count-corner" style="display:none;">0</span></div>
+            <div class="folder-card podcast-folder-trigger" id="podcast-folder-card">🎧 Podcast (học từ vựng qua dictation)</div>
         </div>
 
         <!-- ===== Panel "Từ vựng của tôi" — các từ học viên đã chạm để tra nghĩa khi luyện dịch ===== -->
@@ -1353,6 +1354,115 @@
                     <p class="news-quiz-edit-hint">Tick vào ô tròn trước đáp án đúng. Mọi thay đổi được tự động lưu.</p>
                     <div id="news-quiz-edit-questions"></div>
                     <div class="news-edit-save-status" id="news-quiz-edit-status"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Panel "Podcast" — học từ vựng bằng dictation qua podcast ===== -->
+        <div id="podcast-panel" style="display:none;">
+            <div class="grammar-panel-header">
+                <button class="grammar-back-btn" id="podcast-back-btn">← Quay lại</button>
+                <h3 style="margin:0;">🎧 Podcast — Học từ vựng qua Dictation</h3>
+            </div>
+
+            <!-- Danh sách các podcast — tải động từ bảng "podcast_content" -->
+            <div id="podcast-list-view">
+                <div class="grammar-admin-bar" id="podcast-list-admin-bar" style="display:none;">
+                    <button type="button" id="podcast-add-btn" class="grammar-admin-btn grammar-admin-btn-primary">➕ Thêm podcast mới</button>
+                </div>
+                <div class="folder-grid" id="podcast-grid">
+                    <p class="grammar-loading-msg">Đang tải danh sách podcast...</p>
+                </div>
+            </div>
+
+            <!-- Chi tiết 1 podcast — dùng chung cho mọi podcast, dữ liệu đổ vào động khi mở -->
+            <div id="podcast-detail-view" style="display:none;">
+                <div class="grammar-panel-header">
+                    <button class="grammar-back-btn" id="podcast-detail-back-btn">← Quay lại danh sách</button>
+                    <h3 style="margin:0;">🎧 <span id="podcast-detail-title"></span></h3>
+                    <button type="button" id="podcast-delete-btn" class="grammar-admin-btn grammar-admin-btn-danger" style="display:none;">🗑️ Xoá podcast này</button>
+                </div>
+
+                <!-- Khung quản trị: CHỈ hiện với tài khoản giảng viên (TEACHER_EMAILS) -->
+                <div id="podcast-admin-bar" class="dub-admin-bar" style="display:none;">
+                    <h4 class="dub-admin-title">✏️ Cập nhật nội dung (giảng viên)</h4>
+
+                    <div class="dub-field">
+                        <label class="news-quiz-edit-label" for="podcast-admin-title-input">Tên podcast</label>
+                        <div class="dub-admin-inline-row">
+                            <input type="text" id="podcast-admin-title-input" class="news-edit-input" placeholder="VD: 6 Minute English - Tập 1">
+                            <button class="loto-btn-secondary" id="podcast-admin-title-save-btn">Lưu tên</button>
+                        </div>
+                    </div>
+
+                    <div class="dub-field">
+                        <label class="news-quiz-edit-label" for="podcast-admin-video-input">Link video (Backblaze B2)</label>
+                        <p class="news-quiz-edit-hint">Tải video lên bucket Public trên Backblaze B2 (hoặc Supabase Storage bucket public), rồi dán link công khai vào đây. Có thể để trống nếu chỉ muốn luyện dictation bằng văn bản, không có video.</p>
+                        <div class="dub-admin-inline-row">
+                            <input type="text" id="podcast-admin-video-input" class="news-edit-input" placeholder="https://f00x.backblazeb2.com/file/ten-bucket/podcast.mp4">
+                            <button class="loto-btn-secondary" id="podcast-admin-video-save-btn">Lưu link</button>
+                        </div>
+                        <div class="dub-admin-status" id="podcast-admin-video-status"></div>
+                    </div>
+
+                    <div class="dub-field">
+                        <label class="news-quiz-edit-label">Nhập nhanh script (thay thế toàn bộ danh sách đoạn hiện có)</label>
+                        <p class="news-quiz-edit-hint">Dán script tiếng Anh — mỗi đoạn (đoạn văn) cách nhau bằng 1 dòng trống. Dán bản dịch tiếng Việt tương ứng vào ô bên dưới, cũng cách nhau bằng 1 dòng trống, ĐÚNG THEO THỨ TỰ với script tiếng Anh (đoạn 1 khớp đoạn 1, đoạn 2 khớp đoạn 2...). Có thể để trống ô tiếng Việt rồi dịch sau ở khung "Danh sách đoạn" bên dưới.</p>
+                        <textarea id="podcast-admin-import-en" class="news-edit-input dub-admin-import-textarea" placeholder="Đoạn 1 tiếng Anh...&#10;&#10;Đoạn 2 tiếng Anh..."></textarea>
+                        <textarea id="podcast-admin-import-vi" class="news-edit-input dub-admin-import-textarea" placeholder="Đoạn 1 tiếng Việt...&#10;&#10;Đoạn 2 tiếng Việt..." style="margin-top:8px;"></textarea>
+                        <button class="loto-btn-secondary" id="podcast-admin-import-btn" style="margin-top:8px;">📥 Nhập &amp; thay thế danh sách đoạn</button>
+                        <div class="dub-admin-status" id="podcast-admin-import-status"></div>
+                    </div>
+
+                    <div class="dub-field">
+                        <label class="news-quiz-edit-label">Danh sách đoạn (script)</label>
+                        <p class="news-quiz-edit-hint">Mỗi đoạn tự tạo chỗ trống cho học viên điền (cứ 10 từ thì khuyết ngẫu nhiên 1 từ). Câu hỏi trắc nghiệm không bắt buộc — để trống nếu không cần. Mọi thay đổi tự động lưu.</p>
+                        <div id="podcast-admin-segments"></div>
+                        <button class="loto-btn-secondary" id="podcast-admin-add-segment-btn">+ Thêm đoạn</button>
+                        <div class="dub-admin-status" id="podcast-admin-segments-status"></div>
+                    </div>
+                </div>
+
+                <div id="podcast-empty-msg" class="dub-empty-msg" style="display:none;">Giảng viên chưa cập nhật nội dung podcast cho phần này.</div>
+
+                <!-- ===== Phần học viên luyện dictation ===== -->
+                <div id="podcast-student-view" style="display:none;">
+                    <div class="grammar-video-wrapper dub-video-wrapper" id="podcast-video-wrapper" style="display:none;"><video id="podcast-player" playsinline controls></video></div>
+
+                    <div class="pod-stage-switch" id="podcast-stage-switch">
+                        <button type="button" class="pod-stage-btn active" data-stage="1" id="podcast-stage1-btn">Giai đoạn 1<br><small>Điền từ có sẵn trong box</small></button>
+                        <button type="button" class="pod-stage-btn" data-stage="2" id="podcast-stage2-btn">Giai đoạn 2 🔒<br><small>Tự điền (ẩn box)</small></button>
+                    </div>
+                    <p class="kid-hint" id="podcast-stage-hint">Hoàn thành đúng hết Giai đoạn 1 (dùng từ có sẵn trong box) để mở khoá Giai đoạn 2 (tự gõ từ, không có box gợi ý). Chạm vào bất kỳ từ nào trong câu (ngoài chỗ trống) để tra nghĩa kèm phát âm.</p>
+
+                    <div class="pod-progress-row">
+                        <div class="pod-progress-track"><div class="pod-progress-fill" id="podcast-progress-fill"></div></div>
+                        <span class="pod-progress-text" id="podcast-progress-text"></span>
+                    </div>
+
+                    <div class="pod-segment-nav">
+                        <button type="button" class="kid-btn" id="podcast-seg-prev">‹ Đoạn trước</button>
+                        <span class="pod-segment-idx" id="podcast-seg-idx">Đoạn 1/1</span>
+                        <button type="button" class="kid-btn" id="podcast-seg-next">Đoạn sau ›</button>
+                    </div>
+
+                    <div class="pod-segment-card">
+                        <div class="pod-sentence" id="podcast-sentence"></div>
+                        <div class="pod-wordbox" id="podcast-wordbox"></div>
+                        <div class="pod-actions">
+                            <button type="button" class="kid-btn kid-btn-primary" id="podcast-check-btn">✔️ Kiểm tra</button>
+                            <button type="button" class="loto-btn-secondary" id="podcast-translate-toggle-btn">🇻🇳 Xem bản dịch</button>
+                        </div>
+                        <div class="pod-translation" id="podcast-translation" style="display:none;"></div>
+                        <div class="pod-feedback" id="podcast-feedback"></div>
+                    </div>
+
+                    <div class="pod-quiz-box" id="podcast-quiz-box" style="display:none;">
+                        <h4>✏️ Câu hỏi nhanh (không tính điểm — chỉ để củng cố hiểu bài)</h4>
+                        <div id="podcast-quiz-question" class="pod-quiz-question"></div>
+                        <div id="podcast-quiz-options"></div>
+                        <div id="podcast-quiz-feedback" class="pod-quiz-feedback"></div>
+                    </div>
                 </div>
             </div>
         </div>
