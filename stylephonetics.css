@@ -5854,6 +5854,17 @@ h3.news-editable:focus,
    PODCAST — HỌC TỪ VỰNG BẰNG DICTATION QUA PODCAST (mục Từ vựng)
    ===================================================================== */
 
+.pod-audio-box {
+    background: var(--surface-2);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 14px;
+}
+.pod-audio-box audio { width: 100%; display: block; margin-bottom: 10px; }
+.pod-audio-controls { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.pod-audio-hint { font-size: 0.78rem; color: var(--text-muted); }
+
 .pod-stage-switch {
     display: flex;
     gap: 10px;
@@ -6053,6 +6064,9 @@ h3.news-editable:focus,
     color: var(--text);
 }
 .pod-admin-seg-en, .pod-admin-seg-vi { min-height: 70px; margin-bottom: 8px; }
+.pod-admin-seg-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.pod-admin-seg-meta label { font-size: 0.78rem; color: var(--text-muted); white-space: nowrap; }
+.pod-admin-seg-start { width: 90px; flex: none; }
 .pod-admin-quiz { margin-top: 8px; }
 .pod-admin-quiz summary { cursor: pointer; font-size: 0.82rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 8px; }
 .pod-admin-quiz-opt-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }

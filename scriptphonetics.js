@@ -9898,13 +9898,20 @@ function toggleCompletion(symbolElement) {
     // =====================================================================
     // ===== BẮT ĐẦU: PODCAST — HỌC TỪ VỰNG BẰNG DICTATION QUA PODCAST =====
     // (mục "Từ vựng" > 🎧 Podcast)
-    // Bảng Supabase "podcast_content" (nhiều dòng) lưu tên, link video (Backblaze) +
-    // danh sách đoạn script (mỗi đoạn: text tiếng Anh, bản dịch tiếng Việt, câu hỏi
-    // trắc nghiệm tuỳ chọn). Xem file SQL "podcast_content_setup.sql".
+    // Bảng Supabase "podcast_content" (nhiều dòng) lưu tên, link audio MP3 (Backblaze) +
+    // danh sách đoạn script (mỗi đoạn: text tiếng Anh, thời điểm bắt đầu trong audio, bản
+    // dịch tiếng Việt, câu hỏi trắc nghiệm tuỳ chọn). Xem file SQL "podcast_content_setup.sql".
     // Bảng "podcast_fill_progress" lưu MỖI Ô TRỐNG đã điền ĐÚNG của MỖI học viên (theo
-    // từng giai đoạn 1/2) — dùng để: (1) khoá/mở Giai đoạn 2, (2) cộng điểm chăm chỉ
-    // (1đ/từ đúng ở Giai đoạn 1, 2đ/từ đúng ở Giai đoạn 2) trong renderProfileAchievements()
-    // ở phía trên file này.
+    // từng giai đoạn 1/2) — dùng để: (1) mở khoá lần lượt từng đoạn + Giai đoạn 2,
+    // (2) cộng điểm chăm chỉ (1đ/từ đúng ở Giai đoạn 1, 2đ/từ đúng ở Giai đoạn 2) trong
+    // renderProfileAchievements() ở phía trên file này.
+    // Mỗi đoạn LUÔN có đúng 5 chỗ trống (từ khoá) — nếu đoạn quá ngắn thì ít hơn. Học viên
+    // phải điền đúng hết đoạn hiện tại mới được sang đoạn kế tiếp (trừ giảng viên xem thử —
+    // giảng viên luôn được đi tự do, không bị khoá, theo đúng quy ước "giảng viên bỏ qua
+    // khoá nội dung" đang áp dụng cho các mục khác trong app).
+    // Nếu đoạn có nhập "Thời điểm bắt đầu" (mm:ss), audio sẽ tự phát đúng đoạn đó rồi tự
+    // dừng khi hết đoạn (tới mốc thời gian của đoạn kế tiếp, hoặc hết bài với đoạn cuối) —
+    // học viên bấm nút "🔁 Nghe lại đoạn này" để nghe lại bất cứ lúc nào.
     // Chỉ tài khoản trong TEACHER_EMAILS mới được thêm/sửa/xoá nội dung — quyền này
     // chặn ở CẢ giao diện lẫn RLS trên Supabase.
     // =====================================================================
@@ -9929,9 +9936,9 @@ function toggleCompletion(symbolElement) {
         const adminBar          = document.getElementById('podcast-admin-bar');
         const adminTitleInput   = document.getElementById('podcast-admin-title-input');
         const adminTitleSaveBtn = document.getElementById('podcast-admin-title-save-btn');
-        const adminVideoInput   = document.getElementById('podcast-admin-video-input');
-        const adminVideoSaveBtn = document.getElementById('podcast-admin-video-save-btn');
-        const adminVideoStatus  = document.getElementById('podcast-admin-video-status');
+        const adminAudioInput   = document.getElementById('podcast-admin-audio-input');
+        const adminAudioSaveBtn = document.getElementById('podcast-admin-audio-save-btn');
+        const adminAudioStatus  = document.getElementById('podcast-admin-audio-status');
         const importEnInput     = document.getElementById('podcast-admin-import-en');
         const importViInput     = document.getElementById('podcast-admin-import-vi');
         const importBtn         = document.getElementById('podcast-admin-import-btn');
@@ -9942,8 +9949,11 @@ function toggleCompletion(symbolElement) {
 
         const emptyMsg    = document.getElementById('podcast-empty-msg');
         const studentView = document.getElementById('podcast-student-view');
-        const videoWrapEl = document.getElementById('podcast-video-wrapper');
-        const videoEl     = document.getElementById('podcast-player');
+
+        const audioBoxEl   = document.getElementById('podcast-audio-box');
+        const audioEl      = document.getElementById('podcast-player');
+        const playSegBtn   = document.getElementById('podcast-play-seg-btn');
+        const audioHintEl  = document.getElementById('podcast-audio-hint');
 
         const stage1Btn    = document.getElementById('podcast-stage1-btn');
         const stage2Btn    = document.getElementById('podcast-stage2-btn');
@@ -9966,15 +9976,18 @@ function toggleCompletion(symbolElement) {
 
         if (!podcastPanel || !detailView || !vocabFolderGrid) return;
 
+        const BLANKS_PER_SEGMENT = 5; // [MỚI] mỗi đoạn luôn có đúng 5 từ khoá bị khuyết (thay vì "cứ 10 từ khuyết 1")
+
         let PODCASTS = [];
         let currentPodcast = null;
-        let currentSegments = [];   // đã xử lý sẵn { parts, blanks, en, vi, quiz }
+        let currentSegments = [];   // đã xử lý sẵn { parts, blanks, en, vi, quiz, startRaw }
         let currentSegIndex = 0;
         let currentStage = 1;       // 1 hoặc 2
         let stage1AllDone = false;  // toàn bộ ô trống Giai đoạn 1 của TOÀN BỘ podcast đang mở đã đúng hết chưa
         let progressRows = [];      // các dòng podcast_fill_progress của học viên cho podcast đang mở
         let selectedChipEl = null;  // chip đang được chọn (Giai đoạn 1), chờ bấm vào 1 ô trống để đặt
         let podBusy = false;        // chặn bấm "Kiểm tra" nhiều lần liên tiếp
+        let podSegEndSec = null;    // mốc giây audio sẽ tự dừng (đoạn đang phát) — null = không tự dừng
 
         function escapeHtmlPod(str) {
             return String(str == null ? '' : str).replace(/[&<>"']/g, ch => ({
@@ -9982,7 +9995,7 @@ function toggleCompletion(symbolElement) {
             }[ch]));
         }
 
-        // ---- Âm thanh phản hồi đúng/sai (tự tạo bằng WebAudio, không cần file mp3) ----
+        // ---- Âm thanh phản hồi đúng/sai (tự tạo bằng WebAudio, không cần file mp3 riêng) ----
         function podPlayTone(freq, delay, dur, type, vol) {
             try {
                 const AC = window.AudioContext || window.webkitAudioContext;
@@ -10006,6 +10019,25 @@ function toggleCompletion(symbolElement) {
             return String(s || '').toLowerCase().replace(/[^a-z0-9']/g, '');
         }
 
+        // ---- Đổi "mm:ss" / "h:mm:ss" -> tổng số giây. Trả về null nếu rỗng/không hợp lệ. ----
+        function podParseTimeToSec(str) {
+            if (str == null || String(str).trim() === '') return null;
+            const parts = String(str).trim().split(':').map(s => Number(s));
+            if (parts.some(n => isNaN(n))) return null;
+            if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+            if (parts.length === 2) return parts[0] * 60 + parts[1];
+            if (parts.length === 1) return parts[0];
+            return null;
+        }
+        // ---- Đổi ngược số giây -> "mm:ss" (hoặc "h:mm:ss" nếu >= 1 giờ), để hiển thị gợi ý ----
+        function podFormatSec(sec) {
+            if (sec == null || !isFinite(sec)) return '';
+            sec = Math.max(0, Math.round(sec));
+            const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
+            const mm = String(m).padStart(2, '0'), ss = String(s).padStart(2, '0');
+            return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
+        }
+
         // ---- Số ngẫu nhiên "có thể lặp lại" (seeded) từ 1 chuỗi bất kỳ — để vị trí các ô
         // trống của 1 đoạn KHÔNG đổi mỗi lần render lại (giữ nguyên giữa Giai đoạn 1 và
         // Giai đoạn 2 — đúng yêu cầu "vẫn là các từ cũ" — và giữa các lần mở lại đoạn này). ----
@@ -10026,7 +10058,8 @@ function toggleCompletion(symbolElement) {
         // ---- Tách 1 đoạn văn tiếng Anh thành từng "phần" (parts), giữ nguyên khoảng
         // trắng/dấu câu; mỗi phần là 1 từ thật thì tách riêng lead/core/trail (dấu câu
         // dính trước/sau vẫn hiển thị bình thường, CHỈ phần "core" mới có thể bị khuyết) —
-        // rồi cứ mỗi 10 TỪ thì random khuyết 1 từ trong nhóm 10 từ đó. -----
+        // rồi chọn ngẫu nhiên (seeded) đúng BLANKS_PER_SEGMENT từ trong cả đoạn để khuyết
+        // (ít hơn nếu đoạn không đủ từ). -----
         function podBuildBlanks(text) {
             const rawTokens = String(text || '').split(/(\s+)/);
             const parts = rawTokens.map(tok => {
@@ -10040,16 +10073,20 @@ function toggleCompletion(symbolElement) {
             parts.forEach((p, i) => { if (p.isWord) wordIdx.push(i); });
 
             const rand = podSeedFromString(text);
-            const blanks = [];
-            for (let start = 0; start < wordIdx.length; start += 10) {
-                const group = wordIdx.slice(start, start + 10);
-                // Ưu tiên từ có ít nhất 3 ký tự chữ cái, tránh khuyết mấy từ quá ngắn (a, is, to...)
-                const eligible = group.filter(i => parts[i].core.length >= 3);
-                const pool = eligible.length ? eligible : group;
-                if (!pool.length) continue;
-                const pick = pool[Math.floor(rand() * pool.length)];
-                blanks.push({ partIndex: pick, answer: parts[pick].core });
+            // Ưu tiên từ có ít nhất 3 ký tự chữ cái, tránh khuyết mấy từ quá ngắn (a, is, to...);
+            // nếu không đủ ứng viên hợp lệ thì mở rộng ra toàn bộ các từ trong đoạn.
+            const eligible = wordIdx.filter(i => parts[i].core.length >= 3);
+            const pool = (eligible.length >= Math.min(BLANKS_PER_SEGMENT, wordIdx.length)) ? eligible.slice() : wordIdx.slice();
+
+            const picks = [];
+            while (picks.length < BLANKS_PER_SEGMENT && pool.length) {
+                const idx = Math.floor(rand() * pool.length);
+                picks.push(pool[idx]);
+                pool.splice(idx, 1);
             }
+            picks.sort((a, b) => a - b);
+
+            const blanks = picks.map(pick => ({ partIndex: pick, answer: parts[pick].core }));
             return { parts, blanks };
         }
 
@@ -10060,6 +10097,7 @@ function toggleCompletion(symbolElement) {
                     index: i,
                     en: seg.en || '',
                     vi: seg.vi || '',
+                    startRaw: seg.start || '', // "mm:ss" do giảng viên nhập — dùng để đồng bộ audio
                     quiz: (seg.quiz && seg.quiz.question && Array.isArray(seg.quiz.options)) ? seg.quiz : null,
                     parts: built.parts,
                     blanks: built.blanks
@@ -10074,7 +10112,7 @@ function toggleCompletion(symbolElement) {
             PODCASTS = data || [];
         }
         async function createPodcastDB() {
-            const payload = { title: 'Podcast mới (bấm vào tiêu đề để đổi tên)', video_url: '', segments: [], created_by: currentEmail };
+            const payload = { title: 'Podcast mới (bấm vào tiêu đề để đổi tên)', audio_url: '', segments: [], created_by: currentEmail };
             const { data, error } = await sb.from('podcast_content').insert(payload).select().single();
             if (error) throw error;
             return data;
@@ -10088,7 +10126,7 @@ function toggleCompletion(symbolElement) {
             try {
                 const { error } = await sb.from('podcast_content').update({
                     title: currentPodcast.title,
-                    video_url: currentPodcast.video_url,
+                    audio_url: currentPodcast.audio_url,
                     segments: currentPodcast.segments
                 }).eq('id', currentPodcast.id);
                 if (error) throw error;
@@ -10131,6 +10169,7 @@ function toggleCompletion(symbolElement) {
             listView.style.display = '';
             detailView.style.display = 'none';
             currentPodcast = null;
+            podStopAudio();
         }
 
         podcastFolderCard.addEventListener('click', async () => {
@@ -10141,6 +10180,7 @@ function toggleCompletion(symbolElement) {
             await renderPodcastGrid();
         });
         podcastBackBtn.addEventListener('click', () => {
+            podStopAudio();
             podcastPanel.style.display = 'none';
             vocabFolderGrid.style.display = '';
         });
@@ -10185,16 +10225,15 @@ function toggleCompletion(symbolElement) {
 
             if (isTeacher) {
                 adminTitleInput.value = p.title || '';
-                adminVideoInput.value = p.video_url || '';
+                adminAudioInput.value = p.audio_url || '';
                 renderAdminSegments();
             }
 
-            if (p.video_url) {
-                videoWrapEl.style.display = 'block';
-                videoEl.src = p.video_url;
+            podStopAudio();
+            if (p.audio_url) {
+                audioEl.src = p.audio_url;
             } else {
-                videoWrapEl.style.display = 'none';
-                videoEl.removeAttribute('src');
+                audioEl.removeAttribute('src');
             }
 
             const hasSegments = Array.isArray(p.segments) && p.segments.length > 0;
@@ -10265,15 +10304,19 @@ function toggleCompletion(symbolElement) {
             return true;
         }
 
+        function podAllBlanksDoneInSegment(seg, stage) {
+            return seg.blanks.every((b, bi) => isBlankDone(seg.index, bi, stage));
+        }
+
         // ================= GIAI ĐOẠN 1 / 2 =================
         function renderStageButtons() {
             stage1Btn.classList.toggle('active', currentStage === 1);
             stage2Btn.classList.toggle('active', currentStage === 2);
-            stage2Btn.classList.toggle('pod-stage-locked', !stage1AllDone);
-            stage2Btn.innerHTML = stage1AllDone
+            stage2Btn.classList.toggle('pod-stage-locked', !stage1AllDone && !isTeacher);
+            stage2Btn.innerHTML = (stage1AllDone || isTeacher)
                 ? 'Giai đoạn 2<br><small>Tự điền (ẩn box)</small>'
                 : 'Giai đoạn 2 🔒<br><small>Tự điền (ẩn box)</small>';
-            stageHint.style.display = stage1AllDone ? 'none' : '';
+            stageHint.style.display = (stage1AllDone || isTeacher) ? 'none' : '';
         }
         stage1Btn.addEventListener('click', () => {
             if (currentStage === 1) return;
@@ -10283,7 +10326,7 @@ function toggleCompletion(symbolElement) {
             renderSegment();
         });
         stage2Btn.addEventListener('click', () => {
-            if (!stage1AllDone) {
+            if (!stage1AllDone && !isTeacher) {
                 if (window.vocabTap && window.vocabTap.toast) {
                     window.vocabTap.toast('🔒 Hoàn thành đúng hết Giai đoạn 1 để mở khoá Giai đoạn 2 nhé!', 'info');
                 }
@@ -10295,6 +10338,54 @@ function toggleCompletion(symbolElement) {
             renderStageButtons();
             renderSegment();
         });
+
+        // ================= PHÁT AUDIO ĐÚNG ĐOẠN + TỰ DỪNG =================
+        function podStopAudio() {
+            podSegEndSec = null;
+            try { audioEl.pause(); } catch (e) {}
+        }
+        // Tìm mốc giây audio sẽ dừng lại: mốc bắt đầu của đoạn kế tiếp GẦN NHẤT có nhập thời
+        // gian (bỏ qua các đoạn ở giữa chưa nhập); nếu là đoạn cuối cùng có thời gian, dừng ở
+        // hết bài (audio.duration), hoặc không tự dừng nếu chưa rõ thời lượng bài.
+        function podGetSegEndSec(fromIndex) {
+            for (let i = fromIndex + 1; i < currentSegments.length; i++) {
+                const t = podParseTimeToSec(currentSegments[i].startRaw);
+                if (t != null) return t;
+            }
+            const dur = audioEl.duration;
+            return (isFinite(dur) && dur > 0) ? dur : null;
+        }
+        function podPlayCurrentSegment() {
+            if (!currentPodcast || !currentPodcast.audio_url) return;
+            const seg = currentSegments[currentSegIndex];
+            const startSec = podParseTimeToSec(seg.startRaw);
+            if (startSec == null) return;
+            podSegEndSec = podGetSegEndSec(currentSegIndex);
+            try {
+                audioEl.currentTime = startSec;
+                const p = audioEl.play();
+                if (p && p.catch) p.catch(() => { /* trình duyệt chặn autoplay -> học viên tự bấm nút để phát */ });
+            } catch (e) { /* bỏ qua nếu audio chưa sẵn sàng */ }
+        }
+        audioEl.addEventListener('timeupdate', () => {
+            if (podSegEndSec != null && audioEl.currentTime >= podSegEndSec - 0.05) {
+                audioEl.pause();
+                podSegEndSec = null;
+            }
+        });
+        playSegBtn.addEventListener('click', () => podPlayCurrentSegment());
+
+        function updateAudioBox() {
+            const hasAudio = !!(currentPodcast && currentPodcast.audio_url);
+            audioBoxEl.style.display = hasAudio ? '' : 'none';
+            if (!hasAudio) return;
+            const seg = currentSegments[currentSegIndex];
+            const startSec = podParseTimeToSec(seg.startRaw);
+            playSegBtn.disabled = (startSec == null);
+            audioHintEl.textContent = (startSec == null)
+                ? 'Đoạn này chưa có "Thời điểm bắt đầu" — giảng viên cần nhập ở khung quản trị để đồng bộ audio.'
+                : '';
+        }
 
         // ================= HIỂN THỊ 1 ĐOẠN =================
         function podTotalBlanksAllSegments() {
@@ -10311,18 +10402,16 @@ function toggleCompletion(symbolElement) {
             progressText.textContent = done + '/' + total + ' ô trống đúng (Giai đoạn ' + currentStage + ')';
         }
 
-        function podAllBlanksDoneInSegment(seg, stage) {
-            return seg.blanks.every((b, bi) => isBlankDone(seg.index, bi, stage));
-        }
-
         function renderSegment() {
             podBusy = false;
             selectedChipEl = null;
+            podStopAudio();
             const seg = currentSegments[currentSegIndex];
             segIdxEl.textContent = 'Đoạn ' + (currentSegIndex + 1) + '/' + currentSegments.length;
             segPrevBtn.disabled = currentSegIndex === 0;
-            segNextBtn.disabled = currentSegIndex === currentSegments.length - 1;
+            segNextBtn.disabled = !(isTeacher || podAllBlanksDoneInSegment(seg, currentStage)) || currentSegIndex === currentSegments.length - 1;
             renderProgressBar();
+            updateAudioBox();
 
             translationEl.style.display = 'none';
             translationEl.textContent = seg.vi || '(Chưa có bản dịch cho đoạn này)';
@@ -10373,7 +10462,6 @@ function toggleCompletion(symbolElement) {
             } else {
                 wordboxEl.style.display = 'none';
                 wordboxEl.innerHTML = '';
-                // Giai đoạn 2: focus sẵn vào ô trống đầu tiên còn thiếu để gõ được ngay
                 const firstInput = sentenceEl.querySelector('.pod-blank-input');
                 if (firstInput) firstInput.focus();
             }
@@ -10520,6 +10608,9 @@ function toggleCompletion(symbolElement) {
 
             renderProgressBar();
             renderStageButtons(); // [Giai đoạn 1] có thể vừa đủ điều kiện mở khoá Giai đoạn 2
+            const nowDone = podAllBlanksDoneInSegment(seg, currentStage);
+            segNextBtn.disabled = !(isTeacher || nowDone) || currentSegIndex === currentSegments.length - 1;
+
             if (anyWrong) {
                 podPlayWrong();
                 feedbackEl.className = 'pod-feedback is-wrong';
@@ -10527,7 +10618,9 @@ function toggleCompletion(symbolElement) {
             } else {
                 podPlayCorrect();
                 feedbackEl.className = 'pod-feedback is-correct';
-                feedbackEl.textContent = '✅ Đúng hết ô trống trong đoạn này!';
+                feedbackEl.textContent = nowDone && currentSegIndex < currentSegments.length - 1
+                    ? '✅ Đúng hết đoạn này! Bấm "Đoạn sau ›" để tiếp tục.'
+                    : '✅ Đúng hết ô trống trong đoạn này!';
                 maybeShowQuiz();
             }
             if (earnedAny) renderProfileAchievements(); // cập nhật ngay điểm chăm chỉ, không cần đợi mở hồ sơ
@@ -10539,11 +10632,21 @@ function toggleCompletion(symbolElement) {
             translateToggleBtn.textContent = showing ? '🇻🇳 Xem bản dịch' : '🙈 Ẩn bản dịch';
         });
 
+        // Đoạn trước: luôn cho phép quay lại xem/nghe lại đoạn đã hoàn thành. Đoạn sau: CHỈ
+        // mở khi đoạn hiện tại đã điền đúng hết (trừ giảng viên xem thử) — đúng yêu cầu
+        // "điền xong thì mới qua đoạn script tiếp theo". Bấm "Đoạn sau" cũng tự phát audio
+        // đoạn kế tiếp luôn (đây là hành động bấm trực tiếp của học viên nên trình duyệt cho
+        // phép tự phát), đúng yêu cầu "tới khi nào học viên bấm tiếp theo thì mới phát tiếp".
         segPrevBtn.addEventListener('click', () => {
             if (currentSegIndex > 0) { currentSegIndex--; renderSegment(); }
         });
         segNextBtn.addEventListener('click', () => {
-            if (currentSegIndex < currentSegments.length - 1) { currentSegIndex++; renderSegment(); }
+            if (segNextBtn.disabled) return;
+            if (currentSegIndex < currentSegments.length - 1) {
+                currentSegIndex++;
+                renderSegment();
+                podPlayCurrentSegment();
+            }
         });
 
         // ================= KHUNG QUẢN TRỊ (GIẢNG VIÊN) =================
@@ -10567,15 +10670,17 @@ function toggleCompletion(symbolElement) {
             if (ok) { const p = PODCASTS.find(x => x.id === currentPodcast.id); if (p) p.title = t; }
         });
 
-        adminVideoSaveBtn.addEventListener('click', async () => {
-            const url = adminVideoInput.value.trim();
-            currentPodcast.video_url = url;
-            adminVideoStatus.textContent = 'Đang lưu...';
+        adminAudioSaveBtn.addEventListener('click', async () => {
+            const url = adminAudioInput.value.trim();
+            currentPodcast.audio_url = url;
+            adminAudioStatus.textContent = 'Đang lưu...';
             const ok = await savePodcastContent();
-            adminVideoStatus.textContent = ok ? '💾 Đã lưu link video.' : '❌ Lưu thất bại, thử lại.';
+            adminAudioStatus.textContent = ok ? '💾 Đã lưu link audio.' : '❌ Lưu thất bại, thử lại.';
             if (ok) {
-                if (url) { videoWrapEl.style.display = 'block'; videoEl.src = url; }
-                else { videoWrapEl.style.display = 'none'; videoEl.removeAttribute('src'); }
+                podStopAudio();
+                if (url) audioEl.src = url;
+                else audioEl.removeAttribute('src');
+                if (studentView.style.display !== 'none') updateAudioBox();
             }
         });
 
@@ -10584,22 +10689,44 @@ function toggleCompletion(symbolElement) {
             return String(raw || '').split(/\n\s*\n+/).map(s => s.trim()).filter(Boolean);
         }
 
+        // Tách script tiếng Anh theo mốc thời gian [mm:ss] đứng đầu mỗi đoạn. Nếu không có
+        // mốc thời gian nào -> coi như không đồng bộ audio, tách theo dòng trống như cũ.
+        function parseTimedScript(raw) {
+            const text = String(raw || '').trim();
+            if (!text) return [];
+            const re = /\[(\d{1,2}(?::\d{1,2}){1,2})\]/g;
+            const marks = [];
+            let m;
+            while ((m = re.exec(text))) marks.push({ index: m.index, len: m[0].length, time: m[1] });
+            if (!marks.length) {
+                return splitParagraphs(text).map(en => ({ en, start: '' }));
+            }
+            const segs = [];
+            for (let i = 0; i < marks.length; i++) {
+                const start = marks[i].index + marks[i].len;
+                const end = (i + 1 < marks.length) ? marks[i + 1].index : text.length;
+                const chunk = text.slice(start, end).trim();
+                if (chunk) segs.push({ en: chunk, start: marks[i].time });
+            }
+            return segs;
+        }
+
         importBtn.addEventListener('click', async () => {
-            const enParas = splitParagraphs(importEnInput.value);
-            if (!enParas.length) {
+            const enSegs = parseTimedScript(importEnInput.value);
+            if (!enSegs.length) {
                 importStatus.textContent = '❌ Chưa dán script tiếng Anh.';
                 return;
             }
             const viParas = splitParagraphs(importViInput.value);
             if (currentPodcast.segments && currentPodcast.segments.length) {
-                const proceed = confirm('Thao tác này sẽ THAY THẾ toàn bộ ' + currentPodcast.segments.length + ' đoạn hiện có bằng ' + enParas.length + ' đoạn vừa nhập. Tiếp tục?');
+                const proceed = confirm('Thao tác này sẽ THAY THẾ toàn bộ ' + currentPodcast.segments.length + ' đoạn hiện có bằng ' + enSegs.length + ' đoạn vừa nhập. Tiếp tục?');
                 if (!proceed) return;
             }
-            currentPodcast.segments = enParas.map((en, i) => ({ en, vi: viParas[i] || '', quiz: null }));
+            currentPodcast.segments = enSegs.map((s, i) => ({ en: s.en, start: s.start || '', vi: viParas[i] || '', quiz: null }));
             renderAdminSegments();
             importStatus.textContent = 'Đang lưu...';
             const ok = await savePodcastContent();
-            importStatus.textContent = ok ? ('💾 Đã nhập và lưu ' + enParas.length + ' đoạn.') : '❌ Lưu thất bại, thử lại.';
+            importStatus.textContent = ok ? ('💾 Đã nhập và lưu ' + enSegs.length + ' đoạn.') : '❌ Lưu thất bại, thử lại.';
             if (ok) { importEnInput.value = ''; importViInput.value = ''; }
         });
 
@@ -10613,6 +10740,10 @@ function toggleCompletion(symbolElement) {
                     <div class="pod-admin-segment-head">
                         <b>Đoạn ${i + 1}</b>
                         <button type="button" class="dub-admin-row-del" data-act="del-seg" title="Xoá đoạn">🗑</button>
+                    </div>
+                    <div class="pod-admin-seg-meta">
+                        <label for="pod-seg-start-${i}">⏱ Thời điểm bắt đầu (mm:ss)</label>
+                        <input type="text" id="pod-seg-start-${i}" class="news-edit-input pod-admin-seg-start" data-field="start" placeholder="00:00" value="${escapeHtmlPod(seg.start || '')}">
                     </div>
                     <textarea class="news-edit-input dub-admin-import-textarea pod-admin-seg-en" data-field="en" placeholder="Script tiếng Anh của đoạn này...">${escapeHtmlPod(seg.en || '')}</textarea>
                     <textarea class="news-edit-input dub-admin-import-textarea pod-admin-seg-vi" data-field="vi" placeholder="Bản dịch tiếng Việt của đoạn này...">${escapeHtmlPod(seg.vi || '')}</textarea>
@@ -10632,7 +10763,7 @@ function toggleCompletion(symbolElement) {
 
         addSegmentBtn.addEventListener('click', async () => {
             currentPodcast.segments = currentPodcast.segments || [];
-            currentPodcast.segments.push({ en: '', vi: '', quiz: null });
+            currentPodcast.segments.push({ en: '', vi: '', start: '', quiz: null });
             renderAdminSegments();
             await savePodcastContent();
         });
@@ -10655,6 +10786,7 @@ function toggleCompletion(symbolElement) {
             const field = e.target.dataset.field;
             if (field === 'en') seg.en = e.target.value;
             else if (field === 'vi') seg.vi = e.target.value;
+            else if (field === 'start') seg.start = e.target.value.trim();
             else if (field === 'quiz-q') { seg.quiz = seg.quiz || { options: ['', '', '', ''], correct: 0 }; seg.quiz.question = e.target.value; }
             else if (field === 'quiz-opt') {
                 seg.quiz = seg.quiz || { options: ['', '', '', ''], correct: 0 };

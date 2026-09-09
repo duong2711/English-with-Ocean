@@ -1396,19 +1396,19 @@
                     </div>
 
                     <div class="dub-field">
-                        <label class="news-quiz-edit-label" for="podcast-admin-video-input">Link video (Backblaze B2)</label>
-                        <p class="news-quiz-edit-hint">Tải video lên bucket Public trên Backblaze B2 (hoặc Supabase Storage bucket public), rồi dán link công khai vào đây. Có thể để trống nếu chỉ muốn luyện dictation bằng văn bản, không có video.</p>
+                        <label class="news-quiz-edit-label" for="podcast-admin-audio-input">Link audio MP3 (Backblaze B2)</label>
+                        <p class="news-quiz-edit-hint">Tải file MP3 lên bucket Public trên Backblaze B2 (hoặc Supabase Storage bucket public), rồi dán link công khai vào đây. Có thể để trống nếu chỉ muốn luyện dictation bằng văn bản, không có audio.</p>
                         <div class="dub-admin-inline-row">
-                            <input type="text" id="podcast-admin-video-input" class="news-edit-input" placeholder="https://f00x.backblazeb2.com/file/ten-bucket/podcast.mp4">
-                            <button class="loto-btn-secondary" id="podcast-admin-video-save-btn">Lưu link</button>
+                            <input type="text" id="podcast-admin-audio-input" class="news-edit-input" placeholder="https://f00x.backblazeb2.com/file/ten-bucket/podcast.mp3">
+                            <button class="loto-btn-secondary" id="podcast-admin-audio-save-btn">Lưu link</button>
                         </div>
-                        <div class="dub-admin-status" id="podcast-admin-video-status"></div>
+                        <div class="dub-admin-status" id="podcast-admin-audio-status"></div>
                     </div>
 
                     <div class="dub-field">
                         <label class="news-quiz-edit-label">Nhập nhanh script (thay thế toàn bộ danh sách đoạn hiện có)</label>
-                        <p class="news-quiz-edit-hint">Dán script tiếng Anh — mỗi đoạn (đoạn văn) cách nhau bằng 1 dòng trống. Dán bản dịch tiếng Việt tương ứng vào ô bên dưới, cũng cách nhau bằng 1 dòng trống, ĐÚNG THEO THỨ TỰ với script tiếng Anh (đoạn 1 khớp đoạn 1, đoạn 2 khớp đoạn 2...). Có thể để trống ô tiếng Việt rồi dịch sau ở khung "Danh sách đoạn" bên dưới.</p>
-                        <textarea id="podcast-admin-import-en" class="news-edit-input dub-admin-import-textarea" placeholder="Đoạn 1 tiếng Anh...&#10;&#10;Đoạn 2 tiếng Anh..."></textarea>
+                        <p class="news-quiz-edit-hint">Dán script tiếng Anh — mỗi đoạn bắt đầu bằng mốc thời gian dạng <code>[mm:ss]</code> (VD: <code>[01:23]</code>) để đồng bộ với audio, phần chữ sau mốc thời gian tới mốc thời gian kế tiếp sẽ là nội dung của đoạn đó. Nếu không cần đồng bộ audio thì bỏ mốc thời gian, chỉ cần cách các đoạn bằng 1 dòng trống. Dán bản dịch tiếng Việt tương ứng vào ô bên dưới, cách nhau bằng 1 dòng trống, ĐÚNG THEO THỨ TỰ với script tiếng Anh. Có thể để trống ô tiếng Việt rồi dịch sau ở khung "Danh sách đoạn" bên dưới.</p>
+                        <textarea id="podcast-admin-import-en" class="news-edit-input dub-admin-import-textarea" placeholder="[00:00] Đoạn 1 tiếng Anh...&#10;[00:45] Đoạn 2 tiếng Anh..."></textarea>
                         <textarea id="podcast-admin-import-vi" class="news-edit-input dub-admin-import-textarea" placeholder="Đoạn 1 tiếng Việt...&#10;&#10;Đoạn 2 tiếng Việt..." style="margin-top:8px;"></textarea>
                         <button class="loto-btn-secondary" id="podcast-admin-import-btn" style="margin-top:8px;">📥 Nhập &amp; thay thế danh sách đoạn</button>
                         <div class="dub-admin-status" id="podcast-admin-import-status"></div>
@@ -1416,7 +1416,7 @@
 
                     <div class="dub-field">
                         <label class="news-quiz-edit-label">Danh sách đoạn (script)</label>
-                        <p class="news-quiz-edit-hint">Mỗi đoạn tự tạo chỗ trống cho học viên điền (cứ 10 từ thì khuyết ngẫu nhiên 1 từ). Câu hỏi trắc nghiệm không bắt buộc — để trống nếu không cần. Mọi thay đổi tự động lưu.</p>
+                        <p class="news-quiz-edit-hint">Mỗi đoạn tự tạo 5 chỗ trống (từ khoá) cho học viên điền — nếu đoạn quá ngắn thì tạo ít hơn 5. Học viên phải điền đúng hết đoạn hiện tại mới được sang đoạn kế tiếp. Nhập "Thời điểm bắt đầu" (mm:ss) để audio tự phát đúng đoạn và tự dừng khi hết đoạn. Câu hỏi trắc nghiệm không bắt buộc. Mọi thay đổi tự động lưu.</p>
                         <div id="podcast-admin-segments"></div>
                         <button class="loto-btn-secondary" id="podcast-admin-add-segment-btn">+ Thêm đoạn</button>
                         <div class="dub-admin-status" id="podcast-admin-segments-status"></div>
@@ -1427,13 +1427,19 @@
 
                 <!-- ===== Phần học viên luyện dictation ===== -->
                 <div id="podcast-student-view" style="display:none;">
-                    <div class="grammar-video-wrapper dub-video-wrapper" id="podcast-video-wrapper" style="display:none;"><video id="podcast-player" playsinline controls></video></div>
+                    <div class="pod-audio-box" id="podcast-audio-box" style="display:none;">
+                        <audio id="podcast-player" preload="metadata" controls></audio>
+                        <div class="pod-audio-controls">
+                            <button type="button" class="kid-btn kid-btn-primary" id="podcast-play-seg-btn">🔁 Nghe lại đoạn này</button>
+                            <span class="pod-audio-hint" id="podcast-audio-hint"></span>
+                        </div>
+                    </div>
 
                     <div class="pod-stage-switch" id="podcast-stage-switch">
                         <button type="button" class="pod-stage-btn active" data-stage="1" id="podcast-stage1-btn">Giai đoạn 1<br><small>Điền từ có sẵn trong box</small></button>
                         <button type="button" class="pod-stage-btn" data-stage="2" id="podcast-stage2-btn">Giai đoạn 2 🔒<br><small>Tự điền (ẩn box)</small></button>
                     </div>
-                    <p class="kid-hint" id="podcast-stage-hint">Hoàn thành đúng hết Giai đoạn 1 (dùng từ có sẵn trong box) để mở khoá Giai đoạn 2 (tự gõ từ, không có box gợi ý). Chạm vào bất kỳ từ nào trong câu (ngoài chỗ trống) để tra nghĩa kèm phát âm.</p>
+                    <p class="kid-hint" id="podcast-stage-hint">Hoàn thành đúng hết Giai đoạn 1 (dùng từ có sẵn trong box) để mở khoá Giai đoạn 2 (tự gõ từ, không có box gợi ý). Chạm vào bất kỳ từ nào trong câu (ngoài chỗ trống) để tra nghĩa kèm phát âm. Phải điền đúng hết 1 đoạn mới được sang đoạn tiếp theo.</p>
 
                     <div class="pod-progress-row">
                         <div class="pod-progress-track"><div class="pod-progress-fill" id="podcast-progress-fill"></div></div>
@@ -1443,7 +1449,7 @@
                     <div class="pod-segment-nav">
                         <button type="button" class="kid-btn" id="podcast-seg-prev">‹ Đoạn trước</button>
                         <span class="pod-segment-idx" id="podcast-seg-idx">Đoạn 1/1</span>
-                        <button type="button" class="kid-btn" id="podcast-seg-next">Đoạn sau ›</button>
+                        <button type="button" class="kid-btn" id="podcast-seg-next" title="Điền đúng hết đoạn hiện tại để mở khoá">Đoạn sau ›</button>
                     </div>
 
                     <div class="pod-segment-card">
