@@ -9966,8 +9966,6 @@ function toggleCompletion(symbolElement) {
         const sentenceEl   = document.getElementById('podcast-sentence');
         const wordboxEl    = document.getElementById('podcast-wordbox');
         const checkBtn     = document.getElementById('podcast-check-btn');
-        const translateToggleBtn = document.getElementById('podcast-translate-toggle-btn');
-        const translationEl      = document.getElementById('podcast-translation');
         const feedbackEl         = document.getElementById('podcast-feedback');
         const quizBox         = document.getElementById('podcast-quiz-box');
         const quizQuestionEl  = document.getElementById('podcast-quiz-question');
@@ -9976,12 +9974,23 @@ function toggleCompletion(symbolElement) {
 
         if (!podcastPanel || !detailView || !vocabFolderGrid) return;
 
-        const BLANKS_PER_SEGMENT = 5; // [MỚI] mỗi đoạn luôn có đúng 5 từ khoá bị khuyết (thay vì "cứ 10 từ khuyết 1")
+        // [MỚI] Thay vì mỗi "dòng" (1 đoạn do giảng viên nhập ở khung quản trị) luôn có đúng 5
+        // từ khoá bị khuyết, giờ áp dụng đúng quy tắc "cứ 10 từ khuyết 1" cho TỪNG DÒNG (dòng
+        // ngắn có thể không có từ nào bị khuyết). Nhiều dòng liên tiếp sau đó được GỘP LẠI thành
+        // 1 "đoạn script" hiển thị cho học viên (mỗi lần chỉ hiện 1 đoạn) mỗi khi đủ
+        // BLANKS_PER_DISPLAY_SEGMENT từ khuyết — xem podBuildBlanks() và podGroupIntoChunks().
+        const BLANK_WORD_RATE = 10;
+        const BLANKS_PER_DISPLAY_SEGMENT = 5;
 
         let PODCASTS = [];
         let currentPodcast = null;
-        let currentSegments = [];   // đã xử lý sẵn { parts, blanks, en, vi, quiz, startRaw }
+        // [SỬA] currentSegments giờ là danh sách các "đoạn script" hiển thị cho học viên — mỗi
+        // phần tử { index, lines }; "lines" là các dòng gốc đã xử lý sẵn { index, parts, blanks,
+        // en, vi, quiz, startRaw }, index của dòng CHÍNH LÀ vị trí dòng đó trong toàn bộ script
+        // (dùng làm khoá ổn định để lưu tiến độ điền đúng, không đổi khi cách gộp đoạn thay đổi).
+        let currentSegments = [];
         let currentSegIndex = 0;
+        let currentChunkQuiz = null; // câu hỏi trắc nghiệm (nếu có) của đoạn script đang hiện
         let currentStage = 1;       // 1 hoặc 2
         let stage1AllDone = false;  // toàn bộ ô trống Giai đoạn 1 của TOÀN BỘ podcast đang mở đã đúng hết chưa
         let progressRows = [];      // các dòng podcast_fill_progress của học viên cho podcast đang mở
@@ -10055,11 +10064,12 @@ function toggleCompletion(symbolElement) {
             };
         }
 
-        // ---- Tách 1 đoạn văn tiếng Anh thành từng "phần" (parts), giữ nguyên khoảng
+        // ---- Tách 1 dòng văn tiếng Anh thành từng "phần" (parts), giữ nguyên khoảng
         // trắng/dấu câu; mỗi phần là 1 từ thật thì tách riêng lead/core/trail (dấu câu
         // dính trước/sau vẫn hiển thị bình thường, CHỈ phần "core" mới có thể bị khuyết) —
-        // rồi chọn ngẫu nhiên (seeded) đúng BLANKS_PER_SEGMENT từ trong cả đoạn để khuyết
-        // (ít hơn nếu đoạn không đủ từ). -----
+        // rồi chọn ngẫu nhiên (seeded) đúng theo tỉ lệ "cứ BLANK_WORD_RATE (10) từ khuyết 1"
+        // (làm tròn tới số nguyên gần nhất; dòng quá ngắn có thể ra 0 chỗ trống — vẫn hiển thị
+        // bình thường làm ngữ cảnh, không sao vì các dòng sẽ được gộp lại ở podGroupIntoChunks). ----
         function podBuildBlanks(text) {
             const rawTokens = String(text || '').split(/(\s+)/);
             const parts = rawTokens.map(tok => {
@@ -10074,12 +10084,16 @@ function toggleCompletion(symbolElement) {
 
             const rand = podSeedFromString(text);
             // Ưu tiên từ có ít nhất 3 ký tự chữ cái, tránh khuyết mấy từ quá ngắn (a, is, to...);
-            // nếu không đủ ứng viên hợp lệ thì mở rộng ra toàn bộ các từ trong đoạn.
+            // nếu không đủ ứng viên hợp lệ thì mở rộng ra toàn bộ các từ trong dòng.
             const eligible = wordIdx.filter(i => parts[i].core.length >= 3);
-            const pool = (eligible.length >= Math.min(BLANKS_PER_SEGMENT, wordIdx.length)) ? eligible.slice() : wordIdx.slice();
+            const pool = eligible.length ? eligible.slice() : wordIdx.slice();
+
+            // "10 từ khuyết 1": số chỗ trống = tổng số từ trong dòng / BLANK_WORD_RATE (làm tròn),
+            // không vượt quá số ứng viên hợp lệ đang có.
+            const wantBlanks = Math.min(pool.length, Math.round(wordIdx.length / BLANK_WORD_RATE));
 
             const picks = [];
-            while (picks.length < BLANKS_PER_SEGMENT && pool.length) {
+            while (picks.length < wantBlanks && pool.length) {
                 const idx = Math.floor(rand() * pool.length);
                 picks.push(pool[idx]);
                 pool.splice(idx, 1);
@@ -10090,7 +10104,10 @@ function toggleCompletion(symbolElement) {
             return { parts, blanks };
         }
 
-        function podPrepareSegments(rawSegments) {
+        // [SỬA] Đổi tên podPrepareSegments -> podPrepareLines: mỗi phần tử trả về ứng với ĐÚNG 1
+        // dòng do giảng viên nhập (có "vi"/"startRaw"/"quiz" riêng của dòng đó). Đây chưa phải là
+        // đơn vị hiển thị cho học viên — xem podGroupIntoChunks() bên dưới để gộp thành đoạn script.
+        function podPrepareLines(rawSegments) {
             return (rawSegments || []).map((seg, i) => {
                 const built = podBuildBlanks(seg.en || '');
                 return {
@@ -10103,6 +10120,27 @@ function toggleCompletion(symbolElement) {
                     blanks: built.blanks
                 };
             });
+        }
+
+        // [MỚI] Gộp các "dòng" liên tiếp lại thành từng "đoạn script" hiển thị cho học viên: cứ
+        // gom đủ (>=) BLANKS_PER_DISPLAY_SEGMENT chỗ trống thì chốt 1 đoạn (không cắt ngang giữa
+        // 1 dòng — dòng nào đẩy tổng vượt ngưỡng thì vẫn được tính trọn vẹn vào đoạn đó). Đoạn
+        // cuối cùng có thể có ít hơn 5 chỗ trống (hoặc 0) nếu script không chia hết.
+        function podGroupIntoChunks(lines) {
+            const chunks = [];
+            let cur = null;
+            (lines || []).forEach((line) => {
+                if (!cur) cur = { index: chunks.length, lines: [] };
+                cur.lines.push(line);
+                const totalBlanks = cur.lines.reduce((s, l) => s + l.blanks.length, 0);
+                if (totalBlanks >= BLANKS_PER_DISPLAY_SEGMENT) {
+                    chunks.push(cur);
+                    cur = null;
+                }
+            });
+            if (cur) chunks.push(cur);
+            chunks.forEach((c, i) => { c.index = i; });
+            return chunks;
         }
 
         // ================= SUPABASE: TẢI / LƯU / XOÁ NỘI DUNG =================
@@ -10241,7 +10279,7 @@ function toggleCompletion(symbolElement) {
             studentView.style.display = hasSegments ? '' : 'none';
             if (!hasSegments) return;
 
-            currentSegments = podPrepareSegments(p.segments);
+            currentSegments = podGroupIntoChunks(podPrepareLines(p.segments));
             currentSegIndex = 0;
             currentStage = 1;
             selectedChipEl = null;
@@ -10275,8 +10313,12 @@ function toggleCompletion(symbolElement) {
             return progressRows.some(r => r.segment_index === segIndex && r.blank_index === blankIndex && r.stage === stage);
         }
 
+        function podTotalBlanksAllSegments() {
+            return currentSegments.reduce((sum, c) => sum + c.lines.reduce((s, l) => s + l.blanks.length, 0), 0);
+        }
+
         function recomputeStage1Done() {
-            const totalBlanks = currentSegments.reduce((sum, s) => sum + s.blanks.length, 0);
+            const totalBlanks = podTotalBlanksAllSegments();
             if (!totalBlanks) { stage1AllDone = false; return; }
             const doneCount = progressRows.filter(r => r.stage === 1).length;
             stage1AllDone = doneCount >= totalBlanks;
@@ -10304,8 +10346,11 @@ function toggleCompletion(symbolElement) {
             return true;
         }
 
-        function podAllBlanksDoneInSegment(seg, stage) {
-            return seg.blanks.every((b, bi) => isBlankDone(seg.index, bi, stage));
+        // [SỬA] "seg" giờ là 1 đoạn script (gồm nhiều dòng) — coi là điền xong khi TẤT CẢ chỗ
+        // trống của TẤT CẢ các dòng bên trong đều đã đúng (mỗi dòng dùng đúng chỉ số ổn định
+        // "line.index" của nó để tra/lưu tiến độ, không phụ thuộc cách gộp đoạn).
+        function podChunkAllBlanksDone(chunk, stage) {
+            return chunk.lines.every(line => line.blanks.every((b, bi) => isBlankDone(line.index, bi, stage)));
         }
 
         // ================= GIAI ĐOẠN 1 / 2 =================
@@ -10344,21 +10389,36 @@ function toggleCompletion(symbolElement) {
             podSegEndSec = null;
             try { audioEl.pause(); } catch (e) {}
         }
-        // Tìm mốc giây audio sẽ dừng lại: mốc bắt đầu của đoạn kế tiếp GẦN NHẤT có nhập thời
-        // gian (bỏ qua các đoạn ở giữa chưa nhập); nếu là đoạn cuối cùng có thời gian, dừng ở
-        // hết bài (audio.duration), hoặc không tự dừng nếu chưa rõ thời lượng bài.
-        function podGetSegEndSec(fromIndex) {
-            for (let i = fromIndex + 1; i < currentSegments.length; i++) {
-                const t = podParseTimeToSec(currentSegments[i].startRaw);
+        // Thời điểm bắt đầu của 1 đoạn script = thời điểm bắt đầu của DÒNG ĐẦU TIÊN bên trong nó
+        // có nhập "Thời điểm bắt đầu" (thường là dòng đầu tiên của đoạn, vì admin nhập giờ cho
+        // từng dòng riêng).
+        function podChunkStartSec(chunk) {
+            for (const line of chunk.lines) {
+                const t = podParseTimeToSec(line.startRaw);
                 if (t != null) return t;
+            }
+            return null;
+        }
+        // Tìm mốc giây audio sẽ dừng lại: mốc bắt đầu của DÒNG đầu tiên (ở các đoạn script kế
+        // tiếp) GẦN NHẤT có nhập thời gian (bỏ qua các dòng ở giữa chưa nhập); nếu không còn
+        // đoạn/dòng nào có thời gian phía sau, dừng ở hết bài (audio.duration), hoặc không tự
+        // dừng nếu chưa rõ thời lượng bài. Nhờ vậy audio LUÔN tự dừng đúng ranh giới 1 "đoạn
+        // script" (dù đoạn đó gồm 1 hay nhiều dòng gộp lại), rồi chờ học viên bấm "Đoạn sau" mới
+        // phát tiếp — đúng yêu cầu "nói xong 1 đoạn thì tự động dừng".
+        function podGetSegEndSec(fromChunkIndex) {
+            for (let ci = fromChunkIndex + 1; ci < currentSegments.length; ci++) {
+                for (const line of currentSegments[ci].lines) {
+                    const t = podParseTimeToSec(line.startRaw);
+                    if (t != null) return t;
+                }
             }
             const dur = audioEl.duration;
             return (isFinite(dur) && dur > 0) ? dur : null;
         }
         function podPlayCurrentSegment() {
             if (!currentPodcast || !currentPodcast.audio_url) return;
-            const seg = currentSegments[currentSegIndex];
-            const startSec = podParseTimeToSec(seg.startRaw);
+            const chunk = currentSegments[currentSegIndex];
+            const startSec = podChunkStartSec(chunk);
             if (startSec == null) return;
             podSegEndSec = podGetSegEndSec(currentSegIndex);
             try {
@@ -10373,24 +10433,23 @@ function toggleCompletion(symbolElement) {
                 podSegEndSec = null;
             }
         });
+        // Nút "🔁 Nghe lại đoạn này" — phát lại TỪ ĐẦU đoạn script đang hiện (dùng lại đúng logic
+        // podPlayCurrentSegment ở trên nên vẫn tự dừng đúng cuối đoạn).
         playSegBtn.addEventListener('click', () => podPlayCurrentSegment());
 
         function updateAudioBox() {
             const hasAudio = !!(currentPodcast && currentPodcast.audio_url);
             audioBoxEl.style.display = hasAudio ? '' : 'none';
             if (!hasAudio) return;
-            const seg = currentSegments[currentSegIndex];
-            const startSec = podParseTimeToSec(seg.startRaw);
+            const chunk = currentSegments[currentSegIndex];
+            const startSec = podChunkStartSec(chunk);
             playSegBtn.disabled = (startSec == null);
             audioHintEl.textContent = (startSec == null)
                 ? 'Đoạn này chưa có "Thời điểm bắt đầu" — giảng viên cần nhập ở khung quản trị để đồng bộ audio.'
                 : '';
         }
 
-        // ================= HIỂN THỊ 1 ĐOẠN =================
-        function podTotalBlanksAllSegments() {
-            return currentSegments.reduce((sum, s) => sum + s.blanks.length, 0);
-        }
+        // ================= HIỂN THỊ 1 ĐOẠN SCRIPT (gồm 1 hoặc nhiều dòng) =================
         function podDoneBlanksForStage(stage) {
             return progressRows.filter(r => r.stage === stage).length;
         }
@@ -10402,59 +10461,79 @@ function toggleCompletion(symbolElement) {
             progressText.textContent = done + '/' + total + ' ô trống đúng (Giai đoạn ' + currentStage + ')';
         }
 
-        function renderSegment() {
-            podBusy = false;
-            selectedChipEl = null;
-            podStopAudio();
-            const seg = currentSegments[currentSegIndex];
-            segIdxEl.textContent = 'Đoạn ' + (currentSegIndex + 1) + '/' + currentSegments.length;
-            segPrevBtn.disabled = currentSegIndex === 0;
-            segNextBtn.disabled = !(isTeacher || podAllBlanksDoneInSegment(seg, currentStage)) || currentSegIndex === currentSegments.length - 1;
-            renderProgressBar();
-            updateAudioBox();
-
-            translationEl.style.display = 'none';
-            translationEl.textContent = seg.vi || '(Chưa có bản dịch cho đoạn này)';
-            translateToggleBtn.textContent = '🇻🇳 Xem bản dịch';
-            feedbackEl.className = 'pod-feedback';
-            feedbackEl.innerHTML = '';
-            quizBox.style.display = 'none';
-            quizFeedbackEl.innerHTML = '';
-
+        // Dựng HTML cho 1 DÒNG bên trong đoạn script hiện tại — "lineI" là vị trí của dòng đó
+        // TRONG đoạn script đang hiện (0, 1, 2...), dùng để gắn vào data-line-i của mỗi ô trống
+        // (để lúc chấm điểm/đặt-rút từ biết ô đó thuộc dòng nào). "line.index" (khác với lineI)
+        // là chỉ số ổn định của dòng trong toàn bộ script, dùng để lưu/tra tiến độ.
+        function podBuildLineHtml(line, lineI, stage) {
             const wrapFn = (window.vocabTap && window.vocabTap.wrap) ? window.vocabTap.wrap : escapeHtmlPod;
             const blankByPart = {};
-            seg.blanks.forEach((b, bi) => { blankByPart[b.partIndex] = bi; });
+            line.blanks.forEach((b, bi) => { blankByPart[b.partIndex] = bi; });
 
             let html = '';
-            seg.parts.forEach((p, pi) => {
+            line.parts.forEach((p, pi) => {
                 if (!p.isWord) { html += escapeHtmlPod(p.text); return; }
                 if (blankByPart.hasOwnProperty(pi)) {
                     const bi = blankByPart[pi];
-                    const done = isBlankDone(seg.index, bi, currentStage);
+                    const done = isBlankDone(line.index, bi, stage);
                     const answer = p.core;
                     html += escapeHtmlPod(p.lead);
                     if (done) {
-                        html += `<span class="pod-blank pod-blank-correct" data-blank-i="${bi}">${escapeHtmlPod(answer)}</span>`;
-                    } else if (currentStage === 1) {
-                        html += `<span class="pod-blank" data-blank-i="${bi}" data-answer="${escapeHtmlPod(answer)}">＿＿＿</span>`;
+                        html += `<span class="pod-blank pod-blank-correct" data-line-i="${lineI}" data-blank-i="${bi}">${escapeHtmlPod(answer)}</span>`;
+                    } else if (stage === 1) {
+                        html += `<span class="pod-blank" data-line-i="${lineI}" data-blank-i="${bi}" data-answer="${escapeHtmlPod(answer)}">＿＿＿</span>`;
                     } else {
                         const widthCh = Math.max(answer.length + 2, 4);
-                        html += `<input type="text" class="pod-blank-input" data-blank-i="${bi}" data-answer="${escapeHtmlPod(answer)}" style="width:${widthCh}ch" autocomplete="off" autocapitalize="off" spellcheck="false">`;
+                        html += `<input type="text" class="pod-blank-input" data-line-i="${lineI}" data-blank-i="${bi}" data-answer="${escapeHtmlPod(answer)}" style="width:${widthCh}ch" autocomplete="off" autocapitalize="off" spellcheck="false">`;
                     }
                     html += escapeHtmlPod(p.trail);
                 } else {
                     html += wrapFn(p.lead + p.core + p.trail);
                 }
             });
-            sentenceEl.innerHTML = html.replace(/\n/g, '<br>');
-            sentenceEl.dataset.vocabContext = seg.en;
+            return html.replace(/\n/g, '<br>');
+        }
+
+        function renderSegment() {
+            podBusy = false;
+            selectedChipEl = null;
+            currentChunkQuiz = null;
+            podStopAudio();
+            const chunk = currentSegments[currentSegIndex];
+            segIdxEl.textContent = 'Đoạn ' + (currentSegIndex + 1) + '/' + currentSegments.length;
+            segPrevBtn.disabled = currentSegIndex === 0;
+            segNextBtn.disabled = !(isTeacher || podChunkAllBlanksDone(chunk, currentStage)) || currentSegIndex === currentSegments.length - 1;
+            renderProgressBar();
+            updateAudioBox();
+
+            feedbackEl.className = 'pod-feedback';
+            feedbackEl.innerHTML = '';
+            quizBox.style.display = 'none';
+            quizFeedbackEl.innerHTML = '';
+
+            // [MỚI] Hiện LẦN LƯỢT từng dòng gốc bên trong đoạn script này; cuối mỗi dòng có kí
+            // hiệu 🇻🇳 riêng — bấm vào sẽ xổ xuống ĐÚNG bản dịch tiếng Việt của dòng đó (không
+            // còn 1 nút dịch chung cho cả đoạn như trước).
+            sentenceEl.innerHTML = chunk.lines.map((line, lineI) => {
+                const lineHtml = podBuildLineHtml(line, lineI, currentStage);
+                const viText = (line.vi && line.vi.trim()) ? line.vi : '(Chưa có bản dịch cho dòng này)';
+                return `
+                <div class="pod-script-line">
+                    <span class="pod-line-text">${lineHtml}</span><button type="button" class="pod-line-vi-toggle" data-line-i="${lineI}" title="Xem bản dịch dòng này">🇻🇳</button>
+                    <div class="pod-line-vi" data-line-i="${lineI}" style="display:none;">${escapeHtmlPod(viText)}</div>
+                </div>`;
+            }).join('');
+            sentenceEl.dataset.vocabContext = chunk.lines.map(l => l.en).join(' ');
             sentenceEl.dataset.vocabSource = currentPodcast ? ('Podcast: ' + currentPodcast.title) : '';
 
             if (currentStage === 1) {
                 wordboxEl.style.display = '';
-                const remainingWords = seg.blanks
-                    .filter((b, bi) => !isBlankDone(seg.index, bi, currentStage))
-                    .map(b => b.answer.trim());
+                const remainingWords = [];
+                chunk.lines.forEach(line => {
+                    line.blanks.forEach((b, bi) => {
+                        if (!isBlankDone(line.index, bi, currentStage)) remainingWords.push(b.answer.trim());
+                    });
+                });
                 const shuffled = remainingWords.slice().sort(() => Math.random() - 0.5);
                 wordboxEl.innerHTML = shuffled.length
                     ? shuffled.map(w => `<button type="button" class="pod-chip">${escapeHtmlPod(w)}</button>`).join('')
@@ -10469,27 +10548,30 @@ function toggleCompletion(symbolElement) {
             maybeShowQuiz();
         }
 
+        // Chỉ hiện câu hỏi trắc nghiệm của DÒNG ĐẦU TIÊN (trong đoạn script hiện tại) có gắn
+        // câu hỏi — hầu hết trường hợp mỗi đoạn chỉ có tối đa 1 câu hỏi nên không cần xếp nhiều.
         function maybeShowQuiz() {
-            const seg = currentSegments[currentSegIndex];
-            if (!seg.quiz) return;
-            if (!podAllBlanksDoneInSegment(seg, currentStage)) return;
+            const chunk = currentSegments[currentSegIndex];
+            const quiz = chunk.lines.map(l => l.quiz).find(Boolean);
+            currentChunkQuiz = quiz || null;
+            if (!currentChunkQuiz) return;
+            if (!podChunkAllBlanksDone(chunk, currentStage)) return;
             quizBox.style.display = '';
-            quizQuestionEl.textContent = seg.quiz.question;
-            quizOptionsEl.innerHTML = seg.quiz.options.map((opt, oi) =>
+            quizQuestionEl.textContent = currentChunkQuiz.question;
+            quizOptionsEl.innerHTML = currentChunkQuiz.options.map((opt, oi) =>
                 `<button type="button" class="pod-quiz-opt" data-oi="${oi}">${escapeHtmlPod(opt)}</button>`
             ).join('');
         }
 
         quizOptionsEl.addEventListener('click', (e) => {
             const btn = e.target.closest('.pod-quiz-opt');
-            if (!btn) return;
-            const seg = currentSegments[currentSegIndex];
+            if (!btn || !currentChunkQuiz) return;
             const oi = Number(btn.dataset.oi);
-            const isCorrect = oi === Number(seg.quiz.correct);
+            const isCorrect = oi === Number(currentChunkQuiz.correct);
             quizOptionsEl.querySelectorAll('.pod-quiz-opt').forEach(b => b.disabled = true);
             btn.classList.add(isCorrect ? 'is-correct' : 'is-wrong');
             if (!isCorrect) {
-                const correctBtn = quizOptionsEl.querySelector('[data-oi="' + seg.quiz.correct + '"]');
+                const correctBtn = quizOptionsEl.querySelector('[data-oi="' + currentChunkQuiz.correct + '"]');
                 if (correctBtn) correctBtn.classList.add('is-correct');
             }
             isCorrect ? podPlayCorrect() : podPlayWrong();
@@ -10503,6 +10585,20 @@ function toggleCompletion(symbolElement) {
         // vào (học viên phải tự đoán đúng ô — đây mới là phần luyện tập). Bấm lại vào 1 ô đã
         // đặt (nhưng chưa chấm đúng) để rút từ đó về lại hộp, sửa nếu đặt nhầm. -----
         sentenceEl.addEventListener('click', (e) => {
+            // [MỚI] Kí hiệu 🇻🇳 ở cuối MỖI DÒNG — bấm vào để xổ xuống/thu lại đúng bản dịch
+            // tiếng Việt của dòng đó (không liên quan chỗ trống nên hoạt động ở cả 2 giai đoạn).
+            const viToggleBtn = e.target.closest('.pod-line-vi-toggle');
+            if (viToggleBtn) {
+                const li = viToggleBtn.dataset.lineI;
+                const viBox = sentenceEl.querySelector('.pod-line-vi[data-line-i="' + li + '"]');
+                if (viBox) {
+                    const showing = viBox.style.display !== 'none';
+                    viBox.style.display = showing ? 'none' : '';
+                    viToggleBtn.classList.toggle('is-active', !showing);
+                }
+                return;
+            }
+
             const wordEl = e.target.closest('.tappable-word');
             if (wordEl) {
                 if (window.vocabTap && window.vocabTap.handleTap) window.vocabTap.handleTap(wordEl);
@@ -10562,7 +10658,7 @@ function toggleCompletion(symbolElement) {
         checkBtn.addEventListener('click', async () => {
             if (podBusy) return;
             podBusy = true;
-            const seg = currentSegments[currentSegIndex];
+            const chunk = currentSegments[currentSegIndex];
             let anyWrong = false, anyChecked = false, earnedAny = false;
 
             if (currentStage === 1) {
@@ -10570,13 +10666,14 @@ function toggleCompletion(symbolElement) {
                 for (const slot of slots) {
                     if (!slot.classList.contains('pod-blank-filled')) { anyWrong = true; continue; }
                     anyChecked = true;
+                    const line = chunk.lines[Number(slot.dataset.lineI)];
                     const bi = Number(slot.dataset.blankI);
                     const expected = podNormWord(slot.dataset.answer);
                     const given = podNormWord(slot.textContent);
                     if (given === expected) {
                         slot.classList.add('pod-blank-correct');
                         slot.classList.remove('pod-blank-wrong');
-                        if (await markBlankDone(seg.index, bi, 1)) earnedAny = true;
+                        if (await markBlankDone(line.index, bi, 1)) earnedAny = true;
                     } else {
                         slot.classList.add('pod-blank-wrong');
                         anyWrong = true;
@@ -10586,16 +10683,19 @@ function toggleCompletion(symbolElement) {
                 const inputs = sentenceEl.querySelectorAll('.pod-blank-input');
                 for (const input of inputs) {
                     anyChecked = true;
+                    const lineI = input.dataset.lineI;
+                    const line = chunk.lines[Number(lineI)];
                     const bi = Number(input.dataset.blankI);
                     const expected = podNormWord(input.dataset.answer);
                     const given = podNormWord(input.value);
                     if (given && given === expected) {
                         const span = document.createElement('span');
                         span.className = 'pod-blank pod-blank-correct';
+                        span.dataset.lineI = lineI;
                         span.dataset.blankI = String(bi);
                         span.textContent = input.value.trim();
                         input.replaceWith(span);
-                        if (await markBlankDone(seg.index, bi, 2)) earnedAny = true;
+                        if (await markBlankDone(line.index, bi, 2)) earnedAny = true;
                     } else {
                         input.classList.add('pod-blank-wrong');
                         anyWrong = true;
@@ -10608,7 +10708,7 @@ function toggleCompletion(symbolElement) {
 
             renderProgressBar();
             renderStageButtons(); // [Giai đoạn 1] có thể vừa đủ điều kiện mở khoá Giai đoạn 2
-            const nowDone = podAllBlanksDoneInSegment(seg, currentStage);
+            const nowDone = podChunkAllBlanksDone(chunk, currentStage);
             segNextBtn.disabled = !(isTeacher || nowDone) || currentSegIndex === currentSegments.length - 1;
 
             if (anyWrong) {
@@ -10626,11 +10726,8 @@ function toggleCompletion(symbolElement) {
             if (earnedAny) renderProfileAchievements(); // cập nhật ngay điểm chăm chỉ, không cần đợi mở hồ sơ
         });
 
-        translateToggleBtn.addEventListener('click', () => {
-            const showing = translationEl.style.display !== 'none';
-            translationEl.style.display = showing ? 'none' : '';
-            translateToggleBtn.textContent = showing ? '🇻🇳 Xem bản dịch' : '🙈 Ẩn bản dịch';
-        });
+        // [XOÁ] Nút "🇻🇳 Xem bản dịch" chung cho cả đoạn đã được thay bằng kí hiệu 🇻🇳 riêng ở
+        // cuối MỖI DÒNG (xem sentenceEl click listener ở trên + phần render trong renderSegment).
 
         // Đoạn trước: luôn cho phép quay lại xem/nghe lại đoạn đã hoàn thành. Đoạn sau: CHỈ
         // mở khi đoạn hiện tại đã điền đúng hết (trừ giảng viên xem thử) — đúng yêu cầu
@@ -10719,17 +10816,21 @@ function toggleCompletion(symbolElement) {
             }
             const viParas = splitParagraphs(importViInput.value);
             if (currentPodcast.segments && currentPodcast.segments.length) {
-                const proceed = confirm('Thao tác này sẽ THAY THẾ toàn bộ ' + currentPodcast.segments.length + ' đoạn hiện có bằng ' + enSegs.length + ' đoạn vừa nhập. Tiếp tục?');
+                const proceed = confirm('Thao tác này sẽ THAY THẾ toàn bộ ' + currentPodcast.segments.length + ' dòng hiện có bằng ' + enSegs.length + ' dòng vừa nhập. Tiếp tục?');
                 if (!proceed) return;
             }
             currentPodcast.segments = enSegs.map((s, i) => ({ en: s.en, start: s.start || '', vi: viParas[i] || '', quiz: null }));
             renderAdminSegments();
             importStatus.textContent = 'Đang lưu...';
             const ok = await savePodcastContent();
-            importStatus.textContent = ok ? ('💾 Đã nhập và lưu ' + enSegs.length + ' đoạn.') : '❌ Lưu thất bại, thử lại.';
+            importStatus.textContent = ok ? ('💾 Đã nhập và lưu ' + enSegs.length + ' dòng.') : '❌ Lưu thất bại, thử lại.';
             if (ok) { importEnInput.value = ''; importViInput.value = ''; }
         });
 
+        // [SỬA] Mỗi "khối" ở đây là 1 DÒNG gốc (có "en"/"vi"/"start"/"quiz" riêng). Khi học viên
+        // luyện tập, nhiều dòng liên tiếp sẽ được tự động GỘP lại thành 1 "đoạn script" hiển thị
+        // (xem podGroupIntoChunks) — vì vậy nhãn ở khung quản trị dùng chữ "Dòng" để phân biệt
+        // với "Đoạn" (đơn vị hiển thị cho học viên).
         function renderAdminSegments() {
             const segs = currentPodcast.segments || [];
             segmentsAdminEl.innerHTML = segs.map((seg, i) => {
@@ -10738,15 +10839,15 @@ function toggleCompletion(symbolElement) {
                 return `
                 <div class="pod-admin-segment" data-i="${i}">
                     <div class="pod-admin-segment-head">
-                        <b>Đoạn ${i + 1}</b>
-                        <button type="button" class="dub-admin-row-del" data-act="del-seg" title="Xoá đoạn">🗑</button>
+                        <b>Dòng ${i + 1}</b>
+                        <button type="button" class="dub-admin-row-del" data-act="del-seg" title="Xoá dòng">🗑</button>
                     </div>
                     <div class="pod-admin-seg-meta">
                         <label for="pod-seg-start-${i}">⏱ Thời điểm bắt đầu (mm:ss)</label>
                         <input type="text" id="pod-seg-start-${i}" class="news-edit-input pod-admin-seg-start" data-field="start" placeholder="00:00" value="${escapeHtmlPod(seg.start || '')}">
                     </div>
-                    <textarea class="news-edit-input dub-admin-import-textarea pod-admin-seg-en" data-field="en" placeholder="Script tiếng Anh của đoạn này...">${escapeHtmlPod(seg.en || '')}</textarea>
-                    <textarea class="news-edit-input dub-admin-import-textarea pod-admin-seg-vi" data-field="vi" placeholder="Bản dịch tiếng Việt của đoạn này...">${escapeHtmlPod(seg.vi || '')}</textarea>
+                    <textarea class="news-edit-input dub-admin-import-textarea pod-admin-seg-en" data-field="en" placeholder="Script tiếng Anh của dòng này...">${escapeHtmlPod(seg.en || '')}</textarea>
+                    <textarea class="news-edit-input dub-admin-import-textarea pod-admin-seg-vi" data-field="vi" placeholder="Bản dịch tiếng Việt của dòng này...">${escapeHtmlPod(seg.vi || '')}</textarea>
                     <details class="pod-admin-quiz">
                         <summary>✏️ Câu hỏi trắc nghiệm (tuỳ chọn)</summary>
                         <input type="text" class="news-edit-input" data-field="quiz-q" placeholder="Câu hỏi..." value="${escapeHtmlPod(q.question || '')}">
@@ -10758,7 +10859,7 @@ function toggleCompletion(symbolElement) {
                         `).join('')}
                     </details>
                 </div>`;
-            }).join('') || '<p class="grammar-empty-msg">Chưa có đoạn nào — dùng khung "Nhập nhanh script" ở trên hoặc bấm "+ Thêm đoạn".</p>';
+            }).join('') || '<p class="grammar-empty-msg">Chưa có dòng nào — dùng khung "Nhập nhanh script" ở trên hoặc bấm "+ Thêm dòng".</p>';
         }
 
         addSegmentBtn.addEventListener('click', async () => {
@@ -10771,7 +10872,7 @@ function toggleCompletion(symbolElement) {
         segmentsAdminEl.addEventListener('click', async (e) => {
             if (e.target.dataset.act === 'del-seg') {
                 const i = Number(e.target.closest('.pod-admin-segment').dataset.i);
-                if (!confirm('Xoá đoạn ' + (i + 1) + '?')) return;
+                if (!confirm('Xoá dòng ' + (i + 1) + '?')) return;
                 currentPodcast.segments.splice(i, 1);
                 renderAdminSegments();
                 await savePodcastContent();

@@ -5935,6 +5935,42 @@ h3.news-editable:focus,
     margin-bottom: 16px;
 }
 
+/* [MỚI] Mỗi "đoạn script" hiển thị cho học viên có thể gồm nhiều dòng gốc (do giảng viên nhập
+   riêng từng dòng); mỗi dòng xuống hàng riêng và có kí hiệu 🇻🇳 ở cuối để xổ xuống đúng bản dịch
+   tiếng Việt của dòng đó, thay cho 1 nút "Xem bản dịch" chung cho cả đoạn như trước. */
+.pod-script-line { margin-bottom: 6px; }
+.pod-script-line:last-child { margin-bottom: 0; }
+.pod-line-text { }
+.pod-line-vi-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    margin-left: 4px;
+    padding: 0;
+    border-radius: 50%;
+    border: 1.5px solid var(--border-strong);
+    background: var(--surface-2);
+    font-size: 0.9rem;
+    line-height: 1;
+    cursor: pointer;
+    vertical-align: middle;
+    transition: all 0.15s;
+}
+.pod-line-vi-toggle:hover { border-color: var(--primary); background: var(--primary-light); }
+.pod-line-vi-toggle.is-active { background: var(--primary); border-color: var(--primary-dark); }
+.pod-line-vi {
+    font-size: 0.88rem;
+    font-style: italic;
+    color: var(--text-muted);
+    background: var(--surface-2);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    margin: 6px 0 10px;
+    line-height: 1.6;
+}
+
 /* Ô trống (Giai đoạn 1: span chờ đặt từ; Giai đoạn 2: input tự gõ) */
 .pod-blank {
     display: inline-block;
@@ -6000,17 +6036,6 @@ h3.news-editable:focus,
 .pod-wordbox-empty { font-size: 0.82rem; color: var(--text-light); font-style: italic; }
 
 .pod-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
-
-.pod-translation {
-    font-size: 0.88rem;
-    font-style: italic;
-    color: var(--text-muted);
-    background: var(--surface-2);
-    border-radius: var(--radius-sm);
-    padding: 10px 12px;
-    margin-bottom: 10px;
-    line-height: 1.6;
-}
 
 .pod-feedback { font-size: 0.86rem; font-weight: 600; min-height: 20px; }
 .pod-feedback.is-correct { color: var(--success-dark); }
