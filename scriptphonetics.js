@@ -10796,6 +10796,20 @@ function toggleCompletion(symbolElement) {
             return String(raw || '').split(/\n\s*\n+/).map(s => s.trim()).filter(Boolean);
         }
 
+        // [MỚI] Tách bản dịch tiếng Việt thành từng CÂU, hỗ trợ CẢ 2 kiểu định dạng giáo viên hay
+        // dán vào: (1) mỗi câu cách nhau bằng 1 dòng TRỐNG (như hướng dẫn cũ), HOẶC (2) mỗi câu 1
+        // DÒNG liên tục, KHÔNG có dòng trống ở giữa (giống hệt kiểu transcript tiếng Anh — mỗi
+        // dòng 1 câu, không cách dòng) — vì bản dịch tiếng Việt thực tế thường được dán y hệt
+        // định dạng dòng của transcript gốc, không có dòng trống xen giữa các câu. Ưu tiên tách
+        // theo dòng trống trước (nếu ra được từ 2 đoạn trở lên là đúng định dạng đó); nếu không có
+        // dòng trống nào (chỉ ra 1 khối) thì tự động chuyển sang tách theo TỪNG DÒNG.
+        function splitViSentences(raw) {
+            const byBlankLine = splitParagraphs(raw);
+            if (byBlankLine.length > 1) return byBlankLine;
+            const byLine = String(raw || '').split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+            return byLine.length ? byLine : byBlankLine;
+        }
+
         // [SỬA] Tách transcript theo mốc thời gian ĐẦY ĐỦ dạng "giờ:phút:giây.mili" đứng đầu MỖI
         // DÒNG (đúng định dạng tactiq.io / YouTube xuất ra), mỗi dòng = 1 câu. Có thể kèm tên
         // người nói ngay sau mốc thời gian, trước dấu hai chấm — VD: "00:00:00.000 Georgie:
@@ -10833,7 +10847,7 @@ function toggleCompletion(symbolElement) {
             // [GIỮ NGUYÊN LUỒNG CŨ] Có dán transcript tiếng Anh -> thay thế toàn bộ danh sách
             // dòng như trước, kèm bản dịch tiếng Việt tương ứng (nếu có dán).
             if (enSegs.length) {
-                const viParas = splitParagraphs(importViInput.value);
+                const viParas = splitViSentences(importViInput.value);
                 if (currentPodcast.segments && currentPodcast.segments.length) {
                     const proceed = confirm('Thao tác này sẽ THAY THẾ toàn bộ ' + currentPodcast.segments.length + ' dòng hiện có bằng ' + enSegs.length + ' dòng vừa nhập. Tiếp tục?');
                     if (!proceed) return;
@@ -10859,7 +10873,7 @@ function toggleCompletion(symbolElement) {
                     importStatus.textContent = '❌ Chưa có dòng nào để gán bản dịch — hãy nhập transcript tiếng Anh ở ô trên trước (ít nhất 1 lần) rồi mới dán riêng bản dịch tiếng Việt sau.';
                     return;
                 }
-                const viParas = splitParagraphs(viRaw);
+                const viParas = splitViSentences(viRaw);
                 const n = Math.min(viParas.length, segs.length);
                 for (let i = 0; i < n; i++) segs[i].vi = viParas[i];
                 renderAdminSegments();
