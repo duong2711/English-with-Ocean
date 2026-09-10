@@ -9974,13 +9974,16 @@ function toggleCompletion(symbolElement) {
 
         if (!podcastPanel || !detailView || !vocabFolderGrid) return;
 
-        // [MỚI] Thay vì mỗi "dòng" (1 đoạn do giảng viên nhập ở khung quản trị) luôn có đúng 5
-        // từ khoá bị khuyết, giờ áp dụng đúng quy tắc "cứ 20 từ khuyết 1" cho TỪNG DÒNG (dòng
-        // ngắn có thể không có từ nào bị khuyết). Nhiều dòng liên tiếp sau đó được GỘP LẠI thành
-        // 1 "đoạn script" hiển thị cho học viên (mỗi lần chỉ hiện 1 đoạn) mỗi khi đủ
-        // BLANKS_PER_DISPLAY_SEGMENT từ khuyết — xem podBuildBlanks() và podGroupIntoChunks().
-        const BLANK_WORD_RATE = 20; // [SỬA] trước đây là 10 — cứ 20 từ mới khuyết 1 từ
-        const LINES_PER_DISPLAY_SEGMENT = 6; // [SỬA] gộp đúng 6 câu/dòng thành 1 "đoạn transcript" cho học viên (trước đây gộp theo số chỗ trống)
+        // [SỬA] Đổi từ cách khuyết theo TỈ LỆ số từ/dòng sang khuyết CỐ ĐỊNH đúng
+        // BLANKS_PER_SEGMENT (4) từ cho MỖI "đoạn script" (đơn vị hiển thị gồm
+        // LINES_PER_DISPLAY_SEGMENT dòng gộp lại) — chọn trên TOÀN BỘ các từ trong cả đoạn (nhiều
+        // dòng), không còn chọn riêng từng dòng. Ưu tiên các từ vựng "hay"/khó hơn (coi như gần
+        // mức B1 trở lên — xấp xỉ bằng độ dài từ, vì không có kho dữ liệu CEFR thật) và LOẠI HẲN
+        // (không bao giờ khuyết) các từ quá dễ/thông dụng nằm trong POD_EASY_WORDS bên dưới (đại
+        // từ nhân xưng, mạo từ, giới từ, liên từ, trợ động từ, vài trăm động từ/tính từ cơ bản
+        // nhất...) — xem podPickChunkBlanks() và POD_EASY_WORDS bên dưới.
+        const BLANKS_PER_SEGMENT = 4;
+        const LINES_PER_DISPLAY_SEGMENT = 6; // gộp đúng 6 câu/dòng thành 1 "đoạn transcript" cho học viên
 
         let PODCASTS = [];
         let currentPodcast = null;
@@ -10064,13 +10067,82 @@ function toggleCompletion(symbolElement) {
             };
         }
 
-        // ---- Tách 1 dòng văn tiếng Anh thành từng "phần" (parts), giữ nguyên khoảng
-        // trắng/dấu câu; mỗi phần là 1 từ thật thì tách riêng lead/core/trail (dấu câu
-        // dính trước/sau vẫn hiển thị bình thường, CHỈ phần "core" mới có thể bị khuyết) —
-        // rồi chọn ngẫu nhiên (seeded) đúng theo tỉ lệ "cứ BLANK_WORD_RATE (20) từ khuyết 1"
-        // (làm tròn tới số nguyên gần nhất; dòng quá ngắn có thể ra 0 chỗ trống — vẫn hiển thị
-        // bình thường làm ngữ cảnh, không sao vì các dòng sẽ được gộp lại ở podGroupIntoChunks). ----
-        function podBuildBlanks(text) {
+        // ---- Danh sách các từ QUÁ DỄ/THÔNG DỤNG (đại từ nhân xưng, mạo từ, giới từ, liên từ,
+        // trợ động từ + vài trăm động từ/tính từ/trạng từ cơ bản nhất, xấp xỉ trình độ A1-A2) —
+        // KHÔNG BAO GIỜ chọn các từ này làm chỗ trống, dù đúng vị trí ngẫu nhiên, vì học viên
+        // hầu như ai cũng đã biết, khuyết vào không có tác dụng luyện từ vựng. Dùng Set để tra
+        // nhanh, so khớp không phân biệt hoa/thường (xem podIsEasyWord() bên dưới). ----
+        const POD_EASY_WORDS = new Set([
+            // đại từ nhân xưng/sở hữu/phản thân
+            'i','me','my','mine','myself','you','your','yours','yourself','yourselves',
+            'he','him','his','himself','she','her','hers','herself','it','its','itself',
+            'we','us','our','ours','ourselves','they','them','their','theirs','themselves',
+            'this','that','these','those','who','whom','whose','which','what',
+            // mạo từ, liên từ, giới từ cơ bản
+            'a','an','the','and','but','or','nor','so','yet','because','although','though',
+            'while','if','unless','since','than','as','in','on','at','to','for','of','with',
+            'from','by','about','into','onto','over','under','above','below','between','among',
+            'through','during','after','before','until','without','within','along','across',
+            'behind','beside','near','off','out','up','down','around','not','no','yes',
+            // trợ động từ/động từ khuyết thiếu
+            'be','am','is','are','was','were','been','being','do','does','did','done',
+            'have','has','had','having','will','would','shall','should','can','could','may','might','must',
+            // vài trăm động từ cơ bản nhất (A1-A2)
+            'go','goes','went','gone','going','get','gets','got','gotten','getting',
+            'make','makes','made','making','come','comes','came','coming',
+            'say','says','said','saying','see','sees','saw','seen','seeing',
+            'know','knows','knew','known','knowing','want','wants','wanted','wanting',
+            'look','looks','looked','looking','use','uses','used','using',
+            'find','finds','found','finding','give','gives','gave','given','giving',
+            'tell','tells','told','telling','ask','asks','asked','asking',
+            'work','works','worked','working','seem','seems','seemed','seeming',
+            'feel','feels','felt','feeling','try','tries','tried','trying',
+            'leave','leaves','left','leaving','call','calls','called','calling',
+            'put','puts','putting','mean','means','meant','meaning',
+            'keep','keeps','kept','keeping','let','lets','letting',
+            'begin','begins','began','begun','beginning','help','helps','helped','helping',
+            'show','shows','showed','shown','showing','hear','hears','heard','hearing',
+            'play','plays','played','playing','run','runs','ran','running',
+            'move','moves','moved','moving','live','lives','lived','living',
+            'bring','brings','brought','bringing','happen','happens','happened','happening',
+            'write','writes','wrote','written','writing','sit','sits','sat','sitting',
+            'stand','stands','stood','standing','lose','loses','lost','losing',
+            'pay','pays','paid','paying','meet','meets','met','meeting',
+            'set','sets','setting','learn','learns','learned','learnt','learning',
+            'change','changes','changed','changing','lead','leads','led','leading',
+            'watch','watches','watched','watching','follow','follows','followed','following',
+            'stop','stops','stopped','stopping','speak','speaks','spoke','spoken','speaking',
+            'read','reads','reading','add','adds','added','adding',
+            'spend','spends','spent','spending','grow','grows','grew','grown','growing',
+            'open','opens','opened','opening','walk','walks','walked','walking',
+            'win','wins','won','winning','offer','offers','offered','offering',
+            'remember','remembers','remembered','remembering','love','loves','loved','loving',
+            'appear','appears','appeared','appearing','buy','buys','bought','buying',
+            'wait','waits','waited','waiting','serve','serves','served','serving',
+            'send','sends','sent','sending','expect','expects','expected','expecting',
+            'build','builds','built','building','stay','stays','stayed','staying',
+            'fall','falls','fell','fallen','falling','cut','cuts','cutting',
+            'reach','reaches','reached','reaching','kill','kills','killed','killing',
+            'remain','remains','remained','remaining','turn','turns','turned','turning',
+            'start','starts','started','starting','need','needs','needed','needing',
+            'like','likes','liked','liking','eat','eats','ate','eaten','eating',
+            'drink','drinks','drank','drunk','drinking','sleep','sleeps','slept','sleeping',
+            'talk','talks','talked','talking','walk',
+            // vài chục tính từ/trạng từ/số từ cơ bản nhất
+            'good','bad','big','small','new','old','first','last','long','great','little',
+            'own','other','right','high','different','large','next','early','young','important',
+            'few','same','able','also','just','now','then','here','there','very','really',
+            'only','even','back','well','still','more','most','much','many','some','any','all',
+            'one','two','three','four','five','six','seven','eight','nine','ten','today','tomorrow','yesterday'
+        ]);
+        function podIsEasyWord(core) {
+            return POD_EASY_WORDS.has(String(core || '').toLowerCase());
+        }
+
+        // (dòng quá ngắn/không có từ hợp lệ vẫn hiển thị bình thường làm ngữ cảnh, không sao vì
+        // các dòng sẽ được gộp lại ở podGroupIntoChunks rồi mới chọn từ khuyết CHO CẢ ĐOẠN — xem
+        // podPickChunkBlanks() bên dưới). ----
+        function podTokenizeLine(text) {
             const rawTokens = String(text || '').split(/(\s+)/);
             const parts = rawTokens.map(tok => {
                 if (!tok || /^\s+$/.test(tok)) return { text: tok, isWord: false };
@@ -10078,38 +10150,17 @@ function toggleCompletion(symbolElement) {
                 if (!m) return { text: tok, isWord: false };
                 return { isWord: true, lead: m[1], core: m[2], trail: m[3] };
             });
-
-            const wordIdx = [];
-            parts.forEach((p, i) => { if (p.isWord) wordIdx.push(i); });
-
-            const rand = podSeedFromString(text);
-            // Ưu tiên từ có ít nhất 3 ký tự chữ cái, tránh khuyết mấy từ quá ngắn (a, is, to...);
-            // nếu không đủ ứng viên hợp lệ thì mở rộng ra toàn bộ các từ trong dòng.
-            const eligible = wordIdx.filter(i => parts[i].core.length >= 3);
-            const pool = eligible.length ? eligible.slice() : wordIdx.slice();
-
-            // "20 từ khuyết 1": số chỗ trống = tổng số từ trong dòng / BLANK_WORD_RATE (làm tròn),
-            // không vượt quá số ứng viên hợp lệ đang có.
-            const wantBlanks = Math.min(pool.length, Math.round(wordIdx.length / BLANK_WORD_RATE));
-
-            const picks = [];
-            while (picks.length < wantBlanks && pool.length) {
-                const idx = Math.floor(rand() * pool.length);
-                picks.push(pool[idx]);
-                pool.splice(idx, 1);
-            }
-            picks.sort((a, b) => a - b);
-
-            const blanks = picks.map(pick => ({ partIndex: pick, answer: parts[pick].core }));
-            return { parts, blanks };
+            return parts;
         }
 
         // [SỬA] Đổi tên podPrepareSegments -> podPrepareLines: mỗi phần tử trả về ứng với ĐÚNG 1
         // dòng do giảng viên nhập (có "vi"/"startRaw"/"quiz" riêng của dòng đó). Đây chưa phải là
         // đơn vị hiển thị cho học viên — xem podGroupIntoChunks() bên dưới để gộp thành đoạn script.
+        // [SỬA] "blanks" giờ CHƯA được chọn ở bước này (mảng rỗng tạm thời) — việc chọn từ khuyết
+        // chuyển sang chọn theo CẢ ĐOẠN SCRIPT sau khi gộp dòng, xem podGroupIntoChunks() +
+        // podPickChunkBlanks() bên dưới.
         function podPrepareLines(rawSegments) {
             return (rawSegments || []).map((seg, i) => {
-                const built = podBuildBlanks(seg.en || '');
                 return {
                     index: i,
                     en: seg.en || '',
@@ -10117,22 +10168,76 @@ function toggleCompletion(symbolElement) {
                     speaker: seg.speaker || '', // [MỚI] tên người nói (tuỳ chọn) — chỉ hiển thị, không bị khuyết
                     startRaw: seg.start || '', // "mm:ss" do giảng viên nhập — dùng để đồng bộ audio
                     quiz: (seg.quiz && seg.quiz.question && Array.isArray(seg.quiz.options)) ? seg.quiz : null,
-                    parts: built.parts,
-                    blanks: built.blanks
+                    parts: podTokenizeLine(seg.en || ''),
+                    blanks: []
                 };
             });
         }
 
         // [SỬA] Gộp các "dòng" (câu) liên tiếp lại thành từng "đoạn transcript" hiển thị cho học
         // viên: cứ ĐỦ ĐÚNG LINES_PER_DISPLAY_SEGMENT (6) câu thì chốt 1 đoạn. Đoạn cuối cùng có
-        // thể có ít hơn 6 câu nếu tổng số câu không chia hết cho 6.
+        // thể có ít hơn 6 câu nếu tổng số câu không chia hết cho 6. Sau khi gộp, chọn LUÔN từ
+        // khuyết cho CẢ ĐOẠN (podPickChunkBlanks) — xem hàm đó bên dưới.
         function podGroupIntoChunks(lines) {
             const chunks = [];
             const list = lines || [];
             for (let i = 0; i < list.length; i += LINES_PER_DISPLAY_SEGMENT) {
-                chunks.push({ index: chunks.length, lines: list.slice(i, i + LINES_PER_DISPLAY_SEGMENT) });
+                const chunk = { index: chunks.length, lines: list.slice(i, i + LINES_PER_DISPLAY_SEGMENT) };
+                podPickChunkBlanks(chunk);
+                chunks.push(chunk);
             }
             return chunks;
+        }
+
+        // [MỚI] Chọn CỐ ĐỊNH đúng BLANKS_PER_SEGMENT (4) từ làm chỗ trống cho CẢ 1 "đoạn script"
+        // (nhiều dòng đã gộp lại) — thay cho cách chọn riêng theo TỈ LỆ trên TỪNG DÒNG trước đây.
+        // Gom hết các từ hợp lệ (>= 3 ký tự chữ cái) trong TOÀN ĐOẠN thành 1 danh sách ứng viên
+        // chung, LOẠI HẲN các từ có trong POD_EASY_WORDS (đại từ nhân xưng, mạo từ, giới từ, trợ
+        // động từ...), rồi CHỌN CÓ TRỌNG SỐ (seeded, không hoàn lại): từ càng DÀI càng dễ được
+        // chọn hơn — xấp xỉ ưu tiên từ vựng "hay"/khó hơn (B1 trở lên) khi không có kho dữ liệu
+        // CEFR thật để tra. Nếu sau khi loại từ dễ mà không còn đủ ứng viên (đoạn toàn từ cơ
+        // bản) thì mới nới ra dùng luôn cả từ dễ, để đoạn vẫn có ít nhất vài chỗ trống. Kết quả
+        // được gán ngược lại vào "blanks" của TỪNG DÒNG trong đoạn (phần hiển thị/chấm điểm vẫn
+        // dùng "line.blanks" y như cũ, không đổi). Seed theo nội dung CẢ ĐOẠN nên vị trí chỗ
+        // trống KHÔNG đổi mỗi lần render lại (ổn định giữa Giai đoạn 1/2, giữa các lần mở lại).
+        function podPickChunkBlanks(chunk) {
+            const lines = chunk.lines || [];
+            lines.forEach(line => { line.blanks = []; });
+
+            const candidates = [];
+            lines.forEach((line, lineListI) => {
+                line.parts.forEach((p, pi) => {
+                    if (!p.isWord || p.core.length < 3) return;
+                    candidates.push({ lineListI, partIndex: pi, core: p.core, easy: podIsEasyWord(p.core) });
+                });
+            });
+            if (!candidates.length) return;
+
+            const hardPool = candidates.filter(c => !c.easy);
+            const pool = hardPool.length ? hardPool : candidates;
+            const wantBlanks = Math.min(pool.length, BLANKS_PER_SEGMENT);
+
+            const seedText = lines.map(l => l.en).join(' \n ');
+            const rand = podSeedFromString(seedText);
+            const weightOf = c => c.core.length; // từ càng dài -> trọng số càng cao
+            const remaining = pool.slice();
+            const picks = [];
+            while (picks.length < wantBlanks && remaining.length) {
+                let totalWeight = 0;
+                for (const c of remaining) totalWeight += weightOf(c);
+                let threshold = rand() * totalWeight;
+                let chosenI = remaining.length - 1;
+                for (let i = 0; i < remaining.length; i++) {
+                    threshold -= weightOf(remaining[i]);
+                    if (threshold <= 0) { chosenI = i; break; }
+                }
+                picks.push(remaining[chosenI]);
+                remaining.splice(chosenI, 1);
+            }
+
+            picks
+                .sort((a, b) => (a.lineListI - b.lineListI) || (a.partIndex - b.partIndex))
+                .forEach(c => { lines[c.lineListI].blanks.push({ partIndex: c.partIndex, answer: c.core }); });
         }
 
         // ================= SUPABASE: TẢI / LƯU / XOÁ NỘI DUNG =================
