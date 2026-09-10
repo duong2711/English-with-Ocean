@@ -9975,11 +9975,11 @@ function toggleCompletion(symbolElement) {
         if (!podcastPanel || !detailView || !vocabFolderGrid) return;
 
         // [MỚI] Thay vì mỗi "dòng" (1 đoạn do giảng viên nhập ở khung quản trị) luôn có đúng 5
-        // từ khoá bị khuyết, giờ áp dụng đúng quy tắc "cứ 10 từ khuyết 1" cho TỪNG DÒNG (dòng
+        // từ khoá bị khuyết, giờ áp dụng đúng quy tắc "cứ 20 từ khuyết 1" cho TỪNG DÒNG (dòng
         // ngắn có thể không có từ nào bị khuyết). Nhiều dòng liên tiếp sau đó được GỘP LẠI thành
         // 1 "đoạn script" hiển thị cho học viên (mỗi lần chỉ hiện 1 đoạn) mỗi khi đủ
         // BLANKS_PER_DISPLAY_SEGMENT từ khuyết — xem podBuildBlanks() và podGroupIntoChunks().
-        const BLANK_WORD_RATE = 10;
+        const BLANK_WORD_RATE = 20; // [SỬA] trước đây là 10 — cứ 20 từ mới khuyết 1 từ
         const LINES_PER_DISPLAY_SEGMENT = 6; // [SỬA] gộp đúng 6 câu/dòng thành 1 "đoạn transcript" cho học viên (trước đây gộp theo số chỗ trống)
 
         let PODCASTS = [];
@@ -10067,7 +10067,7 @@ function toggleCompletion(symbolElement) {
         // ---- Tách 1 dòng văn tiếng Anh thành từng "phần" (parts), giữ nguyên khoảng
         // trắng/dấu câu; mỗi phần là 1 từ thật thì tách riêng lead/core/trail (dấu câu
         // dính trước/sau vẫn hiển thị bình thường, CHỈ phần "core" mới có thể bị khuyết) —
-        // rồi chọn ngẫu nhiên (seeded) đúng theo tỉ lệ "cứ BLANK_WORD_RATE (10) từ khuyết 1"
+        // rồi chọn ngẫu nhiên (seeded) đúng theo tỉ lệ "cứ BLANK_WORD_RATE (20) từ khuyết 1"
         // (làm tròn tới số nguyên gần nhất; dòng quá ngắn có thể ra 0 chỗ trống — vẫn hiển thị
         // bình thường làm ngữ cảnh, không sao vì các dòng sẽ được gộp lại ở podGroupIntoChunks). ----
         function podBuildBlanks(text) {
@@ -10088,7 +10088,7 @@ function toggleCompletion(symbolElement) {
             const eligible = wordIdx.filter(i => parts[i].core.length >= 3);
             const pool = eligible.length ? eligible.slice() : wordIdx.slice();
 
-            // "10 từ khuyết 1": số chỗ trống = tổng số từ trong dòng / BLANK_WORD_RATE (làm tròn),
+            // "20 từ khuyết 1": số chỗ trống = tổng số từ trong dòng / BLANK_WORD_RATE (làm tròn),
             // không vượt quá số ứng viên hợp lệ đang có.
             const wantBlanks = Math.min(pool.length, Math.round(wordIdx.length / BLANK_WORD_RATE));
 
@@ -10398,14 +10398,21 @@ function toggleCompletion(symbolElement) {
         // script" (dù đoạn đó gồm 1 hay nhiều dòng gộp lại), rồi chờ học viên bấm "Đoạn sau" mới
         // phát tiếp — đúng yêu cầu "nói xong 1 đoạn thì tự động dừng".
         function podGetSegEndSec(fromChunkIndex) {
+            const dur = audioEl.duration;
+            const hasDur = isFinite(dur) && dur > 0;
             for (let ci = fromChunkIndex + 1; ci < currentSegments.length; ci++) {
                 for (const line of currentSegments[ci].lines) {
                     const t = podParseTimeToSec(line.startRaw);
-                    if (t != null) return t;
+                    if (t != null) {
+                        // [MỚI] Phát thêm 4 giây SAU mốc bắt đầu của đoạn kế tiếp rồi mới dừng
+                        // (thay vì dừng đột ngột ngay khi vừa hết dòng transcript cuối của đoạn
+                        // hiện tại) — giới hạn không vượt quá tổng thời lượng audio nếu đã biết.
+                        const withBuffer = t + 4;
+                        return hasDur ? Math.min(withBuffer, dur) : withBuffer;
+                    }
                 }
             }
-            const dur = audioEl.duration;
-            return (isFinite(dur) && dur > 0) ? dur : null;
+            return hasDur ? dur : null;
         }
         function podPlayCurrentSegment() {
             if (!currentPodcast || !currentPodcast.audio_url) return;
@@ -10471,7 +10478,10 @@ function toggleCompletion(symbolElement) {
                     const answer = p.core;
                     html += escapeHtmlPod(p.lead);
                     if (done) {
-                        html += `<span class="pod-blank pod-blank-correct" data-line-i="${lineI}" data-blank-i="${bi}">${escapeHtmlPod(answer)}</span>`;
+                        // [MỚI] Từ khuyết ĐÃ điền đúng (kết quả đã hiện ra) thì cho bấm vào tra
+                        // nghĩa như từ thường (dùng lại wrapFn/window.vocabTap ở trên) — từ khuyết
+                        // CHƯA điền/CHƯA chấm đúng thì không bọc tappable-word, nên không tra được.
+                        html += `<span class="pod-blank pod-blank-correct" data-line-i="${lineI}" data-blank-i="${bi}">${wrapFn(answer)}</span>`;
                     } else if (stage === 1) {
                         html += `<span class="pod-blank" data-line-i="${lineI}" data-blank-i="${bi}" data-answer="${escapeHtmlPod(answer)}">＿＿＿</span>`;
                     } else {
@@ -10655,6 +10665,10 @@ function toggleCompletion(symbolElement) {
             podBusy = true;
             const chunk = currentSegments[currentSegIndex];
             let anyWrong = false, anyChecked = false, earnedAny = false;
+            // [MỚI] Dùng lại đúng 1 bộ máy tra nghĩa (window.vocabTap) để bọc từ khuyết VỪA chấm
+            // đúng thành "tappable-word" — chỉ áp dụng SAU khi hiện kết quả (đúng), như quy tắc
+            // đang dùng cho các từ thường khác trong câu (xem podBuildLineHtml ở trên).
+            const wrapFn = (window.vocabTap && window.vocabTap.wrap) ? window.vocabTap.wrap : escapeHtmlPod;
 
             if (currentStage === 1) {
                 const slots = sentenceEl.querySelectorAll('.pod-blank:not(.pod-blank-correct)');
@@ -10668,6 +10682,7 @@ function toggleCompletion(symbolElement) {
                     if (given === expected) {
                         slot.classList.add('pod-blank-correct');
                         slot.classList.remove('pod-blank-wrong');
+                        slot.innerHTML = wrapFn(slot.textContent); // [MỚI] cho bấm tra nghĩa từ vừa điền đúng
                         if (await markBlankDone(line.index, bi, 1)) earnedAny = true;
                     } else {
                         slot.classList.add('pod-blank-wrong');
@@ -10688,7 +10703,7 @@ function toggleCompletion(symbolElement) {
                         span.className = 'pod-blank pod-blank-correct';
                         span.dataset.lineI = lineI;
                         span.dataset.blankI = String(bi);
-                        span.textContent = input.value.trim();
+                        span.innerHTML = wrapFn(input.value.trim()); // [MỚI] cho bấm tra nghĩa từ vừa điền đúng
                         input.replaceWith(span);
                         if (await markBlankDone(line.index, bi, 2)) earnedAny = true;
                     } else {
@@ -10814,21 +10829,51 @@ function toggleCompletion(symbolElement) {
 
         importBtn.addEventListener('click', async () => {
             const enSegs = parsePodcastTranscript(importEnInput.value);
-            if (!enSegs.length) {
-                importStatus.textContent = '❌ Chưa dán transcript tiếng Anh.';
+
+            // [GIỮ NGUYÊN LUỒNG CŨ] Có dán transcript tiếng Anh -> thay thế toàn bộ danh sách
+            // dòng như trước, kèm bản dịch tiếng Việt tương ứng (nếu có dán).
+            if (enSegs.length) {
+                const viParas = splitParagraphs(importViInput.value);
+                if (currentPodcast.segments && currentPodcast.segments.length) {
+                    const proceed = confirm('Thao tác này sẽ THAY THẾ toàn bộ ' + currentPodcast.segments.length + ' dòng hiện có bằng ' + enSegs.length + ' dòng vừa nhập. Tiếp tục?');
+                    if (!proceed) return;
+                }
+                currentPodcast.segments = enSegs.map((s, i) => ({ en: s.en, start: s.start || '', speaker: s.speaker || '', vi: viParas[i] || '', quiz: null }));
+                renderAdminSegments();
+                importStatus.textContent = 'Đang lưu...';
+                const ok = await savePodcastContent();
+                importStatus.textContent = ok ? ('💾 Đã nhập và lưu ' + enSegs.length + ' dòng.') : '❌ Lưu thất bại, thử lại.';
+                if (ok) { importEnInput.value = ''; importViInput.value = ''; }
                 return;
             }
-            const viParas = splitParagraphs(importViInput.value);
-            if (currentPodcast.segments && currentPodcast.segments.length) {
-                const proceed = confirm('Thao tác này sẽ THAY THẾ toàn bộ ' + currentPodcast.segments.length + ' dòng hiện có bằng ' + enSegs.length + ' dòng vừa nhập. Tiếp tục?');
-                if (!proceed) return;
+
+            // [MỚI] Để trống ô tiếng Anh (không cần yêu cầu phải có transcript tiếng Anh) và chỉ
+            // dán bản dịch tiếng Việt -> PHÂN BỔ (gán) từng đoạn dịch, ĐÚNG THEO THỨ TỰ, vào các
+            // dòng ĐÃ CÓ SẴN trong danh sách (không thay thế en/mốc thời gian/câu hỏi của các
+            // dòng đó) — tiện cho việc dịch/dán bản dịch sau mà không cần dán lại nguyên transcript
+            // tiếng Anh mỗi lần.
+            const viRaw = importViInput.value;
+            if (viRaw.trim()) {
+                const segs = currentPodcast.segments || [];
+                if (!segs.length) {
+                    importStatus.textContent = '❌ Chưa có dòng nào để gán bản dịch — hãy nhập transcript tiếng Anh ở ô trên trước (ít nhất 1 lần) rồi mới dán riêng bản dịch tiếng Việt sau.';
+                    return;
+                }
+                const viParas = splitParagraphs(viRaw);
+                const n = Math.min(viParas.length, segs.length);
+                for (let i = 0; i < n; i++) segs[i].vi = viParas[i];
+                renderAdminSegments();
+                importStatus.textContent = 'Đang lưu...';
+                const ok = await savePodcastContent();
+                if (!ok) { importStatus.textContent = '❌ Lưu thất bại, thử lại.'; return; }
+                importStatus.textContent = (viParas.length === segs.length)
+                    ? ('💾 Đã phân bổ bản dịch cho ' + n + ' dòng.')
+                    : ('⚠️ Đã lưu, nhưng số đoạn dịch (' + viParas.length + ') không khớp số dòng hiện có (' + segs.length + '). Đã phân bổ theo thứ tự cho ' + n + ' dòng đầu — hãy kiểm tra/sửa lại các dòng còn thiếu ở khung "Danh sách các dòng" bên dưới.');
+                importViInput.value = '';
+                return;
             }
-            currentPodcast.segments = enSegs.map((s, i) => ({ en: s.en, start: s.start || '', speaker: s.speaker || '', vi: viParas[i] || '', quiz: null }));
-            renderAdminSegments();
-            importStatus.textContent = 'Đang lưu...';
-            const ok = await savePodcastContent();
-            importStatus.textContent = ok ? ('💾 Đã nhập và lưu ' + enSegs.length + ' dòng.') : '❌ Lưu thất bại, thử lại.';
-            if (ok) { importEnInput.value = ''; importViInput.value = ''; }
+
+            importStatus.textContent = '❌ Chưa dán transcript tiếng Anh hoặc bản dịch tiếng Việt.';
         });
 
         // [SỬA] Mỗi "khối" ở đây là 1 DÒNG gốc (có "en"/"vi"/"start"/"quiz" riêng). Khi học viên
