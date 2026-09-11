@@ -1009,6 +1009,7 @@
             <div class="folder-card myvocab-folder-trigger" id="myvocab-folder-card">⭐ Từ vựng của tôi<span id="myvocab-folder-badge" class="tab-badge-count tab-badge-count-corner" style="display:none;">0</span></div>
             <div class="folder-card" id="kid-folder-card">📁 Vận dụng (20 chủ đề)</div>
             <div class="folder-card" id="thcs-folder-card">📁 THCS/THPT (theo SGK Global success)</div>
+            <div class="folder-card" id="conj-folder-card">🔗 Liên từ (Conjunction)</div>
             <div class="folder-card news-folder-trigger" id="news-folder-card">📁 Tin ngắn (nguồn newsinlevels)<span id="news-folder-badge" class="tab-badge-count tab-badge-count-corner" style="display:none;">0</span></div>
             <div class="folder-card podcast-folder-trigger" id="podcast-folder-card">🎧 Podcast (học từ vựng qua dictation)</div>
         </div>
@@ -1145,6 +1146,22 @@
         <div id="kid-game-result-panel" class="kid-game-result-panel" style="display:none;"></div>
     </div>
             </div>
+        </div>
+
+        <!-- ===== Panel "Liên từ" (Conjunction) — có filter theo khối lớp (cộng dồn) ===== -->
+        <div id="conj-panel" style="display:none;">
+            <div class="grammar-panel-header" style="margin-bottom:16px; padding-bottom:12px; border-bottom:2px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <button class="grammar-back-btn" id="conj-back-btn">← Quay lại</button>
+                    <h3 style="margin:0;">🔗 Liên từ (Conjunction)</h3>
+                </div>
+            </div>
+            <p class="kid-hint">Kéo thanh trượt bên dưới để chỉ hiện các liên từ TỪ LỚP 1 ĐẾN khối lớp bạn chọn (cộng dồn dần theo lộ trình học). Các mục lớn (Liên từ kết hợp, Liên từ tương quan, Liên từ phụ thuộc, Trạng từ liên kết) luôn được giữ nguyên — chỉ có nội dung liên từ bên trong mỗi mục là thêm/bớt theo khối lớp. Chạm vào từ bất kỳ trong câu ví dụ để tra nghĩa.</p>
+            <div class="conj-grade-filter">
+                <label for="conj-grade-slider">Hiện liên từ đến khối: <strong id="conj-grade-label">Lớp 12 (Tất cả)</strong></label>
+                <input type="range" id="conj-grade-slider" min="1" max="12" step="1" value="12">
+            </div>
+            <div id="conj-content"></div>
         </div>
 
         <!-- ===== Panel "THCS/THPT" — chọn khối lớp ===== -->
@@ -1407,7 +1424,7 @@
 
                     <div class="dub-field">
                         <label class="news-quiz-edit-label">Nhập nhanh transcript (thay thế toàn bộ danh sách dòng hiện có)</label>
-                        <p class="news-quiz-edit-hint">Dán transcript có mốc thời gian đầy đủ dạng <code>giờ:phút:giây.mili</code> (ví dụ xuất từ tactiq.io hoặc YouTube), mỗi dòng 1 câu, có thể kèm tên người nói trước dấu hai chấm — ví dụ: <code>00:00:00.000 Georgie: Hello, I'm Georgie.</code> (phần "Tên người nói:" là tuỳ chọn, có thể bỏ qua nếu chỉ có 1 người nói). Dán bản dịch tiếng Việt tương ứng vào ô bên dưới, ĐÚNG THEO THỨ TỰ với các câu ở trên — có thể dán mỗi câu 1 dòng liên tục (KHÔNG cần dòng trống ở giữa, giống hệt cách dán transcript tiếng Anh ở trên) HOẶC cách nhau bằng 1 dòng trống đều được, hệ thống tự nhận diện. Có thể để trống ô tiếng Việt rồi dịch sau ở khung "Danh sách các dòng" bên dưới, HOẶC dán riêng bản dịch tiếng Việt vào ô này rồi bấm nút (để trống ô tiếng Anh) — hệ thống sẽ tự PHÂN BỔ từng câu dịch, ĐÚNG THEO THỨ TỰ, vào các dòng ĐÃ CÓ SẴN mà không cần dán lại transcript tiếng Anh. Lưu ý: mỗi "đoạn transcript" (6 câu gộp lại) tự động khuyết CỐ ĐỊNH 4 từ, ưu tiên các từ vựng hay/khó hơn (không khuyết các từ quá dễ/thông dụng như đại từ nhân xưng, mạo từ...); khi luyện tập, cứ ĐỦ 6 CÂU sẽ được gộp thành 1 "đoạn transcript" hiển thị cho học viên (xem hướng dẫn bên dưới).</p>
+                        <p class="news-quiz-edit-hint">Dán transcript có mốc thời gian đầy đủ dạng <code>giờ:phút:giây.mili</code> (ví dụ xuất từ tactiq.io hoặc YouTube), mỗi dòng 1 câu, có thể kèm tên người nói trước dấu hai chấm — ví dụ: <code>00:00:00.000 Georgie: Hello, I'm Georgie.</code> (phần "Tên người nói:" là tuỳ chọn, có thể bỏ qua nếu chỉ có 1 người nói). Dán bản dịch tiếng Việt tương ứng vào ô bên dưới, ĐÚNG THEO THỨ TỰ với các câu ở trên — có thể dán mỗi câu 1 dòng liên tục (KHÔNG cần dòng trống ở giữa, giống hệt cách dán transcript tiếng Anh ở trên) HOẶC cách nhau bằng 1 dòng trống đều được, hệ thống tự nhận diện. Có thể để trống ô tiếng Việt rồi dịch sau ở khung "Danh sách các dòng" bên dưới, HOẶC dán riêng bản dịch tiếng Việt vào ô này rồi bấm nút (để trống ô tiếng Anh) — hệ thống sẽ tự PHÂN BỔ từng câu dịch, ĐÚNG THEO THỨ TỰ, vào các dòng ĐÃ CÓ SẴN mà không cần dán lại transcript tiếng Anh. Lưu ý: mỗi "đoạn transcript" (tối đa 6 câu, hoặc chốt sớm hơn nếu đã đủ dài — xem hướng dẫn bên dưới) tự động khuyết CỐ ĐỊNH 4 từ, ưu tiên các từ vựng hay/khó hơn (không khuyết các từ quá dễ/thông dụng như đại từ nhân xưng, mạo từ...).</p>
                         <textarea id="podcast-admin-import-en" class="news-edit-input dub-admin-import-textarea" placeholder="00:00:00.000 Georgie: Hello, I'm Georgie.&#10;00:00:02.500 Georgie: Today we're talking about...&#10;00:00:05.800 Nghe được không kèm tên người nói cũng được."></textarea>
                         <textarea id="podcast-admin-import-vi" class="news-edit-input dub-admin-import-textarea" placeholder="Xin chào, tôi là Georgie.&#10;Hôm nay chúng ta sẽ nói về...&#10;Dòng tiếng Việt thứ ba... (mỗi câu 1 dòng, không cần dòng trống ở giữa cũng được)" style="margin-top:8px;"></textarea>
                         <button class="loto-btn-secondary" id="podcast-admin-import-btn" style="margin-top:8px;">📥 Nhập &amp; thay thế danh sách dòng</button>
@@ -1416,7 +1433,7 @@
 
                     <div class="dub-field">
                         <label class="news-quiz-edit-label">Danh sách các dòng (script)</label>
-                        <p class="news-quiz-edit-hint">Mỗi "đoạn transcript" (6 dòng gộp lại — xem bên dưới) tự động khuyết CỐ ĐỊNH 4 từ, chọn trên cả 6 dòng chứ không tính riêng từng dòng (dòng nào cũng có thể có 0 từ khuyết, miễn cả đoạn đủ 4). Ưu tiên khuyết các từ vựng hay/khó hơn, KHÔNG khuyết các từ quá dễ/thông dụng như đại từ nhân xưng, mạo từ, giới từ, trợ động từ... Khi học viên luyện tập, cứ ĐỦ 6 DÒNG liên tiếp được TỰ ĐỘNG GỘP LẠI thành 1 "đoạn transcript" hiển thị (đoạn cuối cùng có thể có ít hơn 6 dòng nếu không chia hết) — mỗi lần chỉ hiện 1 đoạn, điền đúng hết đoạn hiện tại mới được sang đoạn kế tiếp; audio tự dừng (phát thêm khoảng 4 giây sau khi hết đoạn rồi mới dừng hẳn) khi hết đoạn, học viên bấm "Đoạn sau" mới phát tiếp; cuối mỗi dòng có kí hiệu 🇻🇳 để xem riêng bản dịch của dòng đó. Có thể nhập thêm "Tên người nói" cho từng dòng (hiện phía trước câu, không bị khuyết). Nhập "Thời điểm bắt đầu" (mm:ss) cho từng dòng để audio đồng bộ đúng. Câu hỏi trắc nghiệm không bắt buộc. Mọi thay đổi tự động lưu.</p>
+                        <p class="news-quiz-edit-hint">Mỗi "đoạn transcript" (nhiều dòng gộp lại — xem bên dưới) tự động khuyết CỐ ĐỊNH 4 từ, chọn trên cả đoạn chứ không tính riêng từng dòng (dòng nào cũng có thể có 0 từ khuyết, miễn cả đoạn đủ 4). Ưu tiên khuyết các từ vựng hay/khó hơn, KHÔNG khuyết các từ quá dễ/thông dụng như đại từ nhân xưng, mạo từ, giới từ, trợ động từ... Khi học viên luyện tập, các dòng liên tiếp được TỰ ĐỘNG GỘP LẠI thành 1 "đoạn transcript" hiển thị: tối đa 6 dòng/đoạn, NHƯNG nếu gặp câu quá dài (tường thuật, trình bày dài dòng...) khiến tổng số từ trong đoạn vượt khoảng 80 từ thì đoạn sẽ tự CHỐT SỚM HƠN (có thể chỉ 1-2 dòng), tránh đoạn quá dài gây nản cho học viên — không có câu nào bị cắt ngang giữa chừng. Đoạn cuối cùng của cả bài cũng có thể ngắn hơn nếu số dòng còn lại không chia hết. Mỗi lần chỉ hiện 1 đoạn, điền đúng hết đoạn hiện tại mới được sang đoạn kế tiếp; audio tự dừng (phát thêm khoảng 4 giây sau khi hết đoạn rồi mới dừng hẳn) khi hết đoạn, học viên bấm "Đoạn sau" mới phát tiếp; cuối mỗi dòng có kí hiệu 🇻🇳 để xem riêng bản dịch của dòng đó. Có thể nhập thêm "Tên người nói" cho từng dòng (hiện phía trước câu, không bị khuyết). Nhập "Thời điểm bắt đầu" (mm:ss) cho từng dòng để audio đồng bộ đúng. Câu hỏi trắc nghiệm không bắt buộc. Mọi thay đổi tự động lưu.</p>
                         <div id="podcast-admin-segments"></div>
                         <button class="loto-btn-secondary" id="podcast-admin-add-segment-btn">+ Thêm dòng</button>
                         <div class="dub-admin-status" id="podcast-admin-segments-status"></div>

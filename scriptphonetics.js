@@ -9983,7 +9983,12 @@ function toggleCompletion(symbolElement) {
         // từ nhân xưng, mạo từ, giới từ, liên từ, trợ động từ, vài trăm động từ/tính từ cơ bản
         // nhất...) — xem podPickChunkBlanks() và POD_EASY_WORDS bên dưới.
         const BLANKS_PER_SEGMENT = 4;
-        const LINES_PER_DISPLAY_SEGMENT = 6; // gộp đúng 6 câu/dòng thành 1 "đoạn transcript" cho học viên
+        const LINES_PER_DISPLAY_SEGMENT = 6; // gộp TỐI ĐA 6 câu/dòng thành 1 "đoạn transcript" cho học viên
+        // [MỚI] Chốt đoạn SỚM HƠN (dù chưa đủ 6 câu) nếu tổng số từ trong đoạn đã vượt ngưỡng này —
+        // để tránh trường hợp gặp câu tường thuật/trình bày rất dài, gộp đủ 6 câu sẽ ra 1 đoạn quá
+        // dài khiến học viên nản. Một câu tự nó đã dài hơn ngưỡng vẫn được giữ nguyên làm 1 đoạn
+        // riêng (không cắt ngang giữa câu) — xem podGroupIntoChunks() bên dưới.
+        const WORDS_PER_SEGMENT_SOFT_CAP = 80;
 
         let PODCASTS = [];
         let currentPodcast = null;
@@ -10175,39 +10180,77 @@ function toggleCompletion(symbolElement) {
         }
 
         // [SỬA] Gộp các "dòng" (câu) liên tiếp lại thành từng "đoạn transcript" hiển thị cho học
-        // viên: cứ ĐỦ ĐÚNG LINES_PER_DISPLAY_SEGMENT (6) câu thì chốt 1 đoạn. Đoạn cuối cùng có
-        // thể có ít hơn 6 câu nếu tổng số câu không chia hết cho 6. Sau khi gộp, chọn LUÔN từ
-        // khuyết cho CẢ ĐOẠN (podPickChunkBlanks) — xem hàm đó bên dưới.
+        // viên: gộp TỐI ĐA LINES_PER_DISPLAY_SEGMENT (6) câu, NHƯNG chốt đoạn SỚM HƠN nếu tổng số
+        // từ đã vượt WORDS_PER_SEGMENT_SOFT_CAP (80) — dù chưa đủ 6 câu — để tránh đoạn quá dài khi
+        // gặp câu tường thuật/trình bày dài. Một câu tự nó đã dài hơn ngưỡng vẫn được giữ nguyên
+        // vẹn làm 1 đoạn riêng (không bao giờ cắt ngang giữa câu). Đoạn cuối cùng của cả script có
+        // thể có ít hơn 6 câu nếu tổng số câu không chia hết. Sau khi chốt xong từng đoạn, chọn
+        // LUÔN từ khuyết cho CẢ ĐOẠN đó (podPickChunkBlanks) — xem hàm đó bên dưới.
         function podGroupIntoChunks(lines) {
             const chunks = [];
             const list = lines || [];
-            for (let i = 0; i < list.length; i += LINES_PER_DISPLAY_SEGMENT) {
-                const chunk = { index: chunks.length, lines: list.slice(i, i + LINES_PER_DISPLAY_SEGMENT) };
+            let current = [];
+            let wordCount = 0;
+
+            function closeCurrentChunk() {
+                if (!current.length) return;
+                const chunk = { index: chunks.length, lines: current };
                 podPickChunkBlanks(chunk);
                 chunks.push(chunk);
+                current = [];
+                wordCount = 0;
             }
+
+            list.forEach(line => {
+                const lineWordCount = line.parts.filter(p => p.isWord).length;
+                const wouldOverflowLineCap = current.length >= LINES_PER_DISPLAY_SEGMENT;
+                const wouldOverflowWordCap = current.length > 0 && (wordCount + lineWordCount) > WORDS_PER_SEGMENT_SOFT_CAP;
+                if (wouldOverflowLineCap || wouldOverflowWordCap) closeCurrentChunk();
+                current.push(line);
+                wordCount += lineWordCount;
+            });
+            closeCurrentChunk();
+
             return chunks;
         }
 
-        // [MỚI] Chọn CỐ ĐỊNH đúng BLANKS_PER_SEGMENT (4) từ làm chỗ trống cho CẢ 1 "đoạn script"
-        // (nhiều dòng đã gộp lại) — thay cho cách chọn riêng theo TỈ LỆ trên TỪNG DÒNG trước đây.
-        // Gom hết các từ hợp lệ (>= 3 ký tự chữ cái) trong TOÀN ĐOẠN thành 1 danh sách ứng viên
-        // chung, LOẠI HẲN các từ có trong POD_EASY_WORDS (đại từ nhân xưng, mạo từ, giới từ, trợ
-        // động từ...), rồi CHỌN CÓ TRỌNG SỐ (seeded, không hoàn lại): từ càng DÀI càng dễ được
-        // chọn hơn — xấp xỉ ưu tiên từ vựng "hay"/khó hơn (B1 trở lên) khi không có kho dữ liệu
-        // CEFR thật để tra. Nếu sau khi loại từ dễ mà không còn đủ ứng viên (đoạn toàn từ cơ
-        // bản) thì mới nới ra dùng luôn cả từ dễ, để đoạn vẫn có ít nhất vài chỗ trống. Kết quả
-        // được gán ngược lại vào "blanks" của TỪNG DÒNG trong đoạn (phần hiển thị/chấm điểm vẫn
-        // dùng "line.blanks" y như cũ, không đổi). Seed theo nội dung CẢ ĐOẠN nên vị trí chỗ
-        // trống KHÔNG đổi mỗi lần render lại (ổn định giữa Giai đoạn 1/2, giữa các lần mở lại).
+        // [MỚI] Số chỗ trống cho 1 "đoạn script": mặc định CỐ ĐỊNH BLANKS_PER_SEGMENT (4) cho các
+        // đoạn có độ dài bình thường (<= WORDS_PER_SEGMENT_SOFT_CAP từ). Trường hợp hiếm gặp: 1
+        // CÂU tự nó đã dài hơn hẳn ngưỡng (không thể tách nhỏ vì luật "không cắt ngang giữa câu" ở
+        // podGroupIntoChunks) khiến đoạn đó phải đứng riêng với rất nhiều từ — nếu vẫn giữ cứng 4
+        // chỗ trống thì tỉ lệ đọc/tương tác quá lệch, dễ nản. Nên khi đoạn vượt ngưỡng, số chỗ
+        // trống TĂNG DẦN THEO TỈ LỆ số từ (cứ khoảng 20 từ thêm 1 chỗ), có trần MAX_BLANKS_PER_SEGMENT
+        // để không bị quá tải chỗ trống. Với đoạn <= ngưỡng, công thức vẫn ra đúng 4 như cũ.
+        const MAX_BLANKS_PER_SEGMENT = 12;
+        function podBlanksTargetForChunk(totalWords) {
+            if (totalWords <= WORDS_PER_SEGMENT_SOFT_CAP) return BLANKS_PER_SEGMENT;
+            const scaled = Math.round(totalWords / 20);
+            return Math.min(MAX_BLANKS_PER_SEGMENT, Math.max(BLANKS_PER_SEGMENT, scaled));
+        }
+
+        // [SỬA] Chọn số chỗ trống cho CẢ 1 "đoạn script" (nhiều dòng đã gộp lại) theo
+        // podBlanksTargetForChunk() ở trên — mặc định cố định 4, chỉ tăng khi đoạn bị buộc phải
+        // dài hơn bình thường do 1 câu quá dài. Gom hết các từ hợp lệ (>= 3 ký tự chữ cái) trong
+        // TOÀN ĐOẠN thành 1 danh sách ứng viên chung, LOẠI HẲN các từ có trong POD_EASY_WORDS (đại
+        // từ nhân xưng, mạo từ, giới từ, trợ động từ...), rồi CHỌN CÓ TRỌNG SỐ (seeded, không hoàn
+        // lại): từ càng DÀI càng dễ được chọn hơn — xấp xỉ ưu tiên từ vựng "hay"/khó hơn (B1 trở
+        // lên) khi không có kho dữ liệu CEFR thật để tra. Nếu sau khi loại từ dễ mà không còn đủ
+        // ứng viên (đoạn toàn từ cơ bản) thì mới nới ra dùng luôn cả từ dễ, để đoạn vẫn có ít nhất
+        // vài chỗ trống. Kết quả được gán ngược lại vào "blanks" của TỪNG DÒNG trong đoạn (phần
+        // hiển thị/chấm điểm vẫn dùng "line.blanks" y như cũ, không đổi). Seed theo nội dung CẢ
+        // ĐOẠN nên vị trí chỗ trống KHÔNG đổi mỗi lần render lại (ổn định giữa Giai đoạn 1/2, giữa
+        // các lần mở lại).
         function podPickChunkBlanks(chunk) {
             const lines = chunk.lines || [];
             lines.forEach(line => { line.blanks = []; });
 
             const candidates = [];
+            let totalWords = 0;
             lines.forEach((line, lineListI) => {
                 line.parts.forEach((p, pi) => {
-                    if (!p.isWord || p.core.length < 3) return;
+                    if (!p.isWord) return;
+                    totalWords++;
+                    if (p.core.length < 3) return;
                     candidates.push({ lineListI, partIndex: pi, core: p.core, easy: podIsEasyWord(p.core) });
                 });
             });
@@ -10215,7 +10258,7 @@ function toggleCompletion(symbolElement) {
 
             const hardPool = candidates.filter(c => !c.easy);
             const pool = hardPool.length ? hardPool : candidates;
-            const wantBlanks = Math.min(pool.length, BLANKS_PER_SEGMENT);
+            const wantBlanks = Math.min(pool.length, podBlanksTargetForChunk(totalWords));
 
             const seedText = lines.map(l => l.en).join(' \n ');
             const rand = podSeedFromString(seedText);
@@ -15262,6 +15305,271 @@ function toggleCompletion(symbolElement) {
 
     })();
     // ===== KẾT THÚC: "THCS/THPT" — LỚP 6 =====
+
+    // ===================================================================
+    // ===== BẮT ĐẦU: MỤC "LIÊN TỪ" (Conjunction) TRONG TAB "TỪ VỰNG" =====
+    // Nguồn nội dung: tài liệu tổng hợp liên từ do giảng viên cung cấp. Có filter theo khối lớp
+    // (thanh trượt 1-12) — LUÔN CỘNG DỒN: chọn lớp N thì hiện mọi liên từ có "grade" <= N (đúng
+    // yêu cầu "nếu filter là lớp 7 thì hiện những liên từ tính từ lớp 1 đến 7"). 4 mục lớn (Liên
+    // từ kết hợp / tương quan / phụ thuộc / trạng từ liên kết) LUÔN được giữ nguyên tiêu đề dù
+    // filter ở lớp nào — chỉ có DANH SÁCH liên từ bên trong mỗi mục (và các nhóm nhỏ bên trong
+    // "phụ thuộc"/"trạng từ liên kết") là thêm/bớt theo khối lớp đang chọn.
+    // ===================================================================
+    (() => {
+        const conjFolderCard = document.getElementById('conj-folder-card');
+        if (!conjFolderCard) return;
+
+        const vocabFolderGrid = document.getElementById('vocab-folder-grid');
+        const conjPanel       = document.getElementById('conj-panel');
+        const conjBackBtn     = document.getElementById('conj-back-btn');
+        const conjGradeSlider = document.getElementById('conj-grade-slider');
+        const conjGradeLabel  = document.getElementById('conj-grade-label');
+        const conjContentEl   = document.getElementById('conj-content');
+        if (!conjPanel || !conjContentEl) return;
+
+        function escapeHtmlConj(str) {
+            return String(str == null ? '' : str)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        // [MỚI] Dữ liệu "Liên từ" — mỗi liên từ có "grade" = khối lớp BẮT ĐẦU được học, lấy theo
+        // mục "Lộ Trình Phân Bổ Kiến Thức Liên Từ (Từ Lớp 1 Đến Lớp 12)" trong tài liệu (dùng cận
+        // dưới của mỗi khoảng lớp, ví dụ "Lớp 6 - Lớp 7" -> grade = 6). Với các liên từ tài liệu
+        // không nêu rõ khối lớp (không nằm trong mục Lộ Trình), grade được gán dựa theo tiến trình
+        // chương trình phổ thông hiện hành cho hợp lý — giảng viên xem lại và sửa trực tiếp số
+        // "grade" bên dưới nếu muốn xếp lại lớp nào đó.
+        const CONJ_DATA = [
+            {
+                key: 'coordinating',
+                title: 'Liên từ kết hợp (Coordinating Conjunctions)',
+                note: '7 liên từ FANBOYS — dùng để nối các từ, cụm từ hoặc mệnh đề CÙNG cấp độ và chức năng ngữ pháp.',
+                items: [
+                    { term: 'And', grade: 1, meaning: 'Và', usage: 'Dùng để thêm thông tin, bổ sung ý nghĩa tương đồng.', example: "She bought apples and bananas at the market." },
+                    { term: 'Or', grade: 1, meaning: 'Hoặc', usage: 'Dùng để đưa ra các sự lựa chọn.', example: "Would you like tea or coffee?" },
+                    { term: 'But', grade: 3, meaning: 'Nhưng', usage: 'Dùng để diễn tả sự đối lập, tương phản trực tiếp giữa hai ý.', example: "I want to go out, but it is raining heavily." },
+                    { term: 'So', grade: 3, meaning: 'Vì thế / Do đó', usage: 'Dùng để chỉ kết quả của một hành động hay sự việc.', example: "It was raining, so we stayed indoors." },
+                    { term: 'For', grade: 6, meaning: 'Bởi vì', usage: 'Dùng để giải thích lý do, nguyên nhân của một sự việc.', example: "I went to bed early, for I was exhausted." },
+                    { term: 'Nor', grade: 6, meaning: 'Cũng không', usage: 'Dùng để bổ sung thêm một ý phủ định vào một ý phủ định trước đó.', example: "He doesn't like coffee, nor does he like tea." },
+                    { term: 'Yet', grade: 6, meaning: 'Tuy nhiên / Nhưng', usage: 'Dùng để chỉ sự nhượng bộ, hoặc một sự việc bất ngờ so với ý trước đó.', example: "The weather was cold, yet bright and sunny." },
+                ]
+            },
+            {
+                key: 'correlative',
+                title: 'Liên từ tương quan (Correlative Conjunctions)',
+                note: 'Luôn đi theo CẶP để nối các thành phần ngữ pháp TƯƠNG ĐƯƠNG nhau trong câu — cần chú ý cấu trúc song song.',
+                items: [
+                    { term: 'Both... and...', grade: 6, meaning: 'Cả... và...', usage: 'Nhấn mạnh sự xuất hiện của cả hai đối tượng.', example: "She is both intelligent and hardworking." },
+                    { term: 'As... as...', grade: 6, meaning: 'Như... / Bằng...', usage: 'So sánh ngang bằng.', example: "She is as smart as her brother." },
+                    { term: 'Such... as...', grade: 7, meaning: 'Như là...', usage: 'Đưa ra ví dụ.', example: "I like citrus fruits such as oranges and lemons." },
+                    { term: 'Either... or...', grade: 8, meaning: 'Hoặc... hoặc...', usage: 'Đưa ra sự lựa chọn một trong hai.', example: "You can either stay here or come with us." },
+                    { term: 'Neither... nor...', grade: 8, meaning: 'Không cái này... mà cũng không cái kia...', usage: 'Phủ định cả hai.', example: "He is neither tall nor short." },
+                    { term: 'Not only... but also...', grade: 8, meaning: 'Không những... mà còn...', usage: 'Nhấn mạnh cả hai vế đều đúng.', example: "He is not only a great singer but also a talented actor." },
+                    { term: 'Whether... or...', grade: 9, meaning: 'Liệu rằng... hay là...', usage: 'Đưa ra hai khả năng chưa chắc chắn.', example: "I don't know whether to cry or laugh." },
+                    { term: 'No sooner... than...', grade: 11, meaning: 'Ngay khi... thì...', usage: 'Hành động này vừa kết thúc thì hành động khác xảy ra (thường đảo ngữ).', example: "No sooner had I arrived than it started to rain." },
+                    { term: 'Hardly/Scarcely... when...', grade: 11, meaning: 'Vừa mới... thì...', usage: 'Dùng với cấu trúc đảo ngữ tương tự "No sooner... than...".', example: "Hardly had she spoken when the phone rang." },
+                    { term: 'Rather... than...', grade: 11, meaning: 'Thích cái này hơn cái kia / Hơn là...', usage: 'So sánh sự ưu tiên giữa hai lựa chọn.', example: "I would rather read a book than watch TV." },
+                    { term: 'Just as... so...', grade: 11, meaning: 'Giống như... thì...', usage: 'So sánh sự tương đồng.', example: "Just as you reap, so you shall sow." },
+                ]
+            },
+            {
+                key: 'subordinating',
+                title: 'Liên từ phụ thuộc (Subordinating Conjunctions)',
+                note: 'Luôn đứng đầu mệnh đề phụ thuộc, dùng để nối mệnh đề phụ thuộc với mệnh đề chính.',
+                subgroups: [
+                    {
+                        key: 'time', title: 'Thời gian (Time)',
+                        items: [
+                            { term: 'When / While', grade: 4, meaning: 'khi, trong khi', usage: 'Diễn tả hai hành động xảy ra cùng lúc.', example: "While I was reading, he was sleeping." },
+                            { term: 'Before / After', grade: 4, meaning: 'trước khi, sau khi', usage: 'Diễn tả thứ tự trước sau của hành động.', example: "Please wash your hands before you eat." },
+                            { term: 'Until / Till', grade: 6, meaning: 'cho đến khi', usage: '', example: "We waited until the rain stopped." },
+                            { term: 'As soon as / As', grade: 7, meaning: 'ngay khi, khi', usage: 'Diễn tả sự nối tiếp của hành động.', example: "Call me as soon as you arrive." },
+                            { term: 'Since', grade: 8, meaning: 'từ khi', usage: 'Thường đi kèm với các thì hoàn thành.', example: "I have known him since we were in high school." },
+                        ]
+                    },
+                    {
+                        key: 'reason', title: 'Nguyên nhân (Reason)',
+                        items: [
+                            { term: 'Because', grade: 4, meaning: 'bởi vì, do', usage: 'Giải thích lý do xảy ra sự việc ở mệnh đề chính.', example: "Because it was raining heavily, the match was canceled." },
+                            { term: 'Since / As', grade: 7, meaning: 'bởi vì, do', usage: 'Đồng nghĩa với "Because" nhưng thường đứng đầu câu.', example: "Since it was raining heavily, the match was canceled." },
+                            { term: 'Now that', grade: 12, meaning: 'vì giờ đây', usage: 'Kết hợp giữa yếu tố thời gian và lý do.', example: "Now that you are here, we can start the meeting." },
+                            { term: 'Seeing that', grade: 12, meaning: 'xét thấy', usage: '', example: "Seeing that he is sick, he shouldn't work today." },
+                        ]
+                    },
+                    {
+                        key: 'result-purpose', title: 'Kết quả và mục đích (Result & Purpose)',
+                        items: [
+                            { term: 'So that / In order that', grade: 8, meaning: 'để, để mà', usage: 'Chỉ mục đích của hành động.', example: "Speak louder so that everyone can hear you." },
+                            { term: 'So... that / Such... that', grade: 8, meaning: 'quá... đến nỗi mà', usage: 'Chỉ kết quả của một tính chất hoặc sự việc.', example: "The box was so heavy that I couldn't lift it." },
+                            { term: 'Lest / For fear that', grade: 12, meaning: 'vì e rằng, sợ rằng', usage: 'Thường đi với động từ nguyên mẫu hoặc "should".', example: "She tied the dog strictly lest it should run away." },
+                        ]
+                    },
+                    {
+                        key: 'concession-contrast', title: 'Nhượng bộ và tương phản (Concession & Contrast)',
+                        items: [
+                            { term: 'Although / Though', grade: 6, meaning: 'mặc dù', usage: 'Diễn tả sự nhượng bộ giữa hai mệnh đề.', example: "Although she was tired, she kept working." },
+                            { term: 'While / Whereas', grade: 7, meaning: 'trong khi, trái lại', usage: 'Nhấn mạnh sự trái ngược, khác biệt giữa hai chủ thể.', example: "She likes tea, whereas her husband prefers coffee." },
+                            { term: 'Even though', grade: 8, meaning: 'mặc dù (nhấn mạnh hơn)', usage: '', example: "Even though she was tired, she kept working." },
+                            { term: 'Even if', grade: 8, meaning: 'ngay cả khi', usage: 'Nhấn mạnh sự nhượng bộ kèm điều kiện.', example: "I will go to the party even if it rains." },
+                        ]
+                    },
+                    {
+                        key: 'condition', title: 'Điều kiện (Condition)',
+                        items: [
+                            { term: 'If', grade: 6, meaning: 'nếu', usage: 'Dùng trong câu điều kiện (loại 1).', example: "If you study hard, you will pass the exam." },
+                            { term: 'Unless', grade: 8, meaning: 'trừ phi, nếu không', usage: 'Tương đương với "If... not".', example: "You won't succeed unless you try." },
+                            { term: 'As long as / Provided that', grade: 10, meaning: 'miễn là', usage: '', example: "You can borrow my car as long as you drive carefully." },
+                            { term: 'In case', grade: 10, meaning: 'phòng khi', usage: '', example: "Take an umbrella in case it rains." },
+                            { term: 'Supposing (that) / Assuming (that)', grade: 12, meaning: 'giả sử như', usage: '', example: "Supposing you win the lottery, what will you do?" },
+                        ]
+                    },
+                    {
+                        key: 'other', title: 'Cách thức, Nơi chốn, So sánh',
+                        items: [
+                            { term: 'Than', grade: 5, meaning: 'hơn', usage: 'Dùng trong câu so sánh.', example: "She is taller than I am." },
+                            { term: 'Where / Wherever', grade: 7, meaning: 'nơi mà, bất cứ nơi nào', usage: 'Chỉ nơi chốn.', example: "I will follow you wherever you go." },
+                            { term: 'As if / As though', grade: 11, meaning: 'như thể là', usage: 'Chỉ cách thức.', example: "He acts as if he were the boss." },
+                        ]
+                    },
+                ]
+            },
+            {
+                key: 'adverbial',
+                title: 'Trạng từ liên kết (Conjunctive Adverbs)',
+                note: 'Nối các câu/mệnh đề độc lập giống liên từ, nhưng CÁCH CHẤM CÂU KHÁC BIỆT (thường đứng sau dấu chấm/dấu chấm phẩy, trước dấu phẩy) — nhóm hay bị nhầm với liên từ thông thường.',
+                subgroups: [
+                    {
+                        key: 'addition', title: 'Chỉ sự thêm vào',
+                        items: [
+                            { term: 'Moreover', grade: 10, meaning: 'hơn nữa', usage: '', example: "The hotel is cheap; moreover, it is close to the beach." },
+                            { term: 'Furthermore', grade: 10, meaning: 'xa hơn nữa', usage: '', example: "The plan saves money; furthermore, it saves time." },
+                            { term: 'Additionally', grade: 10, meaning: 'thêm vào đó', usage: '', example: "She speaks French. Additionally, she speaks German." },
+                            { term: 'Besides', grade: 10, meaning: 'ngoài ra', usage: '', example: "I don't want to go out; besides, it's raining." },
+                        ]
+                    },
+                    {
+                        key: 'contrast', title: 'Chỉ sự tương phản',
+                        items: [
+                            { term: 'However', grade: 10, meaning: 'tuy nhiên', usage: '', example: "The test was hard; however, most students passed." },
+                            { term: 'Nevertheless / Nonetheless', grade: 10, meaning: 'dẫu vậy', usage: '', example: "It was raining heavily; nevertheless, they continued the match." },
+                            { term: 'On the other hand', grade: 10, meaning: 'mặt khác', usage: '', example: "Living in the city is convenient; on the other hand, it is expensive." },
+                            { term: 'Alternatively', grade: 10, meaning: 'thay vào đó', usage: '', example: "You can take the bus; alternatively, you can walk." },
+                        ]
+                    },
+                    {
+                        key: 'result', title: 'Chỉ kết quả',
+                        items: [
+                            { term: 'Therefore', grade: 10, meaning: 'vì vậy', usage: '', example: "He didn't study; therefore, he failed the test." },
+                            { term: 'Consequently', grade: 10, meaning: 'hậu quả là', usage: '', example: "The road was closed; consequently, we arrived late." },
+                            { term: 'As a result', grade: 10, meaning: 'kết quả là', usage: '', example: "Sales dropped; as a result, the company cut costs." },
+                            { term: 'Thus', grade: 10, meaning: 'do đó', usage: '', example: "The data was incomplete; thus, the report was delayed." },
+                        ]
+                    },
+                    {
+                        key: 'neg-condition', title: 'Chỉ điều kiện phủ định',
+                        items: [
+                            { term: 'Otherwise', grade: 10, meaning: 'nếu không thì', usage: '', example: "Hurry up, otherwise you will miss the bus." },
+                        ]
+                    },
+                    {
+                        key: 'time', title: 'Chỉ thời gian',
+                        items: [
+                            { term: 'Meanwhile', grade: 10, meaning: 'trong khi đó', usage: '', example: "She was cooking; meanwhile, he set the table." },
+                            { term: 'Subsequently', grade: 10, meaning: 'sau đó', usage: '', example: "He finished his studies; subsequently, he found a good job." },
+                        ]
+                    },
+                ]
+            },
+        ];
+
+        function conjMinGrade(items) {
+            return items.reduce((m, it) => Math.min(m, it.grade), 12);
+        }
+
+        function conjItemRowHtml(it) {
+            const wrapFn = (window.vocabTap && window.vocabTap.wrap) ? window.vocabTap.wrap : escapeHtmlConj;
+            return `
+                <div class="conj-item-row">
+                    <div class="conj-item-head">
+                        <span class="conj-item-term">${escapeHtmlConj(it.term)}</span>
+                        <span class="conj-item-grade">Lớp ${it.grade}</span>
+                    </div>
+                    <div class="conj-item-meaning">${escapeHtmlConj(it.meaning)}</div>
+                    ${it.usage ? `<div class="conj-item-usage">${escapeHtmlConj(it.usage)}</div>` : ''}
+                    <div class="conj-item-example">${wrapFn(it.example)}</div>
+                </div>
+            `;
+        }
+
+        // [MỚI] Hiện toàn bộ nội dung theo khối lớp đang chọn (CỘNG DỒN: lớp N -> mọi grade <= N).
+        // 4 mục lớn LUÔN được render (giữ tiêu đề) — chỉ ẩn/hiện các liên từ + nhóm nhỏ bên trong.
+        function conjRenderContent(maxGrade) {
+            let html = '';
+            CONJ_DATA.forEach(cat => {
+                html += `<div class="conj-category"><h4 class="conj-category-title">${escapeHtmlConj(cat.title)}</h4>`;
+                if (cat.note) html += `<p class="conj-category-note">${escapeHtmlConj(cat.note)}</p>`;
+
+                if (cat.items) {
+                    const visible = cat.items.filter(it => it.grade <= maxGrade);
+                    if (!visible.length) {
+                        html += `<p class="conj-empty-msg">Ở khối lớp bạn đang chọn, nhóm liên từ này CHƯA xuất hiện — sẽ bắt đầu học từ lớp ${conjMinGrade(cat.items)} trở đi.</p>`;
+                    } else {
+                        visible.forEach(it => { html += conjItemRowHtml(it); });
+                    }
+                } else if (cat.subgroups) {
+                    let anyVisible = false;
+                    cat.subgroups.forEach(sg => {
+                        const visible = sg.items.filter(it => it.grade <= maxGrade);
+                        if (!visible.length) return;
+                        anyVisible = true;
+                        html += `<div class="conj-subgroup"><h5 class="conj-subgroup-title">${escapeHtmlConj(sg.title)}</h5>`;
+                        visible.forEach(it => { html += conjItemRowHtml(it); });
+                        html += `</div>`;
+                    });
+                    if (!anyVisible) {
+                        const minGrade = Math.min(...cat.subgroups.map(sg => conjMinGrade(sg.items)));
+                        html += `<p class="conj-empty-msg">Ở khối lớp bạn đang chọn, nhóm liên từ này CHƯA xuất hiện — sẽ bắt đầu học từ lớp ${minGrade} trở đi.</p>`;
+                    }
+                }
+                html += `</div>`;
+            });
+            conjContentEl.innerHTML = html;
+            if (window.vocabTap && window.vocabTap.markKnown) window.vocabTap.markKnown();
+        }
+
+        function conjUpdateLabel(g) {
+            conjGradeLabel.textContent = (Number(g) >= 12) ? 'Lớp 12 (Tất cả)' : ('Lớp ' + g);
+        }
+
+        conjFolderCard.addEventListener('click', async () => {
+            vocabFolderGrid.style.display = 'none';
+            conjPanel.style.display = 'block';
+            if (window.vocabTap && window.vocabTap.ensureLoaded) {
+                try { await window.vocabTap.ensureLoaded(); } catch (e) { console.error('Lỗi khi tải từ vựng cá nhân:', e.message); }
+            }
+            conjUpdateLabel(conjGradeSlider.value);
+            conjRenderContent(Number(conjGradeSlider.value));
+        });
+
+        conjBackBtn.addEventListener('click', () => {
+            conjPanel.style.display = 'none';
+            vocabFolderGrid.style.display = '';
+        });
+
+        conjGradeSlider.addEventListener('input', () => {
+            conjUpdateLabel(conjGradeSlider.value);
+            conjRenderContent(Number(conjGradeSlider.value));
+        });
+
+        // Bắt sự kiện chạm vào 1 từ tiếng Anh trong câu ví dụ để tra nghĩa (dùng chung bộ máy
+        // tra nghĩa window.vocabTap như mọi nơi khác trong app).
+        conjPanel.addEventListener('click', (e) => {
+            const wordEl = e.target.closest('.tappable-word');
+            if (!wordEl) return;
+            if (window.vocabTap && window.vocabTap.handleTap) window.vocabTap.handleTap(wordEl);
+        });
+    })();
+    // ===== KẾT THÚC: MỤC "LIÊN TỪ" (Conjunction) =====
 
     // ===================================================================
     // ===== BẮT ĐẦU: TAB "HƯỚNG DẪN" (cách học / chat cộng đồng / liên hệ admin) =====
