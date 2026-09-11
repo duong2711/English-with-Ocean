@@ -8493,3 +8493,6 @@ body.irt-focus-body-lock { overflow: hidden; }
 .conj-practice-feedback .conj-practice-meaning{opacity:.8;font-weight:400;margin-top:4px;}
 #conj-practice-result{text-align:center;padding:24px 12px;}
 #conj-practice-result-text{font-size:18px;font-weight:700;margin-bottom:16px;}
+.conj-item-structure{font-size:10.5px;font-weight:700;border-radius:20px;padding:2px 9px;white-space:nowrap;}
+.conj-item-structure-clause{background:#e0e7ff;color:#4338ca;}
+.conj-item-structure-phrase{background:#ffedd5;color:#c2410c;}

@@ -15381,8 +15381,8 @@ function toggleCompletion(symbolElement) {
                     { term: 'Neither... nor...', grade: 8, meaning: 'Không cái này... mà cũng không cái kia...', usage: 'Phủ định cả hai.', example: "He is neither tall nor short.", blank: "neither" },
                     { term: 'Not only... but also...', grade: 8, meaning: 'Không những... mà còn...', usage: 'Nhấn mạnh cả hai vế đều đúng.', example: "He is not only a great singer but also a talented actor.", blank: "not only" },
                     { term: 'Whether... or...', grade: 9, meaning: 'Liệu rằng... hay là...', usage: 'Đưa ra hai khả năng chưa chắc chắn.', example: "I don't know whether to cry or laugh.", blank: "whether" },
-                    { term: 'No sooner... than...', grade: 11, meaning: 'Ngay khi... thì...', usage: 'Hành động này vừa kết thúc thì hành động khác xảy ra (thường đảo ngữ).', example: "No sooner had I arrived than it started to rain.", blank: "No sooner" },
-                    { term: 'Hardly/Scarcely... when...', grade: 11, meaning: 'Vừa mới... thì...', usage: 'Dùng với cấu trúc đảo ngữ tương tự "No sooner... than...".', example: "Hardly had she spoken when the phone rang.", blank: "Hardly" },
+                    { term: 'No sooner... than...', grade: 11, meaning: 'Ngay khi... thì...', usage: 'Hành động này vừa kết thúc thì hành động khác xảy ra (thường đảo ngữ, dùng với quá khứ hoàn thành). Đồng nghĩa với "Hardly/Scarcely... when..." bên dưới, nhưng LUÔN đi với "than" (không đi với "when") nên không gộp chung ví dụ được.', example: "No sooner had I arrived than it started to rain.", blank: "No sooner" },
+                    { term: 'Hardly/Scarcely... when...', grade: 11, meaning: 'Vừa mới... thì...', usage: 'Đồng nghĩa với "No sooner... than..." ở trên (cùng đảo ngữ, cùng dùng quá khứ hoàn thành) nhưng LUÔN đi với "when" (không đi với "than").', example: "Hardly had she spoken when the phone rang.", blank: "Hardly" },
                     { term: 'Rather... than...', grade: 11, meaning: 'Thích cái này hơn cái kia / Hơn là...', usage: 'So sánh sự ưu tiên giữa hai lựa chọn.', example: "I would rather read a book than watch TV.", blank: "rather" },
                     { term: 'Just as... so...', grade: 11, meaning: 'Giống như... thì...', usage: 'So sánh sự tương đồng.', example: "Just as you reap, so you shall sow.", blank: "Just as" },
                 ]
@@ -15390,60 +15390,64 @@ function toggleCompletion(symbolElement) {
             {
                 key: 'subordinating',
                 title: 'Liên từ phụ thuộc (Subordinating Conjunctions)',
-                note: 'Luôn đứng đầu mệnh đề phụ thuộc, dùng để nối mệnh đề phụ thuộc với mệnh đề chính.',
+                note: 'Đa số đứng đầu mệnh đề phụ thuộc, theo sau là 1 MỆNH ĐỀ ĐẦY ĐỦ (S + V) — nhãn "S + V" ở mỗi liên từ. Riêng vài cụm GIỚI TỪ có nghĩa tương đương (despite, because of, thanks to...) theo sau KHÔNG PHẢI mệnh đề mà là DANH TỪ/CỤM DANH TỪ hoặc V-ing — nhãn "N / V-ing" — dễ nhầm với liên từ cùng nghĩa nên xếp riêng để so sánh.',
                 subgroups: [
                     {
                         key: 'time', title: 'Thời gian (Time)',
                         items: [
-                            { term: 'When / While', grade: 4, meaning: 'khi, trong khi', usage: 'Diễn tả hai hành động xảy ra cùng lúc.', example: "While I was reading, he was sleeping.", blank: "While" },
-                            { term: 'Before / After', grade: 4, meaning: 'trước khi, sau khi', usage: 'Diễn tả thứ tự trước sau của hành động.', example: "Please wash your hands before you eat.", blank: "before" },
-                            { term: 'Until / Till', grade: 6, meaning: 'cho đến khi', usage: '', example: "We waited until the rain stopped.", blank: "until" },
-                            { term: 'As soon as / As', grade: 7, meaning: 'ngay khi, khi', usage: 'Diễn tả sự nối tiếp của hành động.', example: "Call me as soon as you arrive.", blank: "as soon as" },
-                            { term: 'Since', grade: 8, meaning: 'từ khi', usage: 'Thường đi kèm với các thì hoàn thành.', example: "I have known him since we were in high school.", blank: "since" },
+                            { term: 'When / While', grade: 4, structure: 'clause', meaning: 'khi, trong khi', usage: 'Diễn tả hai hành động xảy ra cùng lúc.', example: "While I was reading, he was sleeping.", blank: "While" },
+                            { term: 'Before / After', grade: 4, structure: 'clause', meaning: 'trước khi, sau khi', usage: 'Diễn tả thứ tự trước sau của hành động.', example: "Please wash your hands before you eat.", blank: "before" },
+                            { term: 'Until / Till', grade: 6, structure: 'clause', meaning: 'cho đến khi', usage: '', example: "We waited until the rain stopped.", blank: "until" },
+                            { term: 'As soon as / As', grade: 7, structure: 'clause', meaning: 'ngay khi, khi', usage: 'Diễn tả sự nối tiếp của hành động.', example: "Call me as soon as you arrive.", blank: "as soon as" },
+                            { term: 'Since', grade: 8, structure: 'clause', meaning: 'từ khi', usage: 'Thường đi kèm với các thì hoàn thành.', example: "I have known him since we were in high school.", blank: "since" },
                         ]
                     },
                     {
                         key: 'reason', title: 'Nguyên nhân (Reason)',
                         items: [
-                            { term: 'Because', grade: 4, meaning: 'bởi vì, do', usage: 'Giải thích lý do xảy ra sự việc ở mệnh đề chính.', example: "Because it was raining heavily, the match was canceled.", blank: "Because" },
-                            { term: 'Since / As', grade: 7, meaning: 'bởi vì, do', usage: 'Đồng nghĩa với "Because" nhưng thường đứng đầu câu.', example: "Since it was raining heavily, the match was canceled.", blank: "Since" },
-                            { term: 'Now that', grade: 12, meaning: 'vì giờ đây', usage: 'Kết hợp giữa yếu tố thời gian và lý do.', example: "Now that you are here, we can start the meeting.", blank: "Now that" },
-                            { term: 'Seeing that', grade: 12, meaning: 'xét thấy', usage: '', example: "Seeing that he is sick, he shouldn't work today.", blank: "Seeing that" },
+                            { term: 'Because', grade: 4, structure: 'clause', meaning: 'bởi vì, do', usage: 'Giải thích lý do xảy ra sự việc ở mệnh đề chính. Theo sau là MỆNH ĐỀ (S + V).', example: "Because it was raining heavily, the match was canceled.", blank: "Because" },
+                            { term: 'Because = As = Since = For', grade: 7, structure: 'clause', meaning: 'bởi vì, do (4 từ đồng nghĩa)', usage: '4 liên từ đồng nghĩa, theo sau là MỆNH ĐỀ (S + V) — dùng thay thế lẫn nhau được. Riêng "for" chỉ đứng GIỮA câu, sau dấu phẩy (không đứng đầu câu như 3 từ kia).', example: "The match was canceled, because/since/as/for it was raining heavily.", blank: "because/since/as/for" },
+                            { term: 'Because of = Owing to', grade: 7, structure: 'phrase', meaning: 'bởi vì, do (2 cụm đồng nghĩa)', usage: 'Là GIỚI TỪ (không phải liên từ) — theo sau là DANH TỪ/CỤM DANH TỪ hoặc V-ing, KHÔNG PHẢI mệnh đề — khác với "because/since/as/for" ở trên.', example: "Because of/Owing to the heavy rain, the match was canceled.", blank: "Because of/Owing to" },
+                            { term: 'Thanks to', grade: 8, structure: 'phrase', meaning: 'nhờ có (thường mang nghĩa TÍCH CỰC)', usage: 'Cũng là GIỚI TỪ, theo sau là DANH TỪ/CỤM DANH TỪ hoặc V-ing — khác "because of/owing to" ở chỗ thường chỉ dùng khi nguyên nhân mang lại KẾT QUẢ TỐT.', example: "Thanks to her hard work, she passed the exam easily.", blank: "Thanks to" },
+                            { term: 'Now that', grade: 12, structure: 'clause', meaning: 'vì giờ đây', usage: 'Kết hợp giữa yếu tố thời gian và lý do. Theo sau là MỆNH ĐỀ (S + V).', example: "Now that you are here, we can start the meeting.", blank: "Now that" },
+                            { term: 'Seeing that', grade: 12, structure: 'clause', meaning: 'xét thấy', usage: 'Theo sau là MỆNH ĐỀ (S + V).', example: "Seeing that he is sick, he shouldn't work today.", blank: "Seeing that" },
                         ]
                     },
                     {
                         key: 'result-purpose', title: 'Kết quả và mục đích (Result & Purpose)',
                         items: [
-                            { term: 'So that / In order that', grade: 8, meaning: 'để, để mà', usage: 'Chỉ mục đích của hành động.', example: "Speak louder so that everyone can hear you.", blank: "so that" },
-                            { term: 'So... that / Such... that', grade: 8, meaning: 'quá... đến nỗi mà', usage: 'Chỉ kết quả của một tính chất hoặc sự việc.', example: "The box was so heavy that I couldn't lift it.", blank: "so" },
-                            { term: 'Lest / For fear that', grade: 12, meaning: 'vì e rằng, sợ rằng', usage: 'Thường đi với động từ nguyên mẫu hoặc "should".', example: "She tied the dog strictly lest it should run away.", blank: "lest" },
+                            { term: 'So that / In order that', grade: 8, structure: 'clause', meaning: 'để, để mà', usage: 'Chỉ mục đích của hành động.', example: "Speak louder so that everyone can hear you.", blank: "so that" },
+                            { term: 'So... that / Such... that', grade: 8, structure: 'clause', meaning: 'quá... đến nỗi mà', usage: 'Chỉ kết quả của một tính chất hoặc sự việc.', example: "The box was so heavy that I couldn't lift it.", blank: "so" },
+                            { term: 'Lest / For fear that', grade: 12, structure: 'clause', meaning: 'vì e rằng, sợ rằng', usage: 'Thường đi với động từ nguyên mẫu hoặc "should".', example: "She tied the dog strictly lest it should run away.", blank: "lest" },
                         ]
                     },
                     {
                         key: 'concession-contrast', title: 'Nhượng bộ và tương phản (Concession & Contrast)',
                         items: [
-                            { term: 'Although / Though', grade: 6, meaning: 'mặc dù', usage: 'Diễn tả sự nhượng bộ giữa hai mệnh đề.', example: "Although she was tired, she kept working.", blank: "Although" },
-                            { term: 'While / Whereas', grade: 7, meaning: 'trong khi, trái lại', usage: 'Nhấn mạnh sự trái ngược, khác biệt giữa hai chủ thể.', example: "She likes tea, whereas her husband prefers coffee.", blank: "whereas" },
-                            { term: 'Even though', grade: 8, meaning: 'mặc dù (nhấn mạnh hơn)', usage: '', example: "Even though she was tired, she kept working.", blank: "Even though" },
-                            { term: 'Even if', grade: 8, meaning: 'ngay cả khi', usage: 'Nhấn mạnh sự nhượng bộ kèm điều kiện.', example: "I will go to the party even if it rains.", blank: "even if" },
+                            { term: 'Although / Though', grade: 6, structure: 'clause', meaning: 'mặc dù', usage: 'Diễn tả sự nhượng bộ giữa hai mệnh đề. Theo sau là MỆNH ĐỀ (S + V).', example: "Although she was tired, she kept working.", blank: "Although" },
+                            { term: 'While / Whereas', grade: 7, structure: 'clause', meaning: 'trong khi, trái lại', usage: 'Nhấn mạnh sự trái ngược, khác biệt giữa hai chủ thể.', example: "She likes tea, whereas her husband prefers coffee.", blank: "whereas" },
+                            { term: 'Even though', grade: 8, structure: 'clause', meaning: 'mặc dù (nhấn mạnh hơn)', usage: 'Theo sau là MỆNH ĐỀ (S + V).', example: "Even though she was tired, she kept working.", blank: "Even though" },
+                            { term: 'Even if', grade: 8, structure: 'clause', meaning: 'ngay cả khi', usage: 'Nhấn mạnh sự nhượng bộ kèm điều kiện.', example: "I will go to the party even if it rains.", blank: "even if" },
+                            { term: 'Despite = In spite of', grade: 10, structure: 'phrase', meaning: 'mặc dù (2 cụm đồng nghĩa)', usage: 'Là GIỚI TỪ (không phải liên từ) — theo sau là DANH TỪ/CỤM DANH TỪ hoặc V-ing, KHÔNG PHẢI mệnh đề — khác với "although/though" ở trên.', example: "Despite/In spite of the heavy rain, they continued the match.", blank: "Despite/In spite of" },
+                            { term: 'Despite the fact that = In spite of the fact that', grade: 11, structure: 'clause', meaning: 'mặc dù (thực tế là...)', usage: 'Vẫn bắt nguồn từ giới từ nhưng thêm "the fact that" nên theo sau là MỆNH ĐỀ ĐẦY ĐỦ (S + V), dùng thay thế được cho "despite/in spite of" khi muốn giữ nguyên 1 mệnh đề mà không phải rút gọn thành cụm từ.', example: "Despite the fact that/In spite of the fact that it was raining heavily, they continued the match.", blank: "Despite the fact that/In spite of the fact that" },
                         ]
                     },
                     {
                         key: 'condition', title: 'Điều kiện (Condition)',
                         items: [
-                            { term: 'If', grade: 6, meaning: 'nếu', usage: 'Dùng trong câu điều kiện (loại 1).', example: "If you study hard, you will pass the exam.", blank: "If" },
-                            { term: 'Unless', grade: 8, meaning: 'trừ phi, nếu không', usage: 'Tương đương với "If... not".', example: "You won't succeed unless you try.", blank: "unless" },
-                            { term: 'As long as / Provided that', grade: 10, meaning: 'miễn là', usage: '', example: "You can borrow my car as long as you drive carefully.", blank: "as long as" },
-                            { term: 'In case', grade: 10, meaning: 'phòng khi', usage: '', example: "Take an umbrella in case it rains.", blank: "in case" },
-                            { term: 'Supposing (that) / Assuming (that)', grade: 12, meaning: 'giả sử như', usage: '', example: "Supposing you win the lottery, what will you do?", blank: "Supposing" },
+                            { term: 'If', grade: 6, structure: 'clause', meaning: 'nếu', usage: 'Dùng trong câu điều kiện (loại 1).', example: "If you study hard, you will pass the exam.", blank: "If" },
+                            { term: 'Unless', grade: 8, structure: 'clause', meaning: 'trừ phi, nếu không', usage: 'Tương đương với "If... not".', example: "You won't succeed unless you try.", blank: "unless" },
+                            { term: 'As long as / Provided that', grade: 10, structure: 'clause', meaning: 'miễn là', usage: '', example: "You can borrow my car as long as you drive carefully.", blank: "as long as" },
+                            { term: 'In case', grade: 10, structure: 'clause', meaning: 'phòng khi', usage: '', example: "Take an umbrella in case it rains.", blank: "in case" },
+                            { term: 'Supposing (that) / Assuming (that)', grade: 12, structure: 'clause', meaning: 'giả sử như', usage: '', example: "Supposing you win the lottery, what will you do?", blank: "Supposing" },
                         ]
                     },
                     {
                         key: 'other', title: 'Cách thức, Nơi chốn, So sánh',
                         items: [
-                            { term: 'Than', grade: 5, meaning: 'hơn', usage: 'Dùng trong câu so sánh.', example: "She is taller than I am.", blank: "than" },
-                            { term: 'Where / Wherever', grade: 7, meaning: 'nơi mà, bất cứ nơi nào', usage: 'Chỉ nơi chốn.', example: "I will follow you wherever you go.", blank: "wherever" },
-                            { term: 'As if / As though', grade: 11, meaning: 'như thể là', usage: 'Chỉ cách thức.', example: "He acts as if he were the boss.", blank: "as if" },
+                            { term: 'Than', grade: 5, structure: 'clause', meaning: 'hơn', usage: 'Dùng trong câu so sánh.', example: "She is taller than I am.", blank: "than" },
+                            { term: 'Where / Wherever', grade: 7, structure: 'clause', meaning: 'nơi mà, bất cứ nơi nào', usage: 'Chỉ nơi chốn.', example: "I will follow you wherever you go.", blank: "wherever" },
+                            { term: 'As if / As though', grade: 11, structure: 'clause', meaning: 'như thể là', usage: 'Chỉ cách thức.', example: "He acts as if he were the boss.", blank: "as if" },
                         ]
                     },
                 ]
@@ -15456,28 +15460,21 @@ function toggleCompletion(symbolElement) {
                     {
                         key: 'addition', title: 'Chỉ sự thêm vào',
                         items: [
-                            { term: 'Moreover', grade: 10, meaning: 'hơn nữa', usage: '', example: "The hotel is cheap; moreover, it is close to the beach.", blank: "moreover" },
-                            { term: 'Furthermore', grade: 10, meaning: 'xa hơn nữa', usage: '', example: "The plan saves money; furthermore, it saves time.", blank: "furthermore" },
-                            { term: 'Additionally', grade: 10, meaning: 'thêm vào đó', usage: '', example: "She speaks French. Additionally, she speaks German.", blank: "Additionally" },
-                            { term: 'Besides', grade: 10, meaning: 'ngoài ra', usage: '', example: "I don't want to go out; besides, it's raining.", blank: "besides" },
+                            { term: 'Moreover = Furthermore = Additionally = Besides', grade: 10, meaning: 'hơn nữa, thêm vào đó (4 từ đồng nghĩa)', usage: 'Dùng thay thế lẫn nhau được — đứng đầu câu/mệnh đề mới, có dấu phẩy theo sau.', example: "The hotel is cheap; moreover/furthermore/additionally/besides, it is close to the beach.", blank: "moreover/furthermore/additionally/besides" },
                         ]
                     },
                     {
                         key: 'contrast', title: 'Chỉ sự tương phản',
                         items: [
-                            { term: 'However', grade: 10, meaning: 'tuy nhiên', usage: '', example: "The test was hard; however, most students passed.", blank: "however" },
-                            { term: 'Nevertheless / Nonetheless', grade: 10, meaning: 'dẫu vậy', usage: '', example: "It was raining heavily; nevertheless, they continued the match.", blank: "nevertheless" },
-                            { term: 'On the other hand', grade: 10, meaning: 'mặt khác', usage: '', example: "Living in the city is convenient; on the other hand, it is expensive.", blank: "on the other hand" },
-                            { term: 'Alternatively', grade: 10, meaning: 'thay vào đó', usage: '', example: "You can take the bus; alternatively, you can walk.", blank: "alternatively" },
+                            { term: 'However = Nevertheless = Nonetheless', grade: 10, meaning: 'tuy nhiên, dẫu vậy (3 từ đồng nghĩa)', usage: 'Dùng thay thế lẫn nhau được — đứng đầu câu/mệnh đề mới, có dấu phẩy theo sau.', example: "The test was hard; however/nevertheless/nonetheless, most students passed.", blank: "however/nevertheless/nonetheless" },
+                            { term: 'On the other hand', grade: 10, meaning: 'mặt khác', usage: 'Đưa ra một góc nhìn/lựa chọn khác để so sánh — KHÔNG hoàn toàn đồng nghĩa với "however" (không chỉ đơn thuần phủ định, mà còn nêu quan điểm/khía cạnh đối lập).', example: "Living in the city is convenient; on the other hand, it is expensive.", blank: "on the other hand" },
+                            { term: 'Alternatively', grade: 10, meaning: 'thay vào đó', usage: 'Đưa ra một PHƯƠNG ÁN KHÁC để lựa chọn — khác "however" (không phải sự tương phản mà là 1 lựa chọn thay thế).', example: "You can take the bus; alternatively, you can walk.", blank: "alternatively" },
                         ]
                     },
                     {
                         key: 'result', title: 'Chỉ kết quả',
                         items: [
-                            { term: 'Therefore', grade: 10, meaning: 'vì vậy', usage: '', example: "He didn't study; therefore, he failed the test.", blank: "therefore" },
-                            { term: 'Consequently', grade: 10, meaning: 'hậu quả là', usage: '', example: "The road was closed; consequently, we arrived late.", blank: "consequently" },
-                            { term: 'As a result', grade: 10, meaning: 'kết quả là', usage: '', example: "Sales dropped; as a result, the company cut costs.", blank: "as a result" },
-                            { term: 'Thus', grade: 10, meaning: 'do đó', usage: '', example: "The data was incomplete; thus, the report was delayed.", blank: "thus" },
+                            { term: 'Therefore = Consequently = As a result = Thus', grade: 10, meaning: 'vì vậy, do đó (4 từ đồng nghĩa)', usage: 'Dùng thay thế lẫn nhau được — đứng đầu câu/mệnh đề mới, có dấu phẩy theo sau.', example: "He didn't study; therefore/consequently/as a result/thus, he failed the test.", blank: "therefore/consequently/as a result/thus" },
                         ]
                     },
                     {
@@ -15503,11 +15500,15 @@ function toggleCompletion(symbolElement) {
 
         function conjItemRowHtml(it) {
             const wrapFn = (window.vocabTap && window.vocabTap.wrap) ? window.vocabTap.wrap : escapeHtmlConj;
+            const structureBadge = it.structure
+                ? `<span class="conj-item-structure conj-item-structure-${it.structure}">${it.structure === 'phrase' ? 'N / V-ing (giới từ)' : 'S + V (mệnh đề)'}</span>`
+                : '';
             return `
                 <div class="conj-item-row">
                     <div class="conj-item-head">
                         <span class="conj-item-term">${escapeHtmlConj(it.term)}</span>
                         <span class="conj-item-grade">Lớp ${it.grade}</span>
+                        ${structureBadge}
                     </div>
                     <div class="conj-item-meaning">${escapeHtmlConj(it.meaning)}</div>
                     ${it.usage ? `<div class="conj-item-usage">${escapeHtmlConj(it.usage)}</div>` : ''}
