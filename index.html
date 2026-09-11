@@ -1161,7 +1161,34 @@
                 <label for="conj-grade-slider">Hiện liên từ đến khối: <strong id="conj-grade-label">Lớp 12 (Tất cả)</strong></label>
                 <input type="range" id="conj-grade-slider" min="1" max="12" step="1" value="12">
             </div>
+            <div class="kid-subtabs" id="conj-subtabs" style="display:flex; gap:8px; margin-bottom:14px;">
+                <button type="button" class="kid-subtab-btn active" data-conj-view="list">📖 Danh sách</button>
+                <button type="button" class="kid-subtab-btn" data-conj-view="practice">🎯 Luyện tập</button>
+            </div>
             <div id="conj-content"></div>
+
+            <!-- ===== [MỚI] Chế độ Luyện tập — trắc nghiệm điền liên từ vào chỗ trống, lấy đúng
+                 trong phạm vi các liên từ đang hiện theo khối lớp đã chọn ở trên. ===== -->
+            <div id="conj-practice" style="display:none;">
+                <div id="conj-practice-intro">
+                    <p class="kid-hint">Luyện tập trắc nghiệm điền liên từ vào chỗ trống — câu hỏi lấy đúng trong phạm vi <strong id="conj-practice-pool-count">0</strong> liên từ đang hiện theo khối lớp bạn chọn ở trên. Đổi khối lớp rồi quay lại đây để luyện phạm vi khác.</p>
+                    <button type="button" class="loto-btn-secondary" id="conj-practice-start-btn">▶️ Bắt đầu luyện tập</button>
+                </div>
+                <div id="conj-practice-quiz" style="display:none;">
+                    <div class="conj-practice-progress">
+                        <span id="conj-practice-progress-text">Câu 1/10</span>
+                        <span id="conj-practice-score-text">Đúng: 0/0</span>
+                    </div>
+                    <div class="conj-practice-sentence" id="conj-practice-sentence"></div>
+                    <div class="conj-practice-options" id="conj-practice-options"></div>
+                    <div class="conj-practice-feedback" id="conj-practice-feedback"></div>
+                    <button type="button" class="loto-btn-secondary" id="conj-practice-next-btn" style="display:none;">Câu tiếp theo →</button>
+                </div>
+                <div id="conj-practice-result" style="display:none;">
+                    <p id="conj-practice-result-text"></p>
+                    <button type="button" class="loto-btn-secondary" id="conj-practice-restart-btn">🔄 Luyện lại</button>
+                </div>
+            </div>
         </div>
 
         <!-- ===== Panel "THCS/THPT" — chọn khối lớp ===== -->

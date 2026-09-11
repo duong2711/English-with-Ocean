@@ -8475,3 +8475,21 @@ body.irt-focus-body-lock { overflow: hidden; }
 .conj-item-usage{font-size:13px;opacity:.65;margin-bottom:7px;font-style:italic;}
 .conj-item-example{font-size:14px;background:#fff;border-radius:8px;padding:8px 10px;line-height:1.5;}
 .conj-empty-msg{font-size:13.5px;opacity:.6;font-style:italic;padding:10px 2px;}
+
+/* ===== [MỚI] Chế độ "Luyện tập" trong mục Liên từ ===== */
+.conj-practice-progress{display:flex;justify-content:space-between;align-items:center;font-size:13.5px;font-weight:600;opacity:.75;margin-bottom:12px;}
+.conj-practice-sentence{font-size:16px;line-height:1.6;background:var(--surface-2,#f7f7f9);border:1px solid var(--border,#e2e2e6);border-radius:12px;padding:16px 18px;margin-bottom:16px;}
+.conj-practice-sentence .conj-blank-slot{display:inline-block;min-width:70px;border-bottom:2px solid var(--accent,#6d5bff);text-align:center;font-weight:700;color:var(--accent,#6d5bff);}
+.conj-practice-options{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+@media (max-width:520px){.conj-practice-options{grid-template-columns:1fr;}}
+.conj-practice-option-btn{padding:12px 14px;border-radius:12px;border:2px solid var(--border,#e2e2e6);background:var(--surface,#fff);cursor:pointer;font-size:15px;font-weight:600;text-align:left;transition:transform .1s;}
+.conj-practice-option-btn:hover:not(:disabled){border-color:var(--accent,#6d5bff);transform:translateY(-1px);}
+.conj-practice-option-btn:disabled{cursor:default;}
+.conj-practice-option-btn.correct{background:var(--success-light,#d1fae5);border-color:var(--success,#10b981);color:var(--success-dark,#059669);}
+.conj-practice-option-btn.wrong{background:#fee2e2;border-color:#ef4444;color:#b91c1c;}
+.conj-practice-feedback{font-size:14px;border-radius:10px;padding:10px 14px;margin-bottom:14px;}
+.conj-practice-feedback.correct{background:var(--success-light,#d1fae5);color:var(--success-dark,#059669);}
+.conj-practice-feedback.wrong{background:#fee2e2;color:#b91c1c;}
+.conj-practice-feedback .conj-practice-meaning{opacity:.8;font-weight:400;margin-top:4px;}
+#conj-practice-result{text-align:center;padding:24px 12px;}
+#conj-practice-result-text{font-size:18px;font-weight:700;margin-bottom:16px;}
