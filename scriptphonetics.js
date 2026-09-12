@@ -2426,6 +2426,25 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             const podcastPoints = (podcastStage1Count * 1) + (podcastStage2Count * 2);
 
+            // ----- [MỚI] 4c) Điểm từ mục "🔗 Liên từ" (Từ vựng > Liên từ > Luyện tập): +1 điểm
+            // chăm chỉ / mỗi câu trả lời ĐÚNG trong bất kỳ lượt luyện tập nào đã hoàn thành (cộng
+            // dồn "correct_count" trên toàn bộ các dòng "conj_practice_sessions" của học viên).
+            // Cộng THẲNG vào điểm chăm chỉ, giống vocabTestPoints/podcastPoints ở trên, không nằm
+            // trong công thức chia đều 7 yếu tố. Bọc try/catch riêng: nếu bảng
+            // "conj_practice_sessions" CHƯA được tạo trên Supabase thì phần điểm này về 0, không
+            // làm hỏng toàn bộ trang Thành tựu.
+            let conjPracticePoints = 0;
+            try {
+                const { data: conjSessionRows, error: eCj } = await sb
+                    .from('conj_practice_sessions')
+                    .select('correct_count')
+                    .eq('user_id', currentUserId);
+                if (eCj) throw eCj;
+                conjPracticePoints = (conjSessionRows || []).reduce((sum, r) => sum + (r.correct_count || 0), 0);
+            } catch (errCj) {
+                console.error('Lỗi khi tính điểm luyện tập liên từ (có thể do bảng "conj_practice_sessions" chưa được tạo — xem file SQL "conj_practice_setup.sql"):', errCj.message);
+            }
+
             // ----- 5) Điểm trung bình bài kiểm tra: CHỈ tính những bài đang giao (hiện) cho
             // học viên này (status = published + có tên trong student_emails), và chỉ tính
             // những bài đã nộp (status = submitted) trong số đó -----
@@ -2480,8 +2499,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const testPctForScore = avgTestScorePct != null ? avgTestScorePct : 0;
             const diligenceScore = Math.round(
                 (phoneticsPct + newsPct + topicsPct + thcsPct + grammarPct + testPctForScore + timePct) / 7
-                + totalRedoBonusPoints + vocabTestPoints + podcastPoints
-            ); // [MỚI] cộng thêm điểm thưởng "làm lại" + điểm bài kiểm tra từ vựng hàng tuần + điểm podcast dictation
+                + totalRedoBonusPoints + vocabTestPoints + podcastPoints + conjPracticePoints
+            ); // [MỚI] cộng thêm điểm thưởng "làm lại" + điểm bài kiểm tra từ vựng hàng tuần + điểm podcast dictation + điểm luyện tập liên từ
 
             // ----- [SỬA] KHÔNG RESET ĐIỂM CHUYÊN CẦN THEO THÁNG NỮA -----
             // Trước đây mỗi khi sang tháng mới, hệ thống tự "chốt mốc" (baseline_score) rồi chỉ
@@ -15340,6 +15359,10 @@ function toggleCompletion(symbolElement) {
         const conjPracticeResultEl  = document.getElementById('conj-practice-result');
         const conjPracticeResultText = document.getElementById('conj-practice-result-text');
         const conjPracticeRestartBtn = document.getElementById('conj-practice-restart-btn');
+        const conjPracticeFillEl        = document.getElementById('conj-practice-fill');
+        const conjPracticeFillInput     = document.getElementById('conj-practice-fill-input');
+        const conjPracticeFillSubmitBtn = document.getElementById('conj-practice-fill-submit-btn');
+        const conjPracticeDailyStatus   = document.getElementById('conj-practice-daily-status');
         if (!conjPanel || !conjContentEl) return;
 
         function escapeHtmlConj(str) {
@@ -15360,13 +15383,13 @@ function toggleCompletion(symbolElement) {
                 title: 'Liên từ kết hợp (Coordinating Conjunctions)',
                 note: '7 liên từ FANBOYS — dùng để nối các từ, cụm từ hoặc mệnh đề CÙNG cấp độ và chức năng ngữ pháp.',
                 items: [
-                    { term: 'And', grade: 1, meaning: 'Và', usage: 'Dùng để thêm thông tin, bổ sung ý nghĩa tương đồng.', example: "She bought apples and bananas at the market.", blank: "and" },
-                    { term: 'Or', grade: 1, meaning: 'Hoặc', usage: 'Dùng để đưa ra các sự lựa chọn.', example: "Would you like tea or coffee?", blank: "or" },
-                    { term: 'But', grade: 3, meaning: 'Nhưng', usage: 'Dùng để diễn tả sự đối lập, tương phản trực tiếp giữa hai ý.', example: "I want to go out, but it is raining heavily.", blank: "but" },
-                    { term: 'So', grade: 3, meaning: 'Vì thế / Do đó', usage: 'Dùng để chỉ kết quả của một hành động hay sự việc.', example: "It was raining, so we stayed indoors.", blank: "so" },
-                    { term: 'For', grade: 6, meaning: 'Bởi vì', usage: 'Dùng để giải thích lý do, nguyên nhân của một sự việc.', example: "I went to bed early, for I was exhausted.", blank: "for" },
-                    { term: 'Nor', grade: 6, meaning: 'Cũng không', usage: 'Dùng để bổ sung thêm một ý phủ định vào một ý phủ định trước đó.', example: "He doesn't like coffee, nor does he like tea.", blank: "nor" },
-                    { term: 'Yet', grade: 6, meaning: 'Tuy nhiên / Nhưng', usage: 'Dùng để chỉ sự nhượng bộ, hoặc một sự việc bất ngờ so với ý trước đó.', example: "The weather was cold, yet bright and sunny.", blank: "yet" },
+                    { term: 'And', grade: 1, id: 'and', meaning: 'Và', usage: 'Dùng để thêm thông tin, bổ sung ý nghĩa tương đồng.', example: "She bought apples and bananas at the market.", blank: "and" },
+                    { term: 'Or', grade: 1, id: 'or', meaning: 'Hoặc', usage: 'Dùng để đưa ra các sự lựa chọn.', example: "Would you like tea or coffee?", blank: "or" },
+                    { term: 'But', grade: 3, id: 'but', meaning: 'Nhưng', usage: 'Dùng để diễn tả sự đối lập, tương phản trực tiếp giữa hai ý.', example: "I want to go out, but it is raining heavily.", blank: "but" },
+                    { term: 'So', grade: 3, id: 'so', meaning: 'Vì thế / Do đó', usage: 'Dùng để chỉ kết quả của một hành động hay sự việc.', example: "It was raining, so we stayed indoors.", blank: "so" },
+                    { term: 'For', grade: 6, id: 'for', meaning: 'Bởi vì', usage: 'Dùng để giải thích lý do, nguyên nhân của một sự việc.', example: "I went to bed early, for I was exhausted.", blank: "for" },
+                    { term: 'Nor', grade: 6, id: 'nor', meaning: 'Cũng không', usage: 'Dùng để bổ sung thêm một ý phủ định vào một ý phủ định trước đó.', example: "He doesn't like coffee, nor does he like tea.", blank: "nor" },
+                    { term: 'Yet', grade: 6, id: 'yet', meaning: 'Tuy nhiên / Nhưng', usage: 'Dùng để chỉ sự nhượng bộ, hoặc một sự việc bất ngờ so với ý trước đó.', example: "The weather was cold, yet bright and sunny.", blank: "yet" },
                 ]
             },
             {
@@ -15374,17 +15397,17 @@ function toggleCompletion(symbolElement) {
                 title: 'Liên từ tương quan (Correlative Conjunctions)',
                 note: 'Luôn đi theo CẶP để nối các thành phần ngữ pháp TƯƠNG ĐƯƠNG nhau trong câu — cần chú ý cấu trúc song song.',
                 items: [
-                    { term: 'Both... and...', grade: 6, meaning: 'Cả... và...', usage: 'Nhấn mạnh sự xuất hiện của cả hai đối tượng.', example: "She is both intelligent and hardworking.", blank: "both" },
-                    { term: 'As... as...', grade: 6, meaning: 'Như... / Bằng...', usage: 'So sánh ngang bằng.', example: "She is as smart as her brother.", blank: "as" },
-                    { term: 'Such... as...', grade: 7, meaning: 'Như là...', usage: 'Đưa ra ví dụ.', example: "I like citrus fruits such as oranges and lemons.", blank: "such as" },
-                    { term: 'Either... or...', grade: 8, meaning: 'Hoặc... hoặc...', usage: 'Đưa ra sự lựa chọn một trong hai.', example: "You can either stay here or come with us.", blank: "either" },
-                    { term: 'Neither... nor...', grade: 8, meaning: 'Không cái này... mà cũng không cái kia...', usage: 'Phủ định cả hai.', example: "He is neither tall nor short.", blank: "neither" },
-                    { term: 'Not only... but also...', grade: 8, meaning: 'Không những... mà còn...', usage: 'Nhấn mạnh cả hai vế đều đúng.', example: "He is not only a great singer but also a talented actor.", blank: "not only" },
-                    { term: 'Whether... or...', grade: 9, meaning: 'Liệu rằng... hay là...', usage: 'Đưa ra hai khả năng chưa chắc chắn.', example: "I don't know whether to cry or laugh.", blank: "whether" },
-                    { term: 'No sooner... than...', grade: 11, meaning: 'Ngay khi... thì...', usage: 'Hành động này vừa kết thúc thì hành động khác xảy ra (thường đảo ngữ, dùng với quá khứ hoàn thành). Đồng nghĩa với "Hardly/Scarcely... when..." bên dưới, nhưng LUÔN đi với "than" (không đi với "when") nên không gộp chung ví dụ được.', example: "No sooner had I arrived than it started to rain.", blank: "No sooner" },
-                    { term: 'Hardly/Scarcely... when...', grade: 11, meaning: 'Vừa mới... thì...', usage: 'Đồng nghĩa với "No sooner... than..." ở trên (cùng đảo ngữ, cùng dùng quá khứ hoàn thành) nhưng LUÔN đi với "when" (không đi với "than").', example: "Hardly had she spoken when the phone rang.", blank: "Hardly" },
-                    { term: 'Rather... than...', grade: 11, meaning: 'Thích cái này hơn cái kia / Hơn là...', usage: 'So sánh sự ưu tiên giữa hai lựa chọn.', example: "I would rather read a book than watch TV.", blank: "rather" },
-                    { term: 'Just as... so...', grade: 11, meaning: 'Giống như... thì...', usage: 'So sánh sự tương đồng.', example: "Just as you reap, so you shall sow.", blank: "Just as" },
+                    { term: 'Both... and...', grade: 6, id: 'both-and', meaning: 'Cả... và...', usage: 'Nhấn mạnh sự xuất hiện của cả hai đối tượng.', example: "She is both intelligent and hardworking.", blank: "both" },
+                    { term: 'As... as...', grade: 6, id: 'as-as', meaning: 'Như... / Bằng...', usage: 'So sánh ngang bằng.', example: "She is as smart as her brother.", blank: "as" },
+                    { term: 'Such... as...', grade: 7, id: 'such-as', meaning: 'Như là...', usage: 'Đưa ra ví dụ.', example: "I like citrus fruits such as oranges and lemons.", blank: "such as" },
+                    { term: 'Either... or...', grade: 8, id: 'either-or', meaning: 'Hoặc... hoặc...', usage: 'Đưa ra sự lựa chọn một trong hai.', example: "You can either stay here or come with us.", blank: "either" },
+                    { term: 'Neither... nor...', grade: 8, id: 'neither-nor', meaning: 'Không cái này... mà cũng không cái kia...', usage: 'Phủ định cả hai.', example: "He is neither tall nor short.", blank: "neither" },
+                    { term: 'Not only... but also...', grade: 8, id: 'not-only-but-also', meaning: 'Không những... mà còn...', usage: 'Nhấn mạnh cả hai vế đều đúng.', example: "He is not only a great singer but also a talented actor.", blank: "not only" },
+                    { term: 'Whether... or...', grade: 9, id: 'whether-or', meaning: 'Liệu rằng... hay là...', usage: 'Đưa ra hai khả năng chưa chắc chắn.', example: "I don't know whether to cry or laugh.", blank: "whether" },
+                    { term: 'No sooner... than...', grade: 11, id: 'no-sooner-than', meaning: 'Ngay khi... thì...', usage: 'Hành động này vừa kết thúc thì hành động khác xảy ra (thường đảo ngữ, dùng với quá khứ hoàn thành). Đồng nghĩa với "Hardly/Scarcely... when..." bên dưới, nhưng LUÔN đi với "than" (không đi với "when") nên không gộp chung ví dụ được.', example: "No sooner had I arrived than it started to rain.", blank: "No sooner" },
+                    { term: 'Hardly/Scarcely... when...', grade: 11, id: 'hardly-scarcely-when', meaning: 'Vừa mới... thì...', usage: 'Đồng nghĩa với "No sooner... than..." ở trên (cùng đảo ngữ, cùng dùng quá khứ hoàn thành) nhưng LUÔN đi với "when" (không đi với "than").', example: "Hardly had she spoken when the phone rang.", blank: "Hardly" },
+                    { term: 'Rather... than...', grade: 11, id: 'rather-than', meaning: 'Thích cái này hơn cái kia / Hơn là...', usage: 'So sánh sự ưu tiên giữa hai lựa chọn.', example: "I would rather read a book than watch TV.", blank: "rather" },
+                    { term: 'Just as... so...', grade: 11, id: 'just-as-so', meaning: 'Giống như... thì...', usage: 'So sánh sự tương đồng.', example: "Just as you reap, so you shall sow.", blank: "Just as" },
                 ]
             },
             {
@@ -15395,59 +15418,59 @@ function toggleCompletion(symbolElement) {
                     {
                         key: 'time', title: 'Thời gian (Time)',
                         items: [
-                            { term: 'When / While', grade: 4, structure: 'clause', meaning: 'khi, trong khi', usage: 'Diễn tả hai hành động xảy ra cùng lúc.', example: "While I was reading, he was sleeping.", blank: "While" },
-                            { term: 'Before / After', grade: 4, structure: 'clause', meaning: 'trước khi, sau khi', usage: 'Diễn tả thứ tự trước sau của hành động.', example: "Please wash your hands before you eat.", blank: "before" },
-                            { term: 'Until / Till', grade: 6, structure: 'clause', meaning: 'cho đến khi', usage: '', example: "We waited until the rain stopped.", blank: "until" },
-                            { term: 'As soon as / As', grade: 7, structure: 'clause', meaning: 'ngay khi, khi', usage: 'Diễn tả sự nối tiếp của hành động.', example: "Call me as soon as you arrive.", blank: "as soon as" },
-                            { term: 'Since', grade: 8, structure: 'clause', meaning: 'từ khi', usage: 'Thường đi kèm với các thì hoàn thành.', example: "I have known him since we were in high school.", blank: "since" },
+                            { term: 'When / While', grade: 4, id: 'when-while', structure: 'clause', meaning: 'khi, trong khi', usage: 'Diễn tả hai hành động xảy ra cùng lúc.', example: "While I was reading, he was sleeping.", blank: "While" },
+                            { term: 'Before / After', grade: 4, id: 'before-after', structure: 'clause', meaning: 'trước khi, sau khi', usage: 'Diễn tả thứ tự trước sau của hành động.', example: "Please wash your hands before you eat.", blank: "before" },
+                            { term: 'Until / Till', grade: 6, id: 'until-till', structure: 'clause', meaning: 'cho đến khi', usage: '', example: "We waited until the rain stopped.", blank: "until" },
+                            { term: 'As soon as / As', grade: 7, id: 'as-soon-as', structure: 'clause', meaning: 'ngay khi, khi', usage: 'Diễn tả sự nối tiếp của hành động.', example: "Call me as soon as you arrive.", blank: "as soon as" },
+                            { term: 'Since', grade: 8, id: 'since-time', structure: 'clause', meaning: 'từ khi', usage: 'Thường đi kèm với các thì hoàn thành.', example: "I have known him since we were in high school.", blank: "since" },
                         ]
                     },
                     {
                         key: 'reason', title: 'Nguyên nhân (Reason)',
                         items: [
-                            { term: 'Because', grade: 4, structure: 'clause', meaning: 'bởi vì, do', usage: 'Giải thích lý do xảy ra sự việc ở mệnh đề chính. Theo sau là MỆNH ĐỀ (S + V).', example: "Because it was raining heavily, the match was canceled.", blank: "Because" },
-                            { term: 'Because = As = Since = For', grade: 7, structure: 'clause', meaning: 'bởi vì, do (4 từ đồng nghĩa)', usage: '4 liên từ đồng nghĩa, theo sau là MỆNH ĐỀ (S + V) — dùng thay thế lẫn nhau được. Riêng "for" chỉ đứng GIỮA câu, sau dấu phẩy (không đứng đầu câu như 3 từ kia).', example: "The match was canceled, because/since/as/for it was raining heavily.", blank: "because/since/as/for" },
-                            { term: 'Because of = Owing to', grade: 7, structure: 'phrase', meaning: 'bởi vì, do (2 cụm đồng nghĩa)', usage: 'Là GIỚI TỪ (không phải liên từ) — theo sau là DANH TỪ/CỤM DANH TỪ hoặc V-ing, KHÔNG PHẢI mệnh đề — khác với "because/since/as/for" ở trên.', example: "Because of/Owing to the heavy rain, the match was canceled.", blank: "Because of/Owing to" },
-                            { term: 'Thanks to', grade: 8, structure: 'phrase', meaning: 'nhờ có (thường mang nghĩa TÍCH CỰC)', usage: 'Cũng là GIỚI TỪ, theo sau là DANH TỪ/CỤM DANH TỪ hoặc V-ing — khác "because of/owing to" ở chỗ thường chỉ dùng khi nguyên nhân mang lại KẾT QUẢ TỐT.', example: "Thanks to her hard work, she passed the exam easily.", blank: "Thanks to" },
-                            { term: 'Now that', grade: 12, structure: 'clause', meaning: 'vì giờ đây', usage: 'Kết hợp giữa yếu tố thời gian và lý do. Theo sau là MỆNH ĐỀ (S + V).', example: "Now that you are here, we can start the meeting.", blank: "Now that" },
-                            { term: 'Seeing that', grade: 12, structure: 'clause', meaning: 'xét thấy', usage: 'Theo sau là MỆNH ĐỀ (S + V).', example: "Seeing that he is sick, he shouldn't work today.", blank: "Seeing that" },
+                            { term: 'Because', grade: 4, id: 'because', structure: 'clause', meaning: 'bởi vì, do', usage: 'Giải thích lý do xảy ra sự việc ở mệnh đề chính. Theo sau là MỆNH ĐỀ (S + V).', example: "Because it was raining heavily, the match was canceled.", blank: "Because" },
+                            { term: 'Because = As = Since = For', grade: 7, id: 'because-as-since-for', structure: 'clause', meaning: 'bởi vì, do (4 từ đồng nghĩa)', usage: '4 liên từ đồng nghĩa, theo sau là MỆNH ĐỀ (S + V) — dùng thay thế lẫn nhau được. Riêng "for" chỉ đứng GIỮA câu, sau dấu phẩy (không đứng đầu câu như 3 từ kia).', example: "The match was canceled, because/since/as/for it was raining heavily.", blank: "because/since/as/for" },
+                            { term: 'Because of = Owing to', grade: 7, id: 'because-of-owing-to', structure: 'phrase', meaning: 'bởi vì, do (2 cụm đồng nghĩa)', usage: 'Là GIỚI TỪ (không phải liên từ) — theo sau là DANH TỪ/CỤM DANH TỪ hoặc V-ing, KHÔNG PHẢI mệnh đề — khác với "because/since/as/for" ở trên.', example: "Because of/Owing to the heavy rain, the match was canceled.", blank: "Because of/Owing to" },
+                            { term: 'Thanks to', grade: 8, id: 'thanks-to', structure: 'phrase', meaning: 'nhờ có (thường mang nghĩa TÍCH CỰC)', usage: 'Cũng là GIỚI TỪ, theo sau là DANH TỪ/CỤM DANH TỪ hoặc V-ing — khác "because of/owing to" ở chỗ thường chỉ dùng khi nguyên nhân mang lại KẾT QUẢ TỐT.', example: "Thanks to her hard work, she passed the exam easily.", blank: "Thanks to" },
+                            { term: 'Now that', grade: 12, id: 'now-that', structure: 'clause', meaning: 'vì giờ đây', usage: 'Kết hợp giữa yếu tố thời gian và lý do. Theo sau là MỆNH ĐỀ (S + V).', example: "Now that you are here, we can start the meeting.", blank: "Now that" },
+                            { term: 'Seeing that', grade: 12, id: 'seeing-that', structure: 'clause', meaning: 'xét thấy', usage: 'Theo sau là MỆNH ĐỀ (S + V).', example: "Seeing that he is sick, he shouldn't work today.", blank: "Seeing that" },
                         ]
                     },
                     {
                         key: 'result-purpose', title: 'Kết quả và mục đích (Result & Purpose)',
                         items: [
-                            { term: 'So that / In order that', grade: 8, structure: 'clause', meaning: 'để, để mà', usage: 'Chỉ mục đích của hành động.', example: "Speak louder so that everyone can hear you.", blank: "so that" },
-                            { term: 'So... that / Such... that', grade: 8, structure: 'clause', meaning: 'quá... đến nỗi mà', usage: 'Chỉ kết quả của một tính chất hoặc sự việc.', example: "The box was so heavy that I couldn't lift it.", blank: "so" },
-                            { term: 'Lest / For fear that', grade: 12, structure: 'clause', meaning: 'vì e rằng, sợ rằng', usage: 'Thường đi với động từ nguyên mẫu hoặc "should".', example: "She tied the dog strictly lest it should run away.", blank: "lest" },
+                            { term: 'So that / In order that', grade: 8, id: 'so-that-in-order-that', structure: 'clause', meaning: 'để, để mà', usage: 'Chỉ mục đích của hành động.', example: "Speak louder so that everyone can hear you.", blank: "so that" },
+                            { term: 'So... that / Such... that', grade: 8, id: 'so-that-result', structure: 'clause', meaning: 'quá... đến nỗi mà', usage: 'Chỉ kết quả của một tính chất hoặc sự việc.', example: "The box was so heavy that I couldn't lift it.", blank: "so" },
+                            { term: 'Lest / For fear that', grade: 12, id: 'lest-for-fear-that', structure: 'clause', meaning: 'vì e rằng, sợ rằng', usage: 'Thường đi với động từ nguyên mẫu hoặc "should".', example: "She tied the dog strictly lest it should run away.", blank: "lest" },
                         ]
                     },
                     {
                         key: 'concession-contrast', title: 'Nhượng bộ và tương phản (Concession & Contrast)',
                         items: [
-                            { term: 'Although / Though', grade: 6, structure: 'clause', meaning: 'mặc dù', usage: 'Diễn tả sự nhượng bộ giữa hai mệnh đề. Theo sau là MỆNH ĐỀ (S + V).', example: "Although she was tired, she kept working.", blank: "Although" },
-                            { term: 'While / Whereas', grade: 7, structure: 'clause', meaning: 'trong khi, trái lại', usage: 'Nhấn mạnh sự trái ngược, khác biệt giữa hai chủ thể.', example: "She likes tea, whereas her husband prefers coffee.", blank: "whereas" },
-                            { term: 'Even though', grade: 8, structure: 'clause', meaning: 'mặc dù (nhấn mạnh hơn)', usage: 'Theo sau là MỆNH ĐỀ (S + V).', example: "Even though she was tired, she kept working.", blank: "Even though" },
-                            { term: 'Even if', grade: 8, structure: 'clause', meaning: 'ngay cả khi', usage: 'Nhấn mạnh sự nhượng bộ kèm điều kiện.', example: "I will go to the party even if it rains.", blank: "even if" },
-                            { term: 'Despite = In spite of', grade: 10, structure: 'phrase', meaning: 'mặc dù (2 cụm đồng nghĩa)', usage: 'Là GIỚI TỪ (không phải liên từ) — theo sau là DANH TỪ/CỤM DANH TỪ hoặc V-ing, KHÔNG PHẢI mệnh đề — khác với "although/though" ở trên.', example: "Despite/In spite of the heavy rain, they continued the match.", blank: "Despite/In spite of" },
-                            { term: 'Despite the fact that = In spite of the fact that', grade: 11, structure: 'clause', meaning: 'mặc dù (thực tế là...)', usage: 'Vẫn bắt nguồn từ giới từ nhưng thêm "the fact that" nên theo sau là MỆNH ĐỀ ĐẦY ĐỦ (S + V), dùng thay thế được cho "despite/in spite of" khi muốn giữ nguyên 1 mệnh đề mà không phải rút gọn thành cụm từ.', example: "Despite the fact that/In spite of the fact that it was raining heavily, they continued the match.", blank: "Despite the fact that/In spite of the fact that" },
+                            { term: 'Although / Though', grade: 6, id: 'although-though', structure: 'clause', meaning: 'mặc dù', usage: 'Diễn tả sự nhượng bộ giữa hai mệnh đề. Theo sau là MỆNH ĐỀ (S + V).', example: "Although she was tired, she kept working.", blank: "Although" },
+                            { term: 'While / Whereas', grade: 7, id: 'while-whereas', structure: 'clause', meaning: 'trong khi, trái lại', usage: 'Nhấn mạnh sự trái ngược, khác biệt giữa hai chủ thể.', example: "She likes tea, whereas her husband prefers coffee.", blank: "whereas" },
+                            { term: 'Even though', grade: 8, id: 'even-though', structure: 'clause', meaning: 'mặc dù (nhấn mạnh hơn)', usage: 'Theo sau là MỆNH ĐỀ (S + V).', example: "Even though she was tired, she kept working.", blank: "Even though" },
+                            { term: 'Even if', grade: 8, id: 'even-if', structure: 'clause', meaning: 'ngay cả khi', usage: 'Nhấn mạnh sự nhượng bộ kèm điều kiện.', example: "I will go to the party even if it rains.", blank: "even if" },
+                            { term: 'Despite = In spite of', grade: 10, id: 'despite-in-spite-of', structure: 'phrase', meaning: 'mặc dù (2 cụm đồng nghĩa)', usage: 'Là GIỚI TỪ (không phải liên từ) — theo sau là DANH TỪ/CỤM DANH TỪ hoặc V-ing, KHÔNG PHẢI mệnh đề — khác với "although/though" ở trên.', example: "Despite/In spite of the heavy rain, they continued the match.", blank: "Despite/In spite of" },
+                            { term: 'Despite the fact that = In spite of the fact that', grade: 11, id: 'despite-the-fact-that', structure: 'clause', meaning: 'mặc dù (thực tế là...)', usage: 'Vẫn bắt nguồn từ giới từ nhưng thêm "the fact that" nên theo sau là MỆNH ĐỀ ĐẦY ĐỦ (S + V), dùng thay thế được cho "despite/in spite of" khi muốn giữ nguyên 1 mệnh đề mà không phải rút gọn thành cụm từ.', example: "Despite the fact that/In spite of the fact that it was raining heavily, they continued the match.", blank: "Despite the fact that/In spite of the fact that" },
                         ]
                     },
                     {
                         key: 'condition', title: 'Điều kiện (Condition)',
                         items: [
-                            { term: 'If', grade: 6, structure: 'clause', meaning: 'nếu', usage: 'Dùng trong câu điều kiện (loại 1).', example: "If you study hard, you will pass the exam.", blank: "If" },
-                            { term: 'Unless', grade: 8, structure: 'clause', meaning: 'trừ phi, nếu không', usage: 'Tương đương với "If... not".', example: "You won't succeed unless you try.", blank: "unless" },
-                            { term: 'As long as / Provided that', grade: 10, structure: 'clause', meaning: 'miễn là', usage: '', example: "You can borrow my car as long as you drive carefully.", blank: "as long as" },
-                            { term: 'In case', grade: 10, structure: 'clause', meaning: 'phòng khi', usage: '', example: "Take an umbrella in case it rains.", blank: "in case" },
-                            { term: 'Supposing (that) / Assuming (that)', grade: 12, structure: 'clause', meaning: 'giả sử như', usage: '', example: "Supposing you win the lottery, what will you do?", blank: "Supposing" },
+                            { term: 'If', grade: 6, id: 'if', structure: 'clause', meaning: 'nếu', usage: 'Dùng trong câu điều kiện (loại 1).', example: "If you study hard, you will pass the exam.", blank: "If" },
+                            { term: 'Unless', grade: 8, id: 'unless', structure: 'clause', meaning: 'trừ phi, nếu không', usage: 'Tương đương với "If... not".', example: "You won't succeed unless you try.", blank: "unless" },
+                            { term: 'As long as / Provided that', grade: 10, id: 'as-long-as-provided-that', structure: 'clause', meaning: 'miễn là', usage: '', example: "You can borrow my car as long as you drive carefully.", blank: "as long as" },
+                            { term: 'In case', grade: 10, id: 'in-case', structure: 'clause', meaning: 'phòng khi', usage: '', example: "Take an umbrella in case it rains.", blank: "in case" },
+                            { term: 'Supposing (that) / Assuming (that)', grade: 12, id: 'supposing-assuming', structure: 'clause', meaning: 'giả sử như', usage: '', example: "Supposing you win the lottery, what will you do?", blank: "Supposing" },
                         ]
                     },
                     {
                         key: 'other', title: 'Cách thức, Nơi chốn, So sánh',
                         items: [
-                            { term: 'Than', grade: 5, structure: 'clause', meaning: 'hơn', usage: 'Dùng trong câu so sánh.', example: "She is taller than I am.", blank: "than" },
-                            { term: 'Where / Wherever', grade: 7, structure: 'clause', meaning: 'nơi mà, bất cứ nơi nào', usage: 'Chỉ nơi chốn.', example: "I will follow you wherever you go.", blank: "wherever" },
-                            { term: 'As if / As though', grade: 11, structure: 'clause', meaning: 'như thể là', usage: 'Chỉ cách thức.', example: "He acts as if he were the boss.", blank: "as if" },
+                            { term: 'Than', grade: 5, id: 'than', structure: 'clause', meaning: 'hơn', usage: 'Dùng trong câu so sánh.', example: "She is taller than I am.", blank: "than" },
+                            { term: 'Where / Wherever', grade: 7, id: 'where-wherever', structure: 'clause', meaning: 'nơi mà, bất cứ nơi nào', usage: 'Chỉ nơi chốn.', example: "I will follow you wherever you go.", blank: "wherever" },
+                            { term: 'As if / As though', grade: 11, id: 'as-if-as-though', structure: 'clause', meaning: 'như thể là', usage: 'Chỉ cách thức.', example: "He acts as if he were the boss.", blank: "as if" },
                         ]
                     },
                 ]
@@ -15460,48 +15483,279 @@ function toggleCompletion(symbolElement) {
                     {
                         key: 'addition', title: 'Chỉ sự thêm vào',
                         items: [
-                            { term: 'Moreover = Furthermore = Additionally = Besides', grade: 10, meaning: 'hơn nữa, thêm vào đó (4 từ đồng nghĩa)', usage: 'Dùng thay thế lẫn nhau được — đứng đầu câu/mệnh đề mới, có dấu phẩy theo sau.', example: "The hotel is cheap; moreover/furthermore/additionally/besides, it is close to the beach.", blank: "moreover/furthermore/additionally/besides" },
+                            { term: 'Moreover = Furthermore = Additionally = Besides', grade: 10, id: 'moreover-furthermore-additionally-besides', meaning: 'hơn nữa, thêm vào đó (4 từ đồng nghĩa)', usage: 'Dùng thay thế lẫn nhau được — đứng đầu câu/mệnh đề mới, có dấu phẩy theo sau.', example: "The hotel is cheap; moreover/furthermore/additionally/besides, it is close to the beach.", blank: "moreover/furthermore/additionally/besides" },
                         ]
                     },
                     {
                         key: 'contrast', title: 'Chỉ sự tương phản',
                         items: [
-                            { term: 'However = Nevertheless = Nonetheless', grade: 10, meaning: 'tuy nhiên, dẫu vậy (3 từ đồng nghĩa)', usage: 'Dùng thay thế lẫn nhau được — đứng đầu câu/mệnh đề mới, có dấu phẩy theo sau.', example: "The test was hard; however/nevertheless/nonetheless, most students passed.", blank: "however/nevertheless/nonetheless" },
-                            { term: 'On the other hand', grade: 10, meaning: 'mặt khác', usage: 'Đưa ra một góc nhìn/lựa chọn khác để so sánh — KHÔNG hoàn toàn đồng nghĩa với "however" (không chỉ đơn thuần phủ định, mà còn nêu quan điểm/khía cạnh đối lập).', example: "Living in the city is convenient; on the other hand, it is expensive.", blank: "on the other hand" },
-                            { term: 'Alternatively', grade: 10, meaning: 'thay vào đó', usage: 'Đưa ra một PHƯƠNG ÁN KHÁC để lựa chọn — khác "however" (không phải sự tương phản mà là 1 lựa chọn thay thế).', example: "You can take the bus; alternatively, you can walk.", blank: "alternatively" },
+                            { term: 'However = Nevertheless = Nonetheless', grade: 10, id: 'however-nevertheless-nonetheless', meaning: 'tuy nhiên, dẫu vậy (3 từ đồng nghĩa)', usage: 'Dùng thay thế lẫn nhau được — đứng đầu câu/mệnh đề mới, có dấu phẩy theo sau.', example: "The test was hard; however/nevertheless/nonetheless, most students passed.", blank: "however/nevertheless/nonetheless" },
+                            { term: 'On the other hand', grade: 10, id: 'on-the-other-hand', meaning: 'mặt khác', usage: 'Đưa ra một góc nhìn/lựa chọn khác để so sánh — KHÔNG hoàn toàn đồng nghĩa với "however" (không chỉ đơn thuần phủ định, mà còn nêu quan điểm/khía cạnh đối lập).', example: "Living in the city is convenient; on the other hand, it is expensive.", blank: "on the other hand" },
+                            { term: 'Alternatively', grade: 10, id: 'alternatively', meaning: 'thay vào đó', usage: 'Đưa ra một PHƯƠNG ÁN KHÁC để lựa chọn — khác "however" (không phải sự tương phản mà là 1 lựa chọn thay thế).', example: "You can take the bus; alternatively, you can walk.", blank: "alternatively" },
                         ]
                     },
                     {
                         key: 'result', title: 'Chỉ kết quả',
                         items: [
-                            { term: 'Therefore = Consequently = As a result = Thus', grade: 10, meaning: 'vì vậy, do đó (4 từ đồng nghĩa)', usage: 'Dùng thay thế lẫn nhau được — đứng đầu câu/mệnh đề mới, có dấu phẩy theo sau.', example: "He didn't study; therefore/consequently/as a result/thus, he failed the test.", blank: "therefore/consequently/as a result/thus" },
+                            { term: 'Therefore = Consequently = As a result = Thus', grade: 10, id: 'therefore-consequently-as-a-result-thus', meaning: 'vì vậy, do đó (4 từ đồng nghĩa)', usage: 'Dùng thay thế lẫn nhau được — đứng đầu câu/mệnh đề mới, có dấu phẩy theo sau.', example: "He didn't study; therefore/consequently/as a result/thus, he failed the test.", blank: "therefore/consequently/as a result/thus" },
                         ]
                     },
                     {
                         key: 'neg-condition', title: 'Chỉ điều kiện phủ định',
                         items: [
-                            { term: 'Otherwise', grade: 10, meaning: 'nếu không thì', usage: '', example: "Hurry up, otherwise you will miss the bus.", blank: "otherwise" },
+                            { term: 'Otherwise', grade: 10, id: 'otherwise', meaning: 'nếu không thì', usage: '', example: "Hurry up, otherwise you will miss the bus.", blank: "otherwise" },
                         ]
                     },
                     {
                         key: 'time', title: 'Chỉ thời gian',
                         items: [
-                            { term: 'Meanwhile', grade: 10, meaning: 'trong khi đó', usage: '', example: "She was cooking; meanwhile, he set the table.", blank: "meanwhile" },
-                            { term: 'Subsequently', grade: 10, meaning: 'sau đó', usage: '', example: "He finished his studies; subsequently, he found a good job.", blank: "subsequently" },
+                            { term: 'Meanwhile', grade: 10, id: 'meanwhile', meaning: 'trong khi đó', usage: '', example: "She was cooking; meanwhile, he set the table.", blank: "meanwhile" },
+                            { term: 'Subsequently', grade: 10, id: 'subsequently', meaning: 'sau đó', usage: '', example: "He finished his studies; subsequently, he found a good job.", blank: "subsequently" },
                         ]
                     },
                 ]
             },
         ];
 
+        // [MỚI] Ngân hàng đề luyện tập — 100 câu trắc nghiệm (CONJ_MC_BANK) + 100 câu điền
+        // từ không gợi ý tiếng Việt (CONJ_FILL_BANK), độc lập với ví dụ tham khảo ở CONJ_DATA
+        // (câu khác nhau để tránh học vẹt). "id" khớp với "id" của liên từ trong CONJ_DATA để
+        // lọc theo khối lớp + để tính điểm/ưu tiên theo từng liên từ. "blank" có thể là NHIỀU
+        // từ đồng nghĩa cách nhau bởi "/" — điền ĐÚNG 1 trong các từ đó vẫn được tính đúng ở
+        // câu điền từ (xem conjCheckFillAnswer() bên dưới).
+        const CONJ_MC_BANK = [
+            { id: "and", grade: 1, example: "She bought apples and bananas at the market.", blank: "and" },
+            { id: "or", grade: 1, example: "Do you want rice or noodles for lunch?", blank: "or" },
+            { id: "but", grade: 3, example: "The movie was long, but it was very interesting.", blank: "but" },
+            { id: "so", grade: 3, example: "He was very tired, so he went to bed early.", blank: "so" },
+            { id: "for", grade: 6, example: "She stayed at home, for she had a bad cold.", blank: "for" },
+            { id: "nor", grade: 6, example: "My father doesn't smoke, nor does he drink alcohol.", blank: "nor" },
+            { id: "yet", grade: 6, example: "The exam was difficult, yet most students passed it.", blank: "yet" },
+            { id: "yet", grade: 6, example: "The house looks old, yet it is very comfortable inside.", blank: "yet" },
+            { id: "both-and", grade: 6, example: "This restaurant serves both Vietnamese and Italian food.", blank: "both" },
+            { id: "both-and", grade: 6, example: "Both my parents and my sister enjoy hiking.", blank: "Both" },
+            { id: "as-as", grade: 6, example: "This laptop is as expensive as that one.", blank: "as" },
+            { id: "as-as", grade: 6, example: "He runs as fast as a professional athlete.", blank: "as" },
+            { id: "such-as", grade: 7, example: "I enjoy outdoor activities such as hiking and cycling.", blank: "such as" },
+            { id: "such-as", grade: 7, example: "Some countries, such as Japan and Korea, have advanced technology.", blank: "such as" },
+            { id: "either-or", grade: 8, example: "You can choose either the blue shirt or the red one.", blank: "either" },
+            { id: "either-or", grade: 8, example: "We can meet either on Monday or on Tuesday.", blank: "either" },
+            { id: "neither-nor", grade: 8, example: "Neither the teacher nor the students were late.", blank: "Neither" },
+            { id: "neither-nor", grade: 8, example: "She has neither time nor money to travel.", blank: "neither" },
+            { id: "not-only-but-also", grade: 8, example: "She is not only smart but also very kind.", blank: "not only" },
+            { id: "not-only-but-also", grade: 8, example: "The trip was not only fun but also educational.", blank: "not only" },
+            { id: "whether-or", grade: 9, example: "I'm not sure whether to accept the job or not.", blank: "whether" },
+            { id: "whether-or", grade: 9, example: "Please tell me whether you agree or disagree.", blank: "whether" },
+            { id: "no-sooner-than", grade: 11, example: "No sooner had the bell rung than the students rushed out.", blank: "No sooner" },
+            { id: "no-sooner-than", grade: 11, example: "No sooner had she finished her homework than her friend called.", blank: "No sooner" },
+            { id: "hardly-scarcely-when", grade: 11, example: "Hardly had she left when it began to rain.", blank: "Hardly" },
+            { id: "hardly-scarcely-when", grade: 11, example: "Hardly had the game started when the power went out.", blank: "Hardly" },
+            { id: "rather-than", grade: 11, example: "I would rather walk than take the bus.", blank: "rather" },
+            { id: "rather-than", grade: 11, example: "She would rather study alone than in a group.", blank: "rather" },
+            { id: "just-as-so", grade: 11, example: "Just as plants need water, so humans need food.", blank: "Just as" },
+            { id: "just-as-so", grade: 11, example: "Just as a good teacher inspires students, so a good leader inspires a team.", blank: "Just as" },
+            { id: "when-while", grade: 4, example: "While I was cooking dinner, my sister set the table.", blank: "While" },
+            { id: "when-while", grade: 4, example: "She called me when I was still at work.", blank: "when" },
+            { id: "before-after", grade: 4, example: "Before you leave the house, turn off the lights.", blank: "Before" },
+            { id: "before-after", grade: 4, example: "We went for a walk after we had dinner.", blank: "after" },
+            { id: "until-till", grade: 6, example: "Please wait here until I come back.", blank: "until" },
+            { id: "until-till", grade: 6, example: "They danced until the music stopped.", blank: "until" },
+            { id: "as-soon-as", grade: 7, example: "I will call you as soon as I land.", blank: "as soon as" },
+            { id: "as-soon-as", grade: 7, example: "As soon as the rain stopped, the children went outside to play.", blank: "As soon as" },
+            { id: "since-time", grade: 8, example: "I haven't seen him since last summer.", blank: "since" },
+            { id: "since-time", grade: 8, example: "She has lived in Hanoi since she was born.", blank: "since" },
+            { id: "because", grade: 4, example: "Because it was so cold, we stayed indoors all day.", blank: "Because" },
+            { id: "because", grade: 4, example: "She was punished because she came to school late.", blank: "because" },
+            { id: "because-as-since-for", grade: 7, example: "The children stayed inside, because/since/as/for it was raining heavily.", blank: "because/since/as/for" },
+            { id: "because-as-since-for", grade: 7, example: "He couldn't attend the meeting, because/since/as/for he was sick.", blank: "because/since/as/for" },
+            { id: "because-of-owing-to", grade: 7, example: "The flight was delayed because of/owing to the storm.", blank: "because of/owing to" },
+            { id: "because-of-owing-to", grade: 7, example: "Because of/Owing to the traffic jam, we arrived late.", blank: "Because of/Owing to" },
+            { id: "thanks-to", grade: 8, example: "Thanks to modern technology, we can communicate instantly.", blank: "Thanks to" },
+            { id: "thanks-to", grade: 8, example: "She recovered quickly thanks to the doctor's excellent care.", blank: "thanks to" },
+            { id: "now-that", grade: 12, example: "Now that you have a driving license, you can drive alone.", blank: "Now that" },
+            { id: "now-that", grade: 12, example: "Now that the exam is over, we can relax.", blank: "Now that" },
+            { id: "seeing-that", grade: 12, example: "Seeing that he apologized, I decided to forgive him.", blank: "Seeing that" },
+            { id: "seeing-that", grade: 12, example: "Seeing that the shop was closed, we went elsewhere.", blank: "Seeing that" },
+            { id: "so-that-in-order-that", grade: 8, example: "She saves money every month so that she can travel abroad.", blank: "so that" },
+            { id: "so-that-in-order-that", grade: 8, example: "He studies hard so that he can pass the exam.", blank: "so that" },
+            { id: "so-that-result", grade: 8, example: "The music was so loud that we couldn't sleep.", blank: "so" },
+            { id: "so-that-result", grade: 8, example: "It was so cold that the lake froze.", blank: "so" },
+            { id: "lest-for-fear-that", grade: 12, example: "He whispered lest someone might hear him.", blank: "lest" },
+            { id: "lest-for-fear-that", grade: 12, example: "She locked the door lest a thief should break in.", blank: "lest" },
+            { id: "although-though", grade: 6, example: "Although it was raining, they went for a walk.", blank: "Although" },
+            { id: "although-though", grade: 6, example: "She passed the exam though she hadn't studied much.", blank: "though" },
+            { id: "while-whereas", grade: 7, example: "My brother loves sports, whereas I prefer reading.", blank: "whereas" },
+            { id: "while-whereas", grade: 7, example: "The north has cold winters, whereas the south stays warm.", blank: "whereas" },
+            { id: "even-though", grade: 8, example: "Even though she was scared, she jumped into the pool.", blank: "Even though" },
+            { id: "even-though", grade: 8, example: "He kept smiling even though he had failed the test.", blank: "even though" },
+            { id: "even-if", grade: 8, example: "I will go to the beach even if it rains.", blank: "even if" },
+            { id: "even-if", grade: 8, example: "She won't change her mind even if you beg her.", blank: "even if" },
+            { id: "despite-in-spite-of", grade: 10, example: "Despite/In spite of the heavy traffic, we arrived on time.", blank: "Despite/In spite of" },
+            { id: "despite-in-spite-of", grade: 10, example: "She stayed calm despite/in spite of the pressure.", blank: "despite/in spite of" },
+            { id: "despite-the-fact-that", grade: 11, example: "Despite the fact that/In spite of the fact that it was raining heavily, the game continued.", blank: "Despite the fact that/In spite of the fact that" },
+            { id: "despite-the-fact-that", grade: 11, example: "She succeeded despite the fact that/in spite of the fact that she had very little experience.", blank: "despite the fact that/in spite of the fact that" },
+            { id: "if", grade: 6, example: "If you heat ice, it melts.", blank: "If" },
+            { id: "if", grade: 6, example: "You will catch a cold if you don't wear a coat.", blank: "if" },
+            { id: "unless", grade: 8, example: "You can't enter unless you have a ticket.", blank: "unless" },
+            { id: "unless", grade: 8, example: "I won't go unless you come with me.", blank: "unless" },
+            { id: "as-long-as-provided-that", grade: 10, example: "You may borrow my bike as long as you return it today.", blank: "as long as" },
+            { id: "as-long-as-provided-that", grade: 10, example: "Provided that you follow the rules, you can join the club.", blank: "Provided that" },
+            { id: "in-case", grade: 10, example: "Bring a jacket in case it gets cold.", blank: "in case" },
+            { id: "in-case", grade: 10, example: "In case you need help, just call me.", blank: "In case" },
+            { id: "supposing-assuming", grade: 12, example: "Supposing you won a million dollars, what would you do?", blank: "Supposing" },
+            { id: "supposing-assuming", grade: 12, example: "Assuming the bus is late, we might miss the train.", blank: "Assuming" },
+            { id: "than", grade: 5, example: "This book is more interesting than the last one.", blank: "than" },
+            { id: "than", grade: 5, example: "She sings better than anyone else in the class.", blank: "than" },
+            { id: "where-wherever", grade: 7, example: "Wherever you go, I will follow you.", blank: "Wherever" },
+            { id: "where-wherever", grade: 7, example: "This is the park where we used to play.", blank: "where" },
+            { id: "as-if-as-though", grade: 11, example: "She talks as if she knows everything.", blank: "as if" },
+            { id: "as-if-as-though", grade: 11, example: "He looked at me as though he had seen a ghost.", blank: "as though" },
+            { id: "moreover-furthermore-additionally-besides", grade: 10, example: "The restaurant has great food; moreover/furthermore/additionally/besides, the service is excellent.", blank: "moreover/furthermore/additionally/besides" },
+            { id: "moreover-furthermore-additionally-besides", grade: 10, example: "The plan is cheap; moreover/furthermore/additionally/besides, it doesn't take much time.", blank: "moreover/furthermore/additionally/besides" },
+            { id: "however-nevertheless-nonetheless", grade: 10, example: "It was raining; however/nevertheless/nonetheless, they continued the trip.", blank: "however/nevertheless/nonetheless" },
+            { id: "however-nevertheless-nonetheless", grade: 10, example: "He was exhausted; however/nevertheless/nonetheless, he finished the race.", blank: "however/nevertheless/nonetheless" },
+            { id: "on-the-other-hand", grade: 10, example: "Living in the city is exciting; on the other hand, it can be noisy.", blank: "on the other hand" },
+            { id: "on-the-other-hand", grade: 10, example: "Studying abroad is expensive; on the other hand, it offers great opportunities.", blank: "on the other hand" },
+            { id: "alternatively", grade: 10, example: "You could take a taxi; alternatively, you could walk.", blank: "alternatively" },
+            { id: "alternatively", grade: 10, example: "We could eat at home; alternatively, we could order delivery.", blank: "alternatively" },
+            { id: "therefore-consequently-as-a-result-thus", grade: 10, example: "He missed the bus; therefore/consequently/as a result/thus, he was late for work.", blank: "therefore/consequently/as a result/thus" },
+            { id: "therefore-consequently-as-a-result-thus", grade: 10, example: "The company lost money; therefore/consequently/as a result/thus, many workers were laid off.", blank: "therefore/consequently/as a result/thus" },
+            { id: "otherwise", grade: 10, example: "Study hard, otherwise you will fail the exam.", blank: "otherwise" },
+            { id: "meanwhile", grade: 10, example: "She was doing homework; meanwhile, her brother was watching TV.", blank: "meanwhile" },
+            { id: "meanwhile", grade: 10, example: "The chef prepared the main course; meanwhile, the waiter set the tables.", blank: "meanwhile" },
+            { id: "subsequently", grade: 10, example: "He passed the interview; subsequently, he was offered the job.", blank: "subsequently" },
+        ];
+
+        const CONJ_FILL_BANK = [
+            { id: "and", grade: 1, example: "My brother and I go to the same school.", blank: "and" },
+            { id: "or", grade: 1, example: "You can pay by cash or by card.", blank: "or" },
+            { id: "but", grade: 3, example: "She tried her best, but she still failed the test.", blank: "but" },
+            { id: "so", grade: 3, example: "The shop was closed, so we went home.", blank: "so" },
+            { id: "for", grade: 6, example: "He apologized, for he knew he was wrong.", blank: "for" },
+            { id: "nor", grade: 6, example: "She didn't call me, nor did she send a message.", blank: "nor" },
+            { id: "yet", grade: 6, example: "He is very rich, yet he lives a simple life.", blank: "yet" },
+            { id: "yet", grade: 6, example: "She apologized, yet he still refused to forgive her.", blank: "yet" },
+            { id: "both-and", grade: 6, example: "The hotel is both comfortable and affordable.", blank: "both" },
+            { id: "both-and", grade: 6, example: "She can speak both English and French fluently.", blank: "both" },
+            { id: "as-as", grade: 6, example: "My house is as big as yours.", blank: "as" },
+            { id: "as-as", grade: 6, example: "The soup wasn't as spicy as I expected.", blank: "as" },
+            { id: "such-as", grade: 7, example: "He collects vintage items such as old coins and stamps.", blank: "such as" },
+            { id: "such-as", grade: 7, example: "We need basic supplies such as pens and notebooks.", blank: "such as" },
+            { id: "either-or", grade: 8, example: "Either Tom or his brother will pick you up.", blank: "Either" },
+            { id: "either-or", grade: 8, example: "You can have either tea or coffee.", blank: "either" },
+            { id: "neither-nor", grade: 8, example: "The food was neither tasty nor cheap.", blank: "neither" },
+            { id: "neither-nor", grade: 8, example: "I can neither swim nor dive well.", blank: "neither" },
+            { id: "not-only-but-also", grade: 8, example: "He can not only sing but also dance well.", blank: "not only" },
+            { id: "not-only-but-also", grade: 8, example: "This app is not only free but also easy to use.", blank: "not only" },
+            { id: "whether-or", grade: 9, example: "It doesn't matter whether we win or lose.", blank: "whether" },
+            { id: "whether-or", grade: 9, example: "She asked whether the store was open or closed.", blank: "whether" },
+            { id: "no-sooner-than", grade: 11, example: "No sooner had he sat down than the phone rang.", blank: "No sooner" },
+            { id: "no-sooner-than", grade: 11, example: "No sooner had we arrived than it started to snow.", blank: "No sooner" },
+            { id: "hardly-scarcely-when", grade: 11, example: "Hardly had I opened the door when the dog ran out.", blank: "Hardly" },
+            { id: "hardly-scarcely-when", grade: 11, example: "Hardly had he arrived when the meeting ended.", blank: "Hardly" },
+            { id: "rather-than", grade: 11, example: "He would rather stay home than go to the party.", blank: "rather" },
+            { id: "rather-than", grade: 11, example: "They would rather save money than spend it on clothes.", blank: "rather" },
+            { id: "just-as-so", grade: 11, example: "Just as fish need water to live, so plants need sunlight.", blank: "Just as" },
+            { id: "just-as-so", grade: 11, example: "Just as birds fly south in winter, so tourists travel to warmer places.", blank: "Just as" },
+            { id: "when-while", grade: 4, example: "While he was reading, his phone kept ringing.", blank: "While" },
+            { id: "when-while", grade: 4, example: "I met her when I was traveling in Japan.", blank: "when" },
+            { id: "before-after", grade: 4, example: "Before she goes to bed, she always reads a book.", blank: "Before" },
+            { id: "before-after", grade: 4, example: "He called his mother after he landed at the airport.", blank: "after" },
+            { id: "until-till", grade: 6, example: "She won't leave until she finishes her work.", blank: "until" },
+            { id: "until-till", grade: 6, example: "We stayed at the party until it got dark.", blank: "until" },
+            { id: "as-soon-as", grade: 7, example: "She started crying as soon as she heard the news.", blank: "as soon as" },
+            { id: "as-soon-as", grade: 7, example: "As soon as he finishes his homework, he can watch TV.", blank: "As soon as" },
+            { id: "since-time", grade: 8, example: "We have been friends since we were in primary school.", blank: "since" },
+            { id: "since-time", grade: 8, example: "He hasn't eaten anything since breakfast.", blank: "since" },
+            { id: "because", grade: 4, example: "Because he studied hard, he got excellent results.", blank: "Because" },
+            { id: "because", grade: 4, example: "The trip was canceled because the weather was too bad.", blank: "because" },
+            { id: "because-as-since-for", grade: 7, example: "We postponed the trip, because/since/as/for the weather forecast was bad.", blank: "because/since/as/for" },
+            { id: "because-as-since-for", grade: 7, example: "She left early, because/since/as/for she had another appointment.", blank: "because/since/as/for" },
+            { id: "because-of-owing-to", grade: 7, example: "The match was postponed because of/owing to heavy rain.", blank: "because of/owing to" },
+            { id: "because-of-owing-to", grade: 7, example: "Because of/Owing to his hard work, the project succeeded.", blank: "Because of/Owing to" },
+            { id: "thanks-to", grade: 8, example: "Thanks to your help, I finished the project on time.", blank: "Thanks to" },
+            { id: "thanks-to", grade: 8, example: "The team won the match thanks to their captain's great effort.", blank: "thanks to" },
+            { id: "now-that", grade: 12, example: "Now that she has graduated, she is looking for a job.", blank: "Now that" },
+            { id: "now-that", grade: 12, example: "Now that we live closer, we can meet more often.", blank: "Now that" },
+            { id: "seeing-that", grade: 12, example: "Seeing that she was busy, I didn't want to disturb her.", blank: "Seeing that" },
+            { id: "seeing-that", grade: 12, example: "Seeing that the roads were flooded, they canceled the trip.", blank: "Seeing that" },
+            { id: "so-that-in-order-that", grade: 8, example: "Please speak slowly so that everyone can understand.", blank: "so that" },
+            { id: "so-that-in-order-that", grade: 8, example: "I wrote it down so that I wouldn't forget.", blank: "so that" },
+            { id: "so-that-result", grade: 8, example: "She was so tired that she fell asleep instantly.", blank: "so" },
+            { id: "so-that-result", grade: 8, example: "The traffic was so bad that we were an hour late.", blank: "so" },
+            { id: "lest-for-fear-that", grade: 12, example: "They spoke quietly lest they should wake the baby.", blank: "lest" },
+            { id: "lest-for-fear-that", grade: 12, example: "He saved his documents twice lest his computer should crash.", blank: "lest" },
+            { id: "although-though", grade: 6, example: "Although he is young, he is very responsible.", blank: "Although" },
+            { id: "although-though", grade: 6, example: "The food was cold, though it still tasted good.", blank: "though" },
+            { id: "while-whereas", grade: 7, example: "He is very talkative, whereas his sister is quiet.", blank: "whereas" },
+            { id: "while-whereas", grade: 7, example: "Some people enjoy the countryside, whereas others prefer the city.", blank: "whereas" },
+            { id: "even-though", grade: 8, example: "Even though the traffic was terrible, we arrived on time.", blank: "Even though" },
+            { id: "even-though", grade: 8, example: "She forgave him even though he had lied to her.", blank: "even though" },
+            { id: "even-if", grade: 8, example: "We will finish the project even if it takes all night.", blank: "even if" },
+            { id: "even-if", grade: 8, example: "He refuses to apologize even if he is wrong.", blank: "even if" },
+            { id: "despite-in-spite-of", grade: 10, example: "Despite/In spite of his young age, he is very mature.", blank: "Despite/In spite of" },
+            { id: "despite-in-spite-of", grade: 10, example: "They finished the race despite/in spite of the strong wind.", blank: "despite/in spite of" },
+            { id: "despite-the-fact-that", grade: 11, example: "Despite the fact that/In spite of the fact that he was tired, he finished the marathon.", blank: "Despite the fact that/In spite of the fact that" },
+            { id: "despite-the-fact-that", grade: 11, example: "They went hiking despite the fact that/in spite of the fact that the weather forecast was bad.", blank: "despite the fact that/in spite of the fact that" },
+            { id: "if", grade: 6, example: "If it rains tomorrow, we will stay home.", blank: "If" },
+            { id: "if", grade: 6, example: "She will help you if you ask her.", blank: "if" },
+            { id: "unless", grade: 8, example: "We will be late unless we leave now.", blank: "unless" },
+            { id: "unless", grade: 8, example: "She won't forgive him unless he apologizes sincerely.", blank: "unless" },
+            { id: "as-long-as-provided-that", grade: 10, example: "I don't mind waiting as long as you're not too long.", blank: "as long as" },
+            { id: "as-long-as-provided-that", grade: 10, example: "Provided that the weather is good, we will go camping.", blank: "Provided that" },
+            { id: "in-case", grade: 10, example: "She keeps a spare key in case she loses hers.", blank: "in case" },
+            { id: "in-case", grade: 10, example: "In case the plan fails, we should have a backup.", blank: "In case" },
+            { id: "supposing-assuming", grade: 12, example: "Supposing you failed the exam, would you try again?", blank: "Supposing" },
+            { id: "supposing-assuming", grade: 12, example: "Assuming everything goes well, we'll finish by Friday.", blank: "Assuming" },
+            { id: "than", grade: 5, example: "My phone is newer than yours.", blank: "than" },
+            { id: "than", grade: 5, example: "It took longer than we expected.", blank: "than" },
+            { id: "where-wherever", grade: 7, example: "You can sit wherever you like.", blank: "wherever" },
+            { id: "where-wherever", grade: 7, example: "This is the school where I studied as a child.", blank: "where" },
+            { id: "as-if-as-though", grade: 11, example: "It sounds as if you had a great trip.", blank: "as if" },
+            { id: "as-if-as-though", grade: 11, example: "The dog acted as though it wanted to go outside.", blank: "as though" },
+            { id: "moreover-furthermore-additionally-besides", grade: 10, example: "She is talented; moreover/furthermore/additionally/besides, she works very hard.", blank: "moreover/furthermore/additionally/besides" },
+            { id: "moreover-furthermore-additionally-besides", grade: 10, example: "The house is spacious; moreover/furthermore/additionally/besides, it is close to the city center.", blank: "moreover/furthermore/additionally/besides" },
+            { id: "however-nevertheless-nonetheless", grade: 10, example: "The plan was risky; however/nevertheless/nonetheless, they decided to try it.", blank: "however/nevertheless/nonetheless" },
+            { id: "however-nevertheless-nonetheless", grade: 10, example: "She had no experience; however/nevertheless/nonetheless, she got the job.", blank: "however/nevertheless/nonetheless" },
+            { id: "on-the-other-hand", grade: 10, example: "He is generous; on the other hand, he can be careless with money.", blank: "on the other hand" },
+            { id: "on-the-other-hand", grade: 10, example: "The job pays well; on the other hand, the hours are very long.", blank: "on the other hand" },
+            { id: "alternatively", grade: 10, example: "You can pay online; alternatively, you can pay in cash.", blank: "alternatively" },
+            { id: "alternatively", grade: 10, example: "She could study medicine; alternatively, she could study pharmacy.", blank: "alternatively" },
+            { id: "therefore-consequently-as-a-result-thus", grade: 10, example: "She didn't study; therefore/consequently/as a result/thus, she failed the test.", blank: "therefore/consequently/as a result/thus" },
+            { id: "therefore-consequently-as-a-result-thus", grade: 10, example: "The bridge was damaged; therefore/consequently/as a result/thus, traffic was diverted.", blank: "therefore/consequently/as a result/thus" },
+            { id: "otherwise", grade: 10, example: "Take an umbrella, otherwise you will get wet.", blank: "otherwise" },
+            { id: "meanwhile", grade: 10, example: "He was driving to work; meanwhile, his wife was making breakfast.", blank: "meanwhile" },
+            { id: "meanwhile", grade: 10, example: "The team practiced hard; meanwhile, their rivals rested.", blank: "meanwhile" },
+            { id: "subsequently", grade: 10, example: "She finished university; subsequently, she started her own business.", blank: "subsequently" },
+        ];
+
         function conjMinGrade(items) {
             return items.reduce((m, it) => Math.min(m, it.grade), 12);
         }
+
+        // [MỚI] Bảng tra cứu nhanh theo "id" của từng liên từ (term/meaning/catKey/sgKey) — dùng
+        // để: hiện nghĩa trong feedback luyện tập, và để nhóm đáp án gây nhiễu cùng mục/nhóm nhỏ
+        // khi ra câu trắc nghiệm, kể cả khi câu hỏi lấy từ CONJ_MC_BANK/CONJ_FILL_BANK (2 ngân
+        // hàng đó chỉ lưu "id" gọn, không lặp lại toàn bộ term/meaning của CONJ_DATA).
+        const conjItemMeta = {};
+        (function conjBuildItemMeta() {
+            CONJ_DATA.forEach(cat => {
+                const collect = (items, sgKey) => items.forEach(it => {
+                    if (it.id) conjItemMeta[it.id] = { term: it.term, meaning: it.meaning, catKey: cat.key, sgKey: sgKey || null };
+                });
+                if (cat.items) collect(cat.items, null);
+                else if (cat.subgroups) cat.subgroups.forEach(sg => collect(sg.items, sg.key));
+            });
+        })();
 
         function conjItemRowHtml(it) {
             const wrapFn = (window.vocabTap && window.vocabTap.wrap) ? window.vocabTap.wrap : escapeHtmlConj;
             const structureBadge = it.structure
                 ? `<span class="conj-item-structure conj-item-structure-${it.structure}">${it.structure === 'phrase' ? 'N / V-ing (giới từ)' : 'S + V (mệnh đề)'}</span>`
+                : '';
+            const stat = conjStatsMap[it.id];
+            const mistakeBadge = (stat && stat.wrongCount > 0)
+                ? `<span class="conj-item-mistake-badge">⚠️ Hay sai (${stat.wrongCount} lần)</span>`
                 : '';
             return `
                 <div class="conj-item-row">
@@ -15509,6 +15763,7 @@ function toggleCompletion(symbolElement) {
                         <span class="conj-item-term">${escapeHtmlConj(it.term)}</span>
                         <span class="conj-item-grade">Lớp ${it.grade}</span>
                         ${structureBadge}
+                        ${mistakeBadge}
                     </div>
                     <div class="conj-item-meaning">${escapeHtmlConj(it.meaning)}</div>
                     ${it.usage ? `<div class="conj-item-usage">${escapeHtmlConj(it.usage)}</div>` : ''}
@@ -15517,8 +15772,18 @@ function toggleCompletion(symbolElement) {
             `;
         }
 
+        // [MỚI] Sắp xếp lại 1 danh sách liên từ: liên từ có "wrong_count" (số lần sai đã lưu)
+        // CÀNG CAO thì càng được đưa lên ĐẦU — những liên từ chưa từng sai/chưa có thống kê giữ
+        // nguyên thứ tự gốc (chỉ những mục thật sự "hay sai" mới bị đẩy lên trước).
+        function conjSortByMistakes(items) {
+            return items.map((it, i) => ({ it, i, wrong: (conjStatsMap[it.id] && conjStatsMap[it.id].wrongCount) || 0 }))
+                .sort((a, b) => (b.wrong - a.wrong) || (a.i - b.i))
+                .map(x => x.it);
+        }
+
         // [MỚI] Hiện toàn bộ nội dung theo khối lớp đang chọn (CỘNG DỒN: lớp N -> mọi grade <= N).
         // 4 mục lớn LUÔN được render (giữ tiêu đề) — chỉ ẩn/hiện các liên từ + nhóm nhỏ bên trong.
+        // Trong mỗi mục/nhóm nhỏ, liên từ hay sai (theo conjStatsMap) được đẩy lên ĐẦU danh sách.
         function conjRenderContent(maxGrade) {
             let html = '';
             CONJ_DATA.forEach(cat => {
@@ -15526,7 +15791,7 @@ function toggleCompletion(symbolElement) {
                 if (cat.note) html += `<p class="conj-category-note">${escapeHtmlConj(cat.note)}</p>`;
 
                 if (cat.items) {
-                    const visible = cat.items.filter(it => it.grade <= maxGrade);
+                    const visible = conjSortByMistakes(cat.items.filter(it => it.grade <= maxGrade));
                     if (!visible.length) {
                         html += `<p class="conj-empty-msg">Ở khối lớp bạn đang chọn, nhóm liên từ này CHƯA xuất hiện — sẽ bắt đầu học từ lớp ${conjMinGrade(cat.items)} trở đi.</p>`;
                     } else {
@@ -15535,7 +15800,7 @@ function toggleCompletion(symbolElement) {
                 } else if (cat.subgroups) {
                     let anyVisible = false;
                     cat.subgroups.forEach(sg => {
-                        const visible = sg.items.filter(it => it.grade <= maxGrade);
+                        const visible = conjSortByMistakes(sg.items.filter(it => it.grade <= maxGrade));
                         if (!visible.length) return;
                         anyVisible = true;
                         html += `<div class="conj-subgroup"><h5 class="conj-subgroup-title">${escapeHtmlConj(sg.title)}</h5>`;
@@ -15557,29 +15822,29 @@ function toggleCompletion(symbolElement) {
             conjGradeLabel.textContent = (Number(g) >= 12) ? 'Lớp 12 (Tất cả)' : ('Lớp ' + g);
         }
 
-        // ===== [MỚI] CHẾ ĐỘ LUYỆN TẬP — trắc nghiệm điền liên từ vào chỗ trống =====
-        // Lấy PHẲNG toàn bộ liên từ đang hiển thị (theo khối lớp đang chọn) từ CẢ 4 mục lớn
-        // (kể cả các mục có subgroups) thành 1 danh sách chung làm "ngân hàng câu hỏi".
+        // ===== [MỚI] CHẾ ĐỘ LUYỆN TẬP — 10 câu trắc nghiệm + 10 câu điền từ (ngân hàng 200 câu),
+        // ưu tiên liên từ hay sai, tối đa 2 lượt/ngày, chấm +2/-1 điểm/câu, +1 điểm chăm chỉ mỗi
+        // câu đúng. =====
+
+        // Lấy PHẲNG toàn bộ liên từ đang hiển thị (theo khối lớp đang chọn) từ CẢ 4 mục lớn —
+        // dùng để: (a) đếm số liên từ trong phạm vi (hiện ở màn hình bắt đầu), (b) làm nguồn đáp
+        // án gây nhiễu cho câu trắc nghiệm.
         function conjGetFilteredPool(maxGrade) {
             const pool = [];
             CONJ_DATA.forEach(cat => {
                 if (cat.items) {
-                    cat.items.forEach(it => { if (it.grade <= maxGrade) pool.push({ ...it, catKey: cat.key, sgKey: null }); });
+                    cat.items.forEach(it => { if (it.grade <= maxGrade) pool.push(it); });
                 } else if (cat.subgroups) {
                     cat.subgroups.forEach(sg => {
-                        sg.items.forEach(it => { if (it.grade <= maxGrade) pool.push({ ...it, catKey: cat.key, sgKey: sg.key }); });
+                        sg.items.forEach(it => { if (it.grade <= maxGrade) pool.push(it); });
                     });
                 }
             });
             return pool;
         }
-
-        const CONJ_PRACTICE_MAX_QUESTIONS = 10;
-        let conjPracticePool = [];      // toàn bộ ngân hàng câu hỏi đang luyện (theo khối lớp lúc bấm "Bắt đầu")
-        let conjPracticeQuestions = []; // danh sách câu hỏi đã chọn ngẫu nhiên cho lượt luyện này
-        let conjPracticeIndex = 0;
-        let conjPracticeCorrectCount = 0;
-        let conjPracticeAnswered = false;
+        function conjPoolCountLabel(maxGrade) {
+            return conjGetFilteredPool(maxGrade).length;
+        }
 
         function conjShuffle(arr) {
             const a = arr.slice();
@@ -15590,80 +15855,274 @@ function toggleCompletion(symbolElement) {
             return a;
         }
 
-        // Xây 4 đáp án cho 1 câu hỏi: 1 đáp án đúng + 3 đáp án gây nhiễu — ƯU TIÊN lấy đáp án
-        // gây nhiễu TRONG CÙNG mục/nhóm nhỏ với câu hỏi trước (để bài luyện có ý nghĩa, ví dụ
-        // "Although" dễ nhầm với "Even though"/"Even if" hơn là với "Moreover"), phần còn thiếu
-        // mới lấy ngẫu nhiên từ cả ngân hàng câu hỏi.
-        function conjBuildOptions(correctItem, pool) {
-            const others = pool.filter(it => it !== correctItem && it.blank.toLowerCase() !== correctItem.blank.toLowerCase());
-            const sameGroup = conjShuffle(others.filter(it => it.sgKey ? it.sgKey === correctItem.sgKey : it.catKey === correctItem.catKey));
-            const rest = conjShuffle(others.filter(it => !sameGroup.includes(it)));
-            const distractors = sameGroup.concat(rest).slice(0, 3);
-            return conjShuffle([correctItem, ...distractors]);
+        // [MỚI] Thống kê SỐ LẦN SAI + SỐ LẦN ĐÃ HỎI của từng liên từ (theo user đang đăng nhập) —
+        // tải khi mở mục Liên từ, dùng để: sắp xếp lại "Danh sách" (conjSortByMistakes) và ưu
+        // tiên chọn câu hỏi khi luyện tập (conjRankConjIds). Bọc try/catch: nếu bảng
+        // "conj_practice_stats" CHƯA được tạo trên Supabase (xem conj_practice_setup.sql) thì coi
+        // như chưa có thống kê gì (không làm hỏng tính năng).
+        let conjStatsMap = {};
+        async function conjLoadStats() {
+            conjStatsMap = {};
+            if (!currentUserId) return;
+            try {
+                const { data, error } = await sb
+                    .from('conj_practice_stats')
+                    .select('conj_id, wrong_count, times_seen')
+                    .eq('user_id', currentUserId);
+                if (error) throw error;
+                (data || []).forEach(r => {
+                    conjStatsMap[r.conj_id] = { wrongCount: r.wrong_count || 0, timesSeen: r.times_seen || 0 };
+                });
+            } catch (e) {
+                console.error('Lỗi khi tải thống kê luyện tập liên từ (có thể do bảng "conj_practice_stats" chưa được tạo — xem file SQL "conj_practice_setup.sql"):', e.message);
+            }
         }
 
-        function conjPoolCountLabel(maxGrade) {
-            return conjGetFilteredPool(maxGrade).length;
+        // [MỚI] Đếm số lượt luyện tập ĐÃ LÀM trong hôm nay (để giới hạn tối đa CONJ_DAILY_LIMIT
+        // lượt/ngày). Bọc try/catch: nếu bảng "conj_practice_sessions" CHƯA được tạo thì coi như
+        // chưa luyện lượt nào hôm nay (không chặn tính năng).
+        const CONJ_DAILY_LIMIT = 2;
+        async function conjGetTodaySessionCount() {
+            if (!currentUserId) return 0;
+            const todayIso = new Date().toISOString().slice(0, 10);
+            try {
+                const { count, error } = await sb
+                    .from('conj_practice_sessions')
+                    .select('id', { count: 'exact', head: true })
+                    .eq('user_id', currentUserId)
+                    .eq('session_date', todayIso);
+                if (error) throw error;
+                return count || 0;
+            } catch (e) {
+                console.error('Lỗi khi kiểm tra số lượt luyện tập liên từ hôm nay (có thể do bảng "conj_practice_sessions" chưa được tạo — xem file SQL "conj_practice_setup.sql"):', e.message);
+                return 0;
+            }
         }
 
-        function conjStartPractice() {
-            conjPracticePool = conjGetFilteredPool(Number(conjGradeSlider.value));
-            if (conjPracticePool.length < 2) return; // cần ít nhất 2 liên từ mới đủ để ra đáp án nhiễu
-            conjPracticeQuestions = conjShuffle(conjPracticePool).slice(0, Math.min(CONJ_PRACTICE_MAX_QUESTIONS, conjPracticePool.length));
-            conjPracticeIndex = 0;
-            conjPracticeCorrectCount = 0;
-            conjPracticeIntro.style.display = 'none';
-            conjPracticeResultEl.style.display = 'none';
-            conjPracticeQuizEl.style.display = 'block';
-            conjShowQuestion();
+        // [MỚI] Sắp xếp danh sách "id liên từ" theo thứ tự ƯU TIÊN chọn câu hỏi: sai càng nhiều
+        // càng ưu tiên trước, rồi tới liên từ ÍT ĐƯỢC LUYỆN hơn (times_seen thấp — đảm bảo liên
+        // từ nào chưa từng được hỏi cũng sớm được đưa vào), cuối cùng xáo ngẫu nhiên cho các mục
+        // ngang nhau để bài luyện không lặp lại y hệt mỗi lần.
+        function conjRankConjIds(ids) {
+            const withRand = ids.map(id => ({ id, r: Math.random() }));
+            withRand.sort((a, b) => {
+                const sa = conjStatsMap[a.id] || { wrongCount: 0, timesSeen: 0 };
+                const sb_ = conjStatsMap[b.id] || { wrongCount: 0, timesSeen: 0 };
+                if (sb_.wrongCount !== sa.wrongCount) return sb_.wrongCount - sa.wrongCount;
+                if (sa.timesSeen !== sb_.timesSeen) return sa.timesSeen - sb_.timesSeen;
+                return a.r - b.r;
+            });
+            return withRand.map(x => x.id);
+        }
+
+        // [MỚI] Chọn "count" câu hỏi từ 1 ngân hàng (CONJ_MC_BANK hoặc CONJ_FILL_BANK), giới hạn
+        // trong khối lớp đang chọn. ƯU TIÊN phủ càng NHIỀU liên từ KHÁC NHAU càng tốt (mỗi liên
+        // từ góp tối đa 1 câu ở lượt đầu, theo đúng thứ tự ưu tiên từ conjRankConjIds) — chỉ khi
+        // phạm vi có ÍT liên từ hơn "count" mới lấy thêm câu thứ 2/3... của các liên từ ưu tiên
+        // cao nhất để đủ số câu. Đây chính là cách "vẫn đảm bảo đủ tất cả liên từ học viên phải
+        // học" trong khi vẫn ưu tiên liên từ hay sai lên trước.
+        function conjPickQuestions(bank, maxGrade, count) {
+            const candidates = bank.filter(q => q.grade <= maxGrade);
+            if (!candidates.length) return [];
+            const byId = {};
+            candidates.forEach(q => { (byId[q.id] = byId[q.id] || []).push(q); });
+            const rankedIds = conjRankConjIds(Object.keys(byId));
+
+            const picked = [];
+            const usedCountById = {};
+            for (const id of rankedIds) {
+                if (picked.length >= count) break;
+                const list = conjShuffle(byId[id]);
+                picked.push(list[0]);
+                usedCountById[id] = 1;
+            }
+            let safety = 0;
+            while (picked.length < count && safety < 20) {
+                safety++;
+                let addedAny = false;
+                for (const id of rankedIds) {
+                    if (picked.length >= count) break;
+                    const list = byId[id];
+                    const used = usedCountById[id] || 0;
+                    if (used < list.length) {
+                        picked.push(list[used]);
+                        usedCountById[id] = used + 1;
+                        addedAny = true;
+                    }
+                }
+                if (!addedAny) break;
+            }
+            return conjShuffle(picked).slice(0, count);
+        }
+
+        // Xây 4 đáp án cho 1 câu TRẮC NGHIỆM: 1 đáp án đúng + 3 đáp án gây nhiễu — ƯU TIÊN lấy
+        // đáp án gây nhiễu TRONG CÙNG mục/nhóm nhỏ với liên từ đang hỏi (để bài luyện có ý nghĩa,
+        // ví dụ "Although" dễ nhầm với "Even though"/"Even if" hơn là với "Moreover"), phần còn
+        // thiếu mới lấy ngẫu nhiên từ cả phạm vi khối lớp đang luyện.
+        function conjBuildMcOptions(question, maxGrade) {
+            const meta = conjItemMeta[question.id] || {};
+            const pool = conjGetFilteredPool(maxGrade).filter(it => it.id !== question.id);
+            const sameGroup = conjShuffle(pool.filter(it => {
+                const m2 = conjItemMeta[it.id] || {};
+                return meta.sgKey ? m2.sgKey === meta.sgKey : m2.catKey === meta.catKey;
+            }));
+            const rest = conjShuffle(pool.filter(it => !sameGroup.includes(it)));
+            const distractorBlanks = [];
+            const seenBlanks = new Set([question.blank.toLowerCase()]);
+            sameGroup.concat(rest).forEach(it => {
+                if (distractorBlanks.length >= 3) return;
+                const b = it.blank.toLowerCase();
+                if (seenBlanks.has(b)) return;
+                seenBlanks.add(b);
+                distractorBlanks.push(it.blank);
+            });
+            return conjShuffle([question.blank, ...distractorBlanks]);
+        }
+
+        // [MỚI] Kiểm tra đáp án câu ĐIỀN TỪ: "blank" có thể là nhiều từ đồng nghĩa cách nhau bởi
+        // "/" (vd "because/since/as/for") — điền ĐÚNG 1 trong các từ đó là được tính đúng, không
+        // phân biệt hoa/thường, bỏ khoảng trắng thừa 2 đầu.
+        function conjCheckFillAnswer(userInput, blank) {
+            const accepted = blank.toLowerCase().split('/').map(s => s.trim());
+            const given = String(userInput || '').trim().toLowerCase();
+            return !!given && accepted.includes(given);
+        }
+
+        let conjPracticeQuestions = []; // danh sách 20 câu (10 mc + 10 fill) đã chọn cho lượt này, đã trộn
+        let conjPracticeIndex = 0;
+        let conjPracticeCorrectCount = 0;
+        let conjPracticeWrongCount = 0;
+        let conjPracticeRoundScore = 0;
+        let conjPracticeAnswered = false;
+        let conjPracticeDeltas = {}; // { conjId: { wrongDelta, seenDelta } } — gom lại để lưu 1 lần lúc kết thúc lượt
+
+        async function conjStartPractice() {
+            if (conjPracticeStartBtn.disabled) return;
+            conjPracticeStartBtn.disabled = true;
+            conjPracticeStartBtn.textContent = 'Đang tải...';
+            try {
+                const usedToday = await conjGetTodaySessionCount();
+                if (usedToday >= CONJ_DAILY_LIMIT) {
+                    conjPracticeDailyStatus.textContent = `⏳ Bạn đã luyện đủ ${CONJ_DAILY_LIMIT} lượt hôm nay rồi — quay lại vào ngày mai nhé!`;
+                    return;
+                }
+                await conjLoadStats();
+                const maxGrade = Number(conjGradeSlider.value);
+                const mcQuestions = conjPickQuestions(CONJ_MC_BANK, maxGrade, 10).map(q => ({ ...q, qType: 'mc' }));
+                const fillQuestions = conjPickQuestions(CONJ_FILL_BANK, maxGrade, 10).map(q => ({ ...q, qType: 'fill' }));
+                if (mcQuestions.length + fillQuestions.length < 1) return; // phạm vi trống (an toàn)
+
+                conjPracticeQuestions = conjShuffle([...mcQuestions, ...fillQuestions]);
+                conjPracticeIndex = 0;
+                conjPracticeCorrectCount = 0;
+                conjPracticeWrongCount = 0;
+                conjPracticeRoundScore = 0;
+                conjPracticeDeltas = {};
+                conjPracticeIntro.style.display = 'none';
+                conjPracticeResultEl.style.display = 'none';
+                conjPracticeQuizEl.style.display = 'block';
+                conjShowQuestion();
+            } finally {
+                conjPracticeStartBtn.disabled = false;
+                conjPracticeStartBtn.textContent = '▶️ Bắt đầu luyện tập';
+            }
+        }
+
+        // [MỚI] Bọc câu ví dụ để: (a) các từ khác vẫn tra nghĩa được bình thường (dùng chung
+        // window.vocabTap như khung "Danh sách"), (b) đúng 1 vị trí của "blank" được thay bằng ô
+        // trống — làm bằng cách thay "blank" bằng 1 placeholder KHÔNG CHỨA CHỮ CÁI trước khi bọc
+        // tra từ (nên không bị bọc nhầm thành 1 từ tappable), rồi mới thay placeholder đó bằng ô
+        // trống sau khi bọc xong.
+        function conjBuildSentenceHtml(example, blank) {
+            const PLACEHOLDER = '090909090909';
+            const escBlank = blank.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const withPlaceholder = example.replace(new RegExp(escBlank, 'i'), PLACEHOLDER);
+            const wrapFn = (window.vocabTap && window.vocabTap.wrap) ? window.vocabTap.wrap : escapeHtmlConj;
+            return wrapFn(withPlaceholder).replace(PLACEHOLDER, '<span class="conj-blank-slot">＿＿＿</span>');
         }
 
         function conjShowQuestion() {
             conjPracticeAnswered = false;
-            const it = conjPracticeQuestions[conjPracticeIndex];
-            conjPracticeProgress.textContent = `Câu ${conjPracticeIndex + 1}/${conjPracticeQuestions.length}`;
-            conjPracticeScore.textContent = `Đúng: ${conjPracticeCorrectCount}/${conjPracticeIndex}`;
+            const q = conjPracticeQuestions[conjPracticeIndex];
+            const qTypeLabel = (q.qType === 'mc') ? 'Trắc nghiệm' : 'Điền từ';
+            conjPracticeProgress.textContent = `Câu ${conjPracticeIndex + 1}/${conjPracticeQuestions.length} (${qTypeLabel})`;
+            conjPracticeScore.textContent = `Điểm: ${conjPracticeRoundScore}`;
 
-            // Thay ĐÚNG 1 lần xuất hiện đầu tiên của "blank" trong câu ví dụ bằng 1 chỗ trống —
-            // so khớp không phân biệt hoa/thường nhưng giữ nguyên phần còn lại của câu.
-            const sentenceHtml = escapeHtmlConj(it.example).replace(
-                new RegExp(escapeHtmlConj(it.blank).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'),
-                '<span class="conj-blank-slot">＿＿＿</span>'
-            );
-            conjPracticeSentence.innerHTML = sentenceHtml;
-
-            const options = conjBuildOptions(it, conjPracticePool);
-            conjPracticeOptions.innerHTML = options.map(opt =>
-                `<button type="button" class="conj-practice-option-btn" data-blank="${escapeHtmlConj(opt.blank)}">${escapeHtmlConj(opt.blank)}</button>`
-            ).join('');
+            conjPracticeSentence.innerHTML = conjBuildSentenceHtml(q.example, q.blank);
 
             conjPracticeFeedback.style.display = 'none';
             conjPracticeFeedback.className = 'conj-practice-feedback';
             conjPracticeNextBtn.style.display = 'none';
+
+            if (q.qType === 'mc') {
+                conjPracticeOptions.style.display = 'grid';
+                conjPracticeFillEl.style.display = 'none';
+                const options = conjBuildMcOptions(q, Number(conjGradeSlider.value));
+                conjPracticeOptions.innerHTML = options.map(opt =>
+                    `<button type="button" class="conj-practice-option-btn" data-blank="${escapeHtmlConj(opt)}">${escapeHtmlConj(opt)}</button>`
+                ).join('');
+            } else {
+                conjPracticeOptions.style.display = 'none';
+                conjPracticeOptions.innerHTML = '';
+                conjPracticeFillEl.style.display = 'flex';
+                conjPracticeFillInput.value = '';
+                conjPracticeFillInput.classList.remove('correct', 'wrong');
+                conjPracticeFillInput.disabled = false;
+                conjPracticeFillSubmitBtn.disabled = false;
+                setTimeout(() => conjPracticeFillInput.focus(), 0);
+            }
+        }
+
+        // [MỚI] Xử lý chung sau khi biết đúng/sai (dùng cho cả 2 loại câu) — cập nhật điểm số
+        // lượt này (+2 đúng / -1 sai), gộp thay đổi thống kê (wrong/seen) để lưu 1 lần lúc kết
+        // thúc lượt, và hiện feedback + nút "Câu tiếp theo".
+        function conjRecordAnswer(question, isCorrect) {
+            if (isCorrect) { conjPracticeCorrectCount++; conjPracticeRoundScore += 2; }
+            else { conjPracticeWrongCount++; conjPracticeRoundScore -= 1; }
+
+            const d = conjPracticeDeltas[question.id] || (conjPracticeDeltas[question.id] = { wrongDelta: 0, seenDelta: 0 });
+            d.seenDelta += 1;
+            if (!isCorrect) d.wrongDelta += 1;
+
+            const meta = conjItemMeta[question.id] || {};
+            conjPracticeFeedback.style.display = 'block';
+            conjPracticeFeedback.classList.add(isCorrect ? 'correct' : 'wrong');
+            conjPracticeFeedback.innerHTML = (isCorrect ? '✅ Chính xác! (+2 điểm) ' : `❌ Chưa đúng (-1 điểm) — đáp án đúng là "${escapeHtmlConj(question.blank)}". `)
+                + `<div class="conj-practice-meaning">${escapeHtmlConj(meta.term || '')}: ${escapeHtmlConj(meta.meaning || '')}</div>`;
+
+            conjPracticeScore.textContent = `Điểm: ${conjPracticeRoundScore}`;
+            conjPracticeNextBtn.style.display = 'inline-block';
+            conjPracticeNextBtn.textContent = (conjPracticeIndex + 1 < conjPracticeQuestions.length) ? 'Câu tiếp theo →' : 'Xem kết quả →';
         }
 
         function conjHandleAnswer(btn) {
             if (conjPracticeAnswered) return;
             conjPracticeAnswered = true;
-            const it = conjPracticeQuestions[conjPracticeIndex];
+            const q = conjPracticeQuestions[conjPracticeIndex];
             const chosen = btn.dataset.blank.toLowerCase();
-            const isCorrect = chosen === it.blank.toLowerCase();
-            if (isCorrect) conjPracticeCorrectCount++;
+            const isCorrect = chosen === q.blank.toLowerCase();
 
             conjPracticeOptions.querySelectorAll('.conj-practice-option-btn').forEach(b => {
                 b.disabled = true;
-                if (b.dataset.blank.toLowerCase() === it.blank.toLowerCase()) b.classList.add('correct');
+                if (b.dataset.blank.toLowerCase() === q.blank.toLowerCase()) b.classList.add('correct');
                 else if (b === btn) b.classList.add('wrong');
             });
 
-            conjPracticeFeedback.style.display = 'block';
-            conjPracticeFeedback.classList.add(isCorrect ? 'correct' : 'wrong');
-            conjPracticeFeedback.innerHTML = (isCorrect ? '✅ Chính xác! ' : `❌ Chưa đúng — đáp án đúng là "${escapeHtmlConj(it.blank)}". `)
-                + `<div class="conj-practice-meaning">${escapeHtmlConj(it.term)}: ${escapeHtmlConj(it.meaning)}</div>`;
+            conjRecordAnswer(q, isCorrect);
+        }
 
-            conjPracticeScore.textContent = `Đúng: ${conjPracticeCorrectCount}/${conjPracticeIndex + 1}`;
-            conjPracticeNextBtn.style.display = 'inline-block';
-            conjPracticeNextBtn.textContent = (conjPracticeIndex + 1 < conjPracticeQuestions.length) ? 'Câu tiếp theo →' : 'Xem kết quả →';
+        function conjHandleFillSubmit() {
+            if (conjPracticeAnswered) return;
+            if (!conjPracticeFillInput.value.trim()) return; // chưa gõ gì thì chưa cho nộp
+            conjPracticeAnswered = true;
+            const q = conjPracticeQuestions[conjPracticeIndex];
+            const isCorrect = conjCheckFillAnswer(conjPracticeFillInput.value, q.blank);
+
+            conjPracticeFillInput.disabled = true;
+            conjPracticeFillSubmitBtn.disabled = true;
+            conjPracticeFillInput.classList.add(isCorrect ? 'correct' : 'wrong');
+
+            conjRecordAnswer(q, isCorrect);
         }
 
         function conjNextQuestion() {
@@ -15675,18 +16134,75 @@ function toggleCompletion(symbolElement) {
             }
         }
 
+        // [MỚI] Lưu kết quả lượt luyện tập vừa xong lên Supabase: (a) cộng dồn "wrong_count"/
+        // "times_seen" theo từng liên từ vào conj_practice_stats (dựa trên số liệu ĐÃ TẢI lúc bắt
+        // đầu lượt + phần thay đổi trong lượt này — xem conjPracticeDeltas), (b) ghi 1 dòng vào
+        // conj_practice_sessions (dùng để giới hạn 2 lượt/ngày + cộng điểm chăm chỉ +1/câu đúng ở
+        // trang Thành tựu). Bọc try/catch riêng cho từng bảng: nếu bảng nào CHƯA được tạo thì bỏ
+        // qua đúng phần đó, không làm hỏng việc hiện kết quả cho học viên.
+        async function conjPersistPracticeResults() {
+            if (!currentUserId) return;
+            try {
+                const rows = Object.keys(conjPracticeDeltas).map(conjId => {
+                    const before = conjStatsMap[conjId] || { wrongCount: 0, timesSeen: 0 };
+                    const d = conjPracticeDeltas[conjId];
+                    return {
+                        user_id: currentUserId,
+                        conj_id: conjId,
+                        wrong_count: before.wrongCount + d.wrongDelta,
+                        times_seen: before.timesSeen + d.seenDelta,
+                        updated_at: new Date().toISOString()
+                    };
+                });
+                if (rows.length) {
+                    const { error } = await sb.from('conj_practice_stats').upsert(rows, { onConflict: 'user_id,conj_id' });
+                    if (error) throw error;
+                }
+            } catch (e) {
+                console.error('Lỗi khi lưu thống kê lỗi sai liên từ (có thể do bảng "conj_practice_stats" chưa được tạo — xem file SQL "conj_practice_setup.sql"):', e.message);
+            }
+            try {
+                const todayIso = new Date().toISOString().slice(0, 10);
+                const { error } = await sb.from('conj_practice_sessions').insert({
+                    user_id: currentUserId,
+                    session_date: todayIso,
+                    correct_count: conjPracticeCorrectCount,
+                    wrong_count: conjPracticeWrongCount,
+                    total_questions: conjPracticeQuestions.length,
+                    round_score: conjPracticeRoundScore
+                });
+                if (error) throw error;
+                if (typeof renderProfileAchievements === 'function') renderProfileAchievements(); // [MỚI] cập nhật ngay điểm chăm chỉ, không cần đợi mở hồ sơ
+            } catch (e) {
+                console.error('Lỗi khi lưu lượt luyện tập liên từ (có thể do bảng "conj_practice_sessions" chưa được tạo — xem file SQL "conj_practice_setup.sql"):', e.message);
+            }
+        }
+
         function conjShowPracticeResult() {
             conjPracticeQuizEl.style.display = 'none';
             conjPracticeResultEl.style.display = 'block';
             const total = conjPracticeQuestions.length;
-            conjPracticeResultText.textContent = `🎉 Bạn đã trả lời đúng ${conjPracticeCorrectCount}/${total} câu!`;
+            conjPracticeResultText.textContent = `🎉 Đúng ${conjPracticeCorrectCount}/${total} câu — Điểm lượt này: ${conjPracticeRoundScore} (+${conjPracticeCorrectCount} điểm chăm chỉ)`;
+            // [MỚI] Cập nhật NGAY conjStatsMap trong bộ nhớ (để khung "Danh sách" phản ánh đúng
+            // ngay cả khi chưa tải lại từ Supabase), rồi mới lưu lên Supabase ở dưới.
+            Object.keys(conjPracticeDeltas).forEach(conjId => {
+                const before = conjStatsMap[conjId] || { wrongCount: 0, timesSeen: 0 };
+                const d = conjPracticeDeltas[conjId];
+                conjStatsMap[conjId] = { wrongCount: before.wrongCount + d.wrongDelta, timesSeen: before.timesSeen + d.seenDelta };
+            });
+            conjPersistPracticeResults();
         }
 
-        function conjResetPracticeToIntro() {
+        async function conjResetPracticeToIntro() {
             conjPracticeQuizEl.style.display = 'none';
             conjPracticeResultEl.style.display = 'none';
             conjPracticeIntro.style.display = 'block';
             conjPracticePoolCount.textContent = conjPoolCountLabel(Number(conjGradeSlider.value));
+            const usedToday = await conjGetTodaySessionCount();
+            conjPracticeDailyStatus.textContent = (usedToday >= CONJ_DAILY_LIMIT)
+                ? `⏳ Bạn đã luyện đủ ${CONJ_DAILY_LIMIT} lượt hôm nay rồi — quay lại vào ngày mai nhé!`
+                : `Hôm nay đã luyện: ${usedToday}/${CONJ_DAILY_LIMIT} lượt.`;
+            conjPracticeStartBtn.style.display = (usedToday >= CONJ_DAILY_LIMIT) ? 'none' : 'inline-block';
         }
 
         conjPracticeStartBtn.addEventListener('click', conjStartPractice);
@@ -15695,6 +16211,10 @@ function toggleCompletion(symbolElement) {
         conjPracticeOptions.addEventListener('click', (e) => {
             const btn = e.target.closest('.conj-practice-option-btn');
             if (btn) conjHandleAnswer(btn);
+        });
+        conjPracticeFillSubmitBtn.addEventListener('click', conjHandleFillSubmit);
+        conjPracticeFillInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); conjHandleFillSubmit(); }
         });
 
         conjSubtabs.addEventListener('click', (e) => {
@@ -15720,6 +16240,7 @@ function toggleCompletion(symbolElement) {
             if (window.vocabTap && window.vocabTap.ensureLoaded) {
                 try { await window.vocabTap.ensureLoaded(); } catch (e) { console.error('Lỗi khi tải từ vựng cá nhân:', e.message); }
             }
+            await conjLoadStats(); // [MỚI] tải thống kê lỗi sai TRƯỚC khi vẽ "Danh sách" để sắp xếp đúng ngay từ đầu
             conjUpdateLabel(conjGradeSlider.value);
             conjRenderContent(Number(conjGradeSlider.value));
             // [MỚI] Mỗi lần mở lại mục Liên từ, luôn quay về tab "Danh sách" (tránh còn dở dang
@@ -15744,7 +16265,9 @@ function toggleCompletion(symbolElement) {
 
 
         // Bắt sự kiện chạm vào 1 từ tiếng Anh trong câu ví dụ để tra nghĩa (dùng chung bộ máy
-        // tra nghĩa window.vocabTap như mọi nơi khác trong app).
+        // tra nghĩa window.vocabTap như mọi nơi khác trong app) — áp dụng cho CẢ khung "Danh
+        // sách" LẪN câu ví dụ khi đang "Luyện tập" (conjBuildSentenceHtml ở trên cũng dùng chung
+        // window.vocabTap.wrap để bọc từ, kể cả trong câu hỏi luyện tập).
         conjPanel.addEventListener('click', (e) => {
             const wordEl = e.target.closest('.tappable-word');
             if (!wordEl) return;

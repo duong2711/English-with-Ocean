@@ -1156,7 +1156,7 @@
                     <h3 style="margin:0;">🔗 Liên từ (Conjunction)</h3>
                 </div>
             </div>
-            <p class="kid-hint">Kéo thanh trượt bên dưới để chỉ hiện các liên từ TỪ LỚP 1 ĐẾN khối lớp bạn chọn (cộng dồn dần theo lộ trình học). Các mục lớn (Liên từ kết hợp, Liên từ tương quan, Liên từ phụ thuộc, Trạng từ liên kết) luôn được giữ nguyên — chỉ có nội dung liên từ bên trong mỗi mục là thêm/bớt theo khối lớp. Chạm vào từ bất kỳ trong câu ví dụ để tra nghĩa.</p>
+            <p class="kid-hint">Kéo thanh trượt bên dưới để chỉ hiện các liên từ TỪ LỚP 1 ĐẾN khối lớp bạn chọn (cộng dồn dần theo lộ trình học). Các mục lớn (Liên từ kết hợp, Liên từ tương quan, Liên từ phụ thuộc, Trạng từ liên kết) luôn được giữ nguyên — chỉ có nội dung liên từ bên trong mỗi mục là thêm/bớt theo khối lớp. Liên từ nào bạn hay làm sai khi luyện tập sẽ được TỰ ĐỘNG đẩy lên ĐẦU danh sách trong mục/nhóm của nó để bạn ôn lại. Chạm vào từ bất kỳ trong câu ví dụ để tra nghĩa.</p>
             <div class="conj-grade-filter">
                 <label for="conj-grade-slider">Hiện liên từ đến khối: <strong id="conj-grade-label">Lớp 12 (Tất cả)</strong></label>
                 <input type="range" id="conj-grade-slider" min="1" max="12" step="1" value="12">
@@ -1167,20 +1167,26 @@
             </div>
             <div id="conj-content"></div>
 
-            <!-- ===== [MỚI] Chế độ Luyện tập — trắc nghiệm điền liên từ vào chỗ trống, lấy đúng
-                 trong phạm vi các liên từ đang hiện theo khối lớp đã chọn ở trên. ===== -->
+            <!-- ===== [MỚI] Chế độ Luyện tập — 10 câu trắc nghiệm + 10 câu điền từ (không gợi ý
+                 tiếng Việt) lấy từ ngân hàng 200 câu, ưu tiên liên từ hay sai, tối đa 2 lượt/ngày,
+                 chấm +2/-1 điểm mỗi câu và +1 điểm chăm chỉ mỗi câu đúng. ===== -->
             <div id="conj-practice" style="display:none;">
                 <div id="conj-practice-intro">
-                    <p class="kid-hint">Luyện tập trắc nghiệm điền liên từ vào chỗ trống — câu hỏi lấy đúng trong phạm vi <strong id="conj-practice-pool-count">0</strong> liên từ đang hiện theo khối lớp bạn chọn ở trên. Đổi khối lớp rồi quay lại đây để luyện phạm vi khác.</p>
+                    <p class="kid-hint">Mỗi lượt luyện tập gồm <strong>10 câu trắc nghiệm</strong> + <strong>10 câu điền từ</strong> (không gợi ý nghĩa tiếng Việt — điền đúng 1 trong các từ đồng nghĩa vẫn được tính đúng), lấy đúng trong phạm vi <strong id="conj-practice-pool-count">0</strong> liên từ đang hiện theo khối lớp bạn chọn ở trên, và ƯU TIÊN ra câu về liên từ bạn hay sai. Làm đúng +2 điểm, làm sai -1 điểm; mỗi câu đúng còn được +1 điểm chăm chỉ. Mỗi ngày chỉ luyện được tối đa <strong>2 lượt</strong>.</p>
+                    <p class="kid-hint" id="conj-practice-daily-status"></p>
                     <button type="button" class="loto-btn-secondary" id="conj-practice-start-btn">▶️ Bắt đầu luyện tập</button>
                 </div>
                 <div id="conj-practice-quiz" style="display:none;">
                     <div class="conj-practice-progress">
-                        <span id="conj-practice-progress-text">Câu 1/10</span>
-                        <span id="conj-practice-score-text">Đúng: 0/0</span>
+                        <span id="conj-practice-progress-text">Câu 1/20</span>
+                        <span id="conj-practice-score-text">Điểm: 0</span>
                     </div>
                     <div class="conj-practice-sentence" id="conj-practice-sentence"></div>
                     <div class="conj-practice-options" id="conj-practice-options"></div>
+                    <div class="conj-practice-fill" id="conj-practice-fill" style="display:none;">
+                        <input type="text" class="news-edit-input" id="conj-practice-fill-input" placeholder="Gõ liên từ còn thiếu vào đây...">
+                        <button type="button" class="loto-btn-secondary" id="conj-practice-fill-submit-btn">Kiểm tra</button>
+                    </div>
                     <div class="conj-practice-feedback" id="conj-practice-feedback"></div>
                     <button type="button" class="loto-btn-secondary" id="conj-practice-next-btn" style="display:none;">Câu tiếp theo →</button>
                 </div>
