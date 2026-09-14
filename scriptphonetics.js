@@ -9962,6 +9962,9 @@ function toggleCompletion(symbolElement) {
         const importViInput     = document.getElementById('podcast-admin-import-vi');
         const importBtn         = document.getElementById('podcast-admin-import-btn');
         const importStatus      = document.getElementById('podcast-admin-import-status');
+        const adminPhrasesInput   = document.getElementById('podcast-admin-phrases-input');
+        const adminPhrasesSaveBtn = document.getElementById('podcast-admin-phrases-save-btn');
+        const adminPhrasesStatus  = document.getElementById('podcast-admin-phrases-status');
         const segmentsAdminEl   = document.getElementById('podcast-admin-segments');
         const addSegmentBtn     = document.getElementById('podcast-admin-add-segment-btn');
         const segmentsStatus    = document.getElementById('podcast-admin-segments-status');
@@ -9991,7 +9994,27 @@ function toggleCompletion(symbolElement) {
         const quizOptionsEl   = document.getElementById('podcast-quiz-options');
         const quizFeedbackEl  = document.getElementById('podcast-quiz-feedback');
 
+        // [MỚI] Panel "Luyện tập dịch cụm từ" — hiện sau khi hoàn thành toàn bộ podcast, CHỈ khi
+        // giảng viên có nhập danh sách cụm từ khuyết tùy chỉnh (currentPodcast.customPhrases).
+        const phrasePracticeEl      = document.getElementById('podcast-phrase-practice');
+        const phraseIntroEl         = document.getElementById('podcast-phrase-intro');
+        const phraseStartBtn        = document.getElementById('podcast-phrase-start-btn');
+        const phraseIntroStatus     = document.getElementById('podcast-phrase-intro-status');
+        const phraseQuizEl          = document.getElementById('podcast-phrase-quiz');
+        const phraseProgressFill    = document.getElementById('podcast-phrase-progress-fill');
+        const phraseProgressText    = document.getElementById('podcast-phrase-progress-text');
+        const phraseViEl            = document.getElementById('podcast-phrase-vi');
+        const phraseTargetHintEl    = document.getElementById('podcast-phrase-target-hint');
+        const phraseAnswerInput     = document.getElementById('podcast-phrase-answer-input');
+        const phraseCheckBtn        = document.getElementById('podcast-phrase-check-btn');
+        const phraseFeedbackEl      = document.getElementById('podcast-phrase-feedback');
+        const phraseNextBtn         = document.getElementById('podcast-phrase-next-btn');
+        const phraseResultEl        = document.getElementById('podcast-phrase-result');
+        const phraseResultText      = document.getElementById('podcast-phrase-result-text');
+        const phraseRestartBtn      = document.getElementById('podcast-phrase-restart-btn');
+
         if (!podcastPanel || !detailView || !vocabFolderGrid) return;
+
 
         // [SỬA] Đổi từ cách khuyết theo TỈ LỆ số từ/dòng sang khuyết CỐ ĐỊNH đúng
         // BLANKS_PER_SEGMENT (4) từ cho MỖI "đoạn script" (đơn vị hiển thị gồm
@@ -10214,7 +10237,13 @@ function toggleCompletion(symbolElement) {
             function closeCurrentChunk() {
                 if (!current.length) return;
                 const chunk = { index: chunks.length, lines: current };
-                podPickChunkBlanks(chunk);
+                // [MỚI] Nếu giáo viên có nhập danh sách cụm từ khuyết tùy chỉnh cho podcast này,
+                // dùng HẲN cơ chế đó (khuyết đúng cụm từ + hiện nghĩa) thay vì khuyết ngẫu nhiên.
+                if (currentPodcast && currentPodcast.customPhrases && currentPodcast.customPhrases.length) {
+                    podPickChunkCustomBlanks(chunk);
+                } else {
+                    podPickChunkBlanks(chunk);
+                }
                 chunks.push(chunk);
                 current = [];
                 wordCount = 0;
@@ -10302,6 +10331,62 @@ function toggleCompletion(symbolElement) {
                 .forEach(c => { lines[c.lineListI].blanks.push({ partIndex: c.partIndex, answer: c.core }); });
         }
 
+        // [MỚI] Tìm 1 CỤM TỪ (có thể nhiều từ) trong "parts" (đã tách theo podTokenizeLine) của
+        // 1 dòng — so khớp TỪNG TỪ, không phân biệt hoa/thường, khớp Y HỆT (không xử lý chia
+        // thì/số nhiều, giáo viên cần gõ đúng dạng xuất hiện trong transcript). Trả về
+        // {partStart, partEnd} (chỉ số "part" ĐẦU và CUỐI của cụm, bao gồm cả 2 đầu) hoặc null
+        // nếu không tìm thấy.
+        function podFindPhraseSpanInParts(parts, phrase) {
+            const phraseWords = String(phrase || '').toLowerCase().trim().split(/\s+/).filter(Boolean);
+            if (!phraseWords.length) return null;
+            const wordIdxList = [];
+            const normWords = [];
+            parts.forEach((p, i) => {
+                if (p.isWord) { wordIdxList.push(i); normWords.push(p.core.toLowerCase()); }
+            });
+            for (let start = 0; start <= normWords.length - phraseWords.length; start++) {
+                let ok = true;
+                for (let j = 0; j < phraseWords.length; j++) {
+                    if (normWords[start + j] !== phraseWords[j]) { ok = false; break; }
+                }
+                if (ok) {
+                    return { partStart: wordIdxList[start], partEnd: wordIdxList[start + phraseWords.length - 1] };
+                }
+            }
+            return null;
+        }
+
+        // [MỚI] Chọn chỗ trống theo DANH SÁCH CỤM TỪ TÙY CHỈNH của giáo viên (currentPodcast.
+        // customPhrases) — THAY THẾ hoàn toàn cơ chế khuyết ngẫu nhiên (podPickChunkBlanks) cho cả
+        // đoạn script này. Với MỖI cụm từ trong danh sách, tìm trong TỪNG DÒNG của đoạn xem có
+        // xuất hiện không — có thì tạo 1 chỗ trống SPAN NHIỀU "part" (partIndex..partEnd) kèm
+        // "meaning" (nghĩa tiếng Việt) để hiện cạnh ô trống. Dòng/đoạn KHÔNG chứa cụm từ nào thì
+        // KHÔNG có chỗ trống (giữ nguyên văn bản, không khuyết ngẫu nhiên nữa).
+        function podPickChunkCustomBlanks(chunk) {
+            const lines = chunk.lines || [];
+            lines.forEach(line => { line.blanks = []; });
+            (currentPodcast.customPhrases || []).forEach(cp => {
+                lines.forEach(line => {
+                    const span = podFindPhraseSpanInParts(line.parts, cp.phrase);
+                    if (!span) return;
+                    // Bỏ qua nếu vùng này đã bị 1 cụm khác (khai báo trước) chiếm mất — ưu tiên
+                    // theo đúng thứ tự giáo viên liệt kê trong danh sách.
+                    const overlaps = line.blanks.some(b => !(span.partEnd < b.partIndex || span.partStart > b.partEnd));
+                    if (overlaps) return;
+                    const answer = line.parts.slice(span.partStart, span.partEnd + 1)
+                        .map((x, i, arr) => {
+                            if (!x.isWord) return x.text;
+                            let t = x.core;
+                            if (i > 0) t = x.lead + t; // giữ dấu câu/khoảng trắng nằm GIỮA cụm (không phải lead của từ đầu/trail của từ cuối)
+                            if (i < arr.length - 1) t = t + x.trail;
+                            return t;
+                        }).join('');
+                    line.blanks.push({ partIndex: span.partStart, partEnd: span.partEnd, answer, meaning: cp.meaning });
+                });
+            });
+            lines.forEach(line => line.blanks.sort((a, b) => a.partIndex - b.partIndex));
+        }
+
         // ================= SUPABASE: TẢI / LƯU / XOÁ NỘI DUNG =================
         async function loadPodcastsFromDB() {
             const { data, error } = await sb.from('podcast_content').select('*').order('id', { ascending: true });
@@ -10324,7 +10409,8 @@ function toggleCompletion(symbolElement) {
                 const { error } = await sb.from('podcast_content').update({
                     title: currentPodcast.title,
                     audio_url: currentPodcast.audio_url,
-                    segments: currentPodcast.segments
+                    segments: currentPodcast.segments,
+                    custom_phrases: currentPodcast.customPhrases || [] // [MỚI] danh sách cụm từ khuyết tùy chỉnh
                 }).eq('id', currentPodcast.id);
                 if (error) throw error;
                 return true;
@@ -10414,15 +10500,28 @@ function toggleCompletion(symbolElement) {
         // ================= MỞ 1 PODCAST =================
         async function openPodcast(p) {
             currentPodcast = p;
+            // [MỚI] Chuẩn hoá danh sách cụm từ khuyết tùy chỉnh — nếu cột "custom_phrases" chưa
+            // tồn tại trên Supabase (chưa chạy file SQL setup) thì p.custom_phrases sẽ là
+            // undefined, coi như mảng rỗng (dùng cơ chế khuyết ngẫu nhiên mặc định, không lỗi).
+            currentPodcast.customPhrases = Array.isArray(p.custom_phrases) ? p.custom_phrases : [];
             detailTitleEl.textContent = p.title;
             listView.style.display = 'none';
             detailView.style.display = '';
             deleteBtn.style.display = isTeacher ? '' : 'none';
             adminBar.style.display = isTeacher ? '' : 'none';
 
+            // [MỚI] Mở podcast MỚI thì luôn reset panel "Luyện tập dịch cụm từ" về trạng thái ẩn
+            // ban đầu (tránh còn hiện trạng thái luyện tập dở của podcast đã xem trước đó).
+            phrasePracticeEl.style.display = 'none';
+            phraseQuizEl.style.display = 'none';
+            phraseResultEl.style.display = 'none';
+            phraseIntroEl.style.display = 'block';
+            phraseIntroStatus.textContent = '';
+
             if (isTeacher) {
                 adminTitleInput.value = p.title || '';
                 adminAudioInput.value = p.audio_url || '';
+                adminPhrasesInput.value = currentPodcast.customPhrases.map(cp => cp.phrase + ' = ' + cp.meaning).join('\n');
                 renderAdminSegments();
             }
 
@@ -10637,29 +10736,44 @@ function toggleCompletion(symbolElement) {
             line.blanks.forEach((b, bi) => { blankByPart[b.partIndex] = bi; });
 
             let html = '';
-            line.parts.forEach((p, pi) => {
-                if (!p.isWord) { html += escapeHtmlPod(p.text); return; }
+            let pi = 0;
+            while (pi < line.parts.length) {
+                const p = line.parts[pi];
+                if (!p.isWord) { html += escapeHtmlPod(p.text); pi++; continue; }
                 if (blankByPart.hasOwnProperty(pi)) {
                     const bi = blankByPart[pi];
+                    const b = line.blanks[bi];
+                    // [MỚI] "partEnd" chỉ có ở chỗ trống CỤM TỪ TÙY CHỈNH (nhiều "part" gộp lại) —
+                    // chỗ trống ngẫu nhiên (1 từ) như cũ không có "partEnd", coi như partEnd = pi.
+                    const partEnd = (b.partEnd != null) ? b.partEnd : pi;
                     const done = isBlankDone(line.index, bi, stage);
-                    const answer = p.core;
-                    html += escapeHtmlPod(p.lead);
+                    const firstPart = line.parts[pi];
+                    const lastPart = line.parts[partEnd];
+                    const answer = b.answer; // đã ghép sẵn đúng nguyên văn từ podPickChunkBlanks/podPickChunkCustomBlanks
+                    // [MỚI] Nghĩa tiếng Việt gợi ý (chỉ có ở chỗ trống cụm từ tùy chỉnh) — LUÔN hiện
+                    // cạnh ô trống, kể cả TRƯỚC khi điền đúng, vì đây là gợi ý giúp học viên biết
+                    // cần nghe/điền cụm nào (khác với chỗ trống ngẫu nhiên — không có gợi ý nghĩa).
+                    const meaningHint = b.meaning ? ` <span class="pod-blank-meaning">(${escapeHtmlPod(b.meaning)})</span>` : '';
+
+                    html += escapeHtmlPod(firstPart.lead);
                     if (done) {
                         // [MỚI] Từ khuyết ĐÃ điền đúng (kết quả đã hiện ra) thì cho bấm vào tra
                         // nghĩa như từ thường (dùng lại wrapFn/window.vocabTap ở trên) — từ khuyết
                         // CHƯA điền/CHƯA chấm đúng thì không bọc tappable-word, nên không tra được.
                         html += `<span class="pod-blank pod-blank-correct" data-line-i="${lineI}" data-blank-i="${bi}">${wrapFn(answer)}</span>`;
                     } else if (stage === 1) {
-                        html += `<span class="pod-blank" data-line-i="${lineI}" data-blank-i="${bi}" data-answer="${escapeHtmlPod(answer)}">＿＿＿</span>`;
+                        html += `<span class="pod-blank" data-line-i="${lineI}" data-blank-i="${bi}" data-answer="${escapeHtmlPod(answer)}">＿＿＿</span>${meaningHint}`;
                     } else {
                         const widthCh = Math.max(answer.length + 2, 4);
-                        html += `<input type="text" class="pod-blank-input" data-line-i="${lineI}" data-blank-i="${bi}" data-answer="${escapeHtmlPod(answer)}" style="width:${widthCh}ch" autocomplete="off" autocapitalize="off" spellcheck="false">`;
+                        html += `<input type="text" class="pod-blank-input" data-line-i="${lineI}" data-blank-i="${bi}" data-answer="${escapeHtmlPod(answer)}" style="width:${widthCh}ch" autocomplete="off" autocapitalize="off" spellcheck="false">${meaningHint}`;
                     }
-                    html += escapeHtmlPod(p.trail);
+                    html += escapeHtmlPod(lastPart.trail);
+                    pi = partEnd + 1;
                 } else {
                     html += wrapFn(p.lead + p.core + p.trail);
+                    pi++;
                 }
-            });
+            }
             return html.replace(/\n/g, '<br>');
         }
 
@@ -10895,12 +11009,178 @@ function toggleCompletion(symbolElement) {
             } else {
                 podPlayCorrect();
                 feedbackEl.className = 'pod-feedback is-correct';
+                const isWholePodcastDone = nowDone && currentSegIndex === currentSegments.length - 1;
                 feedbackEl.textContent = nowDone && currentSegIndex < currentSegments.length - 1
                     ? '✅ Đúng hết đoạn này! Bấm "Đoạn sau ›" để tiếp tục.'
                     : '✅ Đúng hết ô trống trong đoạn này!';
                 maybeShowQuiz();
+                // [MỚI] Vừa hoàn thành ĐÚNG HẾT toàn bộ podcast (đoạn cuối cùng) — nếu giảng viên
+                // có nhập danh sách cụm từ khuyết tùy chỉnh cho bài này, hiện panel "Luyện tập
+                // dịch cụm từ" bên dưới (AI tự ra đề + tự chấm).
+                if (isWholePodcastDone && currentPodcast.customPhrases && currentPodcast.customPhrases.length) {
+                    phrasePracticeEl.style.display = 'block';
+                }
             }
             if (earnedAny) renderProfileAchievements(); // cập nhật ngay điểm chăm chỉ, không cần đợi mở hồ sơ
+        });
+
+        // ================= [MỚI] LUYỆN TẬP DỊCH CỤM TỪ (sau khi hoàn thành podcast) =================
+        // AI tự ra đề (1 câu tiếng Việt/cụm từ, dựa theo nghĩa giáo viên cho) + tự chấm bản dịch
+        // tiếng Anh của học viên — dùng lại đúng 1 hạ tầng gọi AI (window.aiHelper.callAIJSON)
+        // đã có sẵn ở khu "Tin ngắn", giống hệt cách khu "Viết lại câu" (wr1) đang làm.
+        let podPhraseState = null; // { items: [{phrase, meaning, vi}], index, correctCount }
+
+        // Kiểm tra 1 cụm từ (có thể nhiều từ) có xuất hiện trong câu trả lời không — chấp nhận
+        // biến thể chia thì/số ít số nhiều CƠ BẢN cho từng từ trong cụm (giống wrKeywordPresent).
+        function podPhraseKeywordPresent(answer, phrase) {
+            const words = String(phrase || '').toLowerCase().trim().split(/\s+/).filter(Boolean);
+            if (!words.length) return true;
+            const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const patterns = words.map(w => {
+                if (w.length > 2 && /[^aeiou]y$/.test(w)) return esc(w.slice(0, -1)) + '(?:y|ies)';
+                // [MỚI] Từ tận cùng bằng "e" câm (make, write, take...) khi thêm "-ing"/"-ed" sẽ
+                // BỎ chữ "e" đó (making/writing, không phải makeing/writeing) — chấp nhận CẢ 2
+                // dạng (có/không bỏ "e") để không bỏ sót các cách chia thường gặp.
+                if (w.length > 2 && /[^aeiou]e$/.test(w) && !/ee$/.test(w)) {
+                    return esc(w.slice(0, -1)) + '(?:e?s|e?d|ing)?';
+                }
+                return esc(w) + '(?:e?s|ing|ed|d)?';
+            });
+            try {
+                const re = new RegExp('\\b' + patterns.join('\\s+') + '\\b', 'i');
+                return re.test(String(answer || ''));
+            } catch (e) { return false; }
+        }
+
+        async function podStartPhrasePractice() {
+            if (phraseStartBtn.disabled) return;
+            const phrases = currentPodcast.customPhrases || [];
+            if (!phrases.length) return;
+            if (!window.aiHelper || typeof window.aiHelper.callAIJSON !== 'function') {
+                phraseIntroStatus.textContent = '❌ Chưa sẵn sàng module AI dùng chung — thử tải lại trang.';
+                return;
+            }
+            phraseStartBtn.disabled = true;
+            phraseIntroStatus.textContent = 'AI đang soạn câu luyện tập...';
+            try {
+                const listText = phrases.map((cp, i) => (i + 1) + '. ' + cp.phrase + ' = ' + cp.meaning).join('\n');
+                const prompt = 'Bạn là giáo viên tiếng Anh cho học viên Việt Nam mới bắt đầu học. '
+                    + 'Hãy đặt ra đúng ' + phrases.length + ' câu tiếng Việt, MỖI CÂU tương ứng với ĐÚNG 1 cụm tiếng Anh cho trước theo thứ tự dưới đây, sao cho khi học viên dịch câu tiếng Việt đó sang tiếng Anh, bản dịch tự nhiên NHẤT sẽ cần dùng đúng cụm tiếng Anh đó. '
+                    + 'YÊU CẦU CÂU ĐƠN GIẢN NHẤT CÓ THỂ (ngắn gọn, từ vựng cơ bản, cấu trúc ngữ pháp đơn giản), phù hợp học viên mới bắt đầu học tiếng Anh.\n'
+                    + 'Danh sách cụm từ (cụm tiếng Anh = nghĩa tiếng Việt):\n' + listText + '\n'
+                    + 'Chỉ trả lời bằng JSON hợp lệ, không thêm chữ nào khác, đúng định dạng: '
+                    + '{"items": [{"vi": "câu tiếng Việt đơn giản số 1"}, {"vi": "câu tiếng Việt đơn giản số 2"}]} '
+                    + '(ví dụ mẫu cho 2 câu — thực tế phải trả về ĐÚNG ' + phrases.length + ' phần tử trong mảng "items", GIỮ ĐÚNG THỨ TỰ như danh sách cụm từ ở trên).';
+                const result = await window.aiHelper.callAIJSON(prompt);
+                const items = (result && Array.isArray(result.items)) ? result.items : [];
+                if (items.length !== phrases.length) throw new Error('AI trả về không đúng số câu (' + items.length + '/' + phrases.length + ').');
+                podPhraseState = {
+                    items: phrases.map((cp, i) => ({ phrase: cp.phrase, meaning: cp.meaning, vi: String(items[i].vi || '').trim() })),
+                    index: 0,
+                    correctCount: 0
+                };
+                phraseIntroStatus.textContent = '';
+                phraseIntroEl.style.display = 'none';
+                phraseResultEl.style.display = 'none';
+                phraseQuizEl.style.display = 'block';
+                podShowPhraseQuestion();
+            } catch (e) {
+                phraseIntroStatus.textContent = '❌ Không tạo được đề luyện tập (lỗi AI: ' + e.message + ') — thử lại sau.';
+            } finally {
+                phraseStartBtn.disabled = false;
+            }
+        }
+
+        function podShowPhraseQuestion() {
+            const st = podPhraseState;
+            const it = st.items[st.index];
+            phraseProgressText.textContent = 'Câu ' + (st.index + 1) + '/' + st.items.length;
+            phraseProgressFill.style.width = Math.round((st.index / st.items.length) * 100) + '%';
+            phraseViEl.textContent = it.vi;
+            phraseTargetHintEl.textContent = 'Gợi ý: cần dùng cụm "' + it.phrase + '" (' + it.meaning + ')';
+            phraseAnswerInput.value = '';
+            phraseAnswerInput.disabled = false;
+            phraseFeedbackEl.innerHTML = '';
+            phraseFeedbackEl.className = '';
+            phraseNextBtn.style.display = 'none';
+            phraseCheckBtn.disabled = false;
+            setTimeout(() => phraseAnswerInput.focus(), 0);
+        }
+
+        async function podCheckPhraseAnswer() {
+            const st = podPhraseState;
+            if (!st || phraseCheckBtn.disabled) return;
+            const mine = phraseAnswerInput.value.trim();
+            if (!mine) { phraseAnswerInput.focus(); return; }
+            const it = st.items[st.index];
+
+            phraseCheckBtn.disabled = true;
+            phraseAnswerInput.disabled = true;
+            phraseFeedbackEl.className = '';
+            phraseFeedbackEl.innerHTML = '<div class="wr-loading">AI đang chấm bài của bạn...</div>';
+
+            const hasKeyword = podPhraseKeywordPresent(mine, it.phrase);
+            let aiResult = null;
+            try {
+                const esc = s => String(s).replace(/"/g, '\\"');
+                const prompt = 'Bạn là giáo viên tiếng Anh cho học viên Việt Nam mới bắt đầu, đang chấm bài dịch Việt-Anh. '
+                    + 'Câu tiếng Việt gốc: "' + esc(it.vi) + '". '
+                    + 'Cụm tiếng Anh BẮT BUỘC phải xuất hiện trong câu trả lời (nghĩa: "' + esc(it.meaning) + '"): "' + esc(it.phrase) + '". '
+                    + 'Câu trả lời của học viên: "' + esc(mine) + '". '
+                    + 'Hãy chấm LINH HOẠT theo các nguyên tắc sau: (1) chỉ cần đúng nghĩa cơ bản của câu gốc, không cần dịch từng chữ; (2) ngữ pháp/cấu trúc câu cơ bản đúng; (3) có dùng đúng cụm bắt buộc ở trên (chấp nhận biến thể chia thì/số ít số nhiều của cụm); (4) TUYỆT ĐỐI KHÔNG trừ điểm vì thiếu/sai dấu câu (dấu chấm, phẩy, viết hoa đầu câu...); (5) TUYỆT ĐỐI KHÔNG trừ điểm vì viết tắt hay viết đầy đủ (ví dụ "don\'t" và "do not", "it\'s" và "it is" coi như hoàn toàn tương đương, không phải lỗi). '
+                    + 'Chỉ trả lời bằng JSON hợp lệ, không thêm chữ nào khác, đúng định dạng: '
+                    + '{"correct": true hoặc false, "comment": "1-2 câu nhận xét ngắn gọn, khích lệ, bằng tiếng Việt — khen chỗ đã đúng, chỉ rõ lỗi cụ thể nếu có kèm gợi ý sửa"}';
+                aiResult = await window.aiHelper.callAIJSON(prompt);
+            } catch (e) {
+                console.warn('Lỗi AI chấm luyện tập cụm từ podcast (vẫn chấm theo từ khoá):', e.message);
+            }
+
+            const aiSaysWrong = aiResult && aiResult.correct === false;
+            const isCorrect = hasKeyword && !aiSaysWrong;
+            if (isCorrect) st.correctCount++;
+
+            let commentHtml;
+            if (aiResult && aiResult.comment) {
+                commentHtml = escapeHtmlPod(aiResult.comment);
+            } else if (!hasKeyword) {
+                commentHtml = 'Câu trả lời của bạn chưa dùng cụm bắt buộc: <b>' + escapeHtmlPod(it.phrase) + '</b>.';
+            } else {
+                commentHtml = 'Không kết nối được AI để nhận xét chi tiết — đã dùng đúng cụm bắt buộc.';
+            }
+
+            phraseFeedbackEl.className = isCorrect ? 'pod-feedback is-correct' : 'pod-feedback is-wrong';
+            phraseFeedbackEl.innerHTML = '<div>' + (isCorrect ? '✅ Tốt!' : '🤔 Xem lại nhé') + '</div>'
+                + '<div style="margin-top:6px;">' + commentHtml + '</div>';
+            phraseNextBtn.style.display = 'inline-block';
+            phraseNextBtn.textContent = (st.index + 1 < st.items.length) ? 'Câu tiếp theo →' : 'Xem kết quả →';
+        }
+
+        function podNextPhraseQuestion() {
+            podPhraseState.index++;
+            if (podPhraseState.index >= podPhraseState.items.length) {
+                podShowPhraseResult();
+            } else {
+                podShowPhraseQuestion();
+            }
+        }
+
+        function podShowPhraseResult() {
+            phraseQuizEl.style.display = 'none';
+            phraseResultEl.style.display = 'block';
+            const st = podPhraseState;
+            phraseResultText.textContent = '🎉 Bạn đã dịch đúng ' + st.correctCount + '/' + st.items.length + ' cụm từ!';
+        }
+
+        phraseStartBtn.addEventListener('click', podStartPhrasePractice);
+        phraseCheckBtn.addEventListener('click', podCheckPhraseAnswer);
+        phraseNextBtn.addEventListener('click', podNextPhraseQuestion);
+        phraseRestartBtn.addEventListener('click', () => {
+            phraseResultEl.style.display = 'none';
+            phraseIntroEl.style.display = 'block';
+            phraseIntroStatus.textContent = '';
+        });
+        phraseAnswerInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); podCheckPhraseAnswer(); }
         });
 
         // [XOÁ] Nút "🇻🇳 Xem bản dịch" chung cho cả đoạn đã được thay bằng kí hiệu 🇻🇳 riêng ở
@@ -10955,6 +11235,40 @@ function toggleCompletion(symbolElement) {
                 if (url) audioEl.src = url;
                 else audioEl.removeAttribute('src');
                 if (studentView.style.display !== 'none') updateAudioBox();
+            }
+        });
+
+        // [MỚI] Lưu danh sách cụm từ khuyết tùy chỉnh — mỗi dòng "cụm tiếng Anh = nghĩa tiếng
+        // Việt". Sau khi lưu, DỰNG LẠI toàn bộ currentSegments (podGroupIntoChunks sẽ tự chuyển
+        // sang cơ chế khuyết theo danh sách này thay vì ngẫu nhiên — xem podPickChunkBlanks).
+        adminPhrasesSaveBtn.addEventListener('click', async () => {
+            const lines = adminPhrasesInput.value.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+            const parsed = [];
+            const badLines = [];
+            lines.forEach(line => {
+                const idx = line.indexOf('=');
+                if (idx < 0) { badLines.push(line); return; }
+                const phrase = line.slice(0, idx).trim();
+                const meaning = line.slice(idx + 1).trim();
+                if (!phrase || !meaning) { badLines.push(line); return; }
+                parsed.push({ phrase, meaning });
+            });
+            if (badLines.length) {
+                adminPhrasesStatus.textContent = '❌ Sai định dạng ở dòng: "' + badLines[0] + '" — mỗi dòng phải có dạng "cụm tiếng Anh = nghĩa tiếng Việt".';
+                return;
+            }
+            currentPodcast.customPhrases = parsed;
+            adminPhrasesStatus.textContent = 'Đang lưu...';
+            const ok = await savePodcastContent();
+            if (!ok) { adminPhrasesStatus.textContent = '❌ Lưu thất bại, thử lại.'; return; }
+            adminPhrasesStatus.textContent = parsed.length
+                ? `💾 Đã lưu ${parsed.length} cụm từ — các đoạn transcript giờ sẽ khuyết đúng các cụm này thay vì khuyết ngẫu nhiên.`
+                : '💾 Đã xoá danh sách cụm từ — quay lại dùng cơ chế khuyết ngẫu nhiên mặc định.';
+            // Dựng lại toàn bộ đoạn/chỗ trống ngay lập tức theo danh sách vừa lưu, không cần tải lại trang.
+            if (currentPodcast.segments && currentPodcast.segments.length) {
+                currentSegments = podGroupIntoChunks(podPrepareLines(currentPodcast.segments));
+                currentSegIndex = Math.min(currentSegIndex, currentSegments.length - 1);
+                if (studentView.style.display !== 'none') renderSegment();
             }
         });
 

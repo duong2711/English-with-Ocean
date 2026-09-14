@@ -1465,6 +1465,14 @@
                     </div>
 
                     <div class="dub-field">
+                        <label class="news-quiz-edit-label">Danh sách cụm từ khuyết tùy chỉnh (tùy chọn)</label>
+                        <p class="news-quiz-edit-hint">Mỗi dòng 1 cụm, theo định dạng <code>cụm tiếng Anh = nghĩa tiếng Việt</code> — ví dụ: <code>thanks to = nhờ có</code>. Cụm phải xuất hiện Y HỆT (không phân biệt hoa/thường) trong transcript tiếng Anh ở trên thì hệ thống mới nhận diện được. NẾU danh sách này có nội dung, hệ thống sẽ THAY THẾ cơ chế khuyết từ ngẫu nhiên bằng cách khuyết ĐÚNG các cụm từ này (hiện kèm nghĩa tiếng Việt ngay cạnh ô trống để học viên biết cần điền gì) — dòng/đoạn nào KHÔNG chứa cụm nào trong danh sách sẽ KHÔNG có chỗ trống. Để trống danh sách này để quay lại dùng cơ chế khuyết ngẫu nhiên như mặc định. Sau khi học viên hoàn thành toàn bộ podcast, sẽ có thêm 1 bài luyện dịch các cụm từ này (AI tự ra đề câu tiếng Việt + tự chấm bản dịch tiếng Anh của học viên).</p>
+                        <textarea id="podcast-admin-phrases-input" class="news-edit-input dub-admin-import-textarea" placeholder="thanks to = nhờ có&#10;make up for = bù đắp cho&#10;in spite of = mặc dù"></textarea>
+                        <button class="loto-btn-secondary" id="podcast-admin-phrases-save-btn">💾 Lưu danh sách cụm từ</button>
+                        <div class="dub-admin-status" id="podcast-admin-phrases-status"></div>
+                    </div>
+
+                    <div class="dub-field">
                         <label class="news-quiz-edit-label">Danh sách các dòng (script)</label>
                         <p class="news-quiz-edit-hint">Mỗi "đoạn transcript" (nhiều dòng gộp lại — xem bên dưới) tự động khuyết CỐ ĐỊNH 4 từ, chọn trên cả đoạn chứ không tính riêng từng dòng (dòng nào cũng có thể có 0 từ khuyết, miễn cả đoạn đủ 4). Ưu tiên khuyết các từ vựng hay/khó hơn, KHÔNG khuyết các từ quá dễ/thông dụng như đại từ nhân xưng, mạo từ, giới từ, trợ động từ... Khi học viên luyện tập, các dòng liên tiếp được TỰ ĐỘNG GỘP LẠI thành 1 "đoạn transcript" hiển thị: tối đa 6 dòng/đoạn, NHƯNG nếu gặp câu quá dài (tường thuật, trình bày dài dòng...) khiến tổng số từ trong đoạn vượt khoảng 80 từ thì đoạn sẽ tự CHỐT SỚM HƠN (có thể chỉ 1-2 dòng), tránh đoạn quá dài gây nản cho học viên — không có câu nào bị cắt ngang giữa chừng. Đoạn cuối cùng của cả bài cũng có thể ngắn hơn nếu số dòng còn lại không chia hết. Mỗi lần chỉ hiện 1 đoạn, điền đúng hết đoạn hiện tại mới được sang đoạn kế tiếp; audio tự dừng (phát thêm khoảng 4 giây sau khi hết đoạn rồi mới dừng hẳn) khi hết đoạn, học viên bấm "Đoạn sau" mới phát tiếp; cuối mỗi dòng có kí hiệu 🇻🇳 để xem riêng bản dịch của dòng đó. Có thể nhập thêm "Tên người nói" cho từng dòng (hiện phía trước câu, không bị khuyết). Nhập "Thời điểm bắt đầu" (mm:ss) cho từng dòng để audio đồng bộ đúng. Câu hỏi trắc nghiệm không bắt buộc. Mọi thay đổi tự động lưu.</p>
                         <div id="podcast-admin-segments"></div>
@@ -1516,6 +1524,39 @@
                         <div id="podcast-quiz-question" class="pod-quiz-question"></div>
                         <div id="podcast-quiz-options"></div>
                         <div id="podcast-quiz-feedback" class="pod-quiz-feedback"></div>
+                    </div>
+                </div>
+
+                <!-- ===== [MỚI] Luyện tập dịch các cụm từ tùy chỉnh — hiện sau khi học viên hoàn
+                     thành toàn bộ podcast, CHỈ khi giảng viên có nhập danh sách cụm từ khuyết tùy
+                     chỉnh cho podcast này (xem khung quản trị ở trên). AI tự ra đề (1 câu tiếng
+                     Việt/cụm) và tự chấm bản dịch tiếng Anh của học viên. ===== -->
+                <div id="podcast-phrase-practice" style="display:none;">
+                    <div id="podcast-phrase-intro">
+                        <h4>🎯 Luyện tập dịch cụm từ</h4>
+                        <p class="kid-hint">Bạn đã hoàn thành toàn bộ podcast! Giờ hãy luyện dịch các cụm từ đã gặp trong bài — AI sẽ ra 1 câu tiếng Việt cho mỗi cụm, bạn dịch sang tiếng Anh sao cho có dùng đúng cụm đó. Không cần lo dấu câu hay viết tắt, chỉ cần đúng nghĩa và có dùng cụm từ yêu cầu.</p>
+                        <button type="button" class="kid-btn kid-btn-primary" id="podcast-phrase-start-btn">▶️ Bắt đầu luyện tập</button>
+                        <div class="dub-admin-status" id="podcast-phrase-intro-status"></div>
+                    </div>
+                    <div id="podcast-phrase-quiz" style="display:none;">
+                        <div class="pod-progress-row">
+                            <div class="pod-progress-track"><div class="pod-progress-fill" id="podcast-phrase-progress-fill"></div></div>
+                            <span class="pod-progress-text" id="podcast-phrase-progress-text"></span>
+                        </div>
+                        <div class="pod-segment-card">
+                            <div class="pod-phrase-vi" id="podcast-phrase-vi"></div>
+                            <div class="pod-phrase-target-hint" id="podcast-phrase-target-hint"></div>
+                            <textarea id="podcast-phrase-answer-input" class="news-edit-input" rows="2" placeholder="Gõ bản dịch tiếng Anh của bạn vào đây..."></textarea>
+                            <div class="pod-actions">
+                                <button type="button" class="kid-btn kid-btn-primary" id="podcast-phrase-check-btn">✔️ Kiểm tra</button>
+                            </div>
+                            <div id="podcast-phrase-feedback"></div>
+                            <button type="button" class="kid-btn kid-btn-primary" id="podcast-phrase-next-btn" style="display:none;">Câu tiếp theo →</button>
+                        </div>
+                    </div>
+                    <div id="podcast-phrase-result" style="display:none;">
+                        <p id="podcast-phrase-result-text"></p>
+                        <button type="button" class="kid-btn kid-btn-primary" id="podcast-phrase-restart-btn">🔄 Luyện lại</button>
                     </div>
                 </div>
             </div>
