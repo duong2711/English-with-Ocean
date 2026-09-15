@@ -1,0 +1,609 @@
+/* =============================================================
+   LDD ENGLISH — ROADMAP + READING LAB UI v2
+   Additive layer, loaded by ldd-ui-upgrade.js.
+   ============================================================= */
+
+/* =============================================================
+   1) LEARNING ROADMAPS
+   ============================================================= */
+body.ldd-ui-v2 .ldd-roadmap-page {
+    width: min(100%, 980px);
+    margin-inline: auto;
+}
+
+.ldd-roadmap-hero {
+    position: relative;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 56px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 16px;
+    margin: 4px auto 16px;
+    padding: 18px 20px;
+    max-width: 980px;
+    background:
+        linear-gradient(135deg, rgba(79,110,247,.09), rgba(255,255,255,.92) 52%, rgba(16,185,129,.06)),
+        var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.ldd-roadmap-hero::after {
+    content: '';
+    position: absolute;
+    width: 190px;
+    height: 190px;
+    right: -72px;
+    top: -100px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(79,110,247,.13), transparent 68%);
+    pointer-events: none;
+}
+
+.ldd-roadmap-hero-icon {
+    position: relative;
+    z-index: 1;
+    width: 54px;
+    height: 54px;
+    display: grid;
+    place-items: center;
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    box-shadow: 0 8px 22px rgba(79,110,247,.22);
+    color: #fff;
+    font-size: 1.15rem;
+    font-weight: 800;
+}
+
+.ldd-roadmap-hero-copy {
+    position: relative;
+    z-index: 1;
+    min-width: 0;
+}
+.ldd-roadmap-kicker {
+    margin-bottom: 4px;
+    color: var(--primary);
+    font-size: .68rem;
+    font-weight: 800;
+    letter-spacing: .085em;
+    text-transform: uppercase;
+}
+.ldd-roadmap-hero h2 {
+    margin: 0;
+    font-size: clamp(1.16rem, 2vw, 1.5rem);
+    letter-spacing: -.025em;
+}
+.ldd-roadmap-hero p {
+    max-width: 610px;
+    margin: 5px 0 0;
+    color: var(--text-muted);
+    font-size: .78rem;
+    line-height: 1.55;
+}
+
+.ldd-roadmap-hero-badge {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 10px;
+    background: rgba(255,255,255,.78);
+    border: 1px solid var(--border-strong);
+    border-radius: 999px;
+    color: var(--primary-dark);
+    font-size: .68rem;
+    font-weight: 800;
+    white-space: nowrap;
+    backdrop-filter: blur(7px);
+}
+
+body.ldd-ui-v2 .ldd-roadmap-page .roadmap-switcher {
+    max-width: 860px;
+    margin: 0 auto 18px;
+    padding: 7px;
+    background: rgba(255,255,255,.86);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    box-shadow: var(--shadow-xs);
+    backdrop-filter: blur(8px);
+}
+
+body.ldd-ui-v2 .ldd-roadmap-page .roadmap-switcher-tabs {
+    background: transparent;
+    border: 0;
+    padding: 0;
+}
+
+body.ldd-ui-v2 .ldd-roadmap-page .roadmap-nav-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    box-shadow: none;
+    border-color: var(--border);
+}
+
+body.ldd-ui-v2 .ldd-roadmap-page .roadmap-switcher-tab,
+body.ldd-ui-v2 .ldd-roadmap-page .worklife-switcher-tab,
+body.ldd-ui-v2 .ldd-roadmap-page .ielts-switcher-tab,
+body.ldd-ui-v2 .ldd-roadmap-page .grade-tab-btn,
+body.ldd-ui-v2 .ldd-roadmap-page .thpt-grade-tab-btn,
+body.ldd-ui-v2 .ldd-roadmap-page .g6-switcher-tab,
+body.ldd-ui-v2 .ldd-roadmap-page .g7-switcher-tab,
+body.ldd-ui-v2 .ldd-roadmap-page .g8-switcher-tab,
+body.ldd-ui-v2 .ldd-roadmap-page .g9-switcher-tab,
+body.ldd-ui-v2 .ldd-roadmap-page .g10-switcher-tab,
+body.ldd-ui-v2 .ldd-roadmap-page .g11-switcher-tab,
+body.ldd-ui-v2 .ldd-roadmap-page .g12-switcher-tab {
+    border-radius: 999px;
+}
+
+body.ldd-ui-v2 .ldd-roadmap-page .roadmap-wrap {
+    max-width: 860px;
+}
+
+body.ldd-ui-v2 .ldd-roadmap-page .roadmap-intro {
+    position: relative;
+    overflow: hidden;
+    border-radius: 22px;
+    box-shadow: 0 10px 30px rgba(30,42,69,.14);
+}
+
+body.ldd-ui-v2 .ldd-roadmap-page .roadmap-intro::after {
+    content: '';
+    position: absolute;
+    width: 210px;
+    height: 210px;
+    right: -92px;
+    bottom: -126px;
+    border: 30px solid rgba(255,255,255,.10);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+body.ldd-ui-v2 .ldd-roadmap-page .roadmap-intro-badge {
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+}
+
+body.ldd-ui-v2 .ldd-roadmap-page .roadmap-stat {
+    min-width: 80px;
+    border: 1px solid rgba(255,255,255,.15);
+    backdrop-filter: blur(5px);
+}
+
+body.ldd-ui-v2 .ldd-roadmap-page .roadmap-timeline::before {
+    width: 3px;
+    background: linear-gradient(to bottom, var(--primary), var(--border-strong) 45%, var(--success));
+    opacity: .55;
+}
+
+body.ldd-ui-v2 .ldd-roadmap-page .roadmap-day-marker {
+    box-shadow: 0 0 0 5px var(--bg), 0 2px 8px rgba(30,42,69,.12);
+}
+
+body.ldd-ui-v2 .ldd-roadmap-page .roadmap-day-card {
+    border-radius: 16px;
+    border-top-color: rgba(226,232,248,.88);
+    border-right-color: rgba(226,232,248,.88);
+    border-bottom-color: rgba(226,232,248,.88);
+    box-shadow: var(--shadow-xs);
+}
+
+body.ldd-ui-v2 .ldd-roadmap-page .roadmap-day:hover .roadmap-day-card {
+    transform: translateX(4px);
+    box-shadow: var(--shadow-md);
+}
+
+body.ldd-ui-v2 .ldd-roadmap-page .roadmap-stage-tag,
+body.ldd-ui-v2 .ldd-roadmap-page .ielts-tag,
+body.ldd-ui-v2 .ldd-roadmap-page .ielts-book-level {
+    border: 1px solid rgba(79,110,247,.10);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.55);
+}
+
+body.ldd-ui-v2 .ldd-roadmap-page .gstage-accordion {
+    gap: 14px;
+}
+
+body.ldd-ui-v2 .ldd-roadmap-page .gstage-block {
+    border-radius: 16px;
+    box-shadow: var(--shadow-xs);
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+body.ldd-ui-v2 .ldd-roadmap-page .gstage-block:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+    border-color: var(--border-strong);
+}
+body.ldd-ui-v2 .ldd-roadmap-page .gstage-header {
+    padding: 15px 17px;
+}
+body.ldd-ui-v2 .ldd-roadmap-page .gday-row {
+    border: 1px solid transparent;
+}
+body.ldd-ui-v2 .ldd-roadmap-page .gday-row:hover {
+    background: var(--surface);
+    border-color: var(--border);
+    box-shadow: var(--shadow-xs);
+}
+
+body.ldd-ui-v2 .ldd-roadmap-page .ielts-block {
+    border-radius: 16px;
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+body.ldd-ui-v2 .ldd-roadmap-page .ielts-block:hover {
+    transform: translateY(-2px);
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-sm);
+}
+body.ldd-ui-v2 .ldd-roadmap-page .ielts-block-header {
+    padding: 15px 17px;
+}
+body.ldd-ui-v2 .ldd-roadmap-page .ielts-book,
+body.ldd-ui-v2 .ldd-roadmap-page .ielts-type-card,
+body.ldd-ui-v2 .ldd-roadmap-page .ielts-compare-card {
+    border-radius: 12px;
+    transition: border-color .15s ease, background .15s ease, transform .15s ease;
+}
+body.ldd-ui-v2 .ldd-roadmap-page .ielts-book:hover,
+body.ldd-ui-v2 .ldd-roadmap-page .ielts-type-card:hover {
+    background: var(--surface);
+    border-color: var(--border-strong);
+    transform: translateY(-1px);
+}
+
+body.ldd-ui-v2 .ldd-roadmap-page .roadmap-dots,
+body.ldd-ui-v2 .ldd-roadmap-page .worklife-dots,
+body.ldd-ui-v2 .ldd-roadmap-page .ielts-dots,
+body.ldd-ui-v2 .ldd-roadmap-page [class$="-dots"] {
+    margin-top: 16px;
+}
+
+/* =============================================================
+   2) READING / NEWS
+   ============================================================= */
+body.ldd-ui-v2 #news-panel,
+body.ldd-ui-v2 #news-article-panel {
+    width: min(100%, 1080px);
+    margin-inline: auto;
+}
+
+.ldd-news-hero {
+    position: relative;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr);
+    gap: 14px;
+    align-items: center;
+    margin: 0 0 16px;
+    padding: 18px 20px;
+    background:
+        linear-gradient(135deg, rgba(14,165,183,.10), rgba(255,255,255,.93) 52%, rgba(79,110,247,.06)),
+        var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.ldd-news-hero::after {
+    content: 'A';
+    position: absolute;
+    right: 18px;
+    top: -22px;
+    color: rgba(79,110,247,.055);
+    font-size: 8rem;
+    line-height: 1;
+    font-weight: 800;
+    pointer-events: none;
+}
+
+.ldd-news-hero-icon {
+    position: relative;
+    z-index: 1;
+    width: 50px;
+    height: 50px;
+    display: grid;
+    place-items: center;
+    border-radius: 15px;
+    background: linear-gradient(135deg, #0ea5b7, #0b7285);
+    color: #fff;
+    font-size: 1.2rem;
+    box-shadow: 0 8px 22px rgba(14,165,183,.22);
+}
+
+.ldd-news-hero-copy {
+    position: relative;
+    z-index: 1;
+    min-width: 0;
+}
+.ldd-news-hero-kicker {
+    margin-bottom: 3px;
+    color: #0b7285;
+    font-size: .67rem;
+    font-weight: 800;
+    letter-spacing: .085em;
+    text-transform: uppercase;
+}
+.ldd-news-hero h4 {
+    margin: 0;
+    color: var(--text);
+    font-size: 1.08rem;
+    letter-spacing: -.02em;
+}
+.ldd-news-hero p {
+    margin: 4px 0 0;
+    max-width: 680px;
+    color: var(--text-muted);
+    font-size: .76rem;
+    line-height: 1.55;
+}
+.ldd-news-hero-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 9px;
+}
+.ldd-news-hero-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.72);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: .64rem;
+    font-weight: 700;
+}
+
+body.ldd-ui-v2 #news-cards-grid {
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 16px;
+    margin-top: 12px;
+}
+
+body.ldd-ui-v2 #news-cards-grid .news-card {
+    display: flex;
+    min-height: 100%;
+    flex-direction: column;
+    border-width: 1px;
+    border-radius: 16px;
+    box-shadow: var(--shadow-xs);
+    transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+body.ldd-ui-v2 #news-cards-grid .news-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-md);
+}
+body.ldd-ui-v2 #news-cards-grid .news-card-thumb {
+    aspect-ratio: 16 / 9;
+}
+body.ldd-ui-v2 #news-cards-grid .news-card-title {
+    padding: 12px 13px 5px;
+    font-size: .9rem;
+    font-weight: 800;
+    line-height: 1.42;
+    letter-spacing: -.01em;
+}
+body.ldd-ui-v2 #news-cards-grid .news-card-date {
+    padding: 0 13px 8px;
+    font-size: .68rem;
+}
+
+.ldd-news-card-cta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: auto;
+    padding: 9px 13px 11px;
+    border-top: 1px solid var(--border);
+    color: var(--primary-dark);
+    font-size: .7rem;
+    font-weight: 800;
+}
+.ldd-news-card-cta-arrow {
+    width: 24px;
+    height: 24px;
+    display: inline-grid;
+    place-items: center;
+    border-radius: 8px;
+    background: var(--primary-light);
+    transition: transform .16s ease;
+}
+.news-card:hover .ldd-news-card-cta-arrow {
+    transform: translateX(2px);
+}
+
+body.ldd-ui-v2 #news-cards-grid .news-card.news-card-read {
+    background: var(--surface);
+    border-color: rgba(16,185,129,.38);
+}
+body.ldd-ui-v2 #news-cards-grid .news-card.news-card-read::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 3px;
+    background: var(--success);
+    z-index: 1;
+}
+body.ldd-ui-v2 #news-cards-grid .news-card.news-card-read .ldd-news-card-cta {
+    color: var(--success-dark);
+}
+body.ldd-ui-v2 #news-cards-grid .news-card.news-card-read .ldd-news-card-cta-arrow {
+    background: var(--success-light);
+}
+
+body.ldd-ui-v2 #news-admin-bar {
+    margin: 2px 0 10px;
+}
+body.ldd-ui-v2 .news-admin-btn {
+    border-radius: 10px;
+    font-weight: 750;
+}
+body.ldd-ui-v2 .news-admin-btn-primary {
+    box-shadow: 0 4px 12px rgba(79,110,247,.16);
+}
+
+body.ldd-ui-v2 #news-article-panel > .grammar-panel-header {
+    margin-bottom: 12px !important;
+}
+
+.ldd-reading-meta {
+    display: none;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 7px;
+    margin: 0 0 14px;
+}
+.ldd-reading-meta.is-visible { display: flex; }
+
+.ldd-reading-meta-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 9px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--text-muted);
+    font-size: .67rem;
+    font-weight: 700;
+}
+
+body.ldd-ui-v2 .news-article-body {
+    gap: 18px;
+}
+body.ldd-ui-v2 .news-article-top {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 14px;
+    box-shadow: var(--shadow-xs);
+}
+body.ldd-ui-v2 .news-article-img {
+    border-radius: 13px;
+    box-shadow: var(--shadow-xs);
+}
+body.ldd-ui-v2 .news-article-text {
+    margin-top: 14px;
+    color: var(--text);
+    font-size: .92rem;
+    line-height: 1.82;
+}
+body.ldd-ui-v2 .news-article-text p + p {
+    margin-top: .9em;
+}
+
+body.ldd-ui-v2 .news-translate-section {
+    border-radius: var(--radius-lg);
+    border-color: var(--border);
+    box-shadow: var(--shadow-xs);
+}
+
+body.ldd-ui-v2 #rd-s1-news-card,
+body.ldd-ui-v2 #rd-s2-news-card,
+body.ldd-ui-v2 #rd-s3-news-card,
+body.ldd-ui-v2 #rd-s3-article-card {
+    position: relative;
+    overflow: hidden;
+    border-color: rgba(14,165,183,.24);
+    background: linear-gradient(145deg, rgba(14,165,183,.055), var(--surface) 62%);
+}
+body.ldd-ui-v2 #rd-s1-news-card::after,
+body.ldd-ui-v2 #rd-s2-news-card::after,
+body.ldd-ui-v2 #rd-s3-news-card::after,
+body.ldd-ui-v2 #rd-s3-article-card::after {
+    content: '';
+    position: absolute;
+    width: 82px;
+    height: 82px;
+    right: -40px;
+    bottom: -44px;
+    border-radius: 50%;
+    background: rgba(14,165,183,.08);
+    pointer-events: none;
+}
+
+/* =============================================================
+   3) RESPONSIVE
+   ============================================================= */
+@media (max-width: 700px) {
+    .ldd-roadmap-hero {
+        grid-template-columns: 48px minmax(0, 1fr);
+        padding: 15px;
+        gap: 12px;
+    }
+    .ldd-roadmap-hero-icon {
+        width: 46px;
+        height: 46px;
+        border-radius: 13px;
+        font-size: 1rem;
+    }
+    .ldd-roadmap-hero-badge {
+        grid-column: 1 / -1;
+        justify-self: start;
+        margin-left: 60px;
+        margin-top: -7px;
+    }
+
+    body.ldd-ui-v2 .ldd-roadmap-page .roadmap-switcher {
+        border-radius: 15px;
+        padding: 6px;
+        gap: 6px;
+    }
+
+    .ldd-news-hero {
+        grid-template-columns: 44px minmax(0, 1fr);
+        padding: 15px;
+    }
+    .ldd-news-hero-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        font-size: 1rem;
+    }
+
+    body.ldd-ui-v2 #news-cards-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+    body.ldd-ui-v2 #news-cards-grid .news-card-title {
+        padding: 10px 10px 4px;
+        font-size: .78rem;
+    }
+    body.ldd-ui-v2 #news-cards-grid .news-card-date {
+        padding: 0 10px 7px;
+        font-size: .63rem;
+    }
+    .ldd-news-card-cta {
+        padding: 8px 10px 9px;
+        font-size: .64rem;
+    }
+}
+
+@media (max-width: 440px) {
+    .ldd-roadmap-hero {
+        grid-template-columns: 44px minmax(0, 1fr);
+    }
+    .ldd-roadmap-hero-badge {
+        margin-left: 56px;
+    }
+
+    body.ldd-ui-v2 #news-cards-grid {
+        grid-template-columns: 1fr;
+    }
+
+    body.ldd-ui-v2 .news-article-top {
+        padding: 10px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ldd-roadmap-hero *,
+    .ldd-news-hero *,
+    body.ldd-ui-v2 #news-cards-grid .news-card {
+        transition-duration: .01ms !important;
+    }
+}
