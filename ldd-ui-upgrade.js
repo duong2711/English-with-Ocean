@@ -1,5 +1,5 @@
 /* =============================================================
-   LDD ENGLISH — UI UPGRADE v2
+   LDD ENGLISH — UI UPGRADE v3
    Non-destructive DOM enhancement. No Supabase calls.
    Load AFTER scriptphonetics.js.
    ============================================================= */
@@ -13,19 +13,32 @@
 
     onReady(function () {
         document.body.classList.add('ldd-ui-v2');
-        ensureRoadmapNewsStyles();
+        ensureUpgradeAssets();
         enhanceTestCenter();
         observeCustomTestRows();
         enhanceLearningRoadmaps();
         enhanceReadingLab();
     });
 
-    function ensureRoadmapNewsStyles() {
-        if (document.getElementById('ldd-roadmap-news-style')) return;
+    function ensureUpgradeAssets() {
+        ensureStylesheet('ldd-roadmap-news-style', 'ldd-ui-roadmap-news.css?v=2');
+        ensureStylesheet('ldd-vocab-grammar-style', 'ldd-ui-vocab-grammar.css?v=1');
+
+        if (!document.getElementById('ldd-vocab-grammar-script')) {
+            const script = document.createElement('script');
+            script.id = 'ldd-vocab-grammar-script';
+            script.src = 'ldd-ui-vocab-grammar.js?v=1';
+            script.defer = true;
+            document.body.appendChild(script);
+        }
+    }
+
+    function ensureStylesheet(id, href) {
+        if (document.getElementById(id)) return;
         const link = document.createElement('link');
-        link.id = 'ldd-roadmap-news-style';
+        link.id = id;
         link.rel = 'stylesheet';
-        link.href = 'ldd-ui-roadmap-news.css?v=2';
+        link.href = href;
         document.head.appendChild(link);
     }
 
@@ -33,14 +46,13 @@
         const tab = document.getElementById('tab-kiem-tra');
         const grid = document.getElementById('kiemtra-folder-grid');
         if (!tab || !grid) return;
-
         addTestHero(tab, grid);
         enhanceFolderCards(grid);
     }
 
     function addTestHero(tab, grid) {
         if (tab.querySelector('.ldd-test-hero')) return;
-        const oldTitle = Array.from(tab.children).find(el => el.tagName === 'H2');
+        const oldTitle = Array.from(tab.children).find(function (el) { return el.tagName === 'H2'; });
         if (!oldTitle) return;
 
         const hero = document.createElement('section');
