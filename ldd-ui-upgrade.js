@@ -1,5 +1,5 @@
 /* =============================================================
-   LDD ENGLISH — UI UPGRADE v4
+   LDD ENGLISH — UI UPGRADE v5
    Non-destructive DOM enhancement. No Supabase calls.
    Load AFTER scriptphonetics.js.
    ============================================================= */
@@ -24,10 +24,10 @@
         ensureStylesheet('ldd-roadmap-news-style', 'ldd-ui-roadmap-news.css?v=2');
         ensureStylesheet('ldd-vocab-grammar-style', 'ldd-ui-vocab-grammar.css?v=1');
         ensureStylesheet('ldd-home-phonetics-style', 'ldd-ui-home-phonetics.css?v=1');
-        ensureStylesheet('ldd-timers-style', 'ldd-ui-timers.css?v=1');
+        ensureStylesheet('ldd-timers-style', 'ldd-ui-timers.css?v=2.1');
         ensureScript('ldd-vocab-grammar-script', 'ldd-ui-vocab-grammar.js?v=2');
         ensureScript('ldd-home-phonetics-script', 'ldd-ui-home-phonetics.js?v=6-stable');
-        ensureScript('ldd-timers-script', 'ldd-ui-timers.js?v=1');
+        ensureScript('ldd-timers-script', 'ldd-ui-timers.js?v=2.1');
     }
 
     function ensureStylesheet(id, href) {
