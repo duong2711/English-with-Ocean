@@ -1,5 +1,5 @@
 /* =============================================================
-   LDD ENGLISH — HOME + PHONETICS UI v5
+   LDD ENGLISH — HOME + PHONETICS UI v6
    Non-destructive DOM enhancement. No Supabase calls.
    ============================================================= */
 (function () {
@@ -49,11 +49,11 @@
             '<div class="ldd-home-main">' +
                 '<div class="ldd-home-kicker">LDD English · Học cùng Ocean</div>' +
                 '<h2 class="ldd-home-title">Chào <strong data-ldd-home-name>Học viên</strong> 👋</h2>' +
-                '<p class="ldd-home-desc">Chọn nội dung cần học hôm nay hoặc tiếp tục luyện phát âm ngay bên dưới. Các khu vực vẫn dùng đúng dữ liệu và tiến độ hiện tại của bạn.</p>' +
+                '<p class="ldd-home-desc">Chọn khu vực bạn muốn vào: học từ vựng, luyện ngữ pháp, thư giãn với nội dung giải trí hoặc làm bài kiểm tra được giao.</p>' +
                 '<div class="ldd-home-actions">' +
                     actionHtml('Aa', 'Từ vựng', 'Ôn & vận dụng', 'tab-tu-vung') +
                     actionHtml('G', 'Ngữ pháp', 'Học & luyện bài', 'tab-ngu-phap') +
-                    actionHtml('→', 'Lộ trình', 'Học theo mục tiêu', 'tab-mat-goc') +
+                    actionHtml('★', 'Giải trí', 'Học mà chơi', 'tab-giai-tri') +
                     actionHtml('✓', 'Kiểm tra', 'Bài được giao', 'tab-kiem-tra') +
                 '</div>' +
             '</div>' +
