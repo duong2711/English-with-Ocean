@@ -1,0 +1,489 @@
+/* =============================================================
+   LDD ENGLISH — VOCABULARY + GRAMMAR HUB v1
+   Additive layer; keeps the existing LDD theme and app logic.
+   ============================================================= */
+
+/* =============================================================
+   VOCABULARY HUB
+   ============================================================= */
+body.ldd-ui-v2 #tab-tu-vung.ldd-vocab-page {
+    width: min(100%, 1080px);
+    margin-inline: auto;
+}
+
+.ldd-vocab-hero {
+    position: relative;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 58px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 16px;
+    margin: 4px 0 18px;
+    padding: 20px 22px;
+    background:
+        linear-gradient(135deg, rgba(79,110,247,.09), rgba(255,255,255,.94) 52%, rgba(16,185,129,.07)),
+        var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+}
+.ldd-vocab-hero::after {
+    content: 'Aa';
+    position: absolute;
+    right: 16px;
+    top: -35px;
+    color: rgba(79,110,247,.05);
+    font-size: 8.8rem;
+    line-height: 1;
+    font-weight: 800;
+    letter-spacing: -.09em;
+    pointer-events: none;
+}
+.ldd-vocab-hero-icon {
+    position: relative;
+    z-index: 1;
+    width: 56px;
+    height: 56px;
+    display: grid;
+    place-items: center;
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    font-size: 1.08rem;
+    font-weight: 800;
+    box-shadow: 0 8px 22px rgba(79,110,247,.22);
+}
+.ldd-vocab-hero-copy { position: relative; z-index: 1; min-width: 0; }
+.ldd-vocab-hero-kicker {
+    margin-bottom: 4px;
+    color: var(--primary);
+    font-size: .67rem;
+    font-weight: 800;
+    letter-spacing: .085em;
+    text-transform: uppercase;
+}
+.ldd-vocab-hero h2 {
+    margin: 0;
+    font-size: clamp(1.18rem, 2vw, 1.52rem);
+    letter-spacing: -.025em;
+}
+.ldd-vocab-hero p {
+    max-width: 650px;
+    margin: 5px 0 0;
+    color: var(--text-muted);
+    font-size: .78rem;
+    line-height: 1.55;
+}
+.ldd-vocab-hero-stat {
+    position: relative;
+    z-index: 1;
+    min-width: 110px;
+    padding: 11px 14px;
+    text-align: center;
+    border: 1px solid var(--border-strong);
+    border-radius: 13px;
+    background: rgba(255,255,255,.78);
+    box-shadow: var(--shadow-xs);
+    backdrop-filter: blur(7px);
+}
+.ldd-vocab-hero-stat strong {
+    display: block;
+    color: var(--primary-dark);
+    font-size: 1.35rem;
+    line-height: 1;
+    font-weight: 800;
+}
+.ldd-vocab-hero-stat span {
+    display: block;
+    margin-top: 5px;
+    color: var(--text-muted);
+    font-size: .65rem;
+    font-weight: 700;
+}
+
+body.ldd-ui-v2 #vocab-folder-grid {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+}
+body.ldd-ui-v2 #vocab-folder-grid > .folder-card {
+    position: relative;
+    overflow: hidden;
+    min-height: 136px;
+    padding: 17px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 11px;
+    text-align: left;
+    border-radius: var(--radius-lg);
+    border-width: 1px;
+    box-shadow: var(--shadow-xs);
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+body.ldd-ui-v2 #vocab-folder-grid > .folder-card::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary), var(--success));
+    opacity: 0;
+    transition: opacity .18s ease;
+}
+body.ldd-ui-v2 #vocab-folder-grid > .folder-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-md);
+}
+body.ldd-ui-v2 #vocab-folder-grid > .folder-card:hover::after { opacity: 1; }
+
+.ldd-vocab-card-icon {
+    width: 43px;
+    height: 43px;
+    flex: 0 0 auto;
+    display: inline-grid;
+    place-items: center;
+    border: 1px solid var(--border-strong);
+    border-radius: 12px;
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    font-size: .78rem;
+    font-weight: 800;
+}
+.folder-card[data-ldd-vocab-kind="mine"] .ldd-vocab-card-icon {
+    background: #fff7ed;
+    border-color: #fed7aa;
+    color: #c2410c;
+}
+.folder-card[data-ldd-vocab-kind="news"] .ldd-vocab-card-icon {
+    background: #ecfeff;
+    border-color: #a5f3fc;
+    color: #0e7490;
+}
+.folder-card[data-ldd-vocab-kind="podcast"] .ldd-vocab-card-icon {
+    background: #f3e8ff;
+    border-color: #d8b4fe;
+    color: #7e22ce;
+}
+.folder-card[data-ldd-vocab-kind="school"] .ldd-vocab-card-icon {
+    background: var(--success-light);
+    border-color: rgba(16,185,129,.28);
+    color: var(--success-dark);
+}
+.folder-card[data-ldd-vocab-kind="conj"] .ldd-vocab-card-icon {
+    background: var(--warning-light);
+    border-color: rgba(245,158,11,.32);
+    color: #92620a;
+}
+.ldd-vocab-card-copy { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.ldd-vocab-card-title {
+    color: var(--text);
+    font-size: .91rem;
+    font-weight: 800;
+    line-height: 1.35;
+    letter-spacing: -.01em;
+}
+.ldd-vocab-card-subtitle {
+    color: var(--text-muted);
+    font-size: .7rem;
+    line-height: 1.48;
+}
+body.ldd-ui-v2 #vocab-folder-grid .tab-badge-count-corner {
+    top: 12px;
+    right: 12px;
+}
+
+/* My vocabulary / podcast / vocabulary subpanels */
+body.ldd-ui-v2 #myvocab-panel,
+body.ldd-ui-v2 #podcast-panel,
+body.ldd-ui-v2 #kid-panel,
+body.ldd-ui-v2 #thcs-panel,
+body.ldd-ui-v2 #conj-panel {
+    width: min(100%, 1040px);
+    margin-inline: auto;
+}
+body.ldd-ui-v2 .myvocab-item {
+    border-radius: 12px;
+    box-shadow: var(--shadow-xs);
+    transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
+}
+body.ldd-ui-v2 .myvocab-item:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+    border-color: var(--border-strong);
+}
+
+/* =============================================================
+   GRAMMAR HUB
+   ============================================================= */
+body.ldd-ui-v2 #tab-ngu-phap.ldd-grammar-page {
+    width: min(100%, 1080px);
+    margin-inline: auto;
+}
+
+body.ldd-ui-v2 #tab-ngu-phap .grammar-header.ldd-grammar-hero {
+    position: relative;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 54px minmax(0, 1fr) minmax(240px, 360px);
+    align-items: center;
+    gap: 15px;
+    margin: 4px 0 18px;
+    padding: 18px 20px;
+    background:
+        linear-gradient(135deg, rgba(109,94,247,.09), rgba(255,255,255,.95) 54%, rgba(245,158,11,.055)),
+        var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+}
+body.ldd-ui-v2 #tab-ngu-phap .grammar-header.ldd-grammar-hero::after {
+    content: 'S + V';
+    position: absolute;
+    right: 22px;
+    top: -24px;
+    color: rgba(109,94,247,.045);
+    font-size: 5.6rem;
+    line-height: 1;
+    font-weight: 800;
+    pointer-events: none;
+}
+.ldd-grammar-hero-icon {
+    position: relative;
+    z-index: 1;
+    width: 52px;
+    height: 52px;
+    display: grid;
+    place-items: center;
+    border-radius: 15px;
+    background: linear-gradient(135deg, #6d5ef7, #4c37c9);
+    color: #fff;
+    font-size: .8rem;
+    font-weight: 800;
+    box-shadow: 0 8px 22px rgba(109,94,247,.22);
+}
+.ldd-grammar-hero-copy { position: relative; z-index: 1; min-width: 0; }
+.ldd-grammar-hero-kicker {
+    margin-bottom: 4px;
+    color: #5b4be0;
+    font-size: .67rem;
+    font-weight: 800;
+    letter-spacing: .085em;
+    text-transform: uppercase;
+}
+body.ldd-ui-v2 #tab-ngu-phap .ldd-grammar-hero-copy h2 {
+    margin: 0;
+    font-size: clamp(1.18rem, 2vw, 1.5rem);
+    letter-spacing: -.025em;
+}
+.ldd-grammar-hero-copy p {
+    margin: 5px 0 0;
+    max-width: 560px;
+    color: var(--text-muted);
+    font-size: .76rem;
+    line-height: 1.5;
+}
+
+body.ldd-ui-v2 #tab-ngu-phap .grammar-search-bar {
+    position: relative;
+    z-index: 1;
+    margin: 0;
+    border-radius: 12px;
+    background: rgba(255,255,255,.82);
+    box-shadow: var(--shadow-xs);
+}
+body.ldd-ui-v2 #tab-ngu-phap #grammar-search-input {
+    min-height: 42px;
+    border-radius: 12px;
+    transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
+}
+body.ldd-ui-v2 #tab-ngu-phap #grammar-search-input:focus {
+    border-color: #6d5ef7;
+    box-shadow: 0 0 0 3px rgba(109,94,247,.14);
+    background: #fff;
+}
+
+body.ldd-ui-v2 #grammar-folder-grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+}
+body.ldd-ui-v2 #grammar-folder-grid .grammar-folder-card,
+body.ldd-ui-v2 #grammar-folder-grid > .folder-card {
+    position: relative;
+    overflow: hidden;
+    min-height: 124px;
+    padding: 16px 16px 46px;
+    border-width: 1px;
+    border-radius: 16px;
+    background: var(--surface);
+    box-shadow: var(--shadow-xs);
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+body.ldd-ui-v2 #grammar-folder-grid .grammar-folder-card::before,
+body.ldd-ui-v2 #grammar-folder-grid > .folder-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: linear-gradient(to bottom, #6d5ef7, var(--primary));
+    opacity: .72;
+}
+body.ldd-ui-v2 #grammar-folder-grid .grammar-folder-card:hover,
+body.ldd-ui-v2 #grammar-folder-grid > .folder-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-md);
+}
+body.ldd-ui-v2 #grammar-folder-grid .grammar-folder-card.grammar-folder-done {
+    background: linear-gradient(145deg, rgba(209,250,229,.62), var(--surface) 68%);
+    border-color: rgba(16,185,129,.38);
+}
+body.ldd-ui-v2 #grammar-folder-grid .grammar-folder-card.grammar-folder-done::before {
+    background: var(--success);
+}
+
+.ldd-grammar-card-cta {
+    position: absolute;
+    left: 16px;
+    right: 16px;
+    bottom: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding-top: 9px;
+    border-top: 1px solid var(--border);
+    color: #5b4be0;
+    font-size: .68rem;
+    font-weight: 800;
+    pointer-events: none;
+}
+.ldd-grammar-card-arrow {
+    width: 23px;
+    height: 23px;
+    display: inline-grid;
+    place-items: center;
+    border-radius: 7px;
+    background: #f0edff;
+    transition: transform .16s ease;
+}
+.grammar-folder-card:hover .ldd-grammar-card-arrow,
+#grammar-folder-grid > .folder-card:hover .ldd-grammar-card-arrow {
+    transform: translateX(2px);
+}
+.grammar-folder-done .ldd-grammar-card-cta { color: var(--success-dark); }
+.grammar-folder-done .ldd-grammar-card-arrow { background: var(--success-light); }
+
+body.ldd-ui-v2 .grammar-loading-msg {
+    position: relative;
+    overflow: hidden;
+    grid-column: 1 / -1;
+    min-height: 86px;
+    padding: 28px 20px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface) 50%, var(--surface-2) 75%);
+    background-size: 200% 100%;
+    color: var(--text-muted);
+    animation: lddPlatformShimmer 1.2s linear infinite;
+}
+
+body.ldd-ui-v2 #grammar-panels .grammar-panel-header {
+    padding: 12px 0;
+    margin-bottom: 16px;
+}
+body.ldd-ui-v2 #grammar-panels .grammar-content-card,
+body.ldd-ui-v2 #grammar-panels [class*="grammar-"][class*="card"] {
+    border-radius: 14px;
+}
+
+@keyframes lddPlatformShimmer {
+    to { background-position: -200% 0; }
+}
+
+/* =============================================================
+   RESPONSIVE
+   ============================================================= */
+@media (max-width: 760px) {
+    .ldd-vocab-hero {
+        grid-template-columns: 48px minmax(0, 1fr);
+        padding: 16px;
+        gap: 12px;
+    }
+    .ldd-vocab-hero-icon {
+        width: 46px;
+        height: 46px;
+        border-radius: 13px;
+    }
+    .ldd-vocab-hero-stat {
+        grid-column: 1 / -1;
+        margin-left: 60px;
+        width: fit-content;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        padding: 7px 10px;
+    }
+    .ldd-vocab-hero-stat strong { font-size: .9rem; }
+    .ldd-vocab-hero-stat span { margin-top: 0; }
+
+    body.ldd-ui-v2 #tab-ngu-phap .grammar-header.ldd-grammar-hero {
+        grid-template-columns: 46px minmax(0, 1fr);
+        padding: 16px;
+        gap: 12px;
+    }
+    .ldd-grammar-hero-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+    }
+    body.ldd-ui-v2 #tab-ngu-phap .grammar-search-bar {
+        grid-column: 1 / -1;
+        width: 100%;
+    }
+
+    body.ldd-ui-v2 #vocab-folder-grid,
+    body.ldd-ui-v2 #grammar-folder-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+    body.ldd-ui-v2 #vocab-folder-grid > .folder-card {
+        min-height: 130px;
+        padding: 14px;
+    }
+    .ldd-vocab-card-title { font-size: .82rem; }
+    .ldd-vocab-card-subtitle { font-size: .66rem; }
+}
+
+@media (max-width: 460px) {
+    body.ldd-ui-v2 #vocab-folder-grid,
+    body.ldd-ui-v2 #grammar-folder-grid {
+        grid-template-columns: 1fr;
+    }
+    body.ldd-ui-v2 #vocab-folder-grid > .folder-card {
+        min-height: 104px;
+        display: grid;
+        grid-template-columns: 43px minmax(0, 1fr);
+        align-items: center;
+    }
+    .ldd-vocab-card-copy { padding-right: 12px; }
+
+    .ldd-vocab-hero-stat { margin-left: 58px; }
+    body.ldd-ui-v2 #grammar-folder-grid .grammar-folder-card,
+    body.ldd-ui-v2 #grammar-folder-grid > .folder-card {
+        min-height: 112px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body.ldd-ui-v2 #vocab-folder-grid > .folder-card,
+    body.ldd-ui-v2 #grammar-folder-grid .grammar-folder-card,
+    body.ldd-ui-v2 #grammar-folder-grid > .folder-card {
+        transition-duration: .01ms !important;
+    }
+}
