@@ -1,5 +1,5 @@
 /* =============================================================
-   LDD ENGLISH — HOME + PHONETICS UI v8.3
+   LDD ENGLISH — HOME + PHONETICS UI v8.4
    Dedicated Home tab + Pronunciation Studio.
    ============================================================= */
 (function () {
@@ -18,7 +18,7 @@
 
     function ensureTabHistoryAssets() {
         ensureStyle('ldd-tab-history-style', 'ldd-tab-history.css?v=2');
-        ensureScript('ldd-tab-history-script', 'ldd-tab-history.js?v=2');
+        ensureScript('ldd-tab-history-script', 'ldd-tab-history.js?v=3');
     }
 
     function ensureTodayAssets() {
