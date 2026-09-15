@@ -1,5 +1,5 @@
 /* =============================================================
-   LDD ENGLISH — RESET / UNLOCK COUNTDOWN UI v1
+   LDD ENGLISH — RESET / UNLOCK + LANDING STATUS UI v2
    Additive only. Does not change learning data or unlock rules.
    ============================================================= */
 
@@ -48,14 +48,12 @@
     color: #047857;
 }
 
-/* Timer nằm trong card học tập: xuống một dòng riêng, không làm lệch title/badge. */
 .kid-topic-card > .ldd-timer-chip,
 .folder-card > .ldd-timer-chip,
 .thcs-unit-card > .ldd-timer-chip {
     margin-top: 9px;
 }
 
-/* Hai status line có timer thì căn tự nhiên theo nội dung hiện có. */
 #conj-practice-daily-status .ldd-timer-chip,
 #vocab-own-test-status .ldd-timer-chip {
     margin-left: 7px;
@@ -63,8 +61,220 @@
     vertical-align: middle;
 }
 
-.ldd-timer-detail {
+.ldd-timer-detail,
+.ldd-home-timer-value {
     font-variant-numeric: tabular-nums;
+}
+
+/* ===== Landing page: countdown + leaderboard ===== */
+body.ldd-ui-v2 .ldd-home-dashboard > .ldd-home-live-panel {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
+    gap: 14px;
+    width: 100%;
+    margin-top: 2px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(199,210,254,.72);
+}
+
+.ldd-home-live-card {
+    min-width: 0;
+    padding: 15px;
+    border: 1px solid rgba(226,232,248,.95);
+    border-radius: 16px;
+    background: rgba(255,255,255,.82);
+    box-shadow: 0 5px 18px rgba(30,42,69,.055);
+}
+
+.ldd-home-live-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 11px;
+}
+
+.ldd-home-live-head h3 {
+    margin: 2px 0 0;
+    color: var(--text, #1e2a45);
+    font-size: .94rem;
+    line-height: 1.25;
+}
+
+.ldd-home-live-kicker {
+    display: block;
+    color: var(--primary, #4f6ef7);
+    font-size: .62rem;
+    font-weight: 900;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.ldd-home-live-note {
+    flex: 0 0 auto;
+    padding: 4px 7px;
+    border-radius: 999px;
+    background: var(--surface-2, #f8f9ff);
+    color: var(--text-muted, #64748b);
+    font-size: .61rem;
+    font-weight: 800;
+}
+
+.ldd-home-timer-list,
+.ldd-home-leaderboard {
+    display: grid;
+    gap: 7px;
+}
+
+.ldd-home-leaderboard {
+    max-height: 302px;
+    overflow: auto;
+    padding-right: 2px;
+}
+
+.ldd-home-timer-row {
+    display: grid;
+    grid-template-columns: 28px minmax(0,1fr) auto;
+    align-items: center;
+    gap: 9px;
+    padding: 9px 10px;
+    border: 1px solid rgba(245,158,11,.18);
+    border-radius: 12px;
+    background: rgba(255,247,237,.68);
+}
+
+.ldd-home-timer-row[data-timer-kind="unlock"] {
+    border-color: rgba(79,110,247,.18);
+    background: rgba(238,241,255,.72);
+}
+
+.ldd-home-timer-row.is-urgent {
+    border-color: rgba(239,68,68,.22);
+    background: rgba(254,242,242,.76);
+}
+
+.ldd-home-timer-icon {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 9px;
+    background: rgba(255,255,255,.85);
+    font-size: .9rem;
+}
+
+.ldd-home-timer-copy {
+    min-width: 0;
+    display: grid;
+    gap: 1px;
+}
+
+.ldd-home-timer-copy strong {
+    overflow: hidden;
+    color: var(--text, #1e2a45);
+    font-size: .74rem;
+    line-height: 1.25;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ldd-home-timer-copy small {
+    color: var(--text-muted, #64748b);
+    font-size: .62rem;
+    line-height: 1.25;
+}
+
+.ldd-home-timer-value {
+    color: #9a5b05;
+    font-size: .7rem;
+    font-weight: 900;
+    white-space: nowrap;
+}
+
+.ldd-home-timer-row[data-timer-kind="unlock"] .ldd-home-timer-value {
+    color: var(--primary-dark, #3a56d4);
+}
+
+.ldd-home-timer-row.is-urgent .ldd-home-timer-value {
+    color: #b91c1c;
+}
+
+.ldd-home-rank-row {
+    display: grid;
+    grid-template-columns: 28px 30px minmax(0,1fr) auto;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 8px;
+    border-radius: 11px;
+    background: var(--surface-2, #f8f9ff);
+}
+
+.ldd-home-rank-row.is-me {
+    background: var(--primary-light, #eef1ff);
+    box-shadow: inset 0 0 0 1px rgba(79,110,247,.16);
+}
+
+.ldd-home-rank-pos {
+    text-align: center;
+    color: var(--text-muted, #64748b);
+    font-size: .78rem;
+    font-weight: 900;
+}
+
+.ldd-home-rank-avatar {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    overflow: hidden;
+    border-radius: 50%;
+    background: #fff;
+    color: var(--primary-dark, #3a56d4);
+    font-size: .72rem;
+    font-weight: 900;
+}
+
+.ldd-home-rank-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.ldd-home-rank-name {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--text, #1e2a45);
+    font-size: .72rem;
+    font-weight: 750;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ldd-home-rank-score {
+    color: var(--primary-dark, #3a56d4);
+    font-size: .68rem;
+    white-space: nowrap;
+}
+
+.ldd-home-live-empty {
+    margin: 0;
+    padding: 12px 10px;
+    border-radius: 11px;
+    background: var(--surface-2, #f8f9ff);
+    color: var(--text-muted, #64748b);
+    font-size: .7rem;
+    line-height: 1.45;
+}
+
+@media (max-width: 760px) {
+    body.ldd-ui-v2 .ldd-home-dashboard > .ldd-home-live-panel {
+        grid-template-columns: 1fr;
+    }
+
+    .ldd-home-leaderboard {
+        max-height: 260px;
+    }
 }
 
 @media (max-width: 520px) {
@@ -78,5 +288,24 @@
     #vocab-own-test-status .ldd-timer-chip {
         display: flex;
         margin: 7px 0 0;
+    }
+
+    .ldd-home-live-card {
+        padding: 12px;
+    }
+
+    .ldd-home-timer-row {
+        grid-template-columns: 26px minmax(0,1fr);
+    }
+
+    .ldd-home-timer-value {
+        grid-column: 2;
+        justify-self: start;
+        margin-top: 2px;
+    }
+
+    .ldd-home-rank-row {
+        grid-template-columns: 24px 28px minmax(0,1fr) auto;
+        gap: 6px;
     }
 }
