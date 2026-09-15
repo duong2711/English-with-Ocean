@@ -1,5 +1,5 @@
 /* =============================================================
-   LDD ENGLISH — HOME + PHONETICS UI v7
+   LDD ENGLISH — HOME + PHONETICS UI v6
    Non-destructive DOM enhancement. No Supabase calls.
    ============================================================= */
 (function () {
@@ -28,22 +28,6 @@
             const script = document.createElement('script');
             script.id = 'ldd-tab-history-script';
             script.src = 'ldd-tab-history.js?v=1';
-            script.defer = true;
-            document.body.appendChild(script);
-        }
-
-        if (!document.getElementById('ldd-profile-guide-auth-style')) {
-            const link = document.createElement('link');
-            link.id = 'ldd-profile-guide-auth-style';
-            link.rel = 'stylesheet';
-            link.href = 'ldd-ui-profile-guide-auth.css?v=1';
-            document.head.appendChild(link);
-        }
-
-        if (!document.getElementById('ldd-profile-guide-auth-script')) {
-            const script = document.createElement('script');
-            script.id = 'ldd-profile-guide-auth-script';
-            script.src = 'ldd-ui-profile-guide-auth.js?v=1';
             script.defer = true;
             document.body.appendChild(script);
         }
