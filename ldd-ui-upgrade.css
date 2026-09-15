@@ -4,6 +4,18 @@
    Load AFTER stylephonetics.css.
    ============================================================= */
 
+/* ---------- Login screen safety ----------
+   index.html has an empty top-level <h1> immediately before #auth-container.
+   Some global heading spacing can turn it into a visible blank strip above login. */
+body > h1:empty {
+    display: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 0 !important;
+    height: 0 !important;
+    min-height: 0 !important;
+}
+
 /* ---------- Page hierarchy ---------- */
 body.ldd-ui-v2 #tab-kiem-tra {
     width: min(100%, 1160px);
