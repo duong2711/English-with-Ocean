@@ -1,2 +1,186 @@
-/* LDD ENGLISH — login redesign temporarily disabled.
-   Keep this file as a safe no-op so cached loaders cannot break layout. */
+/* =============================================================
+   LDD ENGLISH — SAFE LOGIN UI v2
+   Chỉ style trực tiếp khung đăng nhập và control bên trong.
+   Không đụng body/header/layout toàn trang, không :has(), không pseudo layout.
+   ============================================================= */
+
+#auth-container {
+    position: relative !important;
+    display: block;
+    width: min(100%, 460px) !important;
+    max-width: 460px !important;
+    min-height: 0 !important;
+    margin: 34px auto 24px !important;
+    padding: 30px 28px 26px !important;
+    background: rgba(255,255,255,.98) !important;
+    border: 1px solid var(--border-strong) !important;
+    border-radius: 22px !important;
+    box-shadow: 0 18px 55px rgba(30,42,69,.14), 0 2px 10px rgba(30,42,69,.05) !important;
+    overflow: hidden !important;
+    isolation: auto !important;
+    grid-template-columns: none !important;
+    align-content: normal !important;
+}
+
+/* Hủy hoàn toàn pseudo-element từ bản login cũ nếu browser còn giữ rule cũ. */
+#auth-container::before,
+#auth-container::after {
+    content: none !important;
+    display: none !important;
+}
+
+#auth-container h2 {
+    margin: 0 0 7px !important;
+    text-align: center !important;
+    color: var(--text) !important;
+    background: none !important;
+    -webkit-background-clip: initial !important;
+    -webkit-text-fill-color: currentColor !important;
+    font-size: clamp(1.5rem, 4vw, 1.9rem) !important;
+    font-weight: 800 !important;
+    letter-spacing: -.035em !important;
+    line-height: 1.15 !important;
+}
+
+#auth-status {
+    display: block !important;
+    width: 100% !important;
+    margin: 0 0 18px !important;
+    padding: 10px 12px !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 11px !important;
+    background: var(--surface-2) !important;
+    color: var(--text-muted) !important;
+    font-size: .78rem !important;
+    line-height: 1.45 !important;
+    text-align: center !important;
+}
+
+#login-form {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 11px !important;
+    width: 100% !important;
+    margin: 0 !important;
+}
+
+#auth-container input[type="email"],
+#auth-container input[type="password"] {
+    display: block !important;
+    width: 100% !important;
+    height: 50px !important;
+    margin: 0 !important;
+    padding: 0 15px !important;
+    border: 1px solid var(--border-strong) !important;
+    border-radius: 12px !important;
+    background: #fff !important;
+    color: var(--text) !important;
+    font: inherit !important;
+    font-size: .88rem !important;
+    outline: none !important;
+    box-shadow: none !important;
+    transition: border-color .16s ease, box-shadow .16s ease, background .16s ease !important;
+}
+
+#auth-container input::placeholder {
+    color: var(--text-light) !important;
+}
+
+#auth-container input:focus {
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 3px var(--primary-glow) !important;
+    background: #fff !important;
+}
+
+#login-btn {
+    width: 100% !important;
+    min-height: 50px !important;
+    margin: 2px 0 0 !important;
+    padding: 12px 16px !important;
+    border: 0 !important;
+    border-radius: 12px !important;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark)) !important;
+    color: #fff !important;
+    font-size: .83rem !important;
+    font-weight: 800 !important;
+    letter-spacing: .055em !important;
+    box-shadow: 0 8px 20px rgba(79,110,247,.22) !important;
+    cursor: pointer !important;
+    transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease !important;
+}
+
+#login-btn:hover:not(:disabled) {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 11px 24px rgba(79,110,247,.27) !important;
+}
+
+#login-btn:disabled {
+    opacity: .65 !important;
+    cursor: not-allowed !important;
+}
+
+#oauth-divider {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    margin: 18px 0 14px !important;
+    color: var(--text-light) !important;
+    font-size: .72rem !important;
+    white-space: nowrap !important;
+}
+
+#oauth-divider::before,
+#oauth-divider::after {
+    content: '' !important;
+    display: block !important;
+    flex: 1 !important;
+    height: 1px !important;
+    background: var(--border) !important;
+}
+
+.google-login-btn {
+    width: 100% !important;
+    min-height: 48px !important;
+    margin: 0 !important;
+    padding: 10px 14px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 10px !important;
+    border: 1px solid var(--border-strong) !important;
+    border-radius: 12px !important;
+    background: #fff !important;
+    color: var(--text) !important;
+    font-size: .82rem !important;
+    font-weight: 700 !important;
+    box-shadow: var(--shadow-xs) !important;
+    cursor: pointer !important;
+    transition: border-color .15s ease, background .15s ease, transform .15s ease !important;
+}
+
+.google-login-btn:hover {
+    border-color: var(--primary) !important;
+    background: var(--primary-light) !important;
+    transform: translateY(-1px) !important;
+}
+
+#auth-container > p {
+    margin: 14px 0 0 !important;
+    color: var(--text-light) !important;
+    font-size: .72rem !important;
+    line-height: 1.5 !important;
+    text-align: center !important;
+}
+
+@media (max-width: 520px) {
+    #auth-container {
+        width: 100% !important;
+        margin: 18px auto 16px !important;
+        padding: 24px 18px 20px !important;
+        border-radius: 18px !important;
+    }
+
+    #auth-container h2 {
+        font-size: 1.55rem !important;
+    }
+}
