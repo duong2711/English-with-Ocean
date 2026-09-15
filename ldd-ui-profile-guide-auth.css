@@ -1,0 +1,851 @@
+/* =============================================================
+   LDD ENGLISH — LEADERBOARD + PROFILE + GUIDE + AUTH UI v1
+   Additive visual layer. Keeps existing theme and logic.
+   ============================================================= */
+
+/* =============================================================
+   1) LANDING — TOP 3 ĐIỂM CHĂM CHỈ
+   ============================================================= */
+.ldd-home-leaderboard {
+    width: min(100%, 980px);
+    margin: 0 auto 18px;
+    padding: 18px;
+    background:
+        linear-gradient(135deg, rgba(245,158,11,.075), rgba(255,255,255,.96) 45%, rgba(79,110,247,.055)),
+        var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.ldd-home-leaderboard-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 14px;
+}
+
+.ldd-home-leaderboard-kicker {
+    color: #a16207;
+    font-size: .67rem;
+    font-weight: 800;
+    letter-spacing: .085em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+
+.ldd-home-leaderboard h3 {
+    margin: 0;
+    color: var(--text);
+    font-size: 1.02rem;
+    font-weight: 800;
+    letter-spacing: -.02em;
+}
+
+.ldd-home-leaderboard-head p {
+    margin: 4px 0 0;
+    color: var(--text-muted);
+    font-size: .72rem;
+    line-height: 1.5;
+}
+
+.ldd-leaderboard-open-btn {
+    flex: 0 0 auto;
+    border: 1px solid var(--border-strong);
+    border-radius: 10px;
+    padding: 8px 11px;
+    background: var(--surface);
+    color: var(--primary-dark);
+    font-size: .69rem;
+    font-weight: 750;
+    cursor: pointer;
+    transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+}
+.ldd-leaderboard-open-btn:hover {
+    transform: translateY(-1px);
+    border-color: var(--primary);
+    box-shadow: var(--shadow-xs);
+}
+
+.ldd-top3-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.ldd-top3-card {
+    position: relative;
+    overflow: hidden;
+    min-width: 0;
+    min-height: 104px;
+    padding: 13px 12px 12px;
+    background: rgba(255,255,255,.9);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: var(--shadow-xs);
+}
+.ldd-top3-card::after {
+    content: '';
+    position: absolute;
+    width: 64px;
+    height: 64px;
+    right: -28px;
+    bottom: -32px;
+    border-radius: 50%;
+    background: rgba(79,110,247,.055);
+    pointer-events: none;
+}
+.ldd-top3-card.rank-1 {
+    border-color: rgba(245,158,11,.44);
+    background: linear-gradient(145deg, rgba(254,243,199,.7), rgba(255,255,255,.94));
+}
+.ldd-top3-card.rank-2 {
+    border-color: rgba(148,163,184,.42);
+}
+.ldd-top3-card.rank-3 {
+    border-color: rgba(180,83,9,.28);
+}
+.ldd-top3-card.is-me {
+    box-shadow: 0 0 0 2px rgba(79,110,247,.10), var(--shadow-xs);
+}
+
+.ldd-top3-rank {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-bottom: 9px;
+}
+.ldd-top3-medal { font-size: 1.05rem; line-height: 1; }
+.ldd-top3-rank-label {
+    color: var(--text-muted);
+    font-size: .65rem;
+    font-weight: 800;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+}
+
+.ldd-top3-name {
+    display: block;
+    overflow: hidden;
+    color: var(--text);
+    font-size: .82rem;
+    font-weight: 800;
+    line-height: 1.35;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.ldd-top3-score {
+    display: block;
+    margin-top: 5px;
+    color: var(--primary-dark);
+    font-size: .72rem;
+    font-weight: 800;
+}
+.ldd-top3-me {
+    display: inline-flex;
+    margin-top: 6px;
+    padding: 3px 6px;
+    border-radius: 999px;
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    font-size: .58rem;
+    font-weight: 800;
+}
+
+.ldd-top3-loading {
+    grid-column: 1 / -1;
+    min-height: 84px;
+    display: grid;
+    place-items: center;
+    color: var(--text-muted);
+    font-size: .72rem;
+    border: 1px dashed var(--border-strong);
+    border-radius: 12px;
+    background: var(--surface-2);
+}
+
+/* Hidden-only prefetch state used to load the existing profile leaderboard. */
+#profile-modal.ldd-profile-prefetching {
+    visibility: hidden !important;
+    pointer-events: none !important;
+    opacity: 0 !important;
+}
+
+/* =============================================================
+   2) PROFILE MODAL — LEARNING PROFILE DASHBOARD
+   ============================================================= */
+body.ldd-ui-v2 #profile-modal.profile-modal-overlay {
+    padding: 18px;
+    background: rgba(20,31,55,.54);
+    backdrop-filter: blur(7px);
+}
+
+body.ldd-ui-v2 #profile-modal .profile-modal-box {
+    width: min(100%, 780px);
+    max-width: 780px;
+    max-height: min(88vh, 820px);
+    overflow-y: auto;
+    padding: 0 20px 22px;
+    border: 1px solid rgba(255,255,255,.72);
+    border-radius: 22px;
+    box-shadow: 0 24px 70px rgba(22,34,58,.24);
+}
+
+body.ldd-ui-v2 #profile-modal .profile-modal-close {
+    top: 14px;
+    right: 14px;
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    border-radius: 10px;
+    background: rgba(255,255,255,.78);
+    border: 1px solid rgba(255,255,255,.82);
+    box-shadow: var(--shadow-xs);
+    z-index: 3;
+}
+
+body.ldd-ui-v2 #profile-modal .profile-modal-box > h3 {
+    display: none;
+}
+
+.ldd-profile-hero {
+    position: relative;
+    overflow: hidden;
+    margin: 0 -20px 18px;
+    padding: 22px 62px 20px 22px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 62%, #3346b5 100%);
+    color: #fff;
+}
+.ldd-profile-hero::after {
+    content: '';
+    position: absolute;
+    width: 170px;
+    height: 170px;
+    right: -62px;
+    top: -84px;
+    border: 28px solid rgba(255,255,255,.09);
+    border-radius: 50%;
+}
+.ldd-profile-hero-kicker {
+    position: relative;
+    z-index: 1;
+    font-size: .64rem;
+    font-weight: 800;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,.76);
+}
+.ldd-profile-hero h3 {
+    position: relative;
+    z-index: 1;
+    margin: 3px 0 4px;
+    color: #fff;
+    font-size: 1.28rem;
+    font-weight: 800;
+    letter-spacing: -.025em;
+}
+.ldd-profile-hero p {
+    position: relative;
+    z-index: 1;
+    margin: 0;
+    max-width: 530px;
+    color: rgba(255,255,255,.83);
+    font-size: .72rem;
+    line-height: 1.5;
+}
+
+.ldd-profile-identity-grid {
+    display: grid;
+    grid-template-columns: 180px minmax(0, 1fr);
+    gap: 16px;
+    align-items: stretch;
+    margin-bottom: 16px;
+}
+
+body.ldd-ui-v2 #profile-modal .profile-avatar-section {
+    margin: 0;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(145deg, var(--primary-light), #fff 66%);
+    border: 1px solid var(--border-strong);
+    border-radius: 16px;
+}
+
+body.ldd-ui-v2 #profile-modal .profile-avatar-preview {
+    width: 88px;
+    height: 88px;
+    margin-bottom: 11px;
+    border: 4px solid #fff;
+    box-shadow: 0 7px 22px rgba(79,110,247,.19);
+}
+body.ldd-ui-v2 #profile-modal .profile-avatar-change-btn,
+body.ldd-ui-v2 #profile-modal .profile-btn-secondary,
+body.ldd-ui-v2 #profile-modal .profile-btn-primary {
+    border-radius: 10px;
+    font-weight: 750;
+}
+body.ldd-ui-v2 #profile-modal .profile-hint {
+    margin-top: 7px;
+    text-align: center;
+    font-size: .62rem;
+    line-height: 1.4;
+}
+
+.ldd-profile-fields-card {
+    padding: 16px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+}
+body.ldd-ui-v2 #profile-modal .profile-field {
+    margin-bottom: 12px;
+}
+body.ldd-ui-v2 #profile-modal .profile-field:last-child { margin-bottom: 0; }
+body.ldd-ui-v2 #profile-modal .profile-field label {
+    display: block;
+    margin-bottom: 5px;
+    color: var(--text-muted);
+    font-size: .67rem;
+    font-weight: 750;
+}
+body.ldd-ui-v2 #profile-modal .profile-field input,
+body.ldd-ui-v2 #profile-modal .profile-readonly {
+    min-height: 40px;
+    border-radius: 10px;
+    font-size: .78rem;
+}
+body.ldd-ui-v2 #profile-modal .profile-field input:focus {
+    border-color: var(--primary);
+    box-shadow: var(--shadow-glow);
+    outline: none;
+}
+
+body.ldd-ui-v2 #profile-modal .profile-enrollment,
+body.ldd-ui-v2 #profile-modal .profile-achievements,
+body.ldd-ui-v2 #profile-modal .profile-leaderboard {
+    margin: 0 0 12px;
+    padding: 15px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 15px;
+    box-shadow: var(--shadow-xs);
+}
+body.ldd-ui-v2 #profile-modal .profile-enrollment h4,
+body.ldd-ui-v2 #profile-modal .profile-achievements h4,
+body.ldd-ui-v2 #profile-modal .profile-leaderboard h4 {
+    margin: 0 0 10px;
+    color: var(--text);
+    font-size: .82rem;
+    font-weight: 800;
+}
+
+body.ldd-ui-v2 #profile-modal .profile-leaderboard-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+}
+body.ldd-ui-v2 #profile-modal .leaderboard-row {
+    min-width: 0;
+    border-radius: 11px;
+    padding: 9px 10px;
+}
+body.ldd-ui-v2 #profile-modal .leaderboard-row:nth-child(-n+3) {
+    border-color: rgba(245,158,11,.26);
+    background: linear-gradient(145deg, rgba(254,243,199,.38), var(--surface));
+}
+body.ldd-ui-v2 #profile-modal .leaderboard-row.is-me {
+    border-color: var(--primary);
+    background: var(--primary-light);
+}
+
+body.ldd-ui-v2 #profile-modal .profile-modal-actions {
+    position: sticky;
+    bottom: -22px;
+    margin: 4px -20px -22px;
+    padding: 10px 20px 14px;
+    background: linear-gradient(to top, #fff 72%, rgba(255,255,255,0));
+    z-index: 2;
+}
+
+/* =============================================================
+   3) WEBSITE GUIDE
+   ============================================================= */
+body.ldd-ui-v2 #tab-huong-dan {
+    width: min(100%, 980px);
+    margin-inline: auto;
+}
+body.ldd-ui-v2 #tab-huong-dan > h2 { display: none; }
+
+.ldd-guide-hero {
+    position: relative;
+    overflow: hidden;
+    margin: 4px 0 16px;
+    padding: 22px 22px 20px;
+    background: linear-gradient(135deg, rgba(79,110,247,.10), #fff 55%, rgba(16,185,129,.06));
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+}
+.ldd-guide-hero::after {
+    content: '?';
+    position: absolute;
+    right: 20px;
+    top: -28px;
+    color: rgba(79,110,247,.055);
+    font-size: 9rem;
+    line-height: 1;
+    font-weight: 800;
+}
+.ldd-guide-kicker {
+    position: relative;
+    z-index: 1;
+    color: var(--primary);
+    font-size: .67rem;
+    font-weight: 800;
+    letter-spacing: .085em;
+    text-transform: uppercase;
+}
+.ldd-guide-hero h2 {
+    position: relative;
+    z-index: 1;
+    margin: 4px 0 6px;
+    color: var(--text);
+    font-size: clamp(1.18rem, 2vw, 1.5rem);
+    letter-spacing: -.025em;
+}
+.ldd-guide-hero p {
+    position: relative;
+    z-index: 1;
+    max-width: 670px;
+    margin: 0;
+    color: var(--text-muted);
+    font-size: .77rem;
+    line-height: 1.55;
+}
+
+body.ldd-ui-v2 #huongdan-folder-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+body.ldd-ui-v2 #huongdan-folder-grid .folder-card {
+    min-height: 126px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    text-align: left;
+    border-radius: 15px;
+    box-shadow: var(--shadow-xs);
+}
+body.ldd-ui-v2 #huongdan-folder-grid .folder-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+}
+.ldd-guide-card-icon {
+    width: 42px;
+    height: 42px;
+    display: grid;
+    place-items: center;
+    border-radius: 12px;
+    background: var(--primary-light);
+    border: 1px solid var(--border-strong);
+    font-size: 1rem;
+}
+.ldd-guide-card-title {
+    color: var(--text);
+    font-size: .86rem;
+    font-weight: 800;
+    line-height: 1.3;
+}
+.ldd-guide-card-sub {
+    color: var(--text-muted);
+    font-size: .68rem;
+    line-height: 1.45;
+}
+
+.ldd-guide-start {
+    margin-top: 16px;
+    padding: 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xs);
+}
+.ldd-guide-start-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+.ldd-guide-start h3 {
+    margin: 0;
+    font-size: .95rem;
+    font-weight: 800;
+    letter-spacing: -.015em;
+}
+.ldd-guide-start-head p {
+    margin: 3px 0 0;
+    color: var(--text-muted);
+    font-size: .68rem;
+}
+.ldd-guide-steps {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 9px;
+}
+.ldd-guide-step {
+    min-width: 0;
+    padding: 12px;
+    text-align: left;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform .16s ease, border-color .16s ease, background .16s ease, box-shadow .16s ease;
+}
+.ldd-guide-step:hover {
+    transform: translateY(-2px);
+    background: var(--surface);
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-xs);
+}
+.ldd-guide-step-num {
+    display: inline-grid;
+    place-items: center;
+    width: 23px;
+    height: 23px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    font-size: .64rem;
+    font-weight: 800;
+}
+.ldd-guide-step strong {
+    display: block;
+    color: var(--text);
+    font-size: .74rem;
+}
+.ldd-guide-step span:last-child {
+    display: block;
+    margin-top: 3px;
+    color: var(--text-muted);
+    font-size: .62rem;
+    line-height: 1.42;
+}
+
+/* =============================================================
+   4) LOGIN / AUTH WINDOW
+   ============================================================= */
+body.ldd-ui-v2 #auth-container.ldd-auth-shell {
+    width: min(100%, 860px);
+    max-width: 860px;
+    min-height: 470px;
+    padding: 0;
+    margin-top: clamp(14px, 5vh, 52px);
+    display: grid;
+    grid-template-columns: minmax(0, .92fr) minmax(320px, 1.08fr);
+    overflow: hidden;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    box-shadow: 0 22px 70px rgba(35,49,83,.16);
+}
+body.ldd-ui-v2 #auth-container.ldd-auth-shell::before { display: none; }
+
+.ldd-auth-brand-panel {
+    position: relative;
+    overflow: hidden;
+    padding: 38px 32px 32px;
+    background: linear-gradient(145deg, var(--primary) 0%, var(--primary-dark) 68%, #3246b3 100%);
+    color: #fff;
+}
+.ldd-auth-brand-panel::before,
+.ldd-auth-brand-panel::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    border: 32px solid rgba(255,255,255,.07);
+}
+.ldd-auth-brand-panel::before {
+    width: 210px;
+    height: 210px;
+    right: -106px;
+    top: -92px;
+}
+.ldd-auth-brand-panel::after {
+    width: 160px;
+    height: 160px;
+    left: -88px;
+    bottom: -95px;
+}
+.ldd-auth-brand-logo {
+    position: relative;
+    z-index: 1;
+    width: 52px;
+    height: 52px;
+    display: grid;
+    place-items: center;
+    margin-bottom: 28px;
+    border-radius: 15px;
+    background: rgba(255,255,255,.16);
+    border: 1px solid rgba(255,255,255,.28);
+    color: #fff;
+    font-size: .9rem;
+    font-weight: 800;
+    letter-spacing: .03em;
+    backdrop-filter: blur(7px);
+}
+.ldd-auth-brand-panel h2 {
+    position: relative;
+    z-index: 1;
+    margin: 0 0 10px;
+    color: #fff;
+    background: none;
+    -webkit-text-fill-color: #fff;
+    font-size: 1.5rem;
+    line-height: 1.22;
+    letter-spacing: -.035em;
+}
+.ldd-auth-brand-panel > p {
+    position: relative;
+    z-index: 1;
+    max-width: 310px;
+    margin: 0 0 24px;
+    color: rgba(255,255,255,.8);
+    font-size: .74rem;
+    line-height: 1.6;
+}
+.ldd-auth-benefits {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+}
+.ldd-auth-benefit {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    color: rgba(255,255,255,.9);
+    font-size: .7rem;
+    font-weight: 650;
+}
+.ldd-auth-benefit-icon {
+    width: 27px;
+    height: 27px;
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    border-radius: 9px;
+    background: rgba(255,255,255,.12);
+    font-size: .68rem;
+}
+
+.ldd-auth-form-panel {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 34px 38px 32px;
+    background: var(--surface);
+}
+body.ldd-ui-v2 #auth-container .ldd-auth-form-panel > h2 {
+    margin: 0 0 7px;
+    font-size: 1.25rem;
+    font-weight: 800;
+    letter-spacing: -.025em;
+}
+body.ldd-ui-v2 #auth-container #auth-status {
+    min-height: 19px;
+    margin-bottom: 13px;
+    color: var(--text-muted);
+    font-size: .7rem;
+}
+body.ldd-ui-v2 #auth-container #login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+body.ldd-ui-v2 #auth-container #login-email,
+body.ldd-ui-v2 #auth-container #login-password {
+    width: 100%;
+    min-height: 46px;
+    padding: 0 13px;
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    background: var(--surface-2);
+    color: var(--text);
+    font-size: .78rem;
+    transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
+}
+body.ldd-ui-v2 #auth-container #login-email:focus,
+body.ldd-ui-v2 #auth-container #login-password:focus {
+    outline: none;
+    background: #fff;
+    border-color: var(--primary);
+    box-shadow: var(--shadow-glow);
+}
+body.ldd-ui-v2 #auth-container #login-btn {
+    min-height: 46px;
+    border: 0;
+    border-radius: 11px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: #fff;
+    font-size: .76rem;
+    font-weight: 800;
+    letter-spacing: .04em;
+    cursor: pointer;
+    box-shadow: 0 7px 18px rgba(79,110,247,.20);
+    transition: transform .16s ease, box-shadow .16s ease;
+}
+body.ldd-ui-v2 #auth-container #login-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 22px rgba(79,110,247,.26);
+}
+body.ldd-ui-v2 #auth-container #oauth-divider {
+    position: relative;
+    margin: 16px 0 !important;
+    color: var(--text-light) !important;
+    font-size: .65rem !important;
+}
+body.ldd-ui-v2 #auth-container .google-login-btn {
+    width: 100%;
+    min-height: 44px;
+    border-radius: 11px;
+    border-color: var(--border);
+    background: #fff;
+    font-size: .74rem;
+    font-weight: 700;
+    box-shadow: var(--shadow-xs);
+}
+body.ldd-ui-v2 #auth-container .ldd-auth-form-panel > p {
+    margin-top: 12px !important;
+    font-size: .66rem !important;
+    line-height: 1.45;
+}
+
+/* =============================================================
+   5) RESPONSIVE
+   ============================================================= */
+@media (max-width: 760px) {
+    .ldd-top3-grid { grid-template-columns: 1fr; }
+    .ldd-top3-card {
+        min-height: 0;
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 10px;
+    }
+    .ldd-top3-rank { margin: 0; }
+    .ldd-top3-card .ldd-top3-name { min-width: 0; }
+    .ldd-top3-score { margin-top: 0; text-align: right; }
+    .ldd-top3-me { display: none; }
+
+    body.ldd-ui-v2 #profile-modal .profile-modal-box {
+        width: min(100%, 620px);
+    }
+    .ldd-profile-identity-grid {
+        grid-template-columns: 150px minmax(0, 1fr);
+    }
+    body.ldd-ui-v2 #profile-modal .profile-leaderboard-list {
+        grid-template-columns: 1fr;
+    }
+
+    body.ldd-ui-v2 #huongdan-folder-grid {
+        grid-template-columns: 1fr;
+    }
+    body.ldd-ui-v2 #huongdan-folder-grid .folder-card {
+        min-height: 94px;
+        display: grid;
+        grid-template-columns: 42px minmax(0,1fr);
+        grid-template-rows: auto auto;
+        align-items: center;
+    }
+    body.ldd-ui-v2 #huongdan-folder-grid .ldd-guide-card-icon {
+        grid-row: 1 / 3;
+    }
+    .ldd-guide-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    body.ldd-ui-v2 #auth-container.ldd-auth-shell {
+        max-width: 520px;
+        min-height: 0;
+        grid-template-columns: 1fr;
+        margin-top: 12px;
+    }
+    .ldd-auth-brand-panel {
+        padding: 22px 24px 20px;
+    }
+    .ldd-auth-brand-logo {
+        width: 44px;
+        height: 44px;
+        margin-bottom: 14px;
+        border-radius: 13px;
+    }
+    .ldd-auth-brand-panel h2 { font-size: 1.18rem; }
+    .ldd-auth-brand-panel > p { margin-bottom: 12px; }
+    .ldd-auth-benefits {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 6px 12px;
+    }
+    .ldd-auth-benefit-icon { display: none; }
+    .ldd-auth-form-panel { padding: 25px 24px 24px; }
+}
+
+@media (max-width: 480px) {
+    .ldd-home-leaderboard { padding: 14px; }
+    .ldd-home-leaderboard-head {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .ldd-leaderboard-open-btn { align-self: flex-start; }
+
+    body.ldd-ui-v2 #profile-modal.profile-modal-overlay { padding: 8px; }
+    body.ldd-ui-v2 #profile-modal .profile-modal-box {
+        max-height: 92vh;
+        padding: 0 13px 16px;
+        border-radius: 18px;
+    }
+    .ldd-profile-hero {
+        margin: 0 -13px 14px;
+        padding: 18px 52px 17px 16px;
+    }
+    .ldd-profile-identity-grid { grid-template-columns: 1fr; }
+    body.ldd-ui-v2 #profile-modal .profile-avatar-section {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        gap: 8px 12px;
+    }
+    body.ldd-ui-v2 #profile-modal .profile-avatar-preview {
+        width: 66px;
+        height: 66px;
+        margin: 0;
+    }
+    body.ldd-ui-v2 #profile-modal .profile-hint {
+        flex-basis: 100%;
+        text-align: left;
+    }
+    body.ldd-ui-v2 #profile-modal .profile-modal-actions {
+        bottom: -16px;
+        margin: 4px -13px -16px;
+        padding: 10px 13px 12px;
+    }
+
+    .ldd-guide-hero { padding: 18px 16px; }
+    .ldd-guide-steps { grid-template-columns: 1fr; }
+
+    .ldd-auth-brand-panel { display: none; }
+    .ldd-auth-form-panel { padding: 28px 20px 24px; }
+    body.ldd-ui-v2 #auth-container.ldd-auth-shell {
+        border-radius: 18px;
+        margin-top: 8px;
+    }
+}
