@@ -1,5 +1,5 @@
 /* =============================================================
-   LDD ENGLISH — HOME + PHONETICS UI v8.1
+   LDD ENGLISH — HOME + PHONETICS UI v8.2
    Dedicated Home tab + Pronunciation Studio.
    ============================================================= */
 (function () {
@@ -55,7 +55,12 @@
 
         const active = document.querySelector('.main-tab-content.active');
         const hasLddHistory = !!(history.state && history.state.lddNav === true);
-        if (!hasLddHistory && (!active || active.id === 'tab-phien-am')) activateHomeDirect();
+        if (isLoggedIn() && !hasLddHistory && (!active || active.id === 'tab-phien-am')) activateHomeDirect();
+    }
+
+    function isLoggedIn() {
+        const account = document.getElementById('account-area');
+        return !!(account && window.getComputedStyle(account).display !== 'none');
     }
 
     function ensureHomeTab(phoneticsTab) {
@@ -81,6 +86,7 @@
         btn.dataset.mainTarget = 'tab-trang-chu';
         btn.textContent = 'Trang chủ';
         btn.addEventListener('click', function () {
+            if (!isLoggedIn()) return;
             activateHomeDirect();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
@@ -91,18 +97,22 @@
         if (homeTab.dataset.lddCompatBound === '1') return;
         homeTab.dataset.lddCompatBound = '1';
 
-        // Core app lấy NodeList tab trước khi Home động được tạo. Vì vậy tự loại Home khi mở tab cũ.
         document.addEventListener('click', function (event) {
             const btn = event.target.closest('.main-tab-btn[data-main-target]');
             if (btn && btn.dataset.mainTarget !== 'tab-trang-chu') homeTab.classList.remove('active');
         }, true);
 
-        // Core app cũng không biết Home khi logout, nên đảm bảo Home không lộ ở màn đăng nhập.
         const account = document.getElementById('account-area');
         if (account) {
             const sync = function () {
                 const loggedIn = window.getComputedStyle(account).display !== 'none';
-                if (!loggedIn) homeTab.classList.remove('active');
+                if (!loggedIn) {
+                    homeTab.classList.remove('active');
+                    return;
+                }
+                const hasLddHistory = !!(history.state && history.state.lddNav === true);
+                const active = document.querySelector('.main-tab-content.active');
+                if (!hasLddHistory && (!active || active.id === 'tab-phien-am')) activateHomeDirect();
             };
             new MutationObserver(sync).observe(account, { attributes: true, attributeFilter: ['style', 'class'] });
             sync();
