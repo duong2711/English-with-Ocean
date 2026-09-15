@@ -1,5 +1,5 @@
 /* =============================================================
-   LDD ENGLISH — UI UPGRADE v5
+   LDD ENGLISH — UI UPGRADE v5.1
    Non-destructive DOM enhancement. No Supabase calls.
    Load AFTER scriptphonetics.js.
    ============================================================= */
@@ -24,10 +24,11 @@
         ensureStylesheet('ldd-roadmap-news-style', 'ldd-ui-roadmap-news.css?v=2');
         ensureStylesheet('ldd-vocab-grammar-style', 'ldd-ui-vocab-grammar.css?v=1');
         ensureStylesheet('ldd-home-phonetics-style', 'ldd-ui-home-phonetics.css?v=1');
+        // Giữ stylesheet timer vì Trang chủ mới dùng lại giao diện Countdown + Leaderboard.
+        // JS timer cũ không còn nạp: ldd-ui-today.js đảm nhiệm dữ liệu Home để tránh gọi trùng.
         ensureStylesheet('ldd-timers-style', 'ldd-ui-timers.css?v=2.1');
         ensureScript('ldd-vocab-grammar-script', 'ldd-ui-vocab-grammar.js?v=2');
-        ensureScript('ldd-home-phonetics-script', 'ldd-ui-home-phonetics.js?v=6-stable');
-        ensureScript('ldd-timers-script', 'ldd-ui-timers.js?v=2.1');
+        ensureScript('ldd-home-phonetics-script', 'ldd-ui-home-phonetics.js?v=8.2');
     }
 
     function ensureStylesheet(id, href) {
