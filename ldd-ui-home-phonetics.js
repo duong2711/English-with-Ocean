@@ -1,5 +1,5 @@
 /* =============================================================
-   LDD ENGLISH — HOME + PHONETICS UI v8.2
+   LDD ENGLISH — HOME + PHONETICS UI v8.3
    Dedicated Home tab + Pronunciation Studio.
    ============================================================= */
 (function () {
@@ -139,10 +139,10 @@
                 '<h2 class="ldd-home-title">Chào <strong data-ldd-home-name>Học viên</strong> 👋</h2>' +
                 '<p class="ldd-home-desc">Đây là Trang chủ học tập của bạn. Xem việc cần làm hôm nay, mở nhanh khu vực học và theo dõi tiến độ ngay tại đây.</p>' +
                 '<div class="ldd-home-actions">' +
-                    actionHtml('Aa', 'Từ vựng', 'Ôn & vận dụng', 'tab-tu-vung') +
+                    actionHtml('Aa', 'Từ vựng', 'Ôn & vận dụng', 'tab-tu-vung', 'vocab') +
                     actionHtml('G', 'Ngữ pháp', 'Học & luyện bài', 'tab-ngu-phap') +
                     actionHtml('★', 'Giải trí', 'Học mà chơi', 'tab-giai-tri') +
-                    actionHtml('✓', 'Kiểm tra', 'Bài được giao', 'tab-kiem-tra') +
+                    actionHtml('✓', 'Kiểm tra', 'Bài được giao', 'tab-kiem-tra', 'tests') +
                 '</div>' +
             '</div>' +
             '<aside class="ldd-home-side ldd-today-shell">' +
@@ -154,14 +154,54 @@
             button.addEventListener('click', function () { openMainTab(button.dataset.lddTarget); });
         });
         bindName(dashboard);
+        bindActionBadges(dashboard);
     }
 
-    function actionHtml(icon, title, subtitle, target) {
+    function actionHtml(icon, title, subtitle, target, badgeKey) {
         return '<button type="button" class="ldd-home-action" data-ldd-target="' + target + '">' +
             '<span class="ldd-home-action-icon" aria-hidden="true">' + icon + '</span>' +
             '<span class="ldd-home-action-title">' + title + '</span>' +
             '<span class="ldd-home-action-sub">' + subtitle + '</span>' +
+            (badgeKey ? '<span class="ldd-home-action-badge" data-home-action-badge="' + badgeKey + '" hidden>0</span>' : '') +
         '</button>';
+    }
+
+    function bindActionBadges(dashboard) {
+        const configs = {
+            vocab: ['myvocab-folder-badge', 'news-folder-badge'],
+            tests: ['ctest-folder-badge', 'vocab-test-folder-badge']
+        };
+
+        Object.keys(configs).forEach(function (key) {
+            const out = dashboard.querySelector('[data-home-action-badge="' + key + '"]');
+            if (!out) return;
+            const sources = configs[key].map(function (id) { return document.getElementById(id); }).filter(Boolean);
+
+            const update = function () {
+                let total = 0;
+                sources.forEach(function (badge) {
+                    if (window.getComputedStyle(badge).display === 'none') return;
+                    const raw = String(badge.textContent || '').trim();
+                    const n = parseInt(raw.replace(/\D/g, ''), 10);
+                    total += Number.isFinite(n) ? n : (raw ? 1 : 0);
+                });
+                out.textContent = total > 99 ? '99+' : String(total);
+                out.hidden = total <= 0;
+                const card = out.closest('.ldd-home-action');
+                if (card) card.classList.toggle('has-badge', total > 0);
+            };
+
+            sources.forEach(function (badge) {
+                new MutationObserver(update).observe(badge, {
+                    childList: true,
+                    characterData: true,
+                    subtree: true,
+                    attributes: true,
+                    attributeFilter: ['style', 'class']
+                });
+            });
+            update();
+        });
     }
 
     function openMainTab(target) {
