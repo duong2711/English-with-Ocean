@@ -25,7 +25,7 @@
         ensureStylesheet('ldd-vocab-grammar-style', 'ldd-ui-vocab-grammar.css?v=1');
         ensureStylesheet('ldd-home-phonetics-style', 'ldd-ui-home-phonetics.css?v=1');
         ensureScript('ldd-vocab-grammar-script', 'ldd-ui-vocab-grammar.js?v=1');
-        ensureScript('ldd-home-phonetics-script', 'ldd-ui-home-phonetics.js?v=1');
+        ensureScript('ldd-home-phonetics-script', 'ldd-ui-home-phonetics.js?v=6-stable');
     }
 
     function ensureStylesheet(id, href) {
