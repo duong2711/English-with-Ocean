@@ -1,5 +1,5 @@
 /* =============================================================
-   LDD ENGLISH — UI UPGRADE v3
+   LDD ENGLISH — UI UPGRADE v4
    Non-destructive DOM enhancement. No Supabase calls.
    Load AFTER scriptphonetics.js.
    ============================================================= */
@@ -23,14 +23,9 @@
     function ensureUpgradeAssets() {
         ensureStylesheet('ldd-roadmap-news-style', 'ldd-ui-roadmap-news.css?v=2');
         ensureStylesheet('ldd-vocab-grammar-style', 'ldd-ui-vocab-grammar.css?v=1');
-
-        if (!document.getElementById('ldd-vocab-grammar-script')) {
-            const script = document.createElement('script');
-            script.id = 'ldd-vocab-grammar-script';
-            script.src = 'ldd-ui-vocab-grammar.js?v=1';
-            script.defer = true;
-            document.body.appendChild(script);
-        }
+        ensureStylesheet('ldd-home-phonetics-style', 'ldd-ui-home-phonetics.css?v=1');
+        ensureScript('ldd-vocab-grammar-script', 'ldd-ui-vocab-grammar.js?v=1');
+        ensureScript('ldd-home-phonetics-script', 'ldd-ui-home-phonetics.js?v=1');
     }
 
     function ensureStylesheet(id, href) {
@@ -40,6 +35,15 @@
         link.rel = 'stylesheet';
         link.href = href;
         document.head.appendChild(link);
+    }
+
+    function ensureScript(id, src) {
+        if (document.getElementById(id)) return;
+        const script = document.createElement('script');
+        script.id = id;
+        script.src = src;
+        script.defer = true;
+        document.body.appendChild(script);
     }
 
     function enhanceTestCenter() {
