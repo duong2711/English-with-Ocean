@@ -1,5 +1,5 @@
 /* =============================================================
-   LDD ENGLISH — HOME + PHONETICS UI v8
+   LDD ENGLISH — HOME + PHONETICS UI v8.1
    Dedicated Home tab + Pronunciation Studio.
    ============================================================= */
 (function () {
@@ -47,13 +47,12 @@
     function enhanceHomeAndPhonetics() {
         const phoneticsTab = document.getElementById('tab-phien-am');
         if (!phoneticsTab) return;
-
         const homeTab = ensureHomeTab(phoneticsTab);
         addHomeDashboard(homeTab);
         addPhoneticsHeading(phoneticsTab);
-        ensureHomeHeaderButton(homeTab);
+        ensureHomeHeaderButton();
+        bindHomeCompatibility(homeTab);
 
-        // Trang mới mở: landing trở thành Trang chủ thay vì nằm trong Phiên âm.
         const active = document.querySelector('.main-tab-content.active');
         const hasLddHistory = !!(history.state && history.state.lddNav === true);
         if (!hasLddHistory && (!active || active.id === 'tab-phien-am')) activateHomeDirect();
@@ -67,8 +66,6 @@
             home.className = 'main-tab-content ldd-home-page';
             phoneticsTab.parentNode.insertBefore(home, phoneticsTab);
         }
-
-        // Nếu dashboard bản cũ đang nằm trong Phiên âm thì chuyển nguyên node sang Trang chủ.
         const oldDashboard = phoneticsTab.querySelector('.ldd-home-dashboard');
         if (oldDashboard && !home.contains(oldDashboard)) home.appendChild(oldDashboard);
         return home;
@@ -77,7 +74,6 @@
     function ensureHomeHeaderButton() {
         const nav = document.getElementById('header-tabs-nav');
         if (!nav || document.getElementById('ldd-home-main-tab')) return;
-
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.id = 'ldd-home-main-tab';
@@ -91,6 +87,28 @@
         nav.insertBefore(btn, nav.firstChild);
     }
 
+    function bindHomeCompatibility(homeTab) {
+        if (homeTab.dataset.lddCompatBound === '1') return;
+        homeTab.dataset.lddCompatBound = '1';
+
+        // Core app lấy NodeList tab trước khi Home động được tạo. Vì vậy tự loại Home khi mở tab cũ.
+        document.addEventListener('click', function (event) {
+            const btn = event.target.closest('.main-tab-btn[data-main-target]');
+            if (btn && btn.dataset.mainTarget !== 'tab-trang-chu') homeTab.classList.remove('active');
+        }, true);
+
+        // Core app cũng không biết Home khi logout, nên đảm bảo Home không lộ ở màn đăng nhập.
+        const account = document.getElementById('account-area');
+        if (account) {
+            const sync = function () {
+                const loggedIn = window.getComputedStyle(account).display !== 'none';
+                if (!loggedIn) homeTab.classList.remove('active');
+            };
+            new MutationObserver(sync).observe(account, { attributes: true, attributeFilter: ['style', 'class'] });
+            sync();
+        }
+    }
+
     function activateHomeDirect() {
         document.querySelectorAll('.main-tab-content').forEach(function (panel) {
             panel.classList.toggle('active', panel.id === 'tab-trang-chu');
@@ -98,14 +116,11 @@
         document.querySelectorAll('.main-tab-btn[data-main-target]').forEach(function (btn) {
             btn.classList.toggle('active', btn.dataset.mainTarget === 'tab-trang-chu');
         });
-        document.querySelectorAll('.main-tab-dropdown-btn').forEach(function (btn) {
-            btn.classList.remove('active');
-        });
+        document.querySelectorAll('.main-tab-dropdown-btn').forEach(function (btn) { btn.classList.remove('active'); });
     }
 
     function addHomeDashboard(tab) {
         if (tab.querySelector('.ldd-home-dashboard')) return;
-
         const dashboard = document.createElement('section');
         dashboard.className = 'ldd-home-dashboard';
         dashboard.innerHTML =
@@ -124,7 +139,6 @@
                 '<div class="ldd-home-side-title">Hôm nay</div>' +
                 '<div id="ldd-today-tasks" class="ldd-today-tasks"><div class="ldd-today-loading">Đang tải nhiệm vụ...</div></div>' +
             '</aside>';
-
         tab.appendChild(dashboard);
         dashboard.querySelectorAll('[data-ldd-target]').forEach(function (button) {
             button.addEventListener('click', function () { openMainTab(button.dataset.lddTarget); });
@@ -147,9 +161,7 @@
         }
         const trigger = document.querySelector('.main-tab-btn[data-main-target="' + target + '"]');
         if (trigger) trigger.click();
-        else document.querySelectorAll('.main-tab-content').forEach(function (el) {
-            el.classList.toggle('active', el.id === target);
-        });
+        else document.querySelectorAll('.main-tab-content').forEach(function (el) { el.classList.toggle('active', el.id === target); });
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -172,9 +184,7 @@
         if (!guide && !chart) return;
         const heading = document.createElement('div');
         heading.className = 'ldd-phonetics-heading';
-        heading.innerHTML =
-            '<div class="ldd-phonetics-heading-copy"><h2>Pronunciation Studio</h2><p>Chọn một âm IPA, xem khẩu hình, nghe hướng dẫn rồi ghi âm để luyện lại.</p></div>' +
-            '<span class="ldd-phonetics-badge">IPA · Video · Ghi âm</span>';
+        heading.innerHTML = '<div class="ldd-phonetics-heading-copy"><h2>Pronunciation Studio</h2><p>Chọn một âm IPA, xem khẩu hình, nghe hướng dẫn rồi ghi âm để luyện lại.</p></div><span class="ldd-phonetics-badge">IPA · Video · Ghi âm</span>';
         tab.insertBefore(heading, guide || chart);
     }
 })();
