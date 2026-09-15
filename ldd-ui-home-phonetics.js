@@ -1,5 +1,5 @@
 /* =============================================================
-   LDD ENGLISH — HOME + PHONETICS UI v4
+   LDD ENGLISH — HOME + PHONETICS UI v5
    Non-destructive DOM enhancement. No Supabase calls.
    ============================================================= */
 (function () {
@@ -11,8 +11,27 @@
     }
 
     ready(function () {
+        ensureTabHistoryAssets();
         enhanceHomeAndPhonetics();
     });
+
+    function ensureTabHistoryAssets() {
+        if (!document.getElementById('ldd-tab-history-style')) {
+            const link = document.createElement('link');
+            link.id = 'ldd-tab-history-style';
+            link.rel = 'stylesheet';
+            link.href = 'ldd-tab-history.css?v=1';
+            document.head.appendChild(link);
+        }
+
+        if (!document.getElementById('ldd-tab-history-script')) {
+            const script = document.createElement('script');
+            script.id = 'ldd-tab-history-script';
+            script.src = 'ldd-tab-history.js?v=1';
+            script.defer = true;
+            document.body.appendChild(script);
+        }
+    }
 
     function enhanceHomeAndPhonetics() {
         const tab = document.getElementById('tab-phien-am');
