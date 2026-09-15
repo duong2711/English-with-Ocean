@@ -74,7 +74,6 @@
             return;
         }
 
-        // Fallback only changes visible content if an existing trigger cannot be found.
         document.querySelectorAll('.main-tab-content').forEach(function (el) {
             el.classList.toggle('active', el.id === target);
         });
@@ -184,7 +183,7 @@
             '</div>' +
             '<span class="ldd-phonetics-badge">IPA · Video · Ghi âm</span>';
 
-        const anchor = chart || guide;
+        const anchor = guide || chart;
         tab.insertBefore(heading, anchor);
     }
 })();
