@@ -1,5 +1,6 @@
 /* =============================================================
    LDD ENGLISH — UI UPGRADE LOADER
-   Stable core styles only. Login redesign temporarily disabled.
+   Stable core styles + safe login UI.
    ============================================================= */
 @import url('./ldd-ui-upgrade-core.css?v=2');
+@import url('./ldd-ui-auth.css?v=2');
