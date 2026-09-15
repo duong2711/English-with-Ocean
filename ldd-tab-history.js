@@ -1,11 +1,14 @@
 /* =============================================================
-   LDD ENGLISH — MAIN TAB HISTORY NAVIGATION v2
+   LDD ENGLISH — MAIN TAB HISTORY NAVIGATION v3
    Back / Home / Forward + browser history.
+   New browsing contexts and explicit logins start at Home.
    ============================================================= */
 (function () {
     'use strict';
 
-    const STORAGE_MAX_INDEX = 'ldd_tab_history_max_v2';
+    const STORAGE_MAX_INDEX = 'ldd_tab_history_max_v3';
+    const CONTEXT_STARTED_KEY = 'ldd_home_context_started_v1';
+    const FORCE_HOME_KEY = 'ldd_force_home_after_login_v1';
     const TAB_LABELS = {
         'tab-trang-chu': 'Trang chủ',
         'tab-phien-am': 'Phiên âm',
@@ -31,6 +34,8 @@
     let pendingNavigation = null;
     let restoringHistory = false;
     let scrollTimer = null;
+    let wasLoggedIn = false;
+    let freshContext = false;
 
     function ready(fn) {
         if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
@@ -42,11 +47,16 @@
         const header = document.getElementById('site-header');
         if (!header || document.getElementById('ldd-tab-history-nav')) return;
         if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+
+        freshContext = sessionStorage.getItem(CONTEXT_STARTED_KEY) !== '1';
+        sessionStorage.setItem(CONTEXT_STARTED_KEY, '1');
+
         createHistoryControls(header);
         initialiseHistoryState();
         bindTabClicks();
         bindBrowserHistory();
         bindScrollMemory();
+        bindLoginIntent();
         bindLoginVisibility();
         exposeNavigationApi();
         updateControls();
@@ -158,14 +168,36 @@
         window.addEventListener('pagehide', rememberCurrentScroll);
     }
 
+    function bindLoginIntent() {
+        const form = document.getElementById('login-form');
+        const google = document.getElementById('google-login-btn');
+        if (form) form.addEventListener('submit', markHomeAfterLogin, true);
+        if (google) google.addEventListener('click', markHomeAfterLogin, true);
+    }
+
+    function markHomeAfterLogin() {
+        sessionStorage.setItem(FORCE_HOME_KEY, '1');
+    }
+
     function bindLoginVisibility() {
         const accountArea = document.getElementById('account-area');
         const nav = document.getElementById('ldd-tab-history-nav');
         if (!nav) return;
+
         const refresh = function () {
             const loggedIn = !accountArea || window.getComputedStyle(accountArea).display !== 'none';
             nav.classList.toggle('is-visible', loggedIn);
+
+            const explicitLogin = sessionStorage.getItem(FORCE_HOME_KEY) === '1';
+            const becameLoggedIn = loggedIn && !wasLoggedIn;
+            if (becameLoggedIn && (freshContext || explicitLogin)) {
+                sessionStorage.removeItem(FORCE_HOME_KEY);
+                freshContext = false;
+                resetToHome({ smooth: false });
+            }
+            wasLoggedIn = loggedIn;
         };
+
         if (accountArea) new MutationObserver(refresh).observe(accountArea, { attributes: true, attributeFilter: ['style', 'class'] });
         refresh();
     }
@@ -192,10 +224,29 @@
         return true;
     }
 
+    function resetToHome(options) {
+        options = options || {};
+        if (!validTab('tab-trang-chu')) return false;
+        restoringHistory = true;
+        pendingNavigation = null;
+        currentIndex = 0;
+        maxIndex = 0;
+        sessionStorage.setItem(STORAGE_MAX_INDEX, '0');
+        activatePanelDirect('tab-trang-chu');
+        history.replaceState({ lddNav: true, lddTab: 'tab-trang-chu', lddIndex: 0, lddScrollY: 0 }, '', window.location.href);
+        window.scrollTo({ top: 0, left: 0, behavior: options.smooth ? 'smooth' : 'auto' });
+        requestAnimationFrame(function () {
+            restoringHistory = false;
+            updateControls();
+        });
+        return true;
+    }
+
     function exposeNavigationApi() {
         window.LDDNavigation = Object.assign({}, window.LDDNavigation || {}, {
             goToTab: goToTab,
             home: function () { return goToTab('tab-trang-chu'); },
+            resetToHome: resetToHome,
             getActiveTab: getActiveTabId
         });
     }
