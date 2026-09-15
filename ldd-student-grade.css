@@ -1,0 +1,237 @@
+/* =============================================================
+   LDD ENGLISH — STUDENT GRADE UI v1
+   ============================================================= */
+body.ldd-grade-modal-open { overflow: hidden; }
+
+.ldd-grade-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+    background: rgba(15,23,42,.48);
+    backdrop-filter: blur(3px);
+}
+.ldd-grade-modal {
+    width: min(100%, 780px);
+    max-height: min(86vh, 760px);
+    overflow: auto;
+    padding: 20px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background: var(--surface);
+    box-shadow: 0 24px 70px rgba(15,23,42,.24);
+}
+.ldd-grade-modal-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border);
+}
+.ldd-grade-kicker {
+    display: block;
+    margin-bottom: 3px;
+    color: var(--primary);
+    font-size: .67rem;
+    font-weight: 850;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+}
+.ldd-grade-modal-head h3 {
+    margin: 0;
+    font-size: 1.08rem;
+}
+.ldd-grade-modal-head p {
+    max-width: 590px;
+    margin: 5px 0 0;
+    color: var(--text-muted);
+    font-size: .74rem;
+    line-height: 1.5;
+}
+.ldd-grade-close {
+    width: 34px;
+    height: 34px;
+    flex: 0 0 auto;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: var(--surface-2);
+    color: var(--text-muted);
+    font: inherit;
+    font-size: 1.3rem;
+    line-height: 1;
+    cursor: pointer;
+}
+.ldd-grade-close:hover { color: var(--danger-dark); border-color: #fecaca; background: #fff1f2; }
+
+.ldd-grade-add-row {
+    display: grid;
+    grid-template-columns: minmax(220px,1fr) 150px auto;
+    gap: 9px;
+    margin: 16px 0 11px;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 13px;
+    background: var(--surface-2);
+}
+.ldd-grade-add-row input,
+.ldd-grade-add-row select,
+.ldd-grade-toolbar input,
+.ldd-grade-select {
+    min-width: 0;
+    height: 38px;
+    padding: 0 10px;
+    border: 1px solid var(--border-strong);
+    border-radius: 9px;
+    background: #fff;
+    color: var(--text);
+    font: inherit;
+    font-size: .76rem;
+}
+.ldd-grade-add-row input:focus,
+.ldd-grade-add-row select:focus,
+.ldd-grade-toolbar input:focus,
+.ldd-grade-select:focus {
+    outline: 3px solid var(--primary-glow);
+    border-color: var(--primary);
+}
+.ldd-grade-add-row button {
+    min-height: 38px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: 9px;
+    background: var(--primary);
+    color: #fff;
+    font: inherit;
+    font-size: .74rem;
+    font-weight: 800;
+    cursor: pointer;
+}
+.ldd-grade-add-row button:hover { background: var(--primary-dark); }
+.ldd-grade-add-row button:disabled { opacity: .55; cursor: wait; }
+
+.ldd-grade-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+.ldd-grade-toolbar input { flex: 1; }
+.ldd-grade-toolbar span {
+    color: var(--text-muted);
+    font-size: .68rem;
+    font-weight: 750;
+    white-space: nowrap;
+}
+.ldd-grade-status {
+    min-height: 20px;
+    margin-bottom: 6px;
+    color: var(--primary-dark);
+    font-size: .7rem;
+    font-weight: 650;
+}
+.ldd-grade-list {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+.ldd-grade-row {
+    display: grid;
+    grid-template-columns: minmax(0,1fr) 145px 90px;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: #fff;
+}
+.ldd-grade-identity {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.ldd-grade-avatar {
+    width: 34px;
+    height: 34px;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    border-radius: 10px;
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    font-size: .76rem;
+    font-weight: 900;
+}
+.ldd-grade-identity > span:last-child { min-width: 0; }
+.ldd-grade-identity strong,
+.ldd-grade-identity small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ldd-grade-identity strong { color: var(--text); font-size: .76rem; }
+.ldd-grade-identity small { margin-top: 2px; color: var(--text-muted); font-size: .64rem; }
+.ldd-grade-saved {
+    color: var(--text-muted);
+    font-size: .65rem;
+    font-weight: 750;
+    text-align: right;
+}
+.ldd-grade-saved.is-ok { color: var(--success-dark); }
+.ldd-grade-empty {
+    padding: 22px 12px;
+    border: 1px dashed var(--border-strong);
+    border-radius: 12px;
+    background: var(--surface-2);
+    color: var(--text-muted);
+    font-size: .73rem;
+    line-height: 1.5;
+    text-align: center;
+}
+.ldd-grade-error {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 14px;
+    border: 1px solid #fbbf24;
+    border-radius: 12px;
+    background: var(--warning-light);
+    color: #92400e;
+    font-size: .73rem;
+    line-height: 1.5;
+}
+.ldd-grade-error code { font-weight: 800; }
+
+/* Countdown đã reset/mở: luôn nổi bật và nằm đầu danh sách do JS sort. */
+.ldd-home-timer-row.ldd-grade-timer-row {
+    width: 100%;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+.ldd-home-timer-row.ldd-grade-timer-row:hover {
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-sm);
+    transform: translateY(-1px);
+}
+.ldd-home-timer-row.ldd-grade-ready {
+    border-color: #86efac !important;
+    background: linear-gradient(135deg, var(--success-light), #fff) !important;
+    box-shadow: 0 3px 12px rgba(16,185,129,.12);
+}
+.ldd-grade-ready .ldd-home-timer-icon {
+    background: var(--success) !important;
+    color: #fff !important;
+}
+.ldd-grade-ready .ldd-home-timer-value {
+    color: var(--success-dark) !important;
+    font-weight: 900 !important;
+}
+
+@media (max-width: 640px) {
+    .ldd-grade-modal-overlay { padding: 8px; align-items: flex-end; }
+    .ldd-grade-modal { max-height: 92vh; padding: 15px; border-radius: 18px 18px 0 0; }
+    .ldd-grade-add-row { grid-template-columns: 1fr; }
+    .ldd-grade-row { grid-template-columns: minmax(0,1fr) 118px; }
+    .ldd-grade-saved { grid-column: 1 / -1; text-align: left; padding-left: 44px; }
+}
