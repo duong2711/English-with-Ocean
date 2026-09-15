@@ -1,5 +1,5 @@
 /* =============================================================
-   LDD ENGLISH — UI UPGRADE v5.3
+   LDD ENGLISH — UI UPGRADE v5.4
    Non-destructive DOM enhancement. No Supabase calls.
    Load AFTER scriptphonetics.js.
    ============================================================= */
@@ -27,8 +27,10 @@
         // Giữ stylesheet timer vì Trang chủ mới dùng lại giao diện Countdown + Leaderboard.
         // JS timer cũ không còn nạp: ldd-ui-today.js đảm nhiệm dữ liệu Home để tránh gọi trùng.
         ensureStylesheet('ldd-timers-style', 'ldd-ui-timers.css?v=2.1');
+        ensureStylesheet('ldd-student-grade-style', 'ldd-student-grade.css?v=1');
         ensureScript('ldd-vocab-grammar-script', 'ldd-ui-vocab-grammar.js?v=2');
         ensureScript('ldd-home-phonetics-script', 'ldd-ui-home-phonetics.js?v=8.4');
+        ensureScript('ldd-student-grade-script', 'ldd-student-grade.js?v=1');
     }
 
     function ensureStylesheet(id, href) {
