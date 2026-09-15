@@ -1,5 +1,5 @@
 /* =============================================================
-   LDD ENGLISH — UI UPGRADE v1
+   LDD ENGLISH — UI UPGRADE v2
    Non-destructive DOM enhancement. No Supabase calls.
    Load AFTER scriptphonetics.js.
    ============================================================= */
@@ -13,9 +13,21 @@
 
     onReady(function () {
         document.body.classList.add('ldd-ui-v2');
+        ensureRoadmapNewsStyles();
         enhanceTestCenter();
         observeCustomTestRows();
+        enhanceLearningRoadmaps();
+        enhanceReadingLab();
     });
+
+    function ensureRoadmapNewsStyles() {
+        if (document.getElementById('ldd-roadmap-news-style')) return;
+        const link = document.createElement('link');
+        link.id = 'ldd-roadmap-news-style';
+        link.rel = 'stylesheet';
+        link.href = 'ldd-ui-roadmap-news.css?v=2';
+        document.head.appendChild(link);
+    }
 
     function enhanceTestCenter() {
         const tab = document.getElementById('tab-kiem-tra');
@@ -104,7 +116,6 @@
             card.dataset.lddEnhanced = '1';
             card.dataset.lddKind = cfg.kind;
 
-            // Remove only direct text nodes; preserve badges and any existing child controls.
             Array.from(card.childNodes).forEach(function (node) {
                 if (node.nodeType === Node.TEXT_NODE) node.remove();
             });
@@ -148,7 +159,6 @@
                 if (row.querySelector('.ctest-status-in-progress')) status = 'progress';
                 if (row.querySelector('.ctest-status-submitted')) status = 'submitted';
 
-                // Teacher's "Đang giao bài" currently shares the submitted visual class.
                 const text = (row.textContent || '').toLowerCase();
                 if (text.includes('đang giao bài')) status = 'published';
                 row.dataset.lddStatus = status;
@@ -157,5 +167,137 @@
 
         new MutationObserver(decorate).observe(container, { childList: true, subtree: true });
         decorate();
+    }
+
+    function enhanceLearningRoadmaps() {
+        const roadmaps = [
+            { id: 'tab-mat-goc', icon: '01', kicker: 'Lộ trình nền tảng', desc: 'Đi từng bước từ phiên âm, từ vựng và ngữ pháp để xây lại nền tiếng Anh thật chắc.', badge: 'Bắt đầu từ nền tảng' },
+            { id: 'tab-thi-thcs', icon: '6–9', kicker: 'Lộ trình THCS', desc: 'Ôn theo khối lớp, bám chủ điểm trọng tâm và luyện lại kiến thức theo từng chặng.', badge: 'Theo chương trình THCS' },
+            { id: 'tab-thi-thpt', icon: '10+', kicker: 'Lộ trình THPT', desc: 'Hệ thống kiến thức theo lớp và mục tiêu thi, ưu tiên phần cần dùng thật trong bài kiểm tra.', badge: 'Theo chương trình THPT' },
+            { id: 'tab-di-lam', icon: 'PRO', kicker: 'English for Work', desc: 'Tập trung nghe, nói, đọc và viết trong các tình huống công việc thực tế.', badge: 'Ứng dụng thực tế' },
+            { id: 'tab-ielts', icon: 'IELTS', kicker: 'IELTS Roadmap', desc: 'Chia mục tiêu thành từng chặng rõ ràng để biết mình đang học gì và vì sao cần học phần đó.', badge: 'Theo từng chặng' }
+        ];
+
+        roadmaps.forEach(function (cfg) {
+            const tab = document.getElementById(cfg.id);
+            if (!tab) return;
+            tab.classList.add('ldd-roadmap-page');
+            if (tab.querySelector('.ldd-roadmap-hero')) return;
+
+            const title = Array.from(tab.children).find(function (el) { return el.tagName === 'H2'; });
+            if (!title) return;
+
+            const hero = document.createElement('section');
+            hero.className = 'ldd-roadmap-hero';
+
+            const icon = document.createElement('div');
+            icon.className = 'ldd-roadmap-hero-icon';
+            icon.setAttribute('aria-hidden', 'true');
+            icon.textContent = cfg.icon;
+
+            const copy = document.createElement('div');
+            copy.className = 'ldd-roadmap-hero-copy';
+
+            const kicker = document.createElement('div');
+            kicker.className = 'ldd-roadmap-kicker';
+            kicker.textContent = cfg.kicker;
+
+            const desc = document.createElement('p');
+            desc.textContent = cfg.desc;
+
+            copy.appendChild(kicker);
+            copy.appendChild(title);
+            copy.appendChild(desc);
+
+            const badge = document.createElement('span');
+            badge.className = 'ldd-roadmap-hero-badge';
+            badge.innerHTML = '<span aria-hidden="true">◎</span>' + cfg.badge;
+
+            hero.appendChild(icon);
+            hero.appendChild(copy);
+            hero.appendChild(badge);
+            tab.insertBefore(hero, tab.firstChild);
+        });
+    }
+
+    function enhanceReadingLab() {
+        const panel = document.getElementById('news-panel');
+        if (panel) addNewsHero(panel);
+
+        const grid = document.getElementById('news-cards-grid');
+        if (grid) {
+            const decorate = function () { decorateNewsCards(grid); };
+            new MutationObserver(decorate).observe(grid, { childList: true, subtree: true });
+            decorate();
+        }
+
+        enhanceArticleMeta();
+    }
+
+    function addNewsHero(panel) {
+        if (panel.querySelector('.ldd-news-hero')) return;
+        const header = panel.querySelector('.grammar-panel-header');
+        if (!header) return;
+
+        const hero = document.createElement('section');
+        hero.className = 'ldd-news-hero';
+        hero.innerHTML =
+            '<div class="ldd-news-hero-icon" aria-hidden="true">📰</div>' +
+            '<div class="ldd-news-hero-copy">' +
+                '<div class="ldd-news-hero-kicker">LDD Reading Lab</div>' +
+                '<h4>Đọc báo để học tiếng Anh</h4>' +
+                '<p>Đọc nội dung thật, chạm từ để tra nghĩa, luyện dịch và kiểm tra mức độ hiểu bài ngay trong cùng một luồng học.</p>' +
+                '<div class="ldd-news-hero-chips">' +
+                    '<span class="ldd-news-hero-chip">Đọc hiểu</span>' +
+                    '<span class="ldd-news-hero-chip">Từ vựng</span>' +
+                    '<span class="ldd-news-hero-chip">Luyện dịch</span>' +
+                '</div>' +
+            '</div>';
+
+        header.insertAdjacentElement('afterend', hero);
+    }
+
+    function decorateNewsCards(grid) {
+        grid.querySelectorAll('.news-card').forEach(function (card) {
+            if (card.dataset.lddNewsEnhanced === '1') return;
+            card.dataset.lddNewsEnhanced = '1';
+
+            const cta = document.createElement('span');
+            cta.className = 'ldd-news-card-cta';
+            cta.innerHTML = '<span>Đọc & luyện bài</span><span class="ldd-news-card-cta-arrow" aria-hidden="true">→</span>';
+            card.appendChild(cta);
+        });
+    }
+
+    function enhanceArticleMeta() {
+        const panel = document.getElementById('news-article-panel');
+        const text = document.getElementById('news-article-text');
+        if (!panel || !text) return;
+
+        let meta = panel.querySelector('.ldd-reading-meta');
+        if (!meta) {
+            meta = document.createElement('div');
+            meta.className = 'ldd-reading-meta';
+            meta.innerHTML =
+                '<span class="ldd-reading-meta-chip" data-reading-time>⏱ 1 phút đọc</span>' +
+                '<span class="ldd-reading-meta-chip">🔎 Chạm từ để tra nghĩa</span>' +
+                '<span class="ldd-reading-meta-chip">✍️ Luyện dịch bên dưới</span>';
+
+            const header = panel.querySelector('.grammar-panel-header');
+            if (header) header.insertAdjacentElement('afterend', meta);
+            else panel.insertBefore(meta, panel.firstChild);
+        }
+
+        const update = function () {
+            const raw = (text.textContent || '').trim();
+            const words = raw ? raw.split(/\s+/).filter(Boolean).length : 0;
+            const minutes = Math.max(1, Math.ceil(words / 180));
+            const timeChip = meta.querySelector('[data-reading-time]');
+            if (timeChip) timeChip.textContent = '⏱ ' + minutes + ' phút đọc';
+            meta.classList.toggle('is-visible', words > 0);
+        };
+
+        new MutationObserver(update).observe(text, { childList: true, characterData: true, subtree: true });
+        update();
     }
 })();
