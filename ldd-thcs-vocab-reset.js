@@ -1,10 +1,9 @@
 /* =============================================================
-   LDD ENGLISH — THCS/THPT VOCAB RESET v2
-   Applies the exact existing review cycle to vocabulary units:
+   LDD ENGLISH — THCS/THPT VOCAB RESET v4 · LOW EGRESS
    completion #1 -> reset after 7 days
    completion #2 -> reset after 14 days
-   completion #3+ -> permanent completion (no more reset)
-   Units are stored in thcs_unit_progress for grades 6-12.
+   completion #3+ -> permanent completion
+   Reads once, then schedules the next due reset locally instead of polling DB.
    ============================================================= */
 (function () {
     'use strict';
@@ -14,10 +13,13 @@
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl3cWJha3NtbXR2d2JvamNnc2RkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxNjc3NTAsImV4cCI6MjA5Nzc0Mzc1MH0.vhgt7cB6w2elm-MXY57U_wJtYkJQHDFAEsJwAArOjhQ';
     const TEACHER_EMAIL = 'lddbaiu@gmail.com';
     const DAY_MS = 86400000;
+    const STALE_MS = 6 * 60 * 60 * 1000;
 
     let lastToken = null;
     let rows = [];
     let syncing = false;
+    let lastSyncAt = 0;
+    let dueTimer = null;
     let timerObserver = null;
     let timerHost = null;
 
@@ -104,6 +106,31 @@
         return match ? Number(match[1]) : NaN;
     }
 
+    function scheduleNextDueSync() {
+        clearTimeout(dueTimer);
+        dueTimer = null;
+        const now = Date.now();
+        let nearest = Infinity;
+        (rows || []).forEach(function (row) {
+            const count = Number(row.times_completed || 0);
+            const target = resetTarget(row);
+            if (row.completed && count >= 1 && count <= 2 && target && target > now) nearest = Math.min(nearest, target);
+        });
+        if (!Number.isFinite(nearest)) return;
+        dueTimer = setTimeout(function () { sync(); }, Math.max(1000, nearest - now + 1000));
+    }
+
+    function shouldSyncNow() {
+        if (!getToken() || isTeacher()) return false;
+        if (!lastSyncAt || Date.now() - lastSyncAt >= STALE_MS) return true;
+        const now = Date.now();
+        return (rows || []).some(function (row) {
+            const count = Number(row.times_completed || 0);
+            const target = resetTarget(row);
+            return row.completed && count >= 1 && count <= 2 && target && target <= now;
+        });
+    }
+
     async function sync() {
         if (syncing || !getToken() || isTeacher()) return;
         syncing = true;
@@ -111,28 +138,23 @@
             const uid = userId();
             if (!uid) return;
             const grade = assignedGrade();
-            // Chỉ reset và hiển countdown cho khối lớp được gán của học sinh.
-            // Khi assignment chưa tải xong, chờ event ldd:student-grade-changed thay vì
-            // truy vấn/reset nhầm dữ liệu của mọi khối.
             if (!grade || grade < 6 || grade > 12) return;
             const params = {
                 select: 'user_id,grade,unit_id,flashcard_done,translate_done,story_done,completed,times_completed,completed_at',
                 user_id: 'eq.' + uid,
-                order: 'grade.asc,unit_id.asc'
+                order: 'grade.asc,unit_id.asc',
+                grade: 'eq.' + grade
             };
-            params.grade = 'eq.' + grade;
             const result = await request('GET', 'thcs_unit_progress', params);
             if (!result.ok) return;
             rows = result.data || [];
+            lastSyncAt = Date.now();
 
             const now = Date.now();
             let changed = false;
             for (const row of rows) {
                 const count = Number(row.times_completed || 0);
                 const target = resetTarget(row);
-
-                // Exact existing mechanism:
-                // #1 resets after 7d, #2 after 14d, #3+ never resets again.
                 if (Number(row.grade) < 6 || Number(row.grade) > 12 || !row.completed || count < 1 || count >= 3 || !target || target > now) continue;
 
                 const patch = await request('PATCH', 'thcs_unit_progress', {
@@ -147,10 +169,6 @@
                     completed_at: null
                 });
                 if (patch.ok) {
-                    // Keep times_completed, but clear every completion flag so the learner can
-                    // genuinely finish all three parts again. completed_at is cleared in the DB;
-                    // this in-memory row retains the old timestamp only to show "LÀM NGAY"
-                    // until the next sync/reload.
                     row.flashcard_done = false;
                     row.translate_done = false;
                     row.story_done = false;
@@ -162,6 +180,7 @@
             renderReadyRows();
             decorateVisibleUnits();
             observeTimerList();
+            scheduleNextDueSync();
             if (changed) {
                 document.dispatchEvent(new CustomEvent('ldd:today-refresh'));
                 document.dispatchEvent(new CustomEvent('ldd:thcs-vocab-reset'));
@@ -186,9 +205,7 @@
         if (timerObserver) timerObserver.disconnect();
         timerHost = host;
         timerObserver = new MutationObserver(function () {
-            if (!host.querySelector('.ldd-thcs-vocab-reset-ready') && readyRows().length) {
-                setTimeout(renderReadyRows, 0);
-            }
+            if (!host.querySelector('.ldd-thcs-vocab-reset-ready') && readyRows().length) setTimeout(renderReadyRows, 0);
         });
         timerObserver.observe(host, { childList: true });
     }
@@ -287,27 +304,36 @@
             const token = getToken();
             if (token && token !== lastToken) {
                 lastToken = token;
+                lastSyncAt = 0;
                 setTimeout(sync, 300);
             } else if (!token) {
                 lastToken = null;
                 rows = [];
+                lastSyncAt = 0;
+                clearTimeout(dueTimer);
+                dueTimer = null;
             }
             observeTimerList();
             decorateVisibleUnits();
         }
         watchSession();
+        // Session watch is localStorage-only and costs no Supabase egress.
         setInterval(watchSession, 1200);
-        setInterval(function () { if (!document.hidden) sync(); }, 30000);
-        document.addEventListener('visibilitychange', function () { if (!document.hidden) sync(); });
-        document.addEventListener('ldd:student-grade-changed', function () { setTimeout(sync, 100); });
+        document.addEventListener('visibilitychange', function () {
+            if (!document.hidden && shouldSyncNow()) sync();
+        });
+        document.addEventListener('ldd:student-grade-changed', function () {
+            lastSyncAt = 0;
+            setTimeout(sync, 100);
+        });
         document.addEventListener('click', function (event) {
             if (event.target.closest && (event.target.closest('#thcs-folder-card') || event.target.closest('.thcs-grade-card'))) {
                 setTimeout(decorateVisibleUnits, 250);
+                if (shouldSyncNow()) setTimeout(sync, 300);
             }
         });
     });
 
-    // Small public hook for other UI modules/tests; does not alter the reset rules.
     window.LDDThcsVocabReset = {
         refresh: sync,
         getResetDays: resetDelayDays
