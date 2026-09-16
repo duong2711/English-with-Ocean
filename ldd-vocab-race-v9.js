@@ -1,4 +1,4 @@
-/* LDD English — Vocab Race v9 intermission controller */
+/* LDD English — Vocab Race v12 intermission controller · low egress */
 (function(){
   'use strict';
 
@@ -8,19 +8,24 @@
 
   const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{detectSessionInUrl:false}});
   let roomId=null;
-  let roomCode='';
   let channel=null;
   let roomSnapshot=null;
   let paused=false;
   let advancing=false;
+  let discovering=false;
+  let discoverTimer=null;
   let clockOffset=0;
   let lastClockSync=0;
 
   const now=()=>Date.now()+clockOffset;
   const isPauseResult=lr=>!!lr&&['round_pause','timeout_pause'].includes(String(lr.type||''));
 
+  function getOverlay(){return document.getElementById('vocab-race-pause-overlay');}
+  function getGame(){return document.getElementById('vocab-race-game');}
+  function gameVisible(){const g=getGame();return !!g&&g.style.display!=='none';}
+
   async function syncClock(force){
-    if(!force&&Date.now()-lastClockSync<10000)return;
+    if(!force&&Date.now()-lastClockSync<30000)return;
     const t0=Date.now();
     try{
       const {data,error}=await sb.rpc('vocab_race_server_time');
@@ -32,9 +37,6 @@
     }catch(_){ }
     lastClockSync=Date.now();
   }
-
-  function getOverlay(){return document.getElementById('vocab-race-pause-overlay');}
-  function getGame(){return document.getElementById('vocab-race-game');}
 
   function setOverlayCopy(reason){
     const overlay=getOverlay();
@@ -50,14 +52,25 @@
     }
   }
 
+  function publishRoomState(r){
+    const state=r?{id:r.id,code:r.code||'',status:r.status||'',round_index:Number(r.round_index),last_result:r.last_result||{}}:null;
+    window.LDDVocabRaceRoomState=state;
+    document.dispatchEvent(new CustomEvent('ldd:vocab-race-room',{detail:state}));
+  }
+
   function applyRoom(r){
     roomSnapshot=r||null;
+    publishRoomState(r);
     const game=getGame();
     const lr=r&&r.last_result||{};
     const shouldPause=!!(r&&r.status==='playing'&&isPauseResult(lr)&&Number(lr.round)===Number(r.round_index));
+    const pauseChanged=shouldPause!==paused;
     paused=shouldPause;
     if(game)game.classList.toggle('vocab-race-v9-paused',shouldPause);
-    if(shouldPause)setOverlayCopy(String(lr.reason||''));
+    if(shouldPause){
+      setOverlayCopy(String(lr.reason||''));
+      if(pauseChanged)syncClock(false);
+    }
   }
 
   function unsubscribe(){
@@ -67,33 +80,43 @@
 
   async function attach(r){
     if(!r||!r.id)return;
-    if(roomId===r.id){applyRoom(r);return;}
+    if(String(roomId)===String(r.id)){applyRoom(r);return;}
     unsubscribe();
     roomId=r.id;
-    roomCode=r.code||'';
     applyRoom(r);
-    channel=sb.channel('race-v9-'+roomId)
+    channel=sb.channel('race-v12-room-'+roomId)
       .on('postgres_changes',{event:'UPDATE',schema:'public',table:'vocab_race_rooms',filter:'id=eq.'+roomId},payload=>applyRoom(payload.new))
       .subscribe();
+    await syncClock(true);
   }
 
   async function discover(){
-    const game=getGame();
-    if(!game||game.style.display==='none')return;
-    const {data:{session}}=await sb.auth.getSession();
-    if(!session||!session.user)return;
-    const {data:rows}=await sb.from('vocab_race_players')
-      .select('room_id,joined_at')
-      .eq('user_id',session.user.id)
-      .order('joined_at',{ascending:false})
-      .limit(1);
-    if(!rows||!rows.length)return;
-    const id=rows[0].room_id;
-    const {data:r}=await sb.from('vocab_race_rooms')
-      .select('id,code,status,round_index,last_result')
-      .eq('id',id)
-      .maybeSingle();
-    if(r)await attach(r);
+    if(discovering||!gameVisible())return;
+    if(roomId&&roomSnapshot&&['lobby','playing'].includes(String(roomSnapshot.status||'')))return;
+    discovering=true;
+    try{
+      const {data:{session}}=await sb.auth.getSession();
+      if(!session||!session.user)return;
+      const {data:rows}=await sb.from('vocab_race_players')
+        .select('room_id,joined_at')
+        .eq('user_id',session.user.id)
+        .order('joined_at',{ascending:false})
+        .limit(1);
+      if(!rows||!rows.length)return;
+      const id=rows[0].room_id;
+      const {data:r}=await sb.from('vocab_race_rooms')
+        .select('id,code,status,round_index,last_result')
+        .eq('id',id)
+        .maybeSingle();
+      if(r)await attach(r);
+    }finally{
+      discovering=false;
+    }
+  }
+
+  function scheduleDiscover(delay){
+    clearTimeout(discoverTimer);
+    discoverTimer=setTimeout(discover,delay==null?40:delay);
   }
 
   async function advanceIfReady(){
@@ -140,8 +163,16 @@
     }
   },true);
 
-  setInterval(discover,900);
-  setInterval(()=>syncClock(false),10000);
-  syncClock(true);
+  // No REST polling: discover once when the game becomes visible, then Realtime owns updates.
+  new MutationObserver(function(){
+    if(gameVisible())scheduleDiscover(30);
+  }).observe(document.documentElement,{childList:true,subtree:true,attributes:true,attributeFilter:['style','class']});
+
+  document.addEventListener('visibilitychange',function(){if(!document.hidden&&gameVisible())scheduleDiscover(0);});
+  document.addEventListener('click',function(e){
+    if(e.target&&e.target.closest&&e.target.closest('#vocab-race-folder-card'))scheduleDiscover(80);
+  },true);
+
+  scheduleDiscover(0);
   requestAnimationFrame(paint);
 })();
