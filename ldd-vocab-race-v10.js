@@ -1,7 +1,7 @@
 /* =============================================================
-   LDD ENGLISH — VOCAB RACE v10 · STABLE TRACK
-   Fix: đổi làn không rebuild toàn bộ track.
-   Giữ road / warning / obstacle DOM sống liên tục để animation không reset.
+   LDD ENGLISH — VOCAB RACE v11 · CONTINUOUS STEERING
+   Fix: rapid left/right no longer reparents cars between lanes.
+   Cars live directly on the track and only their horizontal target changes.
    ============================================================= */
 (function () {
     'use strict';
@@ -110,30 +110,58 @@
         return track.querySelector('.vocab-race-lane[data-lane="' + n + '"]');
     }
 
-    function moveCarWithoutRebuild(car, lane) {
-        if (!car) return;
+    function laneCenterX(lane) {
+        const track = document.getElementById('vocab-race-track');
         const target = laneElement(lane);
-        if (!target || car.parentElement === target) return;
+        if (!track || !target) return null;
+        const tr = track.getBoundingClientRect();
+        const lr = target.getBoundingClientRect();
+        const x = lr.left - tr.left + (lr.width / 2);
+        return Number.isFinite(x) ? x : null;
+    }
+
+    function installOverlayMotion(car, lane) {
+        const track = document.getElementById('vocab-race-track');
+        if (!track || !car) return;
+
+        const targetX = laneCenterX(lane);
+        if (!Number.isFinite(targetX)) return;
 
         const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        const before = car.getBoundingClientRect();
-        target.appendChild(car);
-        const after = car.getBoundingClientRect();
-        const dx = before.left - after.left;
+        const alreadyOverlay = car.parentElement === track && car.dataset.v11Overlay === '1';
 
-        if (!reduceMotion && Number.isFinite(dx) && Math.abs(dx) > 1) {
-            car.style.transition = 'none';
-            car.style.translate = dx.toFixed(1) + 'px 0';
+        if (!alreadyOverlay) {
+            const before = car.getBoundingClientRect();
+            const tr = track.getBoundingClientRect();
+            const startX = before.left - tr.left + (before.width / 2);
+
+            track.appendChild(car);
+            car.dataset.v11Overlay = '1';
+            car.style.setProperty('position', 'absolute', 'important');
+            car.style.setProperty('right', 'auto', 'important');
+            car.style.setProperty('transform', 'translateX(-50%)', 'important');
+            car.style.setProperty('left', (Number.isFinite(startX) ? startX : targetX).toFixed(2) + 'px', 'important');
+            car.style.setProperty('transition', 'none', 'important');
             void car.offsetWidth;
+
             requestAnimationFrame(function () {
-                car.style.transition = 'translate .28s cubic-bezier(.22,.61,.36,1)';
-                car.style.translate = '0px 0';
-                window.setTimeout(function () {
-                    car.style.removeProperty('translate');
-                    car.style.removeProperty('transition');
-                }, 310);
+                car.style.setProperty(
+                    'transition',
+                    reduceMotion
+                        ? 'left .08s linear, bottom .72s cubic-bezier(.22,.61,.36,1), opacity .42s ease, filter .42s ease'
+                        : 'left .24s cubic-bezier(.22,.61,.36,1), bottom .72s cubic-bezier(.22,.61,.36,1), opacity .42s ease, filter .42s ease',
+                    'important'
+                );
+                car.style.setProperty('left', targetX.toFixed(2) + 'px', 'important');
             });
+            return;
         }
+
+        car.style.setProperty('left', targetX.toFixed(2) + 'px', 'important');
+    }
+
+    function moveCarWithoutRebuild(car, lane) {
+        installOverlayMotion(car, lane);
     }
 
     function applyPlayerState(p) {
@@ -173,7 +201,7 @@
                     playerChannel = null;
                 }
                 roomId = nextRoomId;
-                playerChannel = sb.channel('race-v10-players-' + roomId)
+                playerChannel = sb.channel('race-v11-players-' + roomId)
                     .on('postgres_changes', {
                         event: '*',
                         schema: 'public',
@@ -231,6 +259,10 @@
         childList: true,
         subtree: true
     });
+
+    window.addEventListener('resize', function () {
+        requestAnimationFrame(syncOwnCarFromLabel);
+    }, { passive: true });
 
     setInterval(maintain, 250);
     setInterval(syncRoomAndPlayers, 900);
