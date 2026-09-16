@@ -5,12 +5,13 @@
    - Chướng ngại vật mỗi 5 giây
    - Hết giờ: pause đồng bộ 6 giây rồi mới sang vòng tiếp
    - Mặt đường chuyển động bằng requestAnimationFrame trên mọi thiết bị
+   - Đồng hồ dùng thời gian server Supabase để tránh lệch PC/tablet/mobile
    ============================================================= */
 (function () {
     'use strict';
 
     const SUPABASE_URL = 'https://ywqbaksmmtvwbojcgsdd.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJIUzI1NiIsInJlZiI6Inl3cWJha3NtbXR2d2JvamNnc2RkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxNjc3NTAsImV4cCI6MjA5Nzc0Mzc1MH0.vhgt7cB6w2elm-MXY57U_wJtYkJQHDFAEsJwAArOjhQ';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl3cWJha3NtbXR2d2JvamNnc2RkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxNjc3NTAsImV4cCI6MjA5Nzc0Mzc1MH0.vhgt7cB6w2elm-MXY57U_wJtYkJQHDFAEsJwAArOjhQ';
     const TEACHER_EMAIL = 'lddbaiu@gmail.com';
     const ROUND_MS = 30000;
     const PAUSE_MS = 6000;
@@ -37,11 +38,15 @@
     let claimPending = false;
     let charging = null;
     let roadAnimationStarted = false;
+    let clockOffsetMs = 0;
+    let clockSyncPending = false;
+    let lastClockSyncAt = 0;
     const resolvedObstacleKeys = new Set();
 
     const $ = id => document.getElementById(id);
     const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
     const esc = v => String(v == null ? '' : v).replace(/[&<>'"]/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[ch]));
+    const nowMs = () => Date.now() + clockOffsetMs;
 
     function ready(fn) {
         if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
@@ -55,6 +60,7 @@
         const { data } = await raceSb.auth.getSession();
         session = data && data.session;
         await syncIdentity();
+        await syncServerClock(true);
         setInterval(syncSession, 1600);
     });
 
@@ -66,7 +72,8 @@
         session = next;
         if (oldId !== newId) {
             await syncIdentity();
-            if (!newId) leaveLocalRoom();
+            if (newId) await syncServerClock(true);
+            else leaveLocalRoom();
         }
     }
 
@@ -82,6 +89,26 @@
                 : (u.user_metadata && (u.user_metadata.display_name || u.user_metadata.full_name || u.user_metadata.name))
                     || String(u.email || '').split('@')[0] || 'Học viên'
         };
+    }
+
+    async function syncServerClock(force) {
+        if (!session || !session.user || clockSyncPending) return;
+        if (!force && Date.now() - lastClockSyncAt < 9000) return;
+        clockSyncPending = true;
+        const t0 = Date.now();
+        try {
+            const { data, error } = await raceSb.rpc('vocab_race_server_time');
+            const t1 = Date.now();
+            if (!error && data) {
+                const server = Date.parse(data);
+                if (Number.isFinite(server)) clockOffsetMs = server - ((t0 + t1) / 2);
+            }
+            lastClockSyncAt = Date.now();
+        } catch (_) {
+            lastClockSyncAt = Date.now();
+        } finally {
+            clockSyncPending = false;
+        }
     }
 
     function ensureGameUI() {
@@ -252,6 +279,7 @@
 
     async function attachRoom(id) {
         unsubscribe();
+        await syncServerClock(true);
         roomChannel = raceSb.channel('race-room-v5-' + id).on('postgres_changes', { event:'*', schema:'public', table:'vocab_race_rooms', filter:'id=eq.' + id }, scheduleRefresh).subscribe();
         playerChannel = raceSb.channel('race-player-v5-' + id).on('postgres_changes', { event:'*', schema:'public', table:'vocab_race_players', filter:'room_id=eq.' + id }, scheduleRefresh).subscribe();
         if (!tickHandle) tickHandle = setInterval(tick, 100);
@@ -298,7 +326,7 @@
     function pauseRemainingMs() {
         if (!isRoundPaused()) return 0;
         const until = Date.parse((room.last_result || {}).pause_until || '');
-        return Number.isFinite(until) ? Math.max(0, until - Date.now()) : PAUSE_MS;
+        return Number.isFinite(until) ? Math.max(0, until - nowMs()) : PAUSE_MS;
     }
 
     async function startRoom() {
@@ -306,7 +334,7 @@
         const b = $('vocab-race-start-btn'); b.disabled = true;
         const { error } = await raceSb.rpc('vocab_race_start_room', { p_room:room.id });
         b.disabled = false;
-        if (error) setStatus(translateError(error), 'error'); else await refreshRoom(room.id);
+        if (error) setStatus(translateError(error), 'error'); else { await syncServerClock(true); await refreshRoom(room.id); }
     }
 
     async function replayRoom() {
@@ -423,7 +451,7 @@
         const eliminated = isEliminated(p);
         const car = document.createElement('div');
         car.dataset.user = p.user_id;
-        car.className = 'vocab-race-car slot-' + p.slot + (mine ? ' is-me' : '') + (eliminated ? ' is-eliminated' : '') + (mine && charging && charging.round === room.round_index && Date.now() < charging.until ? ' is-charging' : '');
+        car.className = 'vocab-race-car slot-' + p.slot + (mine ? ' is-me' : '') + (eliminated ? ' is-eliminated' : '') + (mine && charging && charging.round === room.round_index && nowMs() < charging.until ? ' is-charging' : '');
         car.style.setProperty('--race-color', PLAYER_COLORS[(Number(p.slot) || 1) - 1]);
         car.innerHTML = '<span class="vocab-race-car-timer">' + (eliminated ? 'LOẠI' : 'READY') + '</span><span class="vocab-race-car-body">🏎️</span><span class="vocab-race-car-name">' + esc(shortName(p.display_name || p.email || ('P' + p.slot))) + '</span>';
         return car;
@@ -510,7 +538,7 @@
         const lane = p.lane == null ? 2 : Number(p.lane);
         const roundAtCall = Number(room.round_index);
         claimPending = true;
-        charging = { round:roundAtCall, lane, until:Date.now()+700 };
+        charging = { round:roundAtCall, lane, until:nowMs()+700 };
         updateControls();
         const car = document.querySelector('#vocab-race-track .vocab-race-car.is-me');
         if (car) car.classList.add('is-charging');
@@ -538,7 +566,7 @@
 
     function elapsedMs() {
         const t = Date.parse(room && room.round_started_at || '');
-        return Number.isFinite(t) ? Math.max(0, Date.now() - t) : 0;
+        return Number.isFinite(t) ? Math.max(0, nowMs() - t) : 0;
     }
 
     function obstacleState() {
@@ -617,6 +645,7 @@
 
     function tick() {
         if (!room || room.status !== 'playing') return;
+        if (Date.now() - lastClockSyncAt > 10000) syncServerClock(false);
 
         if (isRoundPaused()) {
             const clock = $('vocab-race-round-clock');
@@ -631,7 +660,7 @@
         updatePauseOverlay();
         const start = Date.parse(room.round_started_at || '');
         if (!Number.isFinite(start)) return;
-        const remain = Math.max(0, ROUND_MS - (Date.now() - start));
+        const remain = Math.max(0, ROUND_MS - (nowMs() - start));
         const clock = $('vocab-race-round-clock');
         if (clock) {
             clock.textContent = (remain/1000).toFixed(1) + 's';
@@ -651,6 +680,7 @@
         timeoutPending = false;
         if (error && !/game_not_playing/i.test(String(error.message || ''))) setStatus(translateError(error), 'error');
         if (data && data.type === 'timeout_pause' && room && room.id === roomId) room.last_result = data;
+        await syncServerClock(true);
         await refreshRoom(roomId);
     }
 
@@ -663,6 +693,7 @@
         advancePending = false;
         if (error && !/game_not_playing|stale_round/i.test(String(error.message || ''))) setStatus(translateError(error), 'error');
         if (data && data.type === 'too_early') return;
+        await syncServerClock(true);
         await refreshRoom(roomId);
     }
 
