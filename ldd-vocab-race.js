@@ -429,6 +429,9 @@
         car.className='vocab-race-car slot-'+p.slot+(mine?' is-me':'')+(answered?' is-answered':'');
         car.style.setProperty('--race-color',PLAYER_COLORS[(Number(p.slot)||1)-1]);
         car.dataset.user=p.user_id;
+        const minePlayer=myPlayer();
+        const relativePos=minePlayer ? Number(p.track_pos||0)-Number(minePlayer.track_pos||0) : Number(p.track_pos||0);
+        car.style.bottom='calc(10% + '+(relativePos*12)+'%)';
         const hold=holdRemaining(p);
         car.innerHTML='<span class="vocab-race-car-timer">'+(answered?'✓':hold>0?(hold/1000).toFixed(1)+'s':'GO')+'</span><span class="vocab-race-car-body">🏎️</span><span class="vocab-race-car-name">'+esc(shortName(p.display_name||p.email||('P'+p.slot)))+'</span>';
         const lr=room.last_result||{};

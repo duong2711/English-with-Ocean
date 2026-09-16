@@ -188,7 +188,7 @@ declare v_uid uuid := auth.uid(); v_room public.vocab_race_rooms;
 begin
     select * into v_room from public.vocab_race_rooms where id=p_room for update;
     if not found then return; end if;
-    if v_room.status <> 'lobby' then raise exception 'cannot_leave_during_game'; end if;
+    if v_room.status = 'playing' then raise exception 'cannot_leave_during_game'; end if;
     delete from public.vocab_race_players where room_id=p_room and user_id=v_uid;
     if v_room.host_user_id=v_uid then
         delete from public.vocab_race_rooms where id=p_room;
