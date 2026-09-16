@@ -3,3 +3,4 @@
 queue/
 __pycache__/
 *.log
+stop.flag
