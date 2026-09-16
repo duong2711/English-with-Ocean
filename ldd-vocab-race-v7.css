@@ -1,0 +1,108 @@
+/* =============================================================
+   LDD ENGLISH — VOCAB RACE v7 SMOOTH MOTION
+   - Làm vật cản trượt mượt giữa các bước cập nhật 100ms
+   - Giảm tốc / giảm tương phản chuyển động trên PC, laptop, tablet
+   - Giữ nguyên kích thước đường đua và gameplay v5/v6
+   ============================================================= */
+
+/* Ép các lớp chuyển động lên compositor để giảm giật trên màn hình lớn. */
+body .vocab-race-road-flow,
+body .vocab-race-road-texture,
+body .vocab-race-obstacle,
+body .vocab-race-car{
+    backface-visibility:hidden!important;
+    -webkit-backface-visibility:hidden!important;
+    transform-style:preserve-3d!important;
+    will-change:transform,opacity!important;
+}
+
+/* Mặt đường chậm, đều và dịu hơn. */
+body .vocab-race-road-flow{
+    opacity:.68!important;
+    animation-duration:4.8s!important;
+    animation-timing-function:linear!important;
+}
+body .vocab-race-road-texture{
+    opacity:.5!important;
+    animation-duration:7.2s!important;
+    animation-timing-function:linear!important;
+}
+
+/* Vật cản hiện được JS cập nhật top khoảng mỗi 100ms.
+   Transition dài hơn nhịp cập nhật một chút để trình duyệt nội suy liên tục,
+   tránh cảm giác nhảy từng nấc trên màn hình lớn. */
+body .vocab-race-obstacle{
+    transition:
+        top .16s linear,
+        opacity .28s ease,
+        visibility 0s linear .28s!important;
+    box-shadow:0 7px 16px rgba(0,0,0,.24)!important;
+    border-color:#d8dbe0!important;
+    filter:saturate(.78) brightness(.94)!important;
+    contain:layout paint style!important;
+}
+body .vocab-race-obstacle.is-visible{
+    opacity:.94!important;
+    visibility:visible!important;
+    transition:
+        top .16s linear,
+        opacity .28s ease,
+        visibility 0s linear 0s!important;
+}
+
+/* Cảnh báo chỉ fade nhẹ, không nháy/pulse. */
+body .vocab-race-obstacle-warning{
+    transition:opacity .35s ease,background-color .35s ease,border-color .35s ease!important;
+    box-shadow:0 5px 12px rgba(0,0,0,.2)!important;
+}
+body .vocab-race-obstacle-warning.is-visible{
+    animation:none!important;
+    opacity:.92!important;
+}
+
+body .vocab-race-lane.is-obstacle-warning,
+body .vocab-race-lane.is-obstacle-active{
+    animation:none!important;
+    transition:border-color .4s ease,box-shadow .4s ease,background-color .4s ease!important;
+}
+body .vocab-race-lane.is-obstacle-warning{
+    border-color:#b89555!important;
+    box-shadow:inset 0 0 0 2px rgba(184,149,85,.38)!important;
+}
+body .vocab-race-lane.is-obstacle-active{
+    border-color:#9d6666!important;
+    box-shadow:inset 0 0 0 2px rgba(157,102,102,.42)!important;
+}
+
+/* Xe cũng bớt giật khi lao lên / quay về. */
+body .vocab-race-car{
+    transition:
+        bottom .72s cubic-bezier(.22,.61,.36,1),
+        opacity .42s ease,
+        filter .42s ease,
+        transform .42s ease!important;
+}
+body .vocab-race-car.is-charging .vocab-race-car-body,
+body .vocab-race-car.is-charging::after{
+    animation-duration:.8s!important;
+}
+
+/* Màn hình lớn: giảm thêm cường độ để đỡ mỏi mắt. */
+@media(min-width:768px){
+    body .vocab-race-track{
+        box-shadow:inset 0 0 0 1px rgba(255,255,255,.04),0 10px 24px rgba(15,23,42,.16)!important;
+    }
+    body .vocab-race-road-flow{opacity:.58!important}
+    body .vocab-race-road-texture{opacity:.36!important}
+    body .vocab-race-obstacle-warning{opacity:0!important}
+    body .vocab-race-obstacle-warning.is-visible{opacity:.88!important}
+    body .vocab-race-obstacle{filter:saturate(.68) brightness(.92)!important}
+}
+
+/* Nếu thiết bị/browser yêu cầu giảm chuyển động, vẫn giữ gameplay nhưng làm chậm hơn nữa. */
+@media(prefers-reduced-motion:reduce){
+    body .vocab-race-road-flow{animation-duration:8s!important}
+    body .vocab-race-road-texture{animation-duration:11s!important}
+    body .vocab-race-obstacle{transition:top .22s linear,opacity .3s ease!important}
+    body .vocab-race-car{transition:bottom .9s ease,opacity .5s ease!important}
+}
