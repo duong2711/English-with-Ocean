@@ -1,5 +1,5 @@
 /* =============================================================
-   LDD ENGLISH — EGRESS GUARD v1
+   LDD ENGLISH — EGRESS GUARD v1.1
    Goal: reduce Supabase egress without sacrificing correctness.
    - Dedupes identical in-flight REST GET requests.
    - Short-lived in-memory cache for safe/slow-changing GETs.
@@ -125,25 +125,14 @@
         if (hit && now - hit.at < ttl) return cloneStored(hit);
 
         if (inflight.has(key)) {
-            const entry = await inflight.get(key);
-            return cloneStored(entry);
+            return cloneStored(await inflight.get(key));
         }
 
         const work = (async function () {
             const response = await originalFetch(input, init);
-            const type = String(response.headers.get('content-type') || '').toLowerCase();
-            if (!response.ok || (!type.includes('application/json') && !type.includes('application/vnd.pgrst'))) {
-                return {
-                    table: table,
-                    at: Date.now(),
-                    body: await response.clone().text(),
-                    status: response.status,
-                    statusText: response.statusText,
-                    headers: Array.from(response.headers.entries()),
-                    cacheable: false
-                };
-            }
             const body = await response.clone().text();
+            const type = String(response.headers.get('content-type') || '').toLowerCase();
+            const cacheable = response.ok && (type.includes('application/json') || type.includes('application/vnd.pgrst'));
             const entry = {
                 table: table,
                 at: Date.now(),
@@ -151,25 +140,29 @@
                 status: response.status,
                 statusText: response.statusText,
                 headers: Array.from(response.headers.entries()),
-                cacheable: true
+                cacheable: cacheable
             };
-            cache.set(key, entry);
+            if (cacheable) cache.set(key, entry);
             return entry;
         })();
 
         inflight.set(key, work);
         try {
-            const entry = await work;
-            if (!entry.cacheable) return originalFetch(input, init);
-            return cloneStored(entry);
+            return cloneStored(await work);
         } finally {
             inflight.delete(key);
         }
     }
 
     window.fetch = guardedFetch;
+
+    document.addEventListener('ldd:today-refresh', function () {
+        ['comments','ipa_completions','user_vocabulary','vocab_word_progress','news_reads','conj_practice_sessions','podcast_fill_progress','kid_topic_progress','thcs_unit_progress','vocab_weekly_tests','diligence_scores'].forEach(invalidate);
+    });
+    document.addEventListener('ldd:thcs-vocab-reset', function () { invalidate('thcs_unit_progress'); });
+
     window.LDDEgress = {
-        version: 1,
+        version: '1.1',
         invalidate: invalidate,
         clear: function () { cache.clear(); },
         stats: function () { return { cached: cache.size, inflight: inflight.size }; },
