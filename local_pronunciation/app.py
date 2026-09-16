@@ -1,5 +1,5 @@
 from __future__ import annotations
-import asyncio, json, os, time, uuid
+import asyncio, json, os, re, time, uuid
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
@@ -108,9 +108,15 @@ async def health():
 
 @app.post('/v1/jobs')
 async def create_job(audio:UploadFile=File(...),item_type:str=Form(...),item_key:str=Form(...),
-                     item_label:str=Form(''),authorization:str|None=Header(default=None)):
+                     item_label:str=Form(''),client_job_id:str=Form(''),authorization:str|None=Header(default=None)):
     uid=await validate_user(_token(authorization)); item_type=item_type.strip()
     if item_type not in SUPPORTED_TYPES: raise HTTPException(422,'Dạng bài này chưa hỗ trợ chấm tự động an toàn.')
+    requested=(client_job_id or '').strip().lower()
+    jid=requested if re.fullmatch(r'[a-f0-9]{32}',requested) else uuid.uuid4().hex
+    existing=jobs.get(jid)
+    if existing:
+        if str(existing.get('user_id'))!=uid: raise HTTPException(409,'job_id đã được sử dụng.')
+        return {**_public(existing),'position':max(1,q.qsize())}
     try: target,trusted_label=await asyncio.to_thread(resolve_target,item_type,str(item_key))
     except Exception as exc: raise HTTPException(422,str(exc)) from exc
     raw=await audio.read(MAX_AUDIO_BYTES+1)
@@ -118,7 +124,7 @@ async def create_job(audio:UploadFile=File(...),item_type:str=Form(...),item_key
     if len(raw)<512: raise HTTPException(422,'File ghi âm quá ngắn hoặc rỗng.')
     ctype=(audio.content_type or 'audio/webm').lower()
     ext='.mp4' if 'mp4' in ctype or 'aac' in ctype else '.ogg' if 'ogg' in ctype else '.webm'
-    jid=uuid.uuid4().hex; path=QUEUE_DIR/f'{jid}{ext}'; path.write_bytes(raw); now=time.time()
+    path=QUEUE_DIR/f'{jid}{ext}'; path.write_bytes(raw); now=time.time()
     j={'id':jid,'user_id':uid,'item_type':item_type,'item_key':str(item_key)[:200],
        'item_label':str(trusted_label or item_label)[:300],'target_text':target[:1200],
        'audio_path':str(path),'status':'queued','created_at':now,'updated_at':now}
