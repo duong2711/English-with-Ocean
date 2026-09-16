@@ -1,5 +1,5 @@
 /* =============================================================
-   LDD ENGLISH — EGRESS GUARD v1.2
+   LDD ENGLISH — EGRESS GUARD v1.3
    Goal: reduce Supabase egress without sacrificing correctness.
    - Dedupes identical in-flight REST GET requests.
    - Short-lived in-memory cache for safe/slow-changing GETs.
@@ -105,7 +105,8 @@
     }
 
     function shouldThrottleInterval(fn, delay) {
-        if (Number(delay) !== 30000 || typeof fn !== 'function') return false;
+        const ms = Number(delay);
+        if (!Number.isFinite(ms) || ms <= 0 || ms >= POLL_FLOOR_MS || typeof fn !== 'function') return false;
         let source = '';
         try { source = Function.prototype.toString.call(fn); } catch (_) {}
         return source.indexOf('queueRefresh') !== -1 || source.indexOf('refreshData') !== -1;
@@ -176,7 +177,7 @@
     document.addEventListener('ldd:thcs-vocab-reset', function () { invalidate('thcs_unit_progress'); });
 
     window.LDDEgress = {
-        version: '1.2',
+        version: '1.3',
         invalidate: invalidate,
         clear: function () { cache.clear(); },
         stats: function () { return { cached: cache.size, inflight: inflight.size }; },
