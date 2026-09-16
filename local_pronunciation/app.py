@@ -14,6 +14,8 @@ from scoring import machine_available, model_status, score_audio, unload_if_idle
 
 jobs: dict[str,dict[str,Any]]={}
 q: asyncio.Queue[str]=asyncio.Queue()
+MAX_ACTIVE_PER_USER=3
+MAX_GLOBAL_QUEUE=100
 
 
 def _low_priority():
@@ -54,6 +56,10 @@ def _public(j):
     return x
 
 
+def _active_for_user(uid:str)->int:
+    return sum(1 for j in jobs.values() if str(j.get('user_id'))==uid and j.get('status') in {'queued','processing','paused'})
+
+
 async def _worker():
     while True:
         jid=await q.get(); j=jobs.get(jid)
@@ -80,6 +86,9 @@ async def _janitor():
         for jid,j in list(jobs.items()):
             if j.get('status') in {'done','error'} and now-float(j.get('updated_at') or now)>JOB_RETENTION_SECONDS:
                 jobs.pop(jid,None); _meta(jid).unlink(missing_ok=True)
+                try:
+                    Path(str(j.get('audio_path') or '')).unlink(missing_ok=True)
+                except Exception: pass
 
 
 @asynccontextmanager
@@ -117,6 +126,10 @@ async def create_job(audio:UploadFile=File(...),item_type:str=Form(...),item_key
     if existing:
         if str(existing.get('user_id'))!=uid: raise HTTPException(409,'job_id đã được sử dụng.')
         return {**_public(existing),'position':max(1,q.qsize())}
+    if _active_for_user(uid)>=MAX_ACTIVE_PER_USER:
+        raise HTTPException(429,'Bạn đã có 3 bài đang chờ/chấm. Hãy đợi một bài hoàn tất.')
+    if q.qsize()>=MAX_GLOBAL_QUEUE:
+        raise HTTPException(503,'Hàng chờ máy chấm đang đầy. Vui lòng thử lại sau.')
     try: target,trusted_label=await asyncio.to_thread(resolve_target,item_type,str(item_key))
     except Exception as exc: raise HTTPException(422,str(exc)) from exc
     raw=await audio.read(MAX_AUDIO_BYTES+1)
