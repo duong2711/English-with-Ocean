@@ -1,13 +1,27 @@
 from __future__ import annotations
-import gc, re, time
+import gc, re, subprocess, time
 from typing import Any
 import psutil
-from config import (AUTO_PASS_SCORE, CPU_BUSY_LIMIT, MODEL_IDLE_UNLOAD_SECONDS,
+from config import (AUTO_PASS_SCORE, CPU_BUSY_LIMIT, GPU_BUSY_LIMIT, MODEL_IDLE_UNLOAD_SECONDS,
                     PAUSE_ON_BATTERY, WHISPER_COMPUTE_TYPE, WHISPER_DEVICE, WHISPER_MODEL)
 
 _model: Any = None
 _model_device = ''
 _model_last_used = 0.0
+
+
+def _gpu_usage() -> int | None:
+    try:
+        p = subprocess.run(
+            ['nvidia-smi', '--query-gpu=utilization.gpu', '--format=csv,noheader,nounits'],
+            capture_output=True, text=True, timeout=2, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0)
+        )
+        if p.returncode == 0:
+            first = (p.stdout or '').strip().splitlines()[0]
+            return int(float(first.strip()))
+    except Exception:
+        pass
+    return None
 
 
 def machine_available() -> tuple[bool, str]:
@@ -24,6 +38,9 @@ def machine_available() -> tuple[bool, str]:
             return False, f'CPU đang bận {cpu:.0f}%'
     except Exception:
         pass
+    gpu = _gpu_usage()
+    if gpu is not None and gpu >= GPU_BUSY_LIMIT:
+        return False, f'GPU đang bận {gpu}%'
     return True, 'ok'
 
 
