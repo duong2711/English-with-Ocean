@@ -32,6 +32,7 @@
         ensureScript('ldd-home-phonetics-script', 'ldd-ui-home-phonetics.js?v=8.5');
         ensureScript('ldd-student-grade-script', 'ldd-student-grade.js?v=2');
         ensureScript('ldd-thcs-vocab-reset-script', 'ldd-thcs-vocab-reset.js?v=3');
+        ensureScript('ldd-fast-progress-script', 'ldd-fast-progress.js?v=1');
     }
 
     function ensureStylesheet(id, href) {
