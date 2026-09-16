@@ -123,15 +123,15 @@ async function loadTimers(){
    timerData={kid:rs[0].ok?rs[0].data:[],thcs:rs[1].ok?rs[1].data:[],vocab:rs[2].ok?rs[2].data:[],conj:rs[3].ok?rs[3].data:[]};renderTimers();
  }finally{busy=false;}
 }
-function target(at,times){const n=Number(times||0),days=n<=1?7:n===2?14:null,st=Date.parse(at||'');return days&&Number.isFinite(st)?st+days*DAY:null;}
+function target(at,times){const n=Number(times||0),days=n===1?7:n===2?14:null,st=Date.parse(at||'');return days&&Number.isFinite(st)?st+days*DAY:null;}
 function nextUtc(){const d=new Date();return Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate()+1);}
 function timerItems(){
  if(!timerData)return[];const now=Date.now(),a=[];
  (timerData.kid||[]).forEach(r=>{const t=target(r.completed_at,r.times_completed);if(t)a.push({title:'Vận dụng · '+pretty(r.topic_key),note:t<=now?'Đã đến hạn ôn lại':'Reset tiến độ sau',target:t,kind:'reset',action:{type:'kid',key:r.topic_key}});});
- (timerData.thcs||[]).forEach(r=>{if(!r.completed||(grade&&Number(r.grade)!==grade))return;const t=target(r.completed_at,r.times_completed);if(t)a.push({title:'Lớp '+r.grade+' · '+unitLabel(r.unit_id),note:t<=now?'Đã đến hạn ôn lại Unit':'Reset tiến độ sau',target:t,kind:'reset',action:{type:'thcs',grade:Number(r.grade),unitId:r.unit_id}});});
+ (timerData.thcs||[]).forEach(r=>{if(!grade||!r.completed||Number(r.grade)!==grade)return;const t=target(r.completed_at,r.times_completed);if(t)a.push({title:'Từ vựng THCS/THPT · Lớp '+r.grade+' · '+unitLabel(r.unit_id),note:t<=now?'Đã reset · cần ôn lại Unit':'Thời gian còn lại trước khi reset',target:t,kind:'reset',scope:'thcs',action:{type:'thcs',grade:Number(r.grade),unitId:r.unit_id}});});
  const v=(timerData.vocab||[])[0];if(v&&v.status!=='pending'&&v.created_at){const t=Date.parse(v.created_at)+2*DAY;if(Number.isFinite(t))a.push({title:'Kiểm tra từ vựng của tôi',note:t<=now?'Bài tiếp theo đã đến hạn':'Bài tiếp theo mở sau',target:t,kind:'unlock',action:{type:'vocab'}});}
  if((timerData.conj||[]).length>=2){const t=nextUtc();a.push({title:'Luyện tập Liên từ',note:t<=now?'Đã reset lượt luyện tập':'Reset 2 lượt/ngày sau',target:t,kind:'reset',action:{type:'conj'}});}
- a.forEach(x=>x.ready=x.target<=now);a.sort((x,y)=>x.ready!==y.ready?(x.ready?-1:1):x.target-y.target);return a.slice(0,12);
+ a.forEach(x=>x.ready=x.target<=now);a.sort((x,y)=>x.ready!==y.ready?(x.ready?-1:1):x.target-y.target);const units=a.filter(x=>x.scope==='thcs'),other=a.filter(x=>x.scope!=='thcs');return units.concat(other.slice(0,Math.max(0,12-units.length)));
 }
 function tickTimers(){if(token()&&!teacher()&&timerData)renderTimers();}
 function renderTimers(){

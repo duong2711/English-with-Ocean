@@ -38,6 +38,9 @@
         setInterval(tickCountdowns, 1000);
         document.addEventListener('visibilitychange', function () { if (!document.hidden) queueRefresh(0); });
         document.addEventListener('ldd:today-refresh', function () { queueRefresh(100); });
+        document.addEventListener('ldd:student-grade-changed', function () {
+            if (latestState) renderLive(latestState);
+        });
     });
 
     function getToken() {
@@ -506,14 +509,15 @@
 
     function buildCountdowns(state) {
         const now = Date.now(), items = [];
+        const grade = assignedGrade();
         (state.kid || []).forEach(function (r) {
             const t = resetTarget(r.completed_at, r.times_completed);
             if (t && t > now) items.push({ title: 'Vận dụng · ' + prettyKey(r.topic_key), note: 'Reset tiến độ sau', target: t, kind: 'reset' });
         });
         (state.thcs || []).forEach(function (r) {
-            if (!r.completed) return;
+            if (!grade || !r.completed || Number(r.grade) !== grade) return;
             const t = resetTarget(r.completed_at, r.times_completed);
-            if (t && t > now) items.push({ title: 'Lớp ' + r.grade + ' · ' + String(r.unit_id || 'Unit'), note: 'Reset tiến độ sau', target: t, kind: 'reset' });
+            if (t) items.push({ title: 'Từ vựng THCS/THPT · Lớp ' + r.grade + ' · ' + unitLabel(r.unit_id), note: t <= now ? 'Đã reset · cần ôn lại Unit' : 'Thời gian còn lại trước khi reset', target: t, kind: 'reset', scope: 'thcs' });
         });
         const vt = (state.vocabTests || [])[0];
         if (vt && vt.status !== 'pending' && vt.created_at) {
@@ -525,14 +529,27 @@
             const t = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + 1);
             items.push({ title: 'Luyện tập Liên từ', note: 'Reset lượt sau', target: t, kind: 'reset' });
         }
-        return items.sort(function (a, b) { return a.target - b.target; }).slice(0, 8);
+        items.sort(function (a, b) { return a.target - b.target; });
+        const units = items.filter(function (item) { return item.scope === 'thcs'; });
+        const other = items.filter(function (item) { return item.scope !== 'thcs'; });
+        return units.concat(other.slice(0, Math.max(0, 8 - units.length)));
     }
 
     function resetTarget(at, times) {
         const n = Number(times || 0);
-        const days = n <= 1 ? 7 : (n === 2 ? 14 : null);
+        const days = n === 1 ? 7 : (n === 2 ? 14 : null);
         const start = Date.parse(at || '');
         return days && Number.isFinite(start) ? start + days * DAY_MS : null;
+    }
+    function assignedGrade() {
+        try {
+            const grade = window.LDDStudentGrade && Number(window.LDDStudentGrade.getGrade());
+            return Number.isInteger(grade) && grade >= 1 && grade <= 12 ? grade : null;
+        } catch (e) { return null; }
+    }
+    function unitLabel(value) {
+        const match = String(value == null ? '' : value).match(/(\d+)(?!.*\d)/);
+        return match ? 'Unit ' + Number(match[1]) : String(value || 'Unit');
     }
     function prettyKey(key) { return String(key || 'Chủ đề').replace(/[-_]+/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); }); }
 

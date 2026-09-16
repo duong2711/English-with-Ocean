@@ -13840,32 +13840,36 @@ function toggleCompletion(symbolElement) {
             return null; // >= 3 lần hoàn thành: vĩnh viễn, không tự mất nữa
         }
 
-        // [MỚI] Rà soát toàn bộ Unit THCS/THPT (khối 6-12) đã hoàn thành của học viên hiện tại, tự
+        // [MỚI] Rà soát các Unit THCS/THPT thuộc đúng khối lớp được gán cho học viên, tự
         // động bỏ đánh dấu những Unit đã "hết hạn ôn tập". Gọi ngay sau khi thcsProgressMap được
         // tải xong (xem thcsEnsureProgressLoaded). Dùng thẳng thcsSaveProgress() vì hàm đó nhận
         // gradeNum/unitId tường minh (không như bên "Cho bé"), nên an toàn khi gọi cho bất kỳ
         // Unit nào, kể cả Unit đang KHÔNG mở.
         async function thcsCheckAndExpireCompletions() {
+            if (isTeacher) return;
+            let assignedGrade = null;
+            try {
+                assignedGrade = window.LDDStudentGrade && Number(window.LDDStudentGrade.getGrade());
+            } catch (e) {}
+            if (!Number.isInteger(assignedGrade) || assignedGrade < 6 || assignedGrade > 12) return;
             const now = Date.now();
             const expiredTitles = [];
-            for (let g = 6; g <= 12; g++) {
-                const units = thcsGetGradeUnits(g);
-                if (!units) continue;
-                for (const unit of units) {
-                    const progress = thcsGetProgress(g, unit.id);
-                    if (!progress.completed) continue; // chưa hoàn thành -> bỏ qua
-                    const timesCompleted = progress.times_completed || 0;
-                    const expireDays = thcsGetAutoExpireDays(timesCompleted);
-                    if (expireDays == null) continue; // hoàn thành >=3 lần -> vĩnh viễn
-                    if (!progress.completed_at) continue; // hoàn thành từ TRƯỚC khi có tính năng này -> bỏ qua an toàn
-                    const completedAtMs = new Date(progress.completed_at).getTime();
-                    if (isNaN(completedAtMs) || now < completedAtMs + expireDays * 24 * 60 * 60 * 1000) continue; // chưa hết hạn
-                    await thcsSaveProgress(g, unit.id, { flashcard_done: false, translate_done: false, story_done: false, completed_at: null });
-                    if (currentUnit && currentUnit.id === unit.id && currentGradeNum === g) {
-                        thcsUpdateSubtabIndicators(unit);
-                    }
-                    expiredTitles.push(`Unit ${unit.number}`);
+            const units = thcsGetGradeUnits(assignedGrade);
+            if (!units) return;
+            for (const unit of units) {
+                const progress = thcsGetProgress(assignedGrade, unit.id);
+                if (!progress.completed) continue; // chưa hoàn thành -> bỏ qua
+                const timesCompleted = progress.times_completed || 0;
+                const expireDays = thcsGetAutoExpireDays(timesCompleted);
+                if (expireDays == null) continue; // hoàn thành >=3 lần -> vĩnh viễn
+                if (!progress.completed_at) continue; // hoàn thành từ TRƯỚC khi có tính năng này -> bỏ qua an toàn
+                const completedAtMs = new Date(progress.completed_at).getTime();
+                if (isNaN(completedAtMs) || now < completedAtMs + expireDays * 24 * 60 * 60 * 1000) continue; // chưa hết hạn
+                await thcsSaveProgress(assignedGrade, unit.id, { flashcard_done: false, translate_done: false, story_done: false, completed_at: null });
+                if (currentUnit && currentUnit.id === unit.id && currentGradeNum === assignedGrade) {
+                    thcsUpdateSubtabIndicators(unit);
                 }
+                expiredTitles.push(`Unit ${unit.number}`);
             }
             if (expiredTitles.length && window.vocabTap && window.vocabTap.toast) {
                 const shown = expiredTitles.slice(0, 3).join(', ') + (expiredTitles.length > 3 ? ` và ${expiredTitles.length - 3} Unit khác` : '');

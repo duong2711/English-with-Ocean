@@ -23,7 +23,7 @@
 
     function ensureTodayAssets() {
         ensureStyle('ldd-today-style', 'ldd-ui-today.css?v=1');
-        ensureScript('ldd-today-script', 'ldd-ui-today.js?v=1');
+        ensureScript('ldd-today-script', 'ldd-ui-today.js?v=2');
     }
 
     function ensureStyle(id, href) {

@@ -110,13 +110,17 @@
         try {
             const uid = userId();
             if (!uid) return;
+            const grade = assignedGrade();
+            // Chỉ reset và hiển countdown cho khối lớp được gán của học sinh.
+            // Khi assignment chưa tải xong, chờ event ldd:student-grade-changed thay vì
+            // truy vấn/reset nhầm dữ liệu của mọi khối.
+            if (!grade || grade < 6 || grade > 12) return;
             const params = {
                 select: 'user_id,grade,unit_id,flashcard_done,translate_done,story_done,completed,times_completed,completed_at',
                 user_id: 'eq.' + uid,
                 order: 'grade.asc,unit_id.asc'
             };
-            const grade = assignedGrade();
-            if (grade) params.grade = 'eq.' + grade;
+            params.grade = 'eq.' + grade;
             const result = await request('GET', 'thcs_unit_progress', params);
             if (!result.ok) return;
             rows = result.data || [];
