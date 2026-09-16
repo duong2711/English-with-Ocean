@@ -1,10 +1,11 @@
 /* =============================================================
-   LDD ENGLISH — EGRESS GUARD v1.1
+   LDD ENGLISH — EGRESS GUARD v1.2
    Goal: reduce Supabase egress without sacrificing correctness.
    - Dedupes identical in-flight REST GET requests.
    - Short-lived in-memory cache for safe/slow-changing GETs.
    - Never caches vocab race tables.
    - Any write invalidates cached GETs for the same table.
+   - Noncritical dashboard polling is floored at 5 minutes.
    ============================================================= */
 (function () {
     'use strict';
@@ -12,9 +13,11 @@
     if (window.LDDEgress && window.LDDEgress.version) return;
 
     const originalFetch = window.fetch.bind(window);
+    const originalSetInterval = window.setInterval.bind(window);
     const SUPABASE_REST = 'https://ywqbaksmmtvwbojcgsdd.supabase.co/rest/v1/';
     const cache = new Map();
     const inflight = new Map();
+    const POLL_FLOOR_MS = 5 * 60 * 1000;
 
     const TTL = {
         podcast_content: 6 * 60 * 60 * 1000,
@@ -101,6 +104,19 @@
         return Object.prototype.hasOwnProperty.call(TTL, table) ? TTL[table] : DEFAULT_TTL;
     }
 
+    function shouldThrottleInterval(fn, delay) {
+        if (Number(delay) !== 30000 || typeof fn !== 'function') return false;
+        let source = '';
+        try { source = Function.prototype.toString.call(fn); } catch (_) {}
+        return source.indexOf('queueRefresh') !== -1 || source.indexOf('refreshData') !== -1;
+    }
+
+    window.setInterval = function (fn, delay) {
+        const args = Array.prototype.slice.call(arguments, 2);
+        const nextDelay = shouldThrottleInterval(fn, delay) ? POLL_FLOOR_MS : delay;
+        return originalSetInterval.apply(window, [fn, nextDelay].concat(args));
+    };
+
     async function guardedFetch(input, init) {
         const url = urlFrom(input);
         const table = tableFromUrl(url);
@@ -124,9 +140,7 @@
         const hit = cache.get(key);
         if (hit && now - hit.at < ttl) return cloneStored(hit);
 
-        if (inflight.has(key)) {
-            return cloneStored(await inflight.get(key));
-        }
+        if (inflight.has(key)) return cloneStored(await inflight.get(key));
 
         const work = (async function () {
             const response = await originalFetch(input, init);
@@ -162,11 +176,12 @@
     document.addEventListener('ldd:thcs-vocab-reset', function () { invalidate('thcs_unit_progress'); });
 
     window.LDDEgress = {
-        version: '1.1',
+        version: '1.2',
         invalidate: invalidate,
         clear: function () { cache.clear(); },
         stats: function () { return { cached: cache.size, inflight: inflight.size }; },
         policy: {
+            pollFloorMs: POLL_FLOOR_MS,
             defaultTtlMs: DEFAULT_TTL,
             raceCached: false,
             tableTtlMs: Object.assign({}, TTL)
