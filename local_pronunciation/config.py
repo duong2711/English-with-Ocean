@@ -15,6 +15,7 @@ AUTO_PASS_SCORE = max(0, min(100, int(os.getenv('AUTO_PASS_SCORE', '70'))))
 MAX_AUDIO_BYTES = max(128 * 1024, int(os.getenv('MAX_AUDIO_BYTES', str(2 * 1024 * 1024))))
 PAUSE_ON_BATTERY = os.getenv('PAUSE_ON_BATTERY', '1').lower() not in {'0', 'false', 'no'}
 CPU_BUSY_LIMIT = max(20, min(100, int(os.getenv('CPU_BUSY_LIMIT', '85'))))
+GPU_BUSY_LIMIT = max(20, min(100, int(os.getenv('GPU_BUSY_LIMIT', '70'))))
 MODEL_IDLE_UNLOAD_SECONDS = max(120, int(os.getenv('MODEL_IDLE_UNLOAD_SECONDS', '900')))
 JOB_RETENTION_SECONDS = max(300, int(os.getenv('JOB_RETENTION_SECONDS', '1800')))
 
