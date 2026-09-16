@@ -1,5 +1,5 @@
 /* =============================================================
-   LDD ENGLISH — EGRESS GUARD v1.3
+   LDD ENGLISH — EGRESS GUARD v1.4
    Goal: reduce Supabase egress without sacrificing correctness.
    - Dedupes identical in-flight REST GET requests.
    - Short-lived in-memory cache for safe/slow-changing GETs.
@@ -177,7 +177,7 @@
     document.addEventListener('ldd:thcs-vocab-reset', function () { invalidate('thcs_unit_progress'); });
 
     window.LDDEgress = {
-        version: '1.3',
+        version: '1.4',
         invalidate: invalidate,
         clear: function () { cache.clear(); },
         stats: function () { return { cached: cache.size, inflight: inflight.size }; },
@@ -188,4 +188,15 @@
             tableTtlMs: Object.assign({}, TTL)
         }
     };
+})();
+
+/* Load the optional local pronunciation bridge after the core page has initialized. */
+(function () {
+    'use strict';
+    if (document.getElementById('ldd-local-pronunciation-script')) return;
+    const script = document.createElement('script');
+    script.id = 'ldd-local-pronunciation-script';
+    script.src = 'ldd-local-pronunciation.js?v=20260917-1';
+    script.defer = true;
+    document.body.appendChild(script);
 })();
