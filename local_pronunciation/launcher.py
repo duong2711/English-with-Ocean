@@ -7,18 +7,22 @@ from dotenv import load_dotenv
 from supabase import create_client
 
 BASE=Path(__file__).resolve().parent
+STOP_FILE=BASE/'stop.flag'
 load_dotenv(BASE/'.env')
 SUPABASE_URL=os.getenv('SUPABASE_URL','https://ywqbaksmmtvwbojcgsdd.supabase.co').rstrip('/')
 SERVICE=os.getenv('SUPABASE_SERVICE_ROLE_KEY','').strip()
 PORT=int(os.getenv('SCORER_PORT','8765'))
 CONFIG_KEY='pronunciation_server_url'
-STOP=False
+
+
+def stopping():
+    return STOP_FILE.exists()
 
 
 def require_config():
     if not SERVICE or SERVICE.startswith('PASTE_'):
         print('\n[LDD] Chưa có SUPABASE_SERVICE_ROLE_KEY trong local_pronunciation/.env')
-        print('[LDD] Mở .env, điền anon key + service_role key rồi chạy lại.\n')
+        print('[LDD] Mở .env, điền service_role key rồi chạy lại.\n')
         raise SystemExit(2)
 
 
@@ -33,7 +37,7 @@ def publish(url:str):
 
 def wait_local(timeout=45):
     deadline=time.time()+timeout
-    while time.time()<deadline:
+    while time.time()<deadline and not stopping():
         try:
             with urlopen(f'http://127.0.0.1:{PORT}/health',timeout=2) as r:
                 if r.status==200:return True
@@ -61,7 +65,7 @@ def start_tunnel():
     threading.Thread(target=reader,daemon=True).start()
     deadline=time.time()+45
     pattern=re.compile(r'https://[a-zA-Z0-9-]+\.trycloudflare\.com')
-    while time.time()<deadline and p.poll() is None:
+    while time.time()<deadline and p.poll() is None and not stopping():
         try:line=lines.get(timeout=1)
         except queue.Empty:continue
         m=pattern.search(line)
@@ -76,30 +80,37 @@ def shutdown(server,tunnel=None):
         if p and p.poll() is None:
             try:p.terminate()
             except Exception:pass
+    try:STOP_FILE.unlink(missing_ok=True)
+    except Exception:pass
 
 
 def main():
-    global STOP
-    require_config();server=start_server();tunnel=None
+    require_config();STOP_FILE.unlink(missing_ok=True)
+    server=start_server();tunnel=None
     try:
         if not wait_local():raise RuntimeError('Local scorer không khởi động được ở port 8765.')
         print('[LDD] Local scorer đã sẵn sàng.')
-        while not STOP and server.poll() is None:
+        while not stopping() and server.poll() is None:
             try:
                 tunnel,url=start_tunnel();publish(url)
-                while not STOP and server.poll() is None and tunnel.poll() is None:time.sleep(1)
-                if STOP or server.poll() is not None:break
+                while not stopping() and server.poll() is None and tunnel.poll() is None:time.sleep(1)
+                if stopping() or server.poll() is not None:break
                 print('[LDD] Tunnel bị ngắt; tạo tunnel mới sau 5 giây...')
                 try:publish('')
                 except Exception:pass
-                time.sleep(5)
+                for _ in range(5):
+                    if stopping():break
+                    time.sleep(1)
             except Exception as exc:
+                if stopping():break
                 print('[LDD]',exc)
                 try:publish('')
                 except Exception:pass
-                if not STOP:time.sleep(8)
+                for _ in range(8):
+                    if stopping():break
+                    time.sleep(1)
     except KeyboardInterrupt:
-        STOP=True
+        pass
     finally:
         shutdown(server,tunnel)
 
