@@ -8,7 +8,7 @@
     'use strict';
 
     const SUPABASE_URL = 'https://ywqbaksmmtvwbojcgsdd.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYXNlIiwicmVmIjoieXdxYmFrc21tdHZ3Ym9qY2dzZGQiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTc4MjE2Nzc1MCwiZXhwIjoyMDk3NzQzNzUwfQ.vhgt7cB6w2elm-MXY57U_wJtYkJQHDFAEsJwAArOjhQ';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl3cWJha3NtbXR2d2JvamNnc2RkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxNjc3NTAsImV4cCI6MjA5Nzc0Mzc1MH0.vhgt7cB6w2elm-MXY57U_wJtYkJQHDFAEsJwAArOjhQ';
     const TEACHER_EMAIL = 'lddbaiu@gmail.com';
     const ROUND_SECONDS = 20;
     const HOLD_MS = 6000;
