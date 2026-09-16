@@ -1,7 +1,10 @@
 /* =============================================================
-   LDD ENGLISH — THCS/THPT VOCAB RESET v1
-   Applies the 7d -> 14d -> permanent review cycle to vocabulary
-   units stored in thcs_unit_progress.
+   LDD ENGLISH — THCS/THPT VOCAB RESET v2
+   Applies the exact existing review cycle to vocabulary units:
+   completion #1 -> reset after 7 days
+   completion #2 -> reset after 14 days
+   completion #3+ -> permanent completion (no more reset)
+   Units are stored in thcs_unit_progress for grades 6-12.
    ============================================================= */
 (function () {
     'use strict';
@@ -82,11 +85,18 @@
         }
     }
 
+    function resetDelayDays(timesCompleted) {
+        const count = Number(timesCompleted || 0);
+        if (count === 1) return 7;
+        if (count === 2) return 14;
+        return null;
+    }
+
     function resetTarget(row) {
-        const count = Number(row.times_completed || 0);
-        const days = count <= 1 ? 7 : (count === 2 ? 14 : null);
+        const days = resetDelayDays(row.times_completed);
+        if (days == null) return null;
         const started = Date.parse(row.completed_at || '');
-        return days && Number.isFinite(started) ? started + days * DAY_MS : null;
+        return Number.isFinite(started) ? started + days * DAY_MS : null;
     }
 
     function unitNumber(value) {
@@ -114,14 +124,21 @@
             const now = Date.now();
             let changed = false;
             for (const row of rows) {
+                const count = Number(row.times_completed || 0);
                 const target = resetTarget(row);
-                if (!row.completed || !target || target > now || Number(row.times_completed || 0) >= 3) continue;
+
+                // Exact existing mechanism:
+                // #1 resets after 7d, #2 after 14d, #3+ never resets again.
+                if (!row.completed || count < 1 || count >= 3 || !target || target > now) continue;
+
                 const patch = await request('PATCH', 'thcs_unit_progress', {
                     user_id: 'eq.' + uid,
                     grade: 'eq.' + row.grade,
                     unit_id: 'eq.' + row.unit_id
                 }, { completed: false });
                 if (patch.ok) {
+                    // Do NOT change times_completed/completed_at here. The next successful
+                    // completion advances the existing counter; reset only re-opens the unit.
                     row.completed = false;
                     changed = true;
                 }
@@ -274,4 +291,10 @@
             }
         });
     });
+
+    // Small public hook for other UI modules/tests; does not alter the reset rules.
+    window.LDDThcsVocabReset = {
+        refresh: sync,
+        getResetDays: resetDelayDays
+    };
 })();
