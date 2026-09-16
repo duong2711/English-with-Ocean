@@ -1,0 +1,99 @@
+/* LDD English — Vocab Race v9 intermission + obstacle layering */
+
+/* Khóa tương tác trong 6 giây giữa mọi vòng. */
+body .vocab-race-game.vocab-race-v9-paused .vocab-race-controls,
+body .vocab-race-game.vocab-race-v9-paused .vocab-race-track{
+    pointer-events:none!important;
+}
+body .vocab-race-game.vocab-race-v9-paused .vocab-race-obstacle,
+body .vocab-race-game.vocab-race-v9-paused .vocab-race-obstacle-warning{
+    opacity:0!important;
+    visibility:hidden!important;
+}
+body .vocab-race-game.vocab-race-v9-paused #vocab-race-pause-overlay{
+    display:grid!important;
+}
+
+/* Popup dùng cho mọi khoảng nghỉ giữa vòng, không chỉ timeout. */
+body .vocab-race-pause-overlay{
+    z-index:1000!important;
+    background:rgba(25,32,40,.58)!important;
+    backdrop-filter:blur(2px)!important;
+    -webkit-backdrop-filter:blur(2px)!important;
+}
+body .vocab-race-pause-card{
+    width:min(90%,340px)!important;
+    min-height:245px!important;
+    padding:25px 22px!important;
+    border:1px solid rgba(255,255,255,.22)!important;
+    border-radius:18px!important;
+    background:#29323b!important;
+    box-shadow:0 14px 34px rgba(0,0,0,.24)!important;
+}
+body .vocab-race-pause-card>strong{
+    font-size:1rem!important;
+    letter-spacing:.035em!important;
+}
+body .vocab-race-pause-card>p{
+    margin:9px 0 5px!important;
+    color:#c8d0d8!important;
+}
+body .vocab-race-pause-card>b{
+    width:88px!important;
+    height:88px!important;
+    border:2px solid #a58c66!important;
+    background:#202832!important;
+    color:#e0c89d!important;
+    font-size:2.55rem!important;
+    box-shadow:none!important;
+}
+
+/* Khi vật cản bắt đầu rơi, banner cảnh báo phải biến mất ngay. */
+body .vocab-race-lane.is-obstacle-active .vocab-race-obstacle-warning{
+    opacity:0!important;
+    visibility:hidden!important;
+    transition:none!important;
+}
+
+/* Vật cản luôn nổi trên banner, xe và lớp fallback. */
+body .vocab-race-obstacle{
+    z-index:260!important;
+    width:min(76%,74px)!important;
+    height:50px!important;
+    border:2px solid #d2cbc1!important;
+    background:repeating-linear-gradient(135deg,#8c7f5d 0 12px,#765555 12px 24px)!important;
+    box-shadow:0 8px 18px rgba(0,0,0,.3)!important;
+}
+body .vocab-race-obstacle.is-visible{
+    opacity:1!important;
+    visibility:visible!important;
+}
+body .vocab-race-obstacle span{
+    position:relative!important;
+    z-index:2!important;
+    font-size:1.65rem!important;
+}
+
+/* Lớp fallback cũ chỉ còn dùng lúc cảnh báo; khi active thì không che vật cản. */
+body .vocab-race-lane.is-obstacle-active::before{
+    display:none!important;
+    content:none!important;
+}
+body .vocab-race-lane.is-obstacle-warning::before{
+    z-index:150!important;
+    top:132px!important;
+    opacity:.84!important;
+}
+
+/* Xe nằm dưới vật cản để cảm giác va chạm tự nhiên hơn. */
+body .vocab-race-car,
+body .vocab-race-car.is-charging{
+    z-index:120!important;
+}
+
+@media(max-width:760px){
+    body .vocab-race-obstacle{
+        width:min(84%,70px)!important;
+        height:48px!important;
+    }
+}
