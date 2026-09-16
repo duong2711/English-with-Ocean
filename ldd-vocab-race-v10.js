@@ -1,7 +1,8 @@
 /* =============================================================
-   LDD ENGLISH — VOCAB RACE v11 · CONTINUOUS STEERING
-   Fix: rapid left/right no longer reparents cars between lanes.
-   Cars live directly on the track and only their horizontal target changes.
+   LDD ENGLISH — VOCAB RACE v12 · CONTINUOUS STEERING · LOW EGRESS
+   - Rapid left/right keeps one car DOM node and only changes left target.
+   - Track/obstacle/warning DOM stays stable within a round.
+   - Player data is fetched once per room, then updated by Realtime only.
    ============================================================= */
 (function () {
     'use strict';
@@ -21,7 +22,7 @@
     let roomId = null;
     let roomRound = -1;
     let playerChannel = null;
-    let syncing = false;
+    let loadingPlayers = false;
 
     function currentRoundLabel() {
         const el = document.getElementById('vocab-race-round');
@@ -160,8 +161,13 @@
         car.style.setProperty('left', targetX.toFixed(2) + 'px', 'important');
     }
 
-    function moveCarWithoutRebuild(car, lane) {
-        installOverlayMotion(car, lane);
+    function applyElimination(car) {
+        if (!car) return;
+        const answered = Number(car.dataset.answeredRound);
+        const eliminated = Number.isFinite(answered) && answered === Number(roomRound);
+        car.classList.toggle('is-eliminated', eliminated);
+        const timer = car.querySelector('.vocab-race-car-timer');
+        if (timer) timer.textContent = eliminated ? 'LOẠI' : 'READY';
     }
 
     function applyPlayerState(p) {
@@ -169,64 +175,57 @@
         const car = findCar(p.user_id);
         if (!car) return;
 
-        moveCarWithoutRebuild(car, p.lane == null ? 2 : Number(p.lane));
-
-        const eliminated = Number(p.answered_round) === Number(roomRound);
-        car.classList.toggle('is-eliminated', eliminated);
-        const timer = car.querySelector('.vocab-race-car-timer');
-        if (timer) timer.textContent = eliminated ? 'LOẠI' : 'READY';
+        installOverlayMotion(car, p.lane == null ? 2 : Number(p.lane));
+        car.dataset.answeredRound = String(p.answered_round == null ? '' : p.answered_round);
+        applyElimination(car);
     }
 
-    async function syncRoomAndPlayers() {
-        if (syncing || !gameIsPlaying()) return;
-        syncing = true;
+    function refreshEliminationForRound() {
+        const track = document.getElementById('vocab-race-track');
+        if (!track) return;
+        track.querySelectorAll('.vocab-race-car').forEach(applyElimination);
+    }
+
+    function unsubscribePlayers() {
+        if (playerChannel) {
+            try { sb.removeChannel(playerChannel); } catch (_) {}
+        }
+        playerChannel = null;
+    }
+
+    async function loadPlayersOnce() {
+        if (!roomId || loadingPlayers) return;
+        loadingPlayers = true;
         try {
-            const result = await sb.auth.getSession();
-            const session = result && result.data && result.data.session;
-            if (!session || !session.user) return;
-
-            const playerResult = await sb.from('vocab_race_players')
-                .select('room_id,joined_at')
-                .eq('user_id', session.user.id)
-                .order('joined_at', { ascending: false })
-                .limit(1);
-
-            const rows = playerResult.data || [];
-            if (!rows.length) return;
-            const nextRoomId = rows[0].room_id;
-
-            if (String(nextRoomId) !== String(roomId)) {
-                if (playerChannel) {
-                    try { sb.removeChannel(playerChannel); } catch (_) {}
-                    playerChannel = null;
-                }
-                roomId = nextRoomId;
-                playerChannel = sb.channel('race-v11-players-' + roomId)
-                    .on('postgres_changes', {
-                        event: '*',
-                        schema: 'public',
-                        table: 'vocab_race_players',
-                        filter: 'room_id=eq.' + roomId
-                    }, function (payload) {
-                        if (payload && payload.new) applyPlayerState(payload.new);
-                    })
-                    .subscribe();
-            }
-
-            const roomResult = await sb.from('vocab_race_rooms')
-                .select('round_index,status')
-                .eq('id', roomId)
-                .maybeSingle();
-            if (roomResult.data) roomRound = Number(roomResult.data.round_index);
-
-            const allPlayers = await sb.from('vocab_race_players')
+            const result = await sb.from('vocab_race_players')
                 .select('user_id,lane,answered_round')
                 .eq('room_id', roomId);
-            (allPlayers.data || []).forEach(applyPlayerState);
+            (result.data || []).forEach(applyPlayerState);
         } catch (_) {
         } finally {
-            syncing = false;
+            loadingPlayers = false;
         }
+    }
+
+    function useRoomState(state) {
+        if (!state || !state.id) return;
+        roomRound = Number(state.round_index);
+        refreshEliminationForRound();
+
+        if (String(roomId) === String(state.id)) return;
+        unsubscribePlayers();
+        roomId = state.id;
+        playerChannel = sb.channel('race-v12-players-' + roomId)
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'vocab_race_players',
+                filter: 'room_id=eq.' + roomId
+            }, function (payload) {
+                if (payload && payload.new) applyPlayerState(payload.new);
+            })
+            .subscribe();
+        loadPlayersOnce();
     }
 
     function syncOwnCarFromLabel() {
@@ -235,7 +234,7 @@
         if (!label || !car) return;
         const match = String(label.textContent || '').match(/(\d+)/);
         if (!match) return;
-        moveCarWithoutRebuild(car, Number(match[1]) - 1);
+        installOverlayMotion(car, Number(match[1]) - 1);
     }
 
     function observeLaneLabel() {
@@ -253,7 +252,12 @@
         installStableTrack();
         observeLaneLabel();
         syncOwnCarFromLabel();
+        if (window.LDDVocabRaceRoomState) useRoomState(window.LDDVocabRaceRoomState);
     }
+
+    document.addEventListener('ldd:vocab-race-room', function (event) {
+        if (event && event.detail) useRoomState(event.detail);
+    });
 
     new MutationObserver(maintain).observe(document.documentElement, {
         childList: true,
@@ -264,7 +268,7 @@
         requestAnimationFrame(syncOwnCarFromLabel);
     }, { passive: true });
 
-    setInterval(maintain, 250);
-    setInterval(syncRoomAndPlayers, 900);
+    // Local DOM maintenance only; no network polling.
+    setInterval(maintain, 500);
     maintain();
 })();
