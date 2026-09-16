@@ -1,0 +1,243 @@
+/* =============================================================
+   LDD ENGLISH — VOCAB RACE v5 VISUAL LAYER
+   Cùng chiều dài đường 560px trên mọi thiết bị.
+   Mặt đường dùng DOM transform do JS điều khiển để PC/tablet/mobile giống nhau.
+   ============================================================= */
+
+body .vocab-race-game{position:relative!important}
+
+body .vocab-race-track{
+    height:560px!important;
+    min-height:560px!important;
+    max-height:560px!important;
+    position:relative!important;
+    display:grid!important;
+    grid-template-columns:repeat(5,minmax(0,1fr))!important;
+    gap:7px!important;
+    padding:8px!important;
+    overflow:hidden!important;
+    border:3px solid #0f172a!important;
+    border-radius:18px!important;
+    background:#111827!important;
+    box-shadow:inset 0 0 0 2px rgba(255,255,255,.08),0 18px 40px rgba(15,23,42,.28)!important;
+}
+
+body .vocab-race-lane{
+    height:100%!important;
+    min-height:0!important;
+    position:relative!important;
+    overflow:hidden!important;
+    border:2px solid rgba(255,255,255,.22)!important;
+    border-radius:11px!important;
+    background:linear-gradient(90deg,#272f38 0,#343d47 18%,#2d3640 50%,#343d47 82%,#272f38 100%)!important;
+    box-shadow:inset 0 0 32px rgba(0,0,0,.27)!important;
+}
+
+/* Tắt toàn bộ pseudo-animation cũ: v5 dùng phần tử DOM thật. */
+body .vocab-race-lane::before,
+body .vocab-race-lane::after,
+body .vocab-race-road::before,
+body .vocab-race-road::after{content:none!important;display:none!important}
+
+body .vocab-race-road{
+    position:absolute!important;
+    z-index:2!important;
+    top:72px!important;
+    right:0!important;
+    bottom:0!important;
+    left:0!important;
+    overflow:hidden!important;
+    pointer-events:none!important;
+    background:
+        linear-gradient(90deg,#facc15 0 3px,transparent 3px calc(100% - 3px),#facc15 calc(100% - 3px)),
+        linear-gradient(180deg,rgba(255,255,255,.045),rgba(0,0,0,.14))!important;
+}
+
+body .vocab-race-road-flow{
+    position:absolute!important;
+    z-index:3!important;
+    top:-96px!important;
+    bottom:-96px!important;
+    left:50%!important;
+    width:8px!important;
+    display:block!important;
+    background:repeating-linear-gradient(to bottom,#fff 0 34px,transparent 34px 82px)!important;
+    filter:drop-shadow(0 0 4px rgba(255,255,255,.48))!important;
+    will-change:transform!important;
+    pointer-events:none!important;
+}
+
+body .vocab-race-road-texture{
+    position:absolute!important;
+    z-index:2!important;
+    inset:-36px 0!important;
+    display:block!important;
+    background:repeating-linear-gradient(to bottom,rgba(255,255,255,.085) 0 4px,transparent 4px 18px)!important;
+    will-change:transform!important;
+    pointer-events:none!important;
+}
+
+body .vocab-race-option{
+    z-index:80!important;
+    top:7px!important;
+    left:5px!important;
+    right:5px!important;
+    min-height:60px!important;
+}
+
+body .vocab-race-obstacle-warning{
+    position:absolute!important;
+    z-index:120!important;
+    top:82px!important;
+    left:5px!important;
+    right:5px!important;
+    width:auto!important;
+    min-width:0!important;
+    min-height:50px!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:7px!important;
+    padding:6px 5px!important;
+    border:3px solid #facc15!important;
+    border-radius:10px!important;
+    background:#111827!important;
+    color:#fde047!important;
+    font-size:clamp(.5rem,1.1vw,.69rem)!important;
+    font-weight:950!important;
+    line-height:1.15!important;
+    text-align:center!important;
+    opacity:0!important;
+    visibility:hidden!important;
+    transform:none!important;
+    pointer-events:none!important;
+    box-shadow:0 9px 22px rgba(0,0,0,.55),0 0 0 3px rgba(250,204,21,.22)!important;
+}
+
+body .vocab-race-obstacle-warning b,
+body .vocab-race-obstacle-warning em{font-style:normal!important;font-weight:950!important}
+
+body .vocab-race-obstacle-warning.is-visible{
+    opacity:1!important;
+    visibility:visible!important;
+    animation:vocabRaceV5WarningPulse .42s ease-in-out infinite alternate!important;
+}
+
+body .vocab-race-obstacle{
+    position:absolute!important;
+    z-index:110!important;
+    left:50%!important;
+    top:138px;
+    width:min(82%,84px)!important;
+    height:60px!important;
+    display:grid!important;
+    place-items:center!important;
+    transform:translateX(-50%)!important;
+    border:3px solid #fff!important;
+    border-radius:12px!important;
+    background:repeating-linear-gradient(135deg,#facc15 0 14px,#dc2626 14px 28px)!important;
+    opacity:0!important;
+    visibility:hidden!important;
+    pointer-events:none!important;
+    box-shadow:0 12px 25px rgba(0,0,0,.58),0 0 0 4px rgba(239,68,68,.3)!important;
+}
+
+body .vocab-race-obstacle.is-visible{opacity:1!important;visibility:visible!important}
+body .vocab-race-obstacle span{font-size:2.05rem!important;line-height:1!important;filter:drop-shadow(0 3px 3px rgba(0,0,0,.4))!important}
+
+body .vocab-race-lane.is-obstacle-warning{
+    border-color:#facc15!important;
+    box-shadow:inset 0 0 0 4px rgba(250,204,21,.82),inset 0 0 40px rgba(250,204,21,.3)!important;
+}
+body .vocab-race-lane.is-obstacle-active{
+    border-color:#ef4444!important;
+    box-shadow:inset 0 0 0 4px rgba(239,68,68,.9),inset 0 0 45px rgba(239,68,68,.38)!important;
+}
+
+body .vocab-race-car{bottom:56px!important;z-index:20!important}
+body .vocab-race-car.is-charging{bottom:420px!important;z-index:130!important}
+
+/* ===== HẾT GIỜ: khóa màn hình + popup 6 giây ===== */
+body .vocab-race-pause-overlay{
+    position:absolute!important;
+    z-index:500!important;
+    inset:0!important;
+    display:none;
+    place-items:center!important;
+    padding:18px!important;
+    background:rgba(2,6,23,.74)!important;
+    backdrop-filter:blur(5px)!important;
+    -webkit-backdrop-filter:blur(5px)!important;
+    border-radius:18px!important;
+    pointer-events:auto!important;
+}
+
+body .vocab-race-pause-card{
+    width:min(92%,360px)!important;
+    min-height:280px!important;
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:center!important;
+    justify-content:center!important;
+    padding:28px 22px!important;
+    border:3px solid rgba(255,255,255,.92)!important;
+    border-radius:26px!important;
+    background:linear-gradient(180deg,#172033,#0f172a)!important;
+    color:#fff!important;
+    text-align:center!important;
+    box-shadow:0 24px 70px rgba(0,0,0,.48),0 0 0 6px rgba(255,255,255,.08)!important;
+    animation:vocabRaceV5PauseIn .28s ease-out!important;
+}
+
+body .vocab-race-pause-icon{font-size:2.5rem!important;margin-bottom:7px!important}
+body .vocab-race-pause-card>strong{font-size:1.28rem!important;letter-spacing:.06em!important}
+body .vocab-race-pause-card>p{margin:10px 0 5px!important;color:#cbd5e1!important;font-size:.82rem!important}
+body .vocab-race-pause-card>b{
+    width:110px!important;
+    height:110px!important;
+    display:grid!important;
+    place-items:center!important;
+    margin:5px 0!important;
+    border:5px solid #facc15!important;
+    border-radius:999px!important;
+    background:#020617!important;
+    color:#fde047!important;
+    font-size:3.3rem!important;
+    line-height:1!important;
+    font-variant-numeric:tabular-nums!important;
+    box-shadow:0 0 0 7px rgba(250,204,21,.12)!important;
+}
+body .vocab-race-pause-card>small{color:#cbd5e1!important;font-size:.75rem!important;font-weight:800!important;text-transform:uppercase!important;letter-spacing:.08em!important}
+
+@keyframes vocabRaceV5WarningPulse{
+    from{filter:brightness(1);box-shadow:0 9px 22px rgba(0,0,0,.55),0 0 0 0 rgba(250,204,21,.55)}
+    to{filter:brightness(1.22);box-shadow:0 9px 22px rgba(0,0,0,.55),0 0 0 9px rgba(250,204,21,0)}
+}
+@keyframes vocabRaceV5PauseIn{
+    from{opacity:0;transform:scale(.88)}
+    to{opacity:1;transform:scale(1)}
+}
+
+/* Không thay đổi chiều dài đường theo kích thước màn hình. */
+@media(max-width:900px), (max-width:760px), (max-width:460px), (orientation:landscape) and (max-height:620px){
+    body .vocab-race-track{height:560px!important;min-height:560px!important;max-height:560px!important}
+    body .vocab-race-road{top:72px!important}
+    body .vocab-race-obstacle-warning{top:82px!important}
+    body .vocab-race-car{bottom:56px!important}
+    body .vocab-race-car.is-charging{bottom:420px!important}
+}
+
+@media(max-width:760px){
+    body .vocab-race-track{gap:4px!important;padding:5px!important}
+    body .vocab-race-obstacle-warning{font-size:.52rem!important;padding:5px 3px!important}
+    body .vocab-race-obstacle{width:min(86%,72px)!important;height:54px!important}
+    body .vocab-race-pause-card{width:min(94%,330px)!important;min-height:255px!important}
+}
+
+@media(max-width:460px){
+    body .vocab-race-track{gap:2px!important;padding:4px!important}
+    body .vocab-race-obstacle-warning{font-size:.45rem!important}
+    body .vocab-race-obstacle-warning>span{display:none!important}
+    body .vocab-race-obstacle{width:88%!important;height:50px!important}
+    body .vocab-race-pause-card>b{width:96px!important;height:96px!important;font-size:2.8rem!important}
+}
