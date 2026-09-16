@@ -1,13 +1,13 @@
-/* LDD English — Vocab Race bootstrap v9 */
+/* LDD English — Vocab Race bootstrap v10 */
 (function () {
     'use strict';
 
     const styles = [
-        ['ldd-vocab-race-v5-style', 'ldd-vocab-race-v5.css?v=20260917-9'],
-        ['ldd-vocab-race-v6-style', 'ldd-vocab-race-v6.css?v=20260917-9'],
-        ['ldd-vocab-race-v7-style', 'ldd-vocab-race-v7.css?v=20260917-9'],
-        ['ldd-vocab-race-v8-style', 'ldd-vocab-race-v8.css?v=20260917-9'],
-        ['ldd-vocab-race-v9-style', 'ldd-vocab-race-v9.css?v=20260917-9']
+        ['ldd-vocab-race-v5-style', 'ldd-vocab-race-v5.css?v=20260917-10'],
+        ['ldd-vocab-race-v6-style', 'ldd-vocab-race-v6.css?v=20260917-10'],
+        ['ldd-vocab-race-v7-style', 'ldd-vocab-race-v7.css?v=20260917-10'],
+        ['ldd-vocab-race-v8-style', 'ldd-vocab-race-v8.css?v=20260917-10'],
+        ['ldd-vocab-race-v9-style', 'ldd-vocab-race-v9.css?v=20260917-10']
     ];
 
     styles.forEach(function (item) {
@@ -22,7 +22,7 @@
     if (!document.getElementById('ldd-vocab-race-v5-script')) {
         const core = document.createElement('script');
         core.id = 'ldd-vocab-race-v5-script';
-        core.src = 'ldd-vocab-race-v5.js?v=20260917-9';
+        core.src = 'ldd-vocab-race-v5.js?v=20260917-10';
         core.defer = true;
         document.body.appendChild(core);
     }
@@ -30,8 +30,16 @@
     if (!document.getElementById('ldd-vocab-race-v9-script')) {
         const intermission = document.createElement('script');
         intermission.id = 'ldd-vocab-race-v9-script';
-        intermission.src = 'ldd-vocab-race-v9.js?v=20260917-9';
+        intermission.src = 'ldd-vocab-race-v9.js?v=20260917-10';
         intermission.defer = true;
         document.body.appendChild(intermission);
+    }
+
+    if (!document.getElementById('ldd-vocab-race-v10-script')) {
+        const stableTrack = document.createElement('script');
+        stableTrack.id = 'ldd-vocab-race-v10-script';
+        stableTrack.src = 'ldd-vocab-race-v10.js?v=20260917-10';
+        stableTrack.defer = true;
+        document.body.appendChild(stableTrack);
     }
 })();
