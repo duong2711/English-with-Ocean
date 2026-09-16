@@ -13834,12 +13834,13 @@ function toggleCompletion(symbolElement) {
         // Kiểm tra ở PHÍA TRÌNH DUYỆT mỗi khi tải tiến độ (thcsEnsureProgressLoaded) — không cần
         // cài thêm gì trên Supabase (không dùng pg_cron/Edge Function).
         function thcsGetAutoExpireDays(timesCompleted) {
-            if (timesCompleted <= 1) return 7;
-            if (timesCompleted === 2) return 14;
+            const count = Number(timesCompleted || 0);
+            if (count === 1) return 7;
+            if (count === 2) return 14;
             return null; // >= 3 lần hoàn thành: vĩnh viễn, không tự mất nữa
         }
 
-        // [MỚI] Rà soát toàn bộ Unit (mọi khối lớp 4-12) đã hoàn thành của học viên hiện tại, tự
+        // [MỚI] Rà soát toàn bộ Unit THCS/THPT (khối 6-12) đã hoàn thành của học viên hiện tại, tự
         // động bỏ đánh dấu những Unit đã "hết hạn ôn tập". Gọi ngay sau khi thcsProgressMap được
         // tải xong (xem thcsEnsureProgressLoaded). Dùng thẳng thcsSaveProgress() vì hàm đó nhận
         // gradeNum/unitId tường minh (không như bên "Cho bé"), nên an toàn khi gọi cho bất kỳ
@@ -13847,7 +13848,7 @@ function toggleCompletion(symbolElement) {
         async function thcsCheckAndExpireCompletions() {
             const now = Date.now();
             const expiredTitles = [];
-            for (let g = 4; g <= 12; g++) {
+            for (let g = 6; g <= 12; g++) {
                 const units = thcsGetGradeUnits(g);
                 if (!units) continue;
                 for (const unit of units) {
@@ -13952,17 +13953,23 @@ function toggleCompletion(symbolElement) {
 
         // Lưu (upsert) tiến độ của 1 Unit — patch chỉ chứa các cờ cần cập nhật.
         // Trả về bản ghi tiến độ đầy đủ sau khi gộp (đã tính lại completed).
-        // LƯU Ý: hàm này CHỈ ghi lại đúng những gì được truyền vào patch — không tự ý tăng
-        // "times_completed" (việc phát hiện "vừa hoàn thành lần đầu/lần lại" và tăng đếm được
-        // xử lý riêng ở thcsHandleUnitJustCompleted, do 3 nơi gọi hàm này — Flashcard/Dịch câu/
-        // Câu chuyện — dùng chung; tách riêng để nút admin "Cho làm lại"/"Đánh dấu hoàn thành"
-        // (thcsAdminToggleUnitCompletion) không vô tình cộng nhầm điểm thưởng).
-        async function thcsSaveProgress(gradeNum, unitId, patch) {
+        // options.countCompletion chỉ được bật cho 3 luồng học thật. Khi patch này làm
+        // Unit chuyển từ chưa xong -> hoàn thành, counter và completed_at được gộp vào
+        // CÙNG MỘT lệnh upsert. Như vậy không thể lưu completed=true nhưng bỏ sót counter
+        // nếu trang bị đóng giữa hai request. Luồng Admin không bật option này.
+        async function thcsSaveProgress(gradeNum, unitId, patch, options) {
             if (!gradeNum || !unitId) return null;
             const key = thcsProgressKey(gradeNum, unitId);
             const existing = thcsProgressMap[key] || { flashcard_done: false, translate_done: false, story_done: false, completed: false, times_completed: 0, completed_at: null };
             const merged = Object.assign({}, existing, patch);
             merged.completed = !!(merged.flashcard_done && merged.translate_done && merged.story_done);
+            merged.just_completed = false;
+            if (options && options.countCompletion && !existing.completed && merged.completed) {
+                const previousCount = Number(existing.times_completed || 0);
+                merged.times_completed = (Number.isFinite(previousCount) ? previousCount : 0) + 1;
+                merged.completed_at = new Date().toISOString();
+                merged.just_completed = true;
+            }
             thcsProgressMap[key] = merged; // cập nhật cache ngay để UI phản hồi tức thì
 
             if (!currentUserId) return merged; // chưa đăng nhập: chỉ giữ tạm trong phiên này
@@ -14020,21 +14027,25 @@ function toggleCompletion(symbolElement) {
             }
         }
 
-        // [MỚI] Gọi ngay khi phát hiện 1 Unit VỪA chuyển từ "chưa hoàn thành" sang "đã hoàn
-        // thành" (dùng chung cho cả 3 hành động Flashcard/Dịch câu/Câu chuyện — mỗi nơi tự so
-        // sánh trạng thái "completed" TRƯỚC và SAU khi lưu để biết có nên gọi hàm này không).
-        // Nếu Unit này đã từng hoàn thành ít nhất 1 lần trước đó (bị admin bỏ đánh dấu để bắt
-        // học lại — xem thcsAdminToggleUnitCompletion) thì lần hoàn thành lại này được cộng
-        // thêm điểm chăm chỉ thưởng, giống hệt cơ chế bên "Cho bé" (KID_TOPIC_REDO_BONUS_POINTS).
-        async function thcsHandleUnitJustCompleted(gradeNum, unitId, mergedBeforeCountIncrement) {
-            const timesCompletedBefore = mergedBeforeCountIncrement.times_completed || 0;
-            // [MỚI] Ghi lại mốc thời gian hoàn thành (completed_at) để thcsCheckAndExpireCompletions()
-            // tính đúng khi nào tự động hết hạn (7 ngày/14 ngày — xem thcsGetAutoExpireDays).
-            await thcsSaveProgress(gradeNum, unitId, { times_completed: timesCompletedBefore + 1, completed_at: new Date().toISOString() });
-            if (timesCompletedBefore > 0 && window.vocabTap && window.vocabTap.toast) {
+        function thcsNotifyRedoCompleted(merged) {
+            if (merged && merged.just_completed && Number(merged.times_completed || 0) > 1 && window.vocabTap && window.vocabTap.toast) {
                 window.vocabTap.toast(`🔥 Bạn đã hoàn thành lại Unit đã từng bị mất hoàn thành! +${THCS_UNIT_REDO_BONUS_POINTS} điểm chăm chỉ thưởng.`, 'success');
             }
         }
+
+        // ldd-thcs-vocab-reset.js can reset a Unit while this page is already open. Invalidate
+        // the in-memory cache immediately; otherwise the UI can keep the old three "done" flags
+        // and the next completion will never advance times_completed.
+        document.addEventListener('ldd:thcs-vocab-reset', async () => {
+            thcsProgressLoadedForUser = null;
+            await thcsEnsureProgressLoaded();
+            if (currentGradeNum && currentGradeUnits && thcsGrade6Panel.style.display !== 'none') {
+                await renderUnitGrid();
+            }
+            if (currentUnit && thcsUnitPanel.style.display !== 'none') {
+                thcsUpdateSubtabIndicators(currentUnit);
+            }
+        });
         function thcsNotifyLoginToSave() {
             if (window.vocabTap && window.vocabTap.toast) {
                 window.vocabTap.toast('⚠️ Đăng nhập để lưu tiến độ hoàn thành Unit của bạn.', 'info');
@@ -14191,9 +14202,9 @@ function toggleCompletion(symbolElement) {
 
         // [MỚI] Bật/tắt trạng thái hoàn thành 1 Unit (yêu cầu mật khẩu Admin) — giống hệt
         // kidAdminToggleTopicCompletion bên "Cho bé". LƯU Ý: nhánh "đánh dấu hoàn thành" ở đây
-        // KHÔNG cộng điểm thưởng làm lại (times_completed không tăng) — điểm thưởng chỉ tính khi
-        // chính học viên tự hoàn thành lại qua thcsHandleUnitJustCompleted, để tránh admin lỡ
-        // tay cộng nhầm điểm cho học viên.
+        // KHÔNG cộng điểm thưởng làm lại (times_completed không tăng) — counter chỉ tăng
+        // khi chính học viên hoàn thành đủ 3 phần qua luồng countCompletion, tránh admin
+        // vô tình cộng nhầm điểm cho học viên.
         async function thcsAdminToggleUnitCompletion(gradeNum, unit) {
             if (!currentUserId) {
                 alert('Vui lòng đăng nhập trước khi dùng chức năng này!');
@@ -14536,12 +14547,11 @@ function toggleCompletion(symbolElement) {
             if (!currentUnit) return;
             const already = thcsGetProgress(currentGradeNum, currentUnit.id).flashcard_done;
             if (already) return; // đã ghi nhận rồi, không cần lưu lại
-            const wasCompletedBefore = !!thcsGetProgress(currentGradeNum, currentUnit.id).completed; // [MỚI]
-            const merged = await thcsSaveProgress(currentGradeNum, currentUnit.id, { flashcard_done: true });
+            const merged = await thcsSaveProgress(currentGradeNum, currentUnit.id, { flashcard_done: true }, { countCompletion: true });
             thcsUpdateSubtabIndicators(currentUnit);
             if (merged && merged.completed) {
                 thcsNotifyUnitCompleted();
-                if (!wasCompletedBefore) await thcsHandleUnitJustCompleted(currentGradeNum, currentUnit.id, merged); // [MỚI]
+                thcsNotifyRedoCompleted(merged);
             } else if (!currentUserId) {
                 thcsNotifyLoginToSave();
             }
@@ -14749,12 +14759,11 @@ function toggleCompletion(symbolElement) {
 
         async function thcsHandleTranslateCompleted() {
             if (!currentUnit) return;
-            const wasCompletedBefore = !!thcsGetProgress(currentGradeNum, currentUnit.id).completed; // [MỚI]
-            const merged = await thcsSaveProgress(currentGradeNum, currentUnit.id, { translate_done: true });
+            const merged = await thcsSaveProgress(currentGradeNum, currentUnit.id, { translate_done: true }, { countCompletion: true });
             thcsUpdateSubtabIndicators(currentUnit);
             if (merged && merged.completed) {
                 thcsNotifyUnitCompleted();
-                if (!wasCompletedBefore) await thcsHandleUnitJustCompleted(currentGradeNum, currentUnit.id, merged); // [MỚI]
+                thcsNotifyRedoCompleted(merged);
             } else if (!currentUserId) {
                 thcsNotifyLoginToSave();
             }
@@ -15046,12 +15055,11 @@ function toggleCompletion(symbolElement) {
             if (!currentUnit) return;
             const already = thcsGetProgress(currentGradeNum, currentUnit.id).story_done;
             if (already) return; // đã ghi nhận rồi, không cần lưu lại
-            const wasCompletedBefore = !!thcsGetProgress(currentGradeNum, currentUnit.id).completed; // [MỚI]
-            const merged = await thcsSaveProgress(currentGradeNum, currentUnit.id, { story_done: true });
+            const merged = await thcsSaveProgress(currentGradeNum, currentUnit.id, { story_done: true }, { countCompletion: true });
             thcsUpdateSubtabIndicators(currentUnit);
             if (merged && merged.completed) {
                 thcsNotifyUnitCompleted();
-                if (!wasCompletedBefore) await thcsHandleUnitJustCompleted(currentGradeNum, currentUnit.id, merged); // [MỚI]
+                thcsNotifyRedoCompleted(merged);
             } else if (!currentUserId) {
                 thcsNotifyLoginToSave();
             }

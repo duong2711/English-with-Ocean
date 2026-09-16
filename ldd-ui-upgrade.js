@@ -31,7 +31,7 @@
         ensureScript('ldd-vocab-grammar-script', 'ldd-ui-vocab-grammar.js?v=2');
         ensureScript('ldd-home-phonetics-script', 'ldd-ui-home-phonetics.js?v=8.4');
         ensureScript('ldd-student-grade-script', 'ldd-student-grade.js?v=1');
-        ensureScript('ldd-thcs-vocab-reset-script', 'ldd-thcs-vocab-reset.js?v=1');
+        ensureScript('ldd-thcs-vocab-reset-script', 'ldd-thcs-vocab-reset.js?v=2');
     }
 
     function ensureStylesheet(id, href) {

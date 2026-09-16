@@ -111,7 +111,7 @@
             const uid = userId();
             if (!uid) return;
             const params = {
-                select: 'user_id,grade,unit_id,completed,times_completed,completed_at',
+                select: 'user_id,grade,unit_id,flashcard_done,translate_done,story_done,completed,times_completed,completed_at',
                 user_id: 'eq.' + uid,
                 order: 'grade.asc,unit_id.asc'
             };
@@ -129,16 +129,27 @@
 
                 // Exact existing mechanism:
                 // #1 resets after 7d, #2 after 14d, #3+ never resets again.
-                if (!row.completed || count < 1 || count >= 3 || !target || target > now) continue;
+                if (Number(row.grade) < 6 || Number(row.grade) > 12 || !row.completed || count < 1 || count >= 3 || !target || target > now) continue;
 
                 const patch = await request('PATCH', 'thcs_unit_progress', {
                     user_id: 'eq.' + uid,
                     grade: 'eq.' + row.grade,
                     unit_id: 'eq.' + row.unit_id
-                }, { completed: false });
+                }, {
+                    flashcard_done: false,
+                    translate_done: false,
+                    story_done: false,
+                    completed: false,
+                    completed_at: null
+                });
                 if (patch.ok) {
-                    // Do NOT change times_completed/completed_at here. The next successful
-                    // completion advances the existing counter; reset only re-opens the unit.
+                    // Keep times_completed, but clear every completion flag so the learner can
+                    // genuinely finish all three parts again. completed_at is cleared in the DB;
+                    // this in-memory row retains the old timestamp only to show "LÀM NGAY"
+                    // until the next sync/reload.
+                    row.flashcard_done = false;
+                    row.translate_done = false;
+                    row.story_done = false;
                     row.completed = false;
                     changed = true;
                 }
