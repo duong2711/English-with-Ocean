@@ -2445,6 +2445,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error('Lỗi khi tính điểm luyện tập liên từ (có thể do bảng "conj_practice_sessions" chưa được tạo — xem file SQL "conj_practice_setup.sql"):', errCj.message);
             }
 
+            // ----- Điểm Đua xe từ vựng: thưởng/phạt được lưu riêng để không bị mất khi
+            // Thành tựu tính lại diligence_score. Nếu chưa chạy vocab_race_setup.sql thì mặc định 0.
+            let raceGamePoints = 0;
+            try {
+                const { data: racePointRow, error: eRacePoint } = await sb
+                    .from('vocab_race_points')
+                    .select('points')
+                    .eq('user_id', currentUserId)
+                    .maybeSingle();
+                if (eRacePoint) throw eRacePoint;
+                raceGamePoints = Number((racePointRow && racePointRow.points) || 0);
+            } catch (errRacePoint) {
+                console.warn('Chưa đọc được điểm Đua xe từ vựng (có thể chưa chạy vocab_race_setup.sql):', errRacePoint.message);
+            }
+
             // ----- 5) Điểm trung bình bài kiểm tra: CHỈ tính những bài đang giao (hiện) cho
             // học viên này (status = published + có tên trong student_emails), và chỉ tính
             // những bài đã nộp (status = submitted) trong số đó -----
@@ -2499,7 +2514,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const testPctForScore = avgTestScorePct != null ? avgTestScorePct : 0;
             const diligenceScore = Math.round(
                 (phoneticsPct + newsPct + topicsPct + thcsPct + grammarPct + testPctForScore + timePct) / 7
-                + totalRedoBonusPoints + vocabTestPoints + podcastPoints + conjPracticePoints
+                + totalRedoBonusPoints + vocabTestPoints + podcastPoints + conjPracticePoints + raceGamePoints
             ); // [MỚI] cộng thêm điểm thưởng "làm lại" + điểm bài kiểm tra từ vựng hàng tuần + điểm podcast dictation + điểm luyện tập liên từ
 
             // ----- [SỬA] KHÔNG RESET ĐIỂM CHUYÊN CẦN THEO THÁNG NỮA -----

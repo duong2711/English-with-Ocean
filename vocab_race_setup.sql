@@ -213,7 +213,7 @@ begin
     if v_count < 2 or v_count > 4 then raise exception 'need_2_to_4_players'; end if;
 
     update public.vocab_race_players
-       set score=0, wrong_count=0, total_activation_ms=0, lane=null, lane_entered_at=null,
+       set score=0, wrong_count=0, total_activation_ms=0, lane=2, lane_entered_at=clock_timestamp(),
            track_pos=0, answered_round=-1
      where room_id=p_room;
     delete from public.vocab_race_lane_claims where room_id=p_room;
@@ -301,6 +301,7 @@ declare
     v_correct boolean;
     v_ms int;
     v_victim uuid;
+    v_collision_victim uuid;
     v_total int;
     v_answered int;
     v_result jsonb;
@@ -329,13 +330,13 @@ begin
 
     -- Hút xe: chỉ từ vòng có khoảng cách, và chỉ khi người claim đang phía sau 1 xe cùng làn.
     if v_room.collision_enabled then
-        select p.user_id into v_victim
+        select p.user_id into v_collision_victim
           from public.vocab_race_players p
          where p.room_id=p_room and p.user_id<>v_uid and p.lane=p_lane and p.track_pos>v_player.track_pos
          order by p.track_pos asc, p.slot asc limit 1 for update;
-        if v_victim is not null then
-            perform public.vocab_race_add_points(v_victim,-1);
-            update public.vocab_race_lane_claims set collision_victim=v_victim
+        if v_collision_victim is not null then
+            perform public.vocab_race_add_points(v_collision_victim,-1);
+            update public.vocab_race_lane_claims set collision_victim=v_collision_victim
              where room_id=p_room and round_index=v_room.round_index and lane=p_lane;
         end if;
     end if;
@@ -362,11 +363,11 @@ begin
         update public.vocab_race_players
            set wrong_count=wrong_count + case when user_id<>v_uid and answered_round<>v_room.round_index then 1 else 0 end,
                track_pos=case when user_id=v_uid then track_pos else track_pos-1 end,
-               lane=null, lane_entered_at=null
+               lane=2, lane_entered_at=clock_timestamp()
          where room_id=p_room;
 
         v_result := jsonb_build_object('type','correct','at',clock_timestamp(),'round',v_room.round_index,
-                     'winner_user_id',v_uid,'correct_lane',v_correct_lane,'collision_victim',v_victim);
+                     'winner_user_id',v_uid,'correct_lane',v_correct_lane,'collision_victim',v_collision_victim);
 
         if v_room.round_index >= 19 then
             perform public.vocab_race_finish_locked(p_room,v_result);
@@ -384,7 +385,7 @@ begin
 
     if v_answered >= v_total then
         -- Tất cả đã chọn sai: kéo xe về cùng hàng, vòng sau tắt hút xe.
-        update public.vocab_race_players set track_pos=0,lane=null,lane_entered_at=null where room_id=p_room;
+        update public.vocab_race_players set track_pos=0,lane=2,lane_entered_at=clock_timestamp() where room_id=p_room;
         v_result := jsonb_build_object('type','all_wrong','at',clock_timestamp(),'round',v_room.round_index,'correct_lane',v_correct_lane);
         if v_room.round_index >= 19 then
             perform public.vocab_race_finish_locked(p_room,v_result);
@@ -425,7 +426,7 @@ begin
 
     update public.vocab_race_players
        set wrong_count=wrong_count + case when answered_round<>v_room.round_index then 1 else 0 end,
-           track_pos=0,lane=null,lane_entered_at=null
+           track_pos=0,lane=2,lane_entered_at=clock_timestamp()
      where room_id=p_room;
 
     v_result := jsonb_build_object('type','all_wrong','reason','timeout','at',clock_timestamp(),'round',v_room.round_index);
