@@ -7,7 +7,7 @@
     'use strict';
 
     const SUPABASE_URL = 'https://ywqbaksmmtvwbojcgsdd.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJIUzI1NiIsInJlZiI6Inl3cWJha3NtbXR2d2JvamNnc2RkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxNjc3NTAsImV4cCI6MjA5Nzc0Mzc1MH0.vhgt7cB6w2elm-MXY57U_wJtYkJQHDFAEsJwAArOjhQ';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl3cWJha3NtbXR2d2JvamNnc2RkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxNjc3NTAsImV4cCI6MjA5Nzc0Mzc1MH0.vhgt7cB6w2elm-MXY57U_wJtYkJQHDFAEsJwAArOjhQ';
 
     if (!window.supabase || !window.supabase.createClient) return;
 
@@ -67,8 +67,6 @@
                     const sameRound = !!roundLabel && roundLabel === stableRoundLabel;
 
                     if (next === '' && gameIsPlaying() && hasCompleteTrack && sameRound) {
-                        /* buildTrack() vẫn chạy tiếp nhưng 5 lane mới sẽ bị bỏ qua.
-                           DOM cũ của road / obstacle / warning được giữ nguyên. */
                         suppressLaneAppends = 5;
                         return;
                     }
@@ -94,9 +92,7 @@
 
             track.dataset.v10Stable = '1';
             installedTrack = track;
-        } catch (_) {
-            /* Nếu browser không cho shadow native accessor thì giữ gameplay cũ. */
-        }
+        } catch (_) {}
     }
 
     function findCar(userId) {
@@ -200,7 +196,6 @@
                 .eq('room_id', roomId);
             (allPlayers.data || []).forEach(applyPlayerState);
         } catch (_) {
-            /* Không làm hỏng game chính nếu lớp ổn định gặp lỗi mạng. */
         } finally {
             syncing = false;
         }
