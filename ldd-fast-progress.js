@@ -1,36 +1,96 @@
 /* =============================================================
-   LDD ENGLISH — FAST PROGRESS UI v1
-   DOM-only enhancement: no extra Supabase requests.
-   - Podcast Stage 1 completion appears immediately.
-   - Podcast folder badge = podcasts not yet finished Stage 1.
-   - Vận dụng folder badge = topic cards not currently completed.
+   LDD ENGLISH — FAST PROGRESS UI v2
+   - Shows Podcast + Vận dụng incomplete badges immediately after login.
+   - Does NOT require opening/closing either folder first.
+   - Podcast Stage 1 completion updates optimistically as soon as Stage 2 unlocks.
    ============================================================= */
 (function () {
     'use strict';
+
+    const REF = 'ywqbaksmmtvwbojcgsdd';
+    const API_URL = 'https://' + REF + '.supabase.co';
+    const DAY = 86400000;
 
     let currentPodcastId = null;
     let stage2Node = null;
     let stage2WasLocked = true;
     let renderTimer = null;
+    let tokenSeen = null;
+    let busy = false;
+    let anonKeyPromise = null;
+
+    let podcastRows = [];
+    let podcastProgress = [];
+    let kidRows = [];
 
     function ready(fn) {
         if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
         else fn();
     }
 
-    function getUserId() {
+    function getToken() {
         try {
-            const ref = 'ywqbaksmmtvwbojcgsdd';
-            const raw = localStorage.getItem('sb-' + ref + '-auth-token');
+            const raw = localStorage.getItem('sb-' + REF + '-auth-token');
             if (!raw) return null;
             const value = JSON.parse(raw);
-            const token = value && (value.access_token || (value.currentSession && value.currentSession.access_token) || (Array.isArray(value) && value[0] && value[0].access_token));
-            if (!token) return null;
+            return value && (value.access_token ||
+                (value.currentSession && value.currentSession.access_token) ||
+                (Array.isArray(value) && value[0] && value[0].access_token)) || null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function getUserId() {
+        const token = getToken();
+        if (!token) return null;
+        try {
             let part = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
             while (part.length % 4) part += '=';
             return (JSON.parse(atob(part)) || {}).sub || null;
         } catch (e) {
             return null;
+        }
+    }
+
+    /* Reuse the already-public anon key from an existing same-origin JS asset.
+       This avoids duplicating credentials in this helper module. */
+    function loadAnonKey() {
+        if (anonKeyPromise) return anonKeyPromise;
+        anonKeyPromise = fetch('ldd-thcs-vocab-reset.js?v=3', { cache: 'force-cache' })
+            .then(function (r) { return r.ok ? r.text() : ''; })
+            .then(function (text) {
+                const match = text.match(/SUPABASE_ANON_KEY\s*=\s*['\"]([^'\"]+)['\"]/);
+                return match ? match[1] : null;
+            })
+            .catch(function () { return null; });
+        return anonKeyPromise;
+    }
+
+    async function query(table, select, params) {
+        const token = getToken();
+        const key = await loadAnonKey();
+        if (!token || !key) return [];
+
+        const q = new URLSearchParams();
+        q.set('select', select || '*');
+        Object.keys(params || {}).forEach(function (name) {
+            if (params[name] !== null && params[name] !== undefined) q.set(name, params[name]);
+        });
+
+        try {
+            const r = await fetch(API_URL + '/rest/v1/' + table + '?' + q.toString(), {
+                headers: {
+                    apikey: key,
+                    Authorization: 'Bearer ' + token,
+                    Accept: 'application/json'
+                }
+            });
+            if (!r.ok) return [];
+            const data = await r.json();
+            return Array.isArray(data) ? data : [];
+        } catch (e) {
+            return [];
         }
     }
 
@@ -50,6 +110,7 @@
     function setFolderBadge(cardId, count, kind) {
         const card = document.getElementById(cardId);
         if (!card || count == null) return;
+
         let badge = card.querySelector('.ldd-incomplete-number-badge[data-kind="' + kind + '"]');
         if (!badge) {
             badge = document.createElement('span');
@@ -57,6 +118,7 @@
             badge.dataset.kind = kind;
             card.appendChild(badge);
         }
+
         const n = Math.max(0, Number(count || 0));
         badge.textContent = String(n);
         badge.title = n + ' mục chưa hoàn thành';
@@ -78,6 +140,43 @@
         return !!key && localStorage.getItem(key) === '1';
     }
 
+    function estimatePodcastBlankCount(pod) {
+        const segments = Array.isArray(pod && pod.segments) ? pod.segments : [];
+        if (!segments.length) return 0;
+
+        let chunks = 0;
+        let lines = 0;
+        let words = 0;
+        segments.forEach(function (seg, index) {
+            const count = String((seg && seg.en) || '').trim().split(/\s+/).filter(Boolean).length;
+            if (lines && (lines >= 6 || words + count > 80)) {
+                chunks += 1;
+                lines = 0;
+                words = 0;
+            }
+            lines += 1;
+            words += count;
+            if (index === segments.length - 1 && lines) chunks += 1;
+        });
+        return Math.max(1, chunks * 4);
+    }
+
+    function podcastSavedCount(id) {
+        const seen = new Set();
+        (podcastProgress || []).forEach(function (row) {
+            if (String(row.podcast_id) !== String(id) || Number(row.stage) !== 1) return;
+            seen.add(String(row.segment_index) + ':' + String(row.blank_index));
+        });
+        return seen.size;
+    }
+
+    function isPodcastComplete(pod) {
+        const id = String(pod.id);
+        if (isPodcastLocallyDone(id)) return true;
+        const expected = estimatePodcastBlankCount(pod);
+        return expected > 0 && podcastSavedCount(id) >= expected;
+    }
+
     function ensurePodcastCompleteBadge(card) {
         if (!card) return;
         card.classList.add('ldd-podcast-stage1-complete');
@@ -90,30 +189,86 @@
         }
     }
 
-    function applyLocalPodcastState() {
+    function renderPodcastState() {
+        if (podcastRows.length) {
+            const incomplete = podcastRows.filter(function (pod) {
+                return !isPodcastComplete(pod);
+            }).length;
+            setFolderBadge('podcast-folder-card', incomplete, 'podcast');
+        }
+
+        const byId = new Map(podcastRows.map(function (pod) {
+            return [String(pod.id), pod];
+        }));
+
         document.querySelectorAll('#podcast-grid .folder-card[data-id]').forEach(function (card) {
             const id = String(card.dataset.id || '');
-            if (isPodcastLocallyDone(id)) ensurePodcastCompleteBadge(card);
+            const pod = byId.get(id);
+            const done = pod ? isPodcastComplete(pod) : isPodcastLocallyDone(id);
+            if (done) ensurePodcastCompleteBadge(card);
+            else {
+                card.classList.remove('ldd-podcast-stage1-complete');
+                const badge = card.querySelector('.ldd-podcast-complete-badge');
+                if (badge) badge.remove();
+            }
         });
     }
 
-    function renderPodcastBadge() {
-        const cards = Array.from(document.querySelectorAll('#podcast-grid .folder-card[data-id]'));
-        if (!cards.length) return;
-        applyLocalPodcastState();
-        const incomplete = cards.filter(function (card) {
-            return !card.classList.contains('ldd-podcast-stage1-complete');
-        }).length;
-        setFolderBadge('podcast-folder-card', incomplete, 'podcast');
+    function topicTotal() {
+        try {
+            if (typeof KID_TOPICS !== 'undefined' && Array.isArray(KID_TOPICS)) return KID_TOPICS.length;
+        } catch (e) {}
+        const cards = document.querySelectorAll('#kid-topic-grid .kid-topic-card');
+        return cards.length || 0;
     }
 
-    function renderKidBadge() {
-        const cards = Array.from(document.querySelectorAll('#kid-topic-grid .kid-topic-card'));
-        if (!cards.length) return;
-        const incomplete = cards.filter(function (card) {
-            return !card.classList.contains('completed');
-        }).length;
-        setFolderBadge('kid-folder-card', incomplete, 'kid');
+    function topicResetTarget(row) {
+        const count = Number(row && row.times_completed || 0);
+        if (count >= 3) return Infinity;
+        const days = count === 1 ? 7 : (count === 2 ? 14 : null);
+        const start = Date.parse(row && row.completed_at || '');
+        return days && Number.isFinite(start) ? start + days * DAY : null;
+    }
+
+    function renderKidState() {
+        const total = topicTotal();
+        if (!total) return;
+
+        const now = Date.now();
+        let completed = 0;
+        (kidRows || []).forEach(function (row) {
+            const count = Number(row.times_completed || 0);
+            if (count >= 3) {
+                completed += 1;
+                return;
+            }
+            const target = topicResetTarget(row);
+            if (count >= 1 && target && target > now) completed += 1;
+        });
+
+        setFolderBadge('kid-folder-card', Math.max(0, total - completed), 'kid');
+    }
+
+    async function refreshData() {
+        if (busy || !getToken() || !getUserId()) return;
+        busy = true;
+        try {
+            const uid = getUserId();
+            const result = await Promise.all([
+                query('podcast_content', 'id,title,segments', { order: 'id.asc' }),
+                query('podcast_fill_progress', 'podcast_id,segment_index,blank_index,stage', { user_id: 'eq.' + uid }),
+                query('kid_topic_progress', 'topic_key,times_completed,completed_at', {})
+            ]);
+
+            podcastRows = result[0] || [];
+            podcastProgress = result[1] || [];
+            kidRows = result[2] || [];
+
+            renderPodcastState();
+            renderKidState();
+        } finally {
+            busy = false;
+        }
     }
 
     function markCurrentPodcastDone() {
@@ -125,10 +280,11 @@
 
         const card = document.querySelector('#podcast-grid .folder-card[data-id="' + CSS.escape(String(currentPodcastId)) + '"]');
         ensurePodcastCompleteBadge(card);
-        renderPodcastBadge();
 
-        // Let the existing Today dashboard refresh its own cached state too.
+        /* Update the folder badge immediately, before any network refresh. */
+        renderPodcastState();
         document.dispatchEvent(new CustomEvent('ldd:today-refresh'));
+        setTimeout(refreshData, 300);
     }
 
     function bindStage2() {
@@ -166,9 +322,22 @@
         clearTimeout(renderTimer);
         renderTimer = setTimeout(function () {
             bindStage2();
-            renderPodcastBadge();
-            renderKidBadge();
+            renderPodcastState();
+            renderKidState();
         }, 20);
+    }
+
+    function watchSession() {
+        const token = getToken();
+        if (token && token !== tokenSeen) {
+            tokenSeen = token;
+            setTimeout(refreshData, 0);
+        } else if (!token && tokenSeen) {
+            tokenSeen = null;
+            podcastRows = [];
+            podcastProgress = [];
+            kidRows = [];
+        }
     }
 
     function installObservers() {
@@ -210,19 +379,29 @@
     ready(function () {
         ensureStyle();
         installObservers();
+        watchSession();
         bindStage2();
         scheduleRender();
-        setTimeout(scheduleRender, 300);
-        setTimeout(scheduleRender, 1000);
-        document.addEventListener('ldd:today-refresh', scheduleRender);
-        document.addEventListener('ldd:thcs-vocab-reset', scheduleRender);
+
+        setInterval(watchSession, 1200);
+        setInterval(function () {
+            if (!document.hidden && getToken()) refreshData();
+        }, 30000);
+
         document.addEventListener('visibilitychange', function () {
-            if (!document.hidden) scheduleRender();
+            if (!document.hidden) refreshData();
+        });
+        document.addEventListener('ldd:today-refresh', function () {
+            scheduleRender();
+        });
+        document.addEventListener('ldd:thcs-vocab-reset', function () {
+            scheduleRender();
         });
     });
 
     window.LDDFastProgress = {
-        refresh: scheduleRender,
+        refresh: refreshData,
+        render: scheduleRender,
         markPodcastDone: markCurrentPodcastDone
     };
 })();
