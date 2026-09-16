@@ -28,13 +28,13 @@
         // JS timer cũ không còn nạp: ldd-ui-today.js đảm nhiệm dữ liệu Home để tránh gọi trùng.
         ensureStylesheet('ldd-timers-style', 'ldd-ui-timers.css?v=2.1');
         ensureStylesheet('ldd-student-grade-style', 'ldd-student-grade.css?v=1');
-        ensureStylesheet('ldd-vocab-race-style', 'ldd-vocab-race.css?v=2');
+        ensureStylesheet('ldd-vocab-race-style', 'ldd-vocab-race.css?v=3');
         ensureScript('ldd-vocab-grammar-script', 'ldd-ui-vocab-grammar.js?v=2');
         ensureScript('ldd-home-phonetics-script', 'ldd-ui-home-phonetics.js?v=8.5');
         ensureScript('ldd-student-grade-script', 'ldd-student-grade.js?v=2');
         ensureScript('ldd-thcs-vocab-reset-script', 'ldd-thcs-vocab-reset.js?v=3');
         ensureScript('ldd-fast-progress-script', 'ldd-fast-progress.js?v=1');
-        ensureScript('ldd-vocab-race-script', 'ldd-vocab-race.js?v=2');
+        ensureScript('ldd-vocab-race-script', 'ldd-vocab-race.js?v=3');
     }
 
     function ensureStylesheet(id, href) {
