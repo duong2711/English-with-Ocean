@@ -200,3 +200,14 @@
     script.defer = true;
     document.body.appendChild(script);
 })();
+
+/* Grade each news-translation sentence through the existing AI call and award diligence points. */
+(function () {
+    'use strict';
+    if (document.getElementById('ldd-news-translation-score-script')) return;
+    const script = document.createElement('script');
+    script.id = 'ldd-news-translation-score-script';
+    script.src = 'ldd-news-translation-score.js?v=20260917-1';
+    script.defer = true;
+    document.body.appendChild(script);
+})();
