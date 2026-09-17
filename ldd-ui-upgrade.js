@@ -1,5 +1,5 @@
 /* =============================================================
-   LDD ENGLISH — UI UPGRADE v5.9
+   LDD ENGLISH — UI UPGRADE v5.10
    Non-destructive DOM enhancement + low-egress bootstrap.
    Load AFTER scriptphonetics.js.
    ============================================================= */
@@ -31,6 +31,7 @@
         // Load first. Dynamic scripts are async by default, so ensureScript sets async=false
         // to preserve insertion order and let all helper modules benefit from the guard.
         ensureScript('ldd-egress-guard-script', 'ldd-egress-guard.js?v=1');
+        ensureScript('ldd-vocab-dedup-script', 'ldd-vocab-dedup.js?v=1');
         ensureScript('ldd-pronunciation-fix-script', 'ldd-pronunciation-fix.js?v=3');
         ensureScript('ldd-vocab-grammar-script', 'ldd-ui-vocab-grammar.js?v=2');
         ensureScript('ldd-home-phonetics-script', 'ldd-ui-home-phonetics.js?v=8.5');
