@@ -2444,7 +2444,16 @@ h3 { font-size:0.95rem; font-weight:600; color:var(--text); margin:0 0 8px; }
 @media (min-width: 900px) {
     :root { --header-h: 64px; --tabbar-h: 0px; --total-top: calc(var(--header-h) + var(--banner-h)); }
     html { font-size: 15.5px; }
-    body { padding: calc(var(--total-top) + 18px) 30px calc(var(--footer-h) + 20px); }
+
+    /* Desktop: footer nằm sau nội dung thay vì ghim lên viewport.
+       Tránh footer che ô nhập/nút ở laptop có chiều cao màn hình thấp. */
+    body { padding: calc(var(--total-top) + 18px) 30px 0; }
+    #site-footer {
+        position: static;
+        width: auto;
+        margin: auto -30px 0;
+        flex-shrink: 0;
+    }
 
     /* Trên desktop: đưa tabs trở lại trong header (inline) */
     .header-tabs {
@@ -2525,6 +2534,7 @@ h3 { font-size:0.95rem; font-weight:600; color:var(--text); margin:0 0 8px; }
    ===================================================== */
 @media (min-width: 1280px) {
     body { padding-left: 52px; padding-right: 52px; }
+    #site-footer { margin-left: -52px; margin-right: -52px; }
     h1 { font-size: 1.65rem; margin-bottom: 20px; }
 
     /* Video rất to trên màn hình rộng */
