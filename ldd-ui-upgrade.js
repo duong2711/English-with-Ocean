@@ -21,7 +21,7 @@
     });
 
     function ensureUpgradeAssets() {
-        ensureStylesheet('ldd-roadmap-news-style', 'ldd-ui-roadmap-news.css?v=2');
+        ensureStylesheet('ldd-roadmap-news-style', 'ldd-ui-roadmap-news.css?v=2.1');
         ensureStylesheet('ldd-vocab-grammar-style', 'ldd-ui-vocab-grammar.css?v=1');
         ensureStylesheet('ldd-home-phonetics-style', 'ldd-ui-home-phonetics.css?v=4.1');
         ensureStylesheet('ldd-timers-style', 'ldd-ui-timers.css?v=2.1');
@@ -298,6 +298,99 @@
         });
     }
 
+
+    function renderNewsNonTranslateMeta(text) {
+        if (!text) return;
+
+        const anchor = text.querySelector('.ldd-news-meta-anchor[data-meta]');
+        let box = document.getElementById('ldd-news-nontranslate-meta');
+
+        if (!anchor) {
+            if (box) box.remove();
+            return;
+        }
+
+        const packed = String(anchor.getAttribute('data-meta') || '');
+        if (!packed) {
+            if (box) box.remove();
+            return;
+        }
+
+        let meta = null;
+        try {
+            meta = JSON.parse(decodeURIComponent(packed));
+        } catch (err) {
+            console.warn('[LDD news meta] Không đọc được metadata ngoài phần dịch.', err);
+            if (box) box.remove();
+            return;
+        }
+
+        if (!box) {
+            box = document.createElement('div');
+            box.id = 'ldd-news-nontranslate-meta';
+            box.className = 'ldd-news-nontranslate-meta';
+            text.insertAdjacentElement('afterend', box);
+        }
+
+        if (box.dataset.metaSignature === packed) return;
+        box.dataset.metaSignature = packed;
+        box.replaceChildren();
+
+        const words = Array.isArray(meta.difficultWords) ? meta.difficultWords : [];
+        if (words.length) {
+            const wordsLine = document.createElement('p');
+            wordsLine.className = 'ldd-news-difficult-words';
+
+            const label = document.createElement('strong');
+            label.textContent = 'Difficult words: ';
+            wordsLine.appendChild(label);
+
+            words.forEach(function (item, index) {
+                if (index) wordsLine.appendChild(document.createTextNode(', '));
+
+                const word = document.createElement('strong');
+                word.textContent = String((item && item.word) || '').trim();
+                wordsLine.appendChild(word);
+
+                const meaning = String((item && item.meaning) || '').trim();
+                if (meaning) wordsLine.appendChild(document.createTextNode(' (' + meaning + ')'));
+            });
+
+            wordsLine.appendChild(document.createTextNode('.'));
+            box.appendChild(wordsLine);
+        }
+
+        if (meta.sourceUrl || meta.imageUrl) {
+            const sourceLine = document.createElement('p');
+            sourceLine.className = 'ldd-news-source-credit';
+
+            if (meta.sourceUrl) {
+                sourceLine.appendChild(document.createTextNode('Adapted for classroom use from '));
+                const sourceLink = document.createElement('a');
+                sourceLink.href = String(meta.sourceUrl);
+                sourceLink.target = '_blank';
+                sourceLink.rel = 'noopener noreferrer';
+                sourceLink.textContent = 'News in Levels';
+                sourceLine.appendChild(sourceLink);
+                sourceLine.appendChild(document.createTextNode('.'));
+            }
+
+            if (meta.imageUrl) {
+                if (meta.sourceUrl) sourceLine.appendChild(document.createTextNode(' '));
+                sourceLine.appendChild(document.createTextNode('Image: '));
+                const imageLink = document.createElement('a');
+                imageLink.href = String(meta.imageUrl);
+                imageLink.target = '_blank';
+                imageLink.rel = 'noopener noreferrer';
+                imageLink.textContent = String(meta.imageCredit || 'Image source');
+                sourceLine.appendChild(imageLink);
+                sourceLine.appendChild(document.createTextNode('.'));
+            }
+
+            box.appendChild(sourceLine);
+        }
+    }
+
     function enhanceArticleMeta() {
         const panel = document.getElementById('news-article-panel');
         const text = document.getElementById('news-article-text');
@@ -318,6 +411,7 @@
         }
 
         const update = function () {
+            renderNewsNonTranslateMeta(text);
             const raw = (text.textContent || '').trim();
             const words = raw ? raw.split(/\s+/).filter(Boolean).length : 0;
             const minutes = Math.max(1, Math.ceil(words / 180));
