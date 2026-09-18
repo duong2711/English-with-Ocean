@@ -21,7 +21,7 @@
     });
 
     function ensureUpgradeAssets() {
-        ensureStylesheet('ldd-roadmap-news-style', 'ldd-ui-roadmap-news.css?v=2.3');
+        ensureStylesheet('ldd-roadmap-news-style', 'ldd-ui-roadmap-news.css?v=2.4');
         ensureStylesheet('ldd-vocab-grammar-style', 'ldd-ui-vocab-grammar.css?v=1');
         ensureStylesheet('ldd-home-phonetics-style', 'ldd-ui-home-phonetics.css?v=4.1');
         ensureStylesheet('ldd-timers-style', 'ldd-ui-timers.css?v=2.1');
