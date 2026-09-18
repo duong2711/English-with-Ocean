@@ -360,35 +360,6 @@
             box.appendChild(wordsLine);
         }
 
-        if (meta.sourceUrl || meta.imageUrl) {
-            const sourceLine = document.createElement('p');
-            sourceLine.className = 'ldd-news-source-credit';
-
-            if (meta.sourceUrl) {
-                sourceLine.appendChild(document.createTextNode('Adapted for classroom use from '));
-                const sourceLink = document.createElement('a');
-                sourceLink.href = String(meta.sourceUrl);
-                sourceLink.target = '_blank';
-                sourceLink.rel = 'noopener noreferrer';
-                sourceLink.textContent = 'News in Levels';
-                sourceLine.appendChild(sourceLink);
-                sourceLine.appendChild(document.createTextNode('.'));
-            }
-
-            if (meta.imageUrl) {
-                if (meta.sourceUrl) sourceLine.appendChild(document.createTextNode(' '));
-                sourceLine.appendChild(document.createTextNode('Image: '));
-                const imageLink = document.createElement('a');
-                imageLink.href = String(meta.imageUrl);
-                imageLink.target = '_blank';
-                imageLink.rel = 'noopener noreferrer';
-                imageLink.textContent = String(meta.imageCredit || 'Image source');
-                sourceLine.appendChild(imageLink);
-                sourceLine.appendChild(document.createTextNode('.'));
-            }
-
-            box.appendChild(sourceLine);
-        }
     }
 
     function enhanceArticleMeta() {
