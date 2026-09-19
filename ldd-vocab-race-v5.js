@@ -20,6 +20,10 @@
     const OBSTACLE_FALL_MS = 4000;
     const OBSTACLE_IMPACT_MS = 3200;
     const MAX_OBSTACLE_WAVE = 5;
+    // Host xử lý các RPC "trọng tài" ngay lập tức. Nếu host mất mạng/đóng tab,
+    // các máy còn lại lần lượt tiếp quản sau một khoảng grace nhỏ, không cần heartbeat.
+    const REFEREE_FAILOVER_BASE_MS = 2000;
+    const REFEREE_FAILOVER_STEP_MS = 900;
     const PLAYER_COLORS = ['#4f6ef7', '#ef4444', '#10b981', '#f59e0b'];
 
     if (!window.supabase || !window.supabase.createClient) return;
@@ -743,6 +747,28 @@
 
     function myPlayer() { return players.find(p => me && String(p.user_id) === String(me.id)) || null; }
     function isRoomHost() { return !!(room && me && String(room.host_user_id) === String(me.id)); }
+
+    function refereeFailoverDelayMs() {
+        if (isRoomHost()) return 0;
+        const mine = myPlayer();
+        if (!mine) return Infinity;
+
+        // Chỉ xếp hạng các máy dự phòng, không tính host. Máy có slot nhỏ hơn thử trước.
+        const backups = players
+            .filter(p => !room || String(p.user_id) !== String(room.host_user_id))
+            .slice()
+            .sort((a,b) => Number(a.slot || 99) - Number(b.slot || 99));
+        const index = backups.findIndex(p => String(p.user_id) === String(mine.user_id));
+        if (index < 0) return Infinity;
+        return REFEREE_FAILOVER_BASE_MS + index * REFEREE_FAILOVER_STEP_MS;
+    }
+
+    function refereeMayActAt(dueAtMs) {
+        if (!room || !me || !Number.isFinite(dueAtMs)) return false;
+        if (isRoomHost()) return nowMs() >= dueAtMs;
+        return nowMs() >= dueAtMs + refereeFailoverDelayMs();
+    }
+
     function isEliminated(p) { return !!(p && room && Number(p.answered_round) === Number(room.round_index)); }
     function currentQuestion() { return (Array.isArray(room && room.questions) ? room.questions : [])[room ? room.round_index : 0] || null; }
 
@@ -1254,12 +1280,16 @@
     }
 
     async function resolveObstacleImpacts() {
-        // Only the host acts as the server-side referee. All other clients receive the
-        // resulting room/player changes through Realtime, preventing 2–4 duplicate RPCs.
-        if (!room || !isRoomHost() || isRoundPaused()) return;
+        // Host is primary referee. Backups only act after a staggered grace period, so
+        // normal play still sends one RPC while a disconnected host cannot freeze the game.
+        if (!room || isRoundPaused()) return;
         const elapsed = elapsedMs();
+        const roundStarted = Date.parse(room.round_started_at || '');
+        if (!Number.isFinite(roundStarted)) return;
         for (let wave = 1; wave <= MAX_OBSTACLE_WAVE; wave++) {
+            const impactAt = roundStarted + wave * OBSTACLE_SPAWN_MS + OBSTACLE_IMPACT_MS;
             if (elapsed < wave * OBSTACLE_SPAWN_MS + OBSTACLE_IMPACT_MS) continue;
+            if (!refereeMayActAt(impactAt)) continue;
             const key = room.id + ':' + room.round_index + ':' + wave;
             if (resolvedObstacleKeys.has(key)) continue;
             resolvedObstacleKeys.add(key);
@@ -1325,7 +1355,9 @@
     }
 
     async function resolveTimeout() {
-        if (timeoutPending || !room || !isRoomHost() || isRoundPaused()) return;
+        if (timeoutPending || !room || isRoundPaused()) return;
+        const startedAt = Date.parse(room.round_started_at || '');
+        if (!Number.isFinite(startedAt) || !refereeMayActAt(startedAt + ROUND_MS)) return;
         timeoutPending = true;
         const roomId = room.id;
         const { data, error } = await raceSb.rpc('vocab_race_resolve_timeout', { p_room:roomId });
@@ -1337,7 +1369,9 @@
     }
 
     async function advanceAfterPause() {
-        if (advancePending || !room || !isRoomHost() || !isRoundPaused()) return;
+        if (advancePending || !room || !isRoundPaused()) return;
+        const pauseUntil = Date.parse((room.last_result || {}).pause_until || '');
+        if (!Number.isFinite(pauseUntil) || !refereeMayActAt(pauseUntil)) return;
         advancePending = true;
         const roomId = room.id;
         const roundAtCall = Number(room.round_index);
