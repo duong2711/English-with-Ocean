@@ -1,5 +1,5 @@
 /* =============================================================
-   LDD ENGLISH — EGRESS GUARD v1.5
+   LDD ENGLISH — EGRESS GUARD v1.6
    Goal: reduce Supabase egress without sacrificing correctness.
    - Dedupes identical in-flight REST GET requests.
    - Short-lived in-memory cache for safe/slow-changing GETs.
@@ -77,8 +77,19 @@
         }
     }
 
-    function cacheKey(url, headers) {
-        return userKey(headers) + '|' + String(url) + '|range=' + (headers.get('range') || '');
+    function cacheKey(url, headers, method) {
+        // PostgREST can return different payloads/headers for the same URL depending on
+        // method and request headers (notably HEAD + Prefer: count=exact). Keep those
+        // variants isolated so a cached HEAD response can never replace a GET body.
+        return [
+            userKey(headers),
+            String(method || 'GET').toUpperCase(),
+            String(url),
+            'range=' + (headers.get('range') || ''),
+            'prefer=' + (headers.get('prefer') || ''),
+            'accept=' + (headers.get('accept') || ''),
+            'profile=' + (headers.get('accept-profile') || '')
+        ].join('|');
     }
 
     function cloneStored(entry) {
@@ -136,7 +147,7 @@
         const ttl = requestedFresh ? 0 : ttlFor(table);
         if (!ttl) return originalFetch(input, init);
 
-        const key = cacheKey(url, headers);
+        const key = cacheKey(url, headers, method);
         const now = Date.now();
         const hit = cache.get(key);
         if (hit && now - hit.at < ttl) return cloneStored(hit);
@@ -177,7 +188,7 @@
     document.addEventListener('ldd:thcs-vocab-reset', function () { invalidate('thcs_unit_progress'); });
 
     window.LDDEgress = {
-        version: '1.5',
+        version: '1.6',
         invalidate: invalidate,
         clear: function () { cache.clear(); },
         stats: function () { return { cached: cache.size, inflight: inflight.size }; },
