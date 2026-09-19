@@ -982,10 +982,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     <input type="text" id="allowlist-new-note" placeholder="Ghi chú (vd: học viên)" style="flex:1; min-width:120px; padding:8px; border-radius:8px; border:1px solid #ccc;">
                 </div>
                 <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px;">
-                    <input type="email" id="allowlist-new-gmail" placeholder="Gmail liên kết (để xác thực thiết bị mới)" style="flex:1; min-width:160px; padding:8px; border-radius:8px; border:1px solid #ccc;">
+                    <input type="email" id="allowlist-new-gmail" placeholder="Gmail liên kết (cơ chế cũ, không bắt buộc)" style="flex:1; min-width:160px; padding:8px; border-radius:8px; border:1px solid #ccc;">
                     <button type="button" id="allowlist-add-btn" class="kid-btn kid-btn-primary">Thêm / Cập nhật</button>
                 </div>
-                <p style="font-size:12px; opacity:.65; margin:-4px 0 12px;">"Gmail liên kết" là Gmail cá nhân của học viên (khác email đăng nhập hệ thống) — dùng để xác thực khi học viên đăng nhập trên thiết bị mới. Để trống nếu chưa dùng tính năng này.</p>
+                <p style="font-size:12px; opacity:.65; margin:-4px 0 12px;">Hiện máy mới được duyệt qua mục "Duyệt thiết bị" trong tài khoản giáo viên. Gmail liên kết chỉ được giữ để tương thích với trình duyệt đang cache cơ chế xác minh cũ.</p>
                 <p id="allowlist-status" style="font-size:13px; min-height:18px;"></p>
                 <div id="allowlist-list"></div>
                 <button type="button" id="allowlist-close-btn" class="kid-btn" style="margin-top:14px;">Đóng</button>
@@ -1032,7 +1032,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div>
                     <div style="font-weight:600;">${row.email}</div>
                     ${row.note ? `<div style="font-size:12px; opacity:.65;">${row.note}</div>` : ''}
-                    <div style="font-size:12px; opacity:.65;">${row.linked_gmail ? '🔐 Gmail liên kết: ' + row.linked_gmail : '⚠️ Chưa gán Gmail liên kết'}</div>
+                    <div style="font-size:12px; opacity:.65;">${row.linked_gmail ? 'Gmail xác minh cũ: ' + row.linked_gmail : 'Không dùng Gmail xác minh cũ'}</div>
                 </div>
                 <div style="display:flex; gap:6px; flex-shrink:0;">
                     <button type="button" class="kid-btn allowlist-edit-btn" data-email="${row.email}" data-note="${row.note || ''}" data-gmail="${row.linked_gmail || ''}" style="padding:4px 10px; font-size:12px;">Sửa</button>
