@@ -5339,21 +5339,61 @@ function toggleCompletion(symbolElement) {
         function splitIntoSentences(text) {
             text = String(text || '').replace(/\s+/g, ' ').trim();
             if (!text) return [];
-            const rough = text.match(/[^.!?]+(?:[.!?]+(?=\s|$)|$)/g) || [text];
+
             const sentences = [];
-            let buffer = '';
-            rough.forEach(part => {
-                buffer += (buffer ? ' ' : '') + part.trim();
-                const trimmed = buffer.trim();
-                const lastWord = (trimmed.match(/(\S+)$/) || [])[1] || '';
-                const endsAbbrev = NEWS_ABBREV_RE.test(lastWord);
-                const endsPunct = /[.!?]["'”’)\]]*$/.test(trimmed);
-                if (endsPunct && !endsAbbrev) {
-                    sentences.push(trimmed);
-                    buffer = '';
+            let start = 0;
+
+            for (let i = 0; i < text.length; i++) {
+                const ch = text[i];
+                if (ch !== '.' && ch !== '!' && ch !== '?') continue;
+
+                // Dấu chấm nằm giữa hai chữ số là dấu thập phân, không phải dấu hết câu.
+                // Ví dụ: 1.7 million, 52.5%, version 2.0.
+                if (
+                    ch === '.' &&
+                    i > 0 &&
+                    i + 1 < text.length &&
+                    /\d/.test(text[i - 1]) &&
+                    /\d/.test(text[i + 1])
+                ) {
+                    continue;
                 }
-            });
-            if (buffer.trim()) sentences.push(buffer.trim());
+
+                // Gom các dấu câu liên tiếp như "...", "?!", "!!".
+                let punctEnd = i;
+                while (
+                    punctEnd + 1 < text.length &&
+                    (text[punctEnd + 1] === '.' || text[punctEnd + 1] === '!' || text[punctEnd + 1] === '?')
+                ) {
+                    punctEnd++;
+                }
+
+                // Giữ dấu ngoặc / dấu nháy đóng cùng với câu.
+                let end = punctEnd;
+                while (end + 1 < text.length && /["'”’)\]]/.test(text[end + 1])) end++;
+
+                // Chỉ xem là ranh giới câu khi sau dấu câu là khoảng trắng hoặc hết chuỗi.
+                const next = text[end + 1];
+                if (next && !/\s/.test(next)) {
+                    i = punctEnd;
+                    continue;
+                }
+
+                const candidate = text.slice(start, end + 1).trim();
+                const lastWord = (candidate.match(/(\S+)$/) || [])[1] || '';
+                if (NEWS_ABBREV_RE.test(lastWord)) {
+                    i = punctEnd;
+                    continue;
+                }
+
+                if (candidate) sentences.push(candidate);
+                start = end + 1;
+                while (start < text.length && /\s/.test(text[start])) start++;
+                i = end;
+            }
+
+            const tail = text.slice(start).trim();
+            if (tail) sentences.push(tail);
             return sentences.filter(Boolean);
         }
 
