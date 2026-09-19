@@ -229,9 +229,12 @@
           <div style="font-size:13px; margin-top:3px;">💻 ${esc(deviceLabel(row.user_agent))}</div>
           <div style="font-size:12px; color:#777; margin-top:4px;">Yêu cầu: ${esc(fmtDate(row.created_at))} · IP: ${esc(row.ip_at_request || '—')}</div>
           <div style="font-size:12px; color:#999; margin-top:2px;">Hết hạn: ${esc(fmtDate(row.expires_at))}</div>
+          ${row.hash_ready ? '' : '<div style="font-size:12px; color:#b26a00; margin-top:5px; font-weight:700;">⚠️ Yêu cầu từ bản cũ — học viên cần tải lại trang trước khi duyệt.</div>'}
         </div>
         <div style="display:flex; gap:7px; flex-wrap:wrap;">
-          <button type="button" class="kid-btn kid-btn-primary" data-device-action="approve" data-id="${esc(row.id)}">✓ Duyệt</button>
+          ${row.hash_ready
+            ? `<button type="button" class="kid-btn kid-btn-primary" data-device-action="approve" data-id="${esc(row.id)}">✓ Duyệt</button>`
+            : '<button type="button" class="kid-btn" disabled title="Học viên cần tải lại trang để tạo mã hash an toàn">Chờ học viên tải lại</button>'}
           <button type="button" class="kid-btn" data-device-action="reject" data-id="${esc(row.id)}">✕ Từ chối</button>
         </div>
       </div>
