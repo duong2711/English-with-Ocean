@@ -199,7 +199,13 @@
         $('vocab-race-eat').addEventListener('click', eatWord);
         $('vocab-race-panel').addEventListener('pointerdown', unlockRaceAudio, { passive:true });
         document.addEventListener('keydown', e => {
-            if (!room || room.status !== 'playing' || isRoundPaused() || !$('vocab-race-panel') || $('vocab-race-panel').style.display === 'none') return;
+            const panel = racePanel();
+            if (e.key === 'Escape' && panel && panel.classList.contains('is-race-fullscreen-fallback')) {
+                e.preventDefault();
+                exitRaceFullscreen();
+                return;
+            }
+            if (!room || room.status !== 'playing' || isRoundPaused() || !panel || panel.style.display === 'none') return;
             if (e.key === 'ArrowLeft') { e.preventDefault(); steer(-1); }
             if (e.key === 'ArrowRight') { e.preventDefault(); steer(1); }
             if ((e.key === ' ' || e.key === 'Enter') && (!document.activeElement || document.activeElement.tagName !== 'INPUT')) { e.preventDefault(); eatWord(); }
@@ -1176,8 +1182,12 @@
                     const laneStyles = getComputedStyle(el);
                     const configuredStart = parseFloat(laneStyles.getPropertyValue('--race-obstacle-start'));
                     const configuredEndGap = parseFloat(laneStyles.getPropertyValue('--race-obstacle-end-gap'));
-                    const start = Number.isFinite(configuredStart) ? configuredStart : 138;
-                    const endGap = Number.isFinite(configuredEndGap) ? configuredEndGap : 95;
+                    const start = Number.isFinite(configuredStart)
+                        ? configuredStart
+                        : Math.min(138, Math.max(62, el.clientHeight * 0.18));
+                    const endGap = Number.isFinite(configuredEndGap)
+                        ? configuredEndGap
+                        : Math.min(95, Math.max(42, el.clientHeight * 0.12));
                     const end = Math.max(start + 60, el.clientHeight - endGap);
                     obs.style.top = (start + Math.min(1, Math.max(0, s.falling.progress)) * (end - start)) + 'px';
                 }
