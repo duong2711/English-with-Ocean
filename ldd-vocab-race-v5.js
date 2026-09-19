@@ -67,7 +67,20 @@
         session = data && data.session;
         await syncIdentity();
         await syncServerClock(true);
-        setInterval(syncSession, 1600);
+
+        // Auth state is event-driven. Polling getSession() every 1.6s created thousands of
+        // unnecessary Auth/database requests while a student simply kept the page open.
+        raceSb.auth.onAuthStateChange((_event, nextSession) => {
+            const oldId = session && session.user && session.user.id;
+            const newId = nextSession && nextSession.user && nextSession.user.id;
+            session = nextSession;
+            if (oldId === newId) return;
+            Promise.resolve().then(async () => {
+                await syncIdentity();
+                if (newId) await syncServerClock(true);
+                else leaveLocalRoom();
+            }).catch(() => {});
+        });
     });
 
     async function syncSession() {
@@ -99,7 +112,7 @@
 
     async function syncServerClock(force) {
         if (!session || !session.user || clockSyncPending) return;
-        if (!force && Date.now() - lastClockSyncAt < 9000) return;
+        if (!force && Date.now() - lastClockSyncAt < 60000) return;
         clockSyncPending = true;
         const t0 = Date.now();
         try {
@@ -435,9 +448,10 @@
         await refreshRoom(id);
     }
 
-    function scheduleRefresh() {
+    function scheduleRefresh(delayMs) {
         clearTimeout(refreshTimer);
-        refreshTimer = setTimeout(() => room && refreshRoom(room.id), 45);
+        const wait = Math.max(300, Number(delayMs) || 1200);
+        refreshTimer = setTimeout(() => room && refreshRoom(room.id), wait);
     }
 
     function ensureRaceAudio() {
@@ -522,10 +536,53 @@
     }
 
     function handleRoomRealtime(payload) {
-        if (payload && payload.new && payload.new.last_result) {
-            maybePlayResultSound(payload.new.last_result);
+        if (!payload) return;
+
+        // DELETE is rare and may not include the full old row depending on replica identity.
+        // Use one delayed fallback read only for that exceptional case.
+        if (payload.eventType === 'DELETE' || !payload.new || !payload.new.id) {
+            scheduleRefresh(600);
+            return;
         }
-        scheduleRefresh();
+        if (!room || String(payload.new.id) !== String(room.id)) return;
+
+        // A matching realtime room payload already IS the fresh room snapshot. Consuming it
+        // directly avoids SELECT room + SELECT players after every room change.
+        clearTimeout(refreshTimer);
+        refreshTimer = null;
+
+        const oldRound = room && room.round_index;
+        const oldStatus = room && room.status;
+        room = Object.assign({}, room || {}, payload.new);
+
+        if (room.last_result) maybePlayResultSound(room.last_result);
+
+        const roundChanged = oldRound !== room.round_index;
+        const statusChanged = oldStatus !== room.status;
+        if (roundChanged) {
+            claimPending = false;
+            timeoutPending = false;
+            advancePending = false;
+            charging = null;
+            laneWriteTarget = null;
+            laneVisualTarget = null;
+            laneWriteRound = Number(room.round_index);
+            laneWriteRunning = false;
+            lastRaceSoundKey = '';
+        }
+
+        if (roundChanged || statusChanged) {
+            render();
+        } else if (room.status === 'playing') {
+            renderScores();
+            renderEvent();
+            updateControls();
+            updatePauseOverlay();
+        } else if (room.status === 'lobby') {
+            renderLobby();
+        } else if (room.status === 'finished') {
+            renderFinish();
+        }
     }
 
     function playerResultName(p) {
@@ -685,6 +742,7 @@
     }
 
     function myPlayer() { return players.find(p => me && String(p.user_id) === String(me.id)) || null; }
+    function isRoomHost() { return !!(room && me && String(room.host_user_id) === String(me.id)); }
     function isEliminated(p) { return !!(p && room && Number(p.answered_round) === Number(room.round_index)); }
     function currentQuestion() { return (Array.isArray(room && room.questions) ? room.questions : [])[room ? room.round_index : 0] || null; }
 
@@ -1196,7 +1254,9 @@
     }
 
     async function resolveObstacleImpacts() {
-        if (!room || isRoundPaused()) return;
+        // Only the host acts as the server-side referee. All other clients receive the
+        // resulting room/player changes through Realtime, preventing 2–4 duplicate RPCs.
+        if (!room || !isRoomHost() || isRoundPaused()) return;
         const elapsed = elapsedMs();
         for (let wave = 1; wave <= MAX_OBSTACLE_WAVE; wave++) {
             if (elapsed < wave * OBSTACLE_SPAWN_MS + OBSTACLE_IMPACT_MS) continue;
@@ -1208,7 +1268,6 @@
                 resolvedObstacleKeys.delete(key);
                 setStatus(translateError(error), 'error');
             }
-            scheduleRefresh();
         }
     }
 
@@ -1238,7 +1297,7 @@
 
     function tick() {
         if (!room || room.status !== 'playing') return;
-        if (Date.now() - lastClockSyncAt > 10000) syncServerClock(false);
+        if (Date.now() - lastClockSyncAt > 60000) syncServerClock(false);
 
         if (isRoundPaused()) {
             const clock = $('vocab-race-round-clock');
@@ -1266,7 +1325,7 @@
     }
 
     async function resolveTimeout() {
-        if (timeoutPending || !room || isRoundPaused()) return;
+        if (timeoutPending || !room || !isRoomHost() || isRoundPaused()) return;
         timeoutPending = true;
         const roomId = room.id;
         const { data, error } = await raceSb.rpc('vocab_race_resolve_timeout', { p_room:roomId });
@@ -1278,7 +1337,7 @@
     }
 
     async function advanceAfterPause() {
-        if (advancePending || !room || !isRoundPaused()) return;
+        if (advancePending || !room || !isRoomHost() || !isRoundPaused()) return;
         advancePending = true;
         const roomId = room.id;
         const roundAtCall = Number(room.round_index);
