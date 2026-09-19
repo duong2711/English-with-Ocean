@@ -304,9 +304,15 @@
         else players.push(incoming);
         players.sort((a, b) => Number(a.slot || 0) - Number(b.slot || 0));
 
-        // Render only the race UI. Do not touch the rest of the page.
-        if (room && room.status === 'playing') renderGame();
-        else if (room && room.status === 'lobby') renderLobby();
+        // Same round: move/update only this car. Never rebuild the track,
+        // otherwise road/obstacle animation restarts and looks like a reset.
+        if (room && room.status === 'playing') {
+            syncCarDom(incoming, true);
+            renderScores();
+            updateControls();
+        } else if (room && room.status === 'lobby') {
+            renderLobby();
+        }
     }
 
     async function refreshRoom(id) {
@@ -320,13 +326,27 @@
         players = pp.data || [];
 
 
-        if (oldRound !== room.round_index) {
+        const roundChanged = oldRound !== room.round_index;
+        if (roundChanged) {
             claimPending = false;
             timeoutPending = false;
             advancePending = false;
             charging = null;
         }
-        render();
+
+        // A new round/status needs a fresh track. Updates inside the same round
+        // only patch cars/HUD so moving objects keep their current animation.
+        const track = $('vocab-race-track');
+        const trackReady = !!(track && track.querySelectorAll('.vocab-race-lane').length === 5);
+        if (!roundChanged && room.status === 'playing' && trackReady) {
+            syncAllCarsDom(false);
+            renderScores();
+            renderEvent();
+            updateControls();
+            updatePauseOverlay();
+        } else {
+            render();
+        }
     }
 
     function unsubscribe() {
@@ -467,6 +487,99 @@
         });
     }
 
+    function findRaceCar(userId) {
+        const track = $('vocab-race-track');
+        if (!track) return null;
+        return Array.from(track.querySelectorAll('.vocab-race-car')).find(car =>
+            String(car.dataset.user || '') === String(userId || '')
+        ) || null;
+    }
+
+    function updateCarPresentation(car, p) {
+        if (!car || !p) return;
+        const mine = me && String(p.user_id) === String(me.id);
+        const eliminated = isEliminated(p);
+        car.className = 'vocab-race-car slot-' + p.slot
+            + (mine ? ' is-me' : '')
+            + (eliminated ? ' is-eliminated' : '')
+            + (mine && charging && charging.round === room.round_index && nowMs() < charging.until ? ' is-charging' : '');
+        car.style.setProperty('--race-color', PLAYER_COLORS[(Number(p.slot) || 1) - 1]);
+        const timer = car.querySelector('.vocab-race-car-timer');
+        if (timer) timer.textContent = eliminated ? 'LOẠI' : 'READY';
+        const name = car.querySelector('.vocab-race-car-name');
+        if (name) name.textContent = shortName(p.display_name || p.email || ('P' + p.slot));
+    }
+
+    function syncCarDom(p, animate) {
+        if (!p || !room || room.status !== 'playing') return;
+        const track = $('vocab-race-track');
+        if (!track) return;
+
+        const isMine = me && String(p.user_id) === String(me.id);
+        if (hideOthers() && !isMine) {
+            const hiddenCar = findRaceCar(p.user_id);
+            if (hiddenCar) hiddenCar.remove();
+            return;
+        }
+
+        const laneNo = Math.max(0, Math.min(4, Number(p.lane == null ? 2 : p.lane)));
+        const targetLane = track.querySelector('.vocab-race-lane[data-lane="' + laneNo + '"]');
+        if (!targetLane) return;
+
+        let car = findRaceCar(p.user_id);
+        if (!car) {
+            car = makeCar(p);
+            targetLane.appendChild(car);
+            return;
+        }
+
+        updateCarPresentation(car, p);
+        if (car.parentElement === targetLane) return;
+
+        const before = car.getBoundingClientRect();
+        targetLane.appendChild(car);
+
+        if (!animate) return;
+        const after = car.getBoundingClientRect();
+        const dx = before.left - after.left;
+        const dy = before.top - after.top;
+        if (!Number.isFinite(dx) || !Number.isFinite(dy)) return;
+
+        const moveToken = String((Number(car.dataset.moveToken || 0) + 1));
+        car.dataset.moveToken = moveToken;
+        car.style.setProperty('transition', 'none', 'important');
+        car.style.setProperty(
+            'transform',
+            'translate(calc(-50% + ' + dx.toFixed(2) + 'px), ' + dy.toFixed(2) + 'px)',
+            'important'
+        );
+        void car.offsetWidth;
+
+        requestAnimationFrame(() => {
+            if (car.dataset.moveToken !== moveToken) return;
+            car.style.setProperty('transition', 'transform .24s cubic-bezier(.22,.61,.36,1), bottom .72s cubic-bezier(.22,.61,.36,1), opacity .42s ease, filter .42s ease', 'important');
+            car.style.setProperty('transform', 'translateX(-50%)', 'important');
+            setTimeout(() => {
+                if (car.dataset.moveToken !== moveToken) return;
+                car.style.removeProperty('transition');
+                car.style.removeProperty('transform');
+            }, 280);
+        });
+    }
+
+    function syncAllCarsDom(animate) {
+        if (!room || room.status !== 'playing') return;
+        players.forEach(p => syncCarDom(p, !!animate));
+
+        const ids = new Set(players.map(p => String(p.user_id)));
+        const track = $('vocab-race-track');
+        if (track) {
+            track.querySelectorAll('.vocab-race-car').forEach(car => {
+                if (!ids.has(String(car.dataset.user || ''))) car.remove();
+            });
+        }
+    }
+
     function makeCar(p) {
         const mine = me && String(p.user_id) === String(me.id);
         const eliminated = isEliminated(p);
@@ -526,11 +639,15 @@
         const oldLane = p.lane == null ? 2 : Number(p.lane);
         if (lane === oldLane) return;
         p.lane = lane;
-        buildTrack(currentQuestion());
+        syncCarDom(p, true);
         updateControls();
         const { error } = await raceSb.rpc('vocab_race_set_lane', { p_room:room.id, p_lane:lane, p_round:Number(room.round_index) });
-        if (error) { p.lane = oldLane; buildTrack(currentQuestion()); updateControls(); setStatus(translateError(error), 'error'); }
-        else scheduleRefresh();
+        if (error) {
+            p.lane = oldLane;
+            syncCarDom(p, true);
+            updateControls();
+            setStatus(translateError(error), 'error');
+        }
     }
 
     async function steer(delta) {
