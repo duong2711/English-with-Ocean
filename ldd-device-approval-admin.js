@@ -294,12 +294,23 @@
     setStatus('', false);
   }
 
+  async function loadPendingCount() {
+    if (!currentTeacherSession()) return;
+    const result = await callDeviceAdmin('teacher_pending_count');
+    if (!result || result.error) return;
+    const count = Math.max(0, Number(result.pendingCount) || 0);
+    if (badge) {
+      badge.textContent = String(count);
+      badge.style.display = count ? 'inline-flex' : 'none';
+    }
+  }
+
   function syncTeacherUI() {
     ensureUI();
     if (!menuBtn) return;
     const teacher = !!currentTeacherSession();
     menuBtn.style.display = teacher ? 'flex' : 'none';
-    if (teacher && !lastTeacherState) loadList(true);
+    if (teacher && !lastTeacherState) loadPendingCount();
     if (!teacher) {
       pending = [];
       devices = [];
@@ -311,8 +322,9 @@
 
   // Local-only identity check; no network polling here.
   setInterval(syncTeacherUI, 2000);
+  // Background chỉ hỏi SỐ LƯỢNG yêu cầu; danh sách thiết bị chỉ tải khi giáo viên mở modal.
   setInterval(() => {
-    if (currentTeacherSession() && document.visibilityState === 'visible') loadList(false);
+    if (currentTeacherSession() && document.visibilityState === 'visible') loadPendingCount();
   }, 5 * 60 * 1000);
 
   document.addEventListener('visibilitychange', () => {
