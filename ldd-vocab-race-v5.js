@@ -41,6 +41,10 @@
     let clockOffsetMs = 0;
     let clockSyncPending = false;
     let lastClockSyncAt = 0;
+    let laneWriteRunning = false;
+    let laneWriteTarget = null;
+    let laneVisualTarget = null;
+    let laneWriteRound = -1;
     const resolvedObstacleKeys = new Set();
 
     const $ = id => document.getElementById(id);
@@ -298,7 +302,19 @@
             return;
         }
 
-        const incoming = payload.new;
+        const incoming = Object.assign({}, payload.new);
+        const isOwnEcho = !!(me && String(incoming.user_id) === String(me.id));
+        if (
+            isOwnEcho &&
+            room &&
+            Number(laneWriteRound) === Number(room.round_index) &&
+            (laneWriteRunning || laneWriteTarget !== null) &&
+            laneVisualTarget !== null
+        ) {
+            // Do not let an acknowledgement for an earlier click pull the local car backwards.
+            incoming.lane = laneVisualTarget;
+        }
+
         const index = players.findIndex(p => String(p.user_id) === String(incoming.user_id));
         if (index >= 0) players[index] = Object.assign({}, players[index], incoming);
         else players.push(incoming);
@@ -332,6 +348,10 @@
             timeoutPending = false;
             advancePending = false;
             charging = null;
+            laneWriteTarget = null;
+            laneVisualTarget = null;
+            laneWriteRound = Number(room.round_index);
+            laneWriteRunning = false;
         }
 
         // A new round/status needs a fresh track. Updates inside the same round
@@ -536,34 +556,73 @@
         updateCarPresentation(car, p);
         if (car.parentElement === targetLane) return;
 
+        // Capture the exact on-screen position, including a lane animation that may
+        // still be in progress. Then cancel that animation and continue from here.
         const before = car.getBoundingClientRect();
-        targetLane.appendChild(car);
+        if (car._lddLaneAnimation) {
+            try { car._lddLaneAnimation.cancel(); } catch (_) {}
+            car._lddLaneAnimation = null;
+        }
 
-        if (!animate) return;
+        car.style.setProperty('transition', 'none', 'important');
+        car.style.setProperty('transform', 'translateX(-50%)', 'important');
+        targetLane.appendChild(car);
+        void car.offsetWidth;
+
+        if (!animate) {
+            car.style.removeProperty('transition');
+            car.style.removeProperty('transform');
+            return;
+        }
+
         const after = car.getBoundingClientRect();
         const dx = before.left - after.left;
         const dy = before.top - after.top;
-        if (!Number.isFinite(dx) || !Number.isFinite(dy)) return;
+        if (!Number.isFinite(dx) || !Number.isFinite(dy)) {
+            car.style.removeProperty('transition');
+            car.style.removeProperty('transform');
+            return;
+        }
 
-        const moveToken = String((Number(car.dataset.moveToken || 0) + 1));
-        car.dataset.moveToken = moveToken;
-        car.style.setProperty('transition', 'none', 'important');
-        car.style.setProperty(
-            'transform',
-            'translate(calc(-50% + ' + dx.toFixed(2) + 'px), ' + dy.toFixed(2) + 'px)',
-            'important'
-        );
-        void car.offsetWidth;
+        const startTransform = 'translate(calc(-50% + ' + dx.toFixed(2) + 'px), ' + dy.toFixed(2) + 'px)';
+        if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) {
+            car.style.removeProperty('transition');
+            car.style.removeProperty('transform');
+            return;
+        }
 
-        requestAnimationFrame(() => {
-            if (car.dataset.moveToken !== moveToken) return;
-            car.style.setProperty('transition', 'transform .24s cubic-bezier(.22,.61,.36,1), bottom .72s cubic-bezier(.22,.61,.36,1), opacity .42s ease, filter .42s ease', 'important');
-            car.style.setProperty('transform', 'translateX(-50%)', 'important');
-            setTimeout(() => {
-                if (car.dataset.moveToken !== moveToken) return;
+        if (typeof car.animate === 'function') {
+            const animation = car.animate(
+                [
+                    { transform: startTransform },
+                    { transform: 'translateX(-50%)' }
+                ],
+                {
+                    duration: 220,
+                    easing: 'cubic-bezier(.22,.61,.36,1)',
+                    fill: 'none'
+                }
+            );
+            car._lddLaneAnimation = animation;
+            animation.onfinish = function () {
+                if (car._lddLaneAnimation !== animation) return;
+                car._lddLaneAnimation = null;
                 car.style.removeProperty('transition');
                 car.style.removeProperty('transform');
-            }, 280);
+            };
+            return;
+        }
+
+        // Fallback for old browsers without Web Animations API.
+        car.style.setProperty('transform', startTransform, 'important');
+        void car.offsetWidth;
+        requestAnimationFrame(function () {
+            car.style.setProperty('transition', 'transform .22s cubic-bezier(.22,.61,.36,1)', 'important');
+            car.style.setProperty('transform', 'translateX(-50%)', 'important');
+            setTimeout(function () {
+                car.style.removeProperty('transition');
+                car.style.removeProperty('transform');
+            }, 250);
         });
     }
 
@@ -632,22 +691,60 @@
         $('vocab-race-replay-btn').style.display = room.host_user_id === (me && me.id) ? '' : 'none';
     }
 
+    async function flushLaneWriteQueue() {
+        if (laneWriteRunning || !room) return;
+        laneWriteRunning = true;
+        const roomId = room.id;
+        const roundAtStart = Number(room.round_index);
+
+        try {
+            while (
+                room &&
+                String(room.id) === String(roomId) &&
+                Number(room.round_index) === roundAtStart &&
+                laneWriteTarget !== null
+            ) {
+                const laneToSend = Number(laneWriteTarget);
+                laneWriteTarget = null;
+                const { error } = await raceSb.rpc('vocab_race_set_lane', {
+                    p_room: roomId,
+                    p_lane: laneToSend,
+                    p_round: roundAtStart
+                });
+                if (error) {
+                    const msg = String(error.message || '');
+                    if (!/already_answered|round_timeout|round_paused|game_not_playing|stale_round/i.test(msg)) {
+                        setStatus(translateError(error), 'error');
+                    }
+                    break;
+                }
+            }
+        } finally {
+            laneWriteRunning = false;
+            if (laneWriteTarget !== null && room && Number(room.round_index) === roundAtStart) {
+                flushLaneWriteQueue();
+            } else {
+                laneVisualTarget = null;
+            }
+        }
+    }
+
     async function chooseLane(lane) {
         const p = myPlayer();
         if (!p || !room || room.status !== 'playing' || isRoundPaused() || isEliminated(p) || claimPending) return;
         lane = Math.max(0, Math.min(4, Number(lane)));
         const oldLane = p.lane == null ? 2 : Number(p.lane);
         if (lane === oldLane) return;
+
+        // Move immediately for responsiveness. Network writes are serialized below,
+        // so rapid left/right clicks cannot race and pull the car back to an old lane.
         p.lane = lane;
+        laneWriteRound = Number(room.round_index);
+        laneVisualTarget = lane;
+        laneWriteTarget = lane;
         syncCarDom(p, true);
         updateControls();
-        const { error } = await raceSb.rpc('vocab_race_set_lane', { p_room:room.id, p_lane:lane, p_round:Number(room.round_index) });
-        if (error) {
-            p.lane = oldLane;
-            syncCarDom(p, true);
-            updateControls();
-            setStatus(translateError(error), 'error');
-        }
+        flushLaneWriteQueue();
     }
 
     async function steer(delta) {
