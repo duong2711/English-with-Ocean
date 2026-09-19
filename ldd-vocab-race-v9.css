@@ -334,3 +334,442 @@ body .vocab-race-panel.is-race-fullscreen #vocab-race-entry{
         padding-right:5px!important;
     }
 }
+
+
+/* ===== v20 · Robust responsive fullscreen ===== */
+body .vocab-race-panel.is-race-fullscreen,
+body .vocab-race-panel.is-race-fullscreen-fallback{
+    --race-fs-pad-x:clamp(5px,1vw,12px);
+    --race-fs-pad-y:clamp(4px,.8vh,9px);
+    --race-fs-head-h:clamp(38px,6.2vh,52px);
+    --race-fs-gap:clamp(3px,.65vh,7px);
+    width:100%!important;
+    max-width:none!important;
+    height:var(--race-fs-viewport-h,100dvh)!important;
+    min-height:0!important;
+    max-height:100dvh!important;
+    padding:
+        max(var(--race-fs-pad-y),env(safe-area-inset-top))
+        max(var(--race-fs-pad-x),env(safe-area-inset-right))
+        max(var(--race-fs-pad-y),env(safe-area-inset-bottom))
+        max(var(--race-fs-pad-x),env(safe-area-inset-left))!important;
+    overflow:hidden!important;
+    contain:layout paint!important;
+}
+
+body .vocab-race-panel.is-race-fullscreen .vocab-race-panel-head{
+    min-width:0!important;
+    min-height:var(--race-fs-head-h)!important;
+    max-height:var(--race-fs-head-h)!important;
+    gap:clamp(5px,.8vw,10px)!important;
+    margin:0 0 var(--race-fs-gap)!important;
+    padding:0 0 var(--race-fs-gap)!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+}
+body .vocab-race-panel.is-race-fullscreen .vocab-race-panel-head>*{
+    min-width:0!important;
+}
+body .vocab-race-panel.is-race-fullscreen .grammar-back-btn,
+body .vocab-race-panel.is-race-fullscreen .vocab-race-fullscreen-btn{
+    min-height:34px!important;
+    height:clamp(34px,5vh,40px)!important;
+    padding:0 clamp(7px,1.1vw,12px)!important;
+    white-space:nowrap!important;
+}
+body .vocab-race-panel.is-race-fullscreen .vocab-race-head-copy{
+    min-width:0!important;
+    overflow:hidden!important;
+}
+body .vocab-race-panel.is-race-fullscreen .vocab-race-head-copy h3{
+    max-width:100%!important;
+    font-size:clamp(.76rem,1.4vw,.98rem)!important;
+}
+
+body .vocab-race-panel.is-race-fullscreen.is-race-playing #vocab-race-game{
+    width:min(100%,1440px)!important;
+    height:var(--race-fs-game-height,calc(100dvh - 64px))!important;
+    min-width:0!important;
+    min-height:0!important;
+    margin:0 auto!important;
+    display:grid!important;
+    grid-template-rows:
+        minmax(34px,auto)
+        minmax(22px,auto)
+        minmax(0,1fr)
+        minmax(44px,auto)
+        minmax(34px,auto)!important;
+    row-gap:var(--race-fs-gap)!important;
+    overflow:hidden!important;
+    box-sizing:border-box!important;
+}
+
+body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-hud{
+    min-width:0!important;
+    min-height:0!important;
+    grid-template-columns:
+        clamp(58px,9vw,100px)
+        minmax(0,1fr)
+        clamp(62px,9vw,96px)!important;
+    gap:clamp(3px,.65vw,7px)!important;
+    margin:0!important;
+    overflow:hidden!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-round,
+body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-meaning,
+body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-round-clock{
+    min-width:0!important;
+    min-height:0!important;
+    height:100%!important;
+    padding:clamp(3px,.55vh,6px) clamp(5px,.8vw,10px)!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-round span,
+body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-meaning span{
+    font-size:clamp(.42rem,.8vw,.56rem)!important;
+    white-space:nowrap!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-round strong{
+    font-size:clamp(.65rem,1.25vw,.88rem)!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-meaning strong{
+    max-width:100%!important;
+    font-size:clamp(.78rem,1.7vw,1.08rem)!important;
+    line-height:1.05!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-round-clock{
+    font-size:clamp(.72rem,1.4vw,1rem)!important;
+}
+
+body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-event{
+    min-width:0!important;
+    min-height:0!important;
+    height:100%!important;
+    margin:0!important;
+    padding:3px clamp(5px,1vw,10px)!important;
+    font-size:clamp(.52rem,1vw,.68rem)!important;
+    line-height:1.15!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    box-sizing:border-box!important;
+}
+
+body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-track{
+    --race-obstacle-start:clamp(78px,18%,138px);
+    --race-obstacle-end-gap:clamp(54px,12%,95px);
+    width:100%!important;
+    height:100%!important;
+    min-width:0!important;
+    min-height:0!important;
+    max-width:none!important;
+    max-height:none!important;
+    grid-template-columns:repeat(5,minmax(0,1fr))!important;
+    gap:clamp(2px,.55vw,6px)!important;
+    padding:clamp(3px,.65vw,7px)!important;
+    align-self:stretch!important;
+    overflow:hidden!important;
+    box-sizing:border-box!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-lane{
+    --race-obstacle-start:clamp(78px,18%,138px);
+    --race-obstacle-end-gap:clamp(54px,12%,95px);
+    min-width:0!important;
+    min-height:0!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-option{
+    top:clamp(3px,.8vh,6px)!important;
+    left:clamp(2px,.45vw,4px)!important;
+    right:clamp(2px,.45vw,4px)!important;
+    min-width:0!important;
+    min-height:clamp(36px,8vh,58px)!important;
+    max-height:clamp(42px,9vh,62px)!important;
+    padding:clamp(3px,.65vh,6px) clamp(2px,.45vw,4px)!important;
+    font-size:clamp(.48rem,1.05vw,.72rem)!important;
+    line-height:1.08!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-road{
+    top:clamp(48px,10vh,72px)!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-obstacle-warning{
+    top:clamp(53px,11vh,80px)!important;
+    min-height:clamp(32px,6.8vh,44px)!important;
+    font-size:clamp(.38rem,.85vw,.62rem)!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-obstacle{
+    width:min(76%,74px)!important;
+    height:clamp(34px,7vh,50px)!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-car{
+    bottom:clamp(28px,8%,56px)!important;
+    width:min(78%,70px)!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-car.is-charging{
+    bottom:min(72%,calc(100% - clamp(78px,18%,112px)))!important;
+}
+
+body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-controls{
+    min-width:0!important;
+    min-height:0!important;
+    height:100%!important;
+    margin:0!important;
+    display:grid!important;
+    grid-template-columns:
+        clamp(56px,12vw,105px)
+        minmax(0,1fr)
+        clamp(56px,12vw,105px)!important;
+    gap:clamp(4px,.8vw,8px)!important;
+    align-items:stretch!important;
+    overflow:hidden!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-steer,
+body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-eat-btn{
+    width:100%!important;
+    min-width:0!important;
+    min-height:0!important;
+    height:100%!important;
+    padding:3px clamp(4px,.8vw,10px)!important;
+    box-sizing:border-box!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-steer{
+    font-size:clamp(.85rem,2vw,1.18rem)!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-steer span{
+    font-size:clamp(.48rem,.9vw,.64rem)!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-control-center{
+    min-width:0!important;
+    min-height:0!important;
+    height:100%!important;
+    display:grid!important;
+    grid-template-rows:auto minmax(0,1fr) auto!important;
+    gap:1px!important;
+    overflow:hidden!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-control-center>strong{
+    font-size:clamp(.5rem,1vw,.7rem)!important;
+    line-height:1!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-control-center>small{
+    max-width:100%!important;
+    font-size:clamp(.44rem,.85vw,.58rem)!important;
+    line-height:1!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-eat-btn{
+    max-width:360px!important;
+    justify-self:center!important;
+    font-size:clamp(.58rem,1.2vw,.8rem)!important;
+    line-height:1.05!important;
+}
+
+body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-score-strip{
+    min-width:0!important;
+    min-height:0!important;
+    height:100%!important;
+    max-height:none!important;
+    gap:clamp(3px,.55vw,6px)!important;
+    padding:0!important;
+    display:flex!important;
+    align-items:stretch!important;
+    overflow-x:auto!important;
+    overflow-y:hidden!important;
+    scrollbar-width:none!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-score-strip::-webkit-scrollbar{
+    display:none!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-mini-score{
+    min-width:clamp(112px,18vw,170px)!important;
+    height:100%!important;
+    min-height:0!important;
+    padding:3px clamp(4px,.65vw,8px)!important;
+    box-sizing:border-box!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-mini-score strong,
+body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-mini-score b{
+    font-size:clamp(.52rem,.9vw,.66rem)!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-mini-score small{
+    font-size:clamp(.42rem,.75vw,.54rem)!important;
+}
+
+/* Short laptop / mobile landscape: reserve nearly everything for the race track. */
+body .vocab-race-panel.is-race-fullscreen.is-race-short .vocab-race-panel-head{
+    --race-fs-head-h:38px;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-short .vocab-race-panel-head h3{
+    font-size:.8rem!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-short.is-race-playing #vocab-race-game{
+    grid-template-rows:34px 22px minmax(0,1fr) 46px 32px!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-short.is-race-playing .vocab-race-round span,
+body .vocab-race-panel.is-race-fullscreen.is-race-short.is-race-playing .vocab-race-meaning span{
+    display:none!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-short.is-race-playing .vocab-race-option{
+    min-height:38px!important;
+    max-height:42px!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-short.is-race-playing .vocab-race-road{
+    top:48px!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-short.is-race-playing .vocab-race-obstacle-warning{
+    top:52px!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-short.is-race-playing .vocab-race-lane{
+    --race-obstacle-start:72px;
+    --race-obstacle-end-gap:48px;
+}
+
+/* Very short screens: keep all gameplay buttons visible; simplify secondary text. */
+body .vocab-race-panel.is-race-fullscreen.is-race-very-short .vocab-race-head-copy{
+    display:none!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-very-short .vocab-race-panel-head{
+    justify-content:space-between!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-very-short.is-race-playing #vocab-race-game{
+    grid-template-rows:30px 18px minmax(0,1fr) 42px 28px!important;
+    row-gap:2px!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-very-short.is-race-playing .vocab-race-event{
+    padding-top:1px!important;
+    padding-bottom:1px!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-very-short.is-race-playing .vocab-race-control-center>small,
+body .vocab-race-panel.is-race-fullscreen.is-race-very-short.is-race-playing .vocab-race-mini-score small{
+    display:none!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-very-short.is-race-playing .vocab-race-option{
+    min-height:32px!important;
+    max-height:36px!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-very-short.is-race-playing .vocab-race-road{
+    top:42px!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-very-short.is-race-playing .vocab-race-obstacle-warning{
+    top:45px!important;
+    min-height:28px!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-very-short.is-race-playing .vocab-race-lane{
+    --race-obstacle-start:62px;
+    --race-obstacle-end-gap:42px;
+}
+
+/* Narrow portrait screens: prevent horizontal overflow. */
+body .vocab-race-panel.is-race-fullscreen.is-race-narrow .vocab-race-panel-head{
+    gap:4px!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-narrow .grammar-back-btn{
+    padding-left:7px!important;
+    padding-right:7px!important;
+    font-size:.66rem!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-narrow .vocab-race-fullscreen-btn{
+    width:38px!important;
+    min-width:38px!important;
+    padding:0!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-narrow .vocab-race-fullscreen-btn span{
+    display:none!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-narrow.is-race-playing .vocab-race-hud{
+    grid-template-columns:52px minmax(0,1fr) 58px!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-narrow.is-race-playing .vocab-race-controls{
+    grid-template-columns:clamp(48px,17vw,68px) minmax(0,1fr) clamp(48px,17vw,68px)!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-narrow.is-race-playing .vocab-race-steer span{
+    display:none!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-narrow.is-race-playing .vocab-race-track{
+    gap:2px!important;
+    padding:3px!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-narrow.is-race-playing .vocab-race-option{
+    left:2px!important;
+    right:2px!important;
+    padding-left:1px!important;
+    padding-right:1px!important;
+    font-size:clamp(.42rem,2vw,.6rem)!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-narrow.is-race-playing .vocab-race-car-name{
+    max-width:100%!important;
+    font-size:.48rem!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    white-space:nowrap!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-narrow.is-race-playing .vocab-race-car-timer{
+    min-width:0!important;
+    padding-left:3px!important;
+    padding-right:3px!important;
+    font-size:.45rem!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-narrow.is-race-playing .vocab-race-obstacle{
+    width:min(88%,60px)!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-narrow.is-race-playing .vocab-race-obstacle-warning b{
+    font-size:.42rem!important;
+}
+
+/* Extremely narrow phones: header title is sacrificed before gameplay width. */
+body .vocab-race-panel.is-race-fullscreen.is-race-very-narrow .vocab-race-head-copy{
+    display:none!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-very-narrow .vocab-race-panel-head{
+    justify-content:space-between!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-very-narrow.is-race-playing .vocab-race-controls{
+    grid-template-columns:46px minmax(0,1fr) 46px!important;
+    gap:3px!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-very-narrow.is-race-playing .vocab-race-eat-btn{
+    font-size:.54rem!important;
+    padding-left:2px!important;
+    padding-right:2px!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-very-narrow.is-race-playing .vocab-race-score-strip{
+    gap:3px!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-very-narrow.is-race-playing .vocab-race-mini-score{
+    min-width:104px!important;
+}
+
+/* Pause/result overlay must always stay inside the current viewport. */
+body .vocab-race-panel.is-race-fullscreen .vocab-race-pause-overlay{
+    inset:0!important;
+    padding:max(8px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left))!important;
+    overflow:auto!important;
+}
+body .vocab-race-panel.is-race-fullscreen .vocab-race-pause-card{
+    width:min(92vw,340px)!important;
+    max-width:100%!important;
+    min-height:0!important;
+    max-height:min(88dvh,420px)!important;
+    padding:clamp(14px,3vh,25px) clamp(14px,3vw,22px)!important;
+    overflow:auto!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-very-short .vocab-race-pause-card{
+    width:min(88vw,310px)!important;
+    padding:10px 14px!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-very-short .vocab-race-pause-icon{
+    font-size:1.5rem!important;
+    margin-bottom:3px!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-very-short .vocab-race-pause-card>b{
+    width:58px!important;
+    height:58px!important;
+    font-size:1.8rem!important;
+}
