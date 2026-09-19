@@ -8301,6 +8301,9 @@ function toggleCompletion(symbolElement) {
         let lotoBotAdminTimer = null;
         let lotoBotPlayerTimer = null;
         let lotoBotPlayerCallKey = '';
+        let lotoAutoResetTimer = null;
+        let lotoAutoResetTick = null;
+        let lotoAutoResetEndsAt = 0;
 
         function escapeHtml(str) {
             const div = document.createElement('div');
@@ -8352,6 +8355,7 @@ function toggleCompletion(symbolElement) {
             if (lotoChannel) { sb.removeChannel(lotoChannel); lotoChannel = null; }
             stopCountdown();
             stopLotoBotTimers();
+            stopLotoAutoReset();
         }
         lotoFolderCard.addEventListener('click', showPanel);
         lotoBackBtn.addEventListener('click', hidePanel);
@@ -8648,14 +8652,88 @@ function toggleCompletion(symbolElement) {
             logEl.scrollTop = logEl.scrollHeight;
         }
 
+        function lotoEndBaseMessage() {
+            if (lotoState.winner === 'player1') return '🏆 ' + lotoPlayerLabel('player1') + ' chiến thắng! ' + (lotoState.win_reason || '');
+            if (lotoState.winner === 'player2') return '🏆 ' + lotoPlayerLabel('player2') + ' chiến thắng! ' + (lotoState.win_reason || '');
+            if (lotoState.winner === 'draw') return '🤝 Hòa! ' + (lotoState.win_reason || '');
+            if (lotoState.winner === 'admin_disqualified') return '🚫 Trọng tài đã thua cuộc! ' + (lotoState.win_reason || '');
+            return 'Ván chơi đã kết thúc.';
+        }
+
         function renderEndScreen() {
-            let msg;
-            if (lotoState.winner === 'player1') msg = '🏆 ' + lotoPlayerLabel('player1') + ' chiến thắng! ' + (lotoState.win_reason || '');
-            else if (lotoState.winner === 'player2') msg = '🏆 ' + lotoPlayerLabel('player2') + ' chiến thắng! ' + (lotoState.win_reason || '');
-            else if (lotoState.winner === 'draw') msg = '🤝 Hòa! ' + (lotoState.win_reason || '');
-            else if (lotoState.winner === 'admin_disqualified') msg = '🚫 Trọng tài đã thua cuộc! ' + (lotoState.win_reason || '');
-            else msg = 'Ván chơi đã kết thúc.';
+            let msg = lotoEndBaseMessage();
+            if (lotoAutoResetEndsAt > Date.now()) {
+                const sec = Math.max(1, Math.ceil((lotoAutoResetEndsAt - Date.now()) / 1000));
+                msg += ' · Tự động reset sau ' + sec + ' giây.';
+            } else {
+                msg += ' · Đang tự động reset...';
+            }
             endMessageEl.textContent = msg;
+        }
+
+        function stopLotoAutoReset() {
+            if (lotoAutoResetTimer) {
+                clearTimeout(lotoAutoResetTimer);
+                lotoAutoResetTimer = null;
+            }
+            if (lotoAutoResetTick) {
+                clearInterval(lotoAutoResetTick);
+                lotoAutoResetTick = null;
+            }
+            lotoAutoResetEndsAt = 0;
+        }
+
+        function isLotoAutoResetOwner(isAdmin, isP1, isP2) {
+            if (!lotoState) return false;
+            const adminIsHuman = !!(lotoState.admin_id && lotoState.admin_id !== LOTO_BOT_ADMIN_ID);
+            if (adminIsHuman) return isAdmin;
+
+            const p1IsHuman = !!(lotoState.player1_id && lotoState.player1_id !== LOTO_BOT_P1_ID);
+            if (p1IsHuman) return isP1;
+
+            const p2IsHuman = !!(lotoState.player2_id && lotoState.player2_id !== LOTO_BOT_P2_ID);
+            return p2IsHuman && isP2;
+        }
+
+        function scheduleLotoAutoReset(isAdmin, isP1, isP2) {
+            if (!lotoState || lotoState.status !== 'finished') {
+                stopLotoAutoReset();
+                return;
+            }
+            if (!isLotoAutoResetOwner(isAdmin, isP1, isP2)) return;
+            if (lotoAutoResetTimer) return;
+
+            lotoAutoResetEndsAt = Date.now() + 5000;
+            renderEndScreen();
+
+            lotoAutoResetTick = setInterval(() => {
+                if (!lotoState || lotoState.status !== 'finished') {
+                    stopLotoAutoReset();
+                    return;
+                }
+                renderEndScreen();
+            }, 250);
+
+            lotoAutoResetTimer = setTimeout(async () => {
+                lotoAutoResetTimer = null;
+                if (lotoAutoResetTick) {
+                    clearInterval(lotoAutoResetTick);
+                    lotoAutoResetTick = null;
+                }
+                if (!lotoState || lotoState.status !== 'finished') {
+                    lotoAutoResetEndsAt = 0;
+                    return;
+                }
+
+                const { data, error } = await sb.rpc('loto_reset_full', { p_user_id: currentUserId });
+                lotoAutoResetEndsAt = 0;
+                if (!error && data) {
+                    lotoState = data;
+                    render();
+                } else if (error) {
+                    console.warn('[Loto] Auto reset failed:', error.message || error);
+                }
+            }, 5000);
         }
 
         function stopLotoBotTimers() {
@@ -8825,7 +8903,13 @@ function toggleCompletion(symbolElement) {
             endScreen.style.display = (lotoState.status === 'finished') ? 'flex' : 'none';
             resetBtn.style.display = (isAdmin || isP1 || isP2) ? 'block' : 'none';
 
-            if (lotoState.status === 'finished') renderEndScreen();
+            restartBtn.style.display = lotoState.status === 'finished' ? 'none' : '';
+            if (lotoState.status === 'finished') {
+                scheduleLotoAutoReset(isAdmin, isP1, isP2);
+                renderEndScreen();
+            } else {
+                stopLotoAutoReset();
+            }
 
             if (lotoState.status === 'playing' || lotoState.status === 'finished') {
                 adminZone.style.display = (isAdmin && lotoState.status === 'playing') ? 'flex' : 'none';
