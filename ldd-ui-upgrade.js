@@ -38,7 +38,7 @@
         ensureScript('ldd-student-grade-script', 'ldd-student-grade.js?v=2');
         ensureScript('ldd-thcs-vocab-reset-script', 'ldd-thcs-vocab-reset.js?v=3');
         ensureScript('ldd-fast-progress-script', 'ldd-fast-progress.js?v=1');
-        ensureScript('ldd-vocab-race-script', 'ldd-vocab-race.js?v=12');
+        ensureScript('ldd-vocab-race-script', 'ldd-vocab-race.js?v=14');
     }
 
     function ensureStylesheet(id, href) {
