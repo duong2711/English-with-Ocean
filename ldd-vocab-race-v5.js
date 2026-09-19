@@ -281,7 +281,7 @@
         unsubscribe();
         await syncServerClock(true);
         roomChannel = raceSb.channel('race-room-v5-' + id).on('postgres_changes', { event:'*', schema:'public', table:'vocab_race_rooms', filter:'id=eq.' + id }, scheduleRefresh).subscribe();
-        playerChannel = raceSb.channel('race-player-v5-' + id).on('postgres_changes', { event:'*', schema:'public', table:'vocab_race_players', filter:'room_id=eq.' + id }, scheduleRefresh).subscribe();
+        playerChannel = raceSb.channel('race-player-v5-' + id).on('postgres_changes', { event:'*', schema:'public', table:'vocab_race_players', filter:'room_id=eq.' + id }, applyRealtimePlayer).subscribe();
         if (!tickHandle) tickHandle = setInterval(tick, 100);
         await refreshRoom(id);
     }
@@ -289,6 +289,24 @@
     function scheduleRefresh() {
         clearTimeout(refreshTimer);
         refreshTimer = setTimeout(() => room && refreshRoom(room.id), 45);
+    }
+
+    function applyRealtimePlayer(payload) {
+        if (!payload) return;
+        if (payload.eventType === 'DELETE' || !payload.new || !payload.new.user_id) {
+            scheduleRefresh();
+            return;
+        }
+
+        const incoming = payload.new;
+        const index = players.findIndex(p => String(p.user_id) === String(incoming.user_id));
+        if (index >= 0) players[index] = Object.assign({}, players[index], incoming);
+        else players.push(incoming);
+        players.sort((a, b) => Number(a.slot || 0) - Number(b.slot || 0));
+
+        // Render only the race UI. Do not touch the rest of the page.
+        if (room && room.status === 'playing') renderGame();
+        else if (room && room.status === 'lobby') renderLobby();
     }
 
     async function refreshRoom(id) {
@@ -301,18 +319,6 @@
         room = rr.data;
         players = pp.data || [];
 
-        // Publish the canonical room snapshot for the motion/realtime helper.
-        // This makes opponent car movement independent of script load order:
-        // v10 can subscribe to player updates as soon as the core knows the room.
-        const publicRoomState = {
-            id: room.id,
-            code: room.code || '',
-            status: room.status || '',
-            round_index: Number(room.round_index),
-            last_result: room.last_result || {}
-        };
-        window.LDDVocabRaceRoomState = publicRoomState;
-        document.dispatchEvent(new CustomEvent('ldd:vocab-race-room', { detail: publicRoomState }));
 
         if (oldRound !== room.round_index) {
             claimPending = false;
@@ -369,7 +375,6 @@
     function leaveLocalRoom() {
         unsubscribe();
         room = null; players = []; claimPending = false; timeoutPending = false; advancePending = false; charging = null; resolvedObstacleKeys.clear();
-        window.LDDVocabRaceRoomState = null;
         if ($('vocab-race-entry')) $('vocab-race-entry').style.display = me && me.email !== TEACHER_EMAIL ? 'grid' : 'none';
         if ($('vocab-race-lobby')) $('vocab-race-lobby').style.display = 'none';
         if ($('vocab-race-game')) $('vocab-race-game').style.display = 'none';
