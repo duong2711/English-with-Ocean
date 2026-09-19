@@ -1,5 +1,5 @@
 /* =============================================================
-   LDD ENGLISH — EGRESS GUARD v1.4
+   LDD ENGLISH — EGRESS GUARD v1.5
    Goal: reduce Supabase egress without sacrificing correctness.
    - Dedupes identical in-flight REST GET requests.
    - Short-lived in-memory cache for safe/slow-changing GETs.
@@ -177,7 +177,7 @@
     document.addEventListener('ldd:thcs-vocab-reset', function () { invalidate('thcs_unit_progress'); });
 
     window.LDDEgress = {
-        version: '1.4',
+        version: '1.5',
         invalidate: invalidate,
         clear: function () { cache.clear(); },
         stats: function () { return { cached: cache.size, inflight: inflight.size }; },
@@ -190,24 +190,37 @@
     };
 })();
 
-/* Load the optional local pronunciation bridge after the core page has initialized. */
+/* Load optional helpers only AFTER the core DOMContentLoaded initialization.
+   The guard itself is intentionally loaded before scriptphonetics.js so the main Supabase
+   client is created with guarded fetch/setInterval. */
 (function () {
     'use strict';
-    if (document.getElementById('ldd-local-pronunciation-script')) return;
-    const script = document.createElement('script');
-    script.id = 'ldd-local-pronunciation-script';
-    script.src = 'ldd-local-pronunciation.js?v=20260917-1';
-    script.defer = true;
-    document.body.appendChild(script);
-})();
 
-/* Grade each news-translation sentence through the existing AI call and award diligence points. */
-(function () {
-    'use strict';
-    if (document.getElementById('ldd-news-translation-score-script')) return;
-    const script = document.createElement('script');
-    script.id = 'ldd-news-translation-score-script';
-    script.src = 'ldd-news-translation-score.js?v=20260917-1';
-    script.defer = true;
-    document.body.appendChild(script);
+    function loadHelpers() {
+        if (!document.getElementById('ldd-local-pronunciation-script')) {
+            const script = document.createElement('script');
+            script.id = 'ldd-local-pronunciation-script';
+            script.src = 'ldd-local-pronunciation.js?v=20260917-1';
+            script.async = false;
+            document.body.appendChild(script);
+        }
+
+        if (!document.getElementById('ldd-news-translation-score-script')) {
+            const script = document.createElement('script');
+            script.id = 'ldd-news-translation-score-script';
+            script.src = 'ldd-news-translation-score.js?v=20260917-1';
+            script.async = false;
+            document.body.appendChild(script);
+        }
+    }
+
+    function queueHelpers() {
+        setTimeout(loadHelpers, 0);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', queueHelpers, { once: true });
+    } else {
+        queueHelpers();
+    }
 })();
