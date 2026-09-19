@@ -8290,10 +8290,17 @@ function toggleCompletion(symbolElement) {
         const restartBtn   = document.getElementById('loto-restart-btn');
         const resetBtn     = document.getElementById('loto-reset-btn');
 
+        const LOTO_BOT_ADMIN_ID = '00000000-0000-4000-8000-000000000001';
+        const LOTO_BOT_P1_ID    = '00000000-0000-4000-8000-000000000002';
+        const LOTO_BOT_P2_ID    = '00000000-0000-4000-8000-000000000003';
+
         let lotoState = null;
         let lotoChannel = null;
         let countdownInterval = null;
         let timeoutFired = false;
+        let lotoBotAdminTimer = null;
+        let lotoBotPlayerTimer = null;
+        let lotoBotPlayerCallKey = '';
 
         function escapeHtml(str) {
             const div = document.createElement('div');
@@ -8306,8 +8313,10 @@ function toggleCompletion(symbolElement) {
             const map = {
                 role_taken: 'Vị trí này đã có người chọn rồi.',
                 game_already_started: 'Ván chơi đã bắt đầu, không thể đổi vai trò lúc này.',
-                missing_roles: 'Cần đủ Trọng tài, Người chơi 1 và Người chơi 2 trước khi bắt đầu.',
-                only_admin_can_start: 'Chỉ trọng tài mới có thể bắt đầu trò chơi.',
+                missing_roles: 'Cần có ít nhất 1 người thật ở vị trí Người chơi 1 hoặc Người chơi 2.',
+                need_human_player: 'Phải có ít nhất 1 người thật làm Người chơi 1 hoặc Người chơi 2. Không thể để người thật chỉ làm trọng tài rồi cho 2 máy chơi.',
+                not_participant: 'Bạn cần tham gia với vai trò người chơi hoặc trọng tài trước.',
+                only_admin_can_start: 'Hãy chọn ít nhất một vị trí người chơi; các vị trí còn trống sẽ do máy đảm nhiệm.',
                 already_playing: 'Ván chơi đang diễn ra.',
                 not_admin: 'Chỉ trọng tài mới có thể thực hiện thao tác này.',
                 not_playing: 'Trò chơi chưa bắt đầu hoặc đã kết thúc.',
@@ -8341,6 +8350,7 @@ function toggleCompletion(symbolElement) {
             entertainmentGrid.style.display = '';
             if (lotoChannel) { sb.removeChannel(lotoChannel); lotoChannel = null; }
             stopCountdown();
+            stopLotoBotTimers();
         }
         lotoFolderCard.addEventListener('click', showPanel);
         lotoBackBtn.addEventListener('click', hidePanel);
@@ -8571,15 +8581,29 @@ function toggleCompletion(symbolElement) {
                 unpickBtn.style.display = (isMine && lotoState.status !== 'playing') ? 'inline-block' : 'none';
             } else {
                 cardEl.classList.remove('taken', 'mine');
-                statusEl.textContent = 'Chưa có ai chọn';
+                statusEl.textContent = lotoState.status === 'lobby' ? 'Trống — máy sẽ thay thế nếu cần' : 'Chưa có ai chọn';
                 pickBtn.style.display = (lotoState.status !== 'playing') ? 'inline-block' : 'none';
                 pickBtn.disabled = false;
                 unpickBtn.style.display = 'none';
             }
         }
 
+        function isLotoBotId(id) {
+            return id === LOTO_BOT_ADMIN_ID || id === LOTO_BOT_P1_ID || id === LOTO_BOT_P2_ID;
+        }
+
+        function lotoPlayerLabel(playerKey) {
+            const isBot = playerKey === 'player1'
+                ? lotoState && lotoState.player1_id === LOTO_BOT_P1_ID
+                : lotoState && lotoState.player2_id === LOTO_BOT_P2_ID;
+            if (isBot) return playerKey === 'player1' ? '🤖 Máy 1' : '🤖 Máy 2';
+            return playerKey === 'player1' ? 'Người chơi 1' : 'Người chơi 2';
+        }
+
         function badgeFor(playerKey, isMine) {
             let html = '';
+            const playerId = playerKey === 'player1' ? lotoState.player1_id : lotoState.player2_id;
+            if (isLotoBotId(playerId)) html += '<span class="loto-player-badge">🤖 Máy</span> ';
             if (isMine) html += '<span class="loto-player-badge badge-me">Bạn</span> ';
             if (lotoState.winner === playerKey) html += '<span class="loto-player-badge badge-win">Thắng</span>';
             else if (lotoState.winner && lotoState.winner !== playerKey && lotoState.winner !== 'admin_disqualified' && lotoState.winner !== 'draw') {
@@ -8607,8 +8631,8 @@ function toggleCompletion(symbolElement) {
             const calledEntries = (lotoState.called_numbers || []).map(num => {
                 const st = (lotoState.cell_status || {})[num];
                 let text, cls = '';
-                if (st === 'green1') { text = 'Số ' + num + ' → 🟦 Người chơi 1 đúng & nhanh nhất'; cls = 'log-win'; }
-                else if (st === 'green2') { text = 'Số ' + num + ' → 🟥 Người chơi 2 đúng & nhanh nhất'; cls = 'log-win'; }
+                if (st === 'green1') { text = 'Số ' + num + ' → 🟦 ' + lotoPlayerLabel('player1') + ' đúng & nhanh nhất'; cls = 'log-win'; }
+                else if (st === 'green2') { text = 'Số ' + num + ' → 🟥 ' + lotoPlayerLabel('player2') + ' đúng & nhanh nhất'; cls = 'log-win'; }
                 else if (st === 'gray') { text = 'Số ' + num + ' → không ai chọn đúng kịp lúc'; }
                 else { text = 'Số ' + num + ' → đang chờ kết quả...'; }
                 return '<div class="loto-log-entry ' + cls + '">' + escapeHtml(text) + '</div>';
@@ -8625,12 +8649,108 @@ function toggleCompletion(symbolElement) {
 
         function renderEndScreen() {
             let msg;
-            if (lotoState.winner === 'player1') msg = '🏆 Người chơi 1 chiến thắng! ' + (lotoState.win_reason || '');
-            else if (lotoState.winner === 'player2') msg = '🏆 Người chơi 2 chiến thắng! ' + (lotoState.win_reason || '');
+            if (lotoState.winner === 'player1') msg = '🏆 ' + lotoPlayerLabel('player1') + ' chiến thắng! ' + (lotoState.win_reason || '');
+            else if (lotoState.winner === 'player2') msg = '🏆 ' + lotoPlayerLabel('player2') + ' chiến thắng! ' + (lotoState.win_reason || '');
             else if (lotoState.winner === 'draw') msg = '🤝 Hòa! ' + (lotoState.win_reason || '');
             else if (lotoState.winner === 'admin_disqualified') msg = '🚫 Trọng tài đã thua cuộc! ' + (lotoState.win_reason || '');
             else msg = 'Ván chơi đã kết thúc.';
             endMessageEl.textContent = msg;
+        }
+
+        function stopLotoBotTimers() {
+            if (lotoBotAdminTimer) {
+                clearTimeout(lotoBotAdminTimer);
+                lotoBotAdminTimer = null;
+            }
+            if (lotoBotPlayerTimer) {
+                clearTimeout(lotoBotPlayerTimer);
+                lotoBotPlayerTimer = null;
+            }
+            lotoBotPlayerCallKey = '';
+        }
+
+        function scheduleLotoBots(isAdmin, isP1, isP2) {
+            if (!lotoState || lotoState.status !== 'playing') {
+                stopLotoBotTimers();
+                return;
+            }
+
+            const humanParticipant = isAdmin || isP1 || isP2;
+            if (!humanParticipant) return;
+
+            const adminIsBot = lotoState.admin_id === LOTO_BOT_ADMIN_ID;
+            const cc = lotoState.current_call;
+
+            if (adminIsBot && !cc && lotoState.pending_number == null && !lotoBotAdminTimer) {
+                lotoBotAdminTimer = setTimeout(async () => {
+                    lotoBotAdminTimer = null;
+                    const { data, error } = await sb.rpc('loto_bot_call_next', { p_user_id: currentUserId });
+                    if (!error && data) {
+                        lotoState = data;
+                        render();
+                    } else if (error) {
+                        console.warn('[Loto bot] Không thể gọi số:', error.message || error);
+                    }
+                }, 1100);
+            } else if ((!adminIsBot || cc || lotoState.pending_number != null) && lotoBotAdminTimer) {
+                clearTimeout(lotoBotAdminTimer);
+                lotoBotAdminTimer = null;
+            }
+
+            if (!cc) {
+                if (lotoBotPlayerTimer) {
+                    clearTimeout(lotoBotPlayerTimer);
+                    lotoBotPlayerTimer = null;
+                }
+                lotoBotPlayerCallKey = '';
+                return;
+            }
+
+            let botPlayer = null;
+            let answer = null;
+            let due = null;
+            if (lotoState.player1_id === LOTO_BOT_P1_ID) {
+                botPlayer = 'player1';
+                answer = cc.p1_answer;
+                due = Number(cc.bot1_due || 0);
+            } else if (lotoState.player2_id === LOTO_BOT_P2_ID) {
+                botPlayer = 'player2';
+                answer = cc.p2_answer;
+                due = Number(cc.bot2_due || 0);
+            }
+
+            if (!botPlayer || answer != null) {
+                if (lotoBotPlayerTimer) {
+                    clearTimeout(lotoBotPlayerTimer);
+                    lotoBotPlayerTimer = null;
+                }
+                lotoBotPlayerCallKey = '';
+                return;
+            }
+
+            const callKey = String(cc.started_at || '') + ':' + String(cc.number || '') + ':' + botPlayer;
+            if (lotoBotPlayerCallKey === callKey) return;
+
+            if (lotoBotPlayerTimer) clearTimeout(lotoBotPlayerTimer);
+            lotoBotPlayerCallKey = callKey;
+
+            const fallbackDue = Number(cc.started_at || (Date.now()/1000)) + 4;
+            const fireAt = Number.isFinite(due) && due > 0 ? due : fallbackDue;
+            const waitMs = Math.max(120, Math.ceil((fireAt - Date.now()/1000) * 1000) + 80);
+
+            lotoBotPlayerTimer = setTimeout(async () => {
+                lotoBotPlayerTimer = null;
+                const { data, error } = await sb.rpc('loto_bot_answer', {
+                    p_player: botPlayer,
+                    p_user_id: currentUserId
+                });
+                if (!error && data) {
+                    lotoState = data;
+                    render();
+                } else if (error) {
+                    console.warn('[Loto bot] Không thể trả lời:', error.message || error);
+                }
+            }, waitMs);
         }
 
         function render() {
@@ -8658,16 +8778,21 @@ function toggleCompletion(symbolElement) {
             } else {
                 adminToggleInput.checked = false;
                 adminToggleInput.disabled = (lotoState.status === 'playing');
-                adminStatus.textContent = 'Chưa có ai làm trọng tài';
+                adminStatus.textContent = lotoState.status === 'lobby'
+                    ? 'Trống — máy sẽ làm trọng tài nếu cần'
+                    : 'Chưa có ai làm trọng tài';
             }
 
-            const allRolesFilled = !!(lotoState.admin_id && lotoState.player1_id && lotoState.player2_id);
-            startBox.style.display = (lotoState.status === 'lobby' && isAdmin && allRolesFilled) ? 'flex' : 'none';
+            const humanP1 = !!(lotoState.player1_id && lotoState.player1_id !== LOTO_BOT_P1_ID);
+            const humanP2 = !!(lotoState.player2_id && lotoState.player2_id !== LOTO_BOT_P2_ID);
+            const hasHumanPlayer = humanP1 || humanP2;
+            const canStart = isAdmin || isP1 || isP2;
+            startBox.style.display = (lotoState.status === 'lobby' && canStart && hasHumanPlayer) ? 'flex' : 'none';
 
             setupScreen.style.display = (lotoState.status === 'lobby') ? 'flex' : 'none';
             tableScreen.style.display = (lotoState.status === 'playing' || lotoState.status === 'finished') ? 'flex' : 'none';
             endScreen.style.display = (lotoState.status === 'finished') ? 'flex' : 'none';
-            resetBtn.style.display = (lotoState.admin_id || lotoState.player1_id || lotoState.player2_id) ? 'block' : 'none';
+            resetBtn.style.display = (isAdmin || isP1 || isP2) ? 'block' : 'none';
 
             if (lotoState.status === 'finished') renderEndScreen();
 
@@ -8694,11 +8819,13 @@ function toggleCompletion(symbolElement) {
                 renderCurrentCall();
                 renderBoards(isP1, isP2);
                 renderLog();
+                scheduleLotoBots(isAdmin, isP1, isP2);
             } else {
                 stopCountdown();
+                stopLotoBotTimers();
             }
 
-            restartBtn.disabled = !isAdmin;
+            restartBtn.disabled = !(isAdmin || isP1 || isP2);
         }
 
     })();
