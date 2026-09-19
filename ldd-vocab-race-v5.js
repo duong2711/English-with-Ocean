@@ -134,7 +134,8 @@
         panel.innerHTML = `
             <div class="grammar-panel-header vocab-race-panel-head">
                 <button type="button" class="grammar-back-btn" id="vocab-race-back-btn">← Quay lại</button>
-                <div><h3>🏎️ Đua xe từ vựng</h3><p>Đổi làn để chọn đáp án, né chướng ngại vật và bấm <b>LAO LÊN ĂN TỪ</b>.</p></div>
+                <div class="vocab-race-head-copy"><h3>🏎️ Đua xe từ vựng</h3><p>Đổi làn để chọn đáp án, né chướng ngại vật và bấm <b>LAO LÊN ĂN TỪ</b>.</p></div>
+                <button type="button" class="vocab-race-fullscreen-btn" id="vocab-race-fullscreen-btn" aria-label="Bật chế độ toàn màn hình" aria-pressed="false">⛶ <span>Toàn màn hình</span></button>
             </div>
             <div id="vocab-race-status" class="vocab-race-status"></div>
             <div id="vocab-race-entry" class="vocab-race-entry">
@@ -176,6 +177,10 @@
         if (!card) return;
         card.addEventListener('click', openPanel);
         $('vocab-race-back-btn').addEventListener('click', closePanel);
+        $('vocab-race-fullscreen-btn').addEventListener('click', toggleRaceFullscreen);
+        document.addEventListener('fullscreenchange', syncRaceFullscreenState);
+        document.addEventListener('webkitfullscreenchange', syncRaceFullscreenState);
+        window.addEventListener('resize', scheduleRaceFullscreenLayout, { passive:true });
         $('vocab-race-create-btn').addEventListener('click', createRoom);
         $('vocab-race-join-btn').addEventListener('click', joinRoom);
         $('vocab-race-code-input').addEventListener('keydown', e => { if (e.key === 'Enter') joinRoom(); });
@@ -197,6 +202,101 @@
         });
     }
 
+    function racePanel() { return $('vocab-race-panel'); }
+
+    function nativeRaceFullscreenElement() {
+        return document.fullscreenElement || document.webkitFullscreenElement || null;
+    }
+
+    function raceFullscreenActive() {
+        const panel = racePanel();
+        return !!(panel && (nativeRaceFullscreenElement() === panel || panel.classList.contains('is-race-fullscreen-fallback')));
+    }
+
+    function scheduleRaceFullscreenLayout() {
+        requestAnimationFrame(updateRaceFullscreenLayout);
+    }
+
+    function updateRaceFullscreenLayout() {
+        const panel = racePanel();
+        if (!panel || !raceFullscreenActive()) return;
+        const game = $('vocab-race-game');
+        if (!game || room?.status !== 'playing') return;
+
+        const head = panel.querySelector('.vocab-race-panel-head');
+        const styles = getComputedStyle(panel);
+        const padTop = parseFloat(styles.paddingTop) || 0;
+        const padBottom = parseFloat(styles.paddingBottom) || 0;
+        const viewportH = panel.clientHeight || window.innerHeight;
+        const headH = head ? head.getBoundingClientRect().height : 0;
+        const available = Math.max(320, viewportH - headH - padTop - padBottom - 8);
+        panel.style.setProperty('--race-fs-game-height', available.toFixed(0) + 'px');
+    }
+
+    function syncRaceFullscreenState() {
+        const panel = racePanel();
+        if (!panel) return;
+        const nativeActive = nativeRaceFullscreenElement() === panel;
+        const fallbackActive = panel.classList.contains('is-race-fullscreen-fallback');
+        const active = nativeActive || fallbackActive;
+        panel.classList.toggle('is-race-fullscreen', active);
+
+        const btn = $('vocab-race-fullscreen-btn');
+        if (btn) {
+            btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+            btn.setAttribute('aria-label', active ? 'Thoát chế độ toàn màn hình' : 'Bật chế độ toàn màn hình');
+            btn.innerHTML = active ? '✕ <span>Thoát toàn màn hình</span>' : '⛶ <span>Toàn màn hình</span>';
+        }
+
+        document.documentElement.classList.toggle('vocab-race-page-fullscreen', active);
+        document.body.classList.toggle('vocab-race-page-fullscreen', active);
+        if (active) scheduleRaceFullscreenLayout();
+        else panel.style.removeProperty('--race-fs-game-height');
+    }
+
+    async function enterRaceFullscreen() {
+        const panel = racePanel();
+        if (!panel || raceFullscreenActive()) return;
+        unlockRaceAudio();
+
+        try {
+            const request = panel.requestFullscreen || panel.webkitRequestFullscreen;
+            if (request) {
+                const result = request.call(panel);
+                if (result && typeof result.then === 'function') await result;
+            } else {
+                panel.classList.add('is-race-fullscreen-fallback');
+            }
+        } catch (_) {
+            panel.classList.add('is-race-fullscreen-fallback');
+        }
+        syncRaceFullscreenState();
+    }
+
+    async function exitRaceFullscreen() {
+        const panel = racePanel();
+        if (!panel) return;
+        if (panel.classList.contains('is-race-fullscreen-fallback')) {
+            panel.classList.remove('is-race-fullscreen-fallback');
+        }
+
+        try {
+            if (nativeRaceFullscreenElement()) {
+                const exit = document.exitFullscreen || document.webkitExitFullscreen;
+                if (exit) {
+                    const result = exit.call(document);
+                    if (result && typeof result.then === 'function') await result;
+                }
+            }
+        } catch (_) {}
+        syncRaceFullscreenState();
+    }
+
+    async function toggleRaceFullscreen() {
+        if (raceFullscreenActive()) await exitRaceFullscreen();
+        else await enterRaceFullscreen();
+    }
+
     async function openPanel() {
         await syncIdentity();
         const grid = $('entertainment-folder-grid');
@@ -209,6 +309,7 @@
     }
 
     function closePanel() {
+        if (raceFullscreenActive()) exitRaceFullscreen();
         $('vocab-race-panel').style.display = 'none';
         const grid = $('entertainment-folder-grid');
         if (grid) grid.style.display = '';
@@ -593,6 +694,8 @@
 
     function render() {
         if (!room) return;
+        const panel = racePanel();
+        if (panel) panel.classList.toggle('is-race-playing', room.status === 'playing');
         $('vocab-race-entry').style.display = 'none';
         $('vocab-race-lobby').style.display = room.status === 'lobby' ? 'block' : 'none';
         $('vocab-race-game').style.display = room.status === 'playing' ? 'block' : 'none';
@@ -600,6 +703,7 @@
         if (room.status === 'lobby') renderLobby();
         else if (room.status === 'playing') renderGame();
         else renderFinish();
+        if (raceFullscreenActive()) scheduleRaceFullscreenLayout();
     }
 
     function renderLobby() {
