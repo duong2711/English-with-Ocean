@@ -45,6 +45,8 @@
     let laneWriteTarget = null;
     let laneVisualTarget = null;
     let laneWriteRound = -1;
+    let raceAudioCtx = null;
+    let lastRaceSoundKey = '';
     const resolvedObstacleKeys = new Set();
 
     const $ = id => document.getElementById(id);
@@ -186,6 +188,7 @@
         $('vocab-race-left').addEventListener('click', () => steer(-1));
         $('vocab-race-right').addEventListener('click', () => steer(1));
         $('vocab-race-eat').addEventListener('click', eatWord);
+        $('vocab-race-panel').addEventListener('pointerdown', unlockRaceAudio, { passive:true });
         document.addEventListener('keydown', e => {
             if (!room || room.status !== 'playing' || isRoundPaused() || !$('vocab-race-panel') || $('vocab-race-panel').style.display === 'none') return;
             if (e.key === 'ArrowLeft') { e.preventDefault(); steer(-1); }
@@ -284,7 +287,7 @@
     async function attachRoom(id) {
         unsubscribe();
         await syncServerClock(true);
-        roomChannel = raceSb.channel('race-room-v5-' + id).on('postgres_changes', { event:'*', schema:'public', table:'vocab_race_rooms', filter:'id=eq.' + id }, scheduleRefresh).subscribe();
+        roomChannel = raceSb.channel('race-room-v5-' + id).on('postgres_changes', { event:'*', schema:'public', table:'vocab_race_rooms', filter:'id=eq.' + id }, handleRoomRealtime).subscribe();
         playerChannel = raceSb.channel('race-player-v5-' + id).on('postgres_changes', { event:'*', schema:'public', table:'vocab_race_players', filter:'room_id=eq.' + id }, applyRealtimePlayer).subscribe();
         if (!tickHandle) tickHandle = setInterval(tick, 100);
         await refreshRoom(id);
@@ -293,6 +296,170 @@
     function scheduleRefresh() {
         clearTimeout(refreshTimer);
         refreshTimer = setTimeout(() => room && refreshRoom(room.id), 45);
+    }
+
+    function ensureRaceAudio() {
+        if (raceAudioCtx) return raceAudioCtx;
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (!Ctx) return null;
+        try { raceAudioCtx = new Ctx(); } catch (_) { raceAudioCtx = null; }
+        return raceAudioCtx;
+    }
+
+    function unlockRaceAudio() {
+        const ctx = ensureRaceAudio();
+        if (ctx && ctx.state === 'suspended') ctx.resume().catch(() => {});
+    }
+
+    function playRaceTone(kind) {
+        const ctx = ensureRaceAudio();
+        if (!ctx) return;
+        if (ctx.state === 'suspended') {
+            ctx.resume().then(() => playRaceTone(kind)).catch(() => {});
+            return;
+        }
+
+        const now = ctx.currentTime;
+        const master = ctx.createGain();
+        master.gain.setValueAtTime(0.0001, now);
+        master.gain.exponentialRampToValueAtTime(0.16, now + 0.012);
+        master.gain.exponentialRampToValueAtTime(0.0001, now + (kind === 'correct' ? 0.52 : 0.38));
+        master.connect(ctx.destination);
+
+        if (kind === 'correct') {
+            [523.25, 659.25, 783.99].forEach((freq, idx) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                const start = now + idx * 0.11;
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, start);
+                gain.gain.setValueAtTime(0.0001, start);
+                gain.gain.exponentialRampToValueAtTime(0.8, start + 0.012);
+                gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.13);
+                osc.connect(gain);
+                gain.connect(master);
+                osc.start(start);
+                osc.stop(start + 0.15);
+            });
+        } else {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(190, now);
+            osc.frequency.exponentialRampToValueAtTime(115, now + 0.3);
+            gain.gain.setValueAtTime(0.65, now);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.32);
+            osc.connect(gain);
+            gain.connect(master);
+            osc.start(now);
+            osc.stop(now + 0.34);
+        }
+    }
+
+    function effectiveRoundResult(result) {
+        result = result || {};
+        if ((result.type === 'round_pause' || result.type === 'timeout_pause') && result.round_result) {
+            return result.round_result;
+        }
+        return result;
+    }
+
+    function maybePlayResultSound(result) {
+        const ev = effectiveRoundResult(result);
+        if (!ev || (ev.type !== 'correct' && ev.type !== 'wrong')) return;
+        const key = [
+            room && room.id || '',
+            ev.round == null ? '' : ev.round,
+            ev.type || '',
+            ev.at || '',
+            ev.user_id || ev.winner_user_id || ''
+        ].join(':');
+        if (!key || key === lastRaceSoundKey) return;
+        lastRaceSoundKey = key;
+        playRaceTone(ev.type === 'correct' ? 'correct' : 'wrong');
+    }
+
+    function handleRoomRealtime(payload) {
+        if (payload && payload.new && payload.new.last_result) {
+            maybePlayResultSound(payload.new.last_result);
+        }
+        scheduleRefresh();
+    }
+
+    function playerResultName(p) {
+        return p ? shortName(p.display_name || p.email || ('Xe ' + (p.slot || ''))) : 'Một xe';
+    }
+
+    function roundSummary() {
+        const lr = room && room.last_result || {};
+        const ev = effectiveRoundResult(lr);
+        const result = { title:'KẾT QUẢ VÒNG', text:'Chuẩn bị vòng tiếp theo.', kind:'neutral' };
+
+        if (ev.type === 'correct' || lr.reason === 'correct') {
+            const winnerId = ev.winner_user_id || lr.winner_user_id;
+            const winner = players.find(p => String(p.user_id) === String(winnerId || ''));
+            result.title = '✅ ĂN ĐÚNG TỪ!';
+            result.text = playerResultName(winner) + ' ăn đúng từ.';
+            result.kind = 'correct';
+            return result;
+        }
+
+        if (ev.type === 'timeout' || lr.reason === 'timeout') {
+            result.title = '⏱️ HẾT GIỜ!';
+            result.text = 'Không xe nào ăn đúng từ trước khi hết giờ.';
+            result.kind = 'timeout';
+            return result;
+        }
+
+        const wrong = players.filter(p => String(p.round_outcome || '') === 'wrong');
+        const obstacle = players.filter(p => String(p.round_outcome || '') === 'obstacle');
+        const total = players.length;
+
+        if (total && wrong.length === total) {
+            result.title = '❌ TẤT CẢ ĂN SAI!';
+            result.text = 'Tất cả xe đều ăn sai từ.';
+            result.kind = 'wrong';
+            return result;
+        }
+
+        if (total && obstacle.length === total) {
+            result.title = '💥 TẤT CẢ BỊ LOẠI!';
+            result.text = 'Tất cả xe đều bị chướng ngại vật loại.';
+            result.kind = 'obstacle';
+            return result;
+        }
+
+        if (wrong.length && obstacle.length && wrong.length + obstacle.length === total) {
+            result.title = '⚠️ TẤT CẢ ĐÃ BỊ LOẠI!';
+            if (total === 2 && wrong.length === 1 && obstacle.length === 1) {
+                result.text = playerResultName(obstacle[0]) + ' bị chướng ngại vật loại · ' + playerResultName(wrong[0]) + ' ăn sai từ.';
+            } else {
+                const obstacleNames = obstacle.map(playerResultName).join(', ');
+                const wrongNames = wrong.map(playerResultName).join(', ');
+                result.text = obstacleNames + ' bị chướng ngại vật loại · ' + wrongNames + ' ăn sai từ.';
+            }
+            result.kind = 'mixed';
+            return result;
+        }
+
+        if (ev.type === 'obstacle_hit') {
+            result.title = '💥 XE BỊ LOẠI!';
+            const hitIds = Array.isArray(ev.hit_user_ids) ? ev.hit_user_ids : [ev.user_id].filter(Boolean);
+            const hitNames = hitIds.map(id => playerResultName(players.find(p => String(p.user_id) === String(id)))).join(', ');
+            result.text = (hitNames || 'Có xe') + ' bị chướng ngại vật loại.';
+            result.kind = 'obstacle';
+            return result;
+        }
+
+        if (ev.type === 'wrong') {
+            const p = players.find(x => String(x.user_id) === String(ev.user_id || ''));
+            result.title = '❌ ĂN SAI TỪ!';
+            result.text = playerResultName(p) + ' ăn sai từ.';
+            result.kind = 'wrong';
+            return result;
+        }
+
+        return result;
     }
 
     function applyRealtimePlayer(payload) {
@@ -352,6 +519,7 @@
             laneVisualTarget = null;
             laneWriteRound = Number(room.round_index);
             laneWriteRunning = false;
+            lastRaceSoundKey = '';
         }
 
         // A new round/status needs a fresh track. Updates inside the same round
@@ -415,7 +583,7 @@
     function leaveLocalRoom() {
         unsubscribe();
         room = null; players = []; claimPending = false; timeoutPending = false; advancePending = false; charging = null;
-        laneWriteTarget = null; laneVisualTarget = null; laneWriteRound = -1; laneWriteRunning = false;
+        laneWriteTarget = null; laneVisualTarget = null; laneWriteRound = -1; laneWriteRunning = false; lastRaceSoundKey = '';
         resolvedObstacleKeys.clear();
         if ($('vocab-race-entry')) $('vocab-race-entry').style.display = me && me.email !== TEACHER_EMAIL ? 'grid' : 'none';
         if ($('vocab-race-lobby')) $('vocab-race-lobby').style.display = 'none';
@@ -666,15 +834,36 @@
 
     function renderEvent() {
         const box = $('vocab-race-event');
+        if (!box) return;
         const lr = room.last_result || {};
+        const ev = effectiveRoundResult(lr);
         let text = '🏁 Chọn làn đúng rồi bấm LAO LÊN ĂN TỪ.';
         let cls = '';
-        if (lr.type === 'timeout_pause' && Number(lr.round) === Number(room.round_index)) { text = '⏱️ HẾT GIỜ — tạm dừng 6 giây trước vòng tiếp theo.'; cls = ' is-warn'; }
-        else if (lr.type === 'correct') { const p = players.find(x => String(x.user_id) === String(lr.winner_user_id)); text = '✅ ' + (p ? (p.display_name || p.email) : 'Một xe') + ' ăn từ đầu tiên!'; cls = ' is-success'; }
-        else if (lr.type === 'wrong') { text = '❌ Có xe chọn sai và bị loại vòng này.'; cls = ' is-warn'; }
-        else if (lr.type === 'obstacle_hit') { text = '💥 VA CHẠM! Có xe đâm chướng ngại vật và bị loại.'; cls = ' is-danger'; }
-        else if (lr.type === 'all_eliminated') { text = '↩️ Không còn xe trong vòng — sang từ tiếp theo.'; cls = ' is-warn'; }
-        else if (lr.type === 'finished') text = '🏁 Trận đấu đã kết thúc.';
+
+        if (isRoundPaused()) {
+            const summary = roundSummary();
+            text = summary.title + ' ' + summary.text;
+            cls = summary.kind === 'correct' ? ' is-success'
+                : summary.kind === 'obstacle' || summary.kind === 'mixed' ? ' is-danger'
+                : ' is-warn';
+        } else if (ev.type === 'correct') {
+            const p = players.find(x => String(x.user_id) === String(ev.winner_user_id || ''));
+            text = '✅ ' + playerResultName(p) + ' ăn đúng từ!';
+            cls = ' is-success';
+        } else if (ev.type === 'wrong') {
+            const p = players.find(x => String(x.user_id) === String(ev.user_id || ''));
+            text = '❌ ' + playerResultName(p) + ' ăn sai từ và bị loại vòng này.';
+            cls = ' is-warn';
+        } else if (ev.type === 'obstacle_hit') {
+            const hitIds = Array.isArray(ev.hit_user_ids) ? ev.hit_user_ids : [ev.user_id].filter(Boolean);
+            const names = hitIds.map(id => playerResultName(players.find(p => String(p.user_id) === String(id)))).join(', ');
+            text = '💥 ' + (names || 'Có xe') + ' bị chướng ngại vật loại.';
+            cls = ' is-danger';
+        } else if (ev.type === 'finished') {
+            text = '🏁 Trận đấu đã kết thúc.';
+        }
+
+        maybePlayResultSound(lr);
         box.textContent = text;
         box.className = 'vocab-race-event' + cls;
     }
@@ -874,10 +1063,24 @@
         const overlay = $('vocab-race-pause-overlay');
         const count = $('vocab-race-pause-count');
         if (!overlay || !count) return;
-        if (!isRoundPaused()) { overlay.style.display = 'none'; return; }
+        if (!isRoundPaused()) {
+            overlay.style.display = 'none';
+            overlay.classList.remove('is-result-correct','is-result-wrong','is-result-obstacle','is-result-mixed','is-result-timeout');
+            return;
+        }
+
         overlay.style.display = 'grid';
+        const summary = roundSummary();
+        const title = overlay.querySelector('.vocab-race-pause-card > strong');
+        const text = overlay.querySelector('.vocab-race-pause-card > p');
+        if (title) title.textContent = summary.title;
+        if (text) text.textContent = summary.text;
+        overlay.classList.remove('is-result-correct','is-result-wrong','is-result-obstacle','is-result-mixed','is-result-timeout');
+        if (summary.kind && summary.kind !== 'neutral') overlay.classList.add('is-result-' + summary.kind);
+
         const sec = Math.max(0, Math.ceil(pauseRemainingMs() / 1000));
         count.textContent = String(sec);
+        maybePlayResultSound(room.last_result || {});
     }
 
     function tick() {
