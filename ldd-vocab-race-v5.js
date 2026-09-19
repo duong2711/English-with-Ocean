@@ -181,6 +181,10 @@
         document.addEventListener('fullscreenchange', syncRaceFullscreenState);
         document.addEventListener('webkitfullscreenchange', syncRaceFullscreenState);
         window.addEventListener('resize', scheduleRaceFullscreenLayout, { passive:true });
+        window.addEventListener('orientationchange', scheduleRaceFullscreenLayout, { passive:true });
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', scheduleRaceFullscreenLayout, { passive:true });
+        }
         $('vocab-race-create-btn').addEventListener('click', createRoom);
         $('vocab-race-join-btn').addEventListener('click', joinRoom);
         $('vocab-race-code-input').addEventListener('keydown', e => { if (e.key === 'Enter') joinRoom(); });
@@ -213,24 +217,49 @@
         return !!(panel && (nativeRaceFullscreenElement() === panel || panel.classList.contains('is-race-fullscreen-fallback')));
     }
 
+    let raceFullscreenLayoutRaf = 0;
+
     function scheduleRaceFullscreenLayout() {
-        requestAnimationFrame(updateRaceFullscreenLayout);
+        if (raceFullscreenLayoutRaf) cancelAnimationFrame(raceFullscreenLayoutRaf);
+        raceFullscreenLayoutRaf = requestAnimationFrame(() => {
+            raceFullscreenLayoutRaf = 0;
+            updateRaceFullscreenLayout();
+        });
     }
 
     function updateRaceFullscreenLayout() {
         const panel = racePanel();
         if (!panel || !raceFullscreenActive()) return;
+
+        const visualH = window.visualViewport && Number(window.visualViewport.height)
+            ? Number(window.visualViewport.height)
+            : window.innerHeight;
+        const visualW = window.visualViewport && Number(window.visualViewport.width)
+            ? Number(window.visualViewport.width)
+            : window.innerWidth;
+        const panelH = Math.min(panel.clientHeight || visualH, visualH || panel.clientHeight || window.innerHeight);
+        const panelW = Math.min(panel.clientWidth || visualW, visualW || panel.clientWidth || window.innerWidth);
+
+        panel.style.setProperty('--race-fs-viewport-h', Math.max(1, panelH).toFixed(0) + 'px');
+        panel.style.setProperty('--race-fs-viewport-w', Math.max(1, panelW).toFixed(0) + 'px');
+
         const game = $('vocab-race-game');
-        if (!game || room?.status !== 'playing') return;
+        if (!game || !room || room.status !== 'playing') return;
 
         const head = panel.querySelector('.vocab-race-panel-head');
         const styles = getComputedStyle(panel);
         const padTop = parseFloat(styles.paddingTop) || 0;
         const padBottom = parseFloat(styles.paddingBottom) || 0;
-        const viewportH = panel.clientHeight || window.innerHeight;
         const headH = head ? head.getBoundingClientRect().height : 0;
-        const available = Math.max(320, viewportH - headH - padTop - padBottom - 8);
+        const available = Math.max(250, panelH - headH - padTop - padBottom - 6);
+
+        // CSS uses this one measured value as its grid height; the track receives
+        // whatever space remains after HUD/event/controls/scores.
         panel.style.setProperty('--race-fs-game-height', available.toFixed(0) + 'px');
+        panel.classList.toggle('is-race-short', panelH < 680);
+        panel.classList.toggle('is-race-very-short', panelH < 540);
+        panel.classList.toggle('is-race-narrow', panelW < 700);
+        panel.classList.toggle('is-race-very-narrow', panelW < 430);
     }
 
     function syncRaceFullscreenState() {
@@ -250,8 +279,14 @@
 
         document.documentElement.classList.toggle('vocab-race-page-fullscreen', active);
         document.body.classList.toggle('vocab-race-page-fullscreen', active);
-        if (active) scheduleRaceFullscreenLayout();
-        else panel.style.removeProperty('--race-fs-game-height');
+        if (active) {
+            scheduleRaceFullscreenLayout();
+        } else {
+            panel.style.removeProperty('--race-fs-game-height');
+            panel.style.removeProperty('--race-fs-viewport-h');
+            panel.style.removeProperty('--race-fs-viewport-w');
+            panel.classList.remove('is-race-short','is-race-very-short','is-race-narrow','is-race-very-narrow');
+        }
     }
 
     async function enterRaceFullscreen() {
