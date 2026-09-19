@@ -414,7 +414,9 @@
 
     function leaveLocalRoom() {
         unsubscribe();
-        room = null; players = []; claimPending = false; timeoutPending = false; advancePending = false; charging = null; resolvedObstacleKeys.clear();
+        room = null; players = []; claimPending = false; timeoutPending = false; advancePending = false; charging = null;
+        laneWriteTarget = null; laneVisualTarget = null; laneWriteRound = -1; laneWriteRunning = false;
+        resolvedObstacleKeys.clear();
         if ($('vocab-race-entry')) $('vocab-race-entry').style.display = me && me.email !== TEACHER_EMAIL ? 'grid' : 'none';
         if ($('vocab-race-lobby')) $('vocab-race-lobby').style.display = 'none';
         if ($('vocab-race-game')) $('vocab-race-game').style.display = 'none';
@@ -565,7 +567,7 @@
         }
 
         car.style.setProperty('transition', 'none', 'important');
-        car.style.setProperty('transform', 'translateX(-50%)', 'important');
+        car.style.setProperty('transform', 'translateX(-50%)');
         targetLane.appendChild(car);
         void car.offsetWidth;
 
