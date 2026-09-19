@@ -1397,197 +1397,300 @@ document.addEventListener('DOMContentLoaded', () => {
         updateCommentFormVisibility(user); 
     }
 
-    // ================== [MỚI] XÁC THỰC THIẾT BỊ MỚI BẰNG "GMAIL LIÊN KẾT" ==================
-    // Mục tiêu: hạn chế việc 1 tài khoản học viên bị chia sẻ cho nhiều người dùng chung. Lần
-    // đăng nhập ĐẦU TIÊN của 1 tài khoản trên 1 thiết bị/trình duyệt cụ thể sẽ bị giữ lại, yêu
-    // cầu đăng nhập thêm đúng Gmail cá nhân mà giáo viên đã gán sẵn cho học viên đó (cột
-    // "linked_gmail" trong bảng allowed_signup_emails, xem khối "Quản lý quyền đăng nhập" phía
-    // trên). Nếu khớp, thiết bị này được ghi nhận là "đã xác thực" (lưu 1 device_token ngẫu
-    // nhiên vào localStorage + vào bảng verified_devices trên Supabase) và những lần đăng nhập
-    // SAU trên đúng thiết bị này sẽ không hỏi lại nữa. KHÔNG giới hạn số thiết bị được xác thực
-    // cho 1 tài khoản — học viên có thể xác thực trên nhiều máy (máy nhà, điện thoại,...), mỗi
-    // máy chỉ cần xác thực đúng 1 lần.
-    //
-    // Việc so khớp Gmail được thực hiện Ở PHÍA SERVER (Edge Function "verify-device"), KHÔNG
-    // phải ở JS này — vì JS chạy trên trình duyệt của học viên nên không thể tin tưởng được
-    // (học viên rành kỹ thuật có thể mở DevTools tự sửa biến). Xem file
-    // "verify-device-edge-function.ts" + "verified_devices_setup.sql" để triển khai phần server.
-    // Giảng viên (TEACHER_EMAILS) và trường hợp giảng viên đang "xem như học viên"
-    // (isImpersonating) được bỏ qua bước này — xem hàm handleSessionChange bên dưới.
+    // ================== XÁC THỰC THIẾT BỊ MỚI QUA HÀNG CHỜ GIÁO VIÊN ==================
+    // Máy đã có device_token hợp lệ vẫn vào thẳng như trước. Máy mới tạo một yêu cầu chờ duyệt
+    // trên server; giáo viên có thể duyệt sau, không cần online đúng lúc học viên đăng nhập.
+    const DEVICE_REQUEST_STORAGE_PREFIX = 'ldd_device_request::';
     let deviceGateOverlayEl = null;
-    let deviceGateGoogleButtonReady = false;
-    let pendingGateUser = null;   // user Supabase đang chờ qua cổng xác thực thiết bị
-    let pendingGateEmail = '';    // cache email chữ thường của user ở trên, dùng nhiều nơi
+    let pendingGateUser = null;
+    let pendingGateEmail = '';
+    let activeDeviceRequestToken = '';
+    let deviceGatePollTimer = null;
+    let deviceGateRunSeq = 0;
 
-    // Tạo khung giao diện cổng xác thực (1 lần duy nhất), gắn thẳng vào <body> — không cần
-    // sửa gì trong index.html. Overlay này phủ kín toàn màn hình, đè lên cả form đăng nhập lẫn
-    // toàn bộ nội dung web nên học viên không thao tác được gì cho tới khi qua được bước này.
     function ensureDeviceGateUI() {
         if (deviceGateOverlayEl) return;
         deviceGateOverlayEl = document.createElement('div');
         deviceGateOverlayEl.id = 'device-gate-overlay';
         deviceGateOverlayEl.style.cssText = 'display:none; position:fixed; inset:0; background:#101820; z-index:999999; align-items:center; justify-content:center; padding:16px;';
         deviceGateOverlayEl.innerHTML = `
-            <div style="background:#fff; color:#222; border-radius:16px; padding:30px 24px; max-width:420px; width:100%; text-align:center; box-shadow:0 10px 40px rgba(0,0,0,.35); font-family:inherit;">
+            <div style="background:#fff; color:#222; border-radius:16px; padding:30px 24px; max-width:440px; width:100%; text-align:center; box-shadow:0 10px 40px rgba(0,0,0,.35); font-family:inherit;">
                 <div style="font-size:40px; margin-bottom:6px;">🔐</div>
-                <h2 style="margin:0 0 10px; font-size:20px;">Xác thực thiết bị mới</h2>
+                <h2 id="device-gate-title" style="margin:0 0 10px; font-size:20px;">Kiểm tra thiết bị</h2>
                 <p style="font-size:14px; color:#555; margin:0 0 14px;">Tài khoản: <strong id="device-gate-email"></strong></p>
-                <p id="device-gate-explain" style="font-size:13.5px; color:#666; line-height:1.55; margin:0 0 20px;">
-                    Đây là lần đầu bạn đăng nhập tài khoản này trên thiết bị/trình duyệt này.
-                    Vui lòng đăng nhập bằng <strong>Gmail đã đăng ký với giáo viên</strong> để xác nhận.
-                    Từ lần sau, đăng nhập trên đúng thiết bị này sẽ không cần bước này nữa.
+                <p id="device-gate-explain" style="font-size:13.5px; color:#666; line-height:1.55; margin:0 0 16px;">
+                    Máy mới cần được giáo viên phê duyệt một lần. Sau khi được duyệt, những lần đăng nhập sau trên đúng trình duyệt này sẽ vào thẳng.
                 </p>
-                <p id="device-gate-checking" style="font-size:14px; color:#777; margin:0 0 6px;">⏳ Đang kiểm tra thiết bị...</p>
-                <div id="device-gate-google-btn" style="display:none; justify-content:center; margin-bottom:8px;"></div>
-                <p id="device-gate-status" style="font-size:13px; min-height:18px; color:#c0392b; margin:6px 0 0;"></p>
+                <p id="device-gate-checking" style="font-size:14px; color:#777; margin:0 0 10px;">⏳ Đang kiểm tra thiết bị...</p>
+                <div id="device-gate-waiting" style="display:none; margin:6px 0 10px;">
+                    <div style="font-size:30px; margin-bottom:6px;">⏳</div>
+                    <strong style="display:block; margin-bottom:5px;">Đang chờ giáo viên duyệt</strong>
+                    <span style="font-size:13px; color:#666; line-height:1.5;">Bạn có thể để trang này mở hoặc quay lại sau. Nếu trang đang mở, hệ thống sẽ tự vào ngay khi được duyệt.</span>
+                </div>
+                <p id="device-gate-status" style="font-size:13px; min-height:18px; color:#555; line-height:1.5; margin:8px 0;"></p>
+                <div id="device-gate-actions" style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:10px;">
+                    <button type="button" id="device-gate-refresh-btn" class="kid-btn" style="display:none;">↻ Kiểm tra lại</button>
+                    <button type="button" id="device-gate-resend-btn" class="kid-btn kid-btn-primary" style="display:none;">Gửi yêu cầu mới</button>
+                    <button type="button" id="device-gate-retry-btn" class="kid-btn kid-btn-primary" style="display:none;">Thử lại</button>
+                </div>
                 <button type="button" id="device-gate-logout-btn" style="margin-top:16px; background:none; border:none; color:#888; text-decoration:underline; font-size:13px; cursor:pointer;">Đăng xuất, dùng tài khoản khác</button>
             </div>
         `;
         document.body.appendChild(deviceGateOverlayEl);
+
         document.getElementById('device-gate-logout-btn').addEventListener('click', async () => {
             hideDeviceGateUI();
             await sb.auth.signOut();
         });
+        document.getElementById('device-gate-refresh-btn').addEventListener('click', () => {
+            if (activeDeviceRequestToken && pendingGateUser) pollDeviceApproval(activeDeviceRequestToken, pendingGateUser, true);
+        });
+        document.getElementById('device-gate-resend-btn').addEventListener('click', () => {
+            if (pendingGateUser) createOrResumeApprovalRequest(pendingGateUser, null, true);
+        });
+        document.getElementById('device-gate-retry-btn').addEventListener('click', async () => {
+            const { data } = await sb.auth.getSession();
+            if (data && data.session && data.session.user) gateDeviceOrProceed(data.session.user, data.session);
+        });
+    }
+
+    function stopDeviceGatePolling() {
+        if (deviceGatePollTimer) {
+            clearInterval(deviceGatePollTimer);
+            deviceGatePollTimer = null;
+        }
     }
 
     function showDeviceGateOverlay() {
         ensureDeviceGateUI();
         deviceGateOverlayEl.style.display = 'flex';
     }
+
     function hideDeviceGateUI() {
+        stopDeviceGatePolling();
+        activeDeviceRequestToken = '';
         if (deviceGateOverlayEl) deviceGateOverlayEl.style.display = 'none';
     }
-    // Trạng thái "đang hỏi Supabase xem thiết bị này đã từng xác thực chưa" (thường chỉ mất
-    // chưa tới 1 giây, nhưng vẫn cần khoá màn hình trong lúc chờ để tránh học viên thao tác hụt).
-    function showDeviceGateChecking() {
-        showDeviceGateOverlay();
-        document.getElementById('device-gate-checking').style.display = 'block';
-        document.getElementById('device-gate-google-btn').style.display = 'none';
-        document.getElementById('device-gate-status').textContent = '';
-    }
-    // Trạng thái "thiết bị chưa được xác thực -> hiện nút đăng nhập Gmail".
-    function showDeviceGateForm(email) {
-        showDeviceGateOverlay();
-        document.getElementById('device-gate-email').textContent = email;
-        document.getElementById('device-gate-checking').style.display = 'none';
-        document.getElementById('device-gate-google-btn').style.display = 'flex';
-        document.getElementById('device-gate-status').textContent = '';
-        ensureGoogleGateButton();
-    }
 
-    // Thư viện Google Identity Services (nạp qua thẻ <script> trong index.html) tải bất đồng bộ
-    // nên cần chờ tới khi sẵn sàng thay vì gọi ngay — tránh lỗi "google is not defined" nếu học
-    // viên vào bước xác thực này quá nhanh (mạng chậm).
-    function waitForGoogleIdentity(timeoutMs = 10000) {
-        return new Promise((resolve, reject) => {
-            const start = Date.now();
-            (function poll() {
-                if (window.google && window.google.accounts && window.google.accounts.id) {
-                    resolve();
-                } else if (Date.now() - start > timeoutMs) {
-                    reject(new Error('Không tải được thư viện đăng nhập Google. Vui lòng kiểm tra kết nối mạng rồi tải lại trang.'));
-                } else {
-                    setTimeout(poll, 150);
-                }
-            })();
+    function resetDeviceGateActions() {
+        ['device-gate-refresh-btn','device-gate-resend-btn','device-gate-retry-btn'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
         });
     }
 
-    // Khởi tạo + vẽ nút "Đăng nhập bằng Google" cho MÀN XÁC THỰC THIẾT BỊ (khác nút đăng nhập
-    // Google ở màn hình đăng nhập chính). Chỉ cần initialize() 1 lần cho cả phiên làm việc.
-    async function ensureGoogleGateButton() {
-        const statusEl = document.getElementById('device-gate-status');
-        if (deviceGateGoogleButtonReady) return;
-        if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID.indexOf('DÁN_GOOGLE_CLIENT_ID') === 0) {
-            statusEl.textContent = 'Hệ thống chưa được cấu hình GOOGLE_CLIENT_ID — vui lòng báo giảng viên/người quản trị.';
-            return;
-        }
-        try {
-            await waitForGoogleIdentity();
-        } catch (err) {
-            statusEl.textContent = err.message;
-            return;
-        }
-        google.accounts.id.initialize({
-            client_id: GOOGLE_CLIENT_ID,
-            callback: onDeviceGateGoogleCredential
-        });
-        google.accounts.id.renderButton(
-            document.getElementById('device-gate-google-btn'),
-            { theme: 'outline', size: 'large', text: 'continue_with', width: 280 }
-        );
-        deviceGateGoogleButtonReady = true;
+    function showDeviceGateChecking(email) {
+        showDeviceGateOverlay();
+        resetDeviceGateActions();
+        const title = document.getElementById('device-gate-title');
+        const emailEl = document.getElementById('device-gate-email');
+        const checking = document.getElementById('device-gate-checking');
+        const waiting = document.getElementById('device-gate-waiting');
+        const status = document.getElementById('device-gate-status');
+        if (title) title.textContent = 'Kiểm tra thiết bị';
+        if (emailEl) emailEl.textContent = email || pendingGateEmail || '';
+        if (checking) checking.style.display = 'block';
+        if (waiting) waiting.style.display = 'none';
+        if (status) { status.style.color = '#555'; status.textContent = ''; }
     }
 
-    // Gọi Edge Function "verify-device" — dùng chung 1 hàm cho cả 2 việc: (1) "check" xem
-    // device_token đã lưu sẵn trong localStorage còn hợp lệ không, và (2) "verify" xác nhận
-    // idToken Google vừa đăng nhập có khớp Gmail liên kết của tài khoản hay không.
+    function showDeviceGatePending(email, message) {
+        showDeviceGateOverlay();
+        resetDeviceGateActions();
+        const title = document.getElementById('device-gate-title');
+        const emailEl = document.getElementById('device-gate-email');
+        const checking = document.getElementById('device-gate-checking');
+        const waiting = document.getElementById('device-gate-waiting');
+        const status = document.getElementById('device-gate-status');
+        const refresh = document.getElementById('device-gate-refresh-btn');
+        if (title) title.textContent = 'Thiết bị đang chờ duyệt';
+        if (emailEl) emailEl.textContent = email || pendingGateEmail || '';
+        if (checking) checking.style.display = 'none';
+        if (waiting) waiting.style.display = 'block';
+        if (status) { status.style.color = '#555'; status.textContent = message || 'Yêu cầu đã được gửi tới tài khoản giáo viên.'; }
+        if (refresh) refresh.style.display = '';
+    }
+
+    function showDeviceGateDecision(statusName) {
+        showDeviceGateOverlay();
+        stopDeviceGatePolling();
+        resetDeviceGateActions();
+        const title = document.getElementById('device-gate-title');
+        const checking = document.getElementById('device-gate-checking');
+        const waiting = document.getElementById('device-gate-waiting');
+        const status = document.getElementById('device-gate-status');
+        const resend = document.getElementById('device-gate-resend-btn');
+        if (checking) checking.style.display = 'none';
+        if (waiting) waiting.style.display = 'none';
+        if (resend) resend.style.display = '';
+        if (statusName === 'rejected') {
+            if (title) title.textContent = 'Yêu cầu đã bị từ chối';
+            if (status) { status.style.color = '#c0392b'; status.textContent = 'Giáo viên đã từ chối thiết bị này. Nếu cần, bạn có thể gửi một yêu cầu mới.'; }
+        } else {
+            if (title) title.textContent = 'Yêu cầu đã hết hạn';
+            if (status) { status.style.color = '#b26a00'; status.textContent = 'Yêu cầu chờ duyệt đã hết hạn. Hãy gửi yêu cầu mới.'; }
+        }
+    }
+
+    function showDeviceGateCheckError(message) {
+        showDeviceGateOverlay();
+        stopDeviceGatePolling();
+        resetDeviceGateActions();
+        const checking = document.getElementById('device-gate-checking');
+        const waiting = document.getElementById('device-gate-waiting');
+        const status = document.getElementById('device-gate-status');
+        const retry = document.getElementById('device-gate-retry-btn');
+        if (checking) checking.style.display = 'none';
+        if (waiting) waiting.style.display = 'none';
+        if (status) {
+            status.style.color = '#c0392b';
+            status.textContent = message || 'Không thể kiểm tra thiết bị lúc này. Chứng nhận trên máy vẫn được giữ; hãy thử lại.';
+        }
+        if (retry) retry.style.display = '';
+    }
+
     async function callVerifyDeviceFunction(body, session) {
         try {
+            let activeSession = session;
+            if (!activeSession) {
+                const { data } = await sb.auth.getSession();
+                activeSession = data && data.session;
+            }
+            if (!activeSession || !activeSession.access_token) {
+                return { error: 'Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.' };
+            }
             const resp = await fetch(VERIFY_DEVICE_FUNCTION_URL, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${session.access_token}`,
+                    'Authorization': `Bearer ${activeSession.access_token}`,
                     'apikey': SUPABASE_ANON_KEY
                 },
                 body: JSON.stringify(body)
             });
             const result = await resp.json().catch(() => ({}));
-            if (!resp.ok) {
-                return { error: (result && result.error) || 'Có lỗi xảy ra, vui lòng thử lại.' };
-            }
+            if (!resp.ok) return { error: (result && result.error) || 'Có lỗi xảy ra, vui lòng thử lại.', status: result && result.status };
             return result;
         } catch (err) {
             return { error: 'Không thể kết nối máy chủ: ' + err.message };
         }
     }
 
-    // Được gọi khi học viên chọn xong tài khoản Gmail ở nút đăng nhập Google trên màn xác thực.
-    async function onDeviceGateGoogleCredential(response) {
-        const statusEl = document.getElementById('device-gate-status');
-        statusEl.style.color = '#555';
-        statusEl.textContent = 'Đang xác thực...';
+    function requestStorageKey(email) {
+        return DEVICE_REQUEST_STORAGE_PREFIX + String(email || '').toLowerCase();
+    }
+
+    function getOrCreateRequestToken(email, forceNew) {
+        const key = requestStorageKey(email);
         try {
-            const { data: sessionData } = await sb.auth.getSession();
-            const session = sessionData && sessionData.session;
-            if (!session) {
-                statusEl.style.color = '#c0392b';
-                statusEl.textContent = 'Phiên đăng nhập đã hết hạn, vui lòng tải lại trang và đăng nhập lại.';
-                return;
+            if (forceNew) localStorage.removeItem(key);
+            let token = localStorage.getItem(key);
+            if (!token) {
+                token = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : (
+                    Date.now().toString(16) + '-' + Math.random().toString(16).slice(2) + '-4aaa-8aaa-' + Math.random().toString(16).slice(2,14)
+                );
+                localStorage.setItem(key, token);
             }
-            const result = await callVerifyDeviceFunction({ mode: 'verify', idToken: response.credential }, session);
-            if (!result || result.error) {
-                statusEl.style.color = '#c0392b';
-                statusEl.textContent = (result && result.error) || 'Xác thực thất bại, vui lòng thử lại.';
-                // Cho phép chọn lại Gmail khác ở lần bấm nút tiếp theo, phòng trường hợp Google
-                // tự động chọn nhầm tài khoản do trình duyệt đang đăng nhập sẵn Gmail khác.
-                if (window.google && google.accounts && google.accounts.id) google.accounts.id.disableAutoSelect();
-                return;
-            }
-            // Khớp Gmail liên kết -> lưu device_token, mở khoá app ngay.
-            localStorage.setItem(DEVICE_TOKEN_STORAGE_PREFIX + pendingGateEmail, result.deviceToken);
-            hideDeviceGateUI();
-            updateUIForUser(pendingGateUser);
-        } catch (err) {
-            statusEl.style.color = '#c0392b';
-            statusEl.textContent = 'Lỗi: ' + (err.message || 'không xác định');
+            return token;
+        } catch (_) {
+            return (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : '';
         }
     }
 
-    // Hàm điều phối chính: quyết định thiết bị này đã được xác thực chưa, và mở cổng xác thực
-    // nếu chưa. Gọi thay cho updateUIForUser(user) mỗi khi có user học viên đăng nhập.
+    function saveRequestToken(email, token) {
+        if (!token) return;
+        try { localStorage.setItem(requestStorageKey(email), token); } catch (_) {}
+    }
+
+    function clearRequestToken(email) {
+        try { localStorage.removeItem(requestStorageKey(email)); } catch (_) {}
+    }
+
+    function acceptApprovedDevice(result, user) {
+        if (!result || !result.deviceToken || !user) return false;
+        const email = (user.email || '').toLowerCase();
+        try { localStorage.setItem(DEVICE_TOKEN_STORAGE_PREFIX + email, result.deviceToken); } catch (_) {}
+        clearRequestToken(email);
+        hideDeviceGateUI();
+        updateUIForUser(user);
+        return true;
+    }
+
+    async function pollDeviceApproval(requestToken, user, manual) {
+        if (!requestToken || !user) return;
+        const result = await callVerifyDeviceFunction({ mode: 'poll', requestToken });
+        if (result && result.status === 'approved' && result.deviceToken) {
+            acceptApprovedDevice(result, user);
+            return;
+        }
+        if (result && result.status === 'pending') {
+            if (manual) showDeviceGatePending(user.email || '', 'Vẫn đang chờ giáo viên duyệt.');
+            return;
+        }
+        if (result && (result.status === 'rejected' || result.status === 'expired')) {
+            showDeviceGateDecision(result.status);
+            return;
+        }
+        if (result && result.status === 'missing') {
+            clearRequestToken(user.email || '');
+            stopDeviceGatePolling();
+            await createOrResumeApprovalRequest(user, null, true);
+            return;
+        }
+        if (result && result.error && manual) {
+            const status = document.getElementById('device-gate-status');
+            if (status) { status.style.color = '#c0392b'; status.textContent = result.error; }
+        }
+    }
+
+    function startDeviceGatePolling(requestToken, user) {
+        stopDeviceGatePolling();
+        activeDeviceRequestToken = requestToken;
+        deviceGatePollTimer = setInterval(() => {
+            if (document.visibilityState === 'visible') pollDeviceApproval(requestToken, user, false);
+        }, 15000);
+    }
+
+    async function createOrResumeApprovalRequest(user, session, forceNew) {
+        if (!user) return;
+        pendingGateUser = user;
+        pendingGateEmail = (user.email || '').toLowerCase();
+        const requestToken = getOrCreateRequestToken(pendingGateEmail, !!forceNew);
+        showDeviceGateChecking(pendingGateEmail);
+
+        const result = await callVerifyDeviceFunction({ mode: 'request', requestToken }, session);
+        if (result && result.status === 'approved' && result.deviceToken) {
+            acceptApprovedDevice(result, user);
+            return;
+        }
+        if (result && result.status === 'pending' && result.requestToken) {
+            saveRequestToken(pendingGateEmail, result.requestToken);
+            activeDeviceRequestToken = result.requestToken;
+            showDeviceGatePending(pendingGateEmail, result.reused ? 'Yêu cầu trước đó vẫn đang chờ giáo viên duyệt.' : 'Yêu cầu đã được gửi tới tài khoản giáo viên.');
+            startDeviceGatePolling(result.requestToken, user);
+            return;
+        }
+        if (result && (result.status === 'rejected' || result.status === 'expired')) {
+            showDeviceGateDecision(result.status);
+            return;
+        }
+
+        showDeviceGateCheckError((result && result.error) || 'Không thể gửi yêu cầu duyệt thiết bị lúc này.');
+    }
+
     async function gateDeviceOrProceed(user, session) {
+        const runSeq = ++deviceGateRunSeq;
         pendingGateUser = user;
         pendingGateEmail = (user.email || '').toLowerCase();
         const tokenKey = DEVICE_TOKEN_STORAGE_PREFIX + pendingGateEmail;
         let localToken = null;
-        try { localToken = localStorage.getItem(tokenKey); } catch (e) { /* bỏ qua nếu localStorage bị chặn */ }
+        try { localToken = localStorage.getItem(tokenKey); } catch (_) {}
 
-        showDeviceGateChecking();
+        showDeviceGateChecking(pendingGateEmail);
 
         if (localToken) {
             const result = await callVerifyDeviceFunction({ mode: 'check', deviceToken: localToken }, session);
+            if (runSeq !== deviceGateRunSeq) return;
 
             if (result && result.trusted === true) {
                 hideDeviceGateUI();
@@ -1596,51 +1699,41 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (result && result.trusted === false && !result.error) {
-                // Server đã xác nhận DỨT KHOÁT token này không còn hợp lệ (bị thu hồi/xoá hoặc
-                // không tồn tại). Chỉ trường hợp này mới được phép xoá token ở trình duyệt.
-                try { localStorage.removeItem(tokenKey); } catch (e) { /* bỏ qua */ }
-                showDeviceGateForm(user.email || '');
+                try { localStorage.removeItem(tokenKey); } catch (_) {}
+                await createOrResumeApprovalRequest(user, session, false);
                 return;
             }
 
-            // Lỗi mạng, Edge Function, Supabase hoặc response bất thường KHÔNG có nghĩa thiết bị
-            // đã mất tin cậy. Giữ nguyên token để lần tải sau có thể kiểm tra lại, tránh bắt học
-            // viên đăng nhập Gmail/xác minh số điện thoại lại chỉ vì một lỗi kết nối tạm thời.
-            const checkingEl = document.getElementById('device-gate-checking');
-            const statusEl = document.getElementById('device-gate-status');
-            if (checkingEl) checkingEl.style.display = 'none';
-            if (statusEl) {
-                statusEl.style.color = '#c0392b';
-                statusEl.textContent = 'Không thể kiểm tra thiết bị lúc này. Chứng nhận trên máy vẫn được giữ; vui lòng tải lại trang để thử lại.';
-            }
+            // Lỗi tạm thời không được phép phá chứng nhận cũ.
+            showDeviceGateCheckError((result && result.error)
+                ? 'Không thể kiểm tra thiết bị: ' + result.error + ' Chứng nhận trên máy vẫn được giữ.'
+                : 'Không thể kiểm tra thiết bị lúc này. Chứng nhận trên máy vẫn được giữ.');
             return;
         }
 
-        // Không có token localStorage: đây thực sự là trình duyệt/domain/profile mới (hoặc dữ
-        // liệu trang đã bị xoá), nên mới yêu cầu xác minh Gmail liên kết.
-        showDeviceGateForm(user.email || '');
+        await createOrResumeApprovalRequest(user, session, false);
     }
 
-    // Điểm vào duy nhất mỗi khi trạng thái đăng nhập thay đổi (đăng nhập/đăng xuất/khôi phục
-    // phiên) — thay thế việc gọi thẳng updateUIForUser(session?.user) như trước đây.
     async function handleSessionChange(session) {
         const user = session && session.user;
         if (!user) {
+            ++deviceGateRunSeq;
             pendingGateUser = null;
             pendingGateEmail = '';
             hideDeviceGateUI();
             updateUIForUser(null);
             return;
         }
+
         const emailLower = (user.email || '').toLowerCase();
         const loggedInIsTeacher = TEACHER_EMAILS.includes(emailLower);
-        // Giảng viên đăng nhập thật, HOẶC đang trong phiên "xem như học viên" do giảng viên chủ
-        // động bấm (đã tự xác thực từ trước) -> bỏ qua cổng, vào thẳng như bình thường.
         if (loggedInIsTeacher || isImpersonating) {
+            ++deviceGateRunSeq;
             hideDeviceGateUI();
             updateUIForUser(user);
             return;
         }
+
         await gateDeviceOrProceed(user, session);
     }
     // ================== [KẾT THÚC] XÁC THỰC THIẾT BỊ MỚI ==================
