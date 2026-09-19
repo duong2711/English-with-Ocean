@@ -300,6 +300,20 @@
         const oldRound = room && room.round_index;
         room = rr.data;
         players = pp.data || [];
+
+        // Publish the canonical room snapshot for the motion/realtime helper.
+        // This makes opponent car movement independent of script load order:
+        // v10 can subscribe to player updates as soon as the core knows the room.
+        const publicRoomState = {
+            id: room.id,
+            code: room.code || '',
+            status: room.status || '',
+            round_index: Number(room.round_index),
+            last_result: room.last_result || {}
+        };
+        window.LDDVocabRaceRoomState = publicRoomState;
+        document.dispatchEvent(new CustomEvent('ldd:vocab-race-room', { detail: publicRoomState }));
+
         if (oldRound !== room.round_index) {
             claimPending = false;
             timeoutPending = false;
@@ -320,7 +334,8 @@
 
     function isRoundPaused() {
         const lr = room && room.last_result || {};
-        return !!(room && room.status === 'playing' && lr.type === 'timeout_pause' && Number(lr.round) === Number(room.round_index));
+        const pauseType = lr.type === 'round_pause' || lr.type === 'timeout_pause';
+        return !!(room && room.status === 'playing' && pauseType && Number(lr.round) === Number(room.round_index));
     }
 
     function pauseRemainingMs() {
@@ -354,6 +369,7 @@
     function leaveLocalRoom() {
         unsubscribe();
         room = null; players = []; claimPending = false; timeoutPending = false; advancePending = false; charging = null; resolvedObstacleKeys.clear();
+        window.LDDVocabRaceRoomState = null;
         if ($('vocab-race-entry')) $('vocab-race-entry').style.display = me && me.email !== TEACHER_EMAIL ? 'grid' : 'none';
         if ($('vocab-race-lobby')) $('vocab-race-lobby').style.display = 'none';
         if ($('vocab-race-game')) $('vocab-race-game').style.display = 'none';
@@ -679,7 +695,7 @@
         const { data, error } = await raceSb.rpc('vocab_race_resolve_timeout', { p_room:roomId });
         timeoutPending = false;
         if (error && !/game_not_playing/i.test(String(error.message || ''))) setStatus(translateError(error), 'error');
-        if (data && data.type === 'timeout_pause' && room && room.id === roomId) room.last_result = data;
+        if (data && (data.type === 'round_pause' || data.type === 'timeout_pause') && room && room.id === roomId) room.last_result = data;
         await syncServerClock(true);
         await refreshRoom(roomId);
     }
