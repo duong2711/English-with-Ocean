@@ -1173,8 +1173,12 @@
                 el.classList.add('is-obstacle-active');
                 if (obs) {
                     obs.classList.add('is-visible');
-                    const start = 138;
-                    const end = Math.max(start + 100, el.clientHeight - 95);
+                    const laneStyles = getComputedStyle(el);
+                    const configuredStart = parseFloat(laneStyles.getPropertyValue('--race-obstacle-start'));
+                    const configuredEndGap = parseFloat(laneStyles.getPropertyValue('--race-obstacle-end-gap'));
+                    const start = Number.isFinite(configuredStart) ? configuredStart : 138;
+                    const endGap = Number.isFinite(configuredEndGap) ? configuredEndGap : 95;
+                    const end = Math.max(start + 60, el.clientHeight - endGap);
                     obs.style.top = (start + Math.min(1, Math.max(0, s.falling.progress)) * (end - start)) + 'px';
                 }
             }
