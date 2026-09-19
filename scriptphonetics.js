@@ -1588,16 +1588,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (localToken) {
             const result = await callVerifyDeviceFunction({ mode: 'check', deviceToken: localToken }, session);
-            if (result && result.trusted) {
+
+            if (result && result.trusted === true) {
                 hideDeviceGateUI();
                 updateUIForUser(user);
                 return;
             }
-            // Token cũ không còn hợp lệ nữa (vd: giảng viên đã xoá bản ghi trong verified_devices
-            // để buộc xác thực lại) -> dọn token cũ, rơi xuống yêu cầu xác thực lại bên dưới.
-            try { localStorage.removeItem(tokenKey); } catch (e) { /* bỏ qua */ }
+
+            if (result && result.trusted === false && !result.error) {
+                // Server đã xác nhận DỨT KHOÁT token này không còn hợp lệ (bị thu hồi/xoá hoặc
+                // không tồn tại). Chỉ trường hợp này mới được phép xoá token ở trình duyệt.
+                try { localStorage.removeItem(tokenKey); } catch (e) { /* bỏ qua */ }
+                showDeviceGateForm(user.email || '');
+                return;
+            }
+
+            // Lỗi mạng, Edge Function, Supabase hoặc response bất thường KHÔNG có nghĩa thiết bị
+            // đã mất tin cậy. Giữ nguyên token để lần tải sau có thể kiểm tra lại, tránh bắt học
+            // viên đăng nhập Gmail/xác minh số điện thoại lại chỉ vì một lỗi kết nối tạm thời.
+            const checkingEl = document.getElementById('device-gate-checking');
+            const statusEl = document.getElementById('device-gate-status');
+            if (checkingEl) checkingEl.style.display = 'none';
+            if (statusEl) {
+                statusEl.style.color = '#c0392b';
+                statusEl.textContent = 'Không thể kiểm tra thiết bị lúc này. Chứng nhận trên máy vẫn được giữ; vui lòng tải lại trang để thử lại.';
+            }
+            return;
         }
 
+        // Không có token localStorage: đây thực sự là trình duyệt/domain/profile mới (hoặc dữ
+        // liệu trang đã bị xoá), nên mới yêu cầu xác minh Gmail liên kết.
         showDeviceGateForm(user.email || '');
     }
 
