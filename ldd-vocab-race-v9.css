@@ -97,3 +97,33 @@ body .vocab-race-car.is-charging{
         height:48px!important;
     }
 }
+
+
+/* ===== v18 · Round result announcement ===== */
+body .vocab-race-pause-card>p{
+    max-width:290px!important;
+    margin:10px auto 7px!important;
+    font-size:.94rem!important;
+    font-weight:750!important;
+    line-height:1.45!important;
+    color:#eef2f6!important;
+}
+body .vocab-race-pause-overlay.is-result-correct .vocab-race-pause-card{
+    border-color:rgba(74,222,128,.62)!important;
+}
+body .vocab-race-pause-overlay.is-result-correct .vocab-race-pause-card>strong{
+    color:#bbf7d0!important;
+}
+body .vocab-race-pause-overlay.is-result-wrong .vocab-race-pause-card,
+body .vocab-race-pause-overlay.is-result-obstacle .vocab-race-pause-card,
+body .vocab-race-pause-overlay.is-result-mixed .vocab-race-pause-card{
+    border-color:rgba(251,113,133,.55)!important;
+}
+body .vocab-race-pause-overlay.is-result-wrong .vocab-race-pause-card>strong,
+body .vocab-race-pause-overlay.is-result-obstacle .vocab-race-pause-card>strong,
+body .vocab-race-pause-overlay.is-result-mixed .vocab-race-pause-card>strong{
+    color:#fecdd3!important;
+}
+body .vocab-race-pause-overlay.is-result-timeout .vocab-race-pause-card>strong{
+    color:#fde68a!important;
+}
