@@ -8315,6 +8315,7 @@ function toggleCompletion(symbolElement) {
                 game_already_started: 'Ván chơi đã bắt đầu, không thể đổi vai trò lúc này.',
                 missing_roles: 'Cần có ít nhất 1 người thật ở vị trí Người chơi 1 hoặc Người chơi 2.',
                 need_human_player: 'Phải có ít nhất 1 người thật làm Người chơi 1 hoặc Người chơi 2. Không thể để người thật chỉ làm trọng tài rồi cho 2 máy chơi.',
+                one_role_only: 'Mỗi tài khoản chỉ được chọn 1 vị trí. Hãy hủy vị trí hiện tại trước nếu muốn đổi vai trò.',
                 not_participant: 'Bạn cần tham gia với vai trò người chơi hoặc trọng tài trước.',
                 only_admin_can_start: 'Hãy chọn ít nhất một vị trí người chơi; các vị trí còn trống sẽ do máy đảm nhiệm.',
                 already_playing: 'Ván chơi đang diễn ra.',
@@ -8767,6 +8768,27 @@ function toggleCompletion(symbolElement) {
             updatePickCard(pickCardP1, pickStatusP1, pickBtnP1, unpickBtnP1, lotoState.player1_id, lotoState.player1_email, isP1);
             updatePickCard(pickCardP2, pickStatusP2, pickBtnP2, unpickBtnP2, lotoState.player2_id, lotoState.player2_email, isP2);
 
+            const myRoleCount = Number(isAdmin) + Number(isP1) + Number(isP2);
+            const hasMyRole = myRoleCount > 0;
+
+            // One account = one role. Other empty player slots stay visible but disabled
+            // until the user releases the role they currently own.
+            if (lotoState.status === 'lobby' && hasMyRole) {
+                if (!isP1 && !lotoState.player1_id) {
+                    pickBtnP1.disabled = true;
+                    pickBtnP1.title = 'Bạn đã chọn một vị trí khác';
+                    pickStatusP1.textContent = 'Trống — bạn đã chọn vị trí khác';
+                }
+                if (!isP2 && !lotoState.player2_id) {
+                    pickBtnP2.disabled = true;
+                    pickBtnP2.title = 'Bạn đã chọn một vị trí khác';
+                    pickStatusP2.textContent = 'Trống — bạn đã chọn vị trí khác';
+                }
+            } else {
+                pickBtnP1.title = '';
+                pickBtnP2.title = '';
+            }
+
             if (lotoState.admin_id && lotoState.admin_id !== currentUserId) {
                 adminToggleInput.checked = false;
                 adminToggleInput.disabled = true;
@@ -8777,17 +8799,26 @@ function toggleCompletion(symbolElement) {
                 adminStatus.textContent = 'Bạn là trọng tài ✅';
             } else {
                 adminToggleInput.checked = false;
-                adminToggleInput.disabled = (lotoState.status === 'playing');
-                adminStatus.textContent = lotoState.status === 'lobby'
-                    ? 'Trống — máy sẽ làm trọng tài nếu cần'
-                    : 'Chưa có ai làm trọng tài';
+                adminToggleInput.disabled = (lotoState.status === 'playing') || isP1 || isP2;
+                if (lotoState.status === 'lobby' && (isP1 || isP2)) {
+                    adminStatus.textContent = 'Trống — bạn đã chọn vị trí người chơi';
+                } else {
+                    adminStatus.textContent = lotoState.status === 'lobby'
+                        ? 'Trống — máy sẽ làm trọng tài nếu cần'
+                        : 'Chưa có ai làm trọng tài';
+                }
             }
 
             const humanP1 = !!(lotoState.player1_id && lotoState.player1_id !== LOTO_BOT_P1_ID);
             const humanP2 = !!(lotoState.player2_id && lotoState.player2_id !== LOTO_BOT_P2_ID);
             const hasHumanPlayer = humanP1 || humanP2;
             const canStart = isAdmin || isP1 || isP2;
-            startBox.style.display = (lotoState.status === 'lobby' && canStart && hasHumanPlayer) ? 'flex' : 'none';
+            const validSingleRole = myRoleCount <= 1;
+            startBox.style.display = (lotoState.status === 'lobby' && canStart && hasHumanPlayer && validSingleRole) ? 'flex' : 'none';
+
+            if (lotoState.status === 'lobby' && myRoleCount > 1) {
+                rosterLine.textContent += '   |   ⚠️ Tài khoản của bạn đang giữ nhiều vị trí từ dữ liệu cũ — hãy hủy bớt, chỉ giữ 1 vị trí.';
+            }
 
             setupScreen.style.display = (lotoState.status === 'lobby') ? 'flex' : 'none';
             tableScreen.style.display = (lotoState.status === 'playing' || lotoState.status === 'finished') ? 'flex' : 'none';
