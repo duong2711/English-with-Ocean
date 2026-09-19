@@ -127,3 +127,210 @@ body .vocab-race-pause-overlay.is-result-mixed .vocab-race-pause-card>strong{
 body .vocab-race-pause-overlay.is-result-timeout .vocab-race-pause-card>strong{
     color:#fde68a!important;
 }
+
+
+/* ===== v19 · Fullscreen classroom mode ===== */
+body .vocab-race-panel-head{
+    gap:10px!important;
+}
+body .vocab-race-head-copy{
+    flex:1 1 auto!important;
+    min-width:0!important;
+}
+body .vocab-race-fullscreen-btn{
+    flex:0 0 auto!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    gap:6px!important;
+    min-height:38px!important;
+    padding:7px 11px!important;
+    margin-left:auto!important;
+    border:1px solid #cfd7df!important;
+    border-radius:10px!important;
+    background:#fff!important;
+    color:#334155!important;
+    font:inherit!important;
+    font-size:.72rem!important;
+    font-weight:800!important;
+    cursor:pointer!important;
+    box-shadow:none!important;
+}
+body .vocab-race-fullscreen-btn:hover{
+    background:#f8fafc!important;
+    border-color:#aeb8c3!important;
+}
+body .vocab-race-fullscreen-btn[aria-pressed="true"]{
+    background:#334155!important;
+    border-color:#334155!important;
+    color:#fff!important;
+}
+
+html.vocab-race-page-fullscreen,
+body.vocab-race-page-fullscreen{
+    overflow:hidden!important;
+    overscroll-behavior:none!important;
+}
+
+body .vocab-race-panel.is-race-fullscreen,
+body .vocab-race-panel.is-race-fullscreen-fallback{
+    position:fixed!important;
+    inset:0!important;
+    z-index:2147483000!important;
+    width:100vw!important;
+    max-width:none!important;
+    height:100vh!important;
+    height:100dvh!important;
+    margin:0!important;
+    padding:8px 10px!important;
+    overflow:hidden!important;
+    box-sizing:border-box!important;
+    background:#f4f6f8!important;
+}
+
+body .vocab-race-panel.is-race-fullscreen:fullscreen,
+body .vocab-race-panel.is-race-fullscreen:-webkit-full-screen{
+    width:100vw!important;
+    height:100vh!important;
+    height:100dvh!important;
+    background:#f4f6f8!important;
+}
+
+body .vocab-race-panel.is-race-fullscreen .vocab-race-panel-head{
+    min-height:44px!important;
+    margin:0 0 6px!important;
+    padding:0 0 6px!important;
+    display:flex!important;
+    align-items:center!important;
+}
+body .vocab-race-panel.is-race-fullscreen .vocab-race-panel-head p{
+    display:none!important;
+}
+body .vocab-race-panel.is-race-fullscreen .vocab-race-panel-head h3{
+    font-size:.96rem!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+}
+body .vocab-race-panel.is-race-fullscreen #vocab-race-status{
+    display:none!important;
+}
+
+/* During the race, every important control fits inside one viewport. */
+body .vocab-race-panel.is-race-fullscreen.is-race-playing #vocab-race-game{
+    height:var(--race-fs-game-height,calc(100dvh - 62px))!important;
+    min-height:0!important;
+    display:grid!important;
+    grid-template-rows:auto auto minmax(0,1fr) auto auto!important;
+    gap:0!important;
+    overflow:hidden!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-hud{
+    margin:0 0 5px!important;
+    gap:6px!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-round,
+body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-meaning,
+body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-round-clock{
+    min-height:42px!important;
+    padding-top:5px!important;
+    padding-bottom:5px!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-event{
+    min-height:28px!important;
+    margin:0 0 5px!important;
+    padding-top:4px!important;
+    padding-bottom:4px!important;
+    font-size:.68rem!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-track{
+    width:100%!important;
+    height:auto!important;
+    min-height:0!important;
+    max-height:none!important;
+    align-self:stretch!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-controls{
+    min-height:54px!important;
+    margin:6px 0 0!important;
+    gap:7px!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-steer{
+    min-height:48px!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-eat-btn{
+    min-height:46px!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-score-strip{
+    min-height:46px!important;
+    max-height:54px!important;
+    padding:5px 1px 0!important;
+    overflow-x:auto!important;
+    overflow-y:hidden!important;
+}
+body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-mini-score{
+    padding-top:5px!important;
+    padding-bottom:5px!important;
+}
+
+/* The launch position adapts when a laptop has a short display. */
+body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-car.is-charging{
+    bottom:min(420px,calc(100% - 112px))!important;
+}
+
+/* Lobby and result screens can use the viewport without page scrolling too. */
+body .vocab-race-panel.is-race-fullscreen #vocab-race-lobby,
+body .vocab-race-panel.is-race-fullscreen #vocab-race-finish,
+body .vocab-race-panel.is-race-fullscreen #vocab-race-entry{
+    max-height:calc(100dvh - 66px)!important;
+    overflow:auto!important;
+    overscroll-behavior:contain!important;
+}
+
+@media(max-height:720px){
+    body .vocab-race-panel.is-race-fullscreen{
+        padding:5px 7px!important;
+    }
+    body .vocab-race-panel.is-race-fullscreen .vocab-race-panel-head{
+        min-height:38px!important;
+        margin-bottom:4px!important;
+        padding-bottom:4px!important;
+    }
+    body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-round,
+    body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-meaning,
+    body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-round-clock{
+        min-height:36px!important;
+    }
+    body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-event{
+        min-height:24px!important;
+        margin-bottom:3px!important;
+    }
+    body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-controls{
+        min-height:48px!important;
+        margin-top:4px!important;
+    }
+    body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-steer,
+    body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-eat-btn{
+        min-height:42px!important;
+    }
+    body .vocab-race-panel.is-race-fullscreen.is-race-playing .vocab-race-score-strip{
+        min-height:40px!important;
+        max-height:46px!important;
+        padding-top:3px!important;
+    }
+}
+
+@media(max-width:640px){
+    body .vocab-race-fullscreen-btn span{
+        display:none!important;
+    }
+    body .vocab-race-fullscreen-btn{
+        width:40px!important;
+        padding:6px!important;
+        font-size:1rem!important;
+    }
+    body .vocab-race-panel.is-race-fullscreen{
+        padding-left:5px!important;
+        padding-right:5px!important;
+    }
+}
