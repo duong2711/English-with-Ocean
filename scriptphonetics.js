@@ -1401,6 +1401,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Máy đã có device_token hợp lệ vẫn vào thẳng như trước. Máy mới tạo một yêu cầu chờ duyệt
     // trên server; giáo viên có thể duyệt sau, không cần online đúng lúc học viên đăng nhập.
     const DEVICE_REQUEST_STORAGE_PREFIX = 'ldd_device_request::';
+    const DEVICE_CANDIDATE_STORAGE_PREFIX = 'ldd_device_candidate::';
     let deviceGateOverlayEl = null;
     let pendingGateUser = null;
     let pendingGateEmail = '';
@@ -1580,21 +1581,63 @@ document.addEventListener('DOMContentLoaded', () => {
         return DEVICE_REQUEST_STORAGE_PREFIX + String(email || '').toLowerCase();
     }
 
+    function candidateStorageKey(email) {
+        return DEVICE_CANDIDATE_STORAGE_PREFIX + String(email || '').toLowerCase();
+    }
+
+    function newSecureUuid() {
+        if (window.crypto && typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+        if (window.crypto && typeof crypto.getRandomValues === 'function') {
+            const b = new Uint8Array(16);
+            crypto.getRandomValues(b);
+            b[6] = (b[6] & 0x0f) | 0x40;
+            b[8] = (b[8] & 0x3f) | 0x80;
+            const h = Array.from(b, x => x.toString(16).padStart(2, '0')).join('');
+            return h.slice(0,8) + '-' + h.slice(8,12) + '-' + h.slice(12,16) + '-' + h.slice(16,20) + '-' + h.slice(20);
+        }
+        throw new Error('Trình duyệt không hỗ trợ bộ sinh số ngẫu nhiên an toàn.');
+    }
+
+    function clearApprovalLocalState(email) {
+        try {
+            localStorage.removeItem(requestStorageKey(email));
+            localStorage.removeItem(candidateStorageKey(email));
+        } catch (_) {}
+    }
+
     function getOrCreateRequestToken(email, forceNew) {
         const key = requestStorageKey(email);
         try {
-            if (forceNew) localStorage.removeItem(key);
+            if (forceNew) clearApprovalLocalState(email);
             let token = localStorage.getItem(key);
             if (!token) {
-                token = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : (
-                    Date.now().toString(16) + '-' + Math.random().toString(16).slice(2) + '-4aaa-8aaa-' + Math.random().toString(16).slice(2,14)
-                );
+                token = newSecureUuid();
                 localStorage.setItem(key, token);
             }
             return token;
         } catch (_) {
-            return (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : '';
+            return newSecureUuid();
         }
+    }
+
+    function getOrCreateCandidateToken(email, forceNew) {
+        const key = candidateStorageKey(email);
+        try {
+            if (forceNew) localStorage.removeItem(key);
+            let token = localStorage.getItem(key);
+            if (!token) {
+                token = newSecureUuid();
+                localStorage.setItem(key, token);
+            }
+            return token;
+        } catch (_) {
+            return newSecureUuid();
+        }
+    }
+
+    function getCandidateToken(email) {
+        try { return localStorage.getItem(candidateStorageKey(email)) || ''; }
+        catch (_) { return ''; }
     }
 
     function saveRequestToken(email, token) {
@@ -1603,14 +1646,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function clearRequestToken(email) {
-        try { localStorage.removeItem(requestStorageKey(email)); } catch (_) {}
+        clearApprovalLocalState(email);
     }
 
-    function acceptApprovedDevice(result, user) {
-        if (!result || !result.deviceToken || !user) return false;
+    function acceptApprovedDevice(result, user, candidateToken) {
+        if (!user) return false;
         const email = (user.email || '').toLowerCase();
-        try { localStorage.setItem(DEVICE_TOKEN_STORAGE_PREFIX + email, result.deviceToken); } catch (_) {}
-        clearRequestToken(email);
+        const approvedToken = (result && result.deviceToken) || candidateToken || getCandidateToken(email);
+        if (!approvedToken) return false;
+
+        try { localStorage.setItem(DEVICE_TOKEN_STORAGE_PREFIX + email, approvedToken); } catch (_) {}
+        clearApprovalLocalState(email);
         hideDeviceGateUI();
         updateUIForUser(user);
         return true;
@@ -1618,9 +1664,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function pollDeviceApproval(requestToken, user, manual) {
         if (!requestToken || !user) return;
-        const result = await callVerifyDeviceFunction({ mode: 'poll', requestToken });
-        if (result && result.status === 'approved' && result.deviceToken) {
-            acceptApprovedDevice(result, user);
+        const email = (user.email || '').toLowerCase();
+        const candidateDeviceToken = getCandidateToken(email);
+        const result = await callVerifyDeviceFunction({
+            mode: 'poll',
+            requestToken,
+            candidateDeviceToken
+        });
+
+        if (result && result.status === 'approved') {
+            if (acceptApprovedDevice(result, user, candidateDeviceToken)) return;
+            if (manual) showDeviceGateCheckError('Thiếu mã thiết bị cục bộ. Hãy gửi yêu cầu mới.');
             return;
         }
         if (result && result.status === 'pending') {
@@ -1632,7 +1686,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         if (result && result.status === 'missing') {
-            clearRequestToken(user.email || '');
+            clearApprovalLocalState(email);
             stopDeviceGatePolling();
             await createOrResumeApprovalRequest(user, null, true);
             return;
@@ -1655,18 +1709,37 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!user) return;
         pendingGateUser = user;
         pendingGateEmail = (user.email || '').toLowerCase();
-        const requestToken = getOrCreateRequestToken(pendingGateEmail, !!forceNew);
+
+        let requestToken;
+        let candidateDeviceToken;
+        try {
+            requestToken = getOrCreateRequestToken(pendingGateEmail, !!forceNew);
+            candidateDeviceToken = getOrCreateCandidateToken(pendingGateEmail, false);
+        } catch (err) {
+            showDeviceGateCheckError(err && err.message ? err.message : 'Không thể tạo mã thiết bị an toàn.');
+            return;
+        }
+
         showDeviceGateChecking(pendingGateEmail);
 
-        const result = await callVerifyDeviceFunction({ mode: 'request', requestToken }, session);
-        if (result && result.status === 'approved' && result.deviceToken) {
-            acceptApprovedDevice(result, user);
-            return;
+        const result = await callVerifyDeviceFunction({
+            mode: 'request',
+            requestToken,
+            candidateDeviceToken
+        }, session);
+
+        if (result && result.status === 'approved') {
+            if (acceptApprovedDevice(result, user, candidateDeviceToken)) return;
         }
         if (result && result.status === 'pending' && result.requestToken) {
             saveRequestToken(pendingGateEmail, result.requestToken);
             activeDeviceRequestToken = result.requestToken;
-            showDeviceGatePending(pendingGateEmail, result.reused ? 'Yêu cầu trước đó vẫn đang chờ giáo viên duyệt.' : 'Yêu cầu đã được gửi tới tài khoản giáo viên.');
+            const msg = result.reused
+                ? 'Yêu cầu trước đó vẫn đang chờ giáo viên duyệt.'
+                : result.upgradedToHashOnly
+                    ? 'Yêu cầu đang chờ đã được nâng cấp bảo mật và tiếp tục chờ giáo viên duyệt.'
+                    : 'Yêu cầu đã được gửi tới tài khoản giáo viên.';
+            showDeviceGatePending(pendingGateEmail, msg);
             startDeviceGatePolling(result.requestToken, user);
             return;
         }
