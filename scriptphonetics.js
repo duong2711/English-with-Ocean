@@ -668,6 +668,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const lichHocStatusBadge = document.getElementById('status-badge');
 
     let currentUserId = null; 
+    // [EGRESS] Giữ user hiện tại trong RAM để các module chỉ tải dữ liệu khi người dùng
+    // thực sự mở đúng khu vực, thay vì gọi Auth/API lại chỉ để lấy user.
+    let currentAuthUser = null;
+    let completionStatusLoadedUserId = null;
+    let completionStatusLoadPromise = null;
+
+    function ensureCompletionStatusLoaded() {
+        if (!currentAuthUser) return;
+        if (completionStatusLoadedUserId === currentAuthUser.id || completionStatusLoadPromise) return;
+        const userToLoad = currentAuthUser;
+        completionStatusLoadPromise = Promise.resolve(loadCompletionStatus(userToLoad))
+            .then(() => { completionStatusLoadedUserId = userToLoad.id; })
+            .catch(err => console.error('Lỗi khi tải trạng thái phiên âm:', err && err.message ? err.message : err))
+            .finally(() => { completionStatusLoadPromise = null; });
+    }
     let currentEmail = ''; 
     let currentDisplayName = ''; // [MỚI] tên hiển thị tùy chỉnh (user_metadata.display_name)
     let currentAvatarUrl = '';   // [MỚI] URL ảnh đại diện (user_metadata.avatar_url)
@@ -686,7 +701,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Bảng "study_time_log" + hàm "increment_study_time" cần được tạo trên Supabase trước
     // (xem file "profile_achievements_setup.sql" đi kèm).
     let studyTimeHeartbeatId = null;
-    const STUDY_TIME_PING_SECONDS = 30; // mỗi 30 giây gửi 1 nhịp (chỉ khi tab đang hiển thị)
+    const STUDY_TIME_PING_SECONDS = 60; // mỗi 60 giây gửi 1 nhịp (giảm 50% RPC, chỉ khi tab đang hiển thị)
 
     // [MỚI] THEO DÕI THAO TÁC CỦA HỌC VIÊN: nếu để màn hình quá 30 phút mà không di
     // chuyển chuột / lướt / bấm thì tạm dừng tính thời gian học, cho tới khi có thao tác
@@ -1198,6 +1213,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const mainTabContents = document.querySelectorAll('.main-tab-content');
 
         if (user) {
+            currentAuthUser = user;
             currentUserId = user.id;
             currentEmail = user.email;
             isTeacher = TEACHER_EMAILS.includes((user.email || '').toLowerCase());
@@ -1250,9 +1266,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // [MỚI] Tương tự cho ghi âm luyện nói (5 dạng bài ở tab "🗣️ Nói") — xem khối
             // "HỆ THỐNG GỬI GHI ÂM LUYỆN NÓI CHO GIẢNG VIÊN CHẤM".
             if (typeof window.refreshSpeakingGradingBadge === 'function') window.refreshSpeakingGradingBadge();
-            // [MỚI] Tự động cập nhật điểm chuyên cần ngay khi đăng nhập — không cần đợi học
-            // viên mở hồ sơ của mình mới tính (hàm này tự bỏ qua nếu là tài khoản giảng viên).
-            renderProfileAchievements();
+            // [EGRESS] Không chạy toàn bộ phép tính Thành tựu ngay lúc đăng nhập. Hàm này
+            // đọc nhiều bảng cùng lúc; Hồ sơ và các thao tác làm thay đổi tiến độ vẫn gọi nó
+            // đúng lúc cần, còn một nhịp nền thưa hơn sẽ đồng bộ điểm theo thời gian học.
 
             // [MỚI] Học viên đăng nhập lần đầu (chưa có cờ has_seen_onboarding_tour) sẽ được
             // tự động dẫn đi 1 vòng tham quan nhanh qua các mục chính trên web (xem định
@@ -1281,8 +1297,12 @@ document.addEventListener('DOMContentLoaded', () => {
             // người dùng vẫn ở đúng nơi họ đang xem thay vì quay về tab đầu tiên.
             restoreActiveMainTab();
 
-            // Tải trạng thái hoàn thành ngay lập tức
-            loadCompletionStatus(user);
+            // [EGRESS] Chỉ tải ipa_completions + comments khi tab Phiên âm thực sự đang mở.
+            // Nếu người dùng khôi phục vào tab khác, dữ liệu Phiên âm sẽ được lazy-load khi bấm vào.
+            const activePhoneticsTab = document.getElementById('tab-phien-am');
+            if (activePhoneticsTab && activePhoneticsTab.classList.contains('active')) {
+                ensureCompletionStatusLoaded();
+            }
 
             // [MỚI] Bắt đầu tính thời gian tự học trên web (dùng cho Thành tựu + xếp hạng)
             startStudyTimeHeartbeat();
@@ -1293,6 +1313,9 @@ document.addEventListener('DOMContentLoaded', () => {
             currentSymbol = ''; // Reset ký tự đang chọn
 
         } else {
+            currentAuthUser = null;
+            completionStatusLoadedUserId = null;
+            completionStatusLoadPromise = null;
             currentUserId = null;
             currentEmail = '';
             currentDisplayName = '';
@@ -3162,13 +3185,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     window.refreshCtestBadge = refreshCtestBadge; // để module "Bài kiểm tra riêng" gọi lại sau khi nộp bài / mở danh sách
 
-    // Kiểm tra định kỳ (mỗi 90 giây) để phát hiện bài mới được giao trong lúc đang dùng web,
+    // Kiểm tra định kỳ (mỗi 5 phút) để phát hiện bài mới được giao trong lúc đang dùng web,
     // không cần tải lại trang hay bấm vào tab Kiểm tra.
     setInterval(() => {
         if (currentUserId && !isTeacher && !isImpersonating && document.visibilityState === 'visible') {
             refreshCtestBadge();
         }
-    }, 90 * 1000);
+    }, 5 * 60 * 1000);
 
     // --- [MỚI] BADGE + THÔNG BÁO "GHI ÂM PHIÊN ÂM ĐANG CHỜ CHẤM" (chỉ giảng viên) ---
     // Khi học viên gửi 1 ghi âm luyện phát âm (bảng "comments", cột "graded"), giảng viên sẽ thấy:
@@ -3371,22 +3394,31 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Kiểm tra định kỳ (mỗi 90 giây) để giảng viên phát hiện ghi âm mới cần chấm trong lúc
+    // Kiểm tra định kỳ (mỗi 5 phút) để giảng viên phát hiện ghi âm mới cần chấm trong lúc
     // đang dùng web, không cần tải lại trang hay bấm ra vào tab Phiên âm.
     setInterval(() => {
         if (currentUserId && isTeacher && !isImpersonating && document.visibilityState === 'visible') {
             refreshPhoneticsGradingBadge();
         }
-    }, 90 * 1000);
+    }, 5 * 60 * 1000);
     // --- KẾT THÚC BADGE "GHI ÂM ĐANG CHỜ CHẤM" ---
 
-    // [MỚI] Tự động cập nhật điểm chuyên cần định kỳ (mỗi 5 phút) trong lúc học viên đang
-    // dùng web — không cần họ tự mở hồ sơ thì điểm & bảng xếp hạng mới cập nhật.
+    // [EGRESS] Thành tựu là phép tính nặng vì đọc nhiều bảng. Các thao tác tạo tiến độ vẫn
+    // cập nhật ngay tại chỗ; nhịp nền chỉ cần 30 phút/lần để đồng bộ phần điểm thời gian học.
+    setInterval(() => {
+        if (
+            currentUserId && !isTeacher && !isImpersonating &&
+            document.visibilityState === 'visible' &&
+            Date.now() - lastActivityAt <= STUDY_TIME_IDLE_LIMIT_MS
+        ) {
+            renderProfileAchievements();
+        }
+    }, 30 * 60 * 1000);
+
+    // Badge bài kiểm tra từ vựng vẫn kiểm tra 5 phút/lần vì đây là truy vấn nhẹ và có ý nghĩa
+    // thông báo; tách khỏi phép tính Thành tựu để không kéo theo hàng loạt query khác.
     setInterval(() => {
         if (currentUserId && document.visibilityState === 'visible') {
-            renderProfileAchievements();
-            // [MỚI] Cùng lúc kiểm tra luôn xem có bài kiểm tra từ vựng mới đến hạn không, để
-            // badge trên thẻ "📁 từ vựng" (tab Kiểm tra) tự cập nhật mà không cần tải lại trang.
             if (typeof window.checkVocabWeeklyTestState === 'function') window.checkVocabWeeklyTestState();
         }
     }, 5 * 60 * 1000);
@@ -3586,6 +3618,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const targetContent = document.getElementById(targetId);
             if (targetContent) {
                 targetContent.classList.add('active');
+            }
+
+            // [EGRESS] Trạng thái IPA + ghi âm chỉ được tải lần đầu khi người dùng thực sự
+            // mở tab Phiên âm trong phiên đăng nhập này.
+            if (targetId === 'tab-phien-am') {
+                ensureCompletionStatusLoaded();
             }
 
             // [MỚI] Chuyển sang tab "Phiên âm" -> kiểm tra ngay (không chờ tới lượt quét 90 giây
@@ -5205,14 +5243,14 @@ function toggleCompletion(symbolElement) {
         }
         window.refreshNewsUnreadBadge = refreshNewsUnreadBadge; // để updateUIForUser() gọi ngay sau khi đăng nhập
 
-        // Kiểm tra định kỳ (mỗi 90 giây) để phát hiện bài tin mới ngay trong lúc học viên đang
+        // Kiểm tra định kỳ (mỗi 5 phút) để phát hiện bài tin mới ngay trong lúc học viên đang
         // dùng web, không cần tải lại trang hay đăng nhập lại — giống hệt cơ chế của badge
         // "bài kiểm tra chưa làm" (xem setInterval refreshCtestBadge() ở phía trên).
         setInterval(() => {
             if (currentUserId && !isTeacher && !isImpersonating && document.visibilityState === 'visible') {
                 refreshNewsUnreadBadge();
             }
-        }, 90 * 1000);
+        }, 5 * 60 * 1000);
 
         // Đánh dấu 1 bài tin đã được học viên MỞ RA XEM — gọi ngay trong openArticle() bên dưới.
         // Bấm lại nhiều lần / mở lại bài cũ không tạo dòng trùng lặp (nhờ upsert).
@@ -30056,12 +30094,12 @@ function toggleCompletion(symbolElement) {
         });
     }
 
-    // Kiểm tra định kỳ (mỗi 90 giây), giống hệt cơ chế bên Phiên âm.
+    // Kiểm tra định kỳ (mỗi 5 phút), giống hệt cơ chế bên Phiên âm.
     setInterval(() => {
         if (currentUserId && isTeacher && !isImpersonating && document.visibilityState === 'visible') {
             refreshSpeakingGradingBadge();
         }
-    }, 90 * 1000);
+    }, 5 * 60 * 1000);
 })();
 // ===== KẾT THÚC: HỆ THỐNG GỬI GHI ÂM LUYỆN NÓI CHO GIẢNG VIÊN CHẤM =====
 
