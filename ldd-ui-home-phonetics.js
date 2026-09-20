@@ -1,5 +1,5 @@
 /* =============================================================
-   LDD ENGLISH — HOME + PHONETICS UI v8.5
+   LDD ENGLISH — HOME + PHONETICS UI v8.6
    Dedicated Home tab + Pronunciation Studio.
    ============================================================= */
 (function () {
@@ -22,8 +22,8 @@
     }
 
     function ensureTodayAssets() {
-        ensureStyle('ldd-today-style', 'ldd-ui-today.css?v=3');
-        ensureScript('ldd-today-script', 'ldd-ui-today.js?v=3');
+        ensureStyle('ldd-today-style', 'ldd-ui-today.css?v=4');
+        ensureScript('ldd-today-script', 'ldd-ui-today.js?v=4');
     }
 
     function ensureStyle(id, href) {
@@ -151,7 +151,7 @@
                 '<div class="ldd-today-head">' +
                     '<div class="ldd-today-head-copy">' +
                         '<div class="ldd-home-side-title">Nhiệm vụ hôm nay</div>' +
-                        '<div class="ldd-today-subtitle">Ưu tiên phát âm trước, các việc khác được thu gọn bên dưới.</div>' +
+                        '<div class="ldd-today-subtitle">Toàn bộ đầu việc hằng ngày nằm ở đây; hoàn thành xong sẽ chuyển xuống mục Đã hoàn thành.</div>' +
                     '</div>' +
                     '<span class="ldd-today-plan-badge">10 từ · 10 từ · 5 âm</span>' +
                 '</div>' +
