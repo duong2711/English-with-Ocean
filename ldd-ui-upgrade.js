@@ -276,9 +276,15 @@
         }
 
         function checkLoginSuccess() {
-            if (isVisible(inside) && hasRecentLoginIntent()) {
-                playBootSequence('login', true);
+            if (!isVisible(inside) || !hasRecentLoginIntent()) return;
+
+            // OAuth can return into the same initial page-load boot. One flagship sequence
+            // is enough in that case; clear the login marker so it cannot immediately replay.
+            if (bootRunning) {
+                clearLoginIntent();
+                return;
             }
+            playBootSequence('login', true);
         }
 
         if (auth) {
