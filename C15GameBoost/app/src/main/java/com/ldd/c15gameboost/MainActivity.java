@@ -8,7 +8,10 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
+import android.os.SystemClock;
 import android.view.Gravity;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -54,9 +57,15 @@ public class MainActivity extends Activity {
     };
 
     private final ExecutorService worker = Executors.newSingleThreadExecutor();
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private IBoostService service;
     private boolean binding;
+    private boolean bindScheduled;
+    private int bindAttempt;
+    private int bindGeneration;
     private int pendingAction = ACTION_NONE;
+    private long createdAt;
+    private String bindProblem = "";
     private TextView status, log;
     private Button gameBtn, normalBtn, connectBtn;
     private Shizuku.UserServiceArgs userServiceArgs;
@@ -78,6 +87,9 @@ public class MainActivity extends Activity {
         @Override public void onServiceConnected(ComponentName name, IBinder binder) {
             service = IBoostService.Stub.asInterface(binder);
             binding = false;
+            bindScheduled = false;
+            bindAttempt = 0;
+            bindProblem = "";
             runOnUiThread(() -> {
                 addLog("Shizuku UserService đã sẵn sàng.");
                 refresh();
@@ -87,12 +99,14 @@ public class MainActivity extends Activity {
         @Override public void onServiceDisconnected(ComponentName name) {
             service = null;
             binding = false;
+            bindScheduled = false;
             runOnUiThread(MainActivity.this::refresh);
         }
     };
 
     @Override protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        createdAt = SystemClock.uptimeMillis();
         userServiceArgs = new Shizuku.UserServiceArgs(new ComponentName(this, BoostUserService.class))
                 .processNameSuffix("boost").tag("c15-game-boost").version(1).daemon(false);
         buildUi();
@@ -100,13 +114,23 @@ public class MainActivity extends Activity {
         Shizuku.addBinderDeadListener(binderDead);
         Shizuku.addRequestPermissionResultListener(permissionResult);
         refresh();
-        connect();
+
+        // Một số ROM OEM có thể chưa sẵn sàng ContentProvider của Shizuku ngay khi app vừa mở.
+        // Chờ một chút trước lần bind đầu tiên để tránh UserService treo ở "đang kết nối".
+        mainHandler.postDelayed(this::connect, 2500);
     }
 
     @Override protected void onDestroy() {
+        mainHandler.removeCallbacksAndMessages(null);
         Shizuku.removeBinderReceivedListener(binderReceived);
         Shizuku.removeBinderDeadListener(binderDead);
         Shizuku.removeRequestPermissionResultListener(permissionResult);
+
+        // Dọn record bind lỗi để lần mở sau không bị mắc vào UserService cũ.
+        if (service == null && (binding || bindScheduled)) {
+            try { Shizuku.unbindUserService(userServiceArgs, connection, true); } catch (Throwable ignored) {}
+        }
+
         worker.shutdownNow();
         super.onDestroy();
     }
@@ -171,13 +195,59 @@ public class MainActivity extends Activity {
     }
 
     private void bind() {
-        if (service != null || binding) return;
+        if (service != null || binding || bindScheduled) return;
+
+        long elapsed = SystemClock.uptimeMillis() - createdAt;
+        long wait = 2500 - elapsed;
+        if (wait > 0) {
+            bindScheduled = true;
+            bindProblem = "";
+            refresh();
+            mainHandler.postDelayed(() -> {
+                bindScheduled = false;
+                bind();
+            }, wait);
+            return;
+        }
+
         binding = true;
-        try { Shizuku.bindUserService(userServiceArgs, connection); }
-        catch (Throwable t) {
+        bindAttempt++;
+        bindGeneration++;
+        final int generation = bindGeneration;
+        bindProblem = "";
+        refresh();
+
+        try {
+            Shizuku.bindUserService(userServiceArgs, connection);
+
+            // Nếu ROM không trả onServiceConnected, không treo vô hạn.
+            mainHandler.postDelayed(() -> {
+                if (generation != bindGeneration || service != null || !binding) return;
+
+                binding = false;
+                addLog("UserService không phản hồi sau 8 giây. Đang làm sạch kết nối và thử lại…");
+                try { Shizuku.unbindUserService(userServiceArgs, connection, true); } catch (Throwable ignored) {}
+                refresh();
+
+                if (bindAttempt < 2) {
+                    bindScheduled = true;
+                    mainHandler.postDelayed(() -> {
+                        bindScheduled = false;
+                        bind();
+                    }, 2500);
+                } else {
+                    pendingAction = ACTION_NONE;
+                    bindProblem = "không phản hồi";
+                    addLog("Không bind được UserService. Vào Shizuku > Ứng dụng được ủy quyền, tắt quyền C15 Game Boost rồi bật lại, sau đó mở lại app.");
+                    refresh();
+                }
+            }, 8000);
+
+        } catch (Throwable t) {
             binding = false;
             pendingAction = ACTION_NONE;
-            addLog("Bind lỗi: " + t.getMessage());
+            bindProblem = t.getClass().getSimpleName() + ": " + String.valueOf(t.getMessage());
+            addLog("Bind lỗi: " + bindProblem);
             refresh();
         }
     }
@@ -283,10 +353,24 @@ public class MainActivity extends Activity {
         boolean granted = running && Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED;
         boolean game = getSharedPreferences(PREFS,MODE_PRIVATE).getBoolean("game",false);
 
-        String serviceState = service != null ? "sẵn sàng" : (binding ? "đang kết nối…" : "chưa bind");
+        String serviceState;
+        if (service != null) serviceState = "sẵn sàng";
+        else if (bindScheduled) serviceState = "đang chờ ROM khởi tạo…";
+        else if (binding) serviceState = "đang kết nối… (lần " + Math.max(1, bindAttempt) + "/2)";
+        else if (!bindProblem.isEmpty()) serviceState = "lỗi: " + bindProblem;
+        else serviceState = "chưa bind";
+
+        String extra = "";
+        if (running) {
+            try {
+                extra = "\nShizuku UID: " + Shizuku.getUid() + " • API: " + Shizuku.getVersion();
+            } catch (Throwable ignored) {}
+        }
+
         status.setText(
                 "Chế độ: " + (game ? "🎮 LIÊN QUÂN" : "📱 BÌNH THƯỜNG") +
                 "\nShizuku: " + (running ? (granted ? "Running • đã cấp quyền" : "Running • chưa cấp quyền") : "chưa chạy") +
+                extra +
                 "\nUserService: " + serviceState
         );
 
