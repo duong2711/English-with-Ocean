@@ -1,0 +1,54 @@
+name: Cache vocabulary flashcard images
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/fetch-vocab-images.mjs'
+      - '.github/workflows/cache-vocab-images.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: vocab-image-cache
+  cancel-in-progress: false
+
+jobs:
+  cache-images:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install image optimizer
+        run: npm install --no-save --package-lock=false sharp@0.33.5
+
+      - name: Find, review and cache flashcard images
+        env:
+          VOCAB_IMAGE_REQUEST_GAP_MS: '180'
+          VOCAB_IMAGE_CACHE_TAG: '20260920-localimg1'
+        run: node scripts/fetch-vocab-images.mjs
+
+      - name: Commit cached images
+        shell: bash
+        run: |
+          if [ -z "$(git status --porcelain -- grade4-data.js grade6-data.js grade7-data.js grade8-data.js grade9-data.js grade10-data.js grade11-data.js grade12-data.js index.html assets/vocab)" ]; then
+            echo "No vocabulary image changes to commit."
+            exit 0
+          fi
+          git config user.name "ldd-vocab-image-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add grade4-data.js grade6-data.js grade7-data.js grade8-data.js grade9-data.js grade10-data.js grade11-data.js grade12-data.js index.html assets/vocab
+          git commit -m "Cache flashcard images locally"
+          git pull --rebase origin main
+          git push origin HEAD:main
