@@ -68,8 +68,6 @@ public class MainActivity extends Activity {
             "com.android.networkstack",
             "com.android.networkstack.process",
 
-            "com.oppo.camera",
-            "com.coloros.alarmclock",
             "com.coloros.phonemanager",
             "com.coloros.securitypermission",
 
@@ -98,6 +96,9 @@ public class MainActivity extends Activity {
     private static final String[] NONESSENTIAL_SYSTEM = {
             "com.google.android.googlequicksearchbox",
             "com.android.vending",
+            "com.android.chrome",
+            "com.google.android.apps.maps",
+            "com.google.android.apps.photos",
             "com.google.android.projection.gearhead",
             "com.google.android.apps.wellbeing",
             "com.google.android.feedback",
@@ -105,6 +106,12 @@ public class MainActivity extends Activity {
             "com.google.android.printservice.recommendation",
             "com.android.printspooler",
 
+            "com.oppo.camera",
+            "com.coloros.camera",
+            "com.coloros.alarmclock",
+            "com.coloros.gallery3d",
+            "com.oppo.gallery3d",
+            "com.heytap.photos",
             "com.nearme.gamecenter",
             "com.heytap.market",
             "com.heytap.themestore",
@@ -454,6 +461,8 @@ public class MainActivity extends Activity {
                 int forceStopped = 0;
                 int suspended = 0;
                 int skipped = 0;
+                int suspendFailed = 0;
+                StringBuilder failedPackages = new StringBuilder();
 
                 Set<String> alreadyChanged = csvToSet(p.getString("changed", ""));
 
@@ -483,6 +492,16 @@ public class MainActivity extends Activity {
 
                             // Ghi ngay sau từng package để nếu app bị đóng giữa chừng vẫn Restore được.
                             p.edit().putString("changed", join(alreadyChanged)).apply();
+                        } else {
+                            suspendFailed++;
+                            if (failedPackages.length() < 1200) {
+                                if (failedPackages.length() > 0) failedPackages.append(", ");
+                                failedPackages.append(pkg);
+                                String detail = oneLine(body(out));
+                                if (!detail.isEmpty()) {
+                                    failedPackages.append(" [").append(detail).append("]");
+                                }
+                            }
                         }
                     }
                 }
@@ -499,6 +518,8 @@ public class MainActivity extends Activity {
                 final int fForce = forceStopped;
                 final int fSuspend = suspended;
                 final int fSkipped = skipped;
+                final int fFailed = suspendFailed;
+                final String fFailedPackages = failedPackages.toString();
                 final long fBefore = beforeKb;
                 final long fAfter = afterKb;
                 final String fLauncher = currentLauncher;
@@ -509,7 +530,9 @@ public class MainActivity extends Activity {
                             "\nLauncher bảo vệ: " + safe(fLauncher) +
                             "\nForce-stop: " + fForce +
                             " • Suspend mới: " + fSuspend +
+                            " • Suspend lỗi: " + fFailed +
                             " • Bỏ qua: " + fSkipped +
+                            (fFailedPackages.isEmpty() ? "" : "\nKhông suspend được: " + fFailedPackages) +
                             "\nRAM khả dụng: " + mb(fBefore) + " → " + mb(fAfter) +
                             " (Δ " + signedMb(fAfter - fBefore) + ")");
                     refresh();
