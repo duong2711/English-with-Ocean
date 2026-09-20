@@ -15,6 +15,7 @@
         document.body.classList.add('ldd-ui-v2');
         ensureUpgradeAssets();
         enhanceTestCenter();
+        installTestCenterNavigationGuard();
         observeCustomTestRows();
         enhanceLearningRoadmaps();
         enhanceReadingLab();
@@ -65,6 +66,68 @@
         if (!tab || !grid) return;
         addTestHero(tab, grid);
         enhanceFolderCards(grid);
+    }
+
+    const TEST_CENTER_VIEW_IDS = [
+        'vocab-own-test-panel',
+        'ctest-panel',
+        'ielts-sample-panel',
+        'ilt-panel',
+        'irt-panel'
+    ];
+
+    const TEST_CENTER_ROOT_CARDS = new Set([
+        'vocab-test-folder',
+        'ielts-sample-folder-card',
+        'ctest-folder-card'
+    ]);
+
+    function resetTestCenterViews(options) {
+        options = options || {};
+        const grid = document.getElementById('kiemtra-folder-grid');
+
+        TEST_CENTER_VIEW_IDS.forEach(function (id) {
+            const panel = document.getElementById(id);
+            if (panel) panel.style.display = 'none';
+        });
+
+        // Modal "sẵn sàng" có thể nằm fixed bên ngoài flow của panel.
+        ['ilt-ready-modal', 'irt-ready-modal'].forEach(function (id) {
+            const modal = document.getElementById(id);
+            if (modal) modal.style.display = 'none';
+        });
+
+        if (grid) grid.style.display = options.showGrid === false ? 'none' : '';
+    }
+
+    function installTestCenterNavigationGuard() {
+        const tab = document.getElementById('tab-kiem-tra');
+        const grid = document.getElementById('kiemtra-folder-grid');
+        if (!tab || !grid || tab.dataset.lddTestNavGuard === '1') return;
+        tab.dataset.lddTestNavGuard = '1';
+
+        // Chỉ bắt các folder đã có module thật; các card placeholder lớp 6–12/chuyển cấp
+        // chưa có handler thì không can thiệp để tránh bấm vào bị màn hình trắng.
+        tab.addEventListener('click', function (event) {
+            const card = event.target.closest('#kiemtra-folder-grid > .folder-card');
+            if (!card || !TEST_CENTER_ROOT_CARDS.has(card.id)) return;
+            resetTestCenterViews({ showGrid: false });
+        }, true);
+
+        window.LDDTestNavigation = Object.assign({}, window.LDDTestNavigation || {}, {
+            resetToRoot: function () {
+                resetTestCenterViews({ showGrid: true });
+                return true;
+            },
+            openFolder: function (cardId) {
+                if (!TEST_CENTER_ROOT_CARDS.has(cardId)) return false;
+                const card = document.getElementById(cardId);
+                if (!card || !grid.contains(card)) return false;
+                resetTestCenterViews({ showGrid: true });
+                card.click();
+                return true;
+            }
+        });
     }
 
     function addTestHero(tab, grid) {
