@@ -151,12 +151,15 @@
     menuBtn.addEventListener('click', () => {
       const menu = document.getElementById('account-menu');
       if (menu) menu.classList.remove('open');
-      modal.style.display = 'flex';
+      openDeviceModal();
       loadList(true);
     });
-    document.getElementById('device-admin-close').addEventListener('click', () => { modal.style.display = 'none'; });
+    document.getElementById('device-admin-close').addEventListener('click', closeDeviceModal);
     document.getElementById('device-admin-refresh').addEventListener('click', () => loadList(true));
-    modal.addEventListener('click', e => { if (e.target === modal) modal.style.display = 'none'; });
+    modal.addEventListener('click', e => { if (e.target === modal) closeDeviceModal(); });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && modal && modal.style.display !== 'none') closeDeviceModal();
+    });
 
     modal.querySelectorAll('.device-admin-tab').forEach(btn => {
       btn.addEventListener('click', () => switchTab(btn.dataset.tab));
@@ -187,6 +190,30 @@
       setStatus(action === 'approve' ? '✅ Đã duyệt thiết bị.' : action === 'reject' ? 'Đã từ chối yêu cầu.' : '✅ Đã thu hồi thiết bị.', false);
       await loadList(true);
     });
+  }
+
+  function openDeviceModal() {
+    if (!modal) return;
+    modal.classList.remove('is-closing');
+    modal.style.display = 'flex';
+    // Two frames ensure the browser paints the initial state before transitioning.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        modal.classList.add('is-open');
+      });
+    });
+  }
+
+  function closeDeviceModal() {
+    if (!modal || modal.style.display === 'none') return;
+    modal.classList.remove('is-open');
+    modal.classList.add('is-closing');
+    window.setTimeout(() => {
+      if (!modal.classList.contains('is-open')) {
+        modal.style.display = 'none';
+        modal.classList.remove('is-closing');
+      }
+    }, 380);
   }
 
   function switchTab(tab) {
