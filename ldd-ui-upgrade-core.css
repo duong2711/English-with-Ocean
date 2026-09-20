@@ -830,7 +830,7 @@ body.ldd-motion-ready #inside.ldd-navigation-pulse {
     animation: lddBootLogoAway .48s cubic-bezier(.4,0,.2,1) both;
 }
 .ldd-boot-sequence.is-greeting .ldd-boot-greeting {
-    animation: lddBootGreetingIn .78s .22s cubic-bezier(.16,1,.3,1) both;
+    animation: lddBootGreetingIn .98s .26s cubic-bezier(.16,1,.3,1) both;
 }
 
 @keyframes lddBootCopyAway {
