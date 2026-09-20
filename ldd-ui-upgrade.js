@@ -12,16 +12,23 @@
     }
 
     onReady(function () {
-        document.body.classList.add('ldd-ui-v2');
-        ensureUpgradeAssets();
-        enhanceTestCenter();
-        installTestCenterNavigationGuard();
-        observeCustomTestRows();
-        enhanceLearningRoadmaps();
-        enhanceReadingLab();
-        initAboutMeModal();
-        linkifyLoginZaloNumber();
+        document.body.classList.add('ldd-ui-v2', 'ldd-force-motion');
         initPremiumMotion();
+
+        // Keep the rest of the UI bootstrap isolated so motion still works
+        // even if another enhancement module throws.
+        const safeInit = function (fn) {
+            try { fn(); } catch (error) { console.error('[LDD UI]', error); }
+        };
+
+        safeInit(ensureUpgradeAssets);
+        safeInit(enhanceTestCenter);
+        safeInit(installTestCenterNavigationGuard);
+        safeInit(observeCustomTestRows);
+        safeInit(enhanceLearningRoadmaps);
+        safeInit(enhanceReadingLab);
+        safeInit(initAboutMeModal);
+        safeInit(linkifyLoginZaloNumber);
     });
 
     function ensureUpgradeAssets() {
@@ -68,7 +75,8 @@
         const inside = document.getElementById('inside');
         if (!inside) return;
 
-        const reduceMotion = window.matchMedia &&
+        const reduceMotion = !document.body.classList.contains('ldd-force-motion') &&
+            window.matchMedia &&
             window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         const intentKey = 'ldd-login-launch-intent-v1';
         let loginIntent = false;
@@ -79,6 +87,7 @@
             window.requestAnimationFrame(function () {
                 window.requestAnimationFrame(function () {
                     document.body.classList.add('ldd-motion-ready');
+                    document.body.dataset.lddMotion = 'ready';
                 });
             });
         }
