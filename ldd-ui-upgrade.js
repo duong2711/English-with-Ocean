@@ -83,7 +83,6 @@
         let loginIntent = false;
         let launchTimer = null;
         let bootRunning = false;
-        let hiddenAt = 0;
         let lastBootAt = 0;
 
         function setMotionReady() {
@@ -499,19 +498,7 @@
             playBootSequence('reload', true);
         }, 60);
 
-        // Run it again whenever the user comes back to the LDD English browser tab.
-        document.addEventListener('visibilitychange', function () {
-            if (document.hidden) {
-                hiddenAt = Date.now();
-                return;
-            }
-            if (!hiddenAt) return;
-            const awayFor = Date.now() - hiddenAt;
-            hiddenAt = 0;
-            if (awayFor >= 500) {
-                playBootSequence('return', true);
-            }
-        });
+        // Returning to the browser tab should be immediate; do not replay the flagship boot here.
 
         // Covers browser back-forward cache restores as another form of returning to LDD English.
         window.addEventListener('pageshow', function (event) {
