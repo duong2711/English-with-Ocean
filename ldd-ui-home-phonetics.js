@@ -22,8 +22,8 @@
     }
 
     function ensureTodayAssets() {
-        ensureStyle('ldd-today-style', 'ldd-ui-today.css?v=5');
-        ensureScript('ldd-today-script', 'ldd-ui-today.js?v=5');
+        ensureStyle('ldd-today-style', 'ldd-ui-today.css?v=6');
+        ensureScript('ldd-today-script', 'ldd-ui-today.js?v=6');
     }
 
     function ensureStyle(id, href) {
