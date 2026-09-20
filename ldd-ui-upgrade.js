@@ -21,6 +21,7 @@
         enhanceReadingLab();
         initAboutMeModal();
         linkifyLoginZaloNumber();
+        initPremiumMotion();
     });
 
     function ensureUpgradeAssets() {
@@ -60,6 +61,174 @@
         script.async = false;
         script.src = src;
         document.body.appendChild(script);
+    }
+
+    function initPremiumMotion() {
+        const auth = document.getElementById('auth-container');
+        const inside = document.getElementById('inside');
+        if (!inside) return;
+
+        const reduceMotion = window.matchMedia &&
+            window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const intentKey = 'ldd-login-launch-intent-v1';
+        let loginIntent = false;
+        let bootPlayed = false;
+        let launchTimer = null;
+
+        function setMotionReady() {
+            window.requestAnimationFrame(function () {
+                window.requestAnimationFrame(function () {
+                    document.body.classList.add('ldd-motion-ready');
+                });
+            });
+        }
+
+        function rememberLoginIntent() {
+            loginIntent = true;
+            try {
+                window.sessionStorage.setItem(intentKey, String(Date.now()));
+            } catch (error) {
+                // sessionStorage may be unavailable in strict privacy modes.
+            }
+            if (auth) {
+                auth.classList.add('ldd-auth-launching');
+                if (launchTimer) window.clearTimeout(launchTimer);
+                launchTimer = window.setTimeout(function () {
+                    auth.classList.remove('ldd-auth-launching');
+                }, 12000);
+            }
+        }
+
+        function clearLoginIntent() {
+            loginIntent = false;
+            try {
+                window.sessionStorage.removeItem(intentKey);
+            } catch (error) {
+                // Ignore storage access failures.
+            }
+        }
+
+        function hasRecentLoginIntent() {
+            if (loginIntent) return true;
+            try {
+                const stamp = Number(window.sessionStorage.getItem(intentKey) || 0);
+                return !!stamp && (Date.now() - stamp) < 10 * 60 * 1000;
+            } catch (error) {
+                return false;
+            }
+        }
+
+        function isVisible(element) {
+            if (!element) return false;
+            const style = window.getComputedStyle(element);
+            return style.display !== 'none' &&
+                style.visibility !== 'hidden' &&
+                Number(style.opacity || 1) !== 0;
+        }
+
+        function createBootOverlay() {
+            let overlay = document.getElementById('ldd-boot-sequence');
+            if (overlay) return overlay;
+
+            overlay = document.createElement('div');
+            overlay.id = 'ldd-boot-sequence';
+            overlay.className = 'ldd-boot-sequence';
+            overlay.setAttribute('aria-hidden', 'true');
+            overlay.innerHTML =
+                '<div class="ldd-boot-orbit" aria-hidden="true"></div>' +
+                '<div class="ldd-boot-center">' +
+                    '<div class="ldd-boot-mark">LDD</div>' +
+                    '<div class="ldd-boot-title">LDD English</div>' +
+                    '<div class="ldd-boot-subtitle">Learning space ready</div>' +
+                    '<div class="ldd-boot-progress" aria-hidden="true"><span></span></div>' +
+                '</div>';
+            document.body.appendChild(overlay);
+            return overlay;
+        }
+
+        function wakeApplication() {
+            const header = document.querySelector('header');
+            inside.classList.remove('ldd-app-wake');
+            if (header) header.classList.remove('ldd-app-wake');
+
+            // Force a new animation cycle even if the user logs out and in again.
+            void inside.offsetWidth;
+            inside.classList.add('ldd-app-wake');
+            if (header) header.classList.add('ldd-app-wake');
+
+            window.setTimeout(function () {
+                inside.classList.remove('ldd-app-wake');
+                if (header) header.classList.remove('ldd-app-wake');
+            }, 720);
+        }
+
+        function playBootSequence() {
+            if (bootPlayed || !hasRecentLoginIntent()) return;
+            bootPlayed = true;
+            clearLoginIntent();
+            if (launchTimer) window.clearTimeout(launchTimer);
+            if (auth) auth.classList.remove('ldd-auth-launching');
+
+            wakeApplication();
+            if (reduceMotion) return;
+
+            const overlay = createBootOverlay();
+            overlay.classList.remove('is-finishing');
+            overlay.classList.add('is-running');
+            document.body.classList.add('ldd-booting');
+
+            window.setTimeout(function () {
+                overlay.classList.add('is-finishing');
+            }, 1080);
+
+            window.setTimeout(function () {
+                overlay.classList.remove('is-running', 'is-finishing');
+                document.body.classList.remove('ldd-booting');
+            }, 1420);
+        }
+
+        function checkLoginSuccess() {
+            if (isVisible(inside) && hasRecentLoginIntent()) {
+                playBootSequence();
+            }
+        }
+
+        if (auth) {
+            const form = document.getElementById('login-form');
+            const loginBtn = document.getElementById('login-btn');
+            const googleBtn = document.getElementById('google-login-btn');
+            const status = document.getElementById('auth-status');
+
+            if (form) form.addEventListener('submit', rememberLoginIntent, true);
+            if (loginBtn) loginBtn.addEventListener('click', rememberLoginIntent, true);
+            if (googleBtn) googleBtn.addEventListener('click', rememberLoginIntent, true);
+
+            if (status) {
+                new MutationObserver(function () {
+                    const message = (status.textContent || '').toLowerCase();
+                    if (/sai|lỗi|không đúng|thất bại|invalid|failed|error/.test(message) && isVisible(auth)) {
+                        if (launchTimer) window.clearTimeout(launchTimer);
+                        auth.classList.remove('ldd-auth-launching');
+                        clearLoginIntent();
+                    }
+                    checkLoginSuccess();
+                }).observe(status, { childList: true, subtree: true, characterData: true });
+            }
+
+            new MutationObserver(checkLoginSuccess).observe(auth, {
+                attributes: true,
+                attributeFilter: ['class', 'style', 'hidden']
+            });
+        }
+
+        new MutationObserver(checkLoginSuccess).observe(inside, {
+            attributes: true,
+            attributeFilter: ['class', 'style', 'hidden']
+        });
+
+        // A Google OAuth return may restore the logged-in UI before this script initializes.
+        checkLoginSuccess();
+        setMotionReady();
     }
 
     function linkifyLoginZaloNumber() {
