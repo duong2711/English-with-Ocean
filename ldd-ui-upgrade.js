@@ -373,6 +373,39 @@
             });
         }, true);
 
+        // Guaranteed fallback for navigation controls whose legacy code does not expose
+        // a clean panel visibility mutation. Run after the original click handlers.
+        const navigationIntentSelector = [
+            '.main-tab-btn',
+            '.header-tab-btn',
+            '.main-tab-dropdown-btn',
+            '.folder-card',
+            '[class*="folder-card"]',
+            '.grammar-back-btn',
+            '[id$="-back-btn"]',
+            '[id*="-back-btn"]',
+            '.roadmap-nav-btn',
+            '.roadmap-switcher-tab',
+            '[data-main-target]',
+            '[data-roadmap-page]',
+            '.device-admin-tab'
+        ].join(',');
+
+        document.addEventListener('click', function (event) {
+            const control = event.target.closest(navigationIntentSelector);
+            if (!control || !inside.contains(control) && !document.querySelector('header')?.contains(control)) return;
+
+            window.setTimeout(function () {
+                if (!isVisible(inside)) return;
+                inside.classList.remove('ldd-navigation-pulse');
+                void inside.offsetWidth;
+                inside.classList.add('ldd-navigation-pulse');
+                window.setTimeout(function () {
+                    inside.classList.remove('ldd-navigation-pulse');
+                }, 380);
+            }, 0);
+        }, true);
+
         // A Google OAuth return may restore the logged-in UI before this script initializes.
         checkLoginSuccess();
         setMotionReady();
