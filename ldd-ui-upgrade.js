@@ -1,5 +1,5 @@
 /* =============================================================
-   LDD ENGLISH — UI UPGRADE v5.10
+   LDD ENGLISH — UI UPGRADE v5.11
    Non-destructive DOM enhancement + low-egress bootstrap.
    Load AFTER scriptphonetics.js.
    ============================================================= */
@@ -34,8 +34,8 @@
         ensureScript('ldd-egress-guard-script', 'ldd-egress-guard.js?v=1');
         ensureScript('ldd-vocab-dedup-script', 'ldd-vocab-dedup.js?v=1');
         ensureScript('ldd-pronunciation-fix-script', 'ldd-pronunciation-fix.js?v=3');
-        ensureScript('ldd-vocab-grammar-script', 'ldd-ui-vocab-grammar.js?v=2');
-        ensureScript('ldd-home-phonetics-script', 'ldd-ui-home-phonetics.js?v=8.7');
+        ensureScript('ldd-vocab-grammar-script', 'ldd-ui-vocab-grammar.js?v=3');
+        ensureScript('ldd-home-phonetics-script', 'ldd-ui-home-phonetics.js?v=8.8');
         ensureScript('ldd-student-grade-script', 'ldd-student-grade.js?v=2');
         ensureScript('ldd-thcs-vocab-reset-script', 'ldd-thcs-vocab-reset.js?v=3');
         ensureScript('ldd-fast-progress-script', 'ldd-fast-progress.js?v=1');
