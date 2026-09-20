@@ -9561,3 +9561,61 @@ body.about-me-open { overflow: hidden; }
         right: 8px;
     }
 }
+
+
+/* ===== ABOUT ME typography boost v4 ===== */
+.about-linkbio-profile h2 {
+    font-size: 1.18rem;
+}
+.about-linkbio-profile p {
+    font-size: .82rem;
+    line-height: 1.62;
+}
+.about-linkbio-main-link strong {
+    font-size: .9rem;
+}
+.about-linkbio-box h3 {
+    font-size: 1rem;
+}
+.about-linkbio-rules p,
+.about-linkbio-rules li {
+    font-size: .82rem;
+    line-height: 1.68;
+}
+.about-linkbio-faq summary {
+    font-size: .82rem;
+    line-height: 1.56;
+}
+.about-linkbio-answer {
+    font-size: .8rem;
+    line-height: 1.66;
+}
+
+@media (min-width: 700px) {
+    .about-linkbio-profile h2 {
+        font-size: 1.42rem;
+    }
+    .about-linkbio-profile p {
+        font-size: 1rem;
+        line-height: 1.65;
+    }
+    .about-linkbio-main-link strong {
+        font-size: 1.05rem;
+    }
+    .about-linkbio-box h3 {
+        font-size: 1.18rem;
+    }
+    .about-linkbio-rules p,
+    .about-linkbio-rules li {
+        font-size: .96rem;
+        line-height: 1.72;
+    }
+    .about-linkbio-faq summary {
+        font-size: .95rem;
+        line-height: 1.6;
+    }
+    .about-linkbio-answer {
+        font-size: .92rem;
+        line-height: 1.7;
+    }
+}
