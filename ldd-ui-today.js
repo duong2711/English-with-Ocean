@@ -324,109 +324,129 @@
         const readIds = new Set((state.reads || []).map(function (r) { return String(r.article_id); }));
         const unreadArticles = (state.articles || []).filter(function (a) { return !readIds.has(String(a.id)); }).length;
         const readToday = (state.reads || []).some(function (r) { return String(r.read_at || '').slice(0, 10) === state.day; });
+        const conjDoneToday = (state.conjToday || []).length > 0;
+        const podcastDoneToday = !!state.podcastCompletedToday;
 
-        const mainTasks = [
-            dailyTask(
-                'vocab-poor',
-                '🎯',
-                'Tập lại phát âm',
-                Math.min(DAILY_POOR_TARGET, poor),
-                DAILY_POOR_TARGET,
-                poor,
-                'từ',
-                'Ưu tiên các từ có điểm phát âm gần nhất dưới 60%'
-            ),
-            dailyTask(
-                'vocab-unpronounced',
-                '🎤',
-                'Từ chưa phát âm',
-                Math.min(DAILY_UNPRONOUNCED_TARGET, unpronounced),
-                DAILY_UNPRONOUNCED_TARGET,
-                unpronounced,
-                'từ',
-                'Làm một nhóm nhỏ thay vì nhìn toàn bộ số từ còn lại'
-            ),
-            dailyTask(
-                'ipa',
-                '🔤',
-                'Luyện phiên âm IPA',
-                Math.min(DAILY_IPA_TARGET, state.ipaUnrecorded || 0),
-                DAILY_IPA_TARGET,
-                state.ipaUnrecorded || 0,
-                'âm',
-                'Mỗi ngày tập tối đa 5 âm chưa ghi âm'
-            )
-        ];
+        const activeTasks = [];
+        const completedTasks = [];
 
-        const extras = [];
-        if (unreadArticles > 0 && !readToday) extras.push(task('news', '📰', 'Đọc 1 bài báo', 1, 'Bổ sung'));
-        if (state.customTestCount > 0) extras.push(task('tests', '📝', 'Bài kiểm tra', state.customTestCount, 'Được giao'));
-        if ((state.conjToday || []).length === 0) extras.push(task('conj', '🔗', 'Liên từ', 1, '1 lượt'));
-        if (state.vocabTestPending) extras.push(task('vocabtest', '📒', 'Kiểm tra từ vựng', 1, 'Sẵn sàng'));
-        if (state.podcastIncomplete > 0 && !state.podcastCompletedToday) extras.push(task('podcast', '🎧', 'Podcast', 1, 'Giai đoạn 1'));
+        function place(item, done) {
+            if (done) completedTasks.push(item);
+            else activeTasks.push(item);
+        }
+
+        place(
+            dailyTask('vocab-poor', '🎯', 'Tập lại phát âm',
+                Math.min(DAILY_POOR_TARGET, poor), 'từ',
+                'Ưu tiên từ có điểm phát âm gần nhất dưới 60%'),
+            poor <= 0
+        );
+
+        place(
+            dailyTask('vocab-unpronounced', '🎤', 'Từ chưa phát âm',
+                Math.min(DAILY_UNPRONOUNCED_TARGET, unpronounced), 'từ',
+                'Hoàn thành tối đa 10 từ trong hôm nay'),
+            unpronounced <= 0
+        );
+
+        place(
+            dailyTask('ipa', '🔤', 'Luyện phiên âm IPA',
+                Math.min(DAILY_IPA_TARGET, state.ipaUnrecorded || 0), 'âm',
+                'Mỗi ngày luyện tối đa 5 âm chưa ghi âm'),
+            (state.ipaUnrecorded || 0) <= 0
+        );
+
+        if (unreadArticles > 0 || readToday) {
+            place(
+                dailyTask('news', '📰', 'Đọc bài báo', 1, 'bài',
+                    readToday ? 'Đã đọc bài hôm nay' : 'Đọc 1 bài là hoàn thành'),
+                readToday
+            );
+        }
+
+        if (state.customTestCount > 0) {
+            activeTasks.push(dailyTask('tests', '📝', 'Bài kiểm tra được giao',
+                state.customTestCount, 'bài', 'Mở danh sách bài cần làm'));
+        }
+
+        if (state.vocabTestPending) {
+            activeTasks.push(dailyTask('vocabtest', '📒', 'Kiểm tra từ vựng',
+                1, 'bài', 'Bài kiểm tra đang sẵn sàng'));
+        }
+
+        place(
+            dailyTask('conj', '🔗', 'Luyện tập liên từ', 1, 'lượt',
+                conjDoneToday ? 'Đã hoàn thành lượt luyện hôm nay' : 'Hoàn thành 1 lượt hôm nay'),
+            conjDoneToday
+        );
+
+        if (state.podcastIncomplete > 0 || podcastDoneToday) {
+            place(
+                dailyTask('podcast', '🎧', 'Nghe Podcast', 1, 'bài',
+                    podcastDoneToday ? 'Đã hoàn thành Giai đoạn 1 hôm nay' : 'Hoàn thành Giai đoạn 1 của 1 bài'),
+                podcastDoneToday
+            );
+        }
 
         host.innerHTML = '';
 
-        const primary = document.createElement('div');
-        primary.className = 'ldd-today-primary';
-        mainTasks.forEach(function (item) {
-            const button = document.createElement('button');
-            button.type = 'button';
-            button.className = 'ldd-daily-mission' + (item.available <= 0 ? ' is-done' : '');
-            button.dataset.todayTarget = item.target;
-            button.innerHTML =
-                '<span class="ldd-daily-mission-icon"></span>' +
-                '<span class="ldd-daily-mission-copy"><strong></strong><small></small></span>' +
-                '<span class="ldd-daily-mission-goal"></span>' +
-                '<span class="ldd-daily-mission-arrow">→</span>';
-            button.querySelector('.ldd-daily-mission-icon').textContent = item.icon;
-            button.querySelector('strong').textContent = item.title;
-            button.querySelector('small').textContent = item.available > 0
-                ? item.note
-                : 'Hiện không còn mục nào cần làm ở phần này.';
-            button.querySelector('.ldd-daily-mission-goal').textContent = item.available > 0
-                ? item.count + ' ' + item.unit
-                : '✓ Xong';
-            button.addEventListener('click', function () { navigateToday(item.target); });
-            primary.appendChild(button);
-        });
-        host.appendChild(primary);
-
-        if (extras.length) {
-            const extraWrap = document.createElement('div');
-            extraWrap.className = 'ldd-today-extra-wrap';
-            const label = document.createElement('div');
-            label.className = 'ldd-today-extra-title';
-            label.innerHTML = '<span>Nhắc thêm</span><small>Các việc khác chỉ hiện khi cần</small>';
-            extraWrap.appendChild(label);
-
-            const extraList = document.createElement('div');
-            extraList.className = 'ldd-today-extras';
-            extras.forEach(function (item) {
-                const button = document.createElement('button');
-                button.type = 'button';
-                button.className = 'ldd-today-extra';
-                button.dataset.todayTarget = item.target;
-                button.innerHTML = '<span class="ldd-today-extra-icon"></span><span class="ldd-today-extra-label"></span><strong></strong>';
-                button.querySelector('.ldd-today-extra-icon').textContent = item.icon;
-                button.querySelector('.ldd-today-extra-label').textContent = item.title;
-                button.querySelector('strong').textContent = item.count > 1 ? String(item.count) : item.note;
-                button.addEventListener('click', function () { navigateToday(item.target); });
-                extraList.appendChild(button);
+        const activeGrid = document.createElement('div');
+        activeGrid.className = 'ldd-today-primary ldd-today-mission-grid';
+        if (!activeTasks.length) {
+            activeGrid.innerHTML = '<div class="ldd-today-all-done">✓ Không còn nhiệm vụ nào đang chờ.</div>';
+        } else {
+            activeTasks.forEach(function (item) {
+                activeGrid.appendChild(buildMissionCard(item, false));
             });
-            extraWrap.appendChild(extraList);
-            host.appendChild(extraWrap);
+        }
+        host.appendChild(activeGrid);
+
+        if (completedTasks.length) {
+            const completedWrap = document.createElement('div');
+            completedWrap.className = 'ldd-today-completed-wrap';
+
+            const heading = document.createElement('div');
+            heading.className = 'ldd-today-completed-title';
+            heading.innerHTML = '<span>Đã hoàn thành</span><small>' + completedTasks.length + ' đầu việc</small>';
+            completedWrap.appendChild(heading);
+
+            const completedGrid = document.createElement('div');
+            completedGrid.className = 'ldd-today-mission-grid ldd-today-completed-grid';
+            completedTasks.forEach(function (item) {
+                completedGrid.appendChild(buildMissionCard(item, true));
+            });
+            completedWrap.appendChild(completedGrid);
+            host.appendChild(completedWrap);
         }
     }
 
-    function dailyTask(target, icon, title, count, goal, available, unit, note) {
+    function buildMissionCard(item, done) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'ldd-daily-mission' + (done ? ' is-done' : '');
+        button.dataset.todayTarget = item.target;
+        button.innerHTML =
+            '<span class="ldd-daily-mission-icon"></span>' +
+            '<span class="ldd-daily-mission-copy"><strong></strong><small></small></span>' +
+            '<span class="ldd-daily-mission-goal"></span>' +
+            '<span class="ldd-daily-mission-arrow">→</span>';
+
+        button.querySelector('.ldd-daily-mission-icon').textContent = item.icon;
+        button.querySelector('strong').textContent = item.title;
+        button.querySelector('small').textContent = item.note;
+        button.querySelector('.ldd-daily-mission-goal').textContent = done
+            ? '✓ Xong'
+            : item.count + ' ' + item.unit;
+        button.addEventListener('click', function () { navigateToday(item.target); });
+        return button;
+    }
+
+    function dailyTask(target, icon, title, count, unit, note) {
         return {
             target: target,
             icon: icon,
             title: title,
             count: count,
-            goal: goal,
-            available: available,
             unit: unit,
             note: note
         };
