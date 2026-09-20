@@ -69,9 +69,7 @@ public class MainActivity extends Activity {
             "com.android.networkstack.process",
 
             "com.coloros.phonemanager",
-            "com.coloros.securitypermission",
-
-            "com.cloudflare.onedotonedotonedotone"
+            "com.coloros.securitypermission"
     ));
 
     /*
@@ -99,6 +97,7 @@ public class MainActivity extends Activity {
             "com.android.chrome",
             "com.google.android.apps.maps",
             "com.google.android.apps.photos",
+            "com.cloudflare.onedotonedotonedotone",
             "com.google.android.projection.gearhead",
             "com.google.android.apps.wellbeing",
             "com.google.android.feedback",
@@ -437,6 +436,7 @@ public class MainActivity extends Activity {
             try {
                 if (!p.getBoolean("active", false)) {
                     saveAnimation(p);
+                    saveLocationState(p);
                     p.edit()
                             .putString("changed", "")
                             .putString("mode", mode)
@@ -525,6 +525,8 @@ public class MainActivity extends Activity {
                 }
 
                 service.exec(
+                        "settings put secure location_mode 0; " +
+                        "cmd location set-location-enabled false >/dev/null 2>&1 || true; " +
                         "settings put global window_animation_scale 0; " +
                         "settings put global transition_animation_scale 0; " +
                         "settings put global animator_duration_scale 0; " +
@@ -589,6 +591,8 @@ public class MainActivity extends Activity {
                     service.exec("pm enable --user 0 com.android.vending");
                 }
 
+                restoreLocationState(p);
+
                 service.exec(
                         "settings put global window_animation_scale " + scale(p, "w") + "; " +
                         "settings put global transition_animation_scale " + scale(p, "t") + "; " +
@@ -599,6 +603,7 @@ public class MainActivity extends Activity {
                         .remove("mode")
                         .remove("changed")
                         .remove("play_store_disabled_by_boost")
+                        .remove("location_mode_before")
                         .apply();
 
                 long available = readMemAvailableKb();
@@ -701,6 +706,24 @@ public class MainActivity extends Activity {
         } catch (Throwable ignored) {
         }
         return -1;
+    }
+
+    private void saveLocationState(SharedPreferences p) throws Exception {
+        String out = body(service.exec("settings get secure location_mode"));
+        String value = oneLine(out);
+        if (!value.matches("[0-3]")) value = "3";
+        p.edit().putString("location_mode_before", value).apply();
+    }
+
+    private void restoreLocationState(SharedPreferences p) throws Exception {
+        String value = p.getString("location_mode_before", "3");
+        if (value == null || !value.matches("[0-3]")) value = "3";
+
+        boolean enabled = !"0".equals(value);
+        service.exec(
+                "settings put secure location_mode " + value + "; " +
+                "cmd location set-location-enabled " + (enabled ? "true" : "false") +
+                " >/dev/null 2>&1 || true");
     }
 
     private void saveAnimation(SharedPreferences p) throws Exception {
