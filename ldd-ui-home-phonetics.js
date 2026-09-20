@@ -1,5 +1,5 @@
 /* =============================================================
-   LDD ENGLISH — HOME + PHONETICS UI v8.4
+   LDD ENGLISH — HOME + PHONETICS UI v8.5
    Dedicated Home tab + Pronunciation Studio.
    ============================================================= */
 (function () {
@@ -22,8 +22,8 @@
     }
 
     function ensureTodayAssets() {
-        ensureStyle('ldd-today-style', 'ldd-ui-today.css?v=1');
-        ensureScript('ldd-today-script', 'ldd-ui-today.js?v=2');
+        ensureStyle('ldd-today-style', 'ldd-ui-today.css?v=3');
+        ensureScript('ldd-today-script', 'ldd-ui-today.js?v=3');
     }
 
     function ensureStyle(id, href) {
@@ -135,9 +135,11 @@
         dashboard.className = 'ldd-home-dashboard';
         dashboard.innerHTML =
             '<div class="ldd-home-main">' +
-                '<div class="ldd-home-kicker">LDD English · Học cùng Ocean</div>' +
-                '<h2 class="ldd-home-title">Chào <strong data-ldd-home-name>Học viên</strong> 👋</h2>' +
-                '<p class="ldd-home-desc">Đây là Trang chủ học tập của bạn. Xem việc cần làm hôm nay, mở nhanh khu vực học và theo dõi tiến độ ngay tại đây.</p>' +
+                '<div class="ldd-home-intro">' +
+                    '<div class="ldd-home-kicker">LDD English · Học cùng Ocean</div>' +
+                    '<h2 class="ldd-home-title">Chào <strong data-ldd-home-name>Học viên</strong> 👋</h2>' +
+                    '<p class="ldd-home-desc">Mỗi ngày hoàn thành một nhóm nhỏ. Không cần nhìn cả danh sách dài — cứ làm từng nhiệm vụ hôm nay.</p>' +
+                '</div>' +
                 '<div class="ldd-home-actions">' +
                     actionHtml('Aa', 'Từ vựng', 'Ôn & vận dụng', 'tab-tu-vung', 'vocab') +
                     actionHtml('G', 'Ngữ pháp', 'Học & luyện bài', 'tab-ngu-phap') +
@@ -146,7 +148,13 @@
                 '</div>' +
             '</div>' +
             '<aside class="ldd-home-side ldd-today-shell">' +
-                '<div class="ldd-home-side-title">Hôm nay</div>' +
+                '<div class="ldd-today-head">' +
+                    '<div class="ldd-today-head-copy">' +
+                        '<div class="ldd-home-side-title">Nhiệm vụ hôm nay</div>' +
+                        '<div class="ldd-today-subtitle">Ưu tiên phát âm trước, các việc khác được thu gọn bên dưới.</div>' +
+                    '</div>' +
+                    '<span class="ldd-today-plan-badge">10 từ · 10 từ · 5 âm</span>' +
+                '</div>' +
                 '<div id="ldd-today-tasks" class="ldd-today-tasks"><div class="ldd-today-loading">Đang tải nhiệm vụ...</div></div>' +
             '</aside>';
         tab.appendChild(dashboard);
