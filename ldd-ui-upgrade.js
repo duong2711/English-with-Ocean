@@ -19,6 +19,7 @@
         observeCustomTestRows();
         enhanceLearningRoadmaps();
         enhanceReadingLab();
+        initAboutMeModal();
     });
 
     function ensureUpgradeAssets() {
@@ -58,6 +59,71 @@
         script.async = false;
         script.src = src;
         document.body.appendChild(script);
+    }
+
+    function initAboutMeModal() {
+        const modal = document.getElementById('about-me-modal');
+        const openBtn = document.getElementById('about-me-open-btn');
+        const closeBtn = document.getElementById('about-me-close-btn');
+        const frame = document.getElementById('about-me-frame');
+        const loading = document.getElementById('about-me-loading');
+        const fallback = document.getElementById('about-me-fallback');
+        if (!modal || !openBtn || !closeBtn || !frame) return;
+
+        let frameStarted = false;
+        let loadTimer = null;
+
+        function showFallback() {
+            if (fallback) fallback.hidden = false;
+            if (loading) loading.classList.add('is-hidden');
+        }
+
+        function startFrame() {
+            if (frameStarted) return;
+            frameStarted = true;
+            const src = frame.dataset.src;
+            if (!src) {
+                showFallback();
+                return;
+            }
+            frame.src = src;
+
+            // Nếu trang ngoài chặn iframe, trình duyệt thường không cho ta đọc lỗi trực tiếp.
+            // Sau một khoảng chờ dài vẫn giữ fallback sẵn để người dùng không gặp màn trắng.
+            loadTimer = window.setTimeout(function () {
+                if (loading && !loading.classList.contains('is-hidden')) showFallback();
+            }, 9000);
+        }
+
+        function openModal() {
+            modal.classList.add('is-open');
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('about-me-open');
+            startFrame();
+            window.setTimeout(function () { closeBtn.focus(); }, 0);
+        }
+
+        function closeModal() {
+            modal.classList.remove('is-open');
+            modal.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('about-me-open');
+            openBtn.focus();
+        }
+
+        openBtn.addEventListener('click', openModal);
+        closeBtn.addEventListener('click', closeModal);
+        modal.querySelectorAll('[data-about-close]').forEach(function (el) {
+            el.addEventListener('click', closeModal);
+        });
+
+        frame.addEventListener('load', function () {
+            if (loadTimer) window.clearTimeout(loadTimer);
+            if (loading) loading.classList.add('is-hidden');
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && modal.classList.contains('is-open')) closeModal();
+        });
     }
 
     function enhanceTestCenter() {
