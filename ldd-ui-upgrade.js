@@ -65,6 +65,7 @@
         const modal = document.getElementById('about-me-modal');
         const openBtn = document.getElementById('about-me-open-btn');
         const closeBtn = document.getElementById('about-me-close-btn');
+        const homeBtn = document.getElementById('about-linkbio-home-btn');
         if (!modal || !openBtn || !closeBtn) return;
 
         function openModal() {
@@ -86,6 +87,18 @@
         modal.querySelectorAll('[data-about-close]').forEach(function (el) {
             el.addEventListener('click', closeModal);
         });
+
+        if (homeBtn) {
+            homeBtn.addEventListener('click', function () {
+                closeModal();
+                if (window.LDDNavigation && typeof window.LDDNavigation.goToTab === 'function') {
+                    window.LDDNavigation.goToTab('tab-trang-chu');
+                } else {
+                    const tab = document.querySelector('.main-tab-btn[data-main-target="tab-trang-chu"]');
+                    if (tab) tab.click();
+                }
+            });
+        }
 
         document.addEventListener('keydown', function (event) {
             if (event.key === 'Escape' && modal.classList.contains('is-open')) closeModal();
