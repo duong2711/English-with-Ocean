@@ -14,7 +14,7 @@ permissions:
 
 concurrency:
   group: vocab-image-cache
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   cache-images:
@@ -37,7 +37,8 @@ jobs:
       - name: Find, review and cache flashcard images
         env:
           VOCAB_IMAGE_REQUEST_GAP_MS: '180'
-          VOCAB_IMAGE_CACHE_TAG: '20260920-localimg1'
+          VOCAB_IMAGE_CACHE_TAG: '20260920-localimg2'
+          VOCAB_IMAGE_CONCURRENCY: '6'
         run: node scripts/fetch-vocab-images.mjs
 
       - name: Commit cached images
