@@ -108,18 +108,14 @@ h3 { font-size:0.95rem; font-weight:600; color:var(--text); margin:0 0 8px; }
     flex-shrink: 0;
 }
 .logo-badge {
-    width: 36px;
-    height: 36px;
-    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.78rem;
-    font-weight: 800;
-    color: #fff;
-    letter-spacing: 0.02em;
-    box-shadow: 0 3px 10px var(--primary-glow);
+    width: 42px;
+    height: 42px;
+    display: block;
+    object-fit: cover;
+    object-position: center;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 3px 10px rgba(30, 42, 69, 0.12);
     flex-shrink: 0;
 }
 .logo-text {
