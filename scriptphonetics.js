@@ -778,9 +778,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Khi tab trình duyệt bị chuyển đi/ẩn đi (sang tab khác, thu nhỏ, khóa máy...)
     // thì mọi audio/video đang phát sẽ tự động dừng lại.
+    // Đồng thời huỷ mọi thao tác "giữ 5 giây" dành cho Admin. Nếu không huỷ,
+    // timer có thể bị trình duyệt tạm dừng khi tab ở nền rồi chạy bù ngay lúc quay lại,
+    // khiến hộp nhập mật khẩu Admin tự bật lên dù người dùng không còn giữ chuột/chạm.
+    let lddAdminHoldEpoch = 0;
+    const invalidateAdminHolds = () => { lddAdminHoldEpoch += 1; };
     document.addEventListener('visibilitychange', () => {
-        if (document.hidden) pauseAllMedia();
+        if (document.hidden) {
+            invalidateAdminHolds();
+            pauseAllMedia();
+        }
     });
+    window.addEventListener('blur', invalidateAdminHolds);
 
     // Khôi phục tab chính (Phiên âm / Từ vựng / ...) đã xem lần trước
     function restoreActiveMainTab() {
@@ -12604,8 +12613,10 @@ function toggleCompletion(symbolElement) {
             let holdTimer = null;
             const startHold = () => {
                 if (holdTimer) clearTimeout(holdTimer);
+                const holdEpoch = lddAdminHoldEpoch;
                 holdTimer = setTimeout(() => {
                     holdTimer = null;
+                    if (holdEpoch !== lddAdminHoldEpoch || document.hidden || !document.hasFocus()) return;
                     onTrigger();
                 }, KID_ADMIN_HOLD_MS);
             };
@@ -12837,8 +12848,10 @@ function toggleCompletion(symbolElement) {
                 const startHold = (e) => {
                     e.stopPropagation();
                     if (kidAdminHoldTimer) clearTimeout(kidAdminHoldTimer);
+                    const holdEpoch = lddAdminHoldEpoch;
                     kidAdminHoldTimer = setTimeout(() => {
                         kidAdminHoldTimer = null;
+                        if (holdEpoch !== lddAdminHoldEpoch || document.hidden || !document.hasFocus()) return;
                         if (!currentTopic) return;
                         kidAdminTogglePhase(currentTopic, phase);
                     }, KID_ADMIN_HOLD_MS);
@@ -14745,8 +14758,10 @@ function toggleCompletion(symbolElement) {
             let holdTimer = null;
             const startHold = () => {
                 if (holdTimer) clearTimeout(holdTimer);
+                const holdEpoch = lddAdminHoldEpoch;
                 holdTimer = setTimeout(() => {
                     holdTimer = null;
+                    if (holdEpoch !== lddAdminHoldEpoch || document.hidden || !document.hasFocus()) return;
                     onTrigger();
                 }, THCS_ADMIN_HOLD_MS);
             };
