@@ -101,6 +101,7 @@
             const item = galleryItems[galleryIndex];
             galleryImage.src = item.src;
             galleryImage.alt = item.alt;
+            if (galleryLightbox) galleryLightbox.scrollTop = 0;
         }
 
         function openGallery(index) {
@@ -109,6 +110,7 @@
             renderGalleryImage();
             galleryLightbox.classList.add('is-open');
             galleryLightbox.setAttribute('aria-hidden', 'false');
+            galleryLightbox.scrollTop = 0;
             if (galleryClose) galleryClose.focus();
         }
 
