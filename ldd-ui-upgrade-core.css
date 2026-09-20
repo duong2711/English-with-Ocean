@@ -589,7 +589,8 @@ body.ldd-motion-ready .header-tab-btn.active {
     animation: lddTabControl .22s cubic-bezier(.2,.8,.2,1) both;
 }
 body.ldd-motion-ready .main-tab-dropdown-btn.active {
-    animation: lddTabControl .22s cubic-bezier(.2,.8,.2,1) both;
+    /* Opening a dropdown is not a page/tab navigation. Keep it visually immediate. */
+    animation: none !important;
 }
 
 @keyframes lddBootScreenIn {
