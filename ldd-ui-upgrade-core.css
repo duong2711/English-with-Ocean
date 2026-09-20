@@ -413,9 +413,9 @@ body.ldd-ui-v2 .ctest-loading-msg {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    body.ldd-ui-v2 *,
-    body.ldd-ui-v2 *::before,
-    body.ldd-ui-v2 *::after {
+    body.ldd-ui-v2:not(.ldd-force-motion) *,
+    body.ldd-ui-v2:not(.ldd-force-motion) *::before,
+    body.ldd-ui-v2:not(.ldd-force-motion) *::after {
         scroll-behavior: auto !important;
         animation-duration: .01ms !important;
         animation-iteration-count: 1 !important;
@@ -581,7 +581,7 @@ header.ldd-app-wake {
 /* Each newly active top-level tab gets a short GPU-friendly entrance. */
 body.ldd-motion-ready .main-tab-content.active {
     transform-origin: 50% 0;
-    animation: lddTabEnter .235s cubic-bezier(.2,.78,.25,1) both;
+    animation: lddTabEnter .32s cubic-bezier(.16,1,.3,1) both !important;
     will-change: opacity, transform;
 }
 body.ldd-motion-ready .main-tab-btn.active,
@@ -628,8 +628,8 @@ body.ldd-motion-ready .main-tab-dropdown-btn.active {
     to { opacity: 1; transform: translate3d(0,0,0); }
 }
 @keyframes lddTabEnter {
-    0% { opacity: .38; transform: translate3d(0,8px,0) scale(.998); }
-    62% { opacity: 1; }
+    0% { opacity: .12; transform: translate3d(0,14px,0) scale(.992); }
+    68% { opacity: 1; }
     100% { opacity: 1; transform: translate3d(0,0,0) scale(1); }
 }
 @keyframes lddTabControl {
@@ -653,20 +653,20 @@ body.ldd-motion-ready .main-tab-dropdown-btn.active {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    #auth-container.ldd-auth-launching,
-    .ldd-boot-sequence,
-    .ldd-boot-orbit,
-    .ldd-boot-mark,
-    .ldd-boot-title,
-    .ldd-boot-subtitle,
-    .ldd-boot-progress,
-    .ldd-boot-progress > span,
-    #inside.ldd-app-wake,
-    header.ldd-app-wake,
-    body.ldd-motion-ready .main-tab-content.active,
-    body.ldd-motion-ready .main-tab-btn.active,
-    body.ldd-motion-ready .header-tab-btn.active,
-    body.ldd-motion-ready .main-tab-dropdown-btn.active {
+    body:not(.ldd-force-motion) #auth-container.ldd-auth-launching,
+    body:not(.ldd-force-motion) .ldd-boot-sequence,
+    body:not(.ldd-force-motion) .ldd-boot-orbit,
+    body:not(.ldd-force-motion) .ldd-boot-mark,
+    body:not(.ldd-force-motion) .ldd-boot-title,
+    body:not(.ldd-force-motion) .ldd-boot-subtitle,
+    body:not(.ldd-force-motion) .ldd-boot-progress,
+    body:not(.ldd-force-motion) .ldd-boot-progress > span,
+    body:not(.ldd-force-motion) #inside.ldd-app-wake,
+    body:not(.ldd-force-motion) header.ldd-app-wake,
+    body.ldd-motion-ready:not(.ldd-force-motion) .main-tab-content.active,
+    body.ldd-motion-ready:not(.ldd-force-motion) .main-tab-btn.active,
+    body.ldd-motion-ready:not(.ldd-force-motion) .header-tab-btn.active,
+    body.ldd-motion-ready:not(.ldd-force-motion) .main-tab-dropdown-btn.active {
         animation: none !important;
         transition: none !important;
         filter: none !important;
@@ -679,21 +679,21 @@ body.ldd-motion-ready .main-tab-dropdown-btn.active {
 /* Reusable entrance for nested navigation surfaces (folder -> panel, back -> grid, sub-tab, detail view). */
 body.ldd-motion-ready .ldd-view-enter {
     transform-origin: 50% 0;
-    animation: lddViewEnter .245s cubic-bezier(.2,.78,.25,1) both;
+    animation: lddViewEnter .30s cubic-bezier(.16,1,.3,1) both !important;
     will-change: opacity, transform;
 }
 body.ldd-motion-ready .ldd-view-switch {
     transform-origin: 50% 50%;
-    animation: lddViewSwitch .20s cubic-bezier(.2,.8,.2,1) both;
+    animation: lddViewSwitch .26s cubic-bezier(.16,1,.3,1) both !important;
     will-change: opacity, transform;
 }
 
 @keyframes lddViewEnter {
     0% {
-        opacity: .32;
-        transform: translate3d(0, 9px, 0) scale(.997);
+        opacity: .14;
+        transform: translate3d(0, 13px, 0) scale(.993);
     }
-    58% {
+    66% {
         opacity: 1;
     }
     100% {
@@ -722,8 +722,8 @@ body.ldd-motion-ready .ldd-view-switch {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    body.ldd-motion-ready .ldd-view-enter,
-    body.ldd-motion-ready .ldd-view-switch {
+    body.ldd-motion-ready:not(.ldd-force-motion) .ldd-view-enter,
+    body.ldd-motion-ready:not(.ldd-force-motion) .ldd-view-switch {
         animation: none !important;
         transform: none !important;
         opacity: 1 !important;
