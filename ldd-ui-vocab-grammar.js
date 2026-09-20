@@ -79,7 +79,7 @@
         });
 
         // Đóng các popup/overlay thuộc kho từ nếu đang mở để không phủ lên module mới.
-        ['vocab-weekly-test-overlay', 'word-lookup-modal'].forEach(function (id) {
+        ['vocab-weekly-test-overlay', 'word-lookup-popup'].forEach(function (id) {
             const el = document.getElementById(id);
             if (el && options.keepOverlays !== true) el.style.display = 'none';
         });
