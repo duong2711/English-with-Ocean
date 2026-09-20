@@ -456,11 +456,11 @@
 
     function navigateToday(target) {
         if (target === 'ipa') return navigateAndAct('tab-phien-am', function () { scrollToEl(document.querySelector('.ipa-chart')); });
-        if (target === 'news') return navigateAndAct('tab-tu-vung', function () { clickEl('#news-folder-card'); });
+        if (target === 'news') return navigateAndAct('tab-tu-vung', function () { openVocabFolder('news-folder-card'); });
         if (target === 'tests') return navigateAndAct('tab-kiem-tra', function () { clickEl('#ctest-folder-card'); });
-        if (target === 'conj') return navigateAndAct('tab-tu-vung', function () { clickEl('#conj-folder-card'); });
+        if (target === 'conj') return navigateAndAct('tab-tu-vung', function () { openVocabFolder('conj-folder-card'); });
         if (target === 'vocabtest') return navigateAndAct('tab-kiem-tra', function () { clickEl('#vocab-test-folder'); });
-        if (target === 'podcast') return navigateAndAct('tab-tu-vung', function () { clickEl('#podcast-folder-card'); });
+        if (target === 'podcast') return navigateAndAct('tab-tu-vung', function () { openVocabFolder('podcast-folder-card'); });
         if (target === 'vocab-unpronounced') return openVocabFilter('unpronounced');
         if (target === 'vocab-poor') return openVocabFilter('poor');
     }
@@ -474,12 +474,19 @@
         setTimeout(action, 180);
     }
     function clickEl(selector) { const el = document.querySelector(selector); if (el) el.click(); }
+    function openVocabFolder(cardId) {
+        if (window.LDDVocabNavigation && typeof window.LDDVocabNavigation.openFolder === 'function') {
+            if (window.LDDVocabNavigation.openFolder(cardId)) return true;
+        }
+        const card = document.getElementById(cardId);
+        if (card) { card.click(); return true; }
+        return false;
+    }
     function scrollToEl(el) { if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
 
     function openVocabFilter(filter) {
         navigateAndAct('tab-tu-vung', function () {
-            const card = document.getElementById('myvocab-folder-card');
-            if (card) card.click();
+            openVocabFolder('myvocab-folder-card');
             setTimeout(function () {
                 installVocabPoorFilter();
                 if (filter === 'poor') {
