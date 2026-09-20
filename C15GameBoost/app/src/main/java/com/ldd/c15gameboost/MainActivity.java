@@ -465,6 +465,7 @@ public class MainActivity extends Activity {
                 StringBuilder failedPackages = new StringBuilder();
 
                 Set<String> alreadyChanged = csvToSet(p.getString("changed", ""));
+                boolean playStoreDisabledByBoost = p.getBoolean("play_store_disabled_by_boost", false);
 
                 for (String pkg : candidates) {
                     if (!validPackage(pkg)) continue;
@@ -502,6 +503,23 @@ public class MainActivity extends Activity {
                                     failedPackages.append(" [").append(detail).append("]");
                                 }
                             }
+                        }
+                    }
+
+                    // ColorOS trên RMX2194 vẫn có thể cho mở CH Play dù suspend.
+                    // Khóa cứng riêng CH Play trong Game Mode để nó không thể launch/chạy nền.
+                    if ("com.android.vending".equals(pkg) && !playStoreDisabledByBoost) {
+                        String hardLock = service.exec("pm disable-user --user 0 com.android.vending");
+                        if (hardLock.contains("new state: disabled-user")
+                                || hardLock.contains("new state: disabled")
+                                || body(service.exec("pm list packages -d | grep -F 'package:com.android.vending'"))
+                                .contains("package:com.android.vending")) {
+                            playStoreDisabledByBoost = true;
+                            p.edit().putBoolean("play_store_disabled_by_boost", true).apply();
+                        } else if (failedPackages.length() < 1200) {
+                            if (failedPackages.length() > 0) failedPackages.append(", ");
+                            failedPackages.append("com.android.vending [hard-lock thất bại: ")
+                                    .append(oneLine(body(hardLock))).append("]");
                         }
                     }
                 }
@@ -567,6 +585,10 @@ public class MainActivity extends Activity {
                     }
                 }
 
+                if (p.getBoolean("play_store_disabled_by_boost", false)) {
+                    service.exec("pm enable --user 0 com.android.vending");
+                }
+
                 service.exec(
                         "settings put global window_animation_scale " + scale(p, "w") + "; " +
                         "settings put global transition_animation_scale " + scale(p, "t") + "; " +
@@ -576,6 +598,7 @@ public class MainActivity extends Activity {
                         .putBoolean("active", false)
                         .remove("mode")
                         .remove("changed")
+                        .remove("play_store_disabled_by_boost")
                         .apply();
 
                 long available = readMemAvailableKb();
