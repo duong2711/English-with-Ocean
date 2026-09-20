@@ -27,6 +27,9 @@ public class MainActivity extends Activity {
     private static final int REQ = 2711;
     private static final String PREFS = "boost_state";
     private static final String GAME = "com.garena.game.kgvn";
+    private static final int ACTION_NONE = 0;
+    private static final int ACTION_GAME = 1;
+    private static final int ACTION_RESTORE = 2;
 
     private static final String[] TARGETS = {
             "com.facebook.katana", "com.instagram.barcelona",
@@ -53,6 +56,7 @@ public class MainActivity extends Activity {
     private final ExecutorService worker = Executors.newSingleThreadExecutor();
     private IBoostService service;
     private boolean binding;
+    private int pendingAction = ACTION_NONE;
     private TextView status, log;
     private Button gameBtn, normalBtn, connectBtn;
     private Shizuku.UserServiceArgs userServiceArgs;
@@ -64,14 +68,21 @@ public class MainActivity extends Activity {
         refresh();
     });
     private final Shizuku.OnRequestPermissionResultListener permissionResult = (requestCode, result) -> {
-        if (requestCode == REQ && result == PackageManager.PERMISSION_GRANTED) runOnUiThread(this::bind);
+        if (requestCode == REQ && result == PackageManager.PERMISSION_GRANTED) runOnUiThread(() -> {
+            refresh();
+            bind();
+        });
     };
 
     private final ServiceConnection connection = new ServiceConnection() {
         @Override public void onServiceConnected(ComponentName name, IBinder binder) {
             service = IBoostService.Stub.asInterface(binder);
             binding = false;
-            runOnUiThread(() -> { addLog("Shizuku UserService đã sẵn sàng."); refresh(); });
+            runOnUiThread(() -> {
+                addLog("Shizuku UserService đã sẵn sàng.");
+                refresh();
+                runPendingAction();
+            });
         }
         @Override public void onServiceDisconnected(ComponentName name) {
             service = null;
@@ -129,7 +140,7 @@ public class MainActivity extends Activity {
         normalBtn.setOnClickListener(v -> restoreNormal());
         root.addView(normalBtn, params(-1,dp(62),10));
 
-        connectBtn = button("Kết nồi / cấp quyền Shizuku");
+        connectBtn = button("Kết nối / cấp quyền Shizuku");
         connectBtn.setOnClickListener(v -> connect());
         root.addView(connectBtn, params(-1,dp(52),16));
 
@@ -163,11 +174,22 @@ public class MainActivity extends Activity {
         if (service != null || binding) return;
         binding = true;
         try { Shizuku.bindUserService(userServiceArgs, connection); }
-        catch (Throwable t) { binding = false; addLog("Bind lỗi: " + t.getMessage()); }
+        catch (Throwable t) {
+            binding = false;
+            pendingAction = ACTION_NONE;
+            addLog("Bind lỗi: " + t.getMessage());
+            refresh();
+        }
     }
 
     private void enableGameMode() {
-        if (service == null) { connect(); toast("Chưa kết nồi Shizuku"); return; }
+        if (service == null) {
+            pendingAction = ACTION_GAME;
+            connect();
+            toast(binding ? "Đang kết nối Shizuku…" : "Đang chuẩn bị Shizuku…");
+            return;
+        }
+        pendingAction = ACTION_NONE;
         setButtons(false);
         worker.execute(() -> {
             try {
@@ -196,7 +218,13 @@ public class MainActivity extends Activity {
     }
 
     private void restoreNormal() {
-        if (service == null) { connect(); toast("Chưa kết nồi Shizuku"); return; }
+        if (service == null) {
+            pendingAction = ACTION_RESTORE;
+            connect();
+            toast(binding ? "Đang kết nối Shizuku…" : "Đang chuẩn bị Shizuku…");
+            return;
+        }
+        pendingAction = ACTION_NONE;
         setButtons(false);
         worker.execute(() -> {
             try {
@@ -254,9 +282,27 @@ public class MainActivity extends Activity {
         boolean running = Shizuku.pingBinder();
         boolean granted = running && Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED;
         boolean game = getSharedPreferences(PREFS,MODE_PRIVATE).getBoolean("game",false);
-        status.setText("Chế độ: " + (game ? "🎮 LIÊN QUÂN" : "📱 BÌNH THƯỜNG") + "\nShizuku: " + (running ? (granted ? "Running • đã cấp quyền" : "Running • chưa cấp quyền") : "chưa chạy"));
-        setButtons(service != null);
+
+        String serviceState = service != null ? "sẵn sàng" : (binding ? "đang kết nối…" : "chưa bind");
+        status.setText(
+                "Chế độ: " + (game ? "🎮 LIÊN QUÂN" : "📱 BÌNH THƯỜNG") +
+                "\nShizuku: " + (running ? (granted ? "Running • đã cấp quyền" : "Running • chưa cấp quyền") : "chưa chạy") +
+                "\nUserService: " + serviceState
+        );
+
+        // Quan trọng: hai nút được bật ngay khi Shizuku đang chạy + đã cấp quyền.
+        // Nếu UserService chưa bind, lúc bấm nút app sẽ tự bind rồi tiếp tục tác vụ.
+        setButtons(running && granted);
     }
+
+    private void runPendingAction() {
+        if (service == null) return;
+        int action = pendingAction;
+        pendingAction = ACTION_NONE;
+        if (action == ACTION_GAME) enableGameMode();
+        else if (action == ACTION_RESTORE) restoreNormal();
+    }
+
     private void setButtons(boolean enabled) { gameBtn.setEnabled(enabled); normalBtn.setEnabled(enabled); }
     private void addLog(String s) { if (log != null) log.setText(s + (log.getText().length() == 0 ? "" : "\n\n" + log.getText())); }
     private String compact(String s) { if (s == null) return ""; return s.length() > 2500 ? s.substring(0,2500) + "…" : s; }
