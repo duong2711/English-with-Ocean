@@ -136,7 +136,7 @@
         dashboard.innerHTML =
             '<div class="ldd-home-main">' +
                 '<div class="ldd-home-intro">' +
-                    '<div class="ldd-home-kicker">LDD English · Học cùng Ocean</div>' +
+                    '<div class="ldd-home-kicker">LDD English · Học cùng Web tự học</div>' +
                     '<h2 class="ldd-home-title">Chào <strong data-ldd-home-name>Học viên</strong> 👋</h2>' +
                     '<p class="ldd-home-desc">Mỗi ngày hoàn thành một nhóm nhỏ. Không cần nhìn cả danh sách dài — cứ làm từng nhiệm vụ hôm nay.</p>' +
                 '</div>' +
