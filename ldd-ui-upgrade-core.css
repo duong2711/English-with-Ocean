@@ -673,3 +673,59 @@ body.ldd-motion-ready .main-tab-dropdown-btn.active {
         transform: none !important;
     }
 }
+
+
+/* ===== UNIVERSAL NAVIGATION MOTION v2 ===== */
+/* Reusable entrance for nested navigation surfaces (folder -> panel, back -> grid, sub-tab, detail view). */
+body.ldd-motion-ready .ldd-view-enter {
+    transform-origin: 50% 0;
+    animation: lddViewEnter .245s cubic-bezier(.2,.78,.25,1) both;
+    will-change: opacity, transform;
+}
+body.ldd-motion-ready .ldd-view-switch {
+    transform-origin: 50% 50%;
+    animation: lddViewSwitch .20s cubic-bezier(.2,.8,.2,1) both;
+    will-change: opacity, transform;
+}
+
+@keyframes lddViewEnter {
+    0% {
+        opacity: .32;
+        transform: translate3d(0, 9px, 0) scale(.997);
+    }
+    58% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 1;
+        transform: translate3d(0, 0, 0) scale(1);
+    }
+}
+@keyframes lddViewSwitch {
+    0% {
+        opacity: .58;
+        transform: scale(.996);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@media (max-width: 560px) {
+    body.ldd-motion-ready .ldd-view-enter {
+        animation-duration: .22s;
+    }
+    body.ldd-motion-ready .ldd-view-switch {
+        animation-duration: .18s;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body.ldd-motion-ready .ldd-view-enter,
+    body.ldd-motion-ready .ldd-view-switch {
+        animation: none !important;
+        transform: none !important;
+        opacity: 1 !important;
+    }
+}
