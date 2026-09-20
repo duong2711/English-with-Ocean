@@ -9437,3 +9437,127 @@ body.about-me-open { overflow: hidden; }
         right: 2px;
     }
 }
+
+
+/* ===== ABOUT ME readability + scrollable gallery viewer v3 ===== */
+.about-linkbio-profile h2 {
+    font-size: 1rem;
+}
+.about-linkbio-profile p {
+    font-size: .66rem;
+    line-height: 1.52;
+}
+.about-linkbio-main-link strong {
+    font-size: .76rem;
+}
+.about-linkbio-box h3 {
+    font-size: .84rem;
+}
+.about-linkbio-rules p,
+.about-linkbio-rules li {
+    font-size: .66rem;
+    line-height: 1.58;
+}
+.about-linkbio-faq summary {
+    font-size: .66rem;
+    line-height: 1.48;
+}
+.about-linkbio-answer {
+    font-size: .64rem;
+    line-height: 1.55;
+}
+
+/* Do not shrink tall gallery images to the viewport.
+   The overlay itself is the vertical scroll container. */
+.about-gallery-lightbox {
+    align-items: flex-start;
+    justify-content: center;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+}
+.about-gallery-lightbox-backdrop {
+    position: fixed;
+}
+.about-gallery-lightbox-dialog {
+    width: min(1100px, 94vw);
+    height: auto;
+    min-height: calc(100dvh - 56px);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 58px 0 44px;
+    box-sizing: border-box;
+}
+.about-gallery-lightbox-dialog img {
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    max-height: none;
+    object-fit: contain;
+}
+.about-gallery-lightbox-close,
+.about-gallery-lightbox-nav {
+    position: fixed;
+}
+.about-gallery-lightbox-close {
+    top: max(14px, env(safe-area-inset-top));
+    right: max(14px, env(safe-area-inset-right));
+}
+.about-gallery-lightbox-nav.prev {
+    left: 18px;
+}
+.about-gallery-lightbox-nav.next {
+    right: 18px;
+}
+
+@media (min-width: 700px) {
+    .about-linkbio-profile h2 {
+        font-size: 1.22rem;
+    }
+    .about-linkbio-profile p {
+        font-size: .82rem;
+        line-height: 1.58;
+    }
+    .about-linkbio-main-link strong {
+        font-size: .94rem;
+    }
+    .about-linkbio-box h3 {
+        font-size: 1rem;
+    }
+    .about-linkbio-rules p,
+    .about-linkbio-rules li {
+        font-size: .78rem;
+        line-height: 1.62;
+    }
+    .about-linkbio-faq summary {
+        font-size: .79rem;
+        line-height: 1.5;
+    }
+    .about-linkbio-answer {
+        font-size: .76rem;
+        line-height: 1.6;
+    }
+}
+@media (max-width: 699px) {
+    .about-gallery-lightbox {
+        padding: 0 12px;
+    }
+    .about-gallery-lightbox-dialog {
+        width: 100%;
+        height: auto;
+        min-height: 100dvh;
+        padding: 62px 0 42px;
+    }
+    .about-gallery-lightbox-dialog img {
+        width: 100%;
+        max-width: 100%;
+    }
+    .about-gallery-lightbox-nav.prev {
+        left: 8px;
+    }
+    .about-gallery-lightbox-nav.next {
+        right: 8px;
+    }
+}
