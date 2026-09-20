@@ -79,9 +79,12 @@
             window.matchMedia &&
             window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         const intentKey = 'ldd-login-launch-intent-v1';
+        const logoUrl = 'https://i.ibb.co/tpn1BxYv/Gemini-Generated-Image-2ugr442ugr442ugr.png';
         let loginIntent = false;
-        let bootPlayed = false;
         let launchTimer = null;
+        let bootRunning = false;
+        let hiddenAt = 0;
+        let lastBootAt = 0;
 
         function setMotionReady() {
             window.requestAnimationFrame(function () {
@@ -89,6 +92,12 @@
                     document.body.classList.add('ldd-motion-ready');
                     document.body.dataset.lddMotion = 'ready';
                 });
+            });
+        }
+
+        function delay(ms) {
+            return new Promise(function (resolve) {
+                window.setTimeout(resolve, ms);
             });
         }
 
@@ -136,6 +145,54 @@
                 element.getClientRects().length > 0;
         }
 
+        function readStudentName() {
+            const source = document.getElementById('account-display-name');
+            const raw = source ? String(source.textContent || '').trim() : '';
+            if (!raw || /^(học viên|student|\?|đang tải|loading)$/i.test(raw)) return '';
+            return raw;
+        }
+
+        function waitForStudentName(maxWaitMs) {
+            return new Promise(function (resolve) {
+                const immediate = readStudentName();
+                if (immediate) {
+                    resolve(immediate);
+                    return;
+                }
+
+                let done = false;
+                const source = document.getElementById('account-display-name');
+                const finish = function (name) {
+                    if (done) return;
+                    done = true;
+                    if (observer) observer.disconnect();
+                    window.clearInterval(poll);
+                    window.clearTimeout(timeout);
+                    resolve(name || '');
+                };
+
+                const observer = source ? new MutationObserver(function () {
+                    const name = readStudentName();
+                    if (name) finish(name);
+                }) : null;
+
+                if (observer) observer.observe(source, {
+                    childList: true,
+                    subtree: true,
+                    characterData: true
+                });
+
+                const poll = window.setInterval(function () {
+                    const name = readStudentName();
+                    if (name) finish(name);
+                }, 90);
+
+                const timeout = window.setTimeout(function () {
+                    finish(readStudentName());
+                }, maxWaitMs);
+            });
+        }
+
         function createBootOverlay() {
             let overlay = document.getElementById('ldd-boot-sequence');
             if (overlay) return overlay;
@@ -147,10 +204,11 @@
             overlay.innerHTML =
                 '<div class="ldd-boot-orbit" aria-hidden="true"></div>' +
                 '<div class="ldd-boot-center">' +
-                    '<div class="ldd-boot-mark">LDD</div>' +
+                    '<div class="ldd-boot-mark"><img src="' + logoUrl + '" alt="LDD English"></div>' +
                     '<div class="ldd-boot-title">LDD English</div>' +
-                    '<div class="ldd-boot-subtitle">Learning space ready</div>' +
+                    '<div class="ldd-boot-subtitle">Preparing your learning space</div>' +
                     '<div class="ldd-boot-progress" aria-hidden="true"><span></span></div>' +
+                    '<div class="ldd-boot-greeting" aria-live="polite"></div>' +
                 '</div>';
             document.body.appendChild(overlay);
             return overlay;
@@ -160,8 +218,6 @@
             const header = document.querySelector('header');
             inside.classList.remove('ldd-app-wake');
             if (header) header.classList.remove('ldd-app-wake');
-
-            // Force a new animation cycle even if the user logs out and in again.
             void inside.offsetWidth;
             inside.classList.add('ldd-app-wake');
             if (header) header.classList.add('ldd-app-wake');
@@ -169,37 +225,59 @@
             window.setTimeout(function () {
                 inside.classList.remove('ldd-app-wake');
                 if (header) header.classList.remove('ldd-app-wake');
-            }, 720);
+            }, 850);
         }
 
-        function playBootSequence() {
-            if (bootPlayed || !hasRecentLoginIntent()) return;
-            bootPlayed = true;
-            clearLoginIntent();
+        async function playBootSequence(reason, force) {
+            const now = Date.now();
+            if (bootRunning) return;
+            if (!force && now - lastBootAt < 2400) return;
+
+            bootRunning = true;
+            lastBootAt = now;
             if (launchTimer) window.clearTimeout(launchTimer);
             if (auth) auth.classList.remove('ldd-auth-launching');
-
-            wakeApplication();
-            if (reduceMotion) return;
+            if (reason === 'login') clearLoginIntent();
 
             const overlay = createBootOverlay();
-            overlay.classList.remove('is-finishing');
+            const greeting = overlay.querySelector('.ldd-boot-greeting');
+            if (greeting) greeting.textContent = '';
+
+            overlay.classList.remove('is-running', 'is-finishing', 'is-greeting');
+            void overlay.offsetWidth;
             overlay.classList.add('is-running');
             document.body.classList.add('ldd-booting');
 
-            window.setTimeout(function () {
-                overlay.classList.add('is-finishing');
-            }, 1080);
+            const namePromise = waitForStudentName(2800);
 
-            window.setTimeout(function () {
-                overlay.classList.remove('is-running', 'is-finishing');
-                document.body.classList.remove('ldd-booting');
-            }, 1420);
+            // Deliberately slower flagship-style boot.
+            await delay(reduceMotion ? 250 : 2050);
+
+            let name = '';
+            try {
+                name = await namePromise;
+            } catch (error) {
+                name = readStudentName();
+            }
+
+            if (greeting) {
+                greeting.textContent = name ? ('Chào, ' + name + '!') : 'Chào mừng trở lại!';
+            }
+            overlay.classList.add('is-greeting');
+
+            await delay(reduceMotion ? 180 : 1250);
+            overlay.classList.add('is-finishing');
+            wakeApplication();
+
+            await delay(reduceMotion ? 100 : 520);
+            overlay.classList.remove('is-running', 'is-finishing', 'is-greeting');
+            document.body.classList.remove('ldd-booting');
+            bootRunning = false;
         }
 
         function checkLoginSuccess() {
             if (isVisible(inside) && hasRecentLoginIntent()) {
-                playBootSequence();
+                playBootSequence('login', true);
             }
         }
 
@@ -406,7 +484,31 @@
             }, 0);
         }, true);
 
-        // A Google OAuth return may restore the logged-in UI before this script initializes.
+
+        // Flagship boot runs on reload/initial load.
+        window.setTimeout(function () {
+            playBootSequence('reload', true);
+        }, 60);
+
+        // Run it again whenever the user comes back to the LDD English browser tab.
+        document.addEventListener('visibilitychange', function () {
+            if (document.hidden) {
+                hiddenAt = Date.now();
+                return;
+            }
+            if (!hiddenAt) return;
+            const awayFor = Date.now() - hiddenAt;
+            hiddenAt = 0;
+            if (awayFor >= 500) {
+                playBootSequence('return', true);
+            }
+        });
+
+        // Covers browser back-forward cache restores as another form of returning to LDD English.
+        window.addEventListener('pageshow', function (event) {
+            if (event.persisted) playBootSequence('return', true);
+        });
+
         checkLoginSuccess();
         setMotionReady();
     }
