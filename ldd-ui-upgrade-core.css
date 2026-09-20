@@ -422,3 +422,254 @@ body.ldd-ui-v2 .ctest-loading-msg {
         transition-duration: .01ms !important;
     }
 }
+
+
+/* ===== FLAGSHIP AUTH BOOT + SMOOTH TAB MOTION v1 ===== */
+
+/* Authentication launch: subtle compression before the app wakes up. */
+#auth-container.ldd-auth-launching {
+    transform: translate3d(0, 1px, 0) scale(.992);
+    box-shadow: 0 12px 42px rgba(30,42,69,.12) !important;
+    transition:
+        transform .32s cubic-bezier(.2,.8,.2,1),
+        box-shadow .32s ease !important;
+}
+#auth-container.ldd-auth-launching #login-btn,
+#auth-container.ldd-auth-launching .google-login-btn {
+    transform: scale(.985) !important;
+    filter: saturate(.92);
+}
+#auth-container.ldd-auth-launching input {
+    opacity: .86;
+    transition: opacity .2s ease !important;
+}
+
+/* Full-screen boot sequence shown only after a real login attempt succeeds. */
+.ldd-boot-sequence {
+    position: fixed;
+    inset: 0;
+    z-index: 12000;
+    display: none;
+    overflow: hidden;
+    place-items: center;
+    background:
+        radial-gradient(circle at 50% 42%, rgba(102,126,255,.20), transparent 31%),
+        radial-gradient(circle at 22% 78%, rgba(72,199,255,.09), transparent 34%),
+        #06080d;
+    color: #fff;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateZ(0);
+}
+.ldd-boot-sequence.is-running {
+    display: grid;
+    pointer-events: auto;
+    animation: lddBootScreenIn .22s ease-out both;
+}
+.ldd-boot-sequence.is-finishing {
+    animation: lddBootScreenOut .32s cubic-bezier(.4,0,.2,1) both;
+}
+.ldd-boot-orbit,
+.ldd-boot-orbit::before,
+.ldd-boot-orbit::after {
+    position: absolute;
+    border-radius: 999px;
+}
+.ldd-boot-orbit {
+    width: min(72vw, 650px);
+    aspect-ratio: 1;
+    border: 1px solid rgba(255,255,255,.045);
+    box-shadow:
+        inset 0 0 110px rgba(94,117,255,.05),
+        0 0 160px rgba(70,93,255,.04);
+    opacity: 0;
+    animation: lddBootOrbit 1.05s .04s cubic-bezier(.2,.75,.2,1) both;
+}
+.ldd-boot-orbit::before,
+.ldd-boot-orbit::after {
+    content: '';
+    inset: 17%;
+    border: 1px solid rgba(255,255,255,.04);
+}
+.ldd-boot-orbit::after {
+    inset: 34%;
+    background: rgba(100,121,255,.035);
+    filter: blur(1px);
+}
+.ldd-boot-center {
+    position: relative;
+    z-index: 2;
+    width: min(82vw, 420px);
+    display: grid;
+    justify-items: center;
+    text-align: center;
+}
+.ldd-boot-mark {
+    width: 82px;
+    height: 82px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(255,255,255,.18);
+    border-radius: 25px;
+    background:
+        linear-gradient(145deg, rgba(255,255,255,.14), rgba(255,255,255,.055));
+    box-shadow:
+        0 18px 70px rgba(39,61,255,.22),
+        inset 0 1px 0 rgba(255,255,255,.18);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    font-size: 1.08rem;
+    font-weight: 900;
+    letter-spacing: .09em;
+    opacity: 0;
+    filter: blur(12px);
+    animation: lddBootMark .68s .08s cubic-bezier(.16,1,.3,1) both;
+}
+.ldd-boot-title {
+    margin-top: 22px;
+    font-size: clamp(1.22rem, 4vw, 1.55rem);
+    font-weight: 760;
+    letter-spacing: -.025em;
+    opacity: 0;
+    transform: translateY(7px);
+    animation: lddBootCopy .48s .34s cubic-bezier(.2,.8,.2,1) both;
+}
+.ldd-boot-subtitle {
+    margin-top: 6px;
+    color: rgba(255,255,255,.58);
+    font-size: .76rem;
+    font-weight: 560;
+    letter-spacing: .02em;
+    opacity: 0;
+    animation: lddBootCopy .46s .44s ease-out both;
+}
+.ldd-boot-progress {
+    width: 116px;
+    height: 2px;
+    margin-top: 25px;
+    overflow: hidden;
+    border-radius: 99px;
+    background: rgba(255,255,255,.10);
+    opacity: 0;
+    animation: lddBootCopy .35s .48s ease-out both;
+}
+.ldd-boot-progress > span {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, rgba(255,255,255,.35), #fff);
+    transform: translateX(-104%);
+    animation: lddBootProgress .58s .52s cubic-bezier(.3,.7,.2,1) forwards;
+}
+body.ldd-booting {
+    overflow: hidden !important;
+}
+body.ldd-booting > *:not(.ldd-boot-sequence) {
+    pointer-events: none;
+}
+
+/* App content wakes up under the finishing splash. */
+#inside.ldd-app-wake {
+    transform-origin: 50% 0;
+    animation: lddAppWake .52s cubic-bezier(.16,1,.3,1) both;
+}
+header.ldd-app-wake {
+    animation: lddHeaderWake .48s cubic-bezier(.16,1,.3,1) both;
+}
+
+/* Each newly active top-level tab gets a short GPU-friendly entrance. */
+body.ldd-motion-ready .main-tab-content.active {
+    transform-origin: 50% 0;
+    animation: lddTabEnter .235s cubic-bezier(.2,.78,.25,1) both;
+    will-change: opacity, transform, filter;
+}
+body.ldd-motion-ready .main-tab-btn.active,
+body.ldd-motion-ready .header-tab-btn.active {
+    animation: lddTabControl .22s cubic-bezier(.2,.8,.2,1) both;
+}
+body.ldd-motion-ready .main-tab-dropdown-btn.active {
+    animation: lddTabControl .22s cubic-bezier(.2,.8,.2,1) both;
+}
+
+@keyframes lddBootScreenIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+@keyframes lddBootScreenOut {
+    from { opacity: 1; }
+    to { opacity: 0; visibility: hidden; }
+}
+@keyframes lddBootOrbit {
+    0% { opacity: 0; transform: scale(.74) rotate(-7deg); filter: blur(12px); }
+    38% { opacity: .92; }
+    100% { opacity: .34; transform: scale(1.06) rotate(0deg); filter: blur(0); }
+}
+@keyframes lddBootMark {
+    0% { opacity: 0; transform: scale(.72); filter: blur(15px); }
+    55% { opacity: 1; transform: scale(1.045); filter: blur(0); }
+    100% { opacity: 1; transform: scale(1); filter: blur(0); }
+}
+@keyframes lddBootCopy {
+    from { opacity: 0; transform: translateY(7px); filter: blur(5px); }
+    to { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+@keyframes lddBootProgress {
+    0% { transform: translateX(-104%); }
+    72% { transform: translateX(-10%); }
+    100% { transform: translateX(0); }
+}
+@keyframes lddAppWake {
+    from { opacity: .18; transform: translate3d(0,10px,0) scale(.995); filter: blur(6px); }
+    to { opacity: 1; transform: translate3d(0,0,0) scale(1); filter: blur(0); }
+}
+@keyframes lddHeaderWake {
+    from { opacity: 0; transform: translate3d(0,-8px,0); filter: blur(5px); }
+    to { opacity: 1; transform: translate3d(0,0,0); filter: blur(0); }
+}
+@keyframes lddTabEnter {
+    0% { opacity: .42; transform: translate3d(0,9px,0) scale(.998); filter: blur(4px); }
+    62% { opacity: 1; }
+    100% { opacity: 1; transform: translate3d(0,0,0) scale(1); filter: blur(0); }
+}
+@keyframes lddTabControl {
+    0% { transform: scale(.975); }
+    70% { transform: scale(1.018); }
+    100% { transform: scale(1); }
+}
+
+@media (max-width: 560px) {
+    .ldd-boot-mark {
+        width: 74px;
+        height: 74px;
+        border-radius: 23px;
+    }
+    .ldd-boot-orbit {
+        width: min(110vw, 560px);
+    }
+    body.ldd-motion-ready .main-tab-content.active {
+        animation-duration: .21s;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #auth-container.ldd-auth-launching,
+    .ldd-boot-sequence,
+    .ldd-boot-orbit,
+    .ldd-boot-mark,
+    .ldd-boot-title,
+    .ldd-boot-subtitle,
+    .ldd-boot-progress,
+    .ldd-boot-progress > span,
+    #inside.ldd-app-wake,
+    header.ldd-app-wake,
+    body.ldd-motion-ready .main-tab-content.active,
+    body.ldd-motion-ready .main-tab-btn.active,
+    body.ldd-motion-ready .header-tab-btn.active,
+    body.ldd-motion-ready .main-tab-dropdown-btn.active {
+        animation: none !important;
+        transition: none !important;
+        filter: none !important;
+        transform: none !important;
+    }
+}
