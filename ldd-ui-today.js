@@ -20,6 +20,7 @@
 
     let activeToken = null;
     let refreshing = false;
+    let refreshAfterCurrent = false;
     let refreshQueued = null;
     let latestState = null;
     let currentPodcastId = null;
@@ -36,7 +37,10 @@
         bindDeepLinkHelpers();
         watchPodcastStageOne();
         watchSession();
-        setInterval(watchSession, 1200);
+        // Wrap watchSession so the egress guard does not mistake this lightweight
+        // auth/session watcher for a dashboard polling callback and throttle it to 5 minutes.
+        setInterval(function () { watchSession(); }, 1200);
+        bindSessionUiWatcher();
         setInterval(function () { if (!document.hidden && getToken()) queueRefresh(0); }, 30000);
         setInterval(tickCountdowns, 1000);
         document.addEventListener('visibilitychange', function () { if (!document.hidden) queueRefresh(0); });
@@ -76,15 +80,32 @@
         const token = getToken();
         if (token && token !== activeToken) {
             activeToken = token;
+            latestState = null;
+            // A fresh login should not inherit a dashboard cache from the previous session.
+            if (window.LDDEgress && typeof window.LDDEgress.clear === 'function') {
+                window.LDDEgress.clear();
+            }
             queueRefresh(0);
         } else if (!token && activeToken) {
             activeToken = null;
             latestState = null;
+            refreshAfterCurrent = false;
             renderToday(null);
             renderLive(null);
         }
         ensureTodayHost();
         ensureLivePanel();
+    }
+
+    function bindSessionUiWatcher() {
+        const account = document.getElementById('account-area');
+        if (!account || account.dataset.lddTodaySessionWatch === '1') return;
+        account.dataset.lddTodaySessionWatch = '1';
+        new MutationObserver(function () {
+            // Login/logout updates #account-area immediately. Re-check the auth token now,
+            // then the 1.2s watcher below catches the rare case where storage updates a beat later.
+            watchSession();
+        }).observe(account, { attributes: true, attributeFilter: ['style', 'class'] });
     }
 
     function queueRefresh(delay) {
@@ -100,16 +121,21 @@
         Object.keys(params || {}).forEach(function (key) {
             if (params[key] !== null && params[key] !== undefined) qs.set(key, params[key]);
         });
+        const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+        const timeoutId = controller ? setTimeout(function () { controller.abort(); }, 12000) : null;
         try {
             const response = await fetch(SUPABASE_URL + '/rest/v1/' + table + '?' + qs.toString(), {
-                headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + token, Accept: 'application/json' }
+                headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + token, Accept: 'application/json' },
+                signal: controller ? controller.signal : undefined
             });
             if (!response.ok) throw new Error('HTTP ' + response.status);
             const data = await response.json();
             return Array.isArray(data) ? data : [];
         } catch (err) {
-            console.warn('[LDD Today] ' + table + ': ' + err.message);
+            console.warn('[LDD Today] ' + table + ': ' + (err && err.message ? err.message : err));
             return [];
+        } finally {
+            if (timeoutId) clearTimeout(timeoutId);
         }
     }
 
@@ -133,7 +159,12 @@
     }
 
     async function refreshAll() {
-        if (refreshing || !getToken()) return;
+        const requestToken = getToken();
+        if (!requestToken) return;
+        if (refreshing) {
+            refreshAfterCurrent = true;
+            return;
+        }
         refreshing = true;
         try {
             const uid = userId();
@@ -164,6 +195,12 @@
 
             state.vocabTestPending = await getVocabTestPending();
             state.customTestCount = badgeCount(document.getElementById('ctest-folder-badge'));
+
+            // Ignore results that finished after the user logged out or switched session.
+            if (getToken() !== requestToken) {
+                refreshAfterCurrent = !!getToken();
+                return;
+            }
             latestState = state;
 
             await reconcileIpa(state);
@@ -174,6 +211,12 @@
             decoratePodcastCards(state);
         } finally {
             refreshing = false;
+            if (refreshAfterCurrent && getToken()) {
+                refreshAfterCurrent = false;
+                queueRefresh(0);
+            } else {
+                refreshAfterCurrent = false;
+            }
         }
     }
 
