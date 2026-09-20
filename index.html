@@ -8400,73 +8400,103 @@
         <button type="button" class="footer-link footer-about-btn" id="about-me-open-btn">About me</button>
     </footer>
 
-    <!-- ===== ABOUT ME — mở ngay trong LDD English, không điều hướng khỏi website ===== -->
+    <!-- ===== ABOUT ME — clone giao diện Linkbio, chạy native trong LDD English ===== -->
     <div id="about-me-modal" class="about-me-modal" aria-hidden="true">
         <div class="about-me-backdrop" data-about-close></div>
-        <section class="about-me-dialog" role="dialog" aria-modal="true" aria-labelledby="about-me-title">
-            <div class="about-me-toolbar">
-                <div class="about-me-toolbar-brand">
-                    <img src="https://i.ibb.co/tpn1BxYv/Gemini-Generated-Image-2ugr442ugr442ugr.png" alt="" class="about-me-toolbar-logo">
-                    <div>
-                        <strong id="about-me-title">About me</strong>
-                        <span>LDD English · Web tự học</span>
+        <section class="about-linkbio-shell" role="dialog" aria-modal="true" aria-labelledby="about-linkbio-name">
+            <button type="button" class="about-linkbio-close" id="about-me-close-btn" aria-label="Đóng About me">✕</button>
+
+            <div class="about-linkbio-page">
+                <img
+                    class="about-linkbio-cover"
+                    src="https://bio.linkcdn.cc/upload/8081504tsrpqt/2026082215/1787412066087.png"
+                    alt="Ảnh bìa Lê Đại Dương"
+                >
+
+                <img
+                    class="about-linkbio-avatar"
+                    src="https://bio.linkcdn.cc/upload/8081504tsrpqt/2026082215/1787412011157.png"
+                    alt="Lê Đại Dương"
+                >
+
+                <section class="about-linkbio-profile">
+                    <h2 id="about-linkbio-name">Lê Đại Dương</h2>
+                    <p>- Dạy Tiếng Anh 1-1 online</p>
+                    <p>- Nhận dạy người đi làm, người mất gốc, học sinh THCS/THPT và người luyện IELTS</p>
+                    <p>- Inbox zalo: 0988007529</p>
+                </section>
+
+                <div class="about-linkbio-socials" aria-label="Mạng xã hội">
+                    <a href="https://www.facebook.com/le.jerry.271105" target="_blank" rel="noopener noreferrer" aria-label="Facebook">f</a>
+                    <button type="button" class="is-placeholder" aria-label="Zalo" title="Chưa gắn link Zalo">◉</button>
+                    <a href="https://www.tiktok.com/@ldd.english" target="_blank" rel="noopener noreferrer" aria-label="TikTok">♪</a>
+                    <a href="https://www.youtube.com/@ldd_english" target="_blank" rel="noopener noreferrer" aria-label="YouTube">▶</a>
+                    <button type="button" class="is-placeholder" aria-label="Instagram" title="Chưa gắn link Instagram">◎</button>
+                </div>
+
+                <button type="button" class="about-linkbio-main-link" id="about-linkbio-home-btn">
+                    <span class="about-linkbio-main-logo">
+                        <img src="https://i.ibb.co/tpn1BxYv/Gemini-Generated-Image-2ugr442ugr442ugr.png" alt="">
+                    </span>
+                    <strong>Website tự học</strong>
+                    <span class="about-linkbio-main-spacer"></span>
+                </button>
+
+                <div class="about-linkbio-gallery" aria-label="Ảnh giới thiệu">
+                    <img
+                        class="about-linkbio-gallery-item"
+                        src="https://bio.linkcdn.cc/upload/8081504tsrpqt/2026081806/1787033980454.png"
+                        alt="Ảnh giới thiệu LDD English 1"
+                    >
+                    <div class="about-linkbio-gallery-wrap">
+                        <img
+                            class="about-linkbio-gallery-item"
+                            src="https://bio.linkcdn.cc/upload/8081504tsrpqt/2026081806/1787034932102.jpeg"
+                            alt="Ảnh giới thiệu LDD English 2"
+                        >
+                        <span class="about-linkbio-gallery-next">›</span>
                     </div>
                 </div>
-                <button type="button" class="about-me-close-btn" id="about-me-close-btn" aria-label="Đóng About me">✕</button>
-            </div>
 
-            <div class="about-me-native">
-                <div class="about-me-profile">
-                    <img
-                        src="https://i.ibb.co/tpn1BxYv/Gemini-Generated-Image-2ugr442ugr442ugr.png"
-                        alt="LDD English"
-                        class="about-me-profile-logo"
-                    >
-                    <h3>LDD English</h3>
-                    <p class="about-me-profile-tagline">Web tự học</p>
-                    <p class="about-me-profile-desc">Học tiếng Anh theo lộ trình, luyện tập mỗi ngày và theo dõi tiến độ ngay trên một website.</p>
-                </div>
+                <div class="about-linkbio-divider"></div>
 
-                <div class="about-me-link-list" aria-label="Kênh của LDD English">
-                    <a class="about-me-link-card about-me-link-facebook"
-                       href="https://www.facebook.com/le.jerry.271105"
-                       target="_blank" rel="noopener noreferrer">
-                        <span class="about-me-link-icon">f</span>
-                        <span class="about-me-link-copy">
-                            <strong>Facebook</strong>
-                            <small>le.jerry.271105</small>
-                        </span>
-                        <span class="about-me-link-arrow">↗</span>
-                    </a>
+                <section class="about-linkbio-box about-linkbio-rules">
+                    <h3>Quy định lớp học</h3>
+                    <p><strong>TÔN CHỈ &amp; NỘI QUY LỚP HỌC 1-1 KIM CHỈ NAM:</strong> Học tiếng Anh đi đôi với rèn luyện đạo đức. Thầy không chỉ truyền đạt kiến thức mà còn là người hướng dẫn bạn đi đúng đường.</p>
 
-                    <a class="about-me-link-card about-me-link-tiktok"
-                       href="https://www.tiktok.com/@ldd.english"
-                       target="_blank" rel="noopener noreferrer">
-                        <span class="about-me-link-icon">♪</span>
-                        <span class="about-me-link-copy">
-                            <strong>TikTok</strong>
-                            <small>@ldd.english</small>
-                        </span>
-                        <span class="about-me-link-arrow">↗</span>
-                    </a>
+                    <p><strong>1. Tác phong trong lớp học:</strong> Đã ngồi vào bàn là phải nghiêm túc và tập trung. Thầy giảng bài không tự ý rời đi, không nói bậy, không xúc phạm, không nhảm, hạn chế đi trễ.</p>
 
-                    <a class="about-me-link-card about-me-link-youtube"
-                       href="https://www.youtube.com/@ldd_english"
-                       target="_blank" rel="noopener noreferrer">
-                        <span class="about-me-link-icon">▶</span>
-                        <span class="about-me-link-copy">
-                            <strong>YouTube</strong>
-                            <small>@ldd_english</small>
-                        </span>
-                        <span class="about-me-link-arrow">↗</span>
-                    </a>
-                </div>
+                    <p><strong>2. Quy định Nghỉ &amp; Học bù Nguyên tắc chung:</strong> Mọi buổi nghỉ (dù có phép hay không phép) đều sẽ được dạy bù đầy đủ.</p>
+                    <ul>
+                        <li><strong>Nghỉ có phép</strong> (nghỉ có báo trước ít nhất 2 tiếng): Thầy sẽ là người chủ động liên hệ với bạn để sắp xếp lịch bù.</li>
+                        <li><strong>Nghỉ không phép</strong> (nghỉ không báo trước hoặc vô trễ quá 20 phút): Bạn bắt buộc phải chủ động hẹn Thầy gặp online 15 phút để trực tiếp trao đổi. Tuyệt đối không chấp nhận bất kỳ tin nhắn giải thích nào. Hãy học cách đối diện và chịu trách nhiệm. Thầy luôn lắng nghe bạn.</li>
+                        <li><strong>Thầy vào trễ:</strong> Khi có việc đột xuất, Thầy có thể vào trễ (không quá 10 phút, có báo trước). Thời gian trễ sẽ được bù.</li>
+                    </ul>
+                </section>
 
-                <div class="about-me-native-foot">
-                    <span>LDD English</span>
-                    <span>•</span>
-                    <span>Web tự học</span>
-                </div>
+                <section class="about-linkbio-box about-linkbio-faq">
+                    <h3>Câu hỏi thường gặp</h3>
+
+                    <details>
+                        <summary>Những lợi ích khi học cùng Dương là gì</summary>
+                        <div class="about-linkbio-answer">Nội dung trả lời có thể bổ sung sau.</div>
+                    </details>
+
+                    <details>
+                        <summary>Học online qua nền tảng nào và học bao lâu</summary>
+                        <div class="about-linkbio-answer">Nội dung trả lời có thể bổ sung sau.</div>
+                    </details>
+
+                    <details>
+                        <summary>Học phí tính thế nào? Có hoàn học phí nếu không học nữa không?</summary>
+                        <div class="about-linkbio-answer">Nội dung trả lời có thể bổ sung sau.</div>
+                    </details>
+
+                    <details>
+                        <summary>Có học thử không?</summary>
+                        <div class="about-linkbio-answer">Nội dung trả lời có thể bổ sung sau.</div>
+                    </details>
+                </section>
             </div>
         </section>
     </div>
