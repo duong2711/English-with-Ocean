@@ -265,7 +265,7 @@
             }
             overlay.classList.add('is-greeting');
 
-            await delay(reduceMotion ? 180 : 1250);
+            await delay(reduceMotion ? 220 : 1900);
             overlay.classList.add('is-finishing');
             wakeApplication();
 
