@@ -973,3 +973,79 @@ body.ldd-motion-ready #inside.ldd-navigation-pulse {
         transform: translate3d(0, 14px, 0) scale(.982);
     }
 }
+
+
+/* ===== STUDENT DEVICE GATE MOTION v6 ===== */
+#device-gate-overlay {
+    opacity: 0;
+    visibility: hidden;
+    background: rgba(10, 16, 26, .78) !important;
+    backdrop-filter: blur(0);
+    -webkit-backdrop-filter: blur(0);
+    transition:
+        opacity .32s ease,
+        visibility .32s step-end,
+        backdrop-filter .38s ease !important;
+}
+#device-gate-overlay .device-gate-card {
+    opacity: 0;
+    transform: translate3d(0, 22px, 0) scale(.965);
+    transform-origin: 50% 50%;
+    transition:
+        opacity .30s ease,
+        transform .42s cubic-bezier(.16,1,.3,1),
+        box-shadow .42s ease !important;
+    will-change: opacity, transform;
+}
+#device-gate-overlay.is-open {
+    opacity: 1;
+    visibility: visible;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition:
+        opacity .32s ease,
+        visibility 0s step-start,
+        backdrop-filter .38s ease !important;
+}
+#device-gate-overlay.is-open .device-gate-card {
+    opacity: 1;
+    transform: translate3d(0,0,0) scale(1);
+    box-shadow:
+        0 28px 90px rgba(0,0,0,.38),
+        0 2px 12px rgba(0,0,0,.16) !important;
+}
+#device-gate-overlay.is-open .device-gate-card > div:first-child {
+    animation: lddDeviceGateLockIn .55s .12s cubic-bezier(.16,1,.3,1) both;
+}
+#device-gate-overlay.is-closing {
+    opacity: 0;
+    visibility: visible;
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+}
+#device-gate-overlay.is-closing .device-gate-card {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0) scale(.982);
+}
+@keyframes lddDeviceGateLockIn {
+    0% {
+        opacity: 0;
+        transform: translate3d(0,8px,0) scale(.72);
+    }
+    70% {
+        opacity: 1;
+        transform: translate3d(0,0,0) scale(1.08);
+    }
+    100% {
+        opacity: 1;
+        transform: translate3d(0,0,0) scale(1);
+    }
+}
+@media (max-width: 560px) {
+    #device-gate-overlay .device-gate-card {
+        transform: translate3d(0, 16px, 0) scale(.975);
+    }
+    #device-gate-overlay.is-open .device-gate-card {
+        transform: translate3d(0,0,0) scale(1);
+    }
+}
