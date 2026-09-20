@@ -45,7 +45,7 @@
         ensureScript('ldd-vocab-dedup-script', 'ldd-vocab-dedup.js?v=1');
         ensureScript('ldd-pronunciation-fix-script', 'ldd-pronunciation-fix.js?v=3');
         ensureScript('ldd-vocab-grammar-script', 'ldd-ui-vocab-grammar.js?v=3');
-        ensureScript('ldd-home-phonetics-script', 'ldd-ui-home-phonetics.js?v=9.0');
+        ensureScript('ldd-home-phonetics-script', 'ldd-ui-home-phonetics.js?v=9.1');
         ensureScript('ldd-student-grade-script', 'ldd-student-grade.js?v=2');
         ensureScript('ldd-thcs-vocab-reset-script', 'ldd-thcs-vocab-reset.js?v=3');
         ensureScript('ldd-fast-progress-script', 'ldd-fast-progress.js?v=1');
@@ -478,6 +478,9 @@
         document.addEventListener('click', function (event) {
             const control = event.target.closest(navigationIntentSelector);
             if (!control || !inside.contains(control) && !document.querySelector('header')?.contains(control)) return;
+            // Parent dropdown clicks only open/close the menu; they do not navigate anywhere.
+            // Do not play the page-transition pulse for that interaction.
+            if (control.classList && control.classList.contains('main-tab-dropdown-btn')) return;
 
             window.setTimeout(function () {
                 if (!isVisible(inside)) return;
