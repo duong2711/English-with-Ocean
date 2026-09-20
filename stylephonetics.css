@@ -2565,9 +2565,9 @@ h3 { font-size:0.95rem; font-weight:600; color:var(--text); margin:0 0 8px; }
        animation-duration về 0.01ms, ô chữ sẽ "rơi" xong ngay lập tức và biến
        mất khỏi vùng nhìn thấy trước khi người chơi kịp thấy — khiến màn hình
        chơi trông như trống trơn, chỉ còn nền màu. */
-    *:not(.kid-game-block):not(.hell-eyes-decor):not(.hell-eye),
-    *:not(.kid-game-block):not(.hell-eyes-decor):not(.hell-eye)::before,
-    *:not(.kid-game-block):not(.hell-eyes-decor):not(.hell-eye)::after {
+    body:not(.ldd-force-motion) *:not(.kid-game-block):not(.hell-eyes-decor):not(.hell-eye),
+    body:not(.ldd-force-motion) *:not(.kid-game-block):not(.hell-eyes-decor):not(.hell-eye)::before,
+    body:not(.ldd-force-motion) *:not(.kid-game-block):not(.hell-eyes-decor):not(.hell-eye)::after {
         transition-duration: 0.01ms !important;
         animation-duration: 0.01ms !important;
     }
