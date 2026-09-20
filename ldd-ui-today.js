@@ -457,9 +457,9 @@
     function navigateToday(target) {
         if (target === 'ipa') return navigateAndAct('tab-phien-am', function () { scrollToEl(document.querySelector('.ipa-chart')); });
         if (target === 'news') return navigateAndAct('tab-tu-vung', function () { openVocabFolder('news-folder-card'); });
-        if (target === 'tests') return navigateAndAct('tab-kiem-tra', function () { clickEl('#ctest-folder-card'); });
+        if (target === 'tests') return navigateAndAct('tab-kiem-tra', function () { openTestFolder('ctest-folder-card'); });
         if (target === 'conj') return navigateAndAct('tab-tu-vung', function () { openVocabFolder('conj-folder-card'); });
-        if (target === 'vocabtest') return navigateAndAct('tab-kiem-tra', function () { clickEl('#vocab-test-folder'); });
+        if (target === 'vocabtest') return navigateAndAct('tab-kiem-tra', function () { openTestFolder('vocab-test-folder'); });
         if (target === 'podcast') return navigateAndAct('tab-tu-vung', function () { openVocabFolder('podcast-folder-card'); });
         if (target === 'vocab-unpronounced') return openVocabFilter('unpronounced');
         if (target === 'vocab-poor') return openVocabFilter('poor');
@@ -477,6 +477,14 @@
     function openVocabFolder(cardId) {
         if (window.LDDVocabNavigation && typeof window.LDDVocabNavigation.openFolder === 'function') {
             if (window.LDDVocabNavigation.openFolder(cardId)) return true;
+        }
+        const card = document.getElementById(cardId);
+        if (card) { card.click(); return true; }
+        return false;
+    }
+    function openTestFolder(cardId) {
+        if (window.LDDTestNavigation && typeof window.LDDTestNavigation.openFolder === 'function') {
+            if (window.LDDTestNavigation.openFolder(cardId)) return true;
         }
         const card = document.getElementById(cardId);
         if (card) { card.click(); return true; }
