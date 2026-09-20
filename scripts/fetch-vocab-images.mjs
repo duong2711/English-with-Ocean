@@ -11,7 +11,8 @@ const FILES = [
 ];
 const UA = 'LDD-English-Vocab-Images/1.0 (github.com/duong2711/English-with-Ocean)';
 const GAP = Number(process.env.VOCAB_IMAGE_REQUEST_GAP_MS || 180);
-const TAG = process.env.VOCAB_IMAGE_CACHE_TAG || '20260920-localimg1';
+const TAG = process.env.VOCAB_IMAGE_CACHE_TAG || '20260920-localimg2';
+const CONCURRENCY = Math.max(1, Math.min(8, Number(process.env.VOCAB_IMAGE_CONCURRENCY || 6)));
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 function ascii(s='') { return String(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase(); }
@@ -124,15 +125,25 @@ async function main() {
     const flat=[]; for(const unit of units) for(const word of unit.words||[]) flat.push({unit,word});
     const matches=[...text.matchAll(/"img"\s*:\s*"([^"]*)"/g)];
     if(matches.length!==flat.length) throw new Error(file+' img count mismatch');
-    const reps=[];
+    const reps=[], jobs=[];
     for(let i=0;i<flat.length;i++) {
       const cur=matches[i][1]; if(cur.startsWith('assets/vocab/')) continue;
       const {unit,word}=flat[i], rel='assets/vocab/grade'+grade+'/'+unit.id+'/'+slug(word.en)+'.webp';
-      console.log('['+(++count)+'] grade '+grade+' '+unit.id+' '+word.en+' -> '+rel);
-      const meta=await choose(word,unit,grade,rel); if(meta){credits.set(rel,meta);if(meta.provider==='local-fallback')fallbacks++;}
       const off=matches[i][0].indexOf(cur), start=matches[i].index+off;
-      reps.push({start,end:start+cur.length,value:rel});
+      jobs.push({cur,unit,word,rel,start,end:start+cur.length});
     }
+    let cursor=0;
+    async function worker() {
+      while(cursor<jobs.length) {
+        const j=jobs[cursor++];
+        const n=++count;
+        console.log('['+n+'] grade '+grade+' '+j.unit.id+' '+j.word.en+' -> '+j.rel);
+        const meta=await choose(j.word,j.unit,grade,j.rel);
+        if(meta){credits.set(j.rel,meta);if(meta.provider==='local-fallback')fallbacks++;}
+        reps.push({start:j.start,end:j.end,value:j.rel});
+      }
+    }
+    await Promise.all(Array.from({length:Math.min(CONCURRENCY,Math.max(1,jobs.length))},()=>worker()));
     reps.sort((a,b)=>b.start-a.start); for(const r of reps) text=text.slice(0,r.start)+r.value+text.slice(r.end);
     if(reps.length) await fs.writeFile(fp,text);
   }
