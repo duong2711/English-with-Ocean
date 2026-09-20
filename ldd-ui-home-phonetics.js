@@ -1,5 +1,5 @@
 /* =============================================================
-   LDD ENGLISH — HOME + PHONETICS UI v8.6
+   LDD ENGLISH — HOME + PHONETICS UI v8.7
    Dedicated Home tab + Pronunciation Studio.
    ============================================================= */
 (function () {
@@ -22,8 +22,8 @@
     }
 
     function ensureTodayAssets() {
-        ensureStyle('ldd-today-style', 'ldd-ui-today.css?v=4');
-        ensureScript('ldd-today-script', 'ldd-ui-today.js?v=4');
+        ensureStyle('ldd-today-style', 'ldd-ui-today.css?v=5');
+        ensureScript('ldd-today-script', 'ldd-ui-today.js?v=5');
     }
 
     function ensureStyle(id, href) {
