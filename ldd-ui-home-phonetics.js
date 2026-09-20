@@ -213,6 +213,9 @@
     }
 
     function openMainTab(target) {
+        if (target === 'tab-tu-vung' && window.LDDVocabNavigation && typeof window.LDDVocabNavigation.resetToRoot === 'function') {
+            window.LDDVocabNavigation.resetToRoot();
+        }
         if (window.LDDNavigation && typeof window.LDDNavigation.goToTab === 'function') {
             window.LDDNavigation.goToTab(target);
             return;
