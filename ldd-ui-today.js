@@ -14,6 +14,9 @@
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl3cWJha3NtbXR2d2JvamNnc2RkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxNjc3NTAsImV4cCI6MjA5Nzc0Mzc1MH0.vhgt7cB6w2elm-MXY57U_wJtYkJQHDFAEsJwAArOjhQ';
     const DAY_MS = 86400000;
     const VOCAB_POOR_THRESHOLD = 60;
+    const DAILY_POOR_TARGET = 10;
+    const DAILY_UNPRONOUNCED_TARGET = 10;
+    const DAILY_IPA_TARGET = 5;
 
     let activeToken = null;
     let refreshing = false;
@@ -321,34 +324,112 @@
         const readIds = new Set((state.reads || []).map(function (r) { return String(r.article_id); }));
         const unreadArticles = (state.articles || []).filter(function (a) { return !readIds.has(String(a.id)); }).length;
         const readToday = (state.reads || []).some(function (r) { return String(r.read_at || '').slice(0, 10) === state.day; });
-        const tasks = [];
 
-        if (state.ipaUnrecorded > 0) tasks.push(task('ipa', '🔤', 'Phiên âm chưa ghi âm', state.ipaUnrecorded, 'Ghi âm các âm còn thiếu'));
-        if (unreadArticles > 0 && !readToday) tasks.push(task('news', '📰', 'Đọc bài báo', 1, 'Đọc 1 bài là hoàn thành hôm nay'));
-        if (state.customTestCount > 0) tasks.push(task('tests', '📝', 'Bài kiểm tra được giao', state.customTestCount, 'Mở danh sách bài cần làm'));
-        if ((state.conjToday || []).length === 0) tasks.push(task('conj', '🔗', 'Luyện tập liên từ', 1, 'Hoàn thành 1 lượt hôm nay'));
-        if (state.vocabTestPending) tasks.push(task('vocabtest', '📒', 'Kiểm tra từ vựng', 1, 'Bài đang sẵn sàng'));
-        if (unpronounced > 0) tasks.push(task('vocab-unpronounced', '🎤', 'Từ chưa phát âm', unpronounced, 'Mở đúng bộ lọc trong Kho từ vựng'));
-        if (poor > 0) tasks.push(task('vocab-poor', '🎯', 'Từ cần tập phát', poor, 'Điểm phát âm gần nhất dưới 60%'));
-        if (state.podcastIncomplete > 0 && !state.podcastCompletedToday) tasks.push(task('podcast', '🎧', 'Nghe Podcast', 1, 'Làm xong Giai đoạn 1 của 1 bài'));
+        const mainTasks = [
+            dailyTask(
+                'vocab-poor',
+                '🎯',
+                'Tập lại phát âm',
+                Math.min(DAILY_POOR_TARGET, poor),
+                DAILY_POOR_TARGET,
+                poor,
+                'từ',
+                'Ưu tiên các từ có điểm phát âm gần nhất dưới 60%'
+            ),
+            dailyTask(
+                'vocab-unpronounced',
+                '🎤',
+                'Từ chưa phát âm',
+                Math.min(DAILY_UNPRONOUNCED_TARGET, unpronounced),
+                DAILY_UNPRONOUNCED_TARGET,
+                unpronounced,
+                'từ',
+                'Làm một nhóm nhỏ thay vì nhìn toàn bộ số từ còn lại'
+            ),
+            dailyTask(
+                'ipa',
+                '🔤',
+                'Luyện phiên âm IPA',
+                Math.min(DAILY_IPA_TARGET, state.ipaUnrecorded || 0),
+                DAILY_IPA_TARGET,
+                state.ipaUnrecorded || 0,
+                'âm',
+                'Mỗi ngày tập tối đa 5 âm chưa ghi âm'
+            )
+        ];
+
+        const extras = [];
+        if (unreadArticles > 0 && !readToday) extras.push(task('news', '📰', 'Đọc 1 bài báo', 1, 'Bổ sung'));
+        if (state.customTestCount > 0) extras.push(task('tests', '📝', 'Bài kiểm tra', state.customTestCount, 'Được giao'));
+        if ((state.conjToday || []).length === 0) extras.push(task('conj', '🔗', 'Liên từ', 1, '1 lượt'));
+        if (state.vocabTestPending) extras.push(task('vocabtest', '📒', 'Kiểm tra từ vựng', 1, 'Sẵn sàng'));
+        if (state.podcastIncomplete > 0 && !state.podcastCompletedToday) extras.push(task('podcast', '🎧', 'Podcast', 1, 'Giai đoạn 1'));
 
         host.innerHTML = '';
-        if (!tasks.length) {
-            host.innerHTML = '<div class="ldd-today-done"><span>✓</span><div><strong>Xong việc hôm nay</strong><small>Bạn đã hoàn thành các mục đang cần làm.</small></div></div>';
-            return;
-        }
-        tasks.forEach(function (item) {
+
+        const primary = document.createElement('div');
+        primary.className = 'ldd-today-primary';
+        mainTasks.forEach(function (item) {
             const button = document.createElement('button');
             button.type = 'button';
-            button.className = 'ldd-today-task';
+            button.className = 'ldd-daily-mission' + (item.available <= 0 ? ' is-done' : '');
             button.dataset.todayTarget = item.target;
-            button.innerHTML = '<span class="ldd-today-icon">' + item.icon + '</span><span class="ldd-today-copy"><strong></strong><small></small></span><span class="ldd-today-count"></span><span class="ldd-today-arrow">→</span>';
+            button.innerHTML =
+                '<span class="ldd-daily-mission-icon"></span>' +
+                '<span class="ldd-daily-mission-copy"><strong></strong><small></small></span>' +
+                '<span class="ldd-daily-mission-goal"></span>' +
+                '<span class="ldd-daily-mission-arrow">→</span>';
+            button.querySelector('.ldd-daily-mission-icon').textContent = item.icon;
             button.querySelector('strong').textContent = item.title;
-            button.querySelector('small').textContent = item.note;
-            button.querySelector('.ldd-today-count').textContent = String(item.count);
+            button.querySelector('small').textContent = item.available > 0
+                ? item.note
+                : 'Hiện không còn mục nào cần làm ở phần này.';
+            button.querySelector('.ldd-daily-mission-goal').textContent = item.available > 0
+                ? item.count + ' ' + item.unit
+                : '✓ Xong';
             button.addEventListener('click', function () { navigateToday(item.target); });
-            host.appendChild(button);
+            primary.appendChild(button);
         });
+        host.appendChild(primary);
+
+        if (extras.length) {
+            const extraWrap = document.createElement('div');
+            extraWrap.className = 'ldd-today-extra-wrap';
+            const label = document.createElement('div');
+            label.className = 'ldd-today-extra-title';
+            label.innerHTML = '<span>Nhắc thêm</span><small>Các việc khác chỉ hiện khi cần</small>';
+            extraWrap.appendChild(label);
+
+            const extraList = document.createElement('div');
+            extraList.className = 'ldd-today-extras';
+            extras.forEach(function (item) {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'ldd-today-extra';
+                button.dataset.todayTarget = item.target;
+                button.innerHTML = '<span class="ldd-today-extra-icon"></span><span class="ldd-today-extra-label"></span><strong></strong>';
+                button.querySelector('.ldd-today-extra-icon').textContent = item.icon;
+                button.querySelector('.ldd-today-extra-label').textContent = item.title;
+                button.querySelector('strong').textContent = item.count > 1 ? String(item.count) : item.note;
+                button.addEventListener('click', function () { navigateToday(item.target); });
+                extraList.appendChild(button);
+            });
+            extraWrap.appendChild(extraList);
+            host.appendChild(extraWrap);
+        }
+    }
+
+    function dailyTask(target, icon, title, count, goal, available, unit, note) {
+        return {
+            target: target,
+            icon: icon,
+            title: title,
+            count: count,
+            goal: goal,
+            available: available,
+            unit: unit,
+            note: note
+        };
     }
 
     function task(target, icon, title, count, note) { return { target: target, icon: icon, title: title, count: count, note: note }; }
