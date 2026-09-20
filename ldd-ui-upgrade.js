@@ -226,6 +226,143 @@
             attributeFilter: ['class', 'style', 'hidden']
         });
 
+        // Universal navigation motion: observe meaningful view containers becoming visible.
+        // This covers existing and future JS-driven navigation without rewriting each module.
+        const motionSelector = [
+            '.main-tab-content',
+            '[id$="-panel"]',
+            '[id$="-folder-grid"]',
+            '[id$="-grid"]',
+            '[id$="-view"]',
+            '[id$="-screen"]',
+            '[id$="-detail"]',
+            '[id$="-hub"]',
+            '[id$="-page"]',
+            '.roadmap-pager',
+            '.roadmap-page'
+        ].join(',');
+
+        const visibilityState = new WeakMap();
+        const pendingMotionChecks = new Set();
+        let motionFrame = 0;
+
+        function isMeaningfulMotionSurface(element) {
+            if (!element || element.nodeType !== Node.ELEMENT_NODE) return false;
+            if (!inside.contains(element)) return false;
+            if (!element.matches(motionSelector)) return false;
+            if (element.closest('.modal, [role="dialog"], .about-me-modal, .about-gallery-lightbox')) return false;
+
+            const rect = element.getBoundingClientRect();
+            return rect.width >= 180 && rect.height >= 64;
+        }
+
+        function replayMotionClass(element, className) {
+            if (reduceMotion || !element || !isVisible(element)) return;
+            if (element.classList.contains('main-tab-content')) return; // already animated by .active
+
+            element.classList.remove('ldd-view-enter', 'ldd-view-switch');
+            void element.offsetWidth;
+            element.classList.add(className);
+            window.setTimeout(function () {
+                element.classList.remove(className);
+            }, 360);
+        }
+
+        function queueMotionCheck(element, allowNewVisible) {
+            if (!element || element.nodeType !== Node.ELEMENT_NODE) return;
+            pendingMotionChecks.add({ element: element, allowNewVisible: !!allowNewVisible });
+            if (motionFrame) return;
+
+            motionFrame = window.requestAnimationFrame(function () {
+                motionFrame = 0;
+                const batch = Array.from(pendingMotionChecks);
+                pendingMotionChecks.clear();
+
+                batch.forEach(function (entry) {
+                    const element = entry.element;
+                    if (!element.isConnected || !inside.contains(element)) return;
+
+                    const nowVisible = isVisible(element);
+                    const previous = visibilityState.get(element);
+                    visibilityState.set(element, nowVisible);
+
+                    if (!nowVisible) return;
+                    if (!isMeaningfulMotionSurface(element)) return;
+
+                    if (previous === false || (previous === undefined && entry.allowNewVisible)) {
+                        replayMotionClass(element, 'ldd-view-enter');
+                    }
+                });
+            });
+        }
+
+        function collectMotionSurfaces(root, allowNewVisible) {
+            if (!root || root.nodeType !== Node.ELEMENT_NODE) return;
+
+            if (root.matches && root.matches(motionSelector)) {
+                queueMotionCheck(root, allowNewVisible);
+            }
+            if (root.querySelectorAll) {
+                root.querySelectorAll(motionSelector).forEach(function (element) {
+                    queueMotionCheck(element, allowNewVisible);
+                });
+            }
+        }
+
+        // Establish the initial visibility baseline so page load does not animate every nested block.
+        inside.querySelectorAll(motionSelector).forEach(function (element) {
+            visibilityState.set(element, isVisible(element));
+        });
+
+        const navigationObserver = new MutationObserver(function (mutations) {
+            mutations.forEach(function (mutation) {
+                const target = mutation.target.nodeType === Node.ELEMENT_NODE
+                    ? mutation.target
+                    : mutation.target.parentElement;
+
+                if (target && target.matches && target.matches('.roadmap-track')) {
+                    const pager = target.closest('.roadmap-pager');
+                    if (pager && isVisible(pager)) replayMotionClass(pager, 'ldd-view-switch');
+                }
+
+                if (target) collectMotionSurfaces(target, false);
+
+                if (mutation.type === 'childList') {
+                    mutation.addedNodes.forEach(function (node) {
+                        if (node.nodeType === Node.ELEMENT_NODE) {
+                            collectMotionSurfaces(node, true);
+                        }
+                    });
+                }
+            });
+        });
+
+        navigationObserver.observe(inside, {
+            subtree: true,
+            childList: true,
+            attributes: true,
+            attributeFilter: ['class', 'style', 'hidden']
+        });
+
+        // Some carousel/roadmap navigation changes transform on an existing track rather than
+        // hiding/showing a panel. Animate its viewport after the click as a fallback.
+        document.addEventListener('click', function (event) {
+            const control = event.target.closest(
+                '.roadmap-nav-btn, .roadmap-switcher-tab, [data-roadmap-page], ' +
+                '.device-admin-tab, [class*="sub-tab"], [class*="tab-btn"]'
+            );
+            if (!control || !inside.contains(control)) return;
+
+            window.requestAnimationFrame(function () {
+                window.requestAnimationFrame(function () {
+                    const pager = control.closest('.main-tab-content, [id$="-panel"], [id$="-view"]');
+                    if (pager && isMeaningfulMotionSurface(pager) && !pager.classList.contains('main-tab-content')) {
+                        replayMotionClass(pager, 'ldd-view-switch');
+                    }
+                });
+            });
+        }, true);
+
         // A Google OAuth return may restore the logged-in UI before this script initializes.
         checkLoginSuccess();
         setMotionReady();
