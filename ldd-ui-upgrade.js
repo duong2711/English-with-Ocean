@@ -20,6 +20,7 @@
         enhanceLearningRoadmaps();
         enhanceReadingLab();
         initAboutMeModal();
+        linkifyLoginZaloNumber();
     });
 
     function ensureUpgradeAssets() {
@@ -59,6 +60,84 @@
         script.async = false;
         script.src = src;
         document.body.appendChild(script);
+    }
+
+    function linkifyLoginZaloNumber() {
+        const auth = document.getElementById('auth-container');
+        if (!auth) return;
+
+        const phone = '0988007529';
+        const zaloUrl = 'https://zalo.me/0988007529';
+
+        function linkify(root) {
+            if (!root) return;
+
+            const walker = document.createTreeWalker(
+                root,
+                NodeFilter.SHOW_TEXT,
+                {
+                    acceptNode: function (node) {
+                        if (!node.nodeValue || !node.nodeValue.includes(phone)) {
+                            return NodeFilter.FILTER_REJECT;
+                        }
+                        const parent = node.parentElement;
+                        if (!parent || parent.closest('a, script, style, textarea, input')) {
+                            return NodeFilter.FILTER_REJECT;
+                        }
+                        return NodeFilter.FILTER_ACCEPT;
+                    }
+                }
+            );
+
+            const nodes = [];
+            while (walker.nextNode()) nodes.push(walker.currentNode);
+
+            nodes.forEach(function (node) {
+                const text = node.nodeValue;
+                const parts = text.split(phone);
+                if (parts.length < 2) return;
+
+                const frag = document.createDocumentFragment();
+                parts.forEach(function (part, index) {
+                    if (part) frag.appendChild(document.createTextNode(part));
+                    if (index < parts.length - 1) {
+                        const link = document.createElement('a');
+                        link.href = zaloUrl;
+                        link.target = '_blank';
+                        link.rel = 'noopener noreferrer';
+                        link.className = 'login-zalo-inline-link';
+                        link.textContent = phone;
+                        link.setAttribute('aria-label', 'Liên hệ Zalo ' + phone);
+                        frag.appendChild(link);
+                    }
+                });
+                node.replaceWith(frag);
+            });
+        }
+
+        linkify(auth);
+
+        const observer = new MutationObserver(function (mutations) {
+            mutations.forEach(function (mutation) {
+                if (mutation.type === 'characterData') {
+                    linkify(mutation.target.parentNode);
+                    return;
+                }
+                mutation.addedNodes.forEach(function (node) {
+                    if (node.nodeType === Node.TEXT_NODE) {
+                        linkify(node.parentNode);
+                    } else if (node.nodeType === Node.ELEMENT_NODE) {
+                        linkify(node);
+                    }
+                });
+            });
+        });
+
+        observer.observe(auth, {
+            childList: true,
+            subtree: true,
+            characterData: true
+        });
     }
 
     function initAboutMeModal() {
