@@ -119,11 +119,12 @@
         }
 
         function isVisible(element) {
-            if (!element) return false;
+            if (!element || !element.isConnected) return false;
             const style = window.getComputedStyle(element);
             return style.display !== 'none' &&
                 style.visibility !== 'hidden' &&
-                Number(style.opacity || 1) !== 0;
+                Number(style.opacity || 1) !== 0 &&
+                element.getClientRects().length > 0;
         }
 
         function createBootOverlay() {
