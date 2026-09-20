@@ -66,6 +66,17 @@
         const openBtn = document.getElementById('about-me-open-btn');
         const closeBtn = document.getElementById('about-me-close-btn');
         const homeBtn = document.getElementById('about-linkbio-home-btn');
+        const galleryLightbox = document.getElementById('about-gallery-lightbox');
+        const galleryImage = document.getElementById('about-gallery-lightbox-image');
+        const galleryClose = document.getElementById('about-gallery-lightbox-close');
+        const galleryPrev = document.getElementById('about-gallery-prev');
+        const galleryNext = document.getElementById('about-gallery-next');
+        const galleryButtons = Array.from(document.querySelectorAll('[data-about-gallery-index]'));
+        const galleryItems = galleryButtons.map(function (btn) {
+            const img = btn.querySelector('img');
+            return img ? { src: img.src, alt: img.alt || 'Ảnh giới thiệu' } : null;
+        }).filter(Boolean);
+        let galleryIndex = 0;
         if (!modal || !openBtn || !closeBtn) return;
 
         function openModal() {
@@ -75,7 +86,34 @@
             window.setTimeout(function () { closeBtn.focus(); }, 0);
         }
 
+        function closeGallery() {
+            if (!galleryLightbox) return;
+            galleryLightbox.classList.remove('is-open');
+            galleryLightbox.setAttribute('aria-hidden', 'true');
+            if (galleryImage) {
+                galleryImage.removeAttribute('src');
+                galleryImage.alt = '';
+            }
+        }
+
+        function renderGalleryImage() {
+            if (!galleryItems.length || !galleryImage) return;
+            const item = galleryItems[galleryIndex];
+            galleryImage.src = item.src;
+            galleryImage.alt = item.alt;
+        }
+
+        function openGallery(index) {
+            if (!galleryLightbox || !galleryItems.length) return;
+            galleryIndex = Math.max(0, Math.min(galleryItems.length - 1, Number(index) || 0));
+            renderGalleryImage();
+            galleryLightbox.classList.add('is-open');
+            galleryLightbox.setAttribute('aria-hidden', 'false');
+            if (galleryClose) galleryClose.focus();
+        }
+
         function closeModal() {
+            closeGallery();
             modal.classList.remove('is-open');
             modal.setAttribute('aria-hidden', 'true');
             document.body.classList.remove('about-me-open');
@@ -100,7 +138,47 @@
             });
         }
 
+        galleryButtons.forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                openGallery(parseInt(btn.dataset.aboutGalleryIndex || '0', 10));
+            });
+        });
+        if (galleryClose) galleryClose.addEventListener('click', closeGallery);
+        if (galleryLightbox) {
+            galleryLightbox.querySelectorAll('[data-gallery-close]').forEach(function (el) {
+                el.addEventListener('click', closeGallery);
+            });
+        }
+        if (galleryPrev) {
+            galleryPrev.addEventListener('click', function () {
+                if (!galleryItems.length) return;
+                galleryIndex = (galleryIndex - 1 + galleryItems.length) % galleryItems.length;
+                renderGalleryImage();
+            });
+        }
+        if (galleryNext) {
+            galleryNext.addEventListener('click', function () {
+                if (!galleryItems.length) return;
+                galleryIndex = (galleryIndex + 1) % galleryItems.length;
+                renderGalleryImage();
+            });
+        }
+
         document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && galleryLightbox && galleryLightbox.classList.contains('is-open')) {
+                closeGallery();
+                return;
+            }
+            if (event.key === 'ArrowLeft' && galleryLightbox && galleryLightbox.classList.contains('is-open') && galleryItems.length) {
+                galleryIndex = (galleryIndex - 1 + galleryItems.length) % galleryItems.length;
+                renderGalleryImage();
+                return;
+            }
+            if (event.key === 'ArrowRight' && galleryLightbox && galleryLightbox.classList.contains('is-open') && galleryItems.length) {
+                galleryIndex = (galleryIndex + 1) % galleryItems.length;
+                renderGalleryImage();
+                return;
+            }
             if (event.key === 'Escape' && modal.classList.contains('is-open')) closeModal();
         });
     }
