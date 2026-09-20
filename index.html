@@ -127,6 +127,7 @@
         </button>
 
         <p style=" color: #7f8c8d; margin-top: 10px; text-align: center;">(Chỉ cho phép các tài khoản đã được tạo sẵn trên hệ thống).</p>
+        <p class="login-zalo-contact">Liên hệ Zalo: <a href="https://zalo.me/0988007529" target="_blank" rel="noopener noreferrer">0988007529</a></p>
     </div>
 <div id="inside">
     <!-- menu gốc giữ lại cho JS, CSS đã ẩn bằng display:none -->
@@ -8427,11 +8428,21 @@
                 </section>
 
                 <div class="about-linkbio-socials" aria-label="Mạng xã hội">
-                    <a href="https://www.facebook.com/le.jerry.271105" target="_blank" rel="noopener noreferrer" aria-label="Facebook">f</a>
-                    <button type="button" class="is-placeholder" aria-label="Zalo" title="Chưa gắn link Zalo">◉</button>
-                    <a href="https://www.tiktok.com/@ldd.english" target="_blank" rel="noopener noreferrer" aria-label="TikTok">♪</a>
-                    <a href="https://www.youtube.com/@ldd_english" target="_blank" rel="noopener noreferrer" aria-label="YouTube">▶</a>
-                    <button type="button" class="is-placeholder" aria-label="Instagram" title="Chưa gắn link Instagram">◎</button>
+                    <a href="https://www.facebook.com/le.jerry.271105" target="_blank" rel="noopener noreferrer" aria-label="Facebook" title="Facebook">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 8h3V4.5c-.5-.1-1.8-.2-3.2-.2-3.1 0-5.2 1.9-5.2 5.4V12H5v4h3.6v8h4.4v-8h3.4l.6-4H13V10c0-1.2.3-2 1-2z"/></svg>
+                    </a>
+                    <a href="https://zalo.me/0988007529" target="_blank" rel="noopener noreferrer" aria-label="Zalo" title="Zalo">
+                        <span class="about-social-zalo">Zalo</span>
+                    </a>
+                    <a href="https://www.tiktok.com/@ldd.english" target="_blank" rel="noopener noreferrer" aria-label="TikTok" title="TikTok">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.2 3c.3 2.2 1.6 3.6 3.8 3.8v3.1c-1.4.1-2.7-.3-3.8-1v6.1a6 6 0 1 1-5.2-5.9v3.2a2.8 2.8 0 1 0 2.1 2.7V3h3.1z"/></svg>
+                    </a>
+                    <a href="https://www.youtube.com/@ldd_english" target="_blank" rel="noopener noreferrer" aria-label="YouTube" title="YouTube">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 7.3a3 3 0 0 0-2.1-2.1C18 4.7 12 4.7 12 4.7s-6 0-7.9.5A3 3 0 0 0 2 7.3 31 31 0 0 0 1.5 12c0 1.6.2 3.2.5 4.7a3 3 0 0 0 2.1 2.1c1.9.5 7.9.5 7.9.5s6 0 7.9-.5a3 3 0 0 0 2.1-2.1c.3-1.5.5-3.1.5-4.7s-.2-3.2-.5-4.7zM10 15.5v-7l6 3.5-6 3.5z"/></svg>
+                    </a>
+                    <button type="button" class="is-placeholder" aria-label="Instagram" title="Instagram chưa gắn link">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5zm0 2a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3H7zm5 3.8A4.2 4.2 0 1 1 12 16.2 4.2 4.2 0 0 1 12 7.8zm0 2A2.2 2.2 0 1 0 12 14.2 2.2 2.2 0 0 0 12 9.8zM17.7 6.3a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/></svg>
+                    </button>
                 </div>
 
                 <button type="button" class="about-linkbio-main-link" id="about-linkbio-home-btn">
@@ -8443,19 +8454,23 @@
                 </button>
 
                 <div class="about-linkbio-gallery" aria-label="Ảnh giới thiệu">
-                    <img
-                        class="about-linkbio-gallery-item"
-                        src="https://bio.linkcdn.cc/upload/8081504tsrpqt/2026081806/1787033980454.png"
-                        alt="Ảnh giới thiệu LDD English 1"
-                    >
-                    <div class="about-linkbio-gallery-wrap">
+                    <button type="button" class="about-linkbio-gallery-button" data-about-gallery-index="0" aria-label="Phóng to ảnh giới thiệu 1">
+                        <img
+                            class="about-linkbio-gallery-item"
+                            src="https://bio.linkcdn.cc/upload/8081504tsrpqt/2026081806/1787033980454.png"
+                            alt="Ảnh giới thiệu LDD English 1"
+                        >
+                        <span class="about-gallery-zoom">⌕</span>
+                    </button>
+                    <button type="button" class="about-linkbio-gallery-button" data-about-gallery-index="1" aria-label="Phóng to ảnh giới thiệu 2">
                         <img
                             class="about-linkbio-gallery-item"
                             src="https://bio.linkcdn.cc/upload/8081504tsrpqt/2026081806/1787034932102.jpeg"
                             alt="Ảnh giới thiệu LDD English 2"
                         >
                         <span class="about-linkbio-gallery-next">›</span>
-                    </div>
+                        <span class="about-gallery-zoom">⌕</span>
+                    </button>
                 </div>
 
                 <div class="about-linkbio-divider"></div>
@@ -8479,26 +8494,36 @@
 
                     <details>
                         <summary>Những lợi ích khi học cùng Dương là gì</summary>
-                        <div class="about-linkbio-answer">Nội dung trả lời có thể bổ sung sau.</div>
+                        <div class="about-linkbio-answer">- Học viên được chủ động luyện tập Tiếng Anh trên web tự học LDD<br>- Gia sư soạn bài kiểm tra hằng tuần riêng cho từng học viên<br>- Học viên được tư vấn và thiết kế lộ trình riêng phù hợp với mục tiêu và khả năng Tiếng Anh</div>
                     </details>
 
                     <details>
                         <summary>Học online qua nền tảng nào và học bao lâu</summary>
-                        <div class="about-linkbio-answer">Nội dung trả lời có thể bổ sung sau.</div>
+                        <div class="about-linkbio-answer">Mỗi buổi học diễn ra qua Google Meet và kéo dài 1 tiếng 30 phút</div>
                     </details>
 
                     <details>
                         <summary>Học phí tính thế nào? Có hoàn học phí nếu không học nữa không?</summary>
-                        <div class="about-linkbio-answer">Nội dung trả lời có thể bổ sung sau.</div>
+                        <div class="about-linkbio-answer">- Học phí đóng theo tháng, tính theo từng buổi học, 1 tuần học tối thiểu 2 buổi. Lưu ý, học phí phải đóng trước buổi học. (gia sư sẽ không lên lớp nếu học viên chưa hoàn thành đóng học phí)<br>- Có. Trong quá trình học, nếu học viên xin nghỉ thì gia sư sẽ hoàn lại tiền tương ứng với những buổi chưa dạy.</div>
                     </details>
 
                     <details>
                         <summary>Có học thử không?</summary>
-                        <div class="about-linkbio-answer">Nội dung trả lời có thể bổ sung sau.</div>
+                        <div class="about-linkbio-answer">Có. Gia sư sẽ hẹn với học viên để có một bài kiểm tra về nền tảng của học viên. Buổi test này không lấy phí.</div>
                     </details>
                 </section>
             </div>
         </section>
+    </div>
+
+    <div id="about-gallery-lightbox" class="about-gallery-lightbox" aria-hidden="true">
+        <div class="about-gallery-lightbox-backdrop" data-gallery-close></div>
+        <div class="about-gallery-lightbox-dialog" role="dialog" aria-modal="true" aria-label="Ảnh giới thiệu phóng to">
+            <button type="button" class="about-gallery-lightbox-close" id="about-gallery-lightbox-close" aria-label="Đóng ảnh">✕</button>
+            <button type="button" class="about-gallery-lightbox-nav prev" id="about-gallery-prev" aria-label="Ảnh trước">‹</button>
+            <img id="about-gallery-lightbox-image" src="" alt="">
+            <button type="button" class="about-gallery-lightbox-nav next" id="about-gallery-next" aria-label="Ảnh tiếp theo">›</button>
+        </div>
     </div>
 
         <!-- ===== POPUP TRA NHANH 1 TỪ (hiện khi học viên chạm vào từ lúc luyện dịch) ===== -->
