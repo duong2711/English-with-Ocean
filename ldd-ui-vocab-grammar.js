@@ -21,9 +21,106 @@
         if (!tab || !grid) return;
 
         tab.classList.add('ldd-vocab-page');
+        installVocabularyNavigationGuard(tab, grid);
         addVocabularyHero(tab, grid);
         decorateVocabularyCards(grid);
         enhanceMyVocabFilters();
+    }
+
+    const VOCAB_VIEW_IDS = [
+        'myvocab-panel',
+        'kid-panel',
+        'kid-topic-panel',
+        'thcs-panel',
+        'thcs-grade6-panel',
+        'thcs-unit-panel',
+        'conj-panel',
+        'news-panel',
+        'news-article-panel',
+        'podcast-panel'
+    ];
+
+    function stopVocabularyTransientActivity() {
+        try {
+            if (window.pronounceGate && typeof window.pronounceGate.stop === 'function') {
+                window.pronounceGate.stop();
+            }
+        } catch (_) {}
+
+        try {
+            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        } catch (_) {}
+
+        const podcast = document.getElementById('podcast-player');
+        if (podcast && typeof podcast.pause === 'function') {
+            try { podcast.pause(); } catch (_) {}
+        }
+
+        // Hai game này có timer/animation riêng. Nếu đang chạy thì tạm dừng trước khi
+        // chuyển module để không còn logic nền tiếp tục chạy trong một panel đã bị ẩn.
+        ['kid-game-pause', 'thcs-game-pause'].forEach(function (id) {
+            const btn = document.getElementById(id);
+            if (!btn || btn.disabled || btn.classList.contains('is-paused')) return;
+            const label = String(btn.textContent || '');
+            if (/Dừng|Pause|⏸/i.test(label)) {
+                try { btn.click(); } catch (_) {}
+            }
+        });
+    }
+
+    function resetVocabularyViews(options) {
+        options = options || {};
+        const grid = document.getElementById('vocab-folder-grid');
+        stopVocabularyTransientActivity();
+
+        VOCAB_VIEW_IDS.forEach(function (id) {
+            const panel = document.getElementById(id);
+            if (panel) panel.style.display = 'none';
+        });
+
+        // Đóng các popup/overlay thuộc kho từ nếu đang mở để không phủ lên module mới.
+        ['vocab-weekly-test-overlay', 'word-lookup-modal'].forEach(function (id) {
+            const el = document.getElementById(id);
+            if (el && options.keepOverlays !== true) el.style.display = 'none';
+        });
+
+        if (grid) grid.style.display = options.showGrid === false ? 'none' : '';
+    }
+
+    function installVocabularyNavigationGuard(tab, grid) {
+        if (tab.dataset.lddVocabNavGuard === '1') return;
+        tab.dataset.lddVocabNavGuard = '1';
+
+        // Capture chạy TRƯỚC các handler cũ trong scriptphonetics.js.
+        // Mỗi lần mở một folder cấp 1: đóng sạch toàn bộ sibling view trước,
+        // sau đó handler gốc chỉ cần hiện panel đích như trước.
+        tab.addEventListener('click', function (event) {
+            const card = event.target.closest('#vocab-folder-grid > .folder-card');
+            if (!card || !grid.contains(card)) return;
+            resetVocabularyViews({ showGrid: false });
+        }, true);
+
+        // Khi vào tab Từ vựng từ header/history, luôn bắt đầu ở hub thay vì
+        // khôi phục ngẫu nhiên một panel cũ còn visible từ lần trước.
+        document.addEventListener('click', function (event) {
+            const btn = event.target.closest('.main-tab-btn[data-main-target="tab-tu-vung"]');
+            if (!btn) return;
+            resetVocabularyViews({ showGrid: true });
+        }, true);
+
+        window.LDDVocabNavigation = Object.assign({}, window.LDDVocabNavigation || {}, {
+            resetToRoot: function () {
+                resetVocabularyViews({ showGrid: true });
+                return true;
+            },
+            openFolder: function (cardId) {
+                const card = document.getElementById(cardId);
+                if (!card || !grid.contains(card)) return false;
+                resetVocabularyViews({ showGrid: true });
+                card.click();
+                return true;
+            }
+        });
     }
 
     function addVocabularyHero(tab, grid) {
