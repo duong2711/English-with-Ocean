@@ -4186,7 +4186,7 @@ h3.news-editable:focus,
 .kf-pronounce-status.kf-pronounce-listening{color:var(--danger-dark);font-weight:700;}
 .kf-pronounce-status.kf-pronounce-unsupported{color:var(--warning);}
 
-/* [MỚI] Ảnh dự phòng Pixabay khi ảnh từ vựng gốc bị lỗi: hiển thị dạng icon căn giữa, không bị crop xấu */
+/* Ảnh dự phòng local cho flashcard khi ảnh từ vựng không tải được: hiển thị cân giữa, không bị crop xấu */
 .kid-img-fallback{object-fit:contain !important;padding:16%;background:rgba(0,0,0,.04);}
 .kid-flash-nav{display:flex;gap:10px;justify-content:center;margin-top:18px;}
 
