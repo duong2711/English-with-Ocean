@@ -1408,6 +1408,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let activeDeviceRequestToken = '';
     let deviceGatePollTimer = null;
     let deviceGateRunSeq = 0;
+    let deviceGateCloseTimer = null;
 
     function ensureDeviceGateUI() {
         if (deviceGateOverlayEl) return;
@@ -1415,7 +1416,7 @@ document.addEventListener('DOMContentLoaded', () => {
         deviceGateOverlayEl.id = 'device-gate-overlay';
         deviceGateOverlayEl.style.cssText = 'display:none; position:fixed; inset:0; background:#101820; z-index:999999; align-items:center; justify-content:center; padding:16px;';
         deviceGateOverlayEl.innerHTML = `
-            <div style="background:#fff; color:#222; border-radius:16px; padding:30px 24px; max-width:440px; width:100%; text-align:center; box-shadow:0 10px 40px rgba(0,0,0,.35); font-family:inherit;">
+            <div class="device-gate-card" style="background:#fff; color:#222; border-radius:16px; padding:30px 24px; max-width:440px; width:100%; text-align:center; box-shadow:0 10px 40px rgba(0,0,0,.35); font-family:inherit;">
                 <div style="font-size:40px; margin-bottom:6px;">🔐</div>
                 <h2 id="device-gate-title" style="margin:0 0 10px; font-size:20px;">Kiểm tra thiết bị</h2>
                 <p style="font-size:14px; color:#555; margin:0 0 14px;">Tài khoản: <strong id="device-gate-email"></strong></p>
@@ -1464,13 +1465,48 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function showDeviceGateOverlay() {
         ensureDeviceGateUI();
+        if (!deviceGateOverlayEl) return;
+
+        if (deviceGateCloseTimer) {
+            clearTimeout(deviceGateCloseTimer);
+            deviceGateCloseTimer = null;
+        }
+
+        const wasHidden = deviceGateOverlayEl.style.display === 'none' ||
+            getComputedStyle(deviceGateOverlayEl).display === 'none';
+
+        deviceGateOverlayEl.classList.remove('is-closing');
         deviceGateOverlayEl.style.display = 'flex';
+
+        if (wasHidden || !deviceGateOverlayEl.classList.contains('is-open')) {
+            deviceGateOverlayEl.classList.remove('is-open');
+            void deviceGateOverlayEl.offsetWidth;
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    if (deviceGateOverlayEl) deviceGateOverlayEl.classList.add('is-open');
+                });
+            });
+        }
     }
 
     function hideDeviceGateUI() {
         stopDeviceGatePolling();
         activeDeviceRequestToken = '';
-        if (deviceGateOverlayEl) deviceGateOverlayEl.style.display = 'none';
+        if (!deviceGateOverlayEl) return;
+
+        if (deviceGateCloseTimer) clearTimeout(deviceGateCloseTimer);
+
+        deviceGateOverlayEl.classList.remove('is-open');
+        deviceGateOverlayEl.classList.add('is-closing');
+
+        deviceGateCloseTimer = setTimeout(() => {
+            if (!deviceGateOverlayEl) return;
+            if (!deviceGateOverlayEl.classList.contains('is-open')) {
+                deviceGateOverlayEl.style.display = 'none';
+                deviceGateOverlayEl.classList.remove('is-closing');
+            }
+            deviceGateCloseTimer = null;
+        }, 430);
     }
 
     function resetDeviceGateActions() {
