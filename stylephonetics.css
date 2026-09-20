@@ -9164,3 +9164,276 @@ body.about-me-open { overflow: hidden; }
         top: max(5px, env(safe-area-inset-top));
     }
 }
+
+
+/* ===== ABOUT ME LINKBIO CLONE — desktop enlarged + clear social icons + gallery lightbox ===== */
+@media (min-width: 700px) {
+    .about-linkbio-shell {
+        width: min(700px, calc(100vw - 48px));
+    }
+    .about-linkbio-page {
+        padding: 10px 20px 26px;
+    }
+    .about-linkbio-cover {
+        border-width: 7px;
+        border-radius: 22px;
+    }
+    .about-linkbio-avatar {
+        width: 98px;
+        height: 98px;
+        margin-top: -47px;
+        border-width: 5px;
+    }
+    .about-linkbio-profile {
+        max-width: 540px;
+        margin-top: 7px;
+    }
+    .about-linkbio-profile h2 {
+        margin-bottom: 6px;
+        font-size: 1.05rem;
+    }
+    .about-linkbio-profile p {
+        margin: 2px 0;
+        font-size: .68rem;
+        line-height: 1.48;
+    }
+    .about-linkbio-socials {
+        gap: 10px;
+        margin: 16px 0 17px;
+    }
+    .about-linkbio-socials a,
+    .about-linkbio-socials button {
+        width: 36px;
+        height: 36px;
+        border-width: 1.7px;
+    }
+    .about-linkbio-socials svg {
+        width: 20px;
+        height: 20px;
+    }
+    .about-social-zalo {
+        font-size: .47rem;
+    }
+    .about-linkbio-main-link {
+        min-height: 68px;
+        grid-template-columns: 48px 1fr 48px;
+        padding: 8px 13px;
+        border-width: 1.7px;
+        border-radius: 12px;
+    }
+    .about-linkbio-main-link strong {
+        font-size: .82rem;
+    }
+    .about-linkbio-main-logo {
+        width: 39px;
+        height: 39px;
+    }
+    .about-linkbio-gallery {
+        gap: 12px;
+        margin-top: 13px;
+    }
+    .about-linkbio-divider {
+        margin-top: 27px;
+        margin-bottom: 18px;
+    }
+    .about-linkbio-box {
+        padding: 15px 16px;
+        border-width: 1.5px;
+        border-radius: 12px;
+    }
+    .about-linkbio-box h3 {
+        margin-bottom: 11px;
+        font-size: .88rem;
+    }
+    .about-linkbio-rules p,
+    .about-linkbio-rules li {
+        font-size: .64rem;
+        line-height: 1.55;
+    }
+    .about-linkbio-faq summary {
+        padding: 11px 18px 11px 18px;
+        font-size: .68rem;
+        line-height: 1.42;
+    }
+    .about-linkbio-faq summary::before {
+        top: 10px;
+        font-size: .72rem;
+    }
+    .about-linkbio-answer {
+        padding: 0 18px 12px;
+        font-size: .64rem;
+        line-height: 1.55;
+    }
+}
+.about-linkbio-socials svg {
+    width: 15px;
+    height: 15px;
+    display: block;
+    fill: currentColor;
+}
+.about-social-zalo {
+    display: block;
+    font-size: .35rem;
+    font-weight: 900;
+    letter-spacing: -.04em;
+}
+.about-linkbio-gallery-button {
+    position: relative;
+    min-width: 0;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    border-radius: 5px;
+    background: transparent;
+    cursor: zoom-in;
+}
+.about-linkbio-gallery-button:focus-visible {
+    outline: 3px solid var(--primary-glow);
+    outline-offset: 2px;
+}
+.about-linkbio-gallery-button .about-linkbio-gallery-item {
+    transition: transform .18s ease, filter .18s ease;
+}
+.about-linkbio-gallery-button:hover .about-linkbio-gallery-item {
+    transform: scale(1.015);
+    filter: brightness(.97);
+}
+.about-gallery-zoom {
+    position: absolute;
+    left: 7px;
+    bottom: 7px;
+    width: 25px;
+    height: 25px;
+    display: grid;
+    place-items: center;
+    border-radius: 999px;
+    background: rgba(255,255,255,.88);
+    color: #172033;
+    font-size: .74rem;
+    font-weight: 900;
+    opacity: 0;
+    transition: opacity .15s ease;
+}
+.about-linkbio-gallery-button:hover .about-gallery-zoom,
+.about-linkbio-gallery-button:focus-visible .about-gallery-zoom {
+    opacity: 1;
+}
+
+.about-gallery-lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 5200;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 28px;
+}
+.about-gallery-lightbox.is-open {
+    display: flex;
+}
+.about-gallery-lightbox-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(4,10,22,.88);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+.about-gallery-lightbox-dialog {
+    position: relative;
+    z-index: 1;
+    width: min(1100px, 94vw);
+    height: min(88vh, 900px);
+    display: grid;
+    place-items: center;
+}
+.about-gallery-lightbox-dialog img {
+    max-width: 100%;
+    max-height: 100%;
+    display: block;
+    object-fit: contain;
+    border-radius: 10px;
+    box-shadow: 0 24px 80px rgba(0,0,0,.45);
+}
+.about-gallery-lightbox-close,
+.about-gallery-lightbox-nav {
+    position: absolute;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(255,255,255,.32);
+    background: rgba(15,23,42,.72);
+    color: #fff;
+    font: inherit;
+    cursor: pointer;
+    backdrop-filter: blur(6px);
+}
+.about-gallery-lightbox-close {
+    top: -6px;
+    right: -6px;
+    width: 42px;
+    height: 42px;
+    border-radius: 999px;
+}
+.about-gallery-lightbox-nav {
+    top: 50%;
+    width: 46px;
+    height: 56px;
+    transform: translateY(-50%);
+    border-radius: 14px;
+    font-size: 1.8rem;
+}
+.about-gallery-lightbox-nav.prev { left: -58px; }
+.about-gallery-lightbox-nav.next { right: -58px; }
+.about-gallery-lightbox-close:hover,
+.about-gallery-lightbox-nav:hover {
+    background: rgba(30,41,59,.95);
+}
+.login-zalo-contact {
+    margin-top: 7px !important;
+    text-align: center;
+    font-size: .74rem !important;
+    color: var(--text-muted) !important;
+}
+.login-zalo-contact a {
+    color: var(--primary-dark);
+    font-weight: 800;
+    text-decoration: none;
+}
+.login-zalo-contact a:hover {
+    text-decoration: underline;
+}
+@media (max-width: 699px) {
+    .about-linkbio-socials a,
+    .about-linkbio-socials button {
+        width: 30px;
+        height: 30px;
+    }
+    .about-linkbio-socials svg {
+        width: 17px;
+        height: 17px;
+    }
+    .about-social-zalo {
+        font-size: .4rem;
+    }
+    .about-gallery-zoom {
+        opacity: 1;
+    }
+    .about-gallery-lightbox {
+        padding: 14px;
+    }
+    .about-gallery-lightbox-dialog {
+        width: 100%;
+        height: 88dvh;
+    }
+    .about-gallery-lightbox-nav {
+        width: 40px;
+        height: 48px;
+        border-radius: 12px;
+    }
+    .about-gallery-lightbox-nav.prev { left: 4px; }
+    .about-gallery-lightbox-nav.next { right: 4px; }
+    .about-gallery-lightbox-close {
+        top: 2px;
+        right: 2px;
+    }
+}
