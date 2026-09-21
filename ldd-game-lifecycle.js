@@ -247,7 +247,10 @@
     async function touch(ctx, visible, force) {
         if (!currentUser || !ctx.participant || !ctx.roomKey) return;
         const now = Date.now();
-        if (!force && ctx.lastSentVisible === visible && now - ctx.lastSentAt < HEARTBEAT_MS - 3000) return;
+        // Local visibility checks run every second, but they NEVER generate network traffic
+        // while the state is unchanged. The separate sparse heartbeat below is the only
+        // periodic network write.
+        if (!force && ctx.lastSentVisible === visible) return;
         ctx.lastSentVisible = visible;
         ctx.lastSentAt = now;
         try {
