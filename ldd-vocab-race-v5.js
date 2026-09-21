@@ -1493,6 +1493,7 @@
         const map = {
             room_not_found:'Không tìm thấy phòng.', room_full:'Phòng đã đủ 4 người.', room_already_started:'Phòng đã bắt đầu.',
             need_2_to_4_players:'Cần 2–4 học viên.', host_only:'Chỉ chủ phòng được thao tác.', teacher_cannot_play:'Tài khoản giáo viên không tham gia.',
+            topic_required:'Hãy chọn 1 chủ đề từ mục Vận dụng trước khi tạo phòng.', game_paused:'Trò chơi đang tạm dừng để chờ người chơi quay lại.',
             stale_round:'Vòng đã chuyển, hãy thử lại.', already_answered:'Bạn đã bị loại hoặc đã hành động vòng này.', round_timeout:'Vòng đã hết thời gian.',
             lane_changed:'Xe vừa đổi làn, hãy thử lại.', not_in_room:'Bạn không còn ở trong phòng này.'
         };
