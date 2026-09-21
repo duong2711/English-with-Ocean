@@ -8604,12 +8604,23 @@ function toggleCompletion(symbolElement) {
                 no_active_call: 'Hiện chưa có số nào được công bố.',
                 only_admin_can_reset: 'Chỉ trọng tài hiện tại mới có thể reset.',
                 cannot_release_while_playing: 'Không thể đổi vai trò khi ván chơi đang diễn ra.',
+                game_paused: 'Trò chơi đang tạm dừng để chờ người chơi quay lại.',
                 not_your_role: 'Đây không phải vai trò của bạn.'
             };
             for (const key in map) {
                 if (msg.includes(key)) return map[key];
             }
             return 'Có lỗi xảy ra (' + msg + '). Bạn đã chạy file loto_schema.sql trong Supabase SQL Editor chưa?';
+        }
+
+        function lotoLifecyclePaused() {
+            return !!(lotoState && String(lotoState.lifecycle_state || 'active') !== 'active');
+        }
+
+        function publishLotoState(state) {
+            const next = state || null;
+            window.LDDLotoState = next;
+            document.dispatchEvent(new CustomEvent('ldd:loto-state', { detail: next }));
         }
 
         // ---------------- MỞ / ĐÓNG PANEL ----------------
@@ -8787,7 +8798,7 @@ function toggleCompletion(symbolElement) {
                 if (status === 'green2' && playerKey === 'player2') cell.classList.add('marked');
                 if (status === 'gray') cell.classList.add('gray');
 
-                const interactive = isMine && lotoState.status === 'playing' && !!lotoState.current_call &&
+                const interactive = isMine && lotoState.status === 'playing' && !lotoLifecyclePaused() && !!lotoState.current_call &&
                     !status && !hasAnsweredThisRound(playerKey);
 
                 if (!interactive) {
@@ -8806,12 +8817,23 @@ function toggleCompletion(symbolElement) {
         function startOrSyncCountdown(cc) {
             stopCountdown();
             timeoutFired = false;
+            if (lotoLifecyclePaused()) {
+                timerDisplayEl.textContent = '⏸';
+                timerDisplayEl.classList.remove('warning', 'danger');
+                return;
+            }
             function tick() {
+                if (lotoLifecyclePaused()) {
+                    timerDisplayEl.textContent = '⏸';
+                    timerDisplayEl.classList.remove('warning', 'danger');
+                    stopCountdown();
+                    return;
+                }
                 const remaining = cc.duration_seconds - (Date.now() / 1000 - cc.started_at);
                 if (remaining <= 0) {
                     timerDisplayEl.textContent = '0';
                     timerDisplayEl.classList.add('danger');
-                    if (!timeoutFired) {
+                    if (!timeoutFired && !lotoLifecyclePaused()) {
                         timeoutFired = true;
                         sb.rpc('loto_resolve_timeout').then(({ data, error }) => {
                             if (!error && data) { lotoState = data; render(); }
@@ -8841,7 +8863,8 @@ function toggleCompletion(symbolElement) {
                 stopCountdown();
                 return;
             }
-            currentResultEl.innerHTML = 'Đáp án: <strong>' + escapeHtml(cc.word) + '</strong>';
+            currentResultEl.innerHTML = 'Đáp án: <strong>' + escapeHtml(cc.word) + '</strong>' +
+                (lotoLifecyclePaused() ? ' · ⏸ đang tạm dừng' : '');
             startOrSyncCountdown(cc);
         }
 
@@ -9018,7 +9041,7 @@ function toggleCompletion(symbolElement) {
         }
 
         function scheduleLotoBots(isAdmin, isP1, isP2) {
-            if (!lotoState || lotoState.status !== 'playing') {
+            if (!lotoState || lotoState.status !== 'playing' || lotoLifecyclePaused()) {
                 stopLotoBotTimers();
                 return;
             }
@@ -9103,6 +9126,7 @@ function toggleCompletion(symbolElement) {
 
         function render() {
             if (!lotoState) return;
+            publishLotoState(lotoState);
             const isAdmin = lotoState.admin_id === currentUserId;
             const isP1 = lotoState.player1_id === currentUserId;
             const isP2 = lotoState.player2_id === currentUserId;
@@ -9190,15 +9214,15 @@ function toggleCompletion(symbolElement) {
                     const hasPending = lotoState.pending_number !== null && lotoState.pending_number !== undefined;
 
                     randomRow.style.display = (!callActive && !hasPending) ? 'flex' : 'none';
-                    randomBtn.disabled = callActive || hasPending;
+                    randomBtn.disabled = callActive || hasPending || lotoLifecyclePaused();
 
-                    answerRow.style.display = (!callActive && hasPending) ? 'flex' : 'none';
+                    answerRow.style.display = (!callActive && hasPending && !lotoLifecyclePaused()) ? 'flex' : 'none';
                     if (hasPending) {
                         pendingNumberEl.textContent = '🎯 Số vừa random: ' + lotoState.pending_number;
                     }
 
-                    answerInput.disabled = callActive;
-                    callSubmitBtn.disabled = callActive;
+                    answerInput.disabled = callActive || lotoLifecyclePaused();
+                    callSubmitBtn.disabled = callActive || lotoLifecyclePaused();
                 }
                 renderCurrentCall();
                 renderBoards(isP1, isP2);
