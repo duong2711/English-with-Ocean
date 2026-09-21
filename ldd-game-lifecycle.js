@@ -54,6 +54,7 @@
 
     function panelVisible(ctx) {
         if (document.hidden) return false;
+        if (typeof document.hasFocus === 'function' && !document.hasFocus()) return false;
         const panel = document.getElementById(ctx.panelId);
         if (!panel || !panel.isConnected) return false;
         const style = window.getComputedStyle(panel);
@@ -324,6 +325,12 @@
 
     function bindVisibility() {
         document.addEventListener('visibilitychange', function () {
+            syncVisibility(true);
+        });
+        window.addEventListener('blur', function () {
+            syncVisibility(true);
+        });
+        window.addEventListener('focus', function () {
             syncVisibility(true);
         });
 
