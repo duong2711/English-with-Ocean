@@ -1,9 +1,9 @@
-/* LDD English — Vocab Race bootstrap v21 · low egress */
+/* LDD English — Vocab Race bootstrap v22 · topic locked + room lifecycle */
 (function () {
     'use strict';
 
     const styles = [
-        ['ldd-vocab-race-v5-style', 'ldd-vocab-race-v5.css?v=20260919-21'],
+        ['ldd-vocab-race-v5-style', 'ldd-vocab-race-v5.css?v=20260921-topic-lifecycle1'],
         ['ldd-vocab-race-v6-style', 'ldd-vocab-race-v6.css?v=20260919-21'],
         ['ldd-vocab-race-v7-style', 'ldd-vocab-race-v7.css?v=20260919-21'],
         ['ldd-vocab-race-v8-style', 'ldd-vocab-race-v8.css?v=20260919-21'],
@@ -22,7 +22,7 @@
     if (!document.getElementById('ldd-vocab-race-v5-script')) {
         const core = document.createElement('script');
         core.id = 'ldd-vocab-race-v5-script';
-        core.src = 'ldd-vocab-race-v5.js?v=20260919-failover1';
+        core.src = 'ldd-vocab-race-v5.js?v=20260921-topic-lifecycle1';
         core.defer = true;
         document.body.appendChild(core);
     }
