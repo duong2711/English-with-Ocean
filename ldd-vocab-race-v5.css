@@ -241,3 +241,32 @@ body .vocab-race-pause-card>small{color:#cbd5e1!important;font-size:.75rem!impor
     body .vocab-race-obstacle{width:88%!important;height:50px!important}
     body .vocab-race-pause-card>b{width:96px!important;height:96px!important;font-size:2.8rem!important}
 }
+
+/* Topic-locked room creation */
+.vocab-race-topic-field{
+    display:grid;
+    gap:6px;
+    margin:12px 0;
+    text-align:left;
+}
+.vocab-race-topic-field>span{
+    font-size:.82rem;
+    font-weight:800;
+    opacity:.78;
+}
+#vocab-race-topic-select{
+    width:100%;
+    min-height:42px;
+    border:1px solid rgba(100,116,139,.28);
+    border-radius:11px;
+    padding:9px 11px;
+    background:var(--surface,#fff);
+    color:inherit;
+    font:inherit;
+    outline:none;
+}
+#vocab-race-topic-select:focus{
+    border-color:rgba(79,110,247,.7);
+    box-shadow:0 0 0 3px rgba(79,110,247,.12);
+}
+#vocab-race-topic-select option:disabled{color:#94a3b8}
