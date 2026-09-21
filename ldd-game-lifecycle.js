@@ -55,9 +55,13 @@
     function panelVisible(ctx) {
         if (document.hidden) return false;
         const panel = document.getElementById(ctx.panelId);
-        if (!panel) return false;
+        if (!panel || !panel.isConnected) return false;
         const style = window.getComputedStyle(panel);
-        return style.display !== 'none' && style.visibility !== 'hidden';
+        if (style.display === 'none' || style.visibility === 'hidden') return false;
+        // getClientRects() also becomes empty when ANY ancestor tab/folder is display:none.
+        // This catches moving from Giải trí to another LDD English tab even when the game
+        // panel itself still has display:block.
+        return panel.getClientRects().length > 0;
     }
 
     function shouldBeVisible(ctx) {
