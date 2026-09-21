@@ -156,7 +156,7 @@
             </div>
             <div id="vocab-race-status" class="vocab-race-status"></div>
             <div id="vocab-race-entry" class="vocab-race-entry">
-                <div class="vocab-race-entry-card"><span class="vocab-race-entry-icon">🏁</span><h4>Tạo phòng mới</h4><p>Lấy ngẫu nhiên 20 từ từ mục <b>Vận dụng</b>.</p><button type="button" id="vocab-race-create-btn" class="vocab-race-primary">Tạo phòng</button></div>
+                <div class="vocab-race-entry-card"><span class="vocab-race-entry-icon">🏁</span><h4>Tạo phòng mới</h4><p>Chọn <b>1 chủ đề trong mục Vận dụng</b>. Cả 20 lượt chỉ dùng từ của chủ đề đó.</p><label class="vocab-race-topic-field"><span>Chủ đề từ vựng</span><select id="vocab-race-topic-select"><option value="">— Chọn chủ đề —</option></select></label><button type="button" id="vocab-race-create-btn" class="vocab-race-primary">Tạo phòng</button></div>
                 <div class="vocab-race-entry-card"><span class="vocab-race-entry-icon">🔑</span><h4>Vào phòng</h4><p>Nhập mã 6 ký tự do chủ phòng gửi.</p><div class="vocab-race-code-row"><input id="vocab-race-code-input" maxlength="6" autocomplete="off" placeholder="VD: A1B2C3"><button type="button" id="vocab-race-join-btn">Vào</button></div></div>
             </div>
             <div id="vocab-race-lobby" class="vocab-race-lobby" style="display:none">
@@ -222,7 +222,7 @@
                 exitRaceFullscreen();
                 return;
             }
-            if (!room || room.status !== 'playing' || isRoundPaused() || !panel || panel.style.display === 'none') return;
+            if (!room || room.status !== 'playing' || isLifecyclePaused() || isRoundPaused() || !panel || panel.style.display === 'none') return;
             if (e.key === 'ArrowLeft') { e.preventDefault(); steer(-1); }
             if (e.key === 'ArrowRight') { e.preventDefault(); steer(1); }
             if ((e.key === ' ' || e.key === 'Enter') && (!document.activeElement || document.activeElement.tagName !== 'INPUT')) { e.preventDefault(); eatWord(); }
@@ -362,6 +362,7 @@
         $('vocab-race-panel').style.display = 'block';
         if (!me) { setStatus('Bạn cần đăng nhập để chơi.', 'error'); return; }
         if (me.email === TEACHER_EMAIL) { $('vocab-race-entry').style.display = 'none'; setStatus('Tài khoản giáo viên không tham gia phòng đua.', 'info'); return; }
+        await populateTopicSelect();
         setStatus('Tạo phòng mới hoặc nhập mã phòng để tham gia.', 'neutral');
         await restoreRoom();
     }
@@ -381,41 +382,103 @@
         el.style.display = text ? '' : 'none';
     }
 
+    function publishRoomState(r) {
+        const state = r ? {
+            id:r.id,
+            code:r.code || '',
+            status:r.status || '',
+            host_user_id:r.host_user_id || null,
+            round_index:Number(r.round_index || 0),
+            last_result:r.last_result || {},
+            topic_id:r.topic_id || '',
+            topic_title:r.topic_title || '',
+            lifecycle_state:r.lifecycle_state || 'active',
+            lifecycle_paused_at:r.lifecycle_paused_at || null,
+            lifecycle_deadline:r.lifecycle_deadline || null,
+            lifecycle_confirm_deadline:r.lifecycle_confirm_deadline || null,
+            lifecycle_reason:r.lifecycle_reason || null
+        } : null;
+        window.LDDVocabRaceRoomState = state;
+        document.dispatchEvent(new CustomEvent('ldd:vocab-race-room', { detail:state }));
+    }
+
     function shuffle(a) {
         a = a.slice();
         for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
         return a;
     }
 
-    async function buildQuestionBank() {
+    async function raceTopics() {
         for (let i = 0; i < 30 && !(window.kidTopicsAPI && typeof window.kidTopicsAPI.getTopics === 'function'); i++) await sleep(120);
         if (!(window.kidTopicsAPI && typeof window.kidTopicsAPI.getTopics === 'function')) throw new Error('Không đọc được dữ liệu mục Vận dụng.');
+        return window.kidTopicsAPI.getTopics() || [];
+    }
+
+    function validTopicWords(topic) {
         const map = new Map();
-        (window.kidTopicsAPI.getTopics() || []).forEach(t => (t.words || []).forEach(w => {
+        (topic && topic.words || []).forEach(w => {
             const en = String((w && (w.en || w.word)) || '').trim();
             const vi = String((w && (w.vi || w.meaning)) || '').trim();
             if (en && vi && !map.has(en.toLowerCase())) map.set(en.toLowerCase(), { en, vi });
-        }));
-        const pool = Array.from(map.values());
-        if (pool.length < 20) throw new Error('Mục Vận dụng chưa có đủ 20 từ hợp lệ.');
-        return shuffle(pool).slice(0, 20).map((word, i) => {
+        });
+        return Array.from(map.values());
+    }
+
+    async function populateTopicSelect() {
+        const select = $('vocab-race-topic-select');
+        if (!select || select.dataset.loaded === '1') return;
+        try {
+            const topics = await raceTopics();
+            const previous = select.value;
+            select.innerHTML = '<option value="">— Chọn chủ đề —</option>';
+            topics.forEach(topic => {
+                const count = validTopicWords(topic).length;
+                const option = document.createElement('option');
+                option.value = String(topic.id || '');
+                option.textContent = String(topic.icon || '📚') + ' ' + String(topic.title || topic.id || 'Chủ đề') + ' (' + count + ' từ)';
+                option.disabled = !option.value || count < 20;
+                select.appendChild(option);
+            });
+            if (previous && Array.from(select.options).some(o => o.value === previous && !o.disabled)) select.value = previous;
+            select.dataset.loaded = '1';
+        } catch (e) {
+            select.innerHTML = '<option value="">Không tải được chủ đề</option>';
+            setStatus(translateError(e), 'error');
+        }
+    }
+
+    async function buildQuestionBank(topicId) {
+        const topics = await raceTopics();
+        const topic = topics.find(t => String(t.id || '') === String(topicId || ''));
+        if (!topic) throw new Error('Bạn cần chọn 1 chủ đề từ vựng trước khi tạo phòng.');
+        const pool = validTopicWords(topic);
+        if (pool.length < 20) throw new Error('Chủ đề "' + String(topic.title || topic.id) + '" chưa có đủ 20 từ hợp lệ.');
+        const questions = shuffle(pool).slice(0, 20).map((word, i) => {
             const options = shuffle([word].concat(shuffle(pool.filter(x => x.en.toLowerCase() !== word.en.toLowerCase())).slice(0, 4)));
             return { no:i+1, vi:word.vi, answer:word.en, options:options.map(x => x.en), correct_index:options.findIndex(x => x.en === word.en) };
         });
+        return { questions, topicId:String(topic.id || ''), topicTitle:String(topic.title || topic.id || 'Chủ đề') };
     }
 
     async function createRoom() {
         if (!me) await syncIdentity();
         if (!me || me.email === TEACHER_EMAIL) return;
+        const topicId = String(($('vocab-race-topic-select') || {}).value || '').trim();
+        if (!topicId) { setStatus('Hãy chọn 1 chủ đề từ mục Vận dụng trước khi tạo phòng.', 'error'); return; }
         const btn = $('vocab-race-create-btn'); btn.disabled = true;
-        setStatus('Đang lấy 20 từ...', 'info');
+        setStatus('Đang lấy 20 từ trong chủ đề đã chọn...', 'info');
         try {
-            const questions = await buildQuestionBank();
-            const { data, error } = await raceSb.rpc('vocab_race_create_room', { p_questions:questions, p_display_name:me.name });
+            const bank = await buildQuestionBank(topicId);
+            const { data, error } = await raceSb.rpc('vocab_race_create_room_topic', {
+                p_questions:bank.questions,
+                p_topic_id:bank.topicId,
+                p_topic_title:bank.topicTitle,
+                p_display_name:me.name
+            });
             if (error) throw error;
             room = Array.isArray(data) ? data[0] : data;
             await attachRoom(room.id);
-            setStatus('Đã tạo phòng ' + room.code + '.', 'success');
+            setStatus('Đã tạo phòng ' + room.code + ' · Chủ đề: ' + bank.topicTitle + '.', 'success');
         } catch (e) { setStatus(translateError(e), 'error'); }
         finally { btn.disabled = false; }
     }
@@ -558,6 +621,7 @@
         const oldRound = room && room.round_index;
         const oldStatus = room && room.status;
         room = Object.assign({}, room || {}, payload.new);
+        publishRoomState(room);
 
         if (room.last_result) maybePlayResultSound(room.last_result);
 
@@ -710,6 +774,7 @@
         const oldRound = room && room.round_index;
         room = rr.data;
         players = pp.data || [];
+        publishRoomState(room);
 
 
         const roundChanged = oldRound !== room.round_index;
@@ -772,6 +837,10 @@
     function isEliminated(p) { return !!(p && room && Number(p.answered_round) === Number(room.round_index)); }
     function currentQuestion() { return (Array.isArray(room && room.questions) ? room.questions : [])[room ? room.round_index : 0] || null; }
 
+    function isLifecyclePaused() {
+        return !!(room && String(room.lifecycle_state || 'active') !== 'active');
+    }
+
     function isRoundPaused() {
         const lr = room && room.last_result || {};
         const pauseType = lr.type === 'round_pause' || lr.type === 'timeout_pause';
@@ -809,6 +878,7 @@
     function leaveLocalRoom() {
         unsubscribe();
         room = null; players = []; claimPending = false; timeoutPending = false; advancePending = false; charging = null;
+        publishRoomState(null);
         laneWriteTarget = null; laneVisualTarget = null; laneWriteRound = -1; laneWriteRunning = false; lastRaceSoundKey = '';
         resolvedObstacleKeys.clear();
         if ($('vocab-race-entry')) $('vocab-race-entry').style.display = me && me.email !== TEACHER_EMAIL ? 'grid' : 'none';
@@ -836,7 +906,8 @@
         const host = room.host_user_id === (me && me.id);
         $('vocab-race-start-btn').style.display = host ? '' : 'none';
         $('vocab-race-start-btn').disabled = players.length < 2 || players.length > 4;
-        $('vocab-race-lobby-hint').textContent = players.length < 2 ? 'Đang chờ thêm ít nhất 1 học viên...' : (host ? 'Đủ người. Có thể bắt đầu.' : 'Đang chờ chủ phòng bắt đầu.');
+        const topicLabel = room.topic_title ? ('Chủ đề: ' + room.topic_title + ' · ') : '';
+        $('vocab-race-lobby-hint').textContent = topicLabel + (players.length < 2 ? 'Đang chờ thêm ít nhất 1 học viên...' : (host ? 'Đủ người. Có thể bắt đầu.' : 'Đang chờ chủ phòng bắt đầu.'));
         const out = $('vocab-race-roster'); out.innerHTML = '';
         for (let slot = 1; slot <= 4; slot++) {
             const p = players.find(x => Number(x.slot) === slot);
@@ -1122,6 +1193,7 @@
                 room &&
                 String(room.id) === String(roomId) &&
                 Number(room.round_index) === roundAtStart &&
+                !isLifecyclePaused() &&
                 laneWriteTarget !== null
             ) {
                 const laneToSend = Number(laneWriteTarget);
@@ -1151,7 +1223,7 @@
 
     async function chooseLane(lane) {
         const p = myPlayer();
-        if (!p || !room || room.status !== 'playing' || isRoundPaused() || isEliminated(p) || claimPending) return;
+        if (!p || !room || room.status !== 'playing' || isLifecyclePaused() || isRoundPaused() || isEliminated(p) || claimPending) return;
         lane = Math.max(0, Math.min(4, Number(lane)));
         const oldLane = p.lane == null ? 2 : Number(p.lane);
         if (lane === oldLane) return;
@@ -1169,7 +1241,7 @@
 
     async function steer(delta) {
         const p = myPlayer();
-        if (!p || isRoundPaused() || isEliminated(p) || claimPending) return;
+        if (!p || isLifecyclePaused() || isRoundPaused() || isEliminated(p) || claimPending) return;
         const cur = p.lane == null ? 2 : Number(p.lane);
         await chooseLane(Math.max(0, Math.min(4, cur + delta)));
     }
@@ -1179,7 +1251,7 @@
         if (!p) return;
         const lane = p.lane == null ? 2 : Number(p.lane);
         const eliminated = isEliminated(p);
-        const paused = isRoundPaused();
+        const paused = isLifecyclePaused() || isRoundPaused();
         $('vocab-race-own-lane').textContent = 'Làn ' + (lane + 1);
         $('vocab-race-left').disabled = paused || eliminated || claimPending || lane <= 0;
         $('vocab-race-right').disabled = paused || eliminated || claimPending || lane >= 4;
@@ -1189,7 +1261,7 @@
 
     async function eatWord() {
         const p = myPlayer();
-        if (!p || !room || room.status !== 'playing' || isRoundPaused() || isEliminated(p) || claimPending) return;
+        if (!p || !room || room.status !== 'playing' || isLifecyclePaused() || isRoundPaused() || isEliminated(p) || claimPending) return;
         const lane = p.lane == null ? 2 : Number(p.lane);
         const roundAtCall = Number(room.round_index);
         claimPending = true;
@@ -1282,7 +1354,7 @@
     async function resolveObstacleImpacts() {
         // Host is primary referee. Backups only act after a staggered grace period, so
         // normal play still sends one RPC while a disconnected host cannot freeze the game.
-        if (!room || isRoundPaused()) return;
+        if (!room || isLifecyclePaused() || isRoundPaused()) return;
         const elapsed = elapsedMs();
         const roundStarted = Date.parse(room.round_started_at || '');
         if (!Number.isFinite(roundStarted)) return;
@@ -1329,6 +1401,16 @@
         if (!room || room.status !== 'playing') return;
         if (Date.now() - lastClockSyncAt > 60000) syncServerClock(false);
 
+        if (isLifecyclePaused()) {
+            const lifecycleClock = $('vocab-race-round-clock');
+            if (lifecycleClock) {
+                lifecycleClock.textContent = '⏸';
+                lifecycleClock.classList.remove('is-danger');
+            }
+            updateControls();
+            return;
+        }
+
         if (isRoundPaused()) {
             const clock = $('vocab-race-round-clock');
             if (clock) { clock.textContent = '0.0s'; clock.classList.add('is-danger'); }
@@ -1355,7 +1437,7 @@
     }
 
     async function resolveTimeout() {
-        if (timeoutPending || !room || isRoundPaused()) return;
+        if (timeoutPending || !room || isLifecyclePaused() || isRoundPaused()) return;
         const startedAt = Date.parse(room.round_started_at || '');
         if (!Number.isFinite(startedAt) || !refereeMayActAt(startedAt + ROUND_MS)) return;
         timeoutPending = true;
@@ -1369,7 +1451,7 @@
     }
 
     async function advanceAfterPause() {
-        if (advancePending || !room || !isRoundPaused()) return;
+        if (advancePending || !room || isLifecyclePaused() || !isRoundPaused()) return;
         const pauseUntil = Date.parse((room.last_result || {}).pause_until || '');
         if (!Number.isFinite(pauseUntil) || !refereeMayActAt(pauseUntil)) return;
         advancePending = true;
