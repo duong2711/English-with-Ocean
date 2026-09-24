@@ -136,7 +136,7 @@ Deno.serve(async (req: Request) => {
 
       await expireOldRequests(user.id);
 
-      const suppliedToken = isUuid(body?.requestToken) ? String(body.requestToken) : null;
+      let suppliedToken = isUuid(body?.requestToken) ? String(body.requestToken) : null;
       const candidateDeviceToken = isUuid(body?.candidateDeviceToken)
         ? String(body.candidateDeviceToken)
         : null;
@@ -149,6 +149,21 @@ Deno.serve(async (req: Request) => {
       }
 
       const candidateHash = await sha256Hex(candidateDeviceToken);
+
+      // If this exact local candidate secret was already approved earlier, trust it
+      // immediately even when an old requestToken is still cached in the browser.
+      const { data: alreadyTrusted, error: trustedErr } = await admin
+        .from('verified_devices')
+        .select('id')
+        .eq('student_email', studentEmail)
+        .eq('device_token_hash', candidateHash)
+        .eq('revoked', false)
+        .maybeSingle();
+
+      if (trustedErr) return json({ error: trustedErr.message }, 500);
+      if (alreadyTrusted) {
+        return json({ status: 'approved', alreadyTrusted: true });
+      }
 
       if (suppliedToken) {
         const { data: existing, error: existingErr } = await admin
@@ -196,20 +211,20 @@ Deno.serve(async (req: Request) => {
               }
             }
 
-            // Never rebind an already approved/rejected/expired request to a new
-            // candidate secret. The client must create a fresh approval request.
-            return json({
-              error: 'Mã thiết bị chờ duyệt không khớp. Vui lòng gửi yêu cầu mới.',
-              status: 'candidate_mismatch',
-            }, 409);
+            // The cached request belongs to an old completed decision. Do not
+            // rebind that historical decision. Ignore its token and continue below to
+            // create a brand-new pending request for the current candidate secret.
+            suppliedToken = null;
           }
-          return json({
-            status: existing.status,
-            requestToken: existing.request_token,
-            requestId: existing.id,
-            createdAt: existing.created_at,
-            expiresAt: existing.expires_at,
-          });
+          if (suppliedToken) {
+            return json({
+              status: existing.status,
+              requestToken: existing.request_token,
+              requestId: existing.id,
+              createdAt: existing.created_at,
+              expiresAt: existing.expires_at,
+            });
+          }
         }
       }
 
@@ -264,6 +279,19 @@ Deno.serve(async (req: Request) => {
       }
       const candidateHash = await sha256Hex(candidateDeviceToken);
 
+      const { data: alreadyTrusted, error: trustedErr } = await admin
+        .from('verified_devices')
+        .select('id')
+        .eq('student_email', studentEmail)
+        .eq('device_token_hash', candidateHash)
+        .eq('revoked', false)
+        .maybeSingle();
+
+      if (trustedErr) return json({ error: trustedErr.message }, 500);
+      if (alreadyTrusted) {
+        return json({ status: 'approved', alreadyTrusted: true });
+      }
+
       await expireOldRequests(user.id);
 
       const { data: row, error } = await admin
@@ -307,9 +335,9 @@ Deno.serve(async (req: Request) => {
         }
 
         return json({
-          error: 'Mã thiết bị không khớp yêu cầu đang chờ.',
-          status: 'candidate_mismatch',
-        }, 409);
+          status: 'missing',
+          reason: 'candidate_mismatch',
+        });
       }
 
       return json({
