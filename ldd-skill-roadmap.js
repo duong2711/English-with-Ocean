@@ -415,6 +415,7 @@
     let placementModal = null;
     const hubs = {};
     const labs = {};
+    const expandedRoadmaps = new Set();
 
     function ready(fn) {
         if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
@@ -456,7 +457,7 @@
     }
 
     function defaultSkillState() {
-        return { audience: 'thcs', recommended: 2, current: 0, completed: [], assessed: false };
+        return { audience: 'thcs', recommended: 2, current: 0, completed: [], assessed: false, weakStages: [] };
     }
 
     function loadState() {
@@ -479,6 +480,8 @@
         if (!AUDIENCES.some(item => item.id === state.audience)) state.audience = 'thcs';
         if (!Array.isArray(state.completed)) state.completed = [];
         state.completed = state.completed.map(Number).filter(n => n >= 1 && n <= 5);
+        if (!Array.isArray(state.weakStages)) state.weakStages = [];
+        state.weakStages = state.weakStages.map(Number).filter(n => n >= 1 && n <= 5);
         state.recommended = Math.min(5, Math.max(1, Number(state.recommended) || 1));
         state.current = Math.min(5, Math.max(0, Number(state.current) || 0));
         return state;
@@ -525,55 +528,96 @@
         const state = getSkillState(skill);
         const hub = hubs[skill];
         if (!hub) return;
+
         const done = state.completed.length;
         const focusStage = state.current || state.recommended;
+        const focus = config.stages[focusStage - 1];
+        const nextStageNumber = focusStage < config.stages.length ? focusStage + 1 : null;
+        const nextStage = nextStageNumber ? config.stages[nextStageNumber - 1] : null;
+        const weakStages = (state.weakStages || []).filter(number => number !== focusStage).slice(0, 2);
+        const expanded = expandedRoadmaps.has(skill);
+
+        const weakHtml = weakStages.length
+            ? '<div class="ldd-focus-secondary"><span class="ldd-control-label">Nên củng cố thêm</span><div class="ldd-focus-mini-list">' +
+                weakStages.map(number => '<button type="button" class="ldd-focus-mini" data-open-stage="' + number + '"><strong>Giai đoạn ' + number + '</strong><span>' + config.stages[number - 1].title + '</span></button>').join('') +
+              '</div></div>'
+            : '';
 
         hub.innerHTML =
-            '<div class="ldd-skill-hero">' +
+            '<div class="ldd-skill-hero is-compact">' +
                 '<div class="ldd-skill-identity">' +
                     '<span class="ldd-skill-icon">' + iconSvg(config.icon) + '</span>' +
                     '<div class="ldd-skill-copy">' +
                         '<span class="ldd-skill-eyebrow">' + config.english + '</span>' +
                         '<h2>' + config.title + '</h2>' +
-                        '<p>' + config.description + '</p>' +
+                        '<p>Học từng bước. Chỉ cần tập trung vào mục được đề xuất trước.</p>' +
                     '</div>' +
                 '</div>' +
                 '<div class="ldd-skill-summary" aria-label="Tóm tắt tiến độ">' +
-                    '<div class="ldd-skill-stat"><strong>' + done + '/5</strong><span>giai đoạn hoàn thành</span></div>' +
-                    '<div class="ldd-skill-stat"><strong>' + focusStage + '</strong><span>giai đoạn nên học</span></div>' +
+                    '<div class="ldd-skill-stat"><strong>' + done + '/5</strong><span>đã hoàn thành</span></div>' +
                 '</div>' +
             '</div>' +
-            '<div class="ldd-roadmap-control-panel">' +
-                '<div>' +
-                    '<span class="ldd-control-label">Mục tiêu học tập</span>' +
-                    '<div class="ldd-audience-chips">' + AUDIENCES.map(item =>
-                        '<button type="button" class="ldd-audience-chip' + (state.audience === item.id ? ' is-active' : '') + '" data-audience="' + item.id + '">' + item.label + '</button>'
-                    ).join('') + '</div>' +
+
+            '<section class="ldd-focus-panel">' +
+                '<div class="ldd-focus-heading">' +
+                    '<div><span class="ldd-control-label">' + (state.assessed ? 'Đề xuất sau kiểm tra đầu vào' : 'Bắt đầu nhanh') + '</span>' +
+                    '<h3>Việc nên làm ngay</h3></div>' +
+                    '<span class="ldd-focus-stage-pill">Giai đoạn ' + focusStage + '</span>' +
+                '</div>' +
+                '<button type="button" class="ldd-focus-main" data-open-stage="' + focusStage + '">' +
+                    '<span class="ldd-focus-main-index">' + focusStage + '</span>' +
+                    '<span><strong>' + focus.title + '</strong><small>' + focus.description + '</small></span>' +
+                    '<b>' + (state.current ? 'Tiếp tục →' : 'Bắt đầu →') + '</b>' +
+                '</button>' +
+                (nextStage ? '<div class="ldd-focus-next"><span>Tiếp theo sau khi đạt 80%</span><button type="button" data-open-stage="' + nextStageNumber + '">Giai đoạn ' + nextStageNumber + ' · ' + nextStage.title + ' →</button></div>' : '') +
+                weakHtml +
+            '</section>' +
+
+            '<div class="ldd-roadmap-control-panel is-simple">' +
+                '<div class="ldd-simple-goal">' +
+                    '<span class="ldd-control-label">Mục tiêu</span>' +
+                    '<select class="ldd-audience-select" data-audience-select aria-label="Chọn mục tiêu học tập">' +
+                        AUDIENCES.map(item => '<option value="' + item.id + '"' + (state.audience === item.id ? ' selected' : '') + '>' + item.label + '</option>').join('') +
+                    '</select>' +
                 '</div>' +
                 '<div class="ldd-roadmap-actions">' +
-                    '<button type="button" class="ldd-roadmap-btn" data-roadmap-assess>' + iconSvg('compass') + '<span>Kiểm tra đầu vào 3 phút</span></button>' +
-                    '<button type="button" class="ldd-roadmap-btn is-primary" data-roadmap-continue>' + iconSvg('play') + '<span>' + (state.current ? 'Tiếp tục giai đoạn ' + state.current : 'Bắt đầu giai đoạn ' + state.recommended) + '</span></button>' +
+                    '<button type="button" class="ldd-roadmap-btn" data-roadmap-assess>' + iconSvg('compass') + '<span>' + (state.assessed ? 'Kiểm tra lại đầu vào' : 'Kiểm tra đầu vào') + '</span></button>' +
+                    '<button type="button" class="ldd-roadmap-btn is-primary" data-roadmap-continue>' + iconSvg('play') + '<span>' + (state.current ? 'Tiếp tục học' : 'Bắt đầu học') + '</span></button>' +
                 '</div>' +
             '</div>' +
+
             '<div class="ldd-roadmap-progress">' +
-                '<div class="ldd-progress-copy"><span>Tiến độ riêng của kỹ năng</span><span>' + done + ' / 5 giai đoạn</span></div>' +
+                '<div class="ldd-progress-copy"><span>Tiến độ ' + config.title.replace('Luyện ', '') + '</span><span>' + done + ' / 5</span></div>' +
                 '<div class="ldd-progress-track"><span style="width:' + (done * 20) + '%"></span></div>' +
             '</div>' +
-            '<ol class="ldd-stage-list">' + config.stages.map((stage, index) => stageCardHtml(skill, stage, index + 1, state)).join('') + '</ol>';
 
-        hub.querySelectorAll('[data-audience]').forEach(button => {
-            button.addEventListener('click', function () {
-                const next = this.dataset.audience;
+            '<div class="ldd-roadmap-disclosure">' +
+                '<button type="button" class="ldd-roadmap-toggle" data-roadmap-toggle aria-expanded="' + expanded + '">' +
+                    (expanded ? 'Ẩn toàn bộ lộ trình ↑' : 'Xem toàn bộ 5 giai đoạn ↓') +
+                '</button>' +
+            '</div>' +
+            '<ol class="ldd-stage-list"' + (expanded ? '' : ' hidden') + '>' +
+                config.stages.map((stage, index) => stageCardHtml(skill, stage, index + 1, state)).join('') +
+            '</ol>';
+
+        const audienceSelect = hub.querySelector('[data-audience-select]');
+        if (audienceSelect) {
+            audienceSelect.addEventListener('change', function () {
                 const skillState = getSkillState(skill);
-                skillState.audience = next;
-                if (!skillState.assessed) skillState.recommended = audienceDefaultStage(next);
+                skillState.audience = this.value;
+                if (!skillState.assessed) skillState.recommended = audienceDefaultStage(this.value);
                 saveState();
                 renderHub(skill);
             });
-        });
+        }
 
         hub.querySelector('[data-roadmap-assess]').addEventListener('click', () => openPlacement(skill));
         hub.querySelector('[data-roadmap-continue]').addEventListener('click', () => openStage(skill, state.current || state.recommended));
+        hub.querySelector('[data-roadmap-toggle]').addEventListener('click', function () {
+            if (expandedRoadmaps.has(skill)) expandedRoadmaps.delete(skill);
+            else expandedRoadmaps.add(skill);
+            renderHub(skill);
+        });
         hub.querySelectorAll('[data-open-stage]').forEach(button => {
             button.addEventListener('click', () => openStage(skill, Number(button.dataset.openStage)));
         });
@@ -722,7 +766,7 @@
         placementModal.className = 'ldd-placement-overlay';
         placementModal.hidden = true;
         placementModal.innerHTML = '<div class="ldd-placement-dialog" role="dialog" aria-modal="true" aria-labelledby="ldd-placement-title">' +
-            '<div class="ldd-placement-head"><div><h3 id="ldd-placement-title">Kiểm tra đầu vào</h3><p>Đây là đánh giá nhanh để đề xuất điểm bắt đầu; bạn vẫn có thể mở bất kỳ giai đoạn nào.</p></div><button type="button" class="ldd-placement-close" aria-label="Đóng">×</button></div>' +
+            '<div class="ldd-placement-head"><div><h3 id="ldd-placement-title">Kiểm tra đầu vào</h3><p>Chọn câu trả lời gần đúng nhất. Sau mỗi lựa chọn, hệ thống sẽ tự chuyển sang câu tiếp theo.</p></div><button type="button" class="ldd-placement-close" aria-label="Đóng">×</button></div>' +
             '<div class="ldd-placement-progress"><span></span></div>' +
             '<div class="ldd-placement-body"></div>' +
         '</div>';
@@ -754,81 +798,116 @@
 
     function renderPlacementQuestion() {
         const config = SKILLS[placementSkill];
+        if (!config) return;
+        const total = config.stages.length;
+        placementIndex = Math.min(Math.max(placementIndex, 0), total - 1);
         const stage = config.stages[placementIndex];
         const body = placementModal.querySelector('.ldd-placement-body');
         const progress = placementModal.querySelector('.ldd-placement-progress span');
-        progress.style.width = ((placementIndex + 1) / 5 * 100) + '%';
+
+        progress.style.width = (((placementIndex + 1) / total) * 100) + '%';
         placementModal.querySelector('#ldd-placement-title').textContent = 'Kiểm tra đầu vào · ' + config.title;
+
         body.innerHTML =
-            '<div class="ldd-placement-count">Khả năng ' + (placementIndex + 1) + ' / 5</div>' +
-            '<h4 class="ldd-placement-question">Bạn tự đánh giá khả năng “' + stage.title + '” của mình như thế nào?</h4>' +
+            '<div class="ldd-placement-count">Câu ' + (placementIndex + 1) + ' / ' + total + '</div>' +
+            '<h4 class="ldd-placement-question">Với “' + stage.title + '”, hiện tại bạn làm được đến đâu?</h4>' +
             '<div class="ldd-placement-options">' +
-                placementOption(0, 'Chưa làm được', 'Tôi cần được hướng dẫn từ đầu.') +
-                placementOption(1, 'Làm được khi có hỗ trợ', 'Tôi hiểu một phần nhưng chưa ổn định.') +
-                placementOption(2, 'Có thể tự làm', 'Tôi thực hiện khá chắc mà không cần nhiều gợi ý.') +
+                placementOption(0, 'Chưa làm được', 'Tôi cần học từ đầu.') +
+                placementOption(1, 'Làm được một phần', 'Tôi làm được khi có gợi ý hoặc hỗ trợ.') +
+                placementOption(2, 'Tự làm khá chắc', 'Tôi có thể tự thực hiện tương đối ổn định.') +
             '</div>' +
-            '<div class="ldd-placement-actions">' +
-                '<button type="button" class="ldd-roadmap-btn" data-placement-back' + (placementIndex === 0 ? ' disabled' : '') + '>← Quay lại</button>' +
-                '<button type="button" class="ldd-roadmap-btn is-primary" data-placement-next disabled>' + (placementIndex === 4 ? 'Xem đề xuất' : 'Tiếp theo →') + '</button>' +
+            '<div class="ldd-placement-actions is-compact">' +
+                '<button type="button" class="ldd-roadmap-btn" data-placement-back' + (placementIndex === 0 ? ' disabled' : '') + '>← Câu trước</button>' +
+                '<span class="ldd-placement-auto-hint">Chọn đáp án để tiếp tục</span>' +
             '</div>';
 
         const saved = placementAnswers[placementIndex];
         body.querySelectorAll('[data-placement-value]').forEach(option => {
-            if (Number(option.dataset.placementValue) === saved) {
-                option.classList.add('is-selected');
-                option.querySelector('input').checked = true;
-                body.querySelector('[data-placement-next]').disabled = false;
-            }
+            if (Number(option.dataset.placementValue) === saved) option.classList.add('is-selected');
+
             option.addEventListener('click', function () {
-                body.querySelectorAll('[data-placement-value]').forEach(node => node.classList.remove('is-selected'));
+                if (this.dataset.advancing === '1') return;
+
+                body.querySelectorAll('[data-placement-value]').forEach(node => {
+                    node.classList.remove('is-selected');
+                    node.disabled = true;
+                });
+
                 this.classList.add('is-selected');
-                this.querySelector('input').checked = true;
+                this.dataset.advancing = '1';
                 placementAnswers[placementIndex] = Number(this.dataset.placementValue);
-                body.querySelector('[data-placement-next]').disabled = false;
+
+                window.setTimeout(() => {
+                    if (!placementSkill) return;
+                    if (placementIndex < total - 1) {
+                        placementIndex++;
+                        renderPlacementQuestion();
+                    } else {
+                        renderPlacementResult();
+                    }
+                }, 180);
             });
         });
-        body.querySelector('[data-placement-back]').addEventListener('click', function () {
-            if (placementIndex > 0) {
-                placementIndex--;
-                renderPlacementQuestion();
-            }
-        });
-        body.querySelector('[data-placement-next]').addEventListener('click', function () {
-            if (placementAnswers[placementIndex] === undefined) return;
-            if (placementIndex < 4) {
-                placementIndex++;
-                renderPlacementQuestion();
-            } else {
-                renderPlacementResult();
-            }
-        });
+
+        const back = body.querySelector('[data-placement-back]');
+        if (back) {
+            back.addEventListener('click', function () {
+                if (placementIndex > 0) {
+                    placementIndex--;
+                    renderPlacementQuestion();
+                }
+            });
+        }
     }
 
     function placementOption(value, title, description) {
-        return '<label class="ldd-placement-option" data-placement-value="' + value + '"><input type="radio" name="ldd-placement-answer"><span><strong>' + title + '</strong><br><small>' + description + '</small></span></label>';
+        return '<button type="button" class="ldd-placement-option" data-placement-value="' + value + '">' +
+            '<span class="ldd-placement-choice-dot" aria-hidden="true"></span>' +
+            '<span><strong>' + title + '</strong><br><small>' + description + '</small></span>' +
+        '</button>';
     }
 
     function renderPlacementResult() {
-        let recommended = placementAnswers.findIndex(answer => answer < 2) + 1;
-        if (recommended <= 0) recommended = 5;
         const config = SKILLS[placementSkill];
+        if (!config) return;
+
+        const total = config.stages.length;
+        let recommended = placementAnswers.findIndex(answer => Number(answer) < 2) + 1;
+        if (recommended <= 0) recommended = total;
+
+        const weakStages = placementAnswers
+            .map((answer, index) => Number(answer) < 2 ? index + 1 : null)
+            .filter(Boolean);
+
         const state = getSkillState(placementSkill);
         state.recommended = recommended;
+        state.current = 0;
         state.assessed = true;
+        state.weakStages = weakStages;
         saveState();
         renderHub(placementSkill);
+
+        const nextStage = recommended < total ? recommended + 1 : null;
+        const weakToShow = weakStages.filter(number => number !== recommended).slice(0, 2);
 
         placementModal.querySelector('.ldd-placement-progress span').style.width = '100%';
         placementModal.querySelector('.ldd-placement-body').innerHTML =
             '<div class="ldd-placement-result">' +
                 '<div class="ldd-placement-result-mark">' + recommended + '</div>' +
-                '<h4>Đề xuất bắt đầu từ Giai đoạn ' + recommended + '</h4>' +
-                '<p><strong>' + config.stages[recommended - 1].title + '</strong> phù hợp nhất với phần bạn đang cần củng cố. Đây chỉ là gợi ý, toàn bộ năm giai đoạn vẫn mở để bạn tự lựa chọn.</p>' +
+                '<span class="ldd-control-label">Lộ trình được đề xuất</span>' +
+                '<h4>Bắt đầu từ Giai đoạn ' + recommended + '</h4>' +
+                '<p><strong>' + config.stages[recommended - 1].title + '</strong> là điểm bắt đầu phù hợp theo câu trả lời của bạn.</p>' +
+                '<div class="ldd-placement-recommendations">' +
+                    '<div><b>1. Học trước</b><span>Giai đoạn ' + recommended + ' · ' + config.stages[recommended - 1].title + '</span></div>' +
+                    (weakToShow.length ? '<div><b>2. Củng cố thêm</b><span>' + weakToShow.map(number => 'GĐ ' + number + ' · ' + config.stages[number - 1].title).join('<br>') + '</span></div>' : '') +
+                    (nextStage ? '<div><b>' + (weakToShow.length ? '3' : '2') + '. Học tiếp sau khi đạt 80%</b><span>Giai đoạn ' + nextStage + ' · ' + config.stages[nextStage - 1].title + '</span></div>' : '<div><b>2. Duy trì</b><span>Luyện lại Giai đoạn ' + recommended + ' để tăng độ chắc và tốc độ.</span></div>') +
+                '</div>' +
                 '<div class="ldd-placement-actions" style="justify-content:center;">' +
-                    '<button type="button" class="ldd-roadmap-btn" data-result-close>Để sau</button>' +
-                    '<button type="button" class="ldd-roadmap-btn is-primary" data-result-start>Bắt đầu giai đoạn ' + recommended + '</button>' +
+                    '<button type="button" class="ldd-roadmap-btn" data-result-close>Xem lộ trình</button>' +
+                    '<button type="button" class="ldd-roadmap-btn is-primary" data-result-start>Bắt đầu ngay</button>' +
                 '</div>' +
             '</div>';
+
         placementModal.querySelector('[data-result-close]').addEventListener('click', closePlacement);
         placementModal.querySelector('[data-result-start]').addEventListener('click', function () {
             const skill = placementSkill;
