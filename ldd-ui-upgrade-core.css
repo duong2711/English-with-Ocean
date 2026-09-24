@@ -766,8 +766,8 @@ body.ldd-motion-ready #inside.ldd-navigation-pulse {
 }
 .ldd-boot-mark {
     position: relative;
-    width: 210px;
-    height: 210px;
+    width: 108px;
+    height: 108px;
     padding: 7px;
     overflow: hidden;
     border-radius: 32px;
@@ -812,19 +812,14 @@ body.ldd-motion-ready #inside.ldd-navigation-pulse {
     display: none;
 }
 .ldd-boot-title {
-    margin-top: 28px;
-    font-size: clamp(1.05rem, 2.6vw, 1.5rem);
-    font-weight: 820;
-    line-height: 1.04;
-    letter-spacing: -.045em;
+    margin-top: 25px;
+    font-size: clamp(1.35rem, 4vw, 1.72rem);
     animation: lddBootCopy .72s .82s cubic-bezier(.16,1,.3,1) both;
 }
 .ldd-boot-subtitle {
-    margin-top: 12px;
-    font-size: clamp(.98rem, 2.2vw, 1.22rem);
-    font-weight: 620;
-    line-height: 1.35;
-    letter-spacing: .035em;
+    margin-top: 8px;
+    font-size: .79rem;
+    letter-spacing: .045em;
     animation: lddBootCopy .68s 1.02s ease-out both;
 }
 .ldd-boot-progress {
@@ -908,21 +903,12 @@ body.ldd-motion-ready #inside.ldd-navigation-pulse {
 
 @media (max-width: 560px) {
     .ldd-boot-mark {
-        width: 165px;
-        height: 165px;
-        border-radius: 36px;
+        width: 96px;
+        height: 96px;
+        border-radius: 29px;
     }
     .ldd-boot-mark img {
         border-radius: 22px;
-    }
-    .ldd-boot-title {
-        margin-top: 24px;
-        font-size: clamp(1.15rem, 5vw, 1.55rem);
-    }
-    .ldd-boot-subtitle {
-        margin-top: 10px;
-        font-size: clamp(.92rem, 4vw, 1.05rem);
-        padding: 0 10px;
     }
     .ldd-boot-progress {
         width: 132px;
