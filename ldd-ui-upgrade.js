@@ -271,7 +271,7 @@
             const namePromise = waitForStudentName(2800);
 
             // Deliberately slower flagship-style boot.
-            await delay(reduceMotion ? 250 : 2050);
+            await delay(reduceMotion ? 250 : 2450);
 
             let name = '';
             try {
