@@ -1694,6 +1694,25 @@ document.addEventListener('DOMContentLoaded', () => {
         clearApprovalLocalState(email);
     }
 
+    function isDeviceCandidateMismatch(result) {
+        const message = String(result && result.error || '').toLowerCase();
+        return message.includes('mã thiết bị chờ duyệt không khớp') ||
+            message.includes('mã thiết bị không khớp yêu cầu đang chờ');
+    }
+
+    async function repairDeviceApprovalPair(user, session, reason) {
+        if (!user) return false;
+        const email = (user.email || '').toLowerCase();
+        // Xóa CẢ requestToken và candidateToken cục bộ để chúng luôn được tạo lại thành
+        // một cặp mới. Backend sẽ tự expire yêu cầu pending cũ trên cùng trình duyệt.
+        clearApprovalLocalState(email);
+        stopDeviceGatePolling();
+        activeDeviceRequestToken = '';
+        console.warn('[LDD device] Rebuilding mismatched approval pair:', reason || 'candidate-mismatch');
+        await createOrResumeApprovalRequest(user, session || null, true, true);
+        return true;
+    }
+
     function acceptApprovedDevice(result, user, candidateToken) {
         if (!user) return false;
         const email = (user.email || '').toLowerCase();
@@ -1716,6 +1735,14 @@ document.addEventListener('DOMContentLoaded', () => {
             requestToken,
             candidateDeviceToken
         });
+
+        // Nếu localStorage từng bị lệch cặp request/candidate (ví dụ do bản cũ hoặc
+        // reload đúng lúc đang ghi state), tự bỏ cặp lỗi và tạo cặp mới. Không yêu cầu
+        // học viên tự xóa cache, không nới lỏng bước so hash trên backend.
+        if (isDeviceCandidateMismatch(result)) {
+            await repairDeviceApprovalPair(user, null, 'poll-mismatch');
+            return;
+        }
 
         if (result && result.status === 'approved') {
             if (acceptApprovedDevice(result, user, candidateDeviceToken)) return;
@@ -1750,7 +1777,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 15000);
     }
 
-    async function createOrResumeApprovalRequest(user, session, forceNew) {
+    async function createOrResumeApprovalRequest(user, session, forceNew, repairAttempt) {
         if (!user) return;
         pendingGateUser = user;
         pendingGateEmail = (user.email || '').toLowerCase();
@@ -1773,6 +1800,13 @@ document.addEventListener('DOMContentLoaded', () => {
             candidateDeviceToken
         }, session);
 
+        // Tự phục hồi state cũ bị lệch: requestToken A nhưng candidateToken B.
+        // Chỉ retry tự động 1 lần để tránh vòng lặp nếu backend gặp lỗi thật.
+        if (isDeviceCandidateMismatch(result) && !repairAttempt) {
+            await repairDeviceApprovalPair(user, session, 'request-mismatch');
+            return;
+        }
+
         if (result && result.status === 'approved') {
             if (acceptApprovedDevice(result, user, candidateDeviceToken)) return;
         }
@@ -1790,6 +1824,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (result && (result.status === 'rejected' || result.status === 'expired')) {
             showDeviceGateDecision(result.status);
+            return;
+        }
+
+        if (isDeviceCandidateMismatch(result) && repairAttempt) {
+            showDeviceGateCheckError('Không thể đồng bộ mã thiết bị sau khi tự sửa. Hãy bấm "Thử lại"; hệ thống sẽ giữ nguyên chứng nhận thiết bị đã có.');
             return;
         }
 
