@@ -63,7 +63,16 @@ body.has-impersonation-banner { --banner-h: 40px; }
 /* =====================================================
    BASE
    ===================================================== */
-html { font-size: 15px; scroll-behavior: smooth; }
+html {
+    font-size: 15px;
+    scroll-behavior: smooth;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+@supports (overflow: clip) {
+    html { overflow-x: clip; }
+}
 body {
     font-family: 'Inter', 'Noto Sans', 'Segoe UI', Arial, sans-serif;
     background: var(--bg);
@@ -74,8 +83,22 @@ body {
     /* padding-top = header, padding-bottom = footer */
     padding: calc(var(--total-top) + 12px) 12px calc(var(--footer-h) + 16px);
     min-height: 100vh;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
     display: flex;
     flex-direction: column;
+}
+@supports (overflow: clip) {
+    body { overflow-x: clip; }
+}
+
+/* Keep the document itself locked to the phone viewport.
+   Components that intentionally scroll sideways keep their own overflow-x:auto. */
+#inside,
+.main-tab-content {
+    min-width: 0;
+    max-width: 100%;
 }
 
 h1 { text-align:center; font-size:1.4rem; font-weight:700; color:var(--text); margin:8px 0 14px; letter-spacing:-0.02em; }
@@ -101,12 +124,32 @@ h3 { font-size:0.95rem; font-weight:600; color:var(--text); margin:0 0 8px; }
 
 /* Logo */
 .header-logo {
+    position: relative;
     display: flex;
     align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    overflow: hidden;
+    border-radius: 12px;
     text-decoration: none;
     flex-shrink: 0;
+    background: linear-gradient(145deg, #eef1ff, #ffffff);
+}
+.header-logo::before {
+    content: 'LDD';
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    color: var(--primary-dark);
+    font-size: .72rem;
+    font-weight: 800;
+    letter-spacing: -.02em;
 }
 .logo-badge {
+    position: relative;
+    z-index: 1;
     width: 42px;
     height: 42px;
     display: block;
@@ -114,6 +157,8 @@ h3 { font-size:0.95rem; font-weight:600; color:var(--text); margin:0 0 8px; }
     object-position: center;
     border-radius: 12px;
     background: #fff;
+    opacity: 0;
+    transition: opacity .16s ease;
     box-shadow: 0 3px 10px rgba(30, 42, 69, 0.12);
     flex-shrink: 0;
 }
