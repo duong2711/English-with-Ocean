@@ -928,9 +928,13 @@
 
     .ldd-audience-chips {
         flex-wrap: nowrap;
-        margin-right: -15px;
-        padding-right: 15px;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        margin-right: 0;
+        padding-right: 4px;
         overflow-x: auto;
+        overflow-y: hidden;
         scrollbar-width: none;
     }
 
