@@ -207,7 +207,7 @@
                 type: 'listening',
                 sourceUrl: 'https://loigiaihay.com/bai-tap-170170.html',
                 sourceLabel: 'Tham khảo dạng bài: Loigiaihay.com',
-                audioUrl: '',
+                audioUrl: 'assets/audio/skill-placement/listening-stage-1.mp3',
                 question: 'What colour is Mia\'s notebook?',
                 options: ['Blue', 'Red', 'Green', 'Black'],
                 answer: 1,
@@ -218,7 +218,7 @@
                 type: 'listening',
                 sourceUrl: 'https://loigiaihay.com/bai-tap-92711.html',
                 sourceLabel: 'Tham khảo dạng bài: Loigiaihay.com',
-                audioUrl: '',
+                audioUrl: 'assets/audio/skill-placement/listening-stage-2.mp3',
                 question: 'What time does the English club start?',
                 options: ['7:00', '7:15', '7:30', '7:45'],
                 answer: 1,
@@ -229,7 +229,7 @@
                 type: 'listening',
                 sourceUrl: 'https://loigiaihay.com/bai-tap-166120.html',
                 sourceLabel: 'Tham khảo dạng bài: Loigiaihay.com',
-                audioUrl: '',
+                audioUrl: 'assets/audio/skill-placement/listening-stage-3.mp3',
                 question: 'What did Nam finally do after school?',
                 options: ['Played football', 'Went home immediately', 'Worked in the library', 'Visited a science museum'],
                 answer: 2,
@@ -240,7 +240,7 @@
                 type: 'listening',
                 sourceUrl: 'https://loigiaihay.com/bai-tap-170350.html',
                 sourceLabel: 'Tham khảo dạng bài: Loigiaihay.com',
-                audioUrl: '',
+                audioUrl: 'assets/audio/skill-placement/listening-stage-4.mp3',
                 question: 'Why were the students still able to see all the planned exhibitions?',
                 options: ['The bus arrived early', 'The museum stayed open longer', 'They cancelled lunch', 'The tour started the next day'],
                 answer: 1,
@@ -251,7 +251,7 @@
                 type: 'listening',
                 sourceUrl: 'https://loigiaihay.com/bai-tap-137252.html',
                 sourceLabel: 'Tham khảo dạng bài: Loigiaihay.com',
-                audioUrl: '',
+                audioUrl: 'assets/audio/skill-placement/listening-stage-5.mp3',
                 question: 'What is the main point of the recording?',
                 options: ['Multitasking always saves time', 'Task switching can reduce efficiency', 'Accuracy improves with more tasks', 'Demanding work should be avoided'],
                 answer: 1,
@@ -1040,9 +1040,9 @@
         } else {
             const listenButton = item.type === 'listening'
                 ? (item.audioUrl
-                    ? '<div class="ldd-placement-audio-wrap"><audio class="ldd-placement-audio" data-placement-audio controls preload="metadata" src="' + item.audioUrl + '"></audio><small>Nghe tối đa 2 lần</small></div>'
+                    ? '<div class="ldd-placement-audio-wrap"><audio class="ldd-placement-audio" data-placement-audio controls preload="metadata" src="' + item.audioUrl + '"></audio><div class="ldd-placement-audio-missing" data-audio-missing hidden><strong>🎧 Chưa có file MP3</strong><span>Thêm file đúng tên vào thư mục audio là dùng được ngay.</span></div><small>Nghe tối đa 2 lần</small></div>'
                     : '<div class="ldd-placement-audio-empty"><strong>🎧 Chưa thêm audio MP3</strong><span>Giáo viên sẽ bổ sung file sau.</span></div>') +
-                  (item.sourceUrl ? '<div class="ldd-placement-source">Nguồn tham khảo dạng bài: <a href="' + item.sourceUrl + '" target="_blank" rel="noopener noreferrer">Loigiaihay.com ↗</a><span>Chỗ MP3 đang để trống để giáo viên thêm sau.</span></div>' : '')
+                  (item.sourceUrl ? '<div class="ldd-placement-source">Tham khảo ý tưởng/dạng bài: <a href="' + item.sourceUrl + '" target="_blank" rel="noopener noreferrer">Loigiaihay.com ↗</a><span>Audio: giáo viên tự ghi âm và lưu trên lddenglish.</span></div>' : '')
                 : '';
             body.innerHTML =
                 '<div class="ldd-placement-count">' + (item.type === 'listening' ? 'Nghe' : (placementSkill === 'writing' ? 'Viết' : 'Đọc')) + ' · Giai đoạn ' + item.stage + '</div>' +
@@ -1056,6 +1056,15 @@
             if (item.type === 'listening') {
                 const audio = body.querySelector('[data-placement-audio]');
                 if (audio) {
+                    const missing = body.querySelector('[data-audio-missing]');
+                    audio.addEventListener('error', function () {
+                        audio.hidden = true;
+                        if (missing) missing.hidden = false;
+                    });
+                    audio.addEventListener('loadedmetadata', function () {
+                        audio.hidden = false;
+                        if (missing) missing.hidden = true;
+                    });
                     let plays = 0;
                     audio.addEventListener('play', function () {
                         if (audio.currentTime < 0.35) plays++;
