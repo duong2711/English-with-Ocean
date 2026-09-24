@@ -766,8 +766,8 @@ body.ldd-motion-ready #inside.ldd-navigation-pulse {
 }
 .ldd-boot-mark {
     position: relative;
-    width: 108px;
-    height: 108px;
+    width: 168px;
+    height: 168px;
     padding: 7px;
     overflow: hidden;
     border-radius: 32px;
@@ -813,7 +813,7 @@ body.ldd-motion-ready #inside.ldd-navigation-pulse {
 }
 .ldd-boot-title {
     margin-top: 28px;
-    font-size: clamp(2.8rem, 8vw, 4.8rem);
+    font-size: clamp(2rem, 6vw, 3.15rem);
     font-weight: 820;
     line-height: 1.04;
     letter-spacing: -.045em;
@@ -821,7 +821,7 @@ body.ldd-motion-ready #inside.ldd-navigation-pulse {
 }
 .ldd-boot-subtitle {
     margin-top: 12px;
-    font-size: clamp(1.15rem, 2.8vw, 1.55rem);
+    font-size: clamp(.98rem, 2.2vw, 1.22rem);
     font-weight: 620;
     line-height: 1.35;
     letter-spacing: .035em;
@@ -908,20 +908,20 @@ body.ldd-motion-ready #inside.ldd-navigation-pulse {
 
 @media (max-width: 560px) {
     .ldd-boot-mark {
-        width: 96px;
-        height: 96px;
-        border-radius: 29px;
+        width: 138px;
+        height: 138px;
+        border-radius: 34px;
     }
     .ldd-boot-mark img {
         border-radius: 22px;
     }
     .ldd-boot-title {
         margin-top: 24px;
-        font-size: clamp(2.45rem, 12vw, 3.7rem);
+        font-size: clamp(1.9rem, 9vw, 2.65rem);
     }
     .ldd-boot-subtitle {
         margin-top: 10px;
-        font-size: clamp(1.05rem, 4.8vw, 1.25rem);
+        font-size: clamp(.92rem, 4vw, 1.05rem);
         padding: 0 10px;
     }
     .ldd-boot-progress {
