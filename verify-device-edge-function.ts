@@ -161,7 +161,47 @@ Deno.serve(async (req: Request) => {
         if (existingErr) return json({ error: existingErr.message }, 500);
         if (existing) {
           if (existing.device_token_hash !== candidateHash) {
-            return json({ error: 'Mã thiết bị chờ duyệt không khớp. Vui lòng gửi yêu cầu mới.' }, 409);
+            // Self-heal only while the request is still pending and belongs to this
+            // authenticated student. This fixes stale/cached clients that accidentally
+            // kept requestToken A together with candidateToken B, without weakening
+            // approved-device security.
+            if (existing.status === 'pending') {
+              const nowIso = new Date().toISOString();
+              const repairedExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+              const { data: repaired, error: repairErr } = await admin
+                .from('device_approval_requests')
+                .update({
+                  device_token_hash: candidateHash,
+                  user_agent: userAgent,
+                  ip_at_request: clientIp,
+                  expires_at: repairedExpiresAt,
+                  updated_at: nowIso,
+                })
+                .eq('id', existing.id)
+                .eq('student_user_id', user.id)
+                .eq('status', 'pending')
+                .select('*')
+                .maybeSingle();
+
+              if (repairErr) return json({ error: repairErr.message }, 500);
+              if (repaired) {
+                return json({
+                  status: 'pending',
+                  requestToken: repaired.request_token,
+                  requestId: repaired.id,
+                  createdAt: repaired.created_at,
+                  expiresAt: repaired.expires_at,
+                  reconciled: true,
+                });
+              }
+            }
+
+            // Never rebind an already approved/rejected/expired request to a new
+            // candidate secret. The client must create a fresh approval request.
+            return json({
+              error: 'Mã thiết bị chờ duyệt không khớp. Vui lòng gửi yêu cầu mới.',
+              status: 'candidate_mismatch',
+            }, 409);
           }
           return json({
             status: existing.status,
@@ -236,7 +276,40 @@ Deno.serve(async (req: Request) => {
       if (error) return json({ error: error.message }, 500);
       if (!row) return json({ status: 'missing' });
       if (row.device_token_hash !== candidateHash) {
-        return json({ error: 'Mã thiết bị không khớp yêu cầu đang chờ.' }, 409);
+        if (row.status === 'pending') {
+          const nowIso = new Date().toISOString();
+          const repairedExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+          const { data: repaired, error: repairErr } = await admin
+            .from('device_approval_requests')
+            .update({
+              device_token_hash: candidateHash,
+              user_agent: userAgent,
+              ip_at_request: clientIp,
+              expires_at: repairedExpiresAt,
+              updated_at: nowIso,
+            })
+            .eq('id', row.id)
+            .eq('student_user_id', user.id)
+            .eq('status', 'pending')
+            .select('id,status,created_at,expires_at')
+            .maybeSingle();
+
+          if (repairErr) return json({ error: repairErr.message }, 500);
+          if (repaired) {
+            return json({
+              status: repaired.status,
+              requestId: repaired.id,
+              createdAt: repaired.created_at,
+              expiresAt: repaired.expires_at,
+              reconciled: true,
+            });
+          }
+        }
+
+        return json({
+          error: 'Mã thiết bị không khớp yêu cầu đang chờ.',
+          status: 'candidate_mismatch',
+        }, 409);
       }
 
       return json({
