@@ -87,7 +87,7 @@
         } catch (_) {}
     }
 
-    async function refreshAccessToken() {
+    async function refreshAccessToken(force) {
         if (refreshPromise) return refreshPromise;
 
         refreshPromise = (async function () {
@@ -98,7 +98,7 @@
             const refreshToken = String(before.session.refresh_token || '');
 
             // Another Supabase client/tab may already have refreshed the session.
-            if (tokenStillUsable(oldAccessToken, 30000)) return oldAccessToken;
+            if (!force && tokenStillUsable(oldAccessToken, 30000)) return oldAccessToken;
             if (!refreshToken) return '';
 
             let response;
@@ -170,7 +170,7 @@
         const suppliedAuth = authHeaderFrom(input, init);
         const suppliedToken = suppliedAuth.replace(/^Bearer\s+/i, '').trim();
         if (suppliedToken && !tokenStillUsable(suppliedToken, 15000)) {
-            const freshBefore = await refreshAccessToken();
+            const freshBefore = await refreshAccessToken(false);
             if (freshBefore) {
                 return nativeFetch(input, withBearer(init, freshBefore));
             }
@@ -181,7 +181,7 @@
 
         // A 401 from verify-device is treated as a stale-access-token signal first.
         // Refresh once, retry once, and only then let the caller decide the session is dead.
-        const freshToken = await refreshAccessToken();
+        const freshToken = await refreshAccessToken(true);
         if (!freshToken) return first;
 
         return nativeFetch(input, withBearer(init, freshToken));
