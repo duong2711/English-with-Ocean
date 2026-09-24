@@ -278,6 +278,7 @@ Deno.serve(async (req: Request) => {
         admin
           .from('verified_devices')
           .select('id,student_email,verified_gmail,ip_at_verification,user_agent,verified_at,last_used_at,last_used_ip,revoked')
+          .eq('revoked', false)
           .order('last_used_at', { ascending: false })
           .limit(300),
       ]);
@@ -395,16 +396,18 @@ Deno.serve(async (req: Request) => {
       const deviceId = String(body?.deviceId || '');
       if (!isUuid(deviceId)) return json({ error: 'Thiết bị không hợp lệ.' }, 400);
 
+      // Thu hồi là thao tác cuối cùng với chứng nhận này:
+      // xóa hẳn bản ghi để thiết bị không còn xuất hiện trong lịch sử quản lý.
       const { data, error } = await admin
         .from('verified_devices')
-        .update({ revoked: true })
+        .delete()
         .eq('id', deviceId)
         .select('id')
         .maybeSingle();
 
       if (error) return json({ error: error.message }, 500);
       if (!data) return json({ error: 'Không tìm thấy thiết bị.' }, 404);
-      return json({ ok: true, revoked: true });
+      return json({ ok: true, revoked: true, deleted: true });
     }
 
     // ---------- Legacy Google verification kept for old cached clients ----------
