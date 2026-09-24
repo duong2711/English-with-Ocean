@@ -205,6 +205,8 @@
             {
                 stage: 1,
                 type: 'listening',
+                sourceUrl: 'https://loigiaihay.com/bai-tap-170170.html',
+                sourceLabel: 'Tham khảo dạng bài: Loigiaihay.com',
                 audio: 'Mia has a red notebook in her school bag.',
                 question: 'What colour is Mia\'s notebook?',
                 options: ['Blue', 'Red', 'Green', 'Black'],
@@ -214,6 +216,8 @@
             {
                 stage: 2,
                 type: 'listening',
+                sourceUrl: 'https://loigiaihay.com/bai-tap-92711.html',
+                sourceLabel: 'Tham khảo dạng bài: Loigiaihay.com',
                 audio: 'The English club starts at a quarter past seven, not at seven thirty.',
                 question: 'What time does the English club start?',
                 options: ['7:00', '7:15', '7:30', '7:45'],
@@ -223,6 +227,8 @@
             {
                 stage: 3,
                 type: 'listening',
+                sourceUrl: 'https://loigiaihay.com/bai-tap-166120.html',
+                sourceLabel: 'Tham khảo dạng bài: Loigiaihay.com',
                 audio: 'Nam planned to play football after school, but it started raining, so he stayed in the library and finished his science project.',
                 question: 'What did Nam finally do after school?',
                 options: ['Played football', 'Went home immediately', 'Worked in the library', 'Visited a science museum'],
@@ -232,6 +238,8 @@
             {
                 stage: 4,
                 type: 'listening',
+                sourceUrl: 'https://loigiaihay.com/bai-tap-170350.html',
+                sourceLabel: 'Tham khảo dạng bài: Loigiaihay.com',
                 audio: 'The school trip was delayed because the bus arrived late. Although the students missed the morning tour, the museum extended its opening time, so they still visited every exhibition they had planned to see.',
                 question: 'Why were the students still able to see all the planned exhibitions?',
                 options: ['The bus arrived early', 'The museum stayed open longer', 'They cancelled lunch', 'The tour started the next day'],
@@ -241,6 +249,8 @@
             {
                 stage: 5,
                 type: 'listening',
+                sourceUrl: 'https://loigiaihay.com/bai-tap-137252.html',
+                sourceLabel: 'Tham khảo dạng bài: Loigiaihay.com',
                 audio: 'Researchers often warn that multitasking feels efficient because people switch tasks quickly, but each switch carries a small mental cost. Over time, those repeated costs can reduce accuracy and make demanding work take longer.',
                 question: 'What is the main point of the recording?',
                 options: ['Multitasking always saves time', 'Task switching can reduce efficiency', 'Accuracy improves with more tasks', 'Demanding work should be avoided'],
@@ -1030,7 +1040,8 @@
             speakButton.addEventListener('click', () => startPlacementSpeech(item, speakButton, body.querySelector('[data-speaking-status]')));
         } else {
             const listenButton = item.type === 'listening'
-                ? '<button type="button" class="ldd-placement-listen" data-placement-listen>▶ Nghe câu <small>tối đa 2 lần</small></button>'
+                ? '<button type="button" class="ldd-placement-listen" data-placement-listen>▶ Nghe câu <small>tối đa 2 lần</small></button>' +
+                  (item.sourceUrl ? '<div class="ldd-placement-source">Nguồn tham khảo dạng bài: <a href="' + item.sourceUrl + '" target="_blank" rel="noopener noreferrer">Loigiaihay.com ↗</a><span>Audio trên lddenglish được tạo riêng.</span></div>' : '')
                 : '';
             body.innerHTML =
                 '<div class="ldd-placement-count">' + (item.type === 'listening' ? 'Nghe' : (placementSkill === 'writing' ? 'Viết' : 'Đọc')) + ' · Giai đoạn ' + item.stage + '</div>' +
