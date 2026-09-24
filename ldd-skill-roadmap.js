@@ -14,7 +14,9 @@
         { id: 'foundation', label: 'Mất gốc', start: 1 },
         { id: 'thcs', label: 'THCS', start: 2 },
         { id: 'exam10', label: 'Ôn thi vào 10', start: 3 },
-        { id: 'thpt', label: 'THPT', start: 5 }
+        { id: 'thpt', label: 'THPT', start: 3 },
+        { id: 'work', label: 'Đi làm', start: 3 },
+        { id: 'ielts', label: 'IELTS', start: 4 }
     ];
 
     const SKILLS = {
@@ -51,17 +53,17 @@
                     backIds: ['ln3-back-btn']
                 },
                 {
-                    title: 'Nghe THCS nâng cao và ôn thi vào 10',
-                    description: 'Nghe đoạn dài hơn, lọc chi tiết, theo dõi nguyên nhân – kết quả và bắt đầu suy luận.',
-                    audiences: ['THCS', 'Thi vào 10', 'THPT'],
+                    title: 'Nghe chi tiết và suy luận',
+                    description: 'Xử lý bài nghe dài hơn, ghi chú thông tin và suy luận từ ngữ cảnh.',
+                    audiences: ['THPT', 'Đi làm', 'IELTS'],
                     custom: 'listening',
                     clicks: ['ln-stage2-folder-card'],
                     backIds: ['ln-stage2-back-btn']
                 },
                 {
-                    title: 'Nghe THPT và đề thi',
-                    description: 'Nghe phỏng vấn, bản tin và bài nói dài ở tốc độ tự nhiên; luyện tổng hợp và suy luận.',
-                    audiences: ['THPT'],
+                    title: 'Nghe học thuật và đề thi',
+                    description: 'Luyện nội dung tốc độ tự nhiên, bài học thuật và chiến lược làm bài nâng cao.',
+                    audiences: ['THPT', 'Đi làm', 'IELTS'],
                     custom: 'listening',
                     clicks: ['ln-stage3-folder-card'],
                     backIds: ['ln-stage3-back-btn']
@@ -86,28 +88,28 @@
                 {
                     title: 'Mở lời và duy trì hội thoại',
                     description: 'Chọn cách bắt chuyện phù hợp, phản hồi tự nhiên trong tình huống thường ngày.',
-                    audiences: ['Mất gốc', 'THCS'],
+                    audiences: ['Mất gốc', 'THCS', 'Đi làm'],
                     clicks: ['ls-stage1-folder-card', 'ls-modau-card'],
                     backIds: ['ls2-back-btn']
                 },
                 {
                     title: 'Nhịp điệu và Shadowing',
                     description: 'Nghe – nhại lại theo tốc độ thật để cải thiện nối âm, trọng âm và ngữ điệu.',
-                    audiences: ['THCS', 'THPT'],
+                    audiences: ['THCS', 'THPT', 'IELTS'],
                     clicks: ['ls-stage2-folder-card', 'ls-shadow-card'],
                     backIds: ['lssh-back-btn']
                 },
                 {
                     title: 'Kể chuyện và trình bày',
                     description: 'Sắp xếp ý, dùng liên từ và kể lại một sự việc thành đoạn nói có mạch.',
-                    audiences: ['Thi vào 10', 'THPT'],
+                    audiences: ['Thi vào 10', 'THPT', 'Đi làm'],
                     clicks: ['ls-stage2-folder-card', 'ls-narrate-card'],
                     backIds: ['lsmt-back-btn']
                 },
                 {
                     title: 'Nêu quan điểm và tranh luận',
                     description: 'Chuẩn bị ý theo khung A.R.E.A, trình bày dài và bảo vệ quan điểm cá nhân.',
-                    audiences: ['THPT'],
+                    audiences: ['THPT', 'Đi làm', 'IELTS'],
                     clicks: ['ls-stage3-folder-card'],
                     backIds: ['ls-stage3-back-btn']
                 }
@@ -142,13 +144,13 @@
                 {
                     title: 'Suy luận và phân tích',
                     description: 'Nhận ra thái độ, mục đích, quan hệ nguyên nhân – kết quả và hàm ý.',
-                    audiences: ['Thi vào 10', 'THPT'],
+                    audiences: ['Thi vào 10', 'THPT', 'IELTS'],
                     custom: 'reading'
                 },
                 {
-                    title: 'Đọc THPT và đề thi',
-                    description: 'Đọc bài dài hơn, xử lý từ vựng học thuật, suy luận và câu hỏi tổng hợp ở mức THPT.',
-                    audiences: ['THPT'],
+                    title: 'Văn bản học thuật và thực tế',
+                    description: 'Đọc bài dài, tài liệu công việc hoặc học thuật với câu hỏi tổng hợp.',
+                    audiences: ['THPT', 'Đi làm', 'IELTS'],
                     custom: 'reading'
                 }
             ]
@@ -177,23 +179,23 @@
                 {
                     title: 'Viết theo tình huống',
                     description: 'Viết email, lời nhắn và phản hồi đúng văn phong formal hoặc informal.',
-                    audiences: ['THCS', 'THPT'],
+                    audiences: ['THCS', 'THPT', 'Đi làm'],
                     clicks: ['wr2-folder-card'],
                     afterClick: '[data-wr2-sub="email"]',
                     backIds: ['wr2-back-btn']
                 },
                 {
-                    title: 'Viết THPT: mô tả và báo cáo',
-                    description: 'Chọn lọc thông tin, mô tả số liệu hoặc hiện tượng và tổ chức đoạn viết rõ ràng.',
-                    audiences: ['THPT'],
+                    title: 'Báo cáo và mô tả dữ liệu',
+                    description: 'Chọn lọc số liệu, viết overview và mô tả xu hướng rõ ràng.',
+                    audiences: ['THPT', 'Đi làm', 'IELTS'],
                     clicks: ['wr3-folder-card'],
                     afterClick: '[data-wr3-sub="t1"]',
                     backIds: ['wr3-back-btn']
                 },
                 {
-                    title: 'Nghị luận THPT',
-                    description: 'Lập luận theo bố cục, phát triển ý, nêu dẫn chứng và hoàn thiện bài viết trong thời gian giới hạn.',
-                    audiences: ['THPT'],
+                    title: 'Nghị luận và viết học thuật',
+                    description: 'Lập luận theo bố cục, phát triển ý và hoàn thiện bài viết trong thời gian giới hạn.',
+                    audiences: ['THPT', 'Đi làm', 'IELTS'],
                     clicks: ['wr3-folder-card'],
                     afterClick: '[data-wr3-sub="t2"]',
                     backIds: ['wr3-back-btn']

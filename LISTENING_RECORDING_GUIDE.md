@@ -2,7 +2,7 @@
 
 Tài liệu này dành cho giáo viên khi tự thu MP3 cho phần **Luyện Nghe**.
 
-- Ngân hàng hiện có: **30 bài / 5 giai đoạn / 6 bài mỗi giai đoạn**, ưu tiên **THCS → ôn thi vào 10 → THPT**.
+- Ngân hàng hiện có: **30 bài / 5 giai đoạn / 6 bài mỗi giai đoạn**. Lộ trình tổng thể vẫn giữ các nhóm **Mất gốc, THCS, Ôn thi vào 10, THPT, Đi làm, IELTS**; tuy nhiên **nội dung đang được ưu tiên hoàn thiện trước cho Mất gốc/THCS/THPT**.
 - Nội dung lời đọc bên dưới là nội dung riêng của lddenglish; các trang Loigiaihay chỉ được dùng để tham khảo **dạng bài, độ khó, nhịp đọc và cách tổ chức Listening**.
 - Nghe phần tham khảo ghi ở từng bài trước, sau đó tự thu đúng phần **Lời cần ghi âm**.
 - Không cần đổi code. Chỉ cần đặt MP3 đúng đường dẫn/tên file đã ghi.
@@ -10,7 +10,7 @@ Tài liệu này dành cho giáo viên khi tự thu MP3 cho phần **Luyện Ngh
 - Stage 1: nền tảng THCS, chậm và rõ; Stage 2: THCS cơ bản, chậm-vừa; Stage 3: THCS khá, tốc độ tự nhiên; Stage 4: THCS nâng cao/ôn thi vào 10; Stage 5: THPT, tốc độ tự nhiên và mật độ thông tin cao.
 
 
-## Phân tầng mục tiêu hiện tại
+## Phân tầng thu âm đang ưu tiên cho Mất gốc/THCS/THPT
 
 | Stage | Đối tượng chính | Kiểu nghe | Tốc độ thu gợi ý |
 | --- | --- | --- | --- |
@@ -321,7 +321,7 @@ Tài liệu này dành cho giáo viên khi tự thu MP3 cho phần **Luyện Ngh
 ---
 
 
-## Stage 4 — THCS nâng cao và ôn thi vào 10
+## Stage 4 — Nghe chi tiết và suy luận
 
 ### S4-01 — Vấn đề giao thông
 
@@ -420,7 +420,7 @@ Tài liệu này dành cho giáo viên khi tự thu MP3 cho phần **Luyện Ngh
 ---
 
 
-## Stage 5 — THPT và đề thi
+## Stage 5 — Nghe học thuật và đề thi
 
 ### S5-01 — Ba góc nhìn về thành phố
 
