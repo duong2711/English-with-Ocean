@@ -766,8 +766,8 @@ body.ldd-motion-ready #inside.ldd-navigation-pulse {
 }
 .ldd-boot-mark {
     position: relative;
-    width: 168px;
-    height: 168px;
+    width: 220px;
+    height: 220px;
     padding: 7px;
     overflow: hidden;
     border-radius: 32px;
@@ -813,7 +813,7 @@ body.ldd-motion-ready #inside.ldd-navigation-pulse {
 }
 .ldd-boot-title {
     margin-top: 28px;
-    font-size: clamp(2rem, 6vw, 3.15rem);
+    font-size: clamp(1.45rem, 3.8vw, 2.15rem);
     font-weight: 820;
     line-height: 1.04;
     letter-spacing: -.045em;
@@ -908,16 +908,16 @@ body.ldd-motion-ready #inside.ldd-navigation-pulse {
 
 @media (max-width: 560px) {
     .ldd-boot-mark {
-        width: 138px;
-        height: 138px;
-        border-radius: 34px;
+        width: 176px;
+        height: 176px;
+        border-radius: 38px;
     }
     .ldd-boot-mark img {
         border-radius: 22px;
     }
     .ldd-boot-title {
         margin-top: 24px;
-        font-size: clamp(1.9rem, 9vw, 2.65rem);
+        font-size: clamp(1.55rem, 7vw, 2.1rem);
     }
     .ldd-boot-subtitle {
         margin-top: 10px;
