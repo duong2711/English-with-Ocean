@@ -1451,3 +1451,113 @@
     color: var(--ldd-skill-muted);
     font-size: 11px;
 }
+
+
+/* ===== Listening practice bank: 6 lessons per stage ===== */
+.ldd-listening-bank {
+    display: grid;
+    grid-template-columns: minmax(220px, .72fr) minmax(0, 1.55fr);
+    gap: 16px;
+    align-items: start;
+}
+.ldd-listening-lesson-list {
+    display: grid;
+    gap: 8px;
+    position: sticky;
+    top: 12px;
+}
+.ldd-listening-lesson {
+    display: grid;
+    grid-template-columns: 38px 1fr;
+    gap: 10px;
+    align-items: center;
+    width: 100%;
+    padding: 11px;
+    border: 1px solid var(--ldd-skill-line);
+    border-radius: 14px;
+    background: #fff;
+    color: #26324a;
+    text-align: left;
+    cursor: pointer;
+}
+.ldd-listening-lesson:hover,
+.ldd-listening-lesson.is-active {
+    border-color: var(--skill-accent);
+    box-shadow: 0 8px 20px rgba(39, 61, 117, .08);
+}
+.ldd-listening-lesson.is-done { border-color: #78c69a; }
+.ldd-listening-lesson.is-wrong { border-color: #e7aaa3; }
+.ldd-listening-lesson-no {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 11px;
+    background: #f3f6ff;
+    color: var(--skill-accent);
+    font-size: 12px;
+    font-weight: 900;
+}
+.ldd-listening-lesson strong,
+.ldd-listening-lesson small { display: block; }
+.ldd-listening-lesson strong { font-size: 13px; line-height: 1.35; }
+.ldd-listening-lesson small { margin-top: 2px; color: var(--ldd-skill-muted); font-size: 10px; }
+.ldd-listening-exercise {
+    min-width: 0;
+    padding: 18px;
+    border: 1px solid var(--ldd-skill-line);
+    border-radius: 18px;
+    background: #fff;
+}
+.ldd-listening-exercise-top {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+.ldd-listening-exercise-top h4 { margin: 4px 0 0; font-size: 19px; }
+.ldd-listening-progress-mini {
+    flex: 0 0 auto;
+    padding: 6px 9px;
+    border-radius: 999px;
+    background: #f3f6ff;
+    color: var(--skill-accent);
+    font-size: 10px;
+    font-weight: 850;
+}
+.ldd-listening-audio-card {
+    padding: 13px;
+    border-radius: 14px;
+    background: #f8faff;
+}
+.ldd-listening-audio-card audio { width: 100%; display: block; }
+.ldd-listening-audio-card small { display: block; margin-top: 6px; color: var(--ldd-skill-muted); font-size: 10px; }
+.ldd-listening-source {
+    display: grid;
+    gap: 2px;
+    margin: 10px 0 16px;
+    padding: 9px 11px;
+    border-radius: 11px;
+    background: #f7f8fc;
+    color: var(--ldd-skill-muted);
+    font-size: 10px;
+    line-height: 1.45;
+}
+.ldd-listening-source a { color: var(--skill-accent); font-weight: 850; text-decoration: none; }
+.ldd-listening-question > h4 { margin: 0 0 11px; font-size: 15px; line-height: 1.45; }
+.ldd-placement-audio-missing code { word-break: break-all; font-size: 10px; }
+@media (max-width: 760px) {
+    .ldd-listening-bank { grid-template-columns: 1fr; }
+    .ldd-listening-lesson-list {
+        position: static;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .ldd-listening-lesson { grid-template-columns: 32px 1fr; padding: 9px; }
+    .ldd-listening-lesson-no { width: 30px; height: 30px; }
+    .ldd-listening-exercise { padding: 14px; }
+}
+@media (max-width: 430px) {
+    .ldd-listening-lesson-list { grid-template-columns: 1fr; }
+}
