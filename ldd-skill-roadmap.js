@@ -210,6 +210,8 @@
             {
                     "id": "s1-01",
                     "stage": 1,
+                    "audienceGroup": "Mất gốc",
+                    "audienceDetail": "Nền tảng",
                     "title": "Sheep hay ship?",
                     "sourceUrl": "https://loigiaihay.com/bai-tap-170170.html",
                     "sourceSection": "Listen and circle the words you hear",
@@ -227,6 +229,8 @@
             {
                     "id": "s1-02",
                     "stage": 1,
+                    "audienceGroup": "Mất gốc",
+                    "audienceDetail": "Nền tảng",
                     "title": "Green hay grin?",
                     "sourceUrl": "https://loigiaihay.com/bai-tap-170170.html",
                     "sourceSection": "Listen and circle the words you hear",
@@ -244,6 +248,8 @@
             {
                     "id": "s1-03",
                     "stage": 1,
+                    "audienceGroup": "Mất gốc",
+                    "audienceDetail": "Nền tảng",
                     "title": "Thirteen hay thirty?",
                     "sourceUrl": "https://loigiaihay.com/bai-tap-170170.html",
                     "sourceSection": "Listen and circle the words you hear",
@@ -261,6 +267,8 @@
             {
                     "id": "s1-04",
                     "stage": 1,
+                    "audienceGroup": "Mất gốc",
+                    "audienceDetail": "Nền tảng",
                     "title": "Nghe giờ chính xác",
                     "sourceUrl": "https://loigiaihay.com/bai-tap-170170.html",
                     "sourceSection": "Listen and circle the words you hear",
@@ -278,6 +286,8 @@
             {
                     "id": "s1-05",
                     "stage": 1,
+                    "audienceGroup": "Mất gốc",
+                    "audienceDetail": "Nền tảng",
                     "title": "Nghe đánh vần",
                     "sourceUrl": "https://loigiaihay.com/tieng-anh-7-unit-7-vocabulary-and-listening-a109316.html",
                     "sourceSection": "Pronunciation – Syllables: Listen and repeat",
@@ -295,6 +305,8 @@
             {
                     "id": "s1-06",
                     "stage": 1,
+                    "audienceGroup": "Mất gốc",
+                    "audienceDetail": "Nền tảng",
                     "title": "Từ khóa trong cụm ngắn",
                     "sourceUrl": "https://loigiaihay.com/tieng-anh-7-unit-7-vocabulary-and-listening-a109316.html",
                     "sourceSection": "Pronunciation – Syllables: Listen and repeat",
@@ -312,6 +324,8 @@
             {
                     "id": "s2-01",
                     "stage": 2,
+                    "audienceGroup": "THCS",
+                    "audienceDetail": "Cơ bản",
                     "title": "Lịch sinh hoạt",
                     "sourceUrl": "https://loigiaihay.com/listening-2f-skills-unit-2-every-day-tieng-anh-6-right-on-a94235.html",
                     "sourceSection": "Listen and complete Miguel’s timetable",
@@ -329,6 +343,8 @@
             {
                     "id": "s2-02",
                     "stage": 2,
+                    "audienceGroup": "THCS",
+                    "audienceDetail": "Cơ bản",
                     "title": "Thói quen sức khỏe",
                     "sourceUrl": "https://loigiaihay.com/tieng-anh-7-unit-2-skills-2-a106605.html",
                     "sourceSection": "Listening 2–3: healthy habits",
@@ -346,6 +362,8 @@
             {
                     "id": "s2-03",
                     "stage": 2,
+                    "audienceGroup": "THCS",
+                    "audienceDetail": "Cơ bản",
                     "title": "Thời khóa biểu",
                     "sourceUrl": "https://loigiaihay.com/listening-2f-skills-unit-2-every-day-tieng-anh-6-right-on-a94235.html",
                     "sourceSection": "Listen and complete Miguel’s timetable",
@@ -363,6 +381,8 @@
             {
                     "id": "s2-04",
                     "stage": 2,
+                    "audienceGroup": "THCS",
+                    "audienceDetail": "Cơ bản",
                     "title": "Kế hoạch ngày Tết",
                     "sourceUrl": "https://loigiaihay.com/skills-2-trang-65-unit-6-sgk-tieng-anh-6-moi-c134a22137.html",
                     "sourceSection": "Listen again and answer the questions in one or two words",
@@ -380,6 +400,8 @@
             {
                     "id": "s2-05",
                     "stage": 2,
+                    "audienceGroup": "THCS",
+                    "audienceDetail": "Cơ bản",
                     "title": "Kế hoạch cuối tuần",
                     "sourceUrl": "https://loigiaihay.com/tieng-anh-7-unit-2-skills-2-a106605.html",
                     "sourceSection": "Listening 2–3: healthy habits",
@@ -397,6 +419,8 @@
             {
                     "id": "s2-06",
                     "stage": 2,
+                    "audienceGroup": "THCS",
+                    "audienceDetail": "Cơ bản",
                     "title": "Thông báo thư viện",
                     "sourceUrl": "https://loigiaihay.com/listening-2f-skills-unit-2-every-day-tieng-anh-6-right-on-a94235.html",
                     "sourceSection": "Listen and complete Miguel’s timetable",
@@ -414,6 +438,8 @@
             {
                     "id": "s3-01",
                     "stage": 3,
+                    "audienceGroup": "THCS",
+                    "audienceDetail": "Trung bình–khá",
                     "title": "Phỏng vấn sở thích",
                     "sourceUrl": "https://loigiaihay.com/tieng-anh-8-unit-1-skills-2-a134923.html",
                     "sourceSection": "Listen to an interview with Mark about his leisure activities",
@@ -431,6 +457,8 @@
             {
                     "id": "s3-02",
                     "stage": 3,
+                    "audienceGroup": "THCS",
+                    "audienceDetail": "Trung bình–khá",
                     "title": "Ý kiến về nông thôn",
                     "sourceUrl": "https://loigiaihay.com/tieng-anh-8-unit-2-skills-2-a137295.html",
                     "sourceSection": "Listen to three people talking about life in the countryside",
@@ -448,6 +476,8 @@
             {
                     "id": "s3-03",
                     "stage": 3,
+                    "audienceGroup": "THCS",
+                    "audienceDetail": "Trung bình–khá",
                     "title": "Học trực tuyến",
                     "sourceUrl": "https://loigiaihay.com/tieng-anh-8-unit-6-skills-2-a137552.html",
                     "sourceSection": "Listen to the conversation and tick True or False",
@@ -465,6 +495,8 @@
             {
                     "id": "s3-04",
                     "stage": 3,
+                    "audienceGroup": "THCS",
+                    "audienceDetail": "Trung bình–khá",
                     "title": "Giao thông thành phố",
                     "sourceUrl": "https://loigiaihay.com/tieng-anh-9-unit-2-skills-2-a156636.html",
                     "sourceSection": "Listen to an interview with three teenagers about life in their cities",
@@ -482,6 +514,8 @@
             {
                     "id": "s3-05",
                     "stage": 3,
+                    "audienceGroup": "THCS",
+                    "audienceDetail": "Trung bình–khá",
                     "title": "Mua sắm trực tuyến",
                     "sourceUrl": "https://loigiaihay.com/tieng-anh-8-unit-8-skills-2-a142616.html",
                     "sourceSection": "Listen to a talk about online shopping",
@@ -499,6 +533,8 @@
             {
                     "id": "s3-06",
                     "stage": 3,
+                    "audienceGroup": "THCS",
+                    "audienceDetail": "Trung bình–khá",
                     "title": "Hỏi đường",
                     "sourceUrl": "https://loigiaihay.com/tieng-anh-8-unit-1-skills-2-a134923.html",
                     "sourceSection": "Listen to an interview with Mark about his leisure activities",
@@ -516,6 +552,8 @@
             {
                     "id": "s4-01",
                     "stage": 4,
+                    "audienceGroup": "THCS",
+                    "audienceDetail": "Nâng cao / ôn vào 10",
                     "title": "Vấn đề giao thông",
                     "sourceUrl": "https://loigiaihay.com/unit-10-planet-earth-e35275.html",
                     "sourceSection": "Skills 2 – listen to a conversation, choose A/B/C, then complete a one-word summary",
@@ -533,6 +571,8 @@
             {
                     "id": "s4-02",
                     "stage": 4,
+                    "audienceGroup": "THCS",
+                    "audienceDetail": "Nâng cao / ôn vào 10",
                     "title": "Ô nhiễm nước",
                     "sourceUrl": "https://loigiaihay.com/tieng-anh-8-unit-7-skills-2-a141336.html",
                     "sourceSection": "Listen to a talk about water pollution",
@@ -550,6 +590,8 @@
             {
                     "id": "s4-03",
                     "stage": 4,
+                    "audienceGroup": "THCS",
+                    "audienceDetail": "Nâng cao / ôn vào 10",
                     "title": "Ưu nhược điểm mua online",
                     "sourceUrl": "https://loigiaihay.com/tieng-anh-8-unit-8-skills-2-a142616.html",
                     "sourceSection": "Listen to a talk about online shopping",
@@ -567,6 +609,8 @@
             {
                     "id": "s4-04",
                     "stage": 4,
+                    "audienceGroup": "THCS",
+                    "audienceDetail": "Nâng cao / ôn vào 10",
                     "title": "Người giúp ích cộng đồng",
                     "sourceUrl": "https://loigiaihay.com/tieng-anh-9-unit-1-skills-2-a156628.html",
                     "sourceSection": "Listen and fill in each blank – My Favourite Community Helper",
@@ -584,6 +628,8 @@
             {
                     "id": "s4-05",
                     "stage": 4,
+                    "audienceGroup": "THCS",
+                    "audienceDetail": "Nâng cao / ôn vào 10",
                     "title": "Chương trình lễ hội",
                     "sourceUrl": "https://loigiaihay.com/tieng-anh-8-unit-5-skills-2-a141799.html",
                     "sourceSection": "Listen to part of the programme “Charming Viet Nam”",
@@ -601,6 +647,8 @@
             {
                     "id": "s4-06",
                     "stage": 4,
+                    "audienceGroup": "THCS",
+                    "audienceDetail": "Nâng cao / ôn vào 10",
                     "title": "Dự án môi trường trường học",
                     "sourceUrl": "https://loigiaihay.com/tieng-anh-8-unit-7-skills-2-a141336.html",
                     "sourceSection": "Listen to a talk about water pollution",
@@ -618,6 +666,8 @@
             {
                     "id": "s5-01",
                     "stage": 5,
+                    "audienceGroup": "THPT",
+                    "audienceDetail": "Lớp 10–12",
                     "title": "Ba góc nhìn về thành phố",
                     "sourceUrl": "https://loigiaihay.com/tieng-anh-11-bright-unit-1-1c-listening-a138328.html",
                     "sourceSection": "Listen to a radio interview and choose the best answer",
@@ -635,6 +685,8 @@
             {
                     "id": "s5-02",
                     "stage": 5,
+                    "audienceGroup": "THPT",
+                    "audienceDetail": "Lớp 10–12",
                     "title": "Chiến lược học từ vựng",
                     "sourceUrl": "https://loigiaihay.com/tieng-anh-12-bright-unit-1-1c-listening-a156154.html",
                     "sourceSection": "Listen and complete the sentences with NO MORE THAN TWO WORDS",
@@ -652,6 +704,8 @@
             {
                     "id": "s5-03",
                     "stage": 5,
+                    "audienceGroup": "THPT",
+                    "audienceDetail": "Lớp 10–12",
                     "title": "Kinh nghiệm học ngoại ngữ",
                     "sourceUrl": "https://loigiaihay.com/tieng-anh-12-bright-unit-3-3c-listening-a156171.html",
                     "sourceSection": "Listen to a TV commentator and fill in a table",
@@ -669,6 +723,8 @@
             {
                     "id": "s5-04",
                     "stage": 5,
+                    "audienceGroup": "THPT",
+                    "audienceDetail": "Lớp 10–12",
                     "title": "Đánh giá một câu chuyện lan truyền",
                     "sourceUrl": "https://loigiaihay.com/tieng-anh-12-bright-unit-5-5c-listening-a158194.html",
                     "sourceSection": "Listen to a talk and answer questions with short answers",
@@ -686,6 +742,8 @@
             {
                     "id": "s5-05",
                     "stage": 5,
+                    "audienceGroup": "THPT",
+                    "audienceDetail": "Lớp 10–12",
                     "title": "Multitasking và sự tập trung",
                     "sourceUrl": "https://loigiaihay.com/tieng-anh-12-bright-unit-3-3c-listening-a156171.html",
                     "sourceSection": "Listen to a TV commentator and fill in a table",
@@ -703,6 +761,8 @@
             {
                     "id": "s5-06",
                     "stage": 5,
+                    "audienceGroup": "THPT",
+                    "audienceDetail": "Lớp 10–12",
                     "title": "Suy luận từ lập luận",
                     "sourceUrl": "https://loigiaihay.com/tieng-anh-11-bright-unit-1-1c-listening-a138328.html",
                     "sourceSection": "Listen to a radio interview and choose the best answer",
@@ -1831,7 +1891,7 @@
         const renderShell = function () {
             panel.innerHTML =
                 '<div class="ldd-stage-lab-head">' +
-                    '<div class="ldd-stage-lab-title-wrap"><span class="ldd-stage-lab-index">' + stageNumber + '</span><div><h3>' + stage.title + '</h3><p class="ldd-stage-lab-subtitle">6 bài luyện · MP3 do giáo viên tự ghi · tham khảo dạng bài Loigiaihay</p></div></div>' +
+                    '<div class="ldd-stage-lab-title-wrap"><span class="ldd-stage-lab-index">' + stageNumber + '</span><div><h3>' + stage.title + '</h3><p class="ldd-stage-lab-subtitle">6 bài luyện · ' + exercises[0].audienceGroup + (exercises[0].audienceDetail ? ' · ' + exercises[0].audienceDetail : '') + ' · MP3 do giáo viên tự ghi</p></div></div>' +
                     '<button type="button" class="ldd-roadmap-btn" data-listening-back>← Lộ trình Nghe</button>' +
                 '</div>' +
                 '<div class="ldd-listening-bank">' +
@@ -1851,7 +1911,7 @@
             list.innerHTML = exercises.map((item, index) =>
                 '<button type="button" class="ldd-listening-lesson' + (index === activeIndex ? ' is-active' : '') + (results[index] === true ? ' is-done' : results[index] === false ? ' is-wrong' : '') + '" data-listening-index="' + index + '">' +
                     '<span class="ldd-listening-lesson-no">' + String(index + 1).padStart(2, '0') + '</span>' +
-                    '<span><strong>' + item.title + '</strong><small>' + (results[index] === null ? 'Chưa làm' : results[index] ? 'Đúng' : 'Cần làm lại') + '</small></span>' +
+                    '<span><strong>' + item.title + '</strong><span class="ldd-listening-audience-badge">' + item.audienceGroup + (item.audienceDetail ? ' · ' + item.audienceDetail : '') + '</span><small>' + (results[index] === null ? 'Chưa làm' : results[index] ? 'Đúng' : 'Cần làm lại') + '</small></span>' +
                 '</button>'
             ).join('');
             list.querySelectorAll('[data-listening-index]').forEach(button => {
@@ -1870,7 +1930,7 @@
             let selected = null;
             let plays = 0;
             host.innerHTML =
-                '<div class="ldd-listening-exercise-top"><div><span class="ldd-control-label">Bài ' + (index + 1) + ' / ' + exercises.length + '</span><h4>' + item.title + '</h4></div><span class="ldd-listening-progress-mini">' + results.filter(value => value !== null).length + '/' + exercises.length + ' đã làm</span></div>' +
+                '<div class="ldd-listening-exercise-top"><div><span class="ldd-control-label">Bài ' + (index + 1) + ' / ' + exercises.length + '</span><h4>' + item.title + '</h4><span class="ldd-listening-audience-badge is-large">' + item.audienceGroup + (item.audienceDetail ? ' · ' + item.audienceDetail : '') + '</span></div><span class="ldd-listening-progress-mini">' + results.filter(value => value !== null).length + '/' + exercises.length + ' đã làm</span></div>' +
                 '<div class="ldd-listening-audio-card">' +
                     '<audio controls preload="metadata" data-listening-audio src="' + item.audioUrl + '"></audio>' +
                     '<div class="ldd-placement-audio-missing" data-listening-audio-missing hidden><strong>🎧 Chưa có MP3</strong><span>File cần thêm: <code>' + item.audioUrl + '</code></span></div>' +

@@ -10,6 +10,22 @@ Tài liệu này dành cho giáo viên khi tự thu MP3 cho phần **Luyện Ngh
 - Stage 1: nền tảng THCS, chậm và rõ; Stage 2: THCS cơ bản, chậm-vừa; Stage 3: THCS khá, tốc độ tự nhiên; Stage 4: THCS nâng cao/ôn thi vào 10; Stage 5: THPT, tốc độ tự nhiên và mật độ thông tin cao.
 
 
+## Phân loại rõ 30 bài theo đối tượng
+
+### Mất gốc
+- **S1-01 → S1-06**: 6 bài nền tảng về âm, từ, số, giờ, đánh vần và từ khóa ngắn.
+
+### THCS
+- **S2-01 → S2-06**: THCS cơ bản.
+- **S3-01 → S3-06**: THCS trung bình–khá.
+- **S4-01 → S4-06**: THCS nâng cao, phù hợp luyện thêm cho học sinh lớp 8–9 và ôn thi vào 10.
+
+### THPT
+- **S5-01 → S5-06**: THPT lớp 10–12, ưu tiên nghe phỏng vấn, bản tin, đoạn nói dài, tổng hợp ý và suy luận.
+
+> Hiện tại không dùng 30 bài này để đại diện cho toàn bộ nhóm Đi làm/IELTS. Hai nhóm đó vẫn giữ trong roadmap để phát triển sau.
+
+
 ## Phân tầng thu âm đang ưu tiên cho Mất gốc/THCS/THPT
 
 | Stage | Đối tượng chính | Kiểu nghe | Tốc độ thu gợi ý |
@@ -25,6 +41,8 @@ Tài liệu này dành cho giáo viên khi tự thu MP3 cho phần **Luyện Ngh
 
 
 ## Stage 1 — Nhận diện âm và từ
+
+**Đối tượng:** Mất gốc · Nền tảng
 
 ### S1-01 — Sheep hay ship?
 
@@ -125,6 +143,8 @@ Tài liệu này dành cho giáo viên khi tự thu MP3 cho phần **Luyện Ngh
 
 ## Stage 2 — Bắt từ khóa trong câu
 
+**Đối tượng:** THCS · Cơ bản
+
 ### S2-01 — Lịch sinh hoạt
 
 **File MP3:** `assets/audio/listening/stage-2/listening-s2-01.mp3`
@@ -223,6 +243,8 @@ Tài liệu này dành cho giáo viên khi tự thu MP3 cho phần **Luyện Ngh
 
 
 ## Stage 3 — Hiểu hội thoại đời sống
+
+**Đối tượng:** THCS · Trung bình–khá
 
 ### S3-01 — Phỏng vấn sở thích
 
@@ -323,6 +345,8 @@ Tài liệu này dành cho giáo viên khi tự thu MP3 cho phần **Luyện Ngh
 
 ## Stage 4 — Nghe chi tiết và suy luận
 
+**Đối tượng:** THCS · Nâng cao / ôn vào 10
+
 ### S4-01 — Vấn đề giao thông
 
 **File MP3:** `assets/audio/listening/stage-4/listening-s4-01.mp3`
@@ -421,6 +445,8 @@ Tài liệu này dành cho giáo viên khi tự thu MP3 cho phần **Luyện Ngh
 
 
 ## Stage 5 — Nghe học thuật và đề thi
+
+**Đối tượng:** THPT · Lớp 10–12
 
 ### S5-01 — Ba góc nhìn về thành phố
 
