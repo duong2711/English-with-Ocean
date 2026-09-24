@@ -203,7 +203,7 @@
             overlay.innerHTML =
                 '<div class="ldd-boot-orbit" aria-hidden="true"></div>' +
                 '<div class="ldd-boot-center">' +
-                    '<div class="ldd-boot-mark"><span class="ldd-boot-logo-fallback" aria-hidden="true">LDD</span><img src="' + logoUrl + '" alt="LDD English" loading="eager" decoding="async" fetchpriority="high"></div>' +
+                    '<div class="ldd-boot-mark"><span class="ldd-boot-logo-fallback" aria-hidden="true">LDD</span><img src="' + logoUrl + '" alt="LDD English" loading="eager" decoding="sync" fetchpriority="high"></div>' +
                     '<div class="ldd-boot-title">LDD English</div>' +
                     '<div class="ldd-boot-subtitle">Preparing your learning space</div>' +
                     '<div class="ldd-boot-progress" aria-hidden="true"><span></span></div>' +
@@ -271,7 +271,7 @@
             const namePromise = waitForStudentName(2800);
 
             // Deliberately slower flagship-style boot.
-            await delay(reduceMotion ? 250 : 2450);
+            await delay(reduceMotion ? 250 : 2100);
 
             let name = '';
             try {
