@@ -2,12 +2,12 @@
 
 Tài liệu này dành cho giáo viên khi tự thu MP3 cho phần **Luyện Nghe**.
 
-- Ngân hàng hiện có: **30 bài / 5 giai đoạn / 6 bài mỗi giai đoạn**.
+- Ngân hàng hiện có: **30 bài / 5 giai đoạn / 6 bài mỗi giai đoạn**, ưu tiên **THCS → ôn thi vào 10 → THPT**.
 - Nội dung lời đọc bên dưới là nội dung riêng của lddenglish; các trang Loigiaihay chỉ được dùng để tham khảo **dạng bài, độ khó, nhịp đọc và cách tổ chức Listening**.
 - Nghe phần tham khảo ghi ở từng bài trước, sau đó tự thu đúng phần **Lời cần ghi âm**.
 - Không cần đổi code. Chỉ cần đặt MP3 đúng đường dẫn/tên file đã ghi.
 - Nên để 0.5–1 giây im lặng đầu/cuối file; không đọc câu hỏi hoặc đáp án.
-- Stage 1: chậm, rõ; Stage 2: chậm-vừa; Stage 3: tự nhiên; Stage 4: tự nhiên, đoạn dài; Stage 5: tự nhiên, có nhấn ý và nối âm.
+- Stage 1: nền tảng THCS, chậm và rõ; Stage 2: THCS cơ bản, chậm-vừa; Stage 3: THCS khá, tốc độ tự nhiên; Stage 4: THCS nâng cao/ôn thi vào 10; Stage 5: THPT, tốc độ tự nhiên và mật độ thông tin cao.
 
 
 ## Stage 1 — Nhận diện âm và từ
@@ -307,7 +307,7 @@ Tài liệu này dành cho giáo viên khi tự thu MP3 cho phần **Luyện Ngh
 ---
 
 
-## Stage 4 — Nghe chi tiết và suy luận
+## Stage 4 — THCS nâng cao và ôn thi vào 10
 
 ### S4-01 — Vấn đề giao thông
 
@@ -406,15 +406,15 @@ Tài liệu này dành cho giáo viên khi tự thu MP3 cho phần **Luyện Ngh
 ---
 
 
-## Stage 5 — Nghe học thuật và đề thi
+## Stage 5 — THPT và đề thi
 
 ### S5-01 — Ba góc nhìn về thành phố
 
 **File MP3:** `assets/audio/listening/stage-5/listening-s5-01.mp3`
 
-**Nghe mẫu trên Loigiaihay:** https://loigiaihay.com/tieng-anh-9-unit-2-skills-2-a156636.html
+**Nghe mẫu trên Loigiaihay:** https://loigiaihay.com/tieng-anh-11-bright-unit-1-1c-listening-a138328.html
 
-**Nghe đúng phần:** Listen to an interview with three teenagers about life in their cities
+**Nghe đúng phần:** Listen to a radio interview and choose the best answer
 
 **Lời cần ghi âm:**
 
@@ -428,9 +428,9 @@ Tài liệu này dành cho giáo viên khi tự thu MP3 cho phần **Luyện Ngh
 
 **File MP3:** `assets/audio/listening/stage-5/listening-s5-02.mp3`
 
-**Nghe mẫu trên Loigiaihay:** https://loigiaihay.com/tieng-anh-9-unit-9-skills-2-a163737.html
+**Nghe mẫu trên Loigiaihay:** https://loigiaihay.com/tieng-anh-12-bright-unit-1-1c-listening-a156154.html
 
-**Nghe đúng phần:** Listen to Trang talking about learning English vocabulary
+**Nghe đúng phần:** Listen and complete the sentences with NO MORE THAN TWO WORDS
 
 **Lời cần ghi âm:**
 
@@ -444,9 +444,9 @@ Tài liệu này dành cho giáo viên khi tự thu MP3 cho phần **Luyện Ngh
 
 **File MP3:** `assets/audio/listening/stage-5/listening-s5-03.mp3`
 
-**Nghe mẫu trên Loigiaihay:** https://loigiaihay.com/skills-2-unit-9-trang-39-sgk-tieng-anh-9-moi-c141a24014.html
+**Nghe mẫu trên Loigiaihay:** https://loigiaihay.com/tieng-anh-12-bright-unit-3-3c-listening-a156171.html
 
-**Nghe đúng phần:** Listen to four people talking about speaking and learning languages
+**Nghe đúng phần:** Listen to a TV commentator and fill in a table
 
 **Lời cần ghi âm:**
 
@@ -460,9 +460,9 @@ Tài liệu này dành cho giáo viên khi tự thu MP3 cho phần **Luyện Ngh
 
 **File MP3:** `assets/audio/listening/stage-5/listening-s5-04.mp3`
 
-**Nghe mẫu trên Loigiaihay:** https://loigiaihay.com/bai-tap-166120.html
+**Nghe mẫu trên Loigiaihay:** https://loigiaihay.com/tieng-anh-12-bright-unit-5-5c-listening-a158194.html
 
-**Nghe đúng phần:** Listen to the interview about urban legends
+**Nghe đúng phần:** Listen to a talk and answer questions with NO MORE THAN THREE WORDS AND/OR A NUMBER
 
 **Lời cần ghi âm:**
 
@@ -476,9 +476,9 @@ Tài liệu này dành cho giáo viên khi tự thu MP3 cho phần **Luyện Ngh
 
 **File MP3:** `assets/audio/listening/stage-5/listening-s5-05.mp3`
 
-**Nghe mẫu trên Loigiaihay:** https://loigiaihay.com/tieng-anh-9-unit-9-skills-2-a163737.html
+**Nghe mẫu trên Loigiaihay:** https://loigiaihay.com/tieng-anh-12-bright-unit-3-3c-listening-a156171.html
 
-**Nghe đúng phần:** Listen to Trang talking about learning English vocabulary
+**Nghe đúng phần:** Listen to a TV commentator and identify key information
 
 **Lời cần ghi âm:**
 
@@ -492,9 +492,9 @@ Tài liệu này dành cho giáo viên khi tự thu MP3 cho phần **Luyện Ngh
 
 **File MP3:** `assets/audio/listening/stage-5/listening-s5-06.mp3`
 
-**Nghe mẫu trên Loigiaihay:** https://loigiaihay.com/tieng-anh-9-unit-2-skills-2-a156636.html
+**Nghe mẫu trên Loigiaihay:** https://loigiaihay.com/tieng-anh-11-bright-unit-1-1c-listening-a138328.html
 
-**Nghe đúng phần:** Listen to an interview with three teenagers about life in their cities
+**Nghe đúng phần:** Listen to a radio interview and choose the best answer
 
 **Lời cần ghi âm:**
 
