@@ -199,6 +199,181 @@
         }
     };
 
+
+    const PLACEMENT_TESTS = {
+        listening: [
+            {
+                stage: 1,
+                type: 'listening',
+                audio: 'Mia has a red notebook in her school bag.',
+                question: 'What colour is Mia\'s notebook?',
+                options: ['Blue', 'Red', 'Green', 'Black'],
+                answer: 1,
+                rate: 0.9
+            },
+            {
+                stage: 2,
+                type: 'listening',
+                audio: 'The English club starts at a quarter past seven, not at seven thirty.',
+                question: 'What time does the English club start?',
+                options: ['7:00', '7:15', '7:30', '7:45'],
+                answer: 1,
+                rate: 0.95
+            },
+            {
+                stage: 3,
+                type: 'listening',
+                audio: 'Nam planned to play football after school, but it started raining, so he stayed in the library and finished his science project.',
+                question: 'What did Nam finally do after school?',
+                options: ['Played football', 'Went home immediately', 'Worked in the library', 'Visited a science museum'],
+                answer: 2,
+                rate: 1
+            },
+            {
+                stage: 4,
+                type: 'listening',
+                audio: 'The school trip was delayed because the bus arrived late. Although the students missed the morning tour, the museum extended its opening time, so they still visited every exhibition they had planned to see.',
+                question: 'Why were the students still able to see all the planned exhibitions?',
+                options: ['The bus arrived early', 'The museum stayed open longer', 'They cancelled lunch', 'The tour started the next day'],
+                answer: 1,
+                rate: 1.02
+            },
+            {
+                stage: 5,
+                type: 'listening',
+                audio: 'Researchers often warn that multitasking feels efficient because people switch tasks quickly, but each switch carries a small mental cost. Over time, those repeated costs can reduce accuracy and make demanding work take longer.',
+                question: 'What is the main point of the recording?',
+                options: ['Multitasking always saves time', 'Task switching can reduce efficiency', 'Accuracy improves with more tasks', 'Demanding work should be avoided'],
+                answer: 1,
+                rate: 1.04
+            }
+        ],
+        reading: [
+            {
+                stage: 1,
+                type: 'choice',
+                context: 'My sister walks to school every morning.',
+                question: 'Which word tells us how often the action happens?',
+                options: ['sister', 'walks', 'school', 'every morning'],
+                answer: 3
+            },
+            {
+                stage: 2,
+                type: 'choice',
+                context: 'The library is closed on Sundays. Students can return books through the box next to the main door.',
+                question: 'What can students do on Sunday?',
+                options: ['Borrow new books inside', 'Return books using the box', 'Meet the librarian', 'Use the reading room'],
+                answer: 1
+            },
+            {
+                stage: 3,
+                type: 'choice',
+                context: 'Linh used to check every new word while reading. Now she first reads the whole paragraph and tries to guess meaning from the surrounding sentences. She says she understands texts faster and remembers more vocabulary.',
+                question: 'What change helped Linh read more effectively?',
+                options: ['Reading only short texts', 'Looking up every word first', 'Using context before checking words', 'Memorising a dictionary'],
+                answer: 2
+            },
+            {
+                stage: 4,
+                type: 'choice',
+                context: 'The school introduced a phone-free study room. Students were not forced to use it, but the room quickly became popular, especially before exams. Many said they completed the same amount of work in less time there.',
+                question: 'What can reasonably be inferred?',
+                options: ['Students were punished for using phones', 'Fewer distractions may have improved concentration', 'The room was only for teachers', 'Exams became easier'],
+                answer: 1
+            },
+            {
+                stage: 5,
+                type: 'choice',
+                context: 'A policy can be popular in the short term yet create costs that appear much later. For that reason, evaluating public decisions only by their immediate effects may reward actions whose disadvantages are merely delayed.',
+                question: 'Which statement best captures the author\'s argument?',
+                options: ['Immediate effects are always the most important', 'Popular policies have no disadvantages', 'Long-term effects should be considered in evaluation', 'Public decisions should never change'],
+                answer: 2
+            }
+        ],
+        writing: [
+            {
+                stage: 1,
+                type: 'choice',
+                question: 'Choose the best complete sentence.',
+                options: ['Because I was tired.', 'My brother play football every day.', 'I finished my homework before dinner.', 'Went to school at seven.'],
+                answer: 2
+            },
+            {
+                stage: 2,
+                type: 'choice',
+                context: 'I enjoy studying English. ___, I practise for fifteen minutes every evening.',
+                question: 'Which connector fits best?',
+                options: ['For example', 'However', 'Unless', 'Although'],
+                answer: 0
+            },
+            {
+                stage: 3,
+                type: 'choice',
+                question: 'Which sentence is most appropriate in a polite email to a teacher?',
+                options: ['Send me the file now.', 'Hey, I want that document.', 'Could you please send me the document when you have time?', 'You forgot my document.'],
+                answer: 2
+            },
+            {
+                stage: 4,
+                type: 'choice',
+                context: '2019: 42% · 2020: 48% · 2021: 61% · 2022: 60%',
+                question: 'Which sentence describes the data most accurately?',
+                options: ['The figure fell every year.', 'The figure rose overall, with a slight fall at the end.', 'The figure stayed unchanged.', 'The figure doubled in 2020.'],
+                answer: 1
+            },
+            {
+                stage: 5,
+                type: 'choice',
+                question: 'Which is the strongest thesis sentence for an argumentative paragraph?',
+                options: [
+                    'Public transport is a topic that many people talk about.',
+                    'There are buses in many cities.',
+                    'Governments should invest more in reliable public transport because it can reduce congestion and widen access to jobs and education.',
+                    'I like public transport sometimes.'
+                ],
+                answer: 2
+            }
+        ],
+        speaking: [
+            {
+                stage: 1,
+                type: 'speaking',
+                question: 'Đọc câu này bằng tiếng Anh:',
+                target: 'I go to school by bike every day.',
+                display: 'I go to school by bike every day.',
+                minWords: 7
+            },
+            {
+                stage: 2,
+                type: 'speaking',
+                question: 'Trả lời bằng tiếng Anh: What do you usually do after school?',
+                display: 'Nói ít nhất 1 câu hoàn chỉnh.',
+                minWords: 5
+            },
+            {
+                stage: 3,
+                type: 'speaking',
+                question: 'Describe one school activity you enjoy and say why.',
+                display: 'Nói khoảng 2 câu.',
+                minWords: 10
+            },
+            {
+                stage: 4,
+                type: 'speaking',
+                question: 'Tell a short story about a problem you had and how you solved it.',
+                display: 'Nói khoảng 3 câu có trình tự.',
+                minWords: 18
+            },
+            {
+                stage: 5,
+                type: 'speaking',
+                question: 'Do you think students should be allowed to use phones in class? Give your opinion and support it.',
+                display: 'Nêu quan điểm + ít nhất 1 lý do.',
+                minWords: 25
+            }
+        ]
+    };
+
     const READING_TRACKS = {
         school: [
             {
@@ -413,6 +588,7 @@
     let placementIndex = 0;
     let placementAnswers = [];
     let placementModal = null;
+    let placementRecognition = null;
     const hubs = {};
     const labs = {};
     const expandedRoadmaps = new Set();
@@ -457,7 +633,7 @@
     }
 
     function defaultSkillState() {
-        return { audience: 'thcs', recommended: 2, current: 0, completed: [], assessed: false, weakStages: [] };
+        return { audience: 'thcs', recommended: 2, current: 0, completed: [], assessed: false, weakStages: [], assessmentScore: null };
     }
 
     function loadState() {
@@ -482,6 +658,7 @@
         state.completed = state.completed.map(Number).filter(n => n >= 1 && n <= 5);
         if (!Array.isArray(state.weakStages)) state.weakStages = [];
         state.weakStages = state.weakStages.map(Number).filter(n => n >= 1 && n <= 5);
+        if (state.assessmentScore !== null && state.assessmentScore !== undefined) state.assessmentScore = Math.min(100, Math.max(0, Number(state.assessmentScore) || 0));
         state.recommended = Math.min(5, Math.max(1, Number(state.recommended) || 1));
         state.current = Math.min(5, Math.max(0, Number(state.current) || 0));
         return state;
@@ -766,7 +943,7 @@
         placementModal.className = 'ldd-placement-overlay';
         placementModal.hidden = true;
         placementModal.innerHTML = '<div class="ldd-placement-dialog" role="dialog" aria-modal="true" aria-labelledby="ldd-placement-title">' +
-            '<div class="ldd-placement-head"><div><h3 id="ldd-placement-title">Kiểm tra đầu vào</h3><p>Chọn câu trả lời gần đúng nhất. Sau mỗi lựa chọn, hệ thống sẽ tự chuyển sang câu tiếp theo.</p></div><button type="button" class="ldd-placement-close" aria-label="Đóng">×</button></div>' +
+            '<div class="ldd-placement-head"><div><h3 id="ldd-placement-title">Kiểm tra đầu vào</h3><p>Bài kiểm tra ngắn theo đúng kỹ năng. Kết quả chỉ dùng để chọn điểm bắt đầu phù hợp.</p></div><button type="button" class="ldd-placement-close" aria-label="Đóng">×</button></div>' +
             '<div class="ldd-placement-progress"><span></span></div>' +
             '<div class="ldd-placement-body"></div>' +
         '</div>';
@@ -791,67 +968,101 @@
 
     function closePlacement() {
         if (!placementModal) return;
+        try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch (_) {}
+        if (placementRecognition) {
+            try { placementRecognition.abort(); } catch (_) {}
+            placementRecognition = null;
+        }
         placementModal.hidden = true;
         document.body.style.overflow = '';
         placementSkill = null;
     }
 
+    function placementTestItems() {
+        return PLACEMENT_TESTS[placementSkill] || [];
+    }
+
+    function placementAnswerScore(index) {
+        const item = placementAnswers[index];
+        return item && Number.isFinite(Number(item.score)) ? Number(item.score) : null;
+    }
+
+    function advancePlacement(score, value) {
+        const items = placementTestItems();
+        placementAnswers[placementIndex] = { score: Number(score) || 0, value: value };
+        window.setTimeout(() => {
+            if (!placementSkill) return;
+            if (placementIndex < items.length - 1) {
+                placementIndex++;
+                renderPlacementQuestion();
+            } else {
+                renderPlacementResult();
+            }
+        }, 220);
+    }
+
     function renderPlacementQuestion() {
         const config = SKILLS[placementSkill];
-        if (!config) return;
-        const total = config.stages.length;
-        placementIndex = Math.min(Math.max(placementIndex, 0), total - 1);
-        const stage = config.stages[placementIndex];
+        const items = placementTestItems();
+        if (!config || !items.length) return;
+
+        placementIndex = Math.min(Math.max(placementIndex, 0), items.length - 1);
+        const item = items[placementIndex];
         const body = placementModal.querySelector('.ldd-placement-body');
         const progress = placementModal.querySelector('.ldd-placement-progress span');
 
-        progress.style.width = (((placementIndex + 1) / total) * 100) + '%';
+        progress.style.width = (((placementIndex + 1) / items.length) * 100) + '%';
         placementModal.querySelector('#ldd-placement-title').textContent = 'Kiểm tra đầu vào · ' + config.title;
 
-        body.innerHTML =
-            '<div class="ldd-placement-count">Câu ' + (placementIndex + 1) + ' / ' + total + '</div>' +
-            '<h4 class="ldd-placement-question">Với “' + stage.title + '”, hiện tại bạn làm được đến đâu?</h4>' +
-            '<div class="ldd-placement-options">' +
-                placementOption(0, 'Chưa làm được', 'Tôi cần học từ đầu.') +
-                placementOption(1, 'Làm được một phần', 'Tôi làm được khi có gợi ý hoặc hỗ trợ.') +
-                placementOption(2, 'Tự làm khá chắc', 'Tôi có thể tự thực hiện tương đối ổn định.') +
-            '</div>' +
-            '<div class="ldd-placement-actions is-compact">' +
-                '<button type="button" class="ldd-roadmap-btn" data-placement-back' + (placementIndex === 0 ? ' disabled' : '') + '>← Câu trước</button>' +
-                '<span class="ldd-placement-auto-hint">Chọn đáp án để tiếp tục</span>' +
-            '</div>';
-
         const saved = placementAnswers[placementIndex];
-        body.querySelectorAll('[data-placement-value]').forEach(option => {
-            if (Number(option.dataset.placementValue) === saved) option.classList.add('is-selected');
+        const context = item.context ? '<div class="ldd-placement-context">' + item.context + '</div>' : '';
+        const back = '<div class="ldd-placement-actions is-compact"><button type="button" class="ldd-roadmap-btn" data-placement-back' + (placementIndex === 0 ? ' disabled' : '') + '>← Câu trước</button><span class="ldd-placement-auto-hint">Câu ' + (placementIndex + 1) + ' / ' + items.length + '</span></div>';
 
-            option.addEventListener('click', function () {
-                if (this.dataset.advancing === '1') return;
+        if (item.type === 'speaking') {
+            body.innerHTML =
+                '<div class="ldd-placement-count">Nói · Giai đoạn ' + item.stage + '</div>' +
+                '<h4 class="ldd-placement-question">' + item.question + '</h4>' +
+                '<div class="ldd-speaking-prompt">' + item.display + '</div>' +
+                '<button type="button" class="ldd-placement-mic" data-placement-speak>🎙️ Bắt đầu nói</button>' +
+                '<div class="ldd-speaking-status" data-speaking-status>Cho phép micro khi trình duyệt hỏi.</div>' +
+                back;
+            const speakButton = body.querySelector('[data-placement-speak]');
+            speakButton.addEventListener('click', () => startPlacementSpeech(item, speakButton, body.querySelector('[data-speaking-status]')));
+        } else {
+            const listenButton = item.type === 'listening'
+                ? '<button type="button" class="ldd-placement-listen" data-placement-listen>▶ Nghe câu <small>tối đa 2 lần</small></button>'
+                : '';
+            body.innerHTML =
+                '<div class="ldd-placement-count">' + (item.type === 'listening' ? 'Nghe' : (placementSkill === 'writing' ? 'Viết' : 'Đọc')) + ' · Giai đoạn ' + item.stage + '</div>' +
+                listenButton + context +
+                '<h4 class="ldd-placement-question">' + item.question + '</h4>' +
+                '<div class="ldd-placement-options">' +
+                    item.options.map((option, index) => placementChoice(index, option, saved && Number(saved.value) === index)).join('') +
+                '</div>' +
+                back;
 
-                body.querySelectorAll('[data-placement-value]').forEach(node => {
-                    node.classList.remove('is-selected');
-                    node.disabled = true;
+            if (item.type === 'listening') {
+                const listen = body.querySelector('[data-placement-listen]');
+                listen.addEventListener('click', () => playPlacementAudio(item, listen, body));
+            }
+
+            body.querySelectorAll('[data-placement-value]').forEach(option => {
+                option.addEventListener('click', function () {
+                    body.querySelectorAll('[data-placement-value]').forEach(node => {
+                        node.disabled = true;
+                        node.classList.remove('is-selected');
+                    });
+                    this.classList.add('is-selected');
+                    const chosen = Number(this.dataset.placementValue);
+                    advancePlacement(chosen === Number(item.answer) ? 2 : 0, chosen);
                 });
-
-                this.classList.add('is-selected');
-                this.dataset.advancing = '1';
-                placementAnswers[placementIndex] = Number(this.dataset.placementValue);
-
-                window.setTimeout(() => {
-                    if (!placementSkill) return;
-                    if (placementIndex < total - 1) {
-                        placementIndex++;
-                        renderPlacementQuestion();
-                    } else {
-                        renderPlacementResult();
-                    }
-                }, 180);
             });
-        });
+        }
 
-        const back = body.querySelector('[data-placement-back]');
-        if (back) {
-            back.addEventListener('click', function () {
+        const backButton = body.querySelector('[data-placement-back]');
+        if (backButton) {
+            backButton.addEventListener('click', function () {
+                try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch (_) {}
                 if (placementIndex > 0) {
                     placementIndex--;
                     renderPlacementQuestion();
@@ -860,51 +1071,197 @@
         }
     }
 
-    function placementOption(value, title, description) {
-        return '<button type="button" class="ldd-placement-option" data-placement-value="' + value + '">' +
+    function placementChoice(value, title, selected) {
+        return '<button type="button" class="ldd-placement-option' + (selected ? ' is-selected' : '') + '" data-placement-value="' + value + '">' +
             '<span class="ldd-placement-choice-dot" aria-hidden="true"></span>' +
-            '<span><strong>' + title + '</strong><br><small>' + description + '</small></span>' +
+            '<span><strong>' + String.fromCharCode(65 + value) + '.</strong> ' + title + '</span>' +
         '</button>';
+    }
+
+    function playPlacementAudio(item, button, body) {
+        if (!('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined') {
+            const hint = body.querySelector('.ldd-placement-question');
+            if (hint) hint.insertAdjacentHTML('beforebegin', '<div class="ldd-placement-warning">Trình duyệt này không phát được audio. Hãy dùng Chrome hoặc Edge để làm phần Nghe.</div>');
+            button.disabled = true;
+            return;
+        }
+
+        const played = Number(button.dataset.played || 0);
+        if (played >= 2) return;
+
+        try { window.speechSynthesis.cancel(); } catch (_) {}
+        const utterance = new SpeechSynthesisUtterance(item.audio);
+        utterance.lang = 'en-US';
+        utterance.rate = Number(item.rate || 1);
+        utterance.pitch = 1;
+        button.dataset.played = String(played + 1);
+        button.innerHTML = played + 1 >= 2 ? '🔊 Đang phát <small>lần 2 / 2</small>' : '🔊 Đang phát <small>lần ' + (played + 1) + ' / 2</small>';
+        utterance.onend = function () {
+            if (Number(button.dataset.played || 0) >= 2) {
+                button.disabled = true;
+                button.innerHTML = '✓ Đã nghe 2 lần';
+            } else {
+                button.innerHTML = '▶ Nghe lại <small>còn 1 lần</small>';
+            }
+        };
+        window.speechSynthesis.speak(utterance);
+    }
+
+    function normalizePlacementSpeech(text) {
+        return String(text || '')
+            .toLowerCase()
+            .replace(/[^a-z0-9' ]+/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+
+    function scorePlacementSpeech(item, transcript) {
+        const heard = normalizePlacementSpeech(transcript);
+        if (!heard) return 0;
+        const words = heard.split(' ').filter(Boolean);
+
+        if (item.target) {
+            const targetWords = normalizePlacementSpeech(item.target).split(' ').filter(Boolean);
+            const targetSet = new Set(targetWords);
+            const hitCount = words.filter(word => targetSet.has(word)).length;
+            const overlap = targetWords.length ? hitCount / targetWords.length : 0;
+            if (overlap >= 0.75 && words.length >= Math.max(5, item.minWords - 2)) return 2;
+            if (overlap >= 0.45) return 1;
+            return 0;
+        }
+
+        if (words.length >= item.minWords) return 2;
+        if (words.length >= Math.max(3, Math.ceil(item.minWords * 0.5))) return 1;
+        return 0;
+    }
+
+    function startPlacementSpeech(item, button, status) {
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SR) {
+            status.innerHTML = '<span class="is-error">Trình duyệt chưa hỗ trợ nhận diện giọng nói. Hãy mở bằng Chrome hoặc Edge để kiểm tra Nói.</span>';
+            return;
+        }
+
+        let recognition;
+        try { recognition = new SR(); } catch (_) { recognition = null; }
+        if (!recognition) {
+            status.innerHTML = '<span class="is-error">Không khởi động được micro. Hãy kiểm tra quyền micro rồi thử lại.</span>';
+            return;
+        }
+
+        placementRecognition = recognition;
+        button.disabled = true;
+        button.textContent = '🎙️ Đang nghe...';
+        status.textContent = 'Hãy nói tự nhiên. Hệ thống sẽ tự chuyển câu khi nhận xong.';
+        recognition.lang = 'en-US';
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 3;
+
+        let settled = false;
+        const finish = function (transcript, errorMessage) {
+            if (settled) return;
+            settled = true;
+            clearTimeout(timer);
+            if (placementRecognition === recognition) placementRecognition = null;
+
+            if (errorMessage) {
+                button.disabled = false;
+                button.textContent = '🎙️ Thử nói lại';
+                status.innerHTML = '<span class="is-error">' + errorMessage + '</span>';
+                return;
+            }
+
+            const clean = String(transcript || '').trim();
+            if (!clean) {
+                button.disabled = false;
+                button.textContent = '🎙️ Thử nói lại';
+                status.innerHTML = '<span class="is-error">Chưa nghe rõ. Hãy nói gần micro hơn và thử lại.</span>';
+                return;
+            }
+
+            const score = scorePlacementSpeech(item, clean);
+            status.innerHTML = '<strong>Máy nghe được:</strong> “' + clean.replace(/[<>]/g, '') + '”';
+            button.textContent = '✓ Đã ghi nhận';
+            advancePlacement(score, clean);
+        };
+
+        recognition.onresult = function (event) {
+            let best = '';
+            const last = event.results[event.results.length - 1];
+            if (last && last[0]) best = last[0].transcript || '';
+            finish(best, '');
+        };
+        recognition.onerror = function (event) {
+            const code = event && event.error;
+            const message = code === 'not-allowed'
+                ? 'Bạn chưa cấp quyền micro cho trang web.'
+                : 'Chưa nhận diện được giọng nói. Hãy thử lại.';
+            finish('', message);
+        };
+        recognition.onend = function () {
+            if (!settled) finish('', 'Chưa nghe rõ. Hãy thử lại.');
+        };
+
+        const timer = window.setTimeout(function () {
+            try { recognition.stop(); } catch (_) {}
+            if (!settled) finish('', 'Hết thời gian ghi âm. Hãy thử nói lại.');
+        }, 12000);
+
+        try {
+            recognition.start();
+        } catch (_) {
+            clearTimeout(timer);
+            button.disabled = false;
+            button.textContent = '🎙️ Thử nói lại';
+            status.innerHTML = '<span class="is-error">Không mở được micro. Hãy kiểm tra quyền truy cập.</span>';
+        }
     }
 
     function renderPlacementResult() {
         const config = SKILLS[placementSkill];
-        if (!config) return;
+        const items = placementTestItems();
+        if (!config || !items.length) return;
 
-        const total = config.stages.length;
-        let recommended = placementAnswers.findIndex(answer => Number(answer) < 2) + 1;
-        if (recommended <= 0) recommended = total;
+        const scores = items.map((_, index) => placementAnswerScore(index) === null ? 0 : placementAnswerScore(index));
+        let recommended = scores.findIndex(score => score < 2) + 1;
+        if (recommended <= 0) recommended = items.length;
 
-        const weakStages = placementAnswers
-            .map((answer, index) => Number(answer) < 2 ? index + 1 : null)
+        const weakStages = scores
+            .map((score, index) => score < 2 ? index + 1 : null)
             .filter(Boolean);
+
+        const totalPoints = scores.reduce((sum, score) => sum + score, 0);
+        const maxPoints = items.length * 2;
+        const overallScore = Math.round(totalPoints / maxPoints * 100);
 
         const state = getSkillState(placementSkill);
         state.recommended = recommended;
         state.current = 0;
         state.assessed = true;
         state.weakStages = weakStages;
+        state.assessmentScore = overallScore;
         saveState();
         renderHub(placementSkill);
 
-        const nextStage = recommended < total ? recommended + 1 : null;
+        const nextStage = recommended < items.length ? recommended + 1 : null;
         const weakToShow = weakStages.filter(number => number !== recommended).slice(0, 2);
 
         placementModal.querySelector('.ldd-placement-progress span').style.width = '100%';
         placementModal.querySelector('.ldd-placement-body').innerHTML =
             '<div class="ldd-placement-result">' +
-                '<div class="ldd-placement-result-mark">' + recommended + '</div>' +
-                '<span class="ldd-control-label">Lộ trình được đề xuất</span>' +
-                '<h4>Bắt đầu từ Giai đoạn ' + recommended + '</h4>' +
-                '<p><strong>' + config.stages[recommended - 1].title + '</strong> là điểm bắt đầu phù hợp theo câu trả lời của bạn.</p>' +
+                '<div class="ldd-placement-result-mark">' + overallScore + '<small>%</small></div>' +
+                '<span class="ldd-control-label">Kết quả kiểm tra đầu vào</span>' +
+                '<h4>Nên bắt đầu từ Giai đoạn ' + recommended + '</h4>' +
+                '<p><strong>' + config.stages[recommended - 1].title + '</strong> là phần nên ưu tiên trước. Bạn không cần học lại toàn bộ từ đầu.</p>' +
                 '<div class="ldd-placement-recommendations">' +
-                    '<div><b>1. Học trước</b><span>Giai đoạn ' + recommended + ' · ' + config.stages[recommended - 1].title + '</span></div>' +
-                    (weakToShow.length ? '<div><b>2. Củng cố thêm</b><span>' + weakToShow.map(number => 'GĐ ' + number + ' · ' + config.stages[number - 1].title).join('<br>') + '</span></div>' : '') +
-                    (nextStage ? '<div><b>' + (weakToShow.length ? '3' : '2') + '. Học tiếp sau khi đạt 80%</b><span>Giai đoạn ' + nextStage + ' · ' + config.stages[nextStage - 1].title + '</span></div>' : '<div><b>2. Duy trì</b><span>Luyện lại Giai đoạn ' + recommended + ' để tăng độ chắc và tốc độ.</span></div>') +
+                    '<div><b>Học trước</b><span>Giai đoạn ' + recommended + ' · ' + config.stages[recommended - 1].title + '</span></div>' +
+                    (weakToShow.length ? '<div><b>Cần củng cố</b><span>' + weakToShow.map(number => 'GĐ ' + number + ' · ' + config.stages[number - 1].title).join('<br>') + '</span></div>' : '') +
+                    (nextStage ? '<div><b>Sau khi đạt 80%</b><span>Chuyển sang Giai đoạn ' + nextStage + ' · ' + config.stages[nextStage - 1].title + '</span></div>' : '<div><b>Duy trì</b><span>Luyện lại Giai đoạn ' + recommended + ' để tăng độ chắc và tốc độ.</span></div>') +
                 '</div>' +
                 '<div class="ldd-placement-actions" style="justify-content:center;">' +
                     '<button type="button" class="ldd-roadmap-btn" data-result-close>Xem lộ trình</button>' +
-                    '<button type="button" class="ldd-roadmap-btn is-primary" data-result-start>Bắt đầu ngay</button>' +
+                    '<button type="button" class="ldd-roadmap-btn is-primary" data-result-start>Bắt đầu phần được đề xuất</button>' +
                 '</div>' +
             '</div>';
 
