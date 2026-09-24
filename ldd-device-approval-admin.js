@@ -187,7 +187,7 @@
         btn.disabled = false;
         return;
       }
-      setStatus(action === 'approve' ? '✅ Đã duyệt thiết bị.' : action === 'reject' ? 'Đã từ chối yêu cầu.' : '✅ Đã thu hồi thiết bị.', false);
+      setStatus(action === 'approve' ? '✅ Đã duyệt thiết bị.' : action === 'reject' ? 'Đã từ chối yêu cầu.' : '✅ Đã thu hồi và xóa khỏi lịch sử thiết bị.', false);
       await loadList(true);
     });
   }
@@ -273,7 +273,7 @@
     if (!host) return;
     const input = document.getElementById('device-admin-search');
     const q = String(input && input.value || '').trim().toLowerCase();
-    const filtered = devices.filter(row => !q || String(row.student_email || '').toLowerCase().includes(q));
+    const filtered = devices.filter(row => !row.revoked && (!q || String(row.student_email || '').toLowerCase().includes(q)));
 
     if (!filtered.length) {
       host.innerHTML = '<div style="padding:24px 10px; text-align:center; color:#777;">Không có thiết bị phù hợp.</div>';
@@ -289,7 +289,7 @@
 
     host.innerHTML = Array.from(groups.entries()).map(([email, rows]) => `
       <div style="border:1px solid #e7e7e7; border-radius:12px; margin-bottom:12px; overflow:hidden;">
-        <div style="padding:10px 13px; background:#f7f7f8; font-weight:800;">${esc(email)} <span style="font-weight:500; color:#777; font-size:12px;">· ${rows.filter(x=>!x.revoked).length} đang hoạt động</span></div>
+        <div style="padding:10px 13px; background:#f7f7f8; font-weight:800;">${esc(email)} <span style="font-weight:500; color:#777; font-size:12px;">· ${rows.length} đang hoạt động</span></div>
         ${rows.map(row => `
           <div style="padding:11px 13px; border-top:1px solid #eee; display:flex; gap:10px; align-items:center; flex-wrap:wrap; opacity:${row.revoked ? '.58' : '1'};">
             <div style="flex:1 1 420px; min-width:0;">
