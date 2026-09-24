@@ -10,6 +10,20 @@ Tài liệu này dành cho giáo viên khi tự thu MP3 cho phần **Luyện Ngh
 - Stage 1: nền tảng THCS, chậm và rõ; Stage 2: THCS cơ bản, chậm-vừa; Stage 3: THCS khá, tốc độ tự nhiên; Stage 4: THCS nâng cao/ôn thi vào 10; Stage 5: THPT, tốc độ tự nhiên và mật độ thông tin cao.
 
 
+## Phân tầng mục tiêu hiện tại
+
+| Stage | Đối tượng chính | Kiểu nghe | Tốc độ thu gợi ý |
+| --- | --- | --- | --- |
+| 1 | THCS mất gốc / lớp 6 yếu | âm, từ, số, giờ, đánh vần | 80–95 từ/phút |
+| 2 | THCS cơ bản / lớp 6–7 | câu ngắn, lịch trình, thông tin trực tiếp | 95–110 từ/phút |
+| 3 | THCS khá / lớp 7–8 | hội thoại đời sống, lý do, chi tiết | 110–125 từ/phút |
+| 4 | lớp 8–9 / ôn thi vào 10 | đoạn dài, nhiều dữ kiện, nguyên nhân–kết quả, suy luận nhẹ | 125–140 từ/phút |
+| 5 | THPT lớp 10–12 | phỏng vấn, bản tin, bài nói dài, tổng hợp và suy luận | 135–155 từ/phút |
+
+> Tốc độ chỉ là mục tiêu thu âm để giữ độ khó tương đối giữa các Stage; ưu tiên phát âm tự nhiên và rõ hơn là cố chạy đúng số từ/phút.
+
+
+
 ## Stage 1 — Nhận diện âm và từ
 
 ### S1-01 — Sheep hay ship?
@@ -313,9 +327,9 @@ Tài liệu này dành cho giáo viên khi tự thu MP3 cho phần **Luyện Ngh
 
 **File MP3:** `assets/audio/listening/stage-4/listening-s4-01.mp3`
 
-**Nghe mẫu trên Loigiaihay:** https://loigiaihay.com/tieng-anh-7-unit-7-skills-2-a108662.html
+**Nghe mẫu trên Loigiaihay:** https://loigiaihay.com/unit-10-planet-earth-e35275.html
 
-**Nghe đúng phần:** Listen to the recording about traffic problems in Mumbai
+**Nghe đúng phần:** Skills 2 – listen to a conversation, choose A/B/C, then complete a one-word summary
 
 **Lời cần ghi âm:**
 
@@ -478,7 +492,7 @@ Tài liệu này dành cho giáo viên khi tự thu MP3 cho phần **Luyện Ngh
 
 **Nghe mẫu trên Loigiaihay:** https://loigiaihay.com/tieng-anh-12-bright-unit-3-3c-listening-a156171.html
 
-**Nghe đúng phần:** Listen to a TV commentator and identify key information
+**Nghe đúng phần:** Listen to a TV commentator and fill in a table
 
 **Lời cần ghi âm:**
 
