@@ -588,6 +588,7 @@
     let placementIndex = 0;
     let placementAnswers = [];
     let placementModal = null;
+    let placementRecognition = null;
     const hubs = {};
     const labs = {};
     const expandedRoadmaps = new Set();
@@ -968,6 +969,10 @@
     function closePlacement() {
         if (!placementModal) return;
         try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch (_) {}
+        if (placementRecognition) {
+            try { placementRecognition.abort(); } catch (_) {}
+            placementRecognition = null;
+        }
         placementModal.hidden = true;
         document.body.style.overflow = '';
         placementSkill = null;
@@ -1144,6 +1149,7 @@
             return;
         }
 
+        placementRecognition = recognition;
         button.disabled = true;
         button.textContent = '🎙️ Đang nghe...';
         status.textContent = 'Hãy nói tự nhiên. Hệ thống sẽ tự chuyển câu khi nhận xong.';
@@ -1157,6 +1163,7 @@
             if (settled) return;
             settled = true;
             clearTimeout(timer);
+            if (placementRecognition === recognition) placementRecognition = null;
 
             if (errorMessage) {
                 button.disabled = false;
