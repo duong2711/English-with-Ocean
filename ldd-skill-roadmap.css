@@ -1434,3 +1434,20 @@
     font-size: 11px;
     font-weight: 800;
 }
+
+.ldd-placement-audio-missing {
+    display: grid;
+    gap: 4px;
+    margin-bottom: 8px;
+    color: #33405d;
+}
+.ldd-placement-audio-missing[hidden] {
+    display: none !important;
+}
+.ldd-placement-audio-missing strong {
+    font-size: 14px;
+}
+.ldd-placement-audio-missing span {
+    color: var(--ldd-skill-muted);
+    font-size: 11px;
+}
