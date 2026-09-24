@@ -207,7 +207,7 @@
                 type: 'listening',
                 sourceUrl: 'https://loigiaihay.com/bai-tap-170170.html',
                 sourceLabel: 'Tham khảo dạng bài: Loigiaihay.com',
-                audio: 'Mia has a red notebook in her school bag.',
+                audioUrl: '',
                 question: 'What colour is Mia\'s notebook?',
                 options: ['Blue', 'Red', 'Green', 'Black'],
                 answer: 1,
@@ -218,7 +218,7 @@
                 type: 'listening',
                 sourceUrl: 'https://loigiaihay.com/bai-tap-92711.html',
                 sourceLabel: 'Tham khảo dạng bài: Loigiaihay.com',
-                audio: 'The English club starts at a quarter past seven, not at seven thirty.',
+                audioUrl: '',
                 question: 'What time does the English club start?',
                 options: ['7:00', '7:15', '7:30', '7:45'],
                 answer: 1,
@@ -229,7 +229,7 @@
                 type: 'listening',
                 sourceUrl: 'https://loigiaihay.com/bai-tap-166120.html',
                 sourceLabel: 'Tham khảo dạng bài: Loigiaihay.com',
-                audio: 'Nam planned to play football after school, but it started raining, so he stayed in the library and finished his science project.',
+                audioUrl: '',
                 question: 'What did Nam finally do after school?',
                 options: ['Played football', 'Went home immediately', 'Worked in the library', 'Visited a science museum'],
                 answer: 2,
@@ -240,7 +240,7 @@
                 type: 'listening',
                 sourceUrl: 'https://loigiaihay.com/bai-tap-170350.html',
                 sourceLabel: 'Tham khảo dạng bài: Loigiaihay.com',
-                audio: 'The school trip was delayed because the bus arrived late. Although the students missed the morning tour, the museum extended its opening time, so they still visited every exhibition they had planned to see.',
+                audioUrl: '',
                 question: 'Why were the students still able to see all the planned exhibitions?',
                 options: ['The bus arrived early', 'The museum stayed open longer', 'They cancelled lunch', 'The tour started the next day'],
                 answer: 1,
@@ -251,7 +251,7 @@
                 type: 'listening',
                 sourceUrl: 'https://loigiaihay.com/bai-tap-137252.html',
                 sourceLabel: 'Tham khảo dạng bài: Loigiaihay.com',
-                audio: 'Researchers often warn that multitasking feels efficient because people switch tasks quickly, but each switch carries a small mental cost. Over time, those repeated costs can reduce accuracy and make demanding work take longer.',
+                audioUrl: '',
                 question: 'What is the main point of the recording?',
                 options: ['Multitasking always saves time', 'Task switching can reduce efficiency', 'Accuracy improves with more tasks', 'Demanding work should be avoided'],
                 answer: 1,
@@ -978,8 +978,7 @@
 
     function closePlacement() {
         if (!placementModal) return;
-        try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch (_) {}
-        if (placementRecognition) {
+                if (placementRecognition) {
             try { placementRecognition.abort(); } catch (_) {}
             placementRecognition = null;
         }
@@ -1040,8 +1039,10 @@
             speakButton.addEventListener('click', () => startPlacementSpeech(item, speakButton, body.querySelector('[data-speaking-status]')));
         } else {
             const listenButton = item.type === 'listening'
-                ? '<button type="button" class="ldd-placement-listen" data-placement-listen>▶ Nghe câu <small>tối đa 2 lần</small></button>' +
-                  (item.sourceUrl ? '<div class="ldd-placement-source">Nguồn tham khảo dạng bài: <a href="' + item.sourceUrl + '" target="_blank" rel="noopener noreferrer">Loigiaihay.com ↗</a><span>Audio trên lddenglish được tạo riêng.</span></div>' : '')
+                ? (item.audioUrl
+                    ? '<div class="ldd-placement-audio-wrap"><audio class="ldd-placement-audio" data-placement-audio controls preload="metadata" src="' + item.audioUrl + '"></audio><small>Nghe tối đa 2 lần</small></div>'
+                    : '<div class="ldd-placement-audio-empty"><strong>🎧 Chưa thêm audio MP3</strong><span>Giáo viên sẽ bổ sung file sau.</span></div>') +
+                  (item.sourceUrl ? '<div class="ldd-placement-source">Nguồn tham khảo dạng bài: <a href="' + item.sourceUrl + '" target="_blank" rel="noopener noreferrer">Loigiaihay.com ↗</a><span>Chỗ MP3 đang để trống để giáo viên thêm sau.</span></div>' : '')
                 : '';
             body.innerHTML =
                 '<div class="ldd-placement-count">' + (item.type === 'listening' ? 'Nghe' : (placementSkill === 'writing' ? 'Viết' : 'Đọc')) + ' · Giai đoạn ' + item.stage + '</div>' +
@@ -1053,8 +1054,20 @@
                 back;
 
             if (item.type === 'listening') {
-                const listen = body.querySelector('[data-placement-listen]');
-                listen.addEventListener('click', () => playPlacementAudio(item, listen, body));
+                const audio = body.querySelector('[data-placement-audio]');
+                if (audio) {
+                    let plays = 0;
+                    audio.addEventListener('play', function () {
+                        if (audio.currentTime < 0.35) plays++;
+                        if (plays > 2) {
+                            audio.pause();
+                            audio.currentTime = 0;
+                            audio.controls = false;
+                            const wrap = audio.closest('.ldd-placement-audio-wrap');
+                            if (wrap) wrap.insertAdjacentHTML('beforeend', '<span class="ldd-placement-audio-limit">Đã nghe đủ 2 lần.</span>');
+                        }
+                    });
+                }
             }
 
             body.querySelectorAll('[data-placement-value]').forEach(option => {
@@ -1073,8 +1086,7 @@
         const backButton = body.querySelector('[data-placement-back]');
         if (backButton) {
             backButton.addEventListener('click', function () {
-                try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch (_) {}
-                if (placementIndex > 0) {
+                                if (placementIndex > 0) {
                     placementIndex--;
                     renderPlacementQuestion();
                 }
@@ -1087,35 +1099,6 @@
             '<span class="ldd-placement-choice-dot" aria-hidden="true"></span>' +
             '<span><strong>' + String.fromCharCode(65 + value) + '.</strong> ' + title + '</span>' +
         '</button>';
-    }
-
-    function playPlacementAudio(item, button, body) {
-        if (!('speechSynthesis' in window) || typeof SpeechSynthesisUtterance === 'undefined') {
-            const hint = body.querySelector('.ldd-placement-question');
-            if (hint) hint.insertAdjacentHTML('beforebegin', '<div class="ldd-placement-warning">Trình duyệt này không phát được audio. Hãy dùng Chrome hoặc Edge để làm phần Nghe.</div>');
-            button.disabled = true;
-            return;
-        }
-
-        const played = Number(button.dataset.played || 0);
-        if (played >= 2) return;
-
-        try { window.speechSynthesis.cancel(); } catch (_) {}
-        const utterance = new SpeechSynthesisUtterance(item.audio);
-        utterance.lang = 'en-US';
-        utterance.rate = Number(item.rate || 1);
-        utterance.pitch = 1;
-        button.dataset.played = String(played + 1);
-        button.innerHTML = played + 1 >= 2 ? '🔊 Đang phát <small>lần 2 / 2</small>' : '🔊 Đang phát <small>lần ' + (played + 1) + ' / 2</small>';
-        utterance.onend = function () {
-            if (Number(button.dataset.played || 0) >= 2) {
-                button.disabled = true;
-                button.innerHTML = '✓ Đã nghe 2 lần';
-            } else {
-                button.innerHTML = '▶ Nghe lại <small>còn 1 lần</small>';
-            }
-        };
-        window.speechSynthesis.speak(utterance);
     }
 
     function normalizePlacementSpeech(text) {
