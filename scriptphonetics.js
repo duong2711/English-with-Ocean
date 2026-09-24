@@ -929,7 +929,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function handleLogout() {
-        await sb.auth.signOut();
+        await sb.auth.signOut({ scope: 'local' });
     }
 
     // [MỚI] Đăng nhập bằng Google (OAuth) — trình duyệt sẽ chuyển sang trang đăng nhập Google,
@@ -1451,7 +1451,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.getElementById('device-gate-logout-btn').addEventListener('click', async () => {
             hideDeviceGateUI();
-            await sb.auth.signOut();
+            await sb.auth.signOut({ scope: 'local' });
         });
         document.getElementById('device-gate-refresh-btn').addEventListener('click', () => {
             if (activeDeviceRequestToken && pendingGateUser) pollDeviceApproval(activeDeviceRequestToken, pendingGateUser, true);
@@ -1595,30 +1595,118 @@ document.addEventListener('DOMContentLoaded', () => {
         if (retry) retry.style.display = '';
     }
 
+    let deviceAuthRefreshPromise = null;
+
+    async function getLatestDeviceSession(preferredSession) {
+        try {
+            const { data } = await sb.auth.getSession();
+            const latest = data && data.session;
+            return (latest && latest.access_token) ? latest : preferredSession;
+        } catch (_) {
+            return preferredSession;
+        }
+    }
+
+    async function refreshDeviceAuthSession() {
+        if (deviceAuthRefreshPromise) return deviceAuthRefreshPromise;
+
+        deviceAuthRefreshPromise = (async () => {
+            try {
+                const { data, error } = await sb.auth.refreshSession();
+                if (!error && data && data.session && data.session.access_token) {
+                    return data.session;
+                }
+
+                // Another tab may have refreshed while this tab was waiting.
+                const { data: latestData } = await sb.auth.getSession();
+                return latestData && latestData.session && latestData.session.access_token
+                    ? latestData.session
+                    : null;
+            } catch (_) {
+                try {
+                    const { data } = await sb.auth.getSession();
+                    return data && data.session && data.session.access_token ? data.session : null;
+                } catch (_) {
+                    return null;
+                }
+            }
+        })();
+
+        try {
+            return await deviceAuthRefreshPromise;
+        } finally {
+            deviceAuthRefreshPromise = null;
+        }
+    }
+
+    async function fetchVerifyDevice(body, activeSession) {
+        const resp = await fetch(VERIFY_DEVICE_FUNCTION_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${activeSession.access_token}`,
+                'apikey': SUPABASE_ANON_KEY
+            },
+            body: JSON.stringify(body)
+        });
+        const result = await resp.json().catch(() => ({}));
+        return { resp, result };
+    }
+
     async function callVerifyDeviceFunction(body, session) {
         try {
-            let activeSession = session;
-            if (!activeSession) {
-                const { data } = await sb.auth.getSession();
-                activeSession = data && data.session;
+            // Always prefer the SDK's current session. A session object captured by
+            // INITIAL_SESSION/SIGNED_IN can already be stale if another tab refreshed it.
+            let activeSession = await getLatestDeviceSession(session);
+            if (!activeSession || !activeSession.access_token) {
+                activeSession = await refreshDeviceAuthSession();
             }
             if (!activeSession || !activeSession.access_token) {
-                return { error: 'Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.' };
+                return { authExpired: true, error: 'Phiên đăng nhập đã kết thúc.' };
             }
-            const resp = await fetch(VERIFY_DEVICE_FUNCTION_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${activeSession.access_token}`,
-                    'apikey': SUPABASE_ANON_KEY
-                },
-                body: JSON.stringify(body)
-            });
-            const result = await resp.json().catch(() => ({}));
-            if (!resp.ok) return { error: (result && result.error) || 'Có lỗi xảy ra, vui lòng thử lại.', status: result && result.status };
-            return result;
+
+            let attempt = await fetchVerifyDevice(body, activeSession);
+            if (attempt.resp.status === 401) {
+                // Important: a JWT can still be inside its exp time while the underlying
+                // Supabase session has been rotated/revoked. Ask the official SDK to
+                // refresh, then retry exactly once with the new access token.
+                const refreshedSession = await refreshDeviceAuthSession();
+                if (refreshedSession && refreshedSession.access_token) {
+                    attempt = await fetchVerifyDevice(body, refreshedSession);
+                }
+            }
+
+            if (attempt.resp.status === 401) {
+                return {
+                    authExpired: true,
+                    error: (attempt.result && attempt.result.error) || 'Phiên đăng nhập đã kết thúc.'
+                };
+            }
+
+            if (!attempt.resp.ok) {
+                return {
+                    error: (attempt.result && attempt.result.error) || 'Có lỗi xảy ra, vui lòng thử lại.',
+                    status: attempt.result && attempt.result.status
+                };
+            }
+            return attempt.result;
         } catch (err) {
             return { error: 'Không thể kết nối máy chủ: ' + err.message };
+        }
+    }
+
+    async function recoverExpiredDeviceSession() {
+        // Only clear the Supabase session on THIS browser. Never revoke sessions on
+        // the student's other approved devices, and never touch the device token.
+        stopDeviceGatePolling();
+        hideDeviceGateUI();
+        try {
+            await sb.auth.signOut({ scope: 'local' });
+        } catch (_) {
+            updateUIForUser(null);
+        }
+        if (authStatus) {
+            authStatus.textContent = 'Phiên đăng nhập đã kết thúc. Vui lòng đăng nhập lại; thiết bị đã duyệt vẫn được giữ.';
         }
     }
 
@@ -1736,6 +1824,11 @@ document.addEventListener('DOMContentLoaded', () => {
             candidateDeviceToken
         });
 
+        if (result && result.authExpired) {
+            await recoverExpiredDeviceSession();
+            return;
+        }
+
         // Nếu localStorage từng bị lệch cặp request/candidate (ví dụ do bản cũ hoặc
         // reload đúng lúc đang ghi state), tự bỏ cặp lỗi và tạo cặp mới. Không yêu cầu
         // học viên tự xóa cache, không nới lỏng bước so hash trên backend.
@@ -1800,6 +1893,11 @@ document.addEventListener('DOMContentLoaded', () => {
             candidateDeviceToken
         }, session);
 
+        if (result && result.authExpired) {
+            await recoverExpiredDeviceSession();
+            return;
+        }
+
         // Tự phục hồi state cũ bị lệch: requestToken A nhưng candidateToken B.
         // Chỉ retry tự động 1 lần để tránh vòng lặp nếu backend gặp lỗi thật.
         if (isDeviceCandidateMismatch(result) && !repairAttempt) {
@@ -1848,6 +1946,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (localToken) {
             const result = await callVerifyDeviceFunction({ mode: 'check', deviceToken: localToken }, session);
             if (runSeq !== deviceGateRunSeq) return;
+
+            if (result && result.authExpired) {
+                await recoverExpiredDeviceSession();
+                return;
+            }
 
             if (result && result.trusted === true) {
                 hideDeviceGateUI();
@@ -3334,7 +3437,7 @@ document.addEventListener('DOMContentLoaded', () => {
             impersonationTargetEmail = '';
             clearImpersonationState();
             hideImpersonationBanner();
-            await sb.auth.signOut();
+            await sb.auth.signOut({ scope: 'local' });
             return;
         }
         try {
@@ -3346,7 +3449,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (err) {
             console.error('Lỗi khi khôi phục phiên giảng viên, cần đăng nhập lại:', err);
             alert('Không thể tự động khôi phục phiên giảng viên (có thể đã hết hạn). Vui lòng đăng nhập lại.');
-            await sb.auth.signOut();
+            await sb.auth.signOut({ scope: 'local' });
         } finally {
             isImpersonating = false;
             impersonationTargetEmail = '';
