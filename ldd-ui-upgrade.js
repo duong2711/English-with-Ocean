@@ -203,13 +203,34 @@
             overlay.innerHTML =
                 '<div class="ldd-boot-orbit" aria-hidden="true"></div>' +
                 '<div class="ldd-boot-center">' +
-                    '<div class="ldd-boot-mark"><img src="' + logoUrl + '" alt="LDD English"></div>' +
+                    '<div class="ldd-boot-mark"><span class="ldd-boot-logo-fallback" aria-hidden="true">LDD</span><img src="' + logoUrl + '" alt="LDD English" loading="eager" decoding="async" fetchpriority="high"></div>' +
                     '<div class="ldd-boot-title">LDD English</div>' +
                     '<div class="ldd-boot-subtitle">Preparing your learning space</div>' +
                     '<div class="ldd-boot-progress" aria-hidden="true"><span></span></div>' +
                     '<div class="ldd-boot-greeting" aria-live="polite"></div>' +
                 '</div>';
             document.body.appendChild(overlay);
+
+            const bootMark = overlay.querySelector('.ldd-boot-mark');
+            const bootLogo = bootMark ? bootMark.querySelector('img') : null;
+            if (bootMark && bootLogo) {
+                const markReady = function () {
+                    bootMark.classList.remove('is-logo-error');
+                    bootMark.classList.add('is-logo-ready');
+                };
+                const markError = function () {
+                    bootMark.classList.remove('is-logo-ready');
+                    bootMark.classList.add('is-logo-error');
+                };
+                bootLogo.addEventListener('load', markReady, { once: true });
+                bootLogo.addEventListener('error', markError, { once: true });
+
+                // Cached images can finish before listeners are attached.
+                if (bootLogo.complete) {
+                    if (bootLogo.naturalWidth > 0) markReady();
+                    else markError();
+                }
+            }
             return overlay;
         }
 
