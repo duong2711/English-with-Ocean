@@ -14,9 +14,7 @@
         { id: 'foundation', label: 'Mất gốc', start: 1 },
         { id: 'thcs', label: 'THCS', start: 2 },
         { id: 'exam10', label: 'Ôn thi vào 10', start: 3 },
-        { id: 'thpt', label: 'THPT', start: 3 },
-        { id: 'work', label: 'Đi làm', start: 3 },
-        { id: 'ielts', label: 'IELTS', start: 4 }
+        { id: 'thpt', label: 'THPT', start: 5 }
     ];
 
     const SKILLS = {
@@ -53,17 +51,17 @@
                     backIds: ['ln3-back-btn']
                 },
                 {
-                    title: 'Nghe chi tiết và suy luận',
-                    description: 'Xử lý bài nghe dài hơn, ghi chú thông tin và suy luận từ ngữ cảnh.',
-                    audiences: ['THPT', 'Đi làm', 'IELTS'],
+                    title: 'Nghe THCS nâng cao và ôn thi vào 10',
+                    description: 'Nghe đoạn dài hơn, lọc chi tiết, theo dõi nguyên nhân – kết quả và bắt đầu suy luận.',
+                    audiences: ['THCS', 'Thi vào 10', 'THPT'],
                     custom: 'listening',
                     clicks: ['ln-stage2-folder-card'],
                     backIds: ['ln-stage2-back-btn']
                 },
                 {
-                    title: 'Nghe học thuật và đề thi',
-                    description: 'Luyện nội dung tốc độ tự nhiên, bài học thuật và chiến lược làm bài nâng cao.',
-                    audiences: ['THPT', 'Đi làm', 'IELTS'],
+                    title: 'Nghe THPT và đề thi',
+                    description: 'Nghe phỏng vấn, bản tin và bài nói dài ở tốc độ tự nhiên; luyện tổng hợp và suy luận.',
+                    audiences: ['THPT'],
                     custom: 'listening',
                     clicks: ['ln-stage3-folder-card'],
                     backIds: ['ln-stage3-back-btn']
@@ -88,28 +86,28 @@
                 {
                     title: 'Mở lời và duy trì hội thoại',
                     description: 'Chọn cách bắt chuyện phù hợp, phản hồi tự nhiên trong tình huống thường ngày.',
-                    audiences: ['Mất gốc', 'THCS', 'Đi làm'],
+                    audiences: ['Mất gốc', 'THCS'],
                     clicks: ['ls-stage1-folder-card', 'ls-modau-card'],
                     backIds: ['ls2-back-btn']
                 },
                 {
                     title: 'Nhịp điệu và Shadowing',
                     description: 'Nghe – nhại lại theo tốc độ thật để cải thiện nối âm, trọng âm và ngữ điệu.',
-                    audiences: ['THCS', 'THPT', 'IELTS'],
+                    audiences: ['THCS', 'THPT'],
                     clicks: ['ls-stage2-folder-card', 'ls-shadow-card'],
                     backIds: ['lssh-back-btn']
                 },
                 {
                     title: 'Kể chuyện và trình bày',
                     description: 'Sắp xếp ý, dùng liên từ và kể lại một sự việc thành đoạn nói có mạch.',
-                    audiences: ['Thi vào 10', 'THPT', 'Đi làm'],
+                    audiences: ['Thi vào 10', 'THPT'],
                     clicks: ['ls-stage2-folder-card', 'ls-narrate-card'],
                     backIds: ['lsmt-back-btn']
                 },
                 {
                     title: 'Nêu quan điểm và tranh luận',
                     description: 'Chuẩn bị ý theo khung A.R.E.A, trình bày dài và bảo vệ quan điểm cá nhân.',
-                    audiences: ['THPT', 'Đi làm', 'IELTS'],
+                    audiences: ['THPT'],
                     clicks: ['ls-stage3-folder-card'],
                     backIds: ['ls-stage3-back-btn']
                 }
@@ -144,13 +142,13 @@
                 {
                     title: 'Suy luận và phân tích',
                     description: 'Nhận ra thái độ, mục đích, quan hệ nguyên nhân – kết quả và hàm ý.',
-                    audiences: ['Thi vào 10', 'THPT', 'IELTS'],
+                    audiences: ['Thi vào 10', 'THPT'],
                     custom: 'reading'
                 },
                 {
-                    title: 'Văn bản học thuật và thực tế',
-                    description: 'Đọc bài dài, tài liệu công việc hoặc học thuật với câu hỏi tổng hợp.',
-                    audiences: ['THPT', 'Đi làm', 'IELTS'],
+                    title: 'Đọc THPT và đề thi',
+                    description: 'Đọc bài dài hơn, xử lý từ vựng học thuật, suy luận và câu hỏi tổng hợp ở mức THPT.',
+                    audiences: ['THPT'],
                     custom: 'reading'
                 }
             ]
@@ -179,23 +177,23 @@
                 {
                     title: 'Viết theo tình huống',
                     description: 'Viết email, lời nhắn và phản hồi đúng văn phong formal hoặc informal.',
-                    audiences: ['THCS', 'THPT', 'Đi làm'],
+                    audiences: ['THCS', 'THPT'],
                     clicks: ['wr2-folder-card'],
                     afterClick: '[data-wr2-sub="email"]',
                     backIds: ['wr2-back-btn']
                 },
                 {
-                    title: 'Báo cáo và mô tả dữ liệu',
-                    description: 'Chọn lọc số liệu, viết overview và mô tả xu hướng rõ ràng.',
-                    audiences: ['THPT', 'Đi làm', 'IELTS'],
+                    title: 'Viết THPT: mô tả và báo cáo',
+                    description: 'Chọn lọc thông tin, mô tả số liệu hoặc hiện tượng và tổ chức đoạn viết rõ ràng.',
+                    audiences: ['THPT'],
                     clicks: ['wr3-folder-card'],
                     afterClick: '[data-wr3-sub="t1"]',
                     backIds: ['wr3-back-btn']
                 },
                 {
-                    title: 'Nghị luận và viết học thuật',
-                    description: 'Lập luận theo bố cục, phát triển ý và hoàn thiện bài viết trong thời gian giới hạn.',
-                    audiences: ['THPT', 'Đi làm', 'IELTS'],
+                    title: 'Nghị luận THPT',
+                    description: 'Lập luận theo bố cục, phát triển ý, nêu dẫn chứng và hoàn thiện bài viết trong thời gian giới hạn.',
+                    audiences: ['THPT'],
                     clicks: ['wr3-folder-card'],
                     afterClick: '[data-wr3-sub="t2"]',
                     backIds: ['wr3-back-btn']
@@ -466,7 +464,7 @@
                     "id": "s3-04",
                     "stage": 3,
                     "title": "Giao thông thành phố",
-                    "sourceUrl": "https://loigiaihay.com/tieng-anh-9-unit-2-skills-2-a156636.html",
+                    "sourceUrl": "https://loigiaihay.com/tieng-anh-11-bright-unit-1-1c-listening-a138328.html",
                     "sourceSection": "Listen to an interview with three teenagers about life in their cities",
                     "audioUrl": "assets/audio/listening/stage-3/listening-s3-04.mp3",
                     "recordingScript": "A: How do you get to school? B: I usually take the bus. It is cheap, but during rush hour it can take almost twice as long as usual.",
@@ -619,8 +617,8 @@
                     "id": "s5-01",
                     "stage": 5,
                     "title": "Ba góc nhìn về thành phố",
-                    "sourceUrl": "https://loigiaihay.com/tieng-anh-9-unit-2-skills-2-a156636.html",
-                    "sourceSection": "Listen to an interview with three teenagers about life in their cities",
+                    "sourceUrl": "https://loigiaihay.com/tieng-anh-11-bright-unit-1-1c-listening-a138328.html",
+                    "sourceSection": "Listen to a radio interview and choose the best answer",
                     "audioUrl": "assets/audio/listening/stage-5/listening-s5-01.mp3",
                     "recordingScript": "Presenter: We asked three teenagers what would improve their cities. Minh wants buses to run later because he studies at the library in the evening. Sofia wants more public sports spaces instead of another shopping centre. Daniel says his city already has good facilities, but cycling feels unsafe because there are few protected bike lanes.",
                     "question": "Which speaker is mainly concerned about road safety?",
@@ -636,8 +634,8 @@
                     "id": "s5-02",
                     "stage": 5,
                     "title": "Chiến lược học từ vựng",
-                    "sourceUrl": "https://loigiaihay.com/tieng-anh-9-unit-9-skills-2-a163737.html",
-                    "sourceSection": "Listen to Trang talking about learning English vocabulary",
+                    "sourceUrl": "https://loigiaihay.com/tieng-anh-12-bright-unit-1-1c-listening-a156154.html",
+                    "sourceSection": "Listen and complete the sentences with NO MORE THAN TWO WORDS",
                     "audioUrl": "assets/audio/listening/stage-5/listening-s5-02.mp3",
                     "recordingScript": "When Linh meets an unfamiliar English word, she does not immediately translate it. First, she reads the sentences around it and predicts a possible meaning. Then she checks a learner's dictionary for meaning, pronunciation, and an example sentence. At the end of the week, she reviews only the words she has actually seen several times.",
                     "question": "Why does Linh read the surrounding sentences first?",
@@ -653,8 +651,8 @@
                     "id": "s5-03",
                     "stage": 5,
                     "title": "Kinh nghiệm học ngoại ngữ",
-                    "sourceUrl": "https://loigiaihay.com/skills-2-unit-9-trang-39-sgk-tieng-anh-9-moi-c141a24014.html",
-                    "sourceSection": "Listen to four people talking about speaking and learning languages",
+                    "sourceUrl": "https://loigiaihay.com/tieng-anh-12-bright-unit-3-3c-listening-a156171.html",
+                    "sourceSection": "Listen to a TV commentator and fill in a table",
                     "audioUrl": "assets/audio/listening/stage-5/listening-s5-03.mp3",
                     "recordingScript": "Speaker one became confident in English after joining an online gaming group. Speaker two studied grammar for years but only began speaking comfortably after travelling abroad. Speaker three learns languages through songs and podcasts, while speaker four prefers regular conversations with one language partner. Their methods differ, but all four say frequent exposure matters more than occasional long study sessions.",
                     "question": "What do all four speakers broadly agree on?",
@@ -670,8 +668,8 @@
                     "id": "s5-04",
                     "stage": 5,
                     "title": "Đánh giá một câu chuyện lan truyền",
-                    "sourceUrl": "https://loigiaihay.com/bai-tap-166120.html",
-                    "sourceSection": "Listen to the interview about urban legends",
+                    "sourceUrl": "https://loigiaihay.com/tieng-anh-12-bright-unit-5-5c-listening-a158194.html",
+                    "sourceSection": "Listen to a talk and answer questions with short answers",
                     "audioUrl": "assets/audio/listening/stage-5/listening-s5-04.mp3",
                     "recordingScript": "A story may spread widely online because it is surprising, not because it is accurate. Before repeating a dramatic claim, Dr Evans suggests checking where it first appeared, whether reliable organisations report the same event, and whether the pictures actually come from the place and date described. A familiar story can still be false if nobody checks the evidence.",
                     "question": "What is the speaker's main advice?",
@@ -687,8 +685,8 @@
                     "id": "s5-05",
                     "stage": 5,
                     "title": "Multitasking và sự tập trung",
-                    "sourceUrl": "https://loigiaihay.com/tieng-anh-9-unit-9-skills-2-a163737.html",
-                    "sourceSection": "Listen to Trang talking about learning English vocabulary",
+                    "sourceUrl": "https://loigiaihay.com/tieng-anh-12-bright-unit-1-1c-listening-a156154.html",
+                    "sourceSection": "Listen to a TV commentator and identify key information",
                     "audioUrl": "assets/audio/listening/stage-5/listening-s5-05.mp3",
                     "recordingScript": "Students often believe that switching between homework and messages helps them finish more tasks. Research suggests the opposite can happen. Each switch requires the brain to reorient attention, which takes a small amount of time. Those delays seem unimportant, but repeated many times they can increase mistakes and make difficult work take longer.",
                     "question": "What is the main conclusion?",
@@ -704,8 +702,8 @@
                     "id": "s5-06",
                     "stage": 5,
                     "title": "Suy luận từ lập luận",
-                    "sourceUrl": "https://loigiaihay.com/tieng-anh-9-unit-2-skills-2-a156636.html",
-                    "sourceSection": "Listen to an interview with three teenagers about life in their cities",
+                    "sourceUrl": "https://loigiaihay.com/tieng-anh-11-bright-unit-1-1c-listening-a138328.html",
+                    "sourceSection": "Listen to a radio interview and choose the best answer",
                     "audioUrl": "assets/audio/listening/stage-5/listening-s5-06.mp3",
                     "recordingScript": "A school is considering a complete ban on phones during the day. Supporters say fewer notifications could improve concentration. Other teachers agree about lessons but argue that students should still be allowed to use phones during lunch for practical reasons, such as contacting family about transport. The debate is therefore not simply about whether phones are good or bad, but about when their use is appropriate.",
                     "question": "Which statement best summarises the discussion?",
@@ -768,8 +766,8 @@
             {
                 stage: 5,
                 type: 'listening',
-                sourceUrl: 'https://loigiaihay.com/bai-tap-166120.html',
-                sourceLabel: 'Tham khảo dạng bài: Loigiaihay.com',
+                sourceUrl: 'https://loigiaihay.com/tieng-anh-12-bright-unit-3-3c-listening-a156171.html',
+                sourceLabel: 'Tham khảo dạng bài THPT: Loigiaihay.com',
                 audioUrl: 'assets/audio/skill-placement/listening-stage-5.mp3',
                 question: 'What is the main point of the recording?',
                 options: ['Multitasking always saves time', 'Task switching can reduce efficiency', 'Accuracy improves with more tasks', 'Demanding work should be avoided'],
