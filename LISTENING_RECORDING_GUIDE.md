@@ -2,11 +2,10 @@
 
 ## Phạm vi hiện tại
 
-Listening đã được xây lại **từ đầu**, chỉ tập trung vào hai lộ trình độc lập:
+Listening được xây lại thành hai lộ trình độc lập:
 
 - **Mất gốc / người mới:** 5 giai đoạn, tương ứng nền tảng lớp 1 → lớp 5, **50 bài**.
 - **THCS:** 4 giai đoạn, tương ứng lớp 6 → lớp 9, **40 bài**.
-- **Không có track “ôn vào lớp 10”** trong phần đang triển khai.
 - Học sinh đang học THCS nhưng mất gốc vẫn học **Mất gốc / người mới**. Không dùng bài THCS chung cho người mất gốc.
 
 Tổng cộng: **90 bài Listening**, mỗi giai đoạn **10 bài**.
@@ -41,7 +40,7 @@ Giữ đúng thang Dễ → Trung bình → Khá → Khó → Địa ngục củ
 
 **Lời cần tự ghi âm:**
 
-> 
+> C, A, T.
 
 **Bài trên web:** nghe từ được đánh vần rồi gõ từ.
 
@@ -59,7 +58,7 @@ Giữ đúng thang Dễ → Trung bình → Khá → Khó → Địa ngục củ
 
 **Lời cần tự ghi âm:**
 
-> 
+> B, O, O, K.
 
 **Bài trên web:** nghe từ được đánh vần rồi gõ từ.
 
@@ -77,7 +76,7 @@ Giữ đúng thang Dễ → Trung bình → Khá → Khó → Địa ngục củ
 
 **Lời cần tự ghi âm:**
 
-> 
+> C, A, T. B, O, O, K. S, U, N.
 
 **Bài trên web:** nghe một loạt từ được đánh vần rồi xếp đúng thứ tự.
 
@@ -95,7 +94,7 @@ Giữ đúng thang Dễ → Trung bình → Khá → Khó → Địa ngục củ
 
 **Lời cần tự ghi âm:**
 
-> 
+> P, E, N. D, O, G. R, E, D. M, I, L, K.
 
 **Bài trên web:** nghe một loạt từ được đánh vần rồi xếp đúng thứ tự.
 
@@ -113,7 +112,7 @@ Giữ đúng thang Dễ → Trung bình → Khá → Khó → Địa ngục củ
 
 **Lời cần tự ghi âm:**
 
-> 
+> A, P, P, L, E. F, I, S, H. B, L, U, E.
 
 **Bài trên web:** nghe chuỗi từ rồi điền đúng từ theo số thứ tự.
 
@@ -131,7 +130,7 @@ Giữ đúng thang Dễ → Trung bình → Khá → Khó → Địa ngục củ
 
 **Lời cần tự ghi âm:**
 
-> 
+> T, A, B, L, E. G, R, E, E, N. W, A, T, E, R.
 
 **Bài trên web:** nghe chuỗi từ rồi điền đúng từ theo số thứ tự.
 
@@ -149,7 +148,7 @@ Giữ đúng thang Dễ → Trung bình → Khá → Khó → Địa ngục củ
 
 **Lời cần tự ghi âm:**
 
-> 
+> B, O, O, K. C, A, K, E. F, I, S, H.
 
 **Bài trên web:** nghe chuỗi đánh vần rồi tick đúng các từ đã nghe.
 
@@ -167,7 +166,7 @@ Giữ đúng thang Dễ → Trung bình → Khá → Khó → Địa ngục củ
 
 **Lời cần tự ghi âm:**
 
-> 
+> S, C, H, O, O, L. C, H, A, I, R. J, U, I, C, E.
 
 **Bài trên web:** nghe chuỗi đánh vần rồi tick đúng các từ đã nghe.
 
@@ -185,7 +184,7 @@ Giữ đúng thang Dễ → Trung bình → Khá → Khó → Địa ngục củ
 
 **Lời cần tự ghi âm:**
 
-> 
+> school
 
 **Bài trên web:** nghe nguyên từ, không đánh vần, rồi gõ lại.
 
@@ -203,7 +202,7 @@ Giữ đúng thang Dễ → Trung bình → Khá → Khó → Địa ngục củ
 
 **Lời cần tự ghi âm:**
 
-> 
+> window
 
 **Bài trên web:** nghe nguyên từ, không đánh vần, rồi gõ lại.
 
@@ -225,7 +224,7 @@ Nghe một cặp hỏi–đáp rồi gõ lại chính xác câu hỏi và câu t
 
 > A: What number is it? B: It is thirteen.
 
-**Bài trên web:** học viên gõ lại câu hỏi **và** câu trả lời.
+**Bài trên web:** gõ lại câu hỏi **và** câu trả lời.
 
 ---
 
@@ -241,7 +240,7 @@ Nghe một cặp hỏi–đáp rồi gõ lại chính xác câu hỏi và câu t
 
 > A: How old is your sister? B: She is eight.
 
-**Bài trên web:** học viên gõ lại câu hỏi **và** câu trả lời.
+**Bài trên web:** gõ lại câu hỏi **và** câu trả lời.
 
 ---
 
@@ -257,7 +256,7 @@ Nghe một cặp hỏi–đáp rồi gõ lại chính xác câu hỏi và câu t
 
 > A: Where is my red ball? B: It is under the table.
 
-**Bài trên web:** học viên gõ lại câu hỏi **và** câu trả lời.
+**Bài trên web:** gõ lại câu hỏi **và** câu trả lời.
 
 ---
 
@@ -273,7 +272,7 @@ Nghe một cặp hỏi–đáp rồi gõ lại chính xác câu hỏi và câu t
 
 > A: Is the goat on the farm? B: Yes, it is.
 
-**Bài trên web:** học viên gõ lại câu hỏi **và** câu trả lời.
+**Bài trên web:** gõ lại câu hỏi **và** câu trả lời.
 
 ---
 
@@ -289,7 +288,7 @@ Nghe một cặp hỏi–đáp rồi gõ lại chính xác câu hỏi và câu t
 
 > A: What do you want? B: I want some cake, please.
 
-**Bài trên web:** học viên gõ lại câu hỏi **và** câu trả lời.
+**Bài trên web:** gõ lại câu hỏi **và** câu trả lời.
 
 ---
 
@@ -305,7 +304,7 @@ Nghe một cặp hỏi–đáp rồi gõ lại chính xác câu hỏi và câu t
 
 > A: Can I open the window? B: Yes, you can.
 
-**Bài trên web:** học viên gõ lại câu hỏi **và** câu trả lời.
+**Bài trên web:** gõ lại câu hỏi **và** câu trả lời.
 
 ---
 
@@ -321,7 +320,7 @@ Nghe một cặp hỏi–đáp rồi gõ lại chính xác câu hỏi và câu t
 
 > A: Do you like kites? B: Yes, I do. I have two kites.
 
-**Bài trên web:** học viên gõ lại câu hỏi **và** câu trả lời.
+**Bài trên web:** gõ lại câu hỏi **và** câu trả lời.
 
 ---
 
@@ -337,7 +336,7 @@ Nghe một cặp hỏi–đáp rồi gõ lại chính xác câu hỏi và câu t
 
 > A: Is it sunny outside? B: No, it is cloudy today.
 
-**Bài trên web:** học viên gõ lại câu hỏi **và** câu trả lời.
+**Bài trên web:** gõ lại câu hỏi **và** câu trả lời.
 
 ---
 
@@ -353,7 +352,7 @@ Nghe một cặp hỏi–đáp rồi gõ lại chính xác câu hỏi và câu t
 
 > A: Who is that woman? B: She is my mother.
 
-**Bài trên web:** học viên gõ lại câu hỏi **và** câu trả lời.
+**Bài trên web:** gõ lại câu hỏi **và** câu trả lời.
 
 ---
 
@@ -369,7 +368,7 @@ Nghe một cặp hỏi–đáp rồi gõ lại chính xác câu hỏi và câu t
 
 > A: Why are you happy? B: Because it is my birthday.
 
-**Bài trên web:** học viên gõ lại câu hỏi **và** câu trả lời.
+**Bài trên web:** gõ lại câu hỏi **và** câu trả lời.
 
 ---
 
@@ -389,7 +388,7 @@ Gõ lại cặp hỏi–đáp, sau đó chọn câu tiếp theo phù hợp để
 
 > A: How are you today? B: I am fine, thank you.
 
-**Bài trên web:** học viên gõ lại câu hỏi + câu trả lời, sau đó chọn câu tiếp theo phù hợp để hoàn thành hội thoại.
+**Bài trên web:** gõ lại câu hỏi + câu trả lời, sau đó chọn câu tiếp theo phù hợp để hoàn thành hội thoại.
 
 ---
 
@@ -405,7 +404,7 @@ Gõ lại cặp hỏi–đáp, sau đó chọn câu tiếp theo phù hợp để
 
 > A: Who is this? B: This is my friend, Lucy.
 
-**Bài trên web:** học viên gõ lại câu hỏi + câu trả lời, sau đó chọn câu tiếp theo phù hợp để hoàn thành hội thoại.
+**Bài trên web:** gõ lại câu hỏi + câu trả lời, sau đó chọn câu tiếp theo phù hợp để hoàn thành hội thoại.
 
 ---
 
@@ -421,7 +420,7 @@ Gõ lại cặp hỏi–đáp, sau đó chọn câu tiếp theo phù hợp để
 
 > A: What is your father's job? B: He is a doctor.
 
-**Bài trên web:** học viên gõ lại câu hỏi + câu trả lời, sau đó chọn câu tiếp theo phù hợp để hoàn thành hội thoại.
+**Bài trên web:** gõ lại câu hỏi + câu trả lời, sau đó chọn câu tiếp theo phù hợp để hoàn thành hội thoại.
 
 ---
 
@@ -437,7 +436,7 @@ Gõ lại cặp hỏi–đáp, sau đó chọn câu tiếp theo phù hợp để
 
 > A: How many rabbits do you have? B: I have two rabbits.
 
-**Bài trên web:** học viên gõ lại câu hỏi + câu trả lời, sau đó chọn câu tiếp theo phù hợp để hoàn thành hội thoại.
+**Bài trên web:** gõ lại câu hỏi + câu trả lời, sau đó chọn câu tiếp theo phù hợp để hoàn thành hội thoại.
 
 ---
 
@@ -453,7 +452,7 @@ Gõ lại cặp hỏi–đáp, sau đó chọn câu tiếp theo phù hợp để
 
 > A: What is Ben doing? B: He is skating in the park.
 
-**Bài trên web:** học viên gõ lại câu hỏi + câu trả lời, sau đó chọn câu tiếp theo phù hợp để hoàn thành hội thoại.
+**Bài trên web:** gõ lại câu hỏi + câu trả lời, sau đó chọn câu tiếp theo phù hợp để hoàn thành hội thoại.
 
 ---
 
@@ -469,7 +468,7 @@ Gõ lại cặp hỏi–đáp, sau đó chọn câu tiếp theo phù hợp để
 
 > A: What would you like to drink? B: I would like some milk, please.
 
-**Bài trên web:** học viên gõ lại câu hỏi + câu trả lời, sau đó chọn câu tiếp theo phù hợp để hoàn thành hội thoại.
+**Bài trên web:** gõ lại câu hỏi + câu trả lời, sau đó chọn câu tiếp theo phù hợp để hoàn thành hội thoại.
 
 ---
 
@@ -485,7 +484,7 @@ Gõ lại cặp hỏi–đáp, sau đó chọn câu tiếp theo phù hợp để
 
 > A: Where is your brother? B: He is in the living room.
 
-**Bài trên web:** học viên gõ lại câu hỏi + câu trả lời, sau đó chọn câu tiếp theo phù hợp để hoàn thành hội thoại.
+**Bài trên web:** gõ lại câu hỏi + câu trả lời, sau đó chọn câu tiếp theo phù hợp để hoàn thành hội thoại.
 
 ---
 
@@ -501,7 +500,7 @@ Gõ lại cặp hỏi–đáp, sau đó chọn câu tiếp theo phù hợp để
 
 > A: Do you have any planes? B: Yes, I have three planes.
 
-**Bài trên web:** học viên gõ lại câu hỏi + câu trả lời, sau đó chọn câu tiếp theo phù hợp để hoàn thành hội thoại.
+**Bài trên web:** gõ lại câu hỏi + câu trả lời, sau đó chọn câu tiếp theo phù hợp để hoàn thành hội thoại.
 
 ---
 
@@ -517,7 +516,7 @@ Gõ lại cặp hỏi–đáp, sau đó chọn câu tiếp theo phù hợp để
 
 > A: Can your sister swim? B: Yes, she can swim very well.
 
-**Bài trên web:** học viên gõ lại câu hỏi + câu trả lời, sau đó chọn câu tiếp theo phù hợp để hoàn thành hội thoại.
+**Bài trên web:** gõ lại câu hỏi + câu trả lời, sau đó chọn câu tiếp theo phù hợp để hoàn thành hội thoại.
 
 ---
 
@@ -533,7 +532,7 @@ Gõ lại cặp hỏi–đáp, sau đó chọn câu tiếp theo phù hợp để
 
 > A: What time do you go to school? B: I go to school at seven o'clock.
 
-**Bài trên web:** học viên gõ lại câu hỏi + câu trả lời, sau đó chọn câu tiếp theo phù hợp để hoàn thành hội thoại.
+**Bài trên web:** gõ lại câu hỏi + câu trả lời, sau đó chọn câu tiếp theo phù hợp để hoàn thành hội thoại.
 
 ---
 
