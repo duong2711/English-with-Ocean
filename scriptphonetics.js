@@ -18190,7 +18190,12 @@ function toggleCompletion(symbolElement) {
     }
 
     function ctestNormalize(s) {
-        return String(s || '').trim().toLowerCase().replace(/\s+/g, ' ');
+        return String(s || '')
+            .trim()
+            .replace(/\.+\s*$/, '')
+            .trim()
+            .toLowerCase()
+            .replace(/\s+/g, ' ');
     }
 
     function ctestTokenize(text) {
@@ -18703,16 +18708,27 @@ function toggleCompletion(symbolElement) {
         const imgField = ctestImageField(q.image_url, q.image_width);
         card.appendChild(imgField);
 
+        const manualLabel = document.createElement('label');
+        manualLabel.className = 'ctest-essay-manual-row';
+        manualLabel.style.cssText = 'display:flex;align-items:center;gap:8px;margin:10px 0;font-weight:600;';
+        const manualCheckbox = document.createElement('input');
+        manualCheckbox.type = 'checkbox';
+        manualCheckbox.className = 'ctest-essay-manual-checkbox';
+        manualCheckbox.checked = !!q.manual_grading;
+        manualLabel.appendChild(manualCheckbox);
+        manualLabel.appendChild(document.createTextNode('Chờ giảng viên chấm (không chấm tự động câu này)'));
+        card.appendChild(manualLabel);
+
         const label2 = document.createElement('label');
         label2.className = 'news-quiz-edit-label';
         label2.style.marginTop = '10px';
         label2.style.display = 'block';
-        label2.textContent = 'Đáp án đúng (do bạn quy định, dùng để chấm tự động):';
+        label2.textContent = 'Đáp án chuẩn / tham khảo:';
         card.appendChild(label2);
         const answerInput = document.createElement('input');
         answerInput.type = 'text';
         answerInput.className = 'news-edit-input ctest-essay-answer-input';
-        answerInput.placeholder = 'Nhập đáp án chuẩn...';
+        answerInput.placeholder = 'Nhập đáp án chuẩn hoặc đáp án tham khảo...';
         answerInput.value = q.answer || '';
         card.appendChild(answerInput);
         return card;
@@ -18723,7 +18739,8 @@ function toggleCompletion(symbolElement) {
             prompt: ctestRichHtml(card.querySelector(':scope > .ctest-essay-prompt-editor')),
             image_url: ctestImageUrl(card.querySelector(':scope > .ctest-image-field')),
             image_width: ctestImageWidth(card.querySelector(':scope > .ctest-image-field')),
-            answer: card.querySelector(':scope > .ctest-essay-answer-input').value.trim()
+            answer: card.querySelector(':scope > .ctest-essay-answer-input').value.trim(),
+            manual_grading: !!(card.querySelector(':scope > .ctest-essay-manual-row .ctest-essay-manual-checkbox') || {}).checked
         };
     }
 
@@ -19322,7 +19339,10 @@ function toggleCompletion(symbolElement) {
                             badgeEl = document.createElement('button');
                             badgeEl.type = 'button';
                             badgeEl.className = 'ctest-status-badge ctest-status-submitted ctest-status-badge-clickable';
-                            badgeEl.textContent = 'Đã nộp — ' + sub.score_correct + '/' + sub.score_total + (sub.teacher_graded_at ? ' 👨‍🏫' : '');
+                            const pendingManual = ctestManualPendingCount(test, sub.teacher_overrides || {});
+                            badgeEl.textContent = pendingManual > 0
+                                ? 'Đã nộp — chờ chấm ' + pendingManual + ' câu'
+                                : 'Đã nộp — ' + sub.score_correct + '/' + sub.score_total + (sub.teacher_graded_at ? ' 👨‍🏫' : '');
                             badgeEl.title = 'Bấm để xem & chấm lại bài này';
                             badgeEl.addEventListener('click', (e) => {
                                 e.stopPropagation();
@@ -20040,8 +20060,60 @@ function toggleCompletion(symbolElement) {
         ctestStartTimer(test.duration_minutes, currentSubmission.started_at);
     }
 
+    function ctestValueMissing(v) {
+        return v === undefined || v === null || (typeof v === 'string' && !v.trim());
+    }
+
+    function ctestMissingForQuestion(q, keyBase, answers) {
+        switch (q.type) {
+            case 'mcq':
+                return ctestValueMissing(answers[keyBase]) ? 1 : 0;
+            case 'mcq_multi':
+                return Array.isArray(answers[keyBase]) && answers[keyBase].length ? 0 : 1;
+            case 'fill_blank':
+            case 'wordbank': {
+                const blanks = ctestParseBlanks(q.html).blanks || [];
+                return blanks.reduce((n, _word, i) => n + (ctestValueMissing(answers[keyBase + ':blank:' + i]) ? 1 : 0), 0);
+            }
+            case 'reorder': {
+                const need = ctestTokenize(q.sentence).length;
+                const got = Array.isArray(answers[keyBase + ':order']) ? answers[keyBase + ':order'].length : 0;
+                return got === need ? 0 : 1;
+            }
+            case 'reading':
+                return (q.sub_questions || []).reduce((n, sq, i) => n + ctestMissingForQuestion(sq, keyBase + ':sub:' + i, answers), 0);
+            case 'mixed':
+                return ctestNormalizeMixedParts(q).reduce((n, part, i) => n + ctestMissingForQuestion(part, keyBase + ':part:' + i, answers), 0);
+            case 'matching': {
+                const pairs = answers[keyBase + ':pairs'];
+                return (q.left || []).reduce((n, _item, i) => n + (!pairs || pairs[i] === undefined ? 1 : 0), 0);
+            }
+            case 'listening':
+                return (q.sub_questions || []).reduce((n, sq, i) => n + ctestMissingForQuestion(sq, keyBase + ':sub:' + i, answers), 0);
+            case 'essay':
+                return ctestValueMissing(answers[keyBase]) ? 1 : 0;
+            default:
+                return ctestValueMissing(answers[keyBase]) ? 1 : 0;
+        }
+    }
+
+    function ctestCountMissingAnswers(test, answers) {
+        let missing = 0;
+        (test.sections || []).forEach(section => {
+            (section.questions || []).forEach(q => {
+                missing += ctestMissingForQuestion(q, keyFor(section.id, q.id), answers || {});
+            });
+        });
+        return missing;
+    }
+
     if (submitBtn) {
         submitBtn.addEventListener('click', () => {
+            const missing = ctestCountMissingAnswers(currentTest, currentAnswers);
+            if (missing > 0) {
+                alert('Bạn còn ' + missing + ' câu/ý chưa trả lời. Hãy hoàn thành tất cả trước khi nộp bài.');
+                return;
+            }
             if (!confirm('Nộp bài ngay bây giờ? Bạn sẽ không thể sửa lại câu trả lời sau khi nộp.')) return;
             submitTest(false);
         });
@@ -20069,7 +20141,7 @@ function toggleCompletion(symbolElement) {
         return { ok: naturalOk, excluded: false };
     }
 
-    function ctestOverrideControl(key, ctx, compact) {
+    function ctestOverrideControl(key, ctx, compact, manualGrading) {
         if (!ctx || !ctx.editable) return null;
         const ov = (ctx.overrides || {})[key] || null;
         const wrap = document.createElement('span');
@@ -20078,8 +20150,9 @@ function toggleCompletion(symbolElement) {
             const stateEl = document.createElement('div');
             stateEl.className = 'ctest-override-state';
             stateEl.textContent = ov === 'excluded' ? '🗑️ Đã loại khỏi bài chấm'
-                : ov === 'force_correct' ? '✅ Giảng viên sửa: Đúng'
-                : ov === 'force_wrong' ? '❌ Giảng viên sửa: Sai'
+                : ov === 'force_correct' ? '✅ Giảng viên chấm: Đúng'
+                : ov === 'force_wrong' ? '❌ Giảng viên chấm: Sai'
+                : manualGrading ? '⏳ Chờ giảng viên chấm'
                 : '🤖 Đang chấm tự động';
             wrap.appendChild(stateEl);
         }
@@ -20102,8 +20175,8 @@ function toggleCompletion(symbolElement) {
             const resetBtn = document.createElement('button');
             resetBtn.type = 'button';
             resetBtn.className = 'ctest-ov-btn ctest-ov-reset';
-            resetBtn.title = 'Bỏ chỉnh sửa, quay về chấm tự động';
-            resetBtn.textContent = compact ? '↺' : '↺ Tự động';
+            resetBtn.title = manualGrading ? 'Đưa câu này về trạng thái chờ giảng viên chấm' : 'Bỏ chỉnh sửa, quay về chấm tự động';
+            resetBtn.textContent = compact ? '↺' : (manualGrading ? '↺ Chờ chấm' : '↺ Tự động');
             resetBtn.addEventListener('click', () => ctx.onOverrideChange(key, null));
             btnRow.appendChild(resetBtn);
         }
@@ -20283,6 +20356,49 @@ function toggleCompletion(symbolElement) {
             block.appendChild(img);
         }
         const given = answers[keyBase] || '';
+
+        if (part.manual_grading) {
+            const ov = ctx && ctx.overrides ? ctx.overrides[keyBase] : null;
+            const excluded = ov === 'excluded';
+            const pending = !ov;
+            const ok = ov === 'force_correct';
+
+            const el = document.createElement('div');
+            const answerLine = document.createElement('div');
+            answerLine.innerHTML = '<b>Câu trả lời của học viên:</b> ' + ctestEscape(given || '(bỏ trống)');
+            el.appendChild(answerLine);
+
+            const statusLine = document.createElement('div');
+            statusLine.style.marginTop = '6px';
+            if (pending) {
+                statusLine.textContent = '⏳ Chờ giáo viên chấm';
+            } else if (excluded) {
+                statusLine.textContent = '🗑️ Câu này không tính điểm';
+            } else if (ok) {
+                statusLine.textContent = '✅ Giáo viên chấm: Đúng';
+            } else {
+                statusLine.textContent = '❌ Giáo viên chấm: Sai';
+            }
+            el.appendChild(statusLine);
+
+            if (ctx && ctx.editable && part.answer) {
+                const ref = document.createElement('div');
+                ref.style.marginTop = '6px';
+                ref.innerHTML = '<b>Đáp án tham khảo:</b> ' + ctestEscape(part.answer);
+                el.appendChild(ref);
+            }
+            block.appendChild(el);
+            if (excluded) block.classList.add('ctest-q-excluded');
+            const ctrl = ctestOverrideControl(keyBase, ctx, false, true);
+            if (ctrl) block.appendChild(ctrl);
+
+            return {
+                el: block,
+                correct: (!pending && !excluded && ok) ? 1 : 0,
+                total: (!pending && !excluded) ? 1 : 0
+            };
+        }
+
         const naturalOk = ctestNormalize(given) === ctestNormalize(part.answer);
         const { ok, excluded } = ctestApplyOverride(keyBase, ctx, naturalOk);
         const el = document.createElement('div');
@@ -20398,6 +20514,19 @@ function toggleCompletion(symbolElement) {
         return { correct, total };
     }
 
+    function ctestManualPendingCount(test, overrides) {
+        let pending = 0;
+        const ov = overrides || {};
+        (test.sections || []).forEach(section => {
+            (section.questions || []).forEach(q => {
+                if (q.type !== 'essay' || !q.manual_grading) return;
+                const key = keyFor(section.id, q.id);
+                if (!ov[key]) pending++;
+            });
+        });
+        return pending;
+    }
+
     async function submitTest(auto) {
         if (!currentSubmission || !currentTest) return;
         clearTimeout(answerSaveTimer);
@@ -20435,7 +20564,15 @@ function toggleCompletion(symbolElement) {
         const editable = !!opts.editable;
         showView('result');
         resultTitleEl.textContent = test.title || '';
-        resultScoreEl.textContent = 'Điểm: ' + (submission.score_correct != null ? submission.score_correct : 0) + ' / ' + (submission.score_total != null ? submission.score_total : 0);
+        const pendingManual = ctestManualPendingCount(test, submission.teacher_overrides || {});
+        if (pendingManual > 0) {
+            resultScoreEl.textContent = 'Đã chấm: ' + (submission.score_correct != null ? submission.score_correct : 0) +
+                ' đúng / ' + (submission.score_total != null ? submission.score_total : 0) +
+                ' câu · ' + pendingManual + ' câu chờ giáo viên chấm';
+        } else {
+            resultScoreEl.textContent = 'Điểm: ' + (submission.score_correct != null ? submission.score_correct : 0) +
+                ' / ' + (submission.score_total != null ? submission.score_total : 0);
+        }
         resultSectionsEl.innerHTML = '';
 
         if (editable) {
