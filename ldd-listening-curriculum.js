@@ -103,7 +103,8 @@
       "source": {
         "url": "https://loigiaihay.com/lop-1.html",
         "section": "Nền tảng lớp 1: alphabet / phonics. Cơ chế Dễ → Địa ngục kế thừa bài đánh vần cũ của lddenglish."
-      }
+      },
+      "recordingScript": "C, A, T."
     },
     {
       "id": "f1-02",
@@ -120,7 +121,8 @@
       "source": {
         "url": "https://loigiaihay.com/lop-1.html",
         "section": "Nền tảng lớp 1: alphabet / phonics. Cơ chế Dễ → Địa ngục kế thừa bài đánh vần cũ của lddenglish."
-      }
+      },
+      "recordingScript": "B, O, O, K."
     },
     {
       "id": "f1-03",
@@ -141,7 +143,8 @@
       "source": {
         "url": "https://loigiaihay.com/lop-1.html",
         "section": "Nền tảng lớp 1: alphabet / phonics. Cơ chế Dễ → Địa ngục kế thừa bài đánh vần cũ của lddenglish."
-      }
+      },
+      "recordingScript": "C, A, T. B, O, O, K. S, U, N."
     },
     {
       "id": "f1-04",
@@ -163,7 +166,8 @@
       "source": {
         "url": "https://loigiaihay.com/lop-1.html",
         "section": "Nền tảng lớp 1: alphabet / phonics. Cơ chế Dễ → Địa ngục kế thừa bài đánh vần cũ của lddenglish."
-      }
+      },
+      "recordingScript": "P, E, N. D, O, G. R, E, D. M, I, L, K."
     },
     {
       "id": "f1-05",
@@ -189,7 +193,8 @@
       "source": {
         "url": "https://loigiaihay.com/lop-1.html",
         "section": "Nền tảng lớp 1: alphabet / phonics. Cơ chế Dễ → Địa ngục kế thừa bài đánh vần cũ của lddenglish."
-      }
+      },
+      "recordingScript": "A, P, P, L, E. F, I, S, H. B, L, U, E."
     },
     {
       "id": "f1-06",
@@ -215,7 +220,8 @@
       "source": {
         "url": "https://loigiaihay.com/lop-1.html",
         "section": "Nền tảng lớp 1: alphabet / phonics. Cơ chế Dễ → Địa ngục kế thừa bài đánh vần cũ của lddenglish."
-      }
+      },
+      "recordingScript": "T, A, B, L, E. G, R, E, E, N. W, A, T, E, R."
     },
     {
       "id": "f1-07",
@@ -244,7 +250,8 @@
       "source": {
         "url": "https://loigiaihay.com/lop-1.html",
         "section": "Nền tảng lớp 1: alphabet / phonics. Cơ chế Dễ → Địa ngục kế thừa bài đánh vần cũ của lddenglish."
-      }
+      },
+      "recordingScript": "B, O, O, K. C, A, K, E. F, I, S, H."
     },
     {
       "id": "f1-08",
@@ -273,7 +280,8 @@
       "source": {
         "url": "https://loigiaihay.com/lop-1.html",
         "section": "Nền tảng lớp 1: alphabet / phonics. Cơ chế Dễ → Địa ngục kế thừa bài đánh vần cũ của lddenglish."
-      }
+      },
+      "recordingScript": "S, C, H, O, O, L. C, H, A, I, R. J, U, I, C, E."
     },
     {
       "id": "f1-09",
@@ -290,7 +298,8 @@
       "source": {
         "url": "https://loigiaihay.com/lop-1.html",
         "section": "Nền tảng lớp 1: alphabet / phonics. Cơ chế Dễ → Địa ngục kế thừa bài đánh vần cũ của lddenglish."
-      }
+      },
+      "recordingScript": "school"
     },
     {
       "id": "f1-10",
@@ -307,7 +316,8 @@
       "source": {
         "url": "https://loigiaihay.com/lop-1.html",
         "section": "Nền tảng lớp 1: alphabet / phonics. Cơ chế Dễ → Địa ngục kế thừa bài đánh vần cũ của lddenglish."
-      }
+      },
+      "recordingScript": "window"
     },
     {
       "id": "f2-01",
