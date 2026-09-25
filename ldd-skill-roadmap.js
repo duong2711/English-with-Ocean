@@ -26,49 +26,8 @@
             icon: 'headphones',
             title: 'Luyện Nghe',
             english: 'Listening Lab',
-            description: 'Đi từ nhận diện âm và từ khóa đến hội thoại, nội dung dài và bài nghe học thuật. Trình độ Nghe được lưu độc lập với ba kỹ năng còn lại.',
-            stages: [
-                {
-                    title: 'Nhận diện âm và từ',
-                    description: 'Phân biệt âm, nghe đánh vần, nhận ra từ đơn và cụm từ quen thuộc.',
-                    audiences: ['Mất gốc', 'THCS'],
-                    custom: 'listening',
-                    clicks: ['ln-stage1-folder-card', 'ln-lv1-card'],
-                    backIds: ['ln-lv1-back-btn']
-                },
-                {
-                    title: 'Bắt từ khóa trong câu',
-                    description: 'Nghe câu hoàn chỉnh, điền từ, sắp xếp câu và chọn thông tin đúng.',
-                    audiences: ['Mất gốc', 'THCS', 'Thi vào 10'],
-                    custom: 'listening',
-                    clicks: ['ln-stage1-folder-card', 'ln-lv2-card'],
-                    backIds: ['ln2-back-btn']
-                },
-                {
-                    title: 'Hiểu hội thoại đời sống',
-                    description: 'Theo dõi đoạn hội thoại, xác định người nói, mục đích và chi tiết chính.',
-                    audiences: ['THCS', 'Thi vào 10', 'THPT'],
-                    custom: 'listening',
-                    clicks: ['ln-stage1-folder-card', 'ln-lv3-card'],
-                    backIds: ['ln3-back-btn']
-                },
-                {
-                    title: 'Nghe chi tiết và suy luận',
-                    description: 'Xử lý bài nghe dài hơn, ghi chú thông tin và suy luận từ ngữ cảnh.',
-                    audiences: ['THPT', 'Đi làm', 'IELTS'],
-                    custom: 'listening',
-                    clicks: ['ln-stage2-folder-card'],
-                    backIds: ['ln-stage2-back-btn']
-                },
-                {
-                    title: 'Nghe học thuật và đề thi',
-                    description: 'Luyện nội dung tốc độ tự nhiên, bài học thuật và chiến lược làm bài nâng cao.',
-                    audiences: ['THPT', 'Đi làm', 'IELTS'],
-                    custom: 'listening',
-                    clicks: ['ln-stage3-folder-card'],
-                    backIds: ['ln-stage3-back-btn']
-                }
-            ]
+            description: 'Hai lộ trình tách biệt: Mất gốc/người mới (nền tảng lớp 1–5) và THCS (lớp 6–9). Không dùng chung bài.',
+            stages: []
         },
         speaking: {
             tabId: 'tab-luyen-noi',
@@ -206,637 +165,10 @@
 
 
 
-    const LISTENING_PRACTICE_BANK = [
-            {
-                    "id": "s1-01",
-                    "stage": 1,
-                    "audienceGroup": "Mất gốc",
-                    "audienceDetail": "Nền tảng",
-                    "title": "Sheep hay ship?",
-                    "sourceUrl": "https://loigiaihay.com/bai-tap-170170.html",
-                    "sourceSection": "Listen and circle the words you hear",
-                    "audioUrl": "assets/audio/listening/stage-1/listening-s1-01.mp3",
-                    "recordingScript": "The sheep is standing beside the ship.",
-                    "question": "Which animal is mentioned?",
-                    "options": [
-                            "A sheep",
-                            "A dog",
-                            "A cat",
-                            "A horse"
-                    ],
-                    "answer": 0
-            },
-            {
-                    "id": "s1-02",
-                    "stage": 1,
-                    "audienceGroup": "Mất gốc",
-                    "audienceDetail": "Nền tảng",
-                    "title": "Green hay grin?",
-                    "sourceUrl": "https://loigiaihay.com/bai-tap-170170.html",
-                    "sourceSection": "Listen and circle the words you hear",
-                    "audioUrl": "assets/audio/listening/stage-1/listening-s1-02.mp3",
-                    "recordingScript": "Please put the green book on the desk.",
-                    "question": "What colour is the book?",
-                    "options": [
-                            "Grey",
-                            "Green",
-                            "Blue",
-                            "Black"
-                    ],
-                    "answer": 1
-            },
-            {
-                    "id": "s1-03",
-                    "stage": 1,
-                    "audienceGroup": "Mất gốc",
-                    "audienceDetail": "Nền tảng",
-                    "title": "Thirteen hay thirty?",
-                    "sourceUrl": "https://loigiaihay.com/bai-tap-170170.html",
-                    "sourceSection": "Listen and circle the words you hear",
-                    "audioUrl": "assets/audio/listening/stage-1/listening-s1-03.mp3",
-                    "recordingScript": "My classroom is room number thirteen.",
-                    "question": "What is the room number?",
-                    "options": [
-                            "13",
-                            "30",
-                            "14",
-                            "40"
-                    ],
-                    "answer": 0
-            },
-            {
-                    "id": "s1-04",
-                    "stage": 1,
-                    "audienceGroup": "Mất gốc",
-                    "audienceDetail": "Nền tảng",
-                    "title": "Nghe giờ chính xác",
-                    "sourceUrl": "https://loigiaihay.com/bai-tap-170170.html",
-                    "sourceSection": "Listen and circle the words you hear",
-                    "audioUrl": "assets/audio/listening/stage-1/listening-s1-04.mp3",
-                    "recordingScript": "The bus leaves at six fifteen.",
-                    "question": "When does the bus leave?",
-                    "options": [
-                            "6:05",
-                            "6:15",
-                            "6:30",
-                            "6:50"
-                    ],
-                    "answer": 1
-            },
-            {
-                    "id": "s1-05",
-                    "stage": 1,
-                    "audienceGroup": "Mất gốc",
-                    "audienceDetail": "Nền tảng",
-                    "title": "Nghe đánh vần",
-                    "sourceUrl": "https://loigiaihay.com/tieng-anh-7-unit-7-vocabulary-and-listening-a109316.html",
-                    "sourceSection": "Pronunciation – Syllables: Listen and repeat",
-                    "audioUrl": "assets/audio/listening/stage-1/listening-s1-05.mp3",
-                    "recordingScript": "Her surname is Brown. That is B, R, O, W, N.",
-                    "question": "How is the surname spelled?",
-                    "options": [
-                            "B-R-A-W-N",
-                            "B-R-O-W-N",
-                            "B-L-O-W-N",
-                            "B-R-O-N"
-                    ],
-                    "answer": 1
-            },
-            {
-                    "id": "s1-06",
-                    "stage": 1,
-                    "audienceGroup": "Mất gốc",
-                    "audienceDetail": "Nền tảng",
-                    "title": "Từ khóa trong cụm ngắn",
-                    "sourceUrl": "https://loigiaihay.com/tieng-anh-7-unit-7-vocabulary-and-listening-a109316.html",
-                    "sourceSection": "Pronunciation – Syllables: Listen and repeat",
-                    "audioUrl": "assets/audio/listening/stage-1/listening-s1-06.mp3",
-                    "recordingScript": "I need a black pen, not a blue one.",
-                    "question": "Which pen does the speaker need?",
-                    "options": [
-                            "A blue pen",
-                            "A red pen",
-                            "A black pen",
-                            "A green pen"
-                    ],
-                    "answer": 2
-            },
-            {
-                    "id": "s2-01",
-                    "stage": 2,
-                    "audienceGroup": "THCS",
-                    "audienceDetail": "Cơ bản",
-                    "title": "Lịch sinh hoạt",
-                    "sourceUrl": "https://loigiaihay.com/listening-2f-skills-unit-2-every-day-tieng-anh-6-right-on-a94235.html",
-                    "sourceSection": "Listen and complete Miguel’s timetable",
-                    "audioUrl": "assets/audio/listening/stage-2/listening-s2-01.mp3",
-                    "recordingScript": "I get up at six thirty, have breakfast at seven, and leave for school at seven twenty.",
-                    "question": "What time does the speaker leave for school?",
-                    "options": [
-                            "6:30",
-                            "7:00",
-                            "7:20",
-                            "7:30"
-                    ],
-                    "answer": 2
-            },
-            {
-                    "id": "s2-02",
-                    "stage": 2,
-                    "audienceGroup": "THCS",
-                    "audienceDetail": "Cơ bản",
-                    "title": "Thói quen sức khỏe",
-                    "sourceUrl": "https://loigiaihay.com/tieng-anh-7-unit-2-skills-2-a106605.html",
-                    "sourceSection": "Listening 2–3: healthy habits",
-                    "audioUrl": "assets/audio/listening/stage-2/listening-s2-02.mp3",
-                    "recordingScript": "To stay healthy, Mai drinks plenty of water and goes to bed before ten. She does not exercise every day, but she walks to school three times a week.",
-                    "question": "Which habit does Mai do every day?",
-                    "options": [
-                            "Walks to school",
-                            "Drinks plenty of water",
-                            "Exercises",
-                            "Plays football"
-                    ],
-                    "answer": 1
-            },
-            {
-                    "id": "s2-03",
-                    "stage": 2,
-                    "audienceGroup": "THCS",
-                    "audienceDetail": "Cơ bản",
-                    "title": "Thời khóa biểu",
-                    "sourceUrl": "https://loigiaihay.com/listening-2f-skills-unit-2-every-day-tieng-anh-6-right-on-a94235.html",
-                    "sourceSection": "Listen and complete Miguel’s timetable",
-                    "audioUrl": "assets/audio/listening/stage-2/listening-s2-03.mp3",
-                    "recordingScript": "Our English lesson is on Tuesday afternoon. It starts at two forty-five and finishes at three thirty.",
-                    "question": "When does the English lesson start?",
-                    "options": [
-                            "2:15",
-                            "2:30",
-                            "2:45",
-                            "3:30"
-                    ],
-                    "answer": 2
-            },
-            {
-                    "id": "s2-04",
-                    "stage": 2,
-                    "audienceGroup": "THCS",
-                    "audienceDetail": "Cơ bản",
-                    "title": "Kế hoạch ngày Tết",
-                    "sourceUrl": "https://loigiaihay.com/skills-2-trang-65-unit-6-sgk-tieng-anh-6-moi-c134a22137.html",
-                    "sourceSection": "Listen again and answer the questions in one or two words",
-                    "audioUrl": "assets/audio/listening/stage-2/listening-s2-04.mp3",
-                    "recordingScript": "Before Tet, we clean the house on Friday. On Saturday, my father makes banh chung, and on Sunday we visit my grandparents.",
-                    "question": "What does the family do on Saturday?",
-                    "options": [
-                            "Clean the house",
-                            "Visit grandparents",
-                            "Make banh chung",
-                            "Buy flowers"
-                    ],
-                    "answer": 2
-            },
-            {
-                    "id": "s2-05",
-                    "stage": 2,
-                    "audienceGroup": "THCS",
-                    "audienceDetail": "Cơ bản",
-                    "title": "Kế hoạch cuối tuần",
-                    "sourceUrl": "https://loigiaihay.com/tieng-anh-7-unit-2-skills-2-a106605.html",
-                    "sourceSection": "Listening 2–3: healthy habits",
-                    "audioUrl": "assets/audio/listening/stage-2/listening-s2-05.mp3",
-                    "recordingScript": "This Saturday I am meeting Lan at the sports centre at nine. We planned to swim, but the pool is closed, so we will play badminton instead.",
-                    "question": "What will they do?",
-                    "options": [
-                            "Swim",
-                            "Play badminton",
-                            "Go shopping",
-                            "Watch a film"
-                    ],
-                    "answer": 1
-            },
-            {
-                    "id": "s2-06",
-                    "stage": 2,
-                    "audienceGroup": "THCS",
-                    "audienceDetail": "Cơ bản",
-                    "title": "Thông báo thư viện",
-                    "sourceUrl": "https://loigiaihay.com/listening-2f-skills-unit-2-every-day-tieng-anh-6-right-on-a94235.html",
-                    "sourceSection": "Listen and complete Miguel’s timetable",
-                    "audioUrl": "assets/audio/listening/stage-2/listening-s2-06.mp3",
-                    "recordingScript": "The school library closes at five on weekdays, but on Friday it stays open until six thirty.",
-                    "question": "What time does the library close on Friday?",
-                    "options": [
-                            "5:00",
-                            "5:30",
-                            "6:00",
-                            "6:30"
-                    ],
-                    "answer": 3
-            },
-            {
-                    "id": "s3-01",
-                    "stage": 3,
-                    "audienceGroup": "THCS",
-                    "audienceDetail": "Trung bình–khá",
-                    "title": "Phỏng vấn sở thích",
-                    "sourceUrl": "https://loigiaihay.com/tieng-anh-8-unit-1-skills-2-a134923.html",
-                    "sourceSection": "Listen to an interview with Mark about his leisure activities",
-                    "audioUrl": "assets/audio/listening/stage-3/listening-s3-01.mp3",
-                    "recordingScript": "A: What do you usually do with your friends after school? B: We often cook together at my house. If the weather is good, we ride our bikes around the park.",
-                    "question": "What do they often do at home?",
-                    "options": [
-                            "Cook together",
-                            "Play volleyball",
-                            "Study maths",
-                            "Watch television"
-                    ],
-                    "answer": 0
-            },
-            {
-                    "id": "s3-02",
-                    "stage": 3,
-                    "audienceGroup": "THCS",
-                    "audienceDetail": "Trung bình–khá",
-                    "title": "Ý kiến về nông thôn",
-                    "sourceUrl": "https://loigiaihay.com/tieng-anh-8-unit-2-skills-2-a137295.html",
-                    "sourceSection": "Listen to three people talking about life in the countryside",
-                    "audioUrl": "assets/audio/listening/stage-3/listening-s3-02.mp3",
-                    "recordingScript": "A: Would you like to live in the countryside? B: I love the clean air and quiet evenings, but I would miss the buses and shops in the city.",
-                    "question": "What does the speaker dislike about the countryside?",
-                    "options": [
-                            "The clean air",
-                            "The quiet evenings",
-                            "The lack of convenient services",
-                            "The people"
-                    ],
-                    "answer": 2
-            },
-            {
-                    "id": "s3-03",
-                    "stage": 3,
-                    "audienceGroup": "THCS",
-                    "audienceDetail": "Trung bình–khá",
-                    "title": "Học trực tuyến",
-                    "sourceUrl": "https://loigiaihay.com/tieng-anh-8-unit-6-skills-2-a137552.html",
-                    "sourceSection": "Listen to the conversation and tick True or False",
-                    "audioUrl": "assets/audio/listening/stage-3/listening-s3-03.mp3",
-                    "recordingScript": "Mai: My internet stopped during the lesson again. Chris: That is annoying, but I still like online classes because I save travel time. Mai: I prefer the classroom because I can concentrate better there.",
-                    "question": "Why does Chris like online classes?",
-                    "options": [
-                            "They are shorter",
-                            "He saves travel time",
-                            "The internet is better",
-                            "He concentrates better"
-                    ],
-                    "answer": 1
-            },
-            {
-                    "id": "s3-04",
-                    "stage": 3,
-                    "audienceGroup": "THCS",
-                    "audienceDetail": "Trung bình–khá",
-                    "title": "Giao thông thành phố",
-                    "sourceUrl": "https://loigiaihay.com/tieng-anh-9-unit-2-skills-2-a156636.html",
-                    "sourceSection": "Listen to an interview with three teenagers about life in their cities",
-                    "audioUrl": "assets/audio/listening/stage-3/listening-s3-04.mp3",
-                    "recordingScript": "A: How do you get to school? B: I usually take the bus. It is cheap, but during rush hour it can take almost twice as long as usual.",
-                    "question": "What problem does the speaker mention?",
-                    "options": [
-                            "The bus is expensive",
-                            "The bus is crowded at night",
-                            "The journey takes longer in rush hour",
-                            "There is no bus stop"
-                    ],
-                    "answer": 2
-            },
-            {
-                    "id": "s3-05",
-                    "stage": 3,
-                    "audienceGroup": "THCS",
-                    "audienceDetail": "Trung bình–khá",
-                    "title": "Mua sắm trực tuyến",
-                    "sourceUrl": "https://loigiaihay.com/tieng-anh-8-unit-8-skills-2-a142616.html",
-                    "sourceSection": "Listen to a talk about online shopping",
-                    "audioUrl": "assets/audio/listening/stage-3/listening-s3-05.mp3",
-                    "recordingScript": "A: Did you buy those headphones at the mall? B: No, I ordered them online because they were cheaper. Unfortunately, the delivery arrived two days late.",
-                    "question": "Why did the speaker buy online?",
-                    "options": [
-                            "Faster delivery",
-                            "Lower price",
-                            "Better colour",
-                            "Free return"
-                    ],
-                    "answer": 1
-            },
-            {
-                    "id": "s3-06",
-                    "stage": 3,
-                    "audienceGroup": "THCS",
-                    "audienceDetail": "Trung bình–khá",
-                    "title": "Hỏi đường",
-                    "sourceUrl": "https://loigiaihay.com/tieng-anh-8-unit-1-skills-2-a134923.html",
-                    "sourceSection": "Listen to an interview with Mark about his leisure activities",
-                    "audioUrl": "assets/audio/listening/stage-3/listening-s3-06.mp3",
-                    "recordingScript": "Tourist: Excuse me, is the museum far from here? Local: Not really. Take bus twelve for three stops, then walk past the post office. The museum is opposite the park.",
-                    "question": "Where is the museum?",
-                    "options": [
-                            "Behind the post office",
-                            "Opposite the park",
-                            "Next to the bus station",
-                            "Inside the park"
-                    ],
-                    "answer": 1
-            },
-            {
-                    "id": "s4-01",
-                    "stage": 4,
-                    "audienceGroup": "THCS",
-                    "audienceDetail": "Nâng cao / ôn vào 10",
-                    "title": "Vấn đề giao thông",
-                    "sourceUrl": "https://loigiaihay.com/unit-10-planet-earth-e35275.html",
-                    "sourceSection": "Skills 2 – listen to a conversation, choose A/B/C, then complete a one-word summary",
-                    "audioUrl": "assets/audio/listening/stage-4/listening-s4-01.mp3",
-                    "recordingScript": "Riverside has become much busier in the last five years. More people now own private cars, while several narrow roads have not been widened. Traffic is worst between seven and eight in the morning. The city plans to add two bus routes and improve the main junction before the end of the year.",
-                    "question": "What is one main cause of the traffic problem?",
-                    "options": [
-                            "Fewer residents",
-                            "Too many new parks",
-                            "More private cars on narrow roads",
-                            "A lack of schools"
-                    ],
-                    "answer": 2
-            },
-            {
-                    "id": "s4-02",
-                    "stage": 4,
-                    "audienceGroup": "THCS",
-                    "audienceDetail": "Nâng cao / ôn vào 10",
-                    "title": "Ô nhiễm nước",
-                    "sourceUrl": "https://loigiaihay.com/tieng-anh-8-unit-7-skills-2-a141336.html",
-                    "sourceSection": "Listen to a talk about water pollution",
-                    "audioUrl": "assets/audio/listening/stage-4/listening-s4-02.mp3",
-                    "recordingScript": "A small river near the town used to be clean enough for fishing. Recently, residents noticed plastic waste and dirty water entering it after heavy rain. The local council is checking nearby drains and asking shops to reduce single-use packaging. Volunteers will also clean the riverbank next Saturday.",
-                    "question": "What is the council doing?",
-                    "options": [
-                            "Closing all shops",
-                            "Checking drains and reducing waste",
-                            "Building a new river",
-                            "Stopping volunteers"
-                    ],
-                    "answer": 1
-            },
-            {
-                    "id": "s4-03",
-                    "stage": 4,
-                    "audienceGroup": "THCS",
-                    "audienceDetail": "Nâng cao / ôn vào 10",
-                    "title": "Ưu nhược điểm mua online",
-                    "sourceUrl": "https://loigiaihay.com/tieng-anh-8-unit-8-skills-2-a142616.html",
-                    "sourceSection": "Listen to a talk about online shopping",
-                    "audioUrl": "assets/audio/listening/stage-4/listening-s4-03.mp3",
-                    "recordingScript": "Online shopping can save time because customers compare products without travelling between stores. However, photographs do not always show the exact size or colour of an item. Returning a product can also take several days, especially when the seller is in another city.",
-                    "question": "What disadvantage is mentioned?",
-                    "options": [
-                            "Customers cannot compare prices",
-                            "Returns may take time",
-                            "Online stores close early",
-                            "Delivery is always expensive"
-                    ],
-                    "answer": 1
-            },
-            {
-                    "id": "s4-04",
-                    "stage": 4,
-                    "audienceGroup": "THCS",
-                    "audienceDetail": "Nâng cao / ôn vào 10",
-                    "title": "Người giúp ích cộng đồng",
-                    "sourceUrl": "https://loigiaihay.com/tieng-anh-9-unit-1-skills-2-a156628.html",
-                    "sourceSection": "Listen and fill in each blank – My Favourite Community Helper",
-                    "audioUrl": "assets/audio/listening/stage-4/listening-s4-04.mp3",
-                    "recordingScript": "Every evening, Mr Long checks the recycling bins in our apartment block. He is not paid for this work. He separates bottles and paper that people put in the wrong place and reminds children why recycling matters. Because of his effort, the building now sends much less mixed rubbish to landfill.",
-                    "question": "Why is Mr Long important to the community?",
-                    "options": [
-                            "He owns the apartment block",
-                            "He helps improve recycling habits",
-                            "He sells bottles to children",
-                            "He collects rent"
-                    ],
-                    "answer": 1
-            },
-            {
-                    "id": "s4-05",
-                    "stage": 4,
-                    "audienceGroup": "THCS",
-                    "audienceDetail": "Nâng cao / ôn vào 10",
-                    "title": "Chương trình lễ hội",
-                    "sourceUrl": "https://loigiaihay.com/tieng-anh-8-unit-5-skills-2-a141799.html",
-                    "sourceSection": "Listen to part of the programme “Charming Viet Nam”",
-                    "audioUrl": "assets/audio/listening/stage-4/listening-s4-05.mp3",
-                    "recordingScript": "The Moon River Festival begins at four on Saturday afternoon with a traditional music performance. The boat race starts at five thirty, followed by a food market at seven. Because rain is expected late in the evening, the outdoor film has been moved from nine o'clock to eight fifteen.",
-                    "question": "Which event changed time?",
-                    "options": [
-                            "The music performance",
-                            "The boat race",
-                            "The food market",
-                            "The outdoor film"
-                    ],
-                    "answer": 3
-            },
-            {
-                    "id": "s4-06",
-                    "stage": 4,
-                    "audienceGroup": "THCS",
-                    "audienceDetail": "Nâng cao / ôn vào 10",
-                    "title": "Dự án môi trường trường học",
-                    "sourceUrl": "https://loigiaihay.com/tieng-anh-8-unit-7-skills-2-a141336.html",
-                    "sourceSection": "Listen to a talk about water pollution",
-                    "audioUrl": "assets/audio/listening/stage-4/listening-s4-06.mp3",
-                    "recordingScript": "Students at Hoa Binh School measured how much plastic their canteen threw away for one week. They found that drink cups were the biggest source of waste. The school then introduced reusable cups with a small deposit. After one month, plastic cup waste had fallen by more than half.",
-                    "question": "What action reduced the waste?",
-                    "options": [
-                            "Closing the canteen",
-                            "Charging more for food",
-                            "Introducing reusable cups",
-                            "Removing all drinks"
-                    ],
-                    "answer": 2
-            },
-            {
-                    "id": "s5-01",
-                    "stage": 5,
-                    "audienceGroup": "THPT",
-                    "audienceDetail": "Lớp 10–12",
-                    "title": "Ba góc nhìn về thành phố",
-                    "sourceUrl": "https://loigiaihay.com/tieng-anh-11-bright-unit-1-1c-listening-a138328.html",
-                    "sourceSection": "Listen to a radio interview and choose the best answer",
-                    "audioUrl": "assets/audio/listening/stage-5/listening-s5-01.mp3",
-                    "recordingScript": "Presenter: We asked three teenagers what would improve their cities. Minh wants buses to run later because he studies at the library in the evening. Sofia wants more public sports spaces instead of another shopping centre. Daniel says his city already has good facilities, but cycling feels unsafe because there are few protected bike lanes.",
-                    "question": "Which speaker is mainly concerned about road safety?",
-                    "options": [
-                            "Minh",
-                            "Sofia",
-                            "Daniel",
-                            "The presenter"
-                    ],
-                    "answer": 2
-            },
-            {
-                    "id": "s5-02",
-                    "stage": 5,
-                    "audienceGroup": "THPT",
-                    "audienceDetail": "Lớp 10–12",
-                    "title": "Chiến lược học từ vựng",
-                    "sourceUrl": "https://loigiaihay.com/tieng-anh-12-bright-unit-1-1c-listening-a156154.html",
-                    "sourceSection": "Listen and complete the sentences with NO MORE THAN TWO WORDS",
-                    "audioUrl": "assets/audio/listening/stage-5/listening-s5-02.mp3",
-                    "recordingScript": "When Linh meets an unfamiliar English word, she does not immediately translate it. First, she reads the sentences around it and predicts a possible meaning. Then she checks a learner's dictionary for meaning, pronunciation, and an example sentence. At the end of the week, she reviews only the words she has actually seen several times.",
-                    "question": "Why does Linh read the surrounding sentences first?",
-                    "options": [
-                            "To translate every sentence",
-                            "To guess the word from context",
-                            "To avoid using a dictionary forever",
-                            "To memorise pronunciation"
-                    ],
-                    "answer": 1
-            },
-            {
-                    "id": "s5-03",
-                    "stage": 5,
-                    "audienceGroup": "THPT",
-                    "audienceDetail": "Lớp 10–12",
-                    "title": "Kinh nghiệm học ngoại ngữ",
-                    "sourceUrl": "https://loigiaihay.com/tieng-anh-12-bright-unit-3-3c-listening-a156171.html",
-                    "sourceSection": "Listen to a TV commentator and fill in a table",
-                    "audioUrl": "assets/audio/listening/stage-5/listening-s5-03.mp3",
-                    "recordingScript": "Speaker one became confident in English after joining an online gaming group. Speaker two studied grammar for years but only began speaking comfortably after travelling abroad. Speaker three learns languages through songs and podcasts, while speaker four prefers regular conversations with one language partner. Their methods differ, but all four say frequent exposure matters more than occasional long study sessions.",
-                    "question": "What do all four speakers broadly agree on?",
-                    "options": [
-                            "Grammar should be avoided",
-                            "Travel is necessary",
-                            "Regular contact with the language matters",
-                            "Music is the best method"
-                    ],
-                    "answer": 2
-            },
-            {
-                    "id": "s5-04",
-                    "stage": 5,
-                    "audienceGroup": "THPT",
-                    "audienceDetail": "Lớp 10–12",
-                    "title": "Đánh giá một câu chuyện lan truyền",
-                    "sourceUrl": "https://loigiaihay.com/tieng-anh-12-bright-unit-5-5c-listening-a158194.html",
-                    "sourceSection": "Listen to a talk and answer questions with short answers",
-                    "audioUrl": "assets/audio/listening/stage-5/listening-s5-04.mp3",
-                    "recordingScript": "A story may spread widely online because it is surprising, not because it is accurate. Before repeating a dramatic claim, Dr Evans suggests checking where it first appeared, whether reliable organisations report the same event, and whether the pictures actually come from the place and date described. A familiar story can still be false if nobody checks the evidence.",
-                    "question": "What is the speaker's main advice?",
-                    "options": [
-                            "Share surprising stories quickly",
-                            "Trust familiar stories",
-                            "Check evidence before repeating a claim",
-                            "Avoid all online information"
-                    ],
-                    "answer": 2
-            },
-            {
-                    "id": "s5-05",
-                    "stage": 5,
-                    "audienceGroup": "THPT",
-                    "audienceDetail": "Lớp 10–12",
-                    "title": "Multitasking và sự tập trung",
-                    "sourceUrl": "https://loigiaihay.com/tieng-anh-12-bright-unit-3-3c-listening-a156171.html",
-                    "sourceSection": "Listen to a TV commentator and fill in a table",
-                    "audioUrl": "assets/audio/listening/stage-5/listening-s5-05.mp3",
-                    "recordingScript": "Students often believe that switching between homework and messages helps them finish more tasks. Research suggests the opposite can happen. Each switch requires the brain to reorient attention, which takes a small amount of time. Those delays seem unimportant, but repeated many times they can increase mistakes and make difficult work take longer.",
-                    "question": "What is the main conclusion?",
-                    "options": [
-                            "Messages improve homework accuracy",
-                            "Task switching can reduce efficiency",
-                            "Short delays never matter",
-                            "Difficult work should be avoided"
-                    ],
-                    "answer": 1
-            },
-            {
-                    "id": "s5-06",
-                    "stage": 5,
-                    "audienceGroup": "THPT",
-                    "audienceDetail": "Lớp 10–12",
-                    "title": "Suy luận từ lập luận",
-                    "sourceUrl": "https://loigiaihay.com/tieng-anh-11-bright-unit-1-1c-listening-a138328.html",
-                    "sourceSection": "Listen to a radio interview and choose the best answer",
-                    "audioUrl": "assets/audio/listening/stage-5/listening-s5-06.mp3",
-                    "recordingScript": "A school is considering a complete ban on phones during the day. Supporters say fewer notifications could improve concentration. Other teachers agree about lessons but argue that students should still be allowed to use phones during lunch for practical reasons, such as contacting family about transport. The debate is therefore not simply about whether phones are good or bad, but about when their use is appropriate.",
-                    "question": "Which statement best summarises the discussion?",
-                    "options": [
-                            "Everyone supports a total ban",
-                            "Teachers think phones are always useful",
-                            "The key issue is when phone use should be allowed",
-                            "Students only use phones for transport"
-                    ],
-                    "answer": 2
-            }
-    ];
+    const LISTENING_CURRICULUM = window.LDD_LISTENING_CURRICULUM || { tracks: {}, exercises: [] };
 
     const PLACEMENT_TESTS = {
-        listening: [
-            {
-                stage: 1,
-                type: 'listening',
-                sourceUrl: 'https://loigiaihay.com/bai-tap-170170.html',
-                sourceLabel: 'Tham khảo dạng bài: Loigiaihay.com',
-                audioUrl: 'assets/audio/skill-placement/listening-stage-1.mp3',
-                question: 'What colour is Mia\'s notebook?',
-                options: ['Blue', 'Red', 'Green', 'Black'],
-                answer: 1,
-                rate: 0.9
-            },
-            {
-                stage: 2,
-                type: 'listening',
-                sourceUrl: 'https://loigiaihay.com/skills-2-trang-23-unit-8-sgk-tieng-anh-8-moi-c138a22862.html',
-                sourceLabel: 'Tham khảo dạng bài: Loigiaihay.com',
-                audioUrl: 'assets/audio/skill-placement/listening-stage-2.mp3',
-                question: 'What time does the English club start?',
-                options: ['7:00', '7:15', '7:30', '7:45'],
-                answer: 1,
-                rate: 0.95
-            },
-            {
-                stage: 3,
-                type: 'listening',
-                sourceUrl: 'https://loigiaihay.com/bai-tap-92711.html',
-                sourceLabel: 'Tham khảo dạng bài: Loigiaihay.com',
-                audioUrl: 'assets/audio/skill-placement/listening-stage-3.mp3',
-                question: 'What did Nam finally do after school?',
-                options: ['Played football', 'Went home immediately', 'Worked in the library', 'Visited a science museum'],
-                answer: 2,
-                rate: 1
-            },
-            {
-                stage: 4,
-                type: 'listening',
-                sourceUrl: 'https://loigiaihay.com/bai-tap-170350.html',
-                sourceLabel: 'Tham khảo dạng bài: Loigiaihay.com',
-                audioUrl: 'assets/audio/skill-placement/listening-stage-4.mp3',
-                question: 'Why were the students still able to see all the planned exhibitions?',
-                options: ['The bus arrived early', 'The museum stayed open longer', 'They cancelled lunch', 'The tour started the next day'],
-                answer: 1,
-                rate: 1.02
-            },
-            {
-                stage: 5,
-                type: 'listening',
-                sourceUrl: 'https://loigiaihay.com/tieng-anh-12-bright-unit-3-3c-listening-a156171.html',
-                sourceLabel: 'Tham khảo dạng bài THPT: Loigiaihay.com',
-                audioUrl: 'assets/audio/skill-placement/listening-stage-5.mp3',
-                question: 'What is the main point of the recording?',
-                options: ['Multitasking always saves time', 'Task switching can reduce efficiency', 'Accuracy improves with more tasks', 'Demanding work should be avoided'],
-                answer: 1,
-                rate: 1.04
-            }
-        ],
+        listening: [],
         reading: [
             {
                 stage: 1,
@@ -1290,6 +622,10 @@
     }
 
     function renderHub(skill) {
+        if (skill === 'listening') {
+            renderListeningHub();
+            return;
+        }
         const config = SKILLS[skill];
         const state = getSkillState(skill);
         const hub = hubs[skill];
@@ -1436,6 +772,12 @@
     }
 
     function openStage(skill, stageNumber) {
+        if (skill === 'listening') {
+            const state = getSkillState('listening');
+            const trackId = state.audience === 'thcs' ? 'thcs' : 'foundation';
+            openListeningLab(trackId, stageNumber);
+            return;
+        }
         const config = SKILLS[skill];
         const stage = config.stages[stageNumber - 1];
         const hub = hubs[skill];
@@ -1858,6 +1200,7 @@
     }
 
 
+
     function buildListeningLab() {
         const tab = document.getElementById(SKILLS.listening.tabId);
         if (!tab) return;
@@ -1869,31 +1212,334 @@
         labs.listening = panel;
     }
 
-    function listeningItemsForStage(stageNumber) {
-        return LISTENING_PRACTICE_BANK.filter(item => Number(item.stage) === Number(stageNumber));
+    function listeningTrackId() {
+        const state = getSkillState('listening');
+        return state.audience === 'thcs' ? 'thcs' : 'foundation';
     }
 
-    function openListeningLab(stageNumber) {
+    function ensureListeningTrackProgress(trackId) {
+        const state = getSkillState('listening');
+        if (!state.listeningTracks || typeof state.listeningTracks !== 'object') state.listeningTracks = {};
+        if (!state.listeningTracks[trackId]) {
+            state.listeningTracks[trackId] = { current: 1, completed: [] };
+        }
+        const progress = state.listeningTracks[trackId];
+        if (!Array.isArray(progress.completed)) progress.completed = [];
+        const track = LISTENING_CURRICULUM.tracks[trackId];
+        const maxStage = track && track.stages ? track.stages.length : 1;
+        progress.current = Math.min(maxStage, Math.max(1, Number(progress.current) || 1));
+        progress.completed = progress.completed
+            .map(Number)
+            .filter(number => number >= 1 && number <= maxStage)
+            .filter((number, index, array) => array.indexOf(number) === index)
+            .sort((a, b) => a - b);
+        return progress;
+    }
+
+    function listeningStageExercises(trackId, stageNumber) {
+        return (LISTENING_CURRICULUM.exercises || []).filter(item =>
+            item.track === trackId && Number(item.stage) === Number(stageNumber)
+        );
+    }
+
+    function renderListeningHub() {
+        const hub = hubs.listening;
+        if (!hub) return;
+        const state = getSkillState('listening');
+        if (state.audience !== 'foundation' && state.audience !== 'thcs') state.audience = 'foundation';
+        const trackId = listeningTrackId();
+        const track = LISTENING_CURRICULUM.tracks[trackId];
+        if (!track) {
+            hub.innerHTML = '<div class="ldd-lab-feedback is-review">Chưa tải được chương trình Luyện Nghe. Hãy tải lại trang.</div>';
+            return;
+        }
+        const progress = ensureListeningTrackProgress(trackId);
+        const done = progress.completed.length;
+        const total = track.stages.length;
+        const current = Math.min(total, Math.max(1, progress.current || 1));
+
+        hub.innerHTML =
+            '<div class="ldd-skill-hero is-compact">' +
+                '<div class="ldd-skill-identity">' +
+                    '<span class="ldd-skill-icon">' + iconSvg('headphones') + '</span>' +
+                    '<div class="ldd-skill-copy"><span class="ldd-skill-eyebrow">Listening Lab</span><h2>Luyện Nghe</h2>' +
+                    '<p>Hai lộ trình tách hẳn nhau. THCS bị mất gốc hãy học track Mất gốc/người mới trước.</p></div>' +
+                '</div>' +
+                '<div class="ldd-skill-summary"><div class="ldd-skill-stat"><strong>' + done + '/' + total + '</strong><span>giai đoạn đã đạt</span></div></div>' +
+            '</div>' +
+
+            '<section class="ldd-listening-track-picker">' +
+                '<span class="ldd-control-label">Chọn đúng lộ trình</span>' +
+                '<div class="ldd-listening-track-options">' +
+                    '<button type="button" class="ldd-listening-track-option' + (trackId === 'foundation' ? ' is-active' : '') + '" data-listening-track="foundation">' +
+                        '<strong>Mất gốc / người mới</strong><span>Nền tảng lớp 1 → lớp 5 · 5 giai đoạn · 50 bài</span>' +
+                    '</button>' +
+                    '<button type="button" class="ldd-listening-track-option' + (trackId === 'thcs' ? ' is-active' : '') + '" data-listening-track="thcs">' +
+                        '<strong>THCS</strong><span>Lớp 6 → lớp 9 · 4 giai đoạn · 40 bài</span>' +
+                    '</button>' +
+                '</div>' +
+                '<div class="ldd-listening-track-warning"><strong>Quan trọng:</strong> học sinh đang học THCS nhưng mất gốc vẫn chọn <b>Mất gốc / người mới</b>. Hai track không dùng chung bài.</div>' +
+            '</section>' +
+
+            '<section class="ldd-listening-track-head">' +
+                '<div><span class="ldd-control-label">Lộ trình đang chọn</span><h3>' + track.label + '</h3><p>' + track.note + '</p></div>' +
+                '<button type="button" class="ldd-roadmap-btn is-primary" data-listening-continue>Tiếp tục Giai đoạn ' + current + ' →</button>' +
+            '</section>' +
+
+            '<div class="ldd-roadmap-progress">' +
+                '<div class="ldd-progress-copy"><span>Tiến độ ' + track.label + '</span><span>' + done + ' / ' + total + '</span></div>' +
+                '<div class="ldd-progress-track"><span style="width:' + (total ? Math.round(done / total * 100) : 0) + '%"></span></div>' +
+            '</div>' +
+
+            '<ol class="ldd-stage-list ldd-listening-stage-list">' +
+                track.stages.map(stage => {
+                    const complete = progress.completed.includes(stage.stage);
+                    const isCurrent = current === stage.stage;
+                    const count = listeningStageExercises(trackId, stage.stage).length;
+                    return '<li class="ldd-stage-card' + (complete ? ' is-complete' : '') + (isCurrent ? ' is-current' : '') + '">' +
+                        '<span class="ldd-stage-number">' + (complete ? iconSvg('check') : stage.stage) + '</span>' +
+                        '<div class="ldd-stage-copy">' +
+                            '<div class="ldd-stage-topline"><span class="ldd-stage-kicker">Giai đoạn ' + stage.stage + '</span>' +
+                                '<span class="ldd-stage-badge is-grade">' + stage.grade + '</span>' +
+                                (complete ? '<span class="ldd-stage-badge is-done">Đã đạt</span>' : '') +
+                            '</div>' +
+                            '<h3>' + stage.title + '</h3><p>' + stage.description + '</p>' +
+                            '<div class="ldd-stage-audiences"><span>' + count + ' bài tập</span><span>MP3 giáo viên tự thu</span></div>' +
+                        '</div>' +
+                        '<button type="button" class="ldd-stage-open" data-listening-stage="' + stage.stage + '">' + (complete ? 'Luyện lại' : 'Bắt đầu') + ' →</button>' +
+                    '</li>';
+                }).join('') +
+            '</ol>';
+
+        hub.querySelectorAll('[data-listening-track]').forEach(button => {
+            button.addEventListener('click', function () {
+                const nextTrack = this.dataset.listeningTrack;
+                if (!LISTENING_CURRICULUM.tracks[nextTrack]) return;
+                state.audience = nextTrack;
+                ensureListeningTrackProgress(nextTrack);
+                saveState();
+                renderListeningHub();
+            });
+        });
+        hub.querySelector('[data-listening-continue]').addEventListener('click', () => openListeningLab(trackId, current));
+        hub.querySelectorAll('[data-listening-stage]').forEach(button => {
+            button.addEventListener('click', () => openListeningLab(trackId, Number(button.dataset.listeningStage)));
+        });
+    }
+
+    function normalizeListeningText(value) {
+        return String(value || '')
+            .toLowerCase()
+            .replace(/[’‘]/g, "'")
+            .replace(/[^a-z0-9'\s]/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+
+    function escapeListening(value) {
+        return String(value == null ? '' : value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function listeningSourceHtml(item) {
+        if (!item.source || !item.source.url) return '';
+        return '<details class="ldd-listening-source-details"><summary>Nguồn mẫu cho giáo viên</summary>' +
+            '<a href="' + escapeListening(item.source.url) + '" target="_blank" rel="noopener noreferrer">Mở Loigiaihay ↗</a>' +
+            '<p>' + escapeListening(item.source.section || '') + '</p>' +
+            '<p><b>MP3 cần thu:</b> <code>' + escapeListening(item.audioUrl) + '</code></p>' +
+            '</details>';
+    }
+
+    function listeningAudioHtml(item, trackId, stageNumber) {
+        const maxPlays = trackId === 'foundation' && stageNumber <= 3 ? 3 : 2;
+        return '<div class="ldd-listening-audio-card">' +
+            '<audio controls preload="metadata" data-listening-audio src="' + escapeListening(item.audioUrl) + '"></audio>' +
+            '<div class="ldd-placement-audio-missing" data-listening-audio-missing hidden>' +
+                '<strong>🎧 Chưa có MP3</strong><span>Giáo viên thu và thêm file: <code>' + escapeListening(item.audioUrl) + '</code></span>' +
+            '</div>' +
+            '<small>Được nghe tối đa ' + maxPlays + ' lần.</small>' +
+        '</div>';
+    }
+
+    function attachListeningAudioLimit(host, trackId, stageNumber) {
+        const audio = host.querySelector('[data-listening-audio]');
+        const missing = host.querySelector('[data-listening-audio-missing]');
+        if (!audio) return;
+        const maxPlays = trackId === 'foundation' && stageNumber <= 3 ? 3 : 2;
+        let plays = 0;
+        audio.addEventListener('error', function () {
+            audio.hidden = true;
+            if (missing) missing.hidden = false;
+        });
+        audio.addEventListener('loadedmetadata', function () {
+            audio.hidden = false;
+            if (missing) missing.hidden = true;
+        });
+        audio.addEventListener('play', function () {
+            if (audio.currentTime < 0.35) plays++;
+            if (plays > maxPlays) {
+                audio.pause();
+                audio.currentTime = 0;
+                audio.controls = false;
+                if (missing) {
+                    missing.hidden = false;
+                    missing.innerHTML = '<strong>✓ Đã nghe đủ ' + maxPlays + ' lần</strong><span>Hãy hoàn thành bài tập bằng những gì bạn đã nghe.</span>';
+                }
+            }
+        });
+    }
+
+    function renderSpellingTask(item) {
+        if (item.mode === 'spell_order') {
+            const display = item.words.slice().sort((a, b) => a.localeCompare(b));
+            return '<p class="ldd-listening-instruction">Nghe chuỗi từ được đánh vần rồi bấm các từ theo đúng thứ tự.</p>' +
+                '<div class="ldd-listening-word-bank" data-spell-order-bank>' +
+                    display.map(word => '<button type="button" data-spell-order-word="' + escapeListening(word) + '">' + escapeListening(word) + '</button>').join('') +
+                '</div><div class="ldd-listening-order-answer" data-spell-order-answer>Chưa chọn từ nào.</div>';
+        }
+        if (item.mode === 'spell_numbered') {
+            return '<p class="ldd-listening-instruction">Nghe các từ được đánh vần. Điền đúng từ vào từng số.</p>' +
+                '<div class="ldd-listening-word-bank is-static">' + item.bank.map(word => '<span>' + escapeListening(word) + '</span>').join('') + '</div>' +
+                '<div class="ldd-listening-fill-grid">' + item.words.map((_,i) =>
+                    '<label><span>' + (i + 1) + '</span><input type="text" autocomplete="off" data-spell-number="' + i + '" placeholder="word ' + (i + 1) + '"></label>'
+                ).join('') + '</div>';
+        }
+        if (item.mode === 'spell_tick') {
+            return '<p class="ldd-listening-instruction">Nghe chuỗi đánh vần rồi tick tất cả các từ bạn nghe thấy.</p>' +
+                '<div class="ldd-listening-check-grid">' + item.options.map(word =>
+                    '<label><input type="checkbox" data-spell-tick="' + escapeListening(word) + '"><span>' + escapeListening(word) + '</span></label>'
+                ).join('') + '</div>';
+        }
+        return '<p class="ldd-listening-instruction">' +
+            (item.mode === 'whole_word' ? 'Nghe nguyên từ, không có đánh vần. Gõ chính xác từ bạn nghe được.' : 'Nghe từng chữ cái được đánh vần rồi gõ lại từ hoàn chỉnh.') +
+            '</p><input class="ldd-listening-text-input" type="text" autocomplete="off" data-spell-single placeholder="Type the word...">';
+    }
+
+    function renderQaTranscribe(item, withChoice) {
+        return '<p class="ldd-listening-instruction">Nghe và gõ lại chính xác câu hỏi và câu trả lời. Không chấm dấu câu/viết hoa.</p>' +
+            '<div class="ldd-listening-transcribe-grid">' +
+                '<label><span>Câu hỏi</span><input type="text" autocomplete="off" data-qa-question placeholder="What...?"></label>' +
+                '<label><span>Câu trả lời</span><input type="text" autocomplete="off" data-qa-answer placeholder="..."></label>' +
+            '</div>' +
+            (withChoice ? '<div class="ldd-listening-followup"><h5>Chọn câu tiếp theo phù hợp nhất để cuộc hội thoại tiếp tục tự nhiên:</h5><div class="ldd-reading-answers">' +
+                item.options.map((option,index) => '<button type="button" data-followup="' + index + '">' + escapeListening(option) + '</button>').join('') +
+            '</div></div>' : '');
+    }
+
+    function renderDialogueGap(item) {
+        const blanks = new Set(item.blankIndices || []);
+        let blankNo = 0;
+        return '<p class="ldd-listening-instruction">Nghe đoạn hội thoại dưới 30 giây. Hai câu đã bị ẩn; hãy gõ lại đúng nội dung.</p>' +
+            '<div class="ldd-listening-dialogue">' + item.dialogue.map((line,index) => {
+                if (!blanks.has(index)) return '<p>' + escapeListening(line) + '</p>';
+                const speaker = line.match(/^([AB]):/) ? line.match(/^([AB]):/)[1] : '';
+                const current = blankNo++;
+                return '<label class="ldd-listening-dialogue-gap"><span>' + (speaker ? speaker + ':' : 'Câu ' + (current + 1)) + '</span><input type="text" autocomplete="off" data-dialogue-gap="' + current + '" placeholder="Gõ câu bạn nghe được..."></label>';
+            }).join('') + '</div>';
+    }
+
+    function renderMcqSet(item) {
+        return '<p class="ldd-listening-instruction">Nghe toàn bộ bài rồi trả lời các câu hỏi.</p>' +
+            '<div class="ldd-listening-mcq-set">' + item.questions.map((question,qIndex) =>
+                '<section class="ldd-listening-mcq-question"><h5>Câu ' + (qIndex + 1) + '. ' + escapeListening(question.text) + '</h5><div class="ldd-reading-answers">' +
+                    question.options.map((option,aIndex) => '<button type="button" data-listening-q="' + qIndex + '" data-listening-a="' + aIndex + '">' + escapeListening(option) + '</button>').join('') +
+                '</div></section>'
+            ).join('') + '</div>';
+    }
+
+    function gradeListeningExercise(item, host) {
+        if (item.type === 'spelling') {
+            if (item.mode === 'spell_order') {
+                const chosen = Array.from(host.querySelectorAll('[data-spell-order-answer] [data-chosen-word]')).map(node => node.dataset.chosenWord);
+                const ok = chosen.length === item.words.length && chosen.every((word,index) => normalizeListeningText(word) === normalizeListeningText(item.words[index]));
+                return { score: ok ? 100 : 0, detail: ok ? 'Đúng thứ tự.' : 'Thứ tự chưa đúng.' };
+            }
+            if (item.mode === 'spell_numbered') {
+                const values = Array.from(host.querySelectorAll('[data-spell-number]')).map(input => normalizeListeningText(input.value));
+                const correct = item.words.filter((word,index) => values[index] === normalizeListeningText(word)).length;
+                return { score: Math.round(correct / item.words.length * 100), detail: 'Đúng ' + correct + '/' + item.words.length + ' từ.' };
+            }
+            if (item.mode === 'spell_tick') {
+                const selected = Array.from(host.querySelectorAll('[data-spell-tick]:checked')).map(input => normalizeListeningText(input.dataset.spellTick)).sort();
+                const expected = item.heard.map(normalizeListeningText).sort();
+                const ok = selected.length === expected.length && selected.every((word,index) => word === expected[index]);
+                return { score: ok ? 100 : 0, detail: ok ? 'Tick đúng toàn bộ từ.' : 'Danh sách từ được tick chưa chính xác.' };
+            }
+            const value = normalizeListeningText((host.querySelector('[data-spell-single]') || {}).value);
+            const ok = value === normalizeListeningText(item.expected);
+            return { score: ok ? 100 : 0, detail: ok ? 'Chính xác.' : 'Từ nghe được chưa đúng.' };
+        }
+
+        if (item.type === 'qa_transcribe' || item.type === 'qa_choice') {
+            const q = normalizeListeningText((host.querySelector('[data-qa-question]') || {}).value);
+            const a = normalizeListeningText((host.querySelector('[data-qa-answer]') || {}).value);
+            let parts = 2;
+            let correct = (q === normalizeListeningText(item.expectedQuestion) ? 1 : 0) + (a === normalizeListeningText(item.expectedAnswer) ? 1 : 0);
+            if (item.type === 'qa_choice') {
+                parts++;
+                const selected = host.querySelector('[data-followup].is-selected');
+                if (selected && Number(selected.dataset.followup) === Number(item.answer)) correct++;
+            }
+            return { score: Math.round(correct / parts * 100), detail: 'Đúng ' + correct + '/' + parts + ' phần.' };
+        }
+
+        if (item.type === 'dialogue_gap') {
+            const values = Array.from(host.querySelectorAll('[data-dialogue-gap]')).map(input => normalizeListeningText(input.value));
+            const correct = item.expectedBlanks.filter((line,index) => values[index] === normalizeListeningText(line)).length;
+            return { score: Math.round(correct / item.expectedBlanks.length * 100), detail: 'Điền đúng ' + correct + '/' + item.expectedBlanks.length + ' câu.' };
+        }
+
+        if (item.type === 'mcq_set') {
+            let correct = 0;
+            item.questions.forEach((question,qIndex) => {
+                const selected = host.querySelector('[data-listening-q="' + qIndex + '"].is-selected');
+                if (selected && Number(selected.dataset.listeningA) === Number(question.answer)) correct++;
+            });
+            return { score: Math.round(correct / item.questions.length * 100), detail: 'Đúng ' + correct + '/' + item.questions.length + ' câu.' };
+        }
+
+        return { score: 0, detail: 'Chưa hỗ trợ dạng bài này.' };
+    }
+
+    function openListeningLab(trackId, stageNumber) {
         const panel = labs.listening;
-        const stage = SKILLS.listening.stages[stageNumber - 1];
-        const exercises = listeningItemsForStage(stageNumber);
-        if (!panel || !stage || !exercises.length) {
+        const track = LISTENING_CURRICULUM.tracks[trackId];
+        const stage = track && track.stages ? track.stages.find(item => Number(item.stage) === Number(stageNumber)) : null;
+        const exercises = listeningStageExercises(trackId, stageNumber);
+        if (!panel || !track || !stage || exercises.length !== 10) {
             showHub('listening');
-            toast('Chưa có bài luyện nghe cho giai đoạn này.');
+            toast('Chưa tải đủ 10 bài của giai đoạn này.');
             return;
         }
 
-        const results = new Array(exercises.length).fill(null);
+        const state = getSkillState('listening');
+        state.audience = trackId;
+        const progress = ensureListeningTrackProgress(trackId);
+        progress.current = stageNumber;
+        saveState();
+
+        const scores = new Array(exercises.length).fill(null);
         let activeIndex = 0;
         panel.style.display = '';
         panel.hidden = false;
+        if (hubs.listening) hubs.listening.hidden = true;
 
         const renderShell = function () {
             panel.innerHTML =
                 '<div class="ldd-stage-lab-head">' +
-                    '<div class="ldd-stage-lab-title-wrap"><span class="ldd-stage-lab-index">' + stageNumber + '</span><div><h3>' + stage.title + '</h3><p class="ldd-stage-lab-subtitle">6 bài luyện · ' + exercises[0].audienceGroup + (exercises[0].audienceDetail ? ' · ' + exercises[0].audienceDetail : '') + ' · MP3 do giáo viên tự ghi</p></div></div>' +
+                    '<div class="ldd-stage-lab-title-wrap"><span class="ldd-stage-lab-index">' + stageNumber + '</span><div>' +
+                        '<span class="ldd-control-label">' + escapeListening(track.label) + ' · ' + escapeListening(stage.grade) + '</span>' +
+                        '<h3>' + escapeListening(stage.title) + '</h3><p class="ldd-stage-lab-subtitle">' + escapeListening(stage.description) + '</p>' +
+                    '</div></div>' +
                     '<button type="button" class="ldd-roadmap-btn" data-listening-back>← Lộ trình Nghe</button>' +
                 '</div>' +
+                (trackId === 'foundation' && stageNumber === 1
+                    ? '<div class="ldd-listening-difficulty-legend"><span class="is-easy">Dễ</span><span>Trung bình</span><span>Khá</span><span>Khó</span><span class="is-hell">💀 Địa ngục</span></div>'
+                    : '') +
                 '<div class="ldd-listening-bank">' +
                     '<div class="ldd-listening-lesson-list" data-listening-list></div>' +
                     '<div class="ldd-listening-exercise" data-listening-exercise></div>' +
@@ -1907,11 +1553,12 @@
 
         const renderList = function () {
             const list = panel.querySelector('[data-listening-list]');
-            if (!list) return;
-            list.innerHTML = exercises.map((item, index) =>
-                '<button type="button" class="ldd-listening-lesson' + (index === activeIndex ? ' is-active' : '') + (results[index] === true ? ' is-done' : results[index] === false ? ' is-wrong' : '') + '" data-listening-index="' + index + '">' +
+            list.innerHTML = exercises.map((item,index) =>
+                '<button type="button" class="ldd-listening-lesson' + (index === activeIndex ? ' is-active' : '') + (scores[index] !== null && scores[index] >= 80 ? ' is-done' : scores[index] !== null ? ' is-wrong' : '') + '" data-listening-index="' + index + '">' +
                     '<span class="ldd-listening-lesson-no">' + String(index + 1).padStart(2, '0') + '</span>' +
-                    '<span><strong>' + item.title + '</strong><span class="ldd-listening-audience-badge">' + item.audienceGroup + (item.audienceDetail ? ' · ' + item.audienceDetail : '') + '</span><small>' + (results[index] === null ? 'Chưa làm' : results[index] ? 'Đúng' : 'Cần làm lại') + '</small></span>' +
+                    '<span><strong>' + escapeListening(item.title) + '</strong>' +
+                    (item.difficulty ? '<span class="ldd-listening-audience-badge">' + escapeListening(item.difficulty) + '</span>' : '') +
+                    '<small>' + (scores[index] === null ? 'Chưa làm' : scores[index] + '/100') + '</small></span>' +
                 '</button>'
             ).join('');
             list.querySelectorAll('[data-listening-index]').forEach(button => {
@@ -1926,91 +1573,86 @@
         const renderExercise = function (index) {
             const item = exercises[index];
             const host = panel.querySelector('[data-listening-exercise]');
-            if (!item || !host) return;
-            let selected = null;
-            let plays = 0;
+            let taskHtml = '';
+            if (item.type === 'spelling') taskHtml = renderSpellingTask(item);
+            else if (item.type === 'qa_transcribe') taskHtml = renderQaTranscribe(item, false);
+            else if (item.type === 'qa_choice') taskHtml = renderQaTranscribe(item, true);
+            else if (item.type === 'dialogue_gap') taskHtml = renderDialogueGap(item);
+            else if (item.type === 'mcq_set') taskHtml = renderMcqSet(item);
+
             host.innerHTML =
-                '<div class="ldd-listening-exercise-top"><div><span class="ldd-control-label">Bài ' + (index + 1) + ' / ' + exercises.length + '</span><h4>' + item.title + '</h4><span class="ldd-listening-audience-badge is-large">' + item.audienceGroup + (item.audienceDetail ? ' · ' + item.audienceDetail : '') + '</span></div><span class="ldd-listening-progress-mini">' + results.filter(value => value !== null).length + '/' + exercises.length + ' đã làm</span></div>' +
-                '<div class="ldd-listening-audio-card">' +
-                    '<audio controls preload="metadata" data-listening-audio src="' + item.audioUrl + '"></audio>' +
-                    '<div class="ldd-placement-audio-missing" data-listening-audio-missing hidden><strong>🎧 Chưa có MP3</strong><span>File cần thêm: <code>' + item.audioUrl + '</code></span></div>' +
-                    '<small>Nghe tối đa 2 lần.</small>' +
-                '</div>' +
-                '<div class="ldd-listening-source">Tham khảo: <a href="' + item.sourceUrl + '" target="_blank" rel="noopener noreferrer">Loigiaihay.com ↗</a><span>' + item.sourceSection + '</span></div>' +
-                '<div class="ldd-listening-question"><h4>' + item.question + '</h4><div class="ldd-reading-answers">' +
-                    item.options.map((answer, answerIndex) => '<button type="button" class="ldd-reading-answer" data-listening-answer="' + answerIndex + '">' + answer + '</button>').join('') +
-                '</div></div>' +
-                '<div class="ldd-lab-actions"><button type="button" class="ldd-roadmap-btn is-primary" data-listening-submit>Kiểm tra</button></div>' +
-                '<div class="ldd-lab-feedback" data-listening-feedback hidden></div>';
+                '<div class="ldd-listening-exercise-top"><div><span class="ldd-control-label">Bài ' + (index + 1) + ' / 10</span><h4>' + escapeListening(item.title) + '</h4>' +
+                    '<span class="ldd-listening-audience-badge is-large">' + escapeListening(stage.grade) + (item.difficulty ? ' · ' + escapeListening(item.difficulty) : '') + '</span></div>' +
+                    '<span class="ldd-listening-progress-mini">' + scores.filter(value => value !== null).length + '/10 đã làm</span></div>' +
+                listeningAudioHtml(item, trackId, stageNumber) +
+                taskHtml +
+                '<div class="ldd-lab-actions"><button type="button" class="ldd-roadmap-btn is-primary" data-listening-submit>Kiểm tra bài này</button></div>' +
+                '<div class="ldd-lab-feedback" data-listening-feedback hidden></div>' +
+                listeningSourceHtml(item);
 
-            const audio = host.querySelector('[data-listening-audio]');
-            const missing = host.querySelector('[data-listening-audio-missing]');
-            audio.addEventListener('error', function () {
-                audio.hidden = true;
-                if (missing) missing.hidden = false;
-            });
-            audio.addEventListener('loadedmetadata', function () {
-                audio.hidden = false;
-                if (missing) missing.hidden = true;
-            });
-            audio.addEventListener('play', function () {
-                if (audio.currentTime < 0.35) plays++;
-                if (plays > 2) {
-                    audio.pause();
-                    audio.currentTime = 0;
-                    audio.controls = false;
-                    if (missing) {
-                        missing.hidden = false;
-                        missing.innerHTML = '<strong>✓ Đã nghe đủ 2 lần</strong><span>Hãy trả lời câu hỏi bên dưới.</span>';
-                    }
-                }
-            });
+            attachListeningAudioLimit(host, trackId, stageNumber);
 
-            host.querySelectorAll('[data-listening-answer]').forEach(button => {
+            const orderBank = host.querySelector('[data-spell-order-bank]');
+            const orderAnswer = host.querySelector('[data-spell-order-answer]');
+            if (orderBank && orderAnswer) {
+                const chosen = [];
+                orderBank.querySelectorAll('[data-spell-order-word]').forEach(button => {
+                    button.addEventListener('click', function () {
+                        if (this.disabled) return;
+                        chosen.push(this.dataset.spellOrderWord);
+                        this.disabled = true;
+                        orderAnswer.innerHTML = chosen.map((word,idx) =>
+                            '<span data-chosen-word="' + escapeListening(word) + '">' + (idx + 1) + '. ' + escapeListening(word) + '</span>'
+                        ).join('');
+                    });
+                });
+            }
+
+            host.querySelectorAll('[data-followup]').forEach(button => {
                 button.addEventListener('click', function () {
-                    selected = Number(this.dataset.listeningAnswer);
-                    host.querySelectorAll('[data-listening-answer]').forEach(node => node.classList.remove('is-selected'));
+                    host.querySelectorAll('[data-followup]').forEach(node => node.classList.remove('is-selected'));
+                    this.classList.add('is-selected');
+                });
+            });
+            host.querySelectorAll('[data-listening-q]').forEach(button => {
+                button.addEventListener('click', function () {
+                    const q = this.dataset.listeningQ;
+                    host.querySelectorAll('[data-listening-q="' + q + '"]').forEach(node => node.classList.remove('is-selected'));
                     this.classList.add('is-selected');
                 });
             });
 
             host.querySelector('[data-listening-submit]').addEventListener('click', function () {
-                if (selected === null) {
-                    toast('Bạn hãy chọn đáp án trước.');
-                    return;
-                }
-                const correct = selected === Number(item.answer);
-                results[index] = correct;
-                host.querySelectorAll('[data-listening-answer]').forEach(button => {
-                    const value = Number(button.dataset.listeningAnswer);
-                    button.disabled = true;
-                    if (value === Number(item.answer)) button.classList.add('is-correct');
-                    else if (value === selected) button.classList.add('is-wrong');
-                });
+                const result = gradeListeningExercise(item, host);
+                scores[index] = result.score;
                 const feedback = host.querySelector('[data-listening-feedback]');
                 feedback.hidden = false;
-                feedback.className = 'ldd-lab-feedback ' + (correct ? 'is-success' : 'is-review');
-                feedback.innerHTML = correct
-                    ? '<strong>✓ Chính xác.</strong>'
-                    : '<strong>Chưa đúng.</strong> Nghe lại bài này ở lượt luyện tiếp theo để bắt đúng từ khóa.';
+                feedback.className = 'ldd-lab-feedback ' + (result.score >= 80 ? 'is-success' : 'is-review');
+                feedback.innerHTML = '<span class="ldd-feedback-score">' + result.score + '/100</span><strong>' +
+                    (result.score >= 80 ? 'Đạt bài này.' : 'Chưa đạt 80%.') + '</strong><p>' + escapeListening(result.detail) + '</p>';
                 renderList();
                 renderStageResultIfReady();
             });
         };
 
         const renderStageResultIfReady = function () {
-            if (results.some(value => value === null)) return;
-            const correct = results.filter(Boolean).length;
-            const score = Math.round(correct / results.length * 100);
+            if (scores.some(value => value === null)) return;
+            const score = Math.round(scores.reduce((sum,value) => sum + value, 0) / scores.length);
             const feedback = panel.querySelector('[data-listening-stage-feedback]');
             feedback.hidden = false;
             feedback.className = 'ldd-lab-feedback ' + (score >= SCORE_TO_COMPLETE ? 'is-success' : 'is-review');
+            if (score >= SCORE_TO_COMPLETE) {
+                if (!progress.completed.includes(stageNumber)) progress.completed.push(stageNumber);
+                progress.completed.sort((a,b) => a - b);
+                progress.current = Math.min(track.stages.length, stageNumber + 1);
+                saveState();
+            }
             feedback.innerHTML =
-                '<span class="ldd-feedback-score">' + score + '/100 · đúng ' + correct + '/' + results.length + '</span>' +
-                (score >= SCORE_TO_COMPLETE ? '<strong>Đạt Giai đoạn ' + stageNumber + '.</strong>' : '<strong>Cần đúng ít nhất 5/6 bài để đạt 80%.</strong>') +
-                '<div class="ldd-lab-actions"><button type="button" class="ldd-roadmap-btn" data-listening-retry>↻ Làm lại 6 bài</button><button type="button" class="ldd-roadmap-btn is-primary" data-listening-route>Về lộ trình</button></div>';
-            window.dispatchEvent(new CustomEvent('ldd:skill-result', { detail: { skill: 'listening', stage: stageNumber, score: score } }));
-            feedback.querySelector('[data-listening-retry]').addEventListener('click', () => openListeningLab(stageNumber));
+                '<span class="ldd-feedback-score">' + score + '/100 · 10 bài</span>' +
+                '<strong>' + (score >= SCORE_TO_COMPLETE ? 'Đã đạt Giai đoạn ' + stageNumber + '.' : 'Chưa đạt mốc 80% của giai đoạn.') + '</strong>' +
+                '<div class="ldd-lab-actions"><button type="button" class="ldd-roadmap-btn" data-listening-retry>↻ Làm lại 10 bài</button>' +
+                '<button type="button" class="ldd-roadmap-btn is-primary" data-listening-route>Về lộ trình</button></div>';
+            feedback.querySelector('[data-listening-retry]').addEventListener('click', () => openListeningLab(trackId, stageNumber));
             feedback.querySelector('[data-listening-route]').addEventListener('click', () => showHub('listening'));
             feedback.scrollIntoView({ behavior: 'smooth', block: 'center' });
         };
