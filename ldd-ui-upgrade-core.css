@@ -776,6 +776,22 @@ body.ldd-motion-ready #inside.ldd-navigation-pulse {
 
 
 /* ===== FLAGSHIP BOOT SEQUENCE v4 — real logo + greeting ===== */
+/* Logo clarity fix: the older boot rule left filter: blur(12px) on the whole
+   .ldd-boot-mark. Because filter applies to children too, the real logo stayed
+   hazy even after it finished loading. Keep the motion, but render the mark/logo
+   itself fully sharp and hide the fallback as soon as the real image is ready. */
+.ldd-boot-mark {
+    filter: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+.ldd-boot-mark img {
+    filter: none !important;
+}
+.ldd-boot-mark.is-logo-ready .ldd-boot-logo-fallback {
+    opacity: 0;
+    visibility: hidden;
+}
 .ldd-boot-sequence.is-running {
     animation: lddBootScreenIn .42s ease-out both;
 }
