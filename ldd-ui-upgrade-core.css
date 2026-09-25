@@ -831,8 +831,8 @@ body.ldd-motion-ready #inside.ldd-navigation-pulse {
 }
 .ldd-boot-mark {
     position: relative;
-    width: 108px;
-    height: 108px;
+    width: 132px;
+    height: 132px;
     padding: 7px;
     overflow: hidden;
     border-radius: 32px;
@@ -968,8 +968,8 @@ body.ldd-motion-ready #inside.ldd-navigation-pulse {
 
 @media (max-width: 560px) {
     .ldd-boot-mark {
-        width: 96px;
-        height: 96px;
+        width: 118px;
+        height: 118px;
         border-radius: 29px;
     }
     .ldd-boot-mark img {
