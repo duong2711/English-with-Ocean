@@ -12,7 +12,7 @@ Tổng cộng: **90 bài Listening**.
 
 ### Hai loại link audio trong guide
 
-1. **MP3 mẫu Loigiaihay trực tiếp**: link trỏ thẳng tới file `.mp3` trên `img.loigiaihay.com`. Bấm link là mở audio mẫu trực tiếp. Chỉ những URL đã xác minh mới được ghi.
+1. **MP3 Loigiaihay trực tiếp**: ưu tiên hiển thị link bấm mở thẳng file `.mp3` trên `img.loigiaihay.com`, đồng thời show luôn Raw URL để bạn có thể copy hoặc mở trực tiếp. Chỉ những URL đã xác minh mới được ghi.
 2. **File bạn tự ghi cho lddenglish**: đường dẫn `assets/audio/...` trong repo. Đây **không phải** MP3 của Loigiaihay.
 
 > Nếu một bài ghi **“Chưa xác minh được URL .mp3 trực tiếp”**, điều đó không có nghĩa trang Loigiaihay không có audio. Chỉ có nghĩa tôi chưa xác minh được đường dẫn raw `.mp3`, nên không đoán `track-xx.mp3`.
@@ -38,7 +38,7 @@ Giữ đúng thang Dễ → Trung bình → Khá → Khó → Địa ngục củ
 
 **Độ khó:** Dễ
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Không có MP3 Loigiaihay cụ thể được gắn cho bài này.** Stage đánh vần kế thừa cơ chế Dễ → Địa ngục cũ của lddenglish.
 
@@ -62,7 +62,7 @@ Giữ đúng thang Dễ → Trung bình → Khá → Khó → Địa ngục củ
 
 **Độ khó:** Dễ
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Không có MP3 Loigiaihay cụ thể được gắn cho bài này.** Stage đánh vần kế thừa cơ chế Dễ → Địa ngục cũ của lddenglish.
 
@@ -86,7 +86,7 @@ Giữ đúng thang Dễ → Trung bình → Khá → Khó → Địa ngục củ
 
 **Độ khó:** Trung bình
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Không có MP3 Loigiaihay cụ thể được gắn cho bài này.** Stage đánh vần kế thừa cơ chế Dễ → Địa ngục cũ của lddenglish.
 
@@ -110,7 +110,7 @@ Giữ đúng thang Dễ → Trung bình → Khá → Khó → Địa ngục củ
 
 **Độ khó:** Trung bình
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Không có MP3 Loigiaihay cụ thể được gắn cho bài này.** Stage đánh vần kế thừa cơ chế Dễ → Địa ngục cũ của lddenglish.
 
@@ -134,7 +134,7 @@ Giữ đúng thang Dễ → Trung bình → Khá → Khó → Địa ngục củ
 
 **Độ khó:** Khá
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Không có MP3 Loigiaihay cụ thể được gắn cho bài này.** Stage đánh vần kế thừa cơ chế Dễ → Địa ngục cũ của lddenglish.
 
@@ -158,7 +158,7 @@ Giữ đúng thang Dễ → Trung bình → Khá → Khó → Địa ngục củ
 
 **Độ khó:** Khá
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Không có MP3 Loigiaihay cụ thể được gắn cho bài này.** Stage đánh vần kế thừa cơ chế Dễ → Địa ngục cũ của lddenglish.
 
@@ -182,7 +182,7 @@ Giữ đúng thang Dễ → Trung bình → Khá → Khó → Địa ngục củ
 
 **Độ khó:** Khó
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Không có MP3 Loigiaihay cụ thể được gắn cho bài này.** Stage đánh vần kế thừa cơ chế Dễ → Địa ngục cũ của lddenglish.
 
@@ -206,7 +206,7 @@ Giữ đúng thang Dễ → Trung bình → Khá → Khó → Địa ngục củ
 
 **Độ khó:** Khó
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Không có MP3 Loigiaihay cụ thể được gắn cho bài này.** Stage đánh vần kế thừa cơ chế Dễ → Địa ngục cũ của lddenglish.
 
@@ -230,7 +230,7 @@ Giữ đúng thang Dễ → Trung bình → Khá → Khó → Địa ngục củ
 
 **Độ khó:** Địa ngục
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Không có MP3 Loigiaihay cụ thể được gắn cho bài này.** Stage đánh vần kế thừa cơ chế Dễ → Địa ngục cũ của lddenglish.
 
@@ -254,7 +254,7 @@ Giữ đúng thang Dễ → Trung bình → Khá → Khó → Địa ngục củ
 
 **Độ khó:** Địa ngục
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Không có MP3 Loigiaihay cụ thể được gắn cho bài này.** Stage đánh vần kế thừa cơ chế Dễ → Địa ngục cũ của lddenglish.
 
@@ -280,7 +280,7 @@ Nghe một cặp hỏi–đáp rồi gõ lại chính xác câu hỏi và câu t
 
 ### F2-01 — Sinh nhật
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -302,7 +302,7 @@ Nghe một cặp hỏi–đáp rồi gõ lại chính xác câu hỏi và câu t
 
 ### F2-02 — Tuổi
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -324,7 +324,7 @@ Nghe một cặp hỏi–đáp rồi gõ lại chính xác câu hỏi và câu t
 
 ### F2-03 — Đồ vật
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -346,7 +346,7 @@ Nghe một cặp hỏi–đáp rồi gõ lại chính xác câu hỏi và câu t
 
 ### F2-04 — Con vật
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -368,7 +368,7 @@ Nghe một cặp hỏi–đáp rồi gõ lại chính xác câu hỏi và câu t
 
 ### F2-05 — Đồ ăn
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -390,7 +390,7 @@ Nghe một cặp hỏi–đáp rồi gõ lại chính xác câu hỏi và câu t
 
 ### F2-06 — Lớp học
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -412,7 +412,7 @@ Nghe một cặp hỏi–đáp rồi gõ lại chính xác câu hỏi và câu t
 
 ### F2-07 — Sở thích
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -434,7 +434,7 @@ Nghe một cặp hỏi–đáp rồi gõ lại chính xác câu hỏi và câu t
 
 ### F2-08 — Thời tiết
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -456,7 +456,7 @@ Nghe một cặp hỏi–đáp rồi gõ lại chính xác câu hỏi và câu t
 
 ### F2-09 — Gia đình
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -478,7 +478,7 @@ Nghe một cặp hỏi–đáp rồi gõ lại chính xác câu hỏi và câu t
 
 ### F2-10 — Lý do đơn giản
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -504,7 +504,7 @@ Gõ lại cặp hỏi–đáp, sau đó chọn câu tiếp theo phù hợp để
 
 ### F3-01 — Chào hỏi
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -526,7 +526,7 @@ Gõ lại cặp hỏi–đáp, sau đó chọn câu tiếp theo phù hợp để
 
 ### F3-02 — Bạn bè
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -548,7 +548,7 @@ Gõ lại cặp hỏi–đáp, sau đó chọn câu tiếp theo phù hợp để
 
 ### F3-03 — Nghề nghiệp
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -570,7 +570,7 @@ Gõ lại cặp hỏi–đáp, sau đó chọn câu tiếp theo phù hợp để
 
 ### F3-04 — Thú cưng
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -592,7 +592,7 @@ Gõ lại cặp hỏi–đáp, sau đó chọn câu tiếp theo phù hợp để
 
 ### F3-05 — Hoạt động
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -614,7 +614,7 @@ Gõ lại cặp hỏi–đáp, sau đó chọn câu tiếp theo phù hợp để
 
 ### F3-06 — Đồ uống
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -636,7 +636,7 @@ Gõ lại cặp hỏi–đáp, sau đó chọn câu tiếp theo phù hợp để
 
 ### F3-07 — Vị trí
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -658,7 +658,7 @@ Gõ lại cặp hỏi–đáp, sau đó chọn câu tiếp theo phù hợp để
 
 ### F3-08 — Đồ chơi
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -680,7 +680,7 @@ Gõ lại cặp hỏi–đáp, sau đó chọn câu tiếp theo phù hợp để
 
 ### F3-09 — Khả năng
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -702,7 +702,7 @@ Gõ lại cặp hỏi–đáp, sau đó chọn câu tiếp theo phù hợp để
 
 ### F3-10 — Thời gian
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -728,7 +728,7 @@ Nghe hội thoại dưới 30 giây và điền chính xác 2 câu bị khuyết
 
 ### F4-01 — Bạn mới
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -750,7 +750,7 @@ Nghe hội thoại dưới 30 giây và điền chính xác 2 câu bị khuyết
 
 ### F4-02 — Bữa sáng
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -772,7 +772,7 @@ Nghe hội thoại dưới 30 giây và điền chính xác 2 câu bị khuyết
 
 ### F4-03 — Sinh nhật
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -794,7 +794,7 @@ Nghe hội thoại dưới 30 giây và điền chính xác 2 câu bị khuyết
 
 ### F4-04 — Môn học
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -816,7 +816,7 @@ Nghe hội thoại dưới 30 giây và điền chính xác 2 câu bị khuyết
 
 ### F4-05 — Khả năng
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -838,7 +838,7 @@ Nghe hội thoại dưới 30 giây và điền chính xác 2 câu bị khuyết
 
 ### F4-06 — Thời tiết
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -860,7 +860,7 @@ Nghe hội thoại dưới 30 giây và điền chính xác 2 câu bị khuyết
 
 ### F4-07 — Mua sắm
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -882,7 +882,7 @@ Nghe hội thoại dưới 30 giây và điền chính xác 2 câu bị khuyết
 
 ### F4-08 — Thể thao
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -904,7 +904,7 @@ Nghe hội thoại dưới 30 giây và điền chính xác 2 câu bị khuyết
 
 ### F4-09 — Trường học
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -926,7 +926,7 @@ Nghe hội thoại dưới 30 giây và điền chính xác 2 câu bị khuyết
 
 ### F4-10 — Cuối tuần
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -952,7 +952,7 @@ Nghe hội thoại ngắn rồi trả lời các câu hỏi trắc nghiệm về
 
 ### F5-01 — Nghề nghiệp tương lai
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -974,7 +974,7 @@ Nghe hội thoại ngắn rồi trả lời các câu hỏi trắc nghiệm về
 
 ### F5-02 — Kỳ nghỉ hè
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -996,7 +996,7 @@ Nghe hội thoại ngắn rồi trả lời các câu hỏi trắc nghiệm về
 
 ### F5-03 — Thời tiết
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -1018,7 +1018,7 @@ Nghe hội thoại ngắn rồi trả lời các câu hỏi trắc nghiệm về
 
 ### F5-04 — Câu chuyện
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -1040,7 +1040,7 @@ Nghe hội thoại ngắn rồi trả lời các câu hỏi trắc nghiệm về
 
 ### F5-05 — Địa điểm tham quan
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -1062,7 +1062,7 @@ Nghe hội thoại ngắn rồi trả lời các câu hỏi trắc nghiệm về
 
 ### F5-06 — Ngôi nhà
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -1084,7 +1084,7 @@ Nghe hội thoại ngắn rồi trả lời các câu hỏi trắc nghiệm về
 
 ### F5-07 — Bạn nước ngoài
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -1106,7 +1106,7 @@ Nghe hội thoại ngắn rồi trả lời các câu hỏi trắc nghiệm về
 
 ### F5-08 — Sức khỏe
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -1128,7 +1128,7 @@ Nghe hội thoại ngắn rồi trả lời các câu hỏi trắc nghiệm về
 
 ### F5-09 — Phương tiện
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -1150,7 +1150,7 @@ Nghe hội thoại ngắn rồi trả lời các câu hỏi trắc nghiệm về
 
 ### F5-10 — Hoạt động hè
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -1181,7 +1181,7 @@ Nghe đoạn nói/hội thoại ngắn và xác định thông tin cụ thể, �
 
 ### M1-01 — My new school
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -1203,7 +1203,7 @@ Nghe đoạn nói/hội thoại ngắn và xác định thông tin cụ thể, �
 
 ### M1-02 — My house
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -1225,7 +1225,7 @@ Nghe đoạn nói/hội thoại ngắn và xác định thông tin cụ thể, �
 
 ### M1-03 — Best friend
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -1247,7 +1247,7 @@ Nghe đoạn nói/hội thoại ngắn và xác định thông tin cụ thể, �
 
 ### M1-04 — Neighbourhood
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -1269,7 +1269,7 @@ Nghe đoạn nói/hội thoại ngắn và xác định thông tin cụ thể, �
 
 ### M1-05 — Phu Quoc
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -1291,7 +1291,7 @@ Nghe đoạn nói/hội thoại ngắn và xác định thông tin cụ thể, �
 
 ### M1-06 — School club
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -1313,7 +1313,7 @@ Nghe đoạn nói/hội thoại ngắn và xác định thông tin cụ thể, �
 
 ### M1-07 — Bedroom
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -1335,7 +1335,7 @@ Nghe đoạn nói/hội thoại ngắn và xác định thông tin cụ thể, �
 
 ### M1-08 — Friend's hobby
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -1357,7 +1357,7 @@ Nghe đoạn nói/hội thoại ngắn và xác định thông tin cụ thể, �
 
 ### M1-09 — Getting around
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -1379,7 +1379,7 @@ Nghe đoạn nói/hội thoại ngắn và xác định thông tin cụ thể, �
 
 ### M1-10 — Weekend trip
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -1405,10 +1405,12 @@ Nghe bài nói dài hơn, lọc thói quen, số liệu, nguyên nhân và câu 
 
 ### M2-01 — Healthy breakfast
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
-- [Mở MP3 mẫu 1](https://img.loigiaihay.com/picture/2022/0705/012.mp3) — `https://img.loigiaihay.com/picture/2022/0705/012.mp3`
-- [Mở MP3 mẫu 2](https://img.loigiaihay.com/picture/2022/0705/013.mp3) — `https://img.loigiaihay.com/picture/2022/0705/013.mp3`
+- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2022/0705/012.mp3)
+  - Raw URL: <https://img.loigiaihay.com/picture/2022/0705/012.mp3>
+- [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2022/0705/013.mp3)
+  - Raw URL: <https://img.loigiaihay.com/picture/2022/0705/013.mp3>
 
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-7-unit-2-skills-2-a106605.html
 
@@ -1428,10 +1430,12 @@ Nghe bài nói dài hơn, lọc thói quen, số liệu, nguyên nhân và câu 
 
 ### M2-02 — Sleep habits
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
-- [Mở MP3 mẫu 1](https://img.loigiaihay.com/picture/2022/0705/012.mp3) — `https://img.loigiaihay.com/picture/2022/0705/012.mp3`
-- [Mở MP3 mẫu 2](https://img.loigiaihay.com/picture/2022/0705/013.mp3) — `https://img.loigiaihay.com/picture/2022/0705/013.mp3`
+- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2022/0705/012.mp3)
+  - Raw URL: <https://img.loigiaihay.com/picture/2022/0705/012.mp3>
+- [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2022/0705/013.mp3)
+  - Raw URL: <https://img.loigiaihay.com/picture/2022/0705/013.mp3>
 
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-7-unit-2-skills-2-a106605.html
 
@@ -1451,7 +1455,7 @@ Nghe bài nói dài hơn, lọc thói quen, số liệu, nguyên nhân và câu 
 
 ### M2-03 — Cycling safely
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -1473,7 +1477,7 @@ Nghe bài nói dài hơn, lọc thói quen, số liệu, nguyên nhân và câu 
 
 ### M2-04 — Traffic jam
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -1495,10 +1499,12 @@ Nghe bài nói dài hơn, lọc thói quen, số liệu, nguyên nhân và câu 
 
 ### M2-05 — Exercise routine
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
-- [Mở MP3 mẫu 1](https://img.loigiaihay.com/picture/2022/0705/012.mp3) — `https://img.loigiaihay.com/picture/2022/0705/012.mp3`
-- [Mở MP3 mẫu 2](https://img.loigiaihay.com/picture/2022/0705/013.mp3) — `https://img.loigiaihay.com/picture/2022/0705/013.mp3`
+- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2022/0705/012.mp3)
+  - Raw URL: <https://img.loigiaihay.com/picture/2022/0705/012.mp3>
+- [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2022/0705/013.mp3)
+  - Raw URL: <https://img.loigiaihay.com/picture/2022/0705/013.mp3>
 
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-7-unit-2-skills-2-a106605.html
 
@@ -1518,7 +1524,7 @@ Nghe bài nói dài hơn, lọc thói quen, số liệu, nguyên nhân và câu 
 
 ### M2-06 — Road safety poster
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -1540,10 +1546,12 @@ Nghe bài nói dài hơn, lọc thói quen, số liệu, nguyên nhân và câu 
 
 ### M2-07 — Healthy lunch
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
-- [Mở MP3 mẫu 1](https://img.loigiaihay.com/picture/2022/0705/012.mp3) — `https://img.loigiaihay.com/picture/2022/0705/012.mp3`
-- [Mở MP3 mẫu 2](https://img.loigiaihay.com/picture/2022/0705/013.mp3) — `https://img.loigiaihay.com/picture/2022/0705/013.mp3`
+- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2022/0705/012.mp3)
+  - Raw URL: <https://img.loigiaihay.com/picture/2022/0705/012.mp3>
+- [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2022/0705/013.mp3)
+  - Raw URL: <https://img.loigiaihay.com/picture/2022/0705/013.mp3>
 
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-7-unit-2-skills-2-a106605.html
 
@@ -1563,7 +1571,7 @@ Nghe bài nói dài hơn, lọc thói quen, số liệu, nguyên nhân và câu 
 
 ### M2-08 — Bus timetable
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -1585,10 +1593,12 @@ Nghe bài nói dài hơn, lọc thói quen, số liệu, nguyên nhân và câu 
 
 ### M2-09 — School health campaign
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
-- [Mở MP3 mẫu 1](https://img.loigiaihay.com/picture/2022/0705/012.mp3) — `https://img.loigiaihay.com/picture/2022/0705/012.mp3`
-- [Mở MP3 mẫu 2](https://img.loigiaihay.com/picture/2022/0705/013.mp3) — `https://img.loigiaihay.com/picture/2022/0705/013.mp3`
+- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2022/0705/012.mp3)
+  - Raw URL: <https://img.loigiaihay.com/picture/2022/0705/012.mp3>
+- [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2022/0705/013.mp3)
+  - Raw URL: <https://img.loigiaihay.com/picture/2022/0705/013.mp3>
 
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-7-unit-2-skills-2-a106605.html
 
@@ -1608,7 +1618,7 @@ Nghe bài nói dài hơn, lọc thói quen, số liệu, nguyên nhân và câu 
 
 ### M2-10 — Crossing the road
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -1634,10 +1644,12 @@ Theo dõi nhiều lượt nói, quan điểm người nói, điền thông tin v
 
 ### M3-01 — Leisure interview
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
-- [Mở MP3 mẫu 1](https://img.loigiaihay.com/picture/2023/0803/track-5.mp3) — `https://img.loigiaihay.com/picture/2023/0803/track-5.mp3`
-- [Mở MP3 mẫu 2](https://img.loigiaihay.com/picture/2023/0803/track-6.mp3) — `https://img.loigiaihay.com/picture/2023/0803/track-6.mp3`
+- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2023/0803/track-5.mp3)
+  - Raw URL: <https://img.loigiaihay.com/picture/2023/0803/track-5.mp3>
+- [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2023/0803/track-6.mp3)
+  - Raw URL: <https://img.loigiaihay.com/picture/2023/0803/track-6.mp3>
 
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-8-unit-1-skills-2-a134923.html
 
@@ -1657,10 +1669,12 @@ Theo dõi nhiều lượt nói, quan điểm người nói, điền thông tin v
 
 ### M3-02 — Countryside opinions
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
-- [Mở MP3 mẫu 1](https://img.loigiaihay.com/picture/2023/0703/track-11.mp3) — `https://img.loigiaihay.com/picture/2023/0703/track-11.mp3`
-- [Mở MP3 mẫu 2](https://img.loigiaihay.com/picture/2023/0703/track-12.mp3) — `https://img.loigiaihay.com/picture/2023/0703/track-12.mp3`
+- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2023/0703/track-11.mp3)
+  - Raw URL: <https://img.loigiaihay.com/picture/2023/0703/track-11.mp3>
+- [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2023/0703/track-12.mp3)
+  - Raw URL: <https://img.loigiaihay.com/picture/2023/0703/track-12.mp3>
 
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-8-unit-2-skills-2-a137295.html
 
@@ -1680,10 +1694,12 @@ Theo dõi nhiều lượt nói, quan điểm người nói, điền thông tin v
 
 ### M3-03 — Teen stress
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
-- [Mở MP3 mẫu 1](https://img.loigiaihay.com/picture/2023/0803/track-17.mp3) — `https://img.loigiaihay.com/picture/2023/0803/track-17.mp3`
-- [Mở MP3 mẫu 2](https://img.loigiaihay.com/picture/2023/0803/track-18.mp3) — `https://img.loigiaihay.com/picture/2023/0803/track-18.mp3`
+- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2023/0803/track-17.mp3)
+  - Raw URL: <https://img.loigiaihay.com/picture/2023/0803/track-17.mp3>
+- [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2023/0803/track-18.mp3)
+  - Raw URL: <https://img.loigiaihay.com/picture/2023/0803/track-18.mp3>
 
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-8-unit-3-skills-2-a137331.html
 
@@ -1703,7 +1719,7 @@ Theo dõi nhiều lượt nói, quan điểm người nói, điền thông tin v
 
 ### M3-04 — Online shopping
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -1725,10 +1741,12 @@ Theo dõi nhiều lượt nói, quan điểm người nói, điền thông tin v
 
 ### M3-05 — Water pollution
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
-- [Mở MP3 mẫu 1](https://img.loigiaihay.com/picture/2023/0613/track-44.mp3) — `https://img.loigiaihay.com/picture/2023/0613/track-44.mp3`
-- [Mở MP3 mẫu 2](https://img.loigiaihay.com/picture/2023/0613/track-45.mp3) — `https://img.loigiaihay.com/picture/2023/0613/track-45.mp3`
+- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2023/0613/track-44.mp3)
+  - Raw URL: <https://img.loigiaihay.com/picture/2023/0613/track-44.mp3>
+- [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2023/0613/track-45.mp3)
+  - Raw URL: <https://img.loigiaihay.com/picture/2023/0613/track-45.mp3>
 
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-8-unit-7-skills-2-a141336.html
 
@@ -1748,10 +1766,12 @@ Theo dõi nhiều lượt nói, quan điểm người nói, điền thông tin v
 
 ### M3-06 — Club pressure
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
-- [Mở MP3 mẫu 1](https://img.loigiaihay.com/picture/2023/0803/track-17.mp3) — `https://img.loigiaihay.com/picture/2023/0803/track-17.mp3`
-- [Mở MP3 mẫu 2](https://img.loigiaihay.com/picture/2023/0803/track-18.mp3) — `https://img.loigiaihay.com/picture/2023/0803/track-18.mp3`
+- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2023/0803/track-17.mp3)
+  - Raw URL: <https://img.loigiaihay.com/picture/2023/0803/track-17.mp3>
+- [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2023/0803/track-18.mp3)
+  - Raw URL: <https://img.loigiaihay.com/picture/2023/0803/track-18.mp3>
 
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-8-unit-3-skills-2-a137331.html
 
@@ -1771,10 +1791,12 @@ Theo dõi nhiều lượt nói, quan điểm người nói, điền thông tin v
 
 ### M3-07 — Free-time balance
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
-- [Mở MP3 mẫu 1](https://img.loigiaihay.com/picture/2023/0803/track-5.mp3) — `https://img.loigiaihay.com/picture/2023/0803/track-5.mp3`
-- [Mở MP3 mẫu 2](https://img.loigiaihay.com/picture/2023/0803/track-6.mp3) — `https://img.loigiaihay.com/picture/2023/0803/track-6.mp3`
+- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2023/0803/track-5.mp3)
+  - Raw URL: <https://img.loigiaihay.com/picture/2023/0803/track-5.mp3>
+- [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2023/0803/track-6.mp3)
+  - Raw URL: <https://img.loigiaihay.com/picture/2023/0803/track-6.mp3>
 
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-8-unit-1-skills-2-a134923.html
 
@@ -1794,10 +1816,12 @@ Theo dõi nhiều lượt nói, quan điểm người nói, điền thông tin v
 
 ### M3-08 — Village change
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
-- [Mở MP3 mẫu 1](https://img.loigiaihay.com/picture/2023/0703/track-11.mp3) — `https://img.loigiaihay.com/picture/2023/0703/track-11.mp3`
-- [Mở MP3 mẫu 2](https://img.loigiaihay.com/picture/2023/0703/track-12.mp3) — `https://img.loigiaihay.com/picture/2023/0703/track-12.mp3`
+- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2023/0703/track-11.mp3)
+  - Raw URL: <https://img.loigiaihay.com/picture/2023/0703/track-11.mp3>
+- [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2023/0703/track-12.mp3)
+  - Raw URL: <https://img.loigiaihay.com/picture/2023/0703/track-12.mp3>
 
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-8-unit-2-skills-2-a137295.html
 
@@ -1817,7 +1841,7 @@ Theo dõi nhiều lượt nói, quan điểm người nói, điền thông tin v
 
 ### M3-09 — Return policy
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -1839,10 +1863,12 @@ Theo dõi nhiều lượt nói, quan điểm người nói, điền thông tin v
 
 ### M3-10 — School environment
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
-- [Mở MP3 mẫu 1](https://img.loigiaihay.com/picture/2023/0613/track-44.mp3) — `https://img.loigiaihay.com/picture/2023/0613/track-44.mp3`
-- [Mở MP3 mẫu 2](https://img.loigiaihay.com/picture/2023/0613/track-45.mp3) — `https://img.loigiaihay.com/picture/2023/0613/track-45.mp3`
+- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2023/0613/track-44.mp3)
+  - Raw URL: <https://img.loigiaihay.com/picture/2023/0613/track-44.mp3>
+- [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2023/0613/track-45.mp3)
+  - Raw URL: <https://img.loigiaihay.com/picture/2023/0613/track-45.mp3>
 
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-8-unit-7-skills-2-a141336.html
 
@@ -1866,7 +1892,7 @@ Nghe nhiều người nói hoặc đoạn thông tin dài, tổng hợp ý, suy 
 
 ### M4-01 — City views
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -1888,7 +1914,7 @@ Nghe nhiều người nói hoặc đoạn thông tin dài, tổng hợp ý, suy 
 
 ### M4-02 — Time management
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -1910,7 +1936,7 @@ Nghe nhiều người nói hoặc đoạn thông tin dài, tổng hợp ý, suy 
 
 ### M4-03 — Learning vocabulary
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -1932,7 +1958,7 @@ Nghe nhiều người nói hoặc đoạn thông tin dài, tổng hợp ý, suy 
 
 ### M4-04 — Community helper
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -1954,7 +1980,7 @@ Nghe nhiều người nói hoặc đoạn thông tin dài, tổng hợp ý, suy 
 
 ### M4-05 — City transport proposal
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -1976,7 +2002,7 @@ Nghe nhiều người nói hoặc đoạn thông tin dài, tổng hợp ý, suy 
 
 ### M4-06 — Study distractions
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -1998,7 +2024,7 @@ Nghe nhiều người nói hoặc đoạn thông tin dài, tổng hợp ý, suy 
 
 ### M4-07 — English exposure
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -2020,7 +2046,7 @@ Nghe nhiều người nói hoặc đoạn thông tin dài, tổng hợp ý, suy 
 
 ### M4-08 — Local craft
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -2042,7 +2068,7 @@ Nghe nhiều người nói hoặc đoạn thông tin dài, tổng hợp ý, suy 
 
 ### M4-09 — Balanced schedule
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
@@ -2064,7 +2090,7 @@ Nghe nhiều người nói hoặc đoạn thông tin dài, tổng hợp ý, suy 
 
 ### M4-10 — City air quality
 
-**MP3 mẫu Loigiaihay trực tiếp:**
+**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
 
 - **Chưa xác minh được URL .mp3 trực tiếp.** Không đoán số track; dùng trang bài bên dưới để nghe mẫu.
 
