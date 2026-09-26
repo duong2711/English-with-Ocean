@@ -12,6 +12,9 @@ Tổng cộng: **90 bài Listening**, mỗi giai đoạn **10 bài**.
 
 ## Quy tắc audio
 
+> **Lưu ý:** các đường dẫn `assets/audio/...` không phải link để bấm nghe. Đó là vị trí file trong repo. Chỉ sau khi bạn upload MP3 đúng chỗ thì link `https://lddenglish.page/assets/audio/...` mới phát được.
+
+
 - MP3 trên lddenglish là **file giáo viên tự ghi**.
 - Trang Loigiaihay được ghi ở từng bài để nghe **dạng bài / chủ đề / độ khó / nhịp đọc tham khảo**.
 - Script bên dưới là nội dung riêng của lddenglish, không phải transcript sao chép nguyên văn từ Loigiaihay.
@@ -32,7 +35,9 @@ Giữ đúng thang Dễ → Trung bình → Khá → Khó → Địa ngục củ
 
 **Độ khó:** Dễ
 
-**File MP3:** `assets/audio/listening/foundation/stage-1/f1-01.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-1/f1-01.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-1/f1-01.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/lop-1.html
 
@@ -50,7 +55,9 @@ Giữ đúng thang Dễ → Trung bình → Khá → Khó → Địa ngục củ
 
 **Độ khó:** Dễ
 
-**File MP3:** `assets/audio/listening/foundation/stage-1/f1-02.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-1/f1-02.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-1/f1-02.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/lop-1.html
 
@@ -68,7 +75,9 @@ Giữ đúng thang Dễ → Trung bình → Khá → Khó → Địa ngục củ
 
 **Độ khó:** Trung bình
 
-**File MP3:** `assets/audio/listening/foundation/stage-1/f1-03.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-1/f1-03.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-1/f1-03.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/lop-1.html
 
@@ -86,7 +95,9 @@ Giữ đúng thang Dễ → Trung bình → Khá → Khó → Địa ngục củ
 
 **Độ khó:** Trung bình
 
-**File MP3:** `assets/audio/listening/foundation/stage-1/f1-04.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-1/f1-04.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-1/f1-04.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/lop-1.html
 
@@ -104,7 +115,9 @@ Giữ đúng thang Dễ → Trung bình → Khá → Khó → Địa ngục củ
 
 **Độ khó:** Khá
 
-**File MP3:** `assets/audio/listening/foundation/stage-1/f1-05.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-1/f1-05.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-1/f1-05.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/lop-1.html
 
@@ -122,7 +135,9 @@ Giữ đúng thang Dễ → Trung bình → Khá → Khó → Địa ngục củ
 
 **Độ khó:** Khá
 
-**File MP3:** `assets/audio/listening/foundation/stage-1/f1-06.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-1/f1-06.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-1/f1-06.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/lop-1.html
 
@@ -140,7 +155,9 @@ Giữ đúng thang Dễ → Trung bình → Khá → Khó → Địa ngục củ
 
 **Độ khó:** Khó
 
-**File MP3:** `assets/audio/listening/foundation/stage-1/f1-07.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-1/f1-07.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-1/f1-07.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/lop-1.html
 
@@ -158,7 +175,9 @@ Giữ đúng thang Dễ → Trung bình → Khá → Khó → Địa ngục củ
 
 **Độ khó:** Khó
 
-**File MP3:** `assets/audio/listening/foundation/stage-1/f1-08.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-1/f1-08.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-1/f1-08.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/lop-1.html
 
@@ -176,7 +195,9 @@ Giữ đúng thang Dễ → Trung bình → Khá → Khó → Địa ngục củ
 
 **Độ khó:** Địa ngục
 
-**File MP3:** `assets/audio/listening/foundation/stage-1/f1-09.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-1/f1-09.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-1/f1-09.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/lop-1.html
 
@@ -194,7 +215,9 @@ Giữ đúng thang Dễ → Trung bình → Khá → Khó → Địa ngục củ
 
 **Độ khó:** Địa ngục
 
-**File MP3:** `assets/audio/listening/foundation/stage-1/f1-10.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-1/f1-10.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-1/f1-10.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/lop-1.html
 
@@ -214,7 +237,9 @@ Nghe một cặp hỏi–đáp rồi gõ lại chính xác câu hỏi và câu t
 
 ### F2-01 — Sinh nhật
 
-**File MP3:** `assets/audio/listening/foundation/stage-2/f2-01.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-2/f2-01.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-2/f2-01.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/de-thi-hoc-ki-2-tieng-anh-2-global-success-de-so-2-a137158.html
 
@@ -230,7 +255,9 @@ Nghe một cặp hỏi–đáp rồi gõ lại chính xác câu hỏi và câu t
 
 ### F2-02 — Tuổi
 
-**File MP3:** `assets/audio/listening/foundation/stage-2/f2-02.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-2/f2-02.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-2/f2-02.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/de-thi-hoc-ki-2-tieng-anh-2-global-success-de-so-2-a137158.html
 
@@ -246,7 +273,9 @@ Nghe một cặp hỏi–đáp rồi gõ lại chính xác câu hỏi và câu t
 
 ### F2-03 — Đồ vật
 
-**File MP3:** `assets/audio/listening/foundation/stage-2/f2-03.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-2/f2-03.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-2/f2-03.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-2-ket-noi-tri-thuc-voi-cuoc-song-c622.html
 
@@ -262,7 +291,9 @@ Nghe một cặp hỏi–đáp rồi gõ lại chính xác câu hỏi và câu t
 
 ### F2-04 — Con vật
 
-**File MP3:** `assets/audio/listening/foundation/stage-2/f2-04.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-2/f2-04.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-2/f2-04.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-2-ket-noi-tri-thuc-voi-cuoc-song-c622.html
 
@@ -278,7 +309,9 @@ Nghe một cặp hỏi–đáp rồi gõ lại chính xác câu hỏi và câu t
 
 ### F2-05 — Đồ ăn
 
-**File MP3:** `assets/audio/listening/foundation/stage-2/f2-05.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-2/f2-05.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-2/f2-05.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-2-ket-noi-tri-thuc-voi-cuoc-song-c622.html
 
@@ -294,7 +327,9 @@ Nghe một cặp hỏi–đáp rồi gõ lại chính xác câu hỏi và câu t
 
 ### F2-06 — Lớp học
 
-**File MP3:** `assets/audio/listening/foundation/stage-2/f2-06.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-2/f2-06.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-2/f2-06.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-2-ket-noi-tri-thuc-voi-cuoc-song-c622.html
 
@@ -310,7 +345,9 @@ Nghe một cặp hỏi–đáp rồi gõ lại chính xác câu hỏi và câu t
 
 ### F2-07 — Sở thích
 
-**File MP3:** `assets/audio/listening/foundation/stage-2/f2-07.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-2/f2-07.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-2/f2-07.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-2-ket-noi-tri-thuc-voi-cuoc-song-c622.html
 
@@ -326,7 +363,9 @@ Nghe một cặp hỏi–đáp rồi gõ lại chính xác câu hỏi và câu t
 
 ### F2-08 — Thời tiết
 
-**File MP3:** `assets/audio/listening/foundation/stage-2/f2-08.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-2/f2-08.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-2/f2-08.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-2-ket-noi-tri-thuc-voi-cuoc-song-c622.html
 
@@ -342,7 +381,9 @@ Nghe một cặp hỏi–đáp rồi gõ lại chính xác câu hỏi và câu t
 
 ### F2-09 — Gia đình
 
-**File MP3:** `assets/audio/listening/foundation/stage-2/f2-09.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-2/f2-09.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-2/f2-09.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-2-ket-noi-tri-thuc-voi-cuoc-song-c622.html
 
@@ -358,7 +399,9 @@ Nghe một cặp hỏi–đáp rồi gõ lại chính xác câu hỏi và câu t
 
 ### F2-10 — Lý do đơn giản
 
-**File MP3:** `assets/audio/listening/foundation/stage-2/f2-10.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-2/f2-10.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-2/f2-10.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-2-ket-noi-tri-thuc-voi-cuoc-song-c622.html
 
@@ -378,7 +421,9 @@ Gõ lại cặp hỏi–đáp, sau đó chọn câu tiếp theo phù hợp để
 
 ### F3-01 — Chào hỏi
 
-**File MP3:** `assets/audio/listening/foundation/stage-3/f3-01.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-3/f3-01.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-3/f3-01.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/unit-1-hello-e25423.html
 
@@ -394,7 +439,9 @@ Gõ lại cặp hỏi–đáp, sau đó chọn câu tiếp theo phù hợp để
 
 ### F3-02 — Bạn bè
 
-**File MP3:** `assets/audio/listening/foundation/stage-3/f3-02.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-3/f3-02.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-3/f3-02.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html
 
@@ -410,7 +457,9 @@ Gõ lại cặp hỏi–đáp, sau đó chọn câu tiếp theo phù hợp để
 
 ### F3-03 — Nghề nghiệp
 
-**File MP3:** `assets/audio/listening/foundation/stage-3/f3-03.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-3/f3-03.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-3/f3-03.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html
 
@@ -426,7 +475,9 @@ Gõ lại cặp hỏi–đáp, sau đó chọn câu tiếp theo phù hợp để
 
 ### F3-04 — Thú cưng
 
-**File MP3:** `assets/audio/listening/foundation/stage-3/f3-04.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-3/f3-04.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-3/f3-04.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-lop-3-unit-16-lesson-2-trang-42-global-success-a108135.html
 
@@ -442,7 +493,9 @@ Gõ lại cặp hỏi–đáp, sau đó chọn câu tiếp theo phù hợp để
 
 ### F3-05 — Hoạt động
 
-**File MP3:** `assets/audio/listening/foundation/stage-3/f3-05.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-3/f3-05.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-3/f3-05.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-lop-3-unit-19-lesson-2-trang-60-global-success-a108223.html
 
@@ -458,7 +511,9 @@ Gõ lại cặp hỏi–đáp, sau đó chọn câu tiếp theo phù hợp để
 
 ### F3-06 — Đồ uống
 
-**File MP3:** `assets/audio/listening/foundation/stage-3/f3-06.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-3/f3-06.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-3/f3-06.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html
 
@@ -474,7 +529,9 @@ Gõ lại cặp hỏi–đáp, sau đó chọn câu tiếp theo phù hợp để
 
 ### F3-07 — Vị trí
 
-**File MP3:** `assets/audio/listening/foundation/stage-3/f3-07.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-3/f3-07.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-3/f3-07.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html
 
@@ -490,7 +547,9 @@ Gõ lại cặp hỏi–đáp, sau đó chọn câu tiếp theo phù hợp để
 
 ### F3-08 — Đồ chơi
 
-**File MP3:** `assets/audio/listening/foundation/stage-3/f3-08.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-3/f3-08.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-3/f3-08.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-lop-3-unit-19-lesson-2-trang-60-global-success-a108223.html
 
@@ -506,7 +565,9 @@ Gõ lại cặp hỏi–đáp, sau đó chọn câu tiếp theo phù hợp để
 
 ### F3-09 — Khả năng
 
-**File MP3:** `assets/audio/listening/foundation/stage-3/f3-09.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-3/f3-09.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-3/f3-09.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/unit-1-hello-e25423.html
 
@@ -522,7 +583,9 @@ Gõ lại cặp hỏi–đáp, sau đó chọn câu tiếp theo phù hợp để
 
 ### F3-10 — Thời gian
 
-**File MP3:** `assets/audio/listening/foundation/stage-3/f3-10.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-3/f3-10.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-3/f3-10.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html
 
@@ -542,7 +605,9 @@ Nghe hội thoại dưới 30 giây và điền chính xác 2 câu bị khuyết
 
 ### F4-01 — Bạn mới
 
-**File MP3:** `assets/audio/listening/foundation/stage-4/f4-01.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-4/f4-01.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-4/f4-01.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-lop-4-unit-1-lesson-2-trang-12-13-global-success-a134621.html
 
@@ -558,7 +623,9 @@ Nghe hội thoại dưới 30 giây và điền chính xác 2 câu bị khuyết
 
 ### F4-02 — Bữa sáng
 
-**File MP3:** `assets/audio/listening/foundation/stage-4/f4-02.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-4/f4-02.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-4/f4-02.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-lop-4-review-1-trang-40-41-global-success-a136098.html
 
@@ -574,7 +641,9 @@ Nghe hội thoại dưới 30 giây và điền chính xác 2 câu bị khuyết
 
 ### F4-03 — Sinh nhật
 
-**File MP3:** `assets/audio/listening/foundation/stage-4/f4-03.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-4/f4-03.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-4/f4-03.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-lop-4-unit-4-lesson-2-trang-30-31-global-success-a135717.html
 
@@ -590,7 +659,9 @@ Nghe hội thoại dưới 30 giây và điền chính xác 2 câu bị khuyết
 
 ### F4-04 — Môn học
 
-**File MP3:** `assets/audio/listening/foundation/stage-4/f4-04.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-4/f4-04.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-4/f4-04.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-lop-4-review-2-trang-74-75-global-success-a138084.html
 
@@ -606,7 +677,9 @@ Nghe hội thoại dưới 30 giây và điền chính xác 2 câu bị khuyết
 
 ### F4-05 — Khả năng
 
-**File MP3:** `assets/audio/listening/foundation/stage-4/f4-05.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-4/f4-05.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-4/f4-05.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-lop-4-review-1-trang-40-41-global-success-a136098.html
 
@@ -622,7 +695,9 @@ Nghe hội thoại dưới 30 giây và điền chính xác 2 câu bị khuyết
 
 ### F4-06 — Thời tiết
 
-**File MP3:** `assets/audio/listening/foundation/stage-4/f4-06.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-4/f4-06.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-4/f4-06.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-lop-4-review-4-trang-70-global-success-a139728.html
 
@@ -638,7 +713,9 @@ Nghe hội thoại dưới 30 giây và điền chính xác 2 câu bị khuyết
 
 ### F4-07 — Mua sắm
 
-**File MP3:** `assets/audio/listening/foundation/stage-4/f4-07.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-4/f4-07.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-4/f4-07.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-lop-4-review-4-trang-70-global-success-a139728.html
 
@@ -654,7 +731,9 @@ Nghe hội thoại dưới 30 giây và điền chính xác 2 câu bị khuyết
 
 ### F4-08 — Thể thao
 
-**File MP3:** `assets/audio/listening/foundation/stage-4/f4-08.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-4/f4-08.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-4/f4-08.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-lop-4-review-4-trang-70-global-success-a139728.html
 
@@ -670,7 +749,9 @@ Nghe hội thoại dưới 30 giây và điền chính xác 2 câu bị khuyết
 
 ### F4-09 — Trường học
 
-**File MP3:** `assets/audio/listening/foundation/stage-4/f4-09.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-4/f4-09.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-4/f4-09.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-lop-4-review-2-trang-74-75-global-success-a138084.html
 
@@ -686,7 +767,9 @@ Nghe hội thoại dưới 30 giây và điền chính xác 2 câu bị khuyết
 
 ### F4-10 — Cuối tuần
 
-**File MP3:** `assets/audio/listening/foundation/stage-4/f4-10.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-4/f4-10.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-4/f4-10.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-lop-4-review-1-trang-40-41-global-success-a136098.html
 
@@ -706,7 +789,9 @@ Nghe hội thoại ngắn rồi trả lời các câu hỏi trắc nghiệm về
 
 ### F5-01 — Nghề nghiệp tương lai
 
-**File MP3:** `assets/audio/listening/foundation/stage-5/f5-01.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-5/f5-01.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-5/f5-01.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/unit-5-my-future-job-e35294.html
 
@@ -722,7 +807,9 @@ Nghe hội thoại ngắn rồi trả lời các câu hỏi trắc nghiệm về
 
 ### F5-02 — Kỳ nghỉ hè
 
-**File MP3:** `assets/audio/listening/foundation/stage-5/f5-02.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-5/f5-02.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-5/f5-02.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/giai-review-4-tieng-anh-5-global-success-co-dap-a162201.html
 
@@ -738,7 +825,9 @@ Nghe hội thoại ngắn rồi trả lời các câu hỏi trắc nghiệm về
 
 ### F5-03 — Thời tiết
 
-**File MP3:** `assets/audio/listening/foundation/stage-5/f5-03.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-5/f5-03.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-5/f5-03.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/giai-review-4-tieng-anh-5-global-success-co-dap-a162201.html
 
@@ -754,7 +843,9 @@ Nghe hội thoại ngắn rồi trả lời các câu hỏi trắc nghiệm về
 
 ### F5-04 — Câu chuyện
 
-**File MP3:** `assets/audio/listening/foundation/stage-5/f5-04.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-5/f5-04.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-5/f5-04.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/giai-review-4-tieng-anh-5-global-success-co-dap-a162201.html
 
@@ -770,7 +861,9 @@ Nghe hội thoại ngắn rồi trả lời các câu hỏi trắc nghiệm về
 
 ### F5-05 — Địa điểm tham quan
 
-**File MP3:** `assets/audio/listening/foundation/stage-5/f5-05.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-5/f5-05.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-5/f5-05.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/giai-review-4-tieng-anh-5-global-success-co-dap-a162201.html
 
@@ -786,7 +879,9 @@ Nghe hội thoại ngắn rồi trả lời các câu hỏi trắc nghiệm về
 
 ### F5-06 — Ngôi nhà
 
-**File MP3:** `assets/audio/listening/foundation/stage-5/f5-06.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-5/f5-06.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-5/f5-06.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-5-global-success-c1762.html
 
@@ -802,7 +897,9 @@ Nghe hội thoại ngắn rồi trả lời các câu hỏi trắc nghiệm về
 
 ### F5-07 — Bạn nước ngoài
 
-**File MP3:** `assets/audio/listening/foundation/stage-5/f5-07.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-5/f5-07.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-5/f5-07.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-5-global-success-c1762.html
 
@@ -818,7 +915,9 @@ Nghe hội thoại ngắn rồi trả lời các câu hỏi trắc nghiệm về
 
 ### F5-08 — Sức khỏe
 
-**File MP3:** `assets/audio/listening/foundation/stage-5/f5-08.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-5/f5-08.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-5/f5-08.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-5-global-success-c1762.html
 
@@ -834,7 +933,9 @@ Nghe hội thoại ngắn rồi trả lời các câu hỏi trắc nghiệm về
 
 ### F5-09 — Phương tiện
 
-**File MP3:** `assets/audio/listening/foundation/stage-5/f5-09.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-5/f5-09.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-5/f5-09.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/giai-review-4-tieng-anh-5-global-success-co-dap-a162201.html
 
@@ -850,7 +951,9 @@ Nghe hội thoại ngắn rồi trả lời các câu hỏi trắc nghiệm về
 
 ### F5-10 — Hoạt động hè
 
-**File MP3:** `assets/audio/listening/foundation/stage-5/f5-10.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/foundation/stage-5/f5-10.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/foundation/stage-5/f5-10.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-5-global-success-c1762.html
 
@@ -875,7 +978,9 @@ Nghe đoạn nói/hội thoại ngắn và xác định thông tin cụ thể, �
 
 ### M1-01 — My new school
 
-**File MP3:** `assets/audio/listening/thcs/stage-1/m1-01.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/thcs/stage-1/m1-01.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/thcs/stage-1/m1-01.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/skills-2-trang-13-unit-1-sgk-tieng-anh-6-moi-c134a22004.html
 
@@ -891,7 +996,9 @@ Nghe đoạn nói/hội thoại ngắn và xác định thông tin cụ thể, �
 
 ### M1-02 — My house
 
-**File MP3:** `assets/audio/listening/thcs/stage-1/m1-02.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/thcs/stage-1/m1-02.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/thcs/stage-1/m1-02.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/skills-2-trang-23-unit-2-sgk-tieng-anh-6-moi-c134a22015.html
 
@@ -907,7 +1014,9 @@ Nghe đoạn nói/hội thoại ngắn và xác định thông tin cụ thể, �
 
 ### M1-03 — Best friend
 
-**File MP3:** `assets/audio/listening/thcs/stage-1/m1-03.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/thcs/stage-1/m1-03.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/thcs/stage-1/m1-03.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/skills-2-trang-33-unit-3-sgk-tieng-anh-6-moi-c134a22041.html
 
@@ -923,7 +1032,9 @@ Nghe đoạn nói/hội thoại ngắn và xác định thông tin cụ thể, �
 
 ### M1-04 — Neighbourhood
 
-**File MP3:** `assets/audio/listening/thcs/stage-1/m1-04.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/thcs/stage-1/m1-04.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/thcs/stage-1/m1-04.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/skills-2-trang-45-unit-4-sgk-tieng-anh-6-moi-c134a22090.html
 
@@ -939,7 +1050,9 @@ Nghe đoạn nói/hội thoại ngắn và xác định thông tin cụ thể, �
 
 ### M1-05 — Phu Quoc
 
-**File MP3:** `assets/audio/listening/thcs/stage-1/m1-05.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/thcs/stage-1/m1-05.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/thcs/stage-1/m1-05.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/skills-2-trang-55-unit-5-sgk-tieng-anh-6-moi-c134a22106.html
 
@@ -955,7 +1068,9 @@ Nghe đoạn nói/hội thoại ngắn và xác định thông tin cụ thể, �
 
 ### M1-06 — School club
 
-**File MP3:** `assets/audio/listening/thcs/stage-1/m1-06.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/thcs/stage-1/m1-06.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/thcs/stage-1/m1-06.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/skills-2-trang-13-unit-1-sgk-tieng-anh-6-moi-c134a22004.html
 
@@ -971,7 +1086,9 @@ Nghe đoạn nói/hội thoại ngắn và xác định thông tin cụ thể, �
 
 ### M1-07 — Bedroom
 
-**File MP3:** `assets/audio/listening/thcs/stage-1/m1-07.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/thcs/stage-1/m1-07.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/thcs/stage-1/m1-07.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/skills-2-trang-23-unit-2-sgk-tieng-anh-6-moi-c134a22015.html
 
@@ -987,7 +1104,9 @@ Nghe đoạn nói/hội thoại ngắn và xác định thông tin cụ thể, �
 
 ### M1-08 — Friend's hobby
 
-**File MP3:** `assets/audio/listening/thcs/stage-1/m1-08.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/thcs/stage-1/m1-08.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/thcs/stage-1/m1-08.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/skills-2-trang-33-unit-3-sgk-tieng-anh-6-moi-c134a22041.html
 
@@ -1003,7 +1122,9 @@ Nghe đoạn nói/hội thoại ngắn và xác định thông tin cụ thể, �
 
 ### M1-09 — Getting around
 
-**File MP3:** `assets/audio/listening/thcs/stage-1/m1-09.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/thcs/stage-1/m1-09.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/thcs/stage-1/m1-09.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/skills-2-trang-45-unit-4-sgk-tieng-anh-6-moi-c134a22090.html
 
@@ -1019,7 +1140,9 @@ Nghe đoạn nói/hội thoại ngắn và xác định thông tin cụ thể, �
 
 ### M1-10 — Weekend trip
 
-**File MP3:** `assets/audio/listening/thcs/stage-1/m1-10.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/thcs/stage-1/m1-10.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/thcs/stage-1/m1-10.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/skills-2-trang-55-unit-5-sgk-tieng-anh-6-moi-c134a22106.html
 
@@ -1039,7 +1162,9 @@ Nghe bài nói dài hơn, lọc thói quen, số liệu, nguyên nhân và câu 
 
 ### M2-01 — Healthy breakfast
 
-**File MP3:** `assets/audio/listening/thcs/stage-2/m2-01.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/thcs/stage-2/m2-01.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/thcs/stage-2/m2-01.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-7-unit-2-skills-2-a106605.html
 
@@ -1055,7 +1180,9 @@ Nghe bài nói dài hơn, lọc thói quen, số liệu, nguyên nhân và câu 
 
 ### M2-02 — Sleep habits
 
-**File MP3:** `assets/audio/listening/thcs/stage-2/m2-02.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/thcs/stage-2/m2-02.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/thcs/stage-2/m2-02.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-7-unit-2-skills-2-a106605.html
 
@@ -1071,7 +1198,9 @@ Nghe bài nói dài hơn, lọc thói quen, số liệu, nguyên nhân và câu 
 
 ### M2-03 — Cycling safely
 
-**File MP3:** `assets/audio/listening/thcs/stage-2/m2-03.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/thcs/stage-2/m2-03.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/thcs/stage-2/m2-03.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-7-unit-7-skills-2-a108662.html
 
@@ -1087,7 +1216,9 @@ Nghe bài nói dài hơn, lọc thói quen, số liệu, nguyên nhân và câu 
 
 ### M2-04 — Traffic jam
 
-**File MP3:** `assets/audio/listening/thcs/stage-2/m2-04.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/thcs/stage-2/m2-04.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/thcs/stage-2/m2-04.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-7-unit-7-skills-2-a108662.html
 
@@ -1103,7 +1234,9 @@ Nghe bài nói dài hơn, lọc thói quen, số liệu, nguyên nhân và câu 
 
 ### M2-05 — Exercise routine
 
-**File MP3:** `assets/audio/listening/thcs/stage-2/m2-05.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/thcs/stage-2/m2-05.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/thcs/stage-2/m2-05.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-7-unit-2-skills-2-a106605.html
 
@@ -1119,7 +1252,9 @@ Nghe bài nói dài hơn, lọc thói quen, số liệu, nguyên nhân và câu 
 
 ### M2-06 — Road safety poster
 
-**File MP3:** `assets/audio/listening/thcs/stage-2/m2-06.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/thcs/stage-2/m2-06.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/thcs/stage-2/m2-06.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-7-unit-7-skills-2-a108662.html
 
@@ -1135,7 +1270,9 @@ Nghe bài nói dài hơn, lọc thói quen, số liệu, nguyên nhân và câu 
 
 ### M2-07 — Healthy lunch
 
-**File MP3:** `assets/audio/listening/thcs/stage-2/m2-07.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/thcs/stage-2/m2-07.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/thcs/stage-2/m2-07.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-7-unit-2-skills-2-a106605.html
 
@@ -1151,7 +1288,9 @@ Nghe bài nói dài hơn, lọc thói quen, số liệu, nguyên nhân và câu 
 
 ### M2-08 — Bus timetable
 
-**File MP3:** `assets/audio/listening/thcs/stage-2/m2-08.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/thcs/stage-2/m2-08.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/thcs/stage-2/m2-08.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-7-unit-7-skills-2-a108662.html
 
@@ -1167,7 +1306,9 @@ Nghe bài nói dài hơn, lọc thói quen, số liệu, nguyên nhân và câu 
 
 ### M2-09 — School health campaign
 
-**File MP3:** `assets/audio/listening/thcs/stage-2/m2-09.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/thcs/stage-2/m2-09.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/thcs/stage-2/m2-09.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-7-unit-2-skills-2-a106605.html
 
@@ -1183,7 +1324,9 @@ Nghe bài nói dài hơn, lọc thói quen, số liệu, nguyên nhân và câu 
 
 ### M2-10 — Crossing the road
 
-**File MP3:** `assets/audio/listening/thcs/stage-2/m2-10.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/thcs/stage-2/m2-10.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/thcs/stage-2/m2-10.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-7-unit-7-skills-2-a108662.html
 
@@ -1203,7 +1346,9 @@ Theo dõi nhiều lượt nói, quan điểm người nói, điền thông tin v
 
 ### M3-01 — Leisure interview
 
-**File MP3:** `assets/audio/listening/thcs/stage-3/m3-01.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/thcs/stage-3/m3-01.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/thcs/stage-3/m3-01.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-8-unit-1-skills-2-a134923.html
 
@@ -1219,7 +1364,9 @@ Theo dõi nhiều lượt nói, quan điểm người nói, điền thông tin v
 
 ### M3-02 — Countryside opinions
 
-**File MP3:** `assets/audio/listening/thcs/stage-3/m3-02.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/thcs/stage-3/m3-02.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/thcs/stage-3/m3-02.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-8-unit-2-skills-2-a137295.html
 
@@ -1235,7 +1382,9 @@ Theo dõi nhiều lượt nói, quan điểm người nói, điền thông tin v
 
 ### M3-03 — Teen stress
 
-**File MP3:** `assets/audio/listening/thcs/stage-3/m3-03.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/thcs/stage-3/m3-03.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/thcs/stage-3/m3-03.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-8-unit-3-skills-2-a137331.html
 
@@ -1251,7 +1400,9 @@ Theo dõi nhiều lượt nói, quan điểm người nói, điền thông tin v
 
 ### M3-04 — Online shopping
 
-**File MP3:** `assets/audio/listening/thcs/stage-3/m3-04.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/thcs/stage-3/m3-04.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/thcs/stage-3/m3-04.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-8-unit-8-skills-2-a142616.html
 
@@ -1267,7 +1418,9 @@ Theo dõi nhiều lượt nói, quan điểm người nói, điền thông tin v
 
 ### M3-05 — Water pollution
 
-**File MP3:** `assets/audio/listening/thcs/stage-3/m3-05.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/thcs/stage-3/m3-05.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/thcs/stage-3/m3-05.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-8-unit-7-skills-2-a141336.html
 
@@ -1283,7 +1436,9 @@ Theo dõi nhiều lượt nói, quan điểm người nói, điền thông tin v
 
 ### M3-06 — Club pressure
 
-**File MP3:** `assets/audio/listening/thcs/stage-3/m3-06.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/thcs/stage-3/m3-06.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/thcs/stage-3/m3-06.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-8-unit-3-skills-2-a137331.html
 
@@ -1299,7 +1454,9 @@ Theo dõi nhiều lượt nói, quan điểm người nói, điền thông tin v
 
 ### M3-07 — Free-time balance
 
-**File MP3:** `assets/audio/listening/thcs/stage-3/m3-07.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/thcs/stage-3/m3-07.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/thcs/stage-3/m3-07.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-8-unit-1-skills-2-a134923.html
 
@@ -1315,7 +1472,9 @@ Theo dõi nhiều lượt nói, quan điểm người nói, điền thông tin v
 
 ### M3-08 — Village change
 
-**File MP3:** `assets/audio/listening/thcs/stage-3/m3-08.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/thcs/stage-3/m3-08.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/thcs/stage-3/m3-08.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-8-unit-2-skills-2-a137295.html
 
@@ -1331,7 +1490,9 @@ Theo dõi nhiều lượt nói, quan điểm người nói, điền thông tin v
 
 ### M3-09 — Return policy
 
-**File MP3:** `assets/audio/listening/thcs/stage-3/m3-09.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/thcs/stage-3/m3-09.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/thcs/stage-3/m3-09.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-8-unit-8-skills-2-a142616.html
 
@@ -1347,7 +1508,9 @@ Theo dõi nhiều lượt nói, quan điểm người nói, điền thông tin v
 
 ### M3-10 — School environment
 
-**File MP3:** `assets/audio/listening/thcs/stage-3/m3-10.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/thcs/stage-3/m3-10.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/thcs/stage-3/m3-10.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-8-unit-7-skills-2-a141336.html
 
@@ -1367,7 +1530,9 @@ Nghe nhiều người nói hoặc đoạn thông tin dài, tổng hợp ý, suy 
 
 ### M4-01 — City views
 
-**File MP3:** `assets/audio/listening/thcs/stage-4/m4-01.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/thcs/stage-4/m4-01.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/thcs/stage-4/m4-01.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-9-unit-2-skills-2-a156636.html
 
@@ -1383,7 +1548,9 @@ Nghe nhiều người nói hoặc đoạn thông tin dài, tổng hợp ý, suy 
 
 ### M4-02 — Time management
 
-**File MP3:** `assets/audio/listening/thcs/stage-4/m4-02.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/thcs/stage-4/m4-02.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/thcs/stage-4/m4-02.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-9-unit-3-skills-2-a156776.html
 
@@ -1399,7 +1566,9 @@ Nghe nhiều người nói hoặc đoạn thông tin dài, tổng hợp ý, suy 
 
 ### M4-03 — Learning vocabulary
 
-**File MP3:** `assets/audio/listening/thcs/stage-4/m4-03.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/thcs/stage-4/m4-03.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/thcs/stage-4/m4-03.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-9-unit-9-skills-2-a163737.html
 
@@ -1415,7 +1584,9 @@ Nghe nhiều người nói hoặc đoạn thông tin dài, tổng hợp ý, suy 
 
 ### M4-04 — Community helper
 
-**File MP3:** `assets/audio/listening/thcs/stage-4/m4-04.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/thcs/stage-4/m4-04.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/thcs/stage-4/m4-04.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-9-unit-1-skills-2-a156628.html
 
@@ -1431,7 +1602,9 @@ Nghe nhiều người nói hoặc đoạn thông tin dài, tổng hợp ý, suy 
 
 ### M4-05 — City transport proposal
 
-**File MP3:** `assets/audio/listening/thcs/stage-4/m4-05.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/thcs/stage-4/m4-05.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/thcs/stage-4/m4-05.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-9-unit-2-skills-2-a156636.html
 
@@ -1447,7 +1620,9 @@ Nghe nhiều người nói hoặc đoạn thông tin dài, tổng hợp ý, suy 
 
 ### M4-06 — Study distractions
 
-**File MP3:** `assets/audio/listening/thcs/stage-4/m4-06.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/thcs/stage-4/m4-06.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/thcs/stage-4/m4-06.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-9-unit-3-skills-2-a156776.html
 
@@ -1463,7 +1638,9 @@ Nghe nhiều người nói hoặc đoạn thông tin dài, tổng hợp ý, suy 
 
 ### M4-07 — English exposure
 
-**File MP3:** `assets/audio/listening/thcs/stage-4/m4-07.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/thcs/stage-4/m4-07.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/thcs/stage-4/m4-07.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-9-unit-9-skills-2-a163737.html
 
@@ -1479,7 +1656,9 @@ Nghe nhiều người nói hoặc đoạn thông tin dài, tổng hợp ý, suy 
 
 ### M4-08 — Local craft
 
-**File MP3:** `assets/audio/listening/thcs/stage-4/m4-08.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/thcs/stage-4/m4-08.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/thcs/stage-4/m4-08.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-9-unit-1-skills-2-a156628.html
 
@@ -1495,7 +1674,9 @@ Nghe nhiều người nói hoặc đoạn thông tin dài, tổng hợp ý, suy 
 
 ### M4-09 — Balanced schedule
 
-**File MP3:** `assets/audio/listening/thcs/stage-4/m4-09.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/thcs/stage-4/m4-09.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/thcs/stage-4/m4-09.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-9-unit-3-skills-2-a156776.html
 
@@ -1511,7 +1692,9 @@ Nghe nhiều người nói hoặc đoạn thông tin dài, tổng hợp ý, suy 
 
 ### M4-10 — City air quality
 
-**File MP3:** `assets/audio/listening/thcs/stage-4/m4-10.mp3`
+**Tên file cần upload vào repo:** `assets/audio/listening/thcs/stage-4/m4-10.mp3`
+
+**Link nghe sau khi đã upload:** https://lddenglish.page/assets/audio/listening/thcs/stage-4/m4-10.mp3
 
 **Nguồn mẫu Loigiaihay:** https://loigiaihay.com/tieng-anh-9-unit-2-skills-2-a156636.html
 
