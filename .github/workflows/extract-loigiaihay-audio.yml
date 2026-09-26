@@ -6,54 +6,28 @@ on:
       - ".github/workflows/extract-loigiaihay-audio.yml"
 
 jobs:
-  extract:
+  verify:
     runs-on: ubuntu-latest
     steps:
-      - name: Crawl English grade 1 child pages
+      - name: Verify grade 1 vocabulary MP3 candidates
         shell: bash
         run: |
-          python3 - <<'PY'
-          import re, json, html, urllib.request, urllib.parse
-          from concurrent.futures import ThreadPoolExecutor, as_completed
-          ROOT="https://loigiaihay.com/lop-1.html"
-          H={"User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/154 Safari/537.36"}
-          def fetch(u):
-              q=urllib.request.Request(u,headers=H)
-              with urllib.request.urlopen(q,timeout=25) as r:return r.read().decode("utf-8","ignore")
-          def getmp3(s):
-              s=html.unescape(s).replace("\\/","/")
-              out=[]
-              for m in re.findall(r'https?://[^\s"\'<>]+?\.mp3(?:\?[^\s"\'<>]*)?',s,re.I):
-                  m=m.rstrip("),.;")
-                  if "img.loigiaihay.com/" in m and m not in out:out.append(m)
-              return out
-          raw=fetch(ROOT)
-          hrefs=re.findall(r'href=["\']([^"\']+)["\']',raw,re.I)
-          c=[]
-          for h in hrefs:
-              u=urllib.parse.urljoin(ROOT,html.unescape(h))
-              p=urllib.parse.urlparse(u)
-              if p.netloc not in ("loigiaihay.com","www.loigiaihay.com","m.loigiaihay.com"):continue
-              u="https://loigiaihay.com"+p.path
-              low=u.lower()
-              if not low.endswith(".html"):continue
-              if ("tieng-anh-1" in low or "tieng-anh-lop-1" in low or "unit-" in low) and u not in c:c.append(u)
-          print("CANDIDATES",len(c))
-          c=c[:220]
-          found=[]
-          with ThreadPoolExecutor(max_workers=16) as ex:
-              fs={ex.submit(fetch,u):u for u in c}
-              for fu in as_completed(fs):
-                  u=fs[fu]
-                  try:
-                      s=fu.result(); a=getmp3(s)
-                      if a:
-                          tm=re.search(r'<title[^>]*>(.*?)</title>',s,re.I|re.S)
-                          t=html.unescape(re.sub(r'<[^>]+>',' ',tm.group(1))).strip() if tm else ""
-                          found.append((u,t,a))
-                  except Exception:pass
-          found.sort()
-          print("FOUND",len(found))
-          for u,t,a in found:
-              print("G1MAP\t"+u+"\t"+json.dumps(t,ensure_ascii=False)+"\t"+json.dumps(a,ensure_ascii=False))
-          PY
+          set +e
+          u="https://img.loigiaihay.com/picture/audio/cat-gb.mp3"; code=$(curl -L -sS -o /dev/null -w "%{http_code}" "$u"); echo -e "WORDMP3\tcat\t$code\t$u"
+          u="https://img.loigiaihay.com/picture/audio/book-gb.mp3"; code=$(curl -L -sS -o /dev/null -w "%{http_code}" "$u"); echo -e "WORDMP3\tbook\t$code\t$u"
+          u="https://img.loigiaihay.com/picture/audio/sun-gb.mp3"; code=$(curl -L -sS -o /dev/null -w "%{http_code}" "$u"); echo -e "WORDMP3\tsun\t$code\t$u"
+          u="https://img.loigiaihay.com/picture/audio/pen-gb.mp3"; code=$(curl -L -sS -o /dev/null -w "%{http_code}" "$u"); echo -e "WORDMP3\tpen\t$code\t$u"
+          u="https://img.loigiaihay.com/picture/audio/dog-gb.mp3"; code=$(curl -L -sS -o /dev/null -w "%{http_code}" "$u"); echo -e "WORDMP3\tdog\t$code\t$u"
+          u="https://img.loigiaihay.com/picture/audio/red-gb.mp3"; code=$(curl -L -sS -o /dev/null -w "%{http_code}" "$u"); echo -e "WORDMP3\tred\t$code\t$u"
+          u="https://img.loigiaihay.com/picture/audio/milk-gb.mp3"; code=$(curl -L -sS -o /dev/null -w "%{http_code}" "$u"); echo -e "WORDMP3\tmilk\t$code\t$u"
+          u="https://img.loigiaihay.com/picture/audio/apple-gb.mp3"; code=$(curl -L -sS -o /dev/null -w "%{http_code}" "$u"); echo -e "WORDMP3\tapple\t$code\t$u"
+          u="https://img.loigiaihay.com/picture/audio/fish-gb.mp3"; code=$(curl -L -sS -o /dev/null -w "%{http_code}" "$u"); echo -e "WORDMP3\tfish\t$code\t$u"
+          u="https://img.loigiaihay.com/picture/audio/blue-gb.mp3"; code=$(curl -L -sS -o /dev/null -w "%{http_code}" "$u"); echo -e "WORDMP3\tblue\t$code\t$u"
+          u="https://img.loigiaihay.com/picture/audio/table-gb.mp3"; code=$(curl -L -sS -o /dev/null -w "%{http_code}" "$u"); echo -e "WORDMP3\ttable\t$code\t$u"
+          u="https://img.loigiaihay.com/picture/audio/green-gb.mp3"; code=$(curl -L -sS -o /dev/null -w "%{http_code}" "$u"); echo -e "WORDMP3\tgreen\t$code\t$u"
+          u="https://img.loigiaihay.com/picture/audio/water-gb.mp3"; code=$(curl -L -sS -o /dev/null -w "%{http_code}" "$u"); echo -e "WORDMP3\twater\t$code\t$u"
+          u="https://img.loigiaihay.com/picture/audio/school-gb.mp3"; code=$(curl -L -sS -o /dev/null -w "%{http_code}" "$u"); echo -e "WORDMP3\tschool\t$code\t$u"
+          u="https://img.loigiaihay.com/picture/audio/chair-gb.mp3"; code=$(curl -L -sS -o /dev/null -w "%{http_code}" "$u"); echo -e "WORDMP3\tchair\t$code\t$u"
+          u="https://img.loigiaihay.com/picture/audio/juice-gb.mp3"; code=$(curl -L -sS -o /dev/null -w "%{http_code}" "$u"); echo -e "WORDMP3\tjuice\t$code\t$u"
+          u="https://img.loigiaihay.com/picture/audio/cake-gb.mp3"; code=$(curl -L -sS -o /dev/null -w "%{http_code}" "$u"); echo -e "WORDMP3\tcake\t$code\t$u"
+          u="https://img.loigiaihay.com/picture/audio/window-gb.mp3"; code=$(curl -L -sS -o /dev/null -w "%{http_code}" "$u"); echo -e "WORDMP3\twindow\t$code\t$u"
