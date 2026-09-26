@@ -9,41 +9,82 @@ jobs:
   extract:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Extract MP3 links from every Loigiaihay source page in guide
+      - name: Crawl child pages of broad Loigiaihay sources
         shell: bash
         run: |
           python3 - <<'PY'
-          import re, json, html, urllib.request, time
-          from pathlib import Path
+          import re, json, html, urllib.request, urllib.parse
+          from concurrent.futures import ThreadPoolExecutor, as_completed
 
-          text = Path("LISTENING_RECORDING_GUIDE.md").read_text(encoding="utf-8")
-          urls = list(dict.fromkeys(re.findall(
-              r'\*\*Trang bài Loigiaihay để đối chiếu:\*\*\s*(https://loigiaihay\.com/[^\s)]+)',
-              text
-          )))
-          print("SOURCE_PAGE_COUNT", len(urls))
+          roots = [
+            ("grade2", "https://loigiaihay.com/tieng-anh-2-ket-noi-tri-thuc-voi-cuoc-song-c622.html"),
+            ("grade3u1", "https://loigiaihay.com/unit-1-hello-e25423.html"),
+            ("grade5u5", "https://loigiaihay.com/unit-5-my-future-job-e35294.html"),
+            ("grade5", "https://loigiaihay.com/tieng-anh-5-global-success-c1762.html"),
+          ]
+          headers = {"User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/154 Safari/537.36"}
 
-          headers = {
-              "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/154 Safari/537.36",
-              "Accept-Language": "vi-VN,vi;q=0.9,en;q=0.8",
-          }
+          def fetch(url):
+              req=urllib.request.Request(url, headers=headers)
+              with urllib.request.urlopen(req, timeout=25) as r:
+                  return r.read().decode("utf-8","ignore")
 
-          for idx, url in enumerate(urls, 1):
+          def mp3s(raw):
+              raw=html.unescape(raw).replace("\\/", "/")
+              out=[]
+              for m in re.findall(r'https?://[^\s"\'<>]+?\.mp3(?:\?[^\s"\'<>]*)?',raw,re.I):
+                  m=m.rstrip("),.;")
+                  if "img.loigiaihay.com/" in m and m not in out: out.append(m)
+              return out
+
+          def title(raw):
+              m=re.search(r'<title[^>]*>(.*?)</title>',raw,re.I|re.S)
+              if not m: return ""
+              return re.sub(r'<[^>]+>',' ',html.unescape(m.group(1))).strip()
+
+          def links(root, raw, tag):
+              vals=re.findall(r'href=["\']([^"\']+)["\']',raw,re.I)
+              out=[]
+              for href in vals:
+                  u=urllib.parse.urljoin(root, html.unescape(href))
+                  p=urllib.parse.urlparse(u)
+                  if p.netloc not in ("loigiaihay.com","www.loigiaihay.com","m.loigiaihay.com"): continue
+                  u="https://loigiaihay.com"+p.path
+                  if p.query: u += "?"+p.query
+                  low=u.lower()
+                  good=False
+                  if tag=="grade2":
+                      good=("tieng-anh-2" in low or "unit-" in low or "review-" in low) and low.endswith(".html")
+                  elif tag=="grade3u1":
+                      good=low.endswith(".html") and ("lop-3" in low or "tieng-anh-3" in low or "unit-1" in low)
+                  elif tag=="grade5u5":
+                      good=low.endswith(".html") and ("lop-5" in low or "tieng-anh-5" in low or "unit-5" in low)
+                  elif tag=="grade5":
+                      good=low.endswith(".html") and ("tieng-anh-5" in low or "lop-5" in low or "giai-" in low)
+                  if good and u not in out: out.append(u)
+              return out[:140]
+
+          for tag,root in roots:
               try:
-                  req = urllib.request.Request(url, headers=headers)
-                  with urllib.request.urlopen(req, timeout=30) as r:
-                      raw = r.read().decode("utf-8", "ignore")
-                  raw = html.unescape(raw).replace("\\/", "/")
-                  mp3s = re.findall(r'https?://[^\s"\'<>]+?\.mp3(?:\?[^\s"\'<>]*)?', raw, flags=re.I)
-                  # Keep Loigiaihay media only and strip common trailing punctuation/entities.
-                  clean = []
-                  for m in mp3s:
-                      m = m.rstrip("),.;")
-                      if "img.loigiaihay.com/" in m and m not in clean:
-                          clean.append(m)
-                  print("MP3MAP\t" + url + "\t" + json.dumps(clean, ensure_ascii=False))
+                  rr=fetch(root)
               except Exception as e:
-                  print("MP3ERR\t" + url + "\t" + repr(e))
-              time.sleep(0.15)
+                  print("ROOTERR\t"+tag+"\t"+root+"\t"+repr(e)); continue
+              cand=links(root,rr,tag)
+              print("ROOT\t"+tag+"\t"+root+"\tCANDIDATES="+str(len(cand)))
+              found=[]
+              with ThreadPoolExecutor(max_workers=12) as ex:
+                  fut={ex.submit(fetch,u):u for u in cand}
+                  for fu in as_completed(fut):
+                      u=fut[fu]
+                      try:
+                          raw=fu.result()
+                          aud=mp3s(raw)
+                          if aud:
+                              found.append((u,title(raw),aud))
+                      except Exception:
+                          pass
+              found.sort()
+              print("ROOTFOUND\t"+tag+"\t"+str(len(found)))
+              for u,t,aud in found:
+                  print("CHILDMAP\t"+tag+"\t"+u+"\t"+json.dumps(t,ensure_ascii=False)+"\t"+json.dumps(aud,ensure_ascii=False))
           PY
