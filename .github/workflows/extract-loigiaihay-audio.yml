@@ -1,0 +1,21 @@
+name: Extract Loigiaihay audio links
+
+on:
+  push:
+    paths:
+      - ".github/workflows/extract-loigiaihay-audio.yml"
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch one Loigiaihay page and print mp3 links
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL="https://loigiaihay.com/tieng-anh-9-unit-2-skills-2-a156636.html"
+          curl -L --compressed -A "Mozilla/5.0" -sS "$URL" -o page.html
+          echo "=== MP3 LINKS ==="
+          grep -Eo 'https?:[^"'\''<> ]+\.mp3([^"'\''<> ]*)?' page.html | sed 's/&amp;/\&/g' | sort -u || true
+          echo "=== IMG.LOIGIAIHAY MP3 ==="
+          grep -Eo 'https?:[^"'\''<> ]*img\.loigiaihay\.com[^"'\''<> ]+\.mp3([^"'\''<> ]*)?' page.html | sed 's/&amp;/\&/g' | sort -u || true
