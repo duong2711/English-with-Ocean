@@ -9,82 +9,51 @@ jobs:
   extract:
     runs-on: ubuntu-latest
     steps:
-      - name: Crawl child pages of broad Loigiaihay sources
+      - name: Crawl English grade 1 child pages
         shell: bash
         run: |
           python3 - <<'PY'
           import re, json, html, urllib.request, urllib.parse
           from concurrent.futures import ThreadPoolExecutor, as_completed
-
-          roots = [
-            ("grade2", "https://loigiaihay.com/tieng-anh-2-ket-noi-tri-thuc-voi-cuoc-song-c622.html"),
-            ("grade3u1", "https://loigiaihay.com/unit-1-hello-e25423.html"),
-            ("grade5u5", "https://loigiaihay.com/unit-5-my-future-job-e35294.html"),
-            ("grade5", "https://loigiaihay.com/tieng-anh-5-global-success-c1762.html"),
-          ]
-          headers = {"User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/154 Safari/537.36"}
-
-          def fetch(url):
-              req=urllib.request.Request(url, headers=headers)
-              with urllib.request.urlopen(req, timeout=25) as r:
-                  return r.read().decode("utf-8","ignore")
-
-          def mp3s(raw):
-              raw=html.unescape(raw).replace("\\/", "/")
+          ROOT="https://loigiaihay.com/lop-1.html"
+          H={"User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/154 Safari/537.36"}
+          def fetch(u):
+              q=urllib.request.Request(u,headers=H)
+              with urllib.request.urlopen(q,timeout=25) as r:return r.read().decode("utf-8","ignore")
+          def getmp3(s):
+              s=html.unescape(s).replace("\\/","/")
               out=[]
-              for m in re.findall(r'https?://[^\s"\'<>]+?\.mp3(?:\?[^\s"\'<>]*)?',raw,re.I):
+              for m in re.findall(r'https?://[^\s"\'<>]+?\.mp3(?:\?[^\s"\'<>]*)?',s,re.I):
                   m=m.rstrip("),.;")
-                  if "img.loigiaihay.com/" in m and m not in out: out.append(m)
+                  if "img.loigiaihay.com/" in m and m not in out:out.append(m)
               return out
-
-          def title(raw):
-              m=re.search(r'<title[^>]*>(.*?)</title>',raw,re.I|re.S)
-              if not m: return ""
-              return re.sub(r'<[^>]+>',' ',html.unescape(m.group(1))).strip()
-
-          def links(root, raw, tag):
-              vals=re.findall(r'href=["\']([^"\']+)["\']',raw,re.I)
-              out=[]
-              for href in vals:
-                  u=urllib.parse.urljoin(root, html.unescape(href))
-                  p=urllib.parse.urlparse(u)
-                  if p.netloc not in ("loigiaihay.com","www.loigiaihay.com","m.loigiaihay.com"): continue
-                  u="https://loigiaihay.com"+p.path
-                  if p.query: u += "?"+p.query
-                  low=u.lower()
-                  good=False
-                  if tag=="grade2":
-                      good=("tieng-anh-2" in low or "unit-" in low or "review-" in low) and low.endswith(".html")
-                  elif tag=="grade3u1":
-                      good=low.endswith(".html") and ("lop-3" in low or "tieng-anh-3" in low or "unit-1" in low)
-                  elif tag=="grade5u5":
-                      good=low.endswith(".html") and ("lop-5" in low or "tieng-anh-5" in low or "unit-5" in low)
-                  elif tag=="grade5":
-                      good=low.endswith(".html") and ("tieng-anh-5" in low or "lop-5" in low or "giai-" in low)
-                  if good and u not in out: out.append(u)
-              return out[:140]
-
-          for tag,root in roots:
-              try:
-                  rr=fetch(root)
-              except Exception as e:
-                  print("ROOTERR\t"+tag+"\t"+root+"\t"+repr(e)); continue
-              cand=links(root,rr,tag)
-              print("ROOT\t"+tag+"\t"+root+"\tCANDIDATES="+str(len(cand)))
-              found=[]
-              with ThreadPoolExecutor(max_workers=12) as ex:
-                  fut={ex.submit(fetch,u):u for u in cand}
-                  for fu in as_completed(fut):
-                      u=fut[fu]
-                      try:
-                          raw=fu.result()
-                          aud=mp3s(raw)
-                          if aud:
-                              found.append((u,title(raw),aud))
-                      except Exception:
-                          pass
-              found.sort()
-              print("ROOTFOUND\t"+tag+"\t"+str(len(found)))
-              for u,t,aud in found:
-                  print("CHILDMAP\t"+tag+"\t"+u+"\t"+json.dumps(t,ensure_ascii=False)+"\t"+json.dumps(aud,ensure_ascii=False))
+          raw=fetch(ROOT)
+          hrefs=re.findall(r'href=["\']([^"\']+)["\']',raw,re.I)
+          c=[]
+          for h in hrefs:
+              u=urllib.parse.urljoin(ROOT,html.unescape(h))
+              p=urllib.parse.urlparse(u)
+              if p.netloc not in ("loigiaihay.com","www.loigiaihay.com","m.loigiaihay.com"):continue
+              u="https://loigiaihay.com"+p.path
+              low=u.lower()
+              if not low.endswith(".html"):continue
+              if ("tieng-anh-1" in low or "tieng-anh-lop-1" in low or "unit-" in low) and u not in c:c.append(u)
+          print("CANDIDATES",len(c))
+          c=c[:220]
+          found=[]
+          with ThreadPoolExecutor(max_workers=16) as ex:
+              fs={ex.submit(fetch,u):u for u in c}
+              for fu in as_completed(fs):
+                  u=fs[fu]
+                  try:
+                      s=fu.result(); a=getmp3(s)
+                      if a:
+                          tm=re.search(r'<title[^>]*>(.*?)</title>',s,re.I|re.S)
+                          t=html.unescape(re.sub(r'<[^>]+>',' ',tm.group(1))).strip() if tm else ""
+                          found.append((u,t,a))
+                  except Exception:pass
+          found.sort()
+          print("FOUND",len(found))
+          for u,t,a in found:
+              print("G1MAP\t"+u+"\t"+json.dumps(t,ensure_ascii=False)+"\t"+json.dumps(a,ensure_ascii=False))
           PY
