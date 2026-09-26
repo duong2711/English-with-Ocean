@@ -9,13 +9,41 @@ jobs:
   extract:
     runs-on: ubuntu-latest
     steps:
-      - name: Fetch one Loigiaihay page and print mp3 links
+      - uses: actions/checkout@v4
+      - name: Extract MP3 links from every Loigiaihay source page in guide
         shell: bash
         run: |
-          set -euo pipefail
-          URL="https://loigiaihay.com/tieng-anh-9-unit-2-skills-2-a156636.html"
-          curl -L --compressed -A "Mozilla/5.0" -sS "$URL" -o page.html
-          echo "=== MP3 LINKS ==="
-          grep -Eo 'https?:[^"'\''<> ]+\.mp3([^"'\''<> ]*)?' page.html | sed 's/&amp;/\&/g' | sort -u || true
-          echo "=== IMG.LOIGIAIHAY MP3 ==="
-          grep -Eo 'https?:[^"'\''<> ]*img\.loigiaihay\.com[^"'\''<> ]+\.mp3([^"'\''<> ]*)?' page.html | sed 's/&amp;/\&/g' | sort -u || true
+          python3 - <<'PY'
+          import re, json, html, urllib.request, time
+          from pathlib import Path
+
+          text = Path("LISTENING_RECORDING_GUIDE.md").read_text(encoding="utf-8")
+          urls = list(dict.fromkeys(re.findall(
+              r'\*\*Trang bài Loigiaihay để đối chiếu:\*\*\s*(https://loigiaihay\.com/[^\s)]+)',
+              text
+          )))
+          print("SOURCE_PAGE_COUNT", len(urls))
+
+          headers = {
+              "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/154 Safari/537.36",
+              "Accept-Language": "vi-VN,vi;q=0.9,en;q=0.8",
+          }
+
+          for idx, url in enumerate(urls, 1):
+              try:
+                  req = urllib.request.Request(url, headers=headers)
+                  with urllib.request.urlopen(req, timeout=30) as r:
+                      raw = r.read().decode("utf-8", "ignore")
+                  raw = html.unescape(raw).replace("\\/", "/")
+                  mp3s = re.findall(r'https?://[^\s"\'<>]+?\.mp3(?:\?[^\s"\'<>]*)?', raw, flags=re.I)
+                  # Keep Loigiaihay media only and strip common trailing punctuation/entities.
+                  clean = []
+                  for m in mp3s:
+                      m = m.rstrip("),.;")
+                      if "img.loigiaihay.com/" in m and m not in clean:
+                          clean.append(m)
+                  print("MP3MAP\t" + url + "\t" + json.dumps(clean, ensure_ascii=False))
+              except Exception as e:
+                  print("MP3ERR\t" + url + "\t" + repr(e))
+              time.sleep(0.15)
+          PY
