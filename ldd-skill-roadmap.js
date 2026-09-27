@@ -1354,35 +1354,33 @@
             (references.length ? '<p><b>MP3 mẫu lưu trên Backblaze B2:</b></p><ol>' +
                 references.map((url, index) => '<li><a href="' + escapeListening(url) + '" target="_blank" rel="noopener noreferrer">▶ Mở MP3 mẫu ' + (index + 1) + '</a></li>').join('') +
                 '</ol>' : '') +
-            '<p><b>MP3 cần thu theo script của bài:</b> <code>' + escapeListening(item.audioUrl) + '</code></p>' +
+            '<p>Phần chấm điểm phát kịch bản riêng bằng giọng đọc tự động.</p>' +
             '</details>';
     }
 
-    function listeningAudioHtml(item, trackId, stageNumber) {
-        const maxPlays = trackId === 'foundation' && stageNumber <= 3 ? 3 : 2;
+    function listeningAudioHtml(item) {
         const references = Array.isArray(item.referenceAudioUrls) ? item.referenceAudioUrls : [];
         const referenceHtml = references.length
             ? '<div class="ldd-listening-reference-player">' +
                 '<strong>🎧 MP3 Loigiaihay trên Backblaze</strong>' +
-                '<p>Audio mẫu để tham khảo. Bài tập bên dưới dùng bản thu theo script riêng.</p>' +
+                '<p>Bài nghe tham khảo; nội dung khác kịch bản dùng để chấm điểm bên dưới.</p>' +
                 (references.length > 1
                     ? '<label>Chọn file mẫu <select data-listening-reference-select>' +
                         references.map((url, index) => '<option value="' + escapeListening(url) + '">MP3 mẫu ' + (index + 1) + ' / ' + references.length + '</option>').join('') +
                         '</select></label>'
                     : '') +
-                '<audio controls preload="none" data-listening-reference-audio src="' + escapeListening(references[0]) + '"></audio>' +
+                '<audio controls preload="metadata" data-listening-reference-audio src="' + escapeListening(references[0]) + '"></audio>' +
                 '<a data-listening-reference-link href="' + escapeListening(references[0]) + '" target="_blank" rel="noopener noreferrer">Mở trực tiếp file .mp3 ↗</a>' +
-            '</div>'
-            : '';
+                '<small data-listening-reference-error hidden>Không phát được MP3 trong trình duyệt. Hãy thử liên kết mở trực tiếp ở trên.</small>' +
+            '</div>' : '';
         return '<div class="ldd-listening-audio-card">' +
-            referenceHtml +
-            '<div class="ldd-listening-exercise-player"><strong>Audio riêng của bài tập</strong>' +
-                '<audio controls preload="metadata" hidden data-listening-audio src="' + escapeListening(item.audioUrl) + '"></audio>' +
-                '<div class="ldd-placement-audio-missing" data-listening-audio-missing>' +
-                    '<strong>Chưa có bản thu theo script</strong><span>MP3 B2 bên trên là mẫu tham khảo; nội dung có thể khác câu hỏi của bài này.</span>' +
-                '</div>' +
-                '<small>Được nghe audio bài tập tối đa ' + maxPlays + ' lần khi có bản thu.</small>' +
-            '</div>' +
+            '<div class="ldd-listening-exercise-player">' +
+                '<strong>🔊 Nghe nội dung của bài để làm câu hỏi</strong>' +
+                '<p>Giọng đọc tự động bằng tiếng Anh, đúng với đáp án của bài này.</p>' +
+                '<button type="button" class="ldd-roadmap-btn is-primary" data-listening-speak>▶ Phát bài nghe</button>' +
+                '<button type="button" class="ldd-roadmap-btn" data-listening-stop hidden>■ Dừng</button>' +
+                '<small data-listening-speech-status role="status">Có thể nghe lại khi cần.</small>' +
+            '</div>' + referenceHtml +
         '</div>';
     }
 
@@ -1390,40 +1388,69 @@
         const select = host.querySelector('[data-listening-reference-select]');
         const audio = host.querySelector('[data-listening-reference-audio]');
         const link = host.querySelector('[data-listening-reference-link]');
-        if (!select || !audio || !link) return;
+        const error = host.querySelector('[data-listening-reference-error]');
+        if (!audio) return;
+        audio.addEventListener('error', function () {
+            if (error) error.hidden = false;
+        });
+        audio.addEventListener('canplay', function () {
+            if (error) error.hidden = true;
+        });
+        if (!select || !link) return;
         select.addEventListener('change', function () {
             audio.pause();
             audio.src = select.value;
             audio.load();
             link.href = select.value;
+            if (error) error.hidden = true;
         });
     }
 
-    function attachListeningAudioLimit(host, trackId, stageNumber) {
-        const audio = host.querySelector('[data-listening-audio]');
-        const missing = host.querySelector('[data-listening-audio-missing]');
-        if (!audio) return;
-        const maxPlays = trackId === 'foundation' && stageNumber <= 3 ? 3 : 2;
-        let plays = 0;
-        audio.addEventListener('error', function () {
-            audio.hidden = true;
-            if (missing) missing.hidden = false;
-        });
-        audio.addEventListener('loadedmetadata', function () {
-            audio.hidden = false;
-            if (missing) missing.hidden = true;
-        });
-        audio.addEventListener('play', function () {
-            if (audio.currentTime < 0.35) plays++;
-            if (plays > maxPlays) {
-                audio.pause();
-                audio.currentTime = 0;
-                audio.controls = false;
-                if (missing) {
-                    missing.hidden = false;
-                    missing.innerHTML = '<strong>✓ Đã nghe đủ ' + maxPlays + ' lần</strong><span>Hãy hoàn thành bài tập bằng những gì bạn đã nghe.</span>';
+    function attachListeningSpeech(host, item) {
+        const play = host.querySelector('[data-listening-speak]');
+        const stop = host.querySelector('[data-listening-stop]');
+        const status = host.querySelector('[data-listening-speech-status]');
+        if (!play || !status) return;
+        const synth = window.speechSynthesis;
+        if (!synth || typeof window.SpeechSynthesisUtterance !== 'function') {
+            play.disabled = true;
+            status.textContent = 'Thiết bị này chưa hỗ trợ giọng đọc tự động. Hãy mở bằng Chrome, Safari hoặc Edge.';
+            return;
+        }
+        const finish = function () {
+            play.disabled = false;
+            stop.hidden = true;
+        };
+        play.addEventListener('click', function () {
+            synth.cancel();
+            const utterance = new SpeechSynthesisUtterance(String(item.recordingScript || item.script || ''));
+            utterance.lang = 'en-US';
+            utterance.rate = 0.82;
+            const voices = synth.getVoices();
+            utterance.voice = voices.find(voice => /^en-(US|GB)/i.test(voice.lang)) ||
+                voices.find(voice => /^en/i.test(voice.lang)) || null;
+            utterance.onstart = function () {
+                play.disabled = true;
+                stop.hidden = false;
+                status.textContent = 'Đang phát bài nghe…';
+            };
+            utterance.onend = function () {
+                finish();
+                status.textContent = 'Đã phát xong. Có thể nghe lại.';
+            };
+            utterance.onerror = function (event) {
+                finish();
+                if (event.error !== 'canceled' && event.error !== 'interrupted') {
+                    status.textContent = 'Không phát được giọng đọc. Hãy kiểm tra âm lượng và thử lại.';
                 }
-            }
+            };
+            status.textContent = 'Đang chuẩn bị giọng đọc…';
+            synth.speak(utterance);
+        });
+        stop.addEventListener('click', function () {
+            synth.cancel();
+            finish();
+            status.textContent = 'Đã dừng. Có thể phát lại.';
         });
     }
 
@@ -1483,6 +1510,29 @@
                     question.options.map((option,aIndex) => '<button type="button" data-listening-q="' + qIndex + '" data-listening-a="' + aIndex + '">' + escapeListening(option) + '</button>').join('') +
                 '</div></section>'
             ).join('') + '</div>';
+    }
+
+    function missingListeningAnswer(item, host) {
+        const blank = selector => Array.from(host.querySelectorAll(selector)).find(input => !input.value.trim());
+        if (item.type === 'spelling') {
+            if (item.mode === 'spell_order' && host.querySelectorAll('[data-chosen-word]').length !== item.words.length) return host.querySelector('[data-spell-order-bank]');
+            if (item.mode === 'spell_numbered') return blank('[data-spell-number]');
+            if (item.mode === 'spell_tick' && !host.querySelector('[data-spell-tick]:checked')) return host.querySelector('[data-spell-tick]');
+            if (item.mode !== 'spell_order' && item.mode !== 'spell_numbered' && item.mode !== 'spell_tick') return blank('[data-spell-single]');
+        }
+        if (item.type === 'qa_transcribe' || item.type === 'qa_choice') {
+            return blank('[data-qa-question], [data-qa-answer]') ||
+                (item.type === 'qa_choice' && !host.querySelector('[data-followup].is-selected') ? host.querySelector('[data-followup]') : null);
+        }
+        if (item.type === 'dialogue_gap') return blank('[data-dialogue-gap]');
+        if (item.type === 'mcq_set') {
+            for (let index = 0; index < item.questions.length; index++) {
+                if (!host.querySelector('[data-listening-q="' + index + '"].is-selected')) {
+                    return host.querySelector('[data-listening-q="' + index + '"]');
+                }
+            }
+        }
+        return null;
     }
 
     function gradeListeningExercise(item, host) {
@@ -1556,7 +1606,16 @@
         progress.current = stageNumber;
         saveState();
 
-        const scores = new Array(exercises.length).fill(null);
+        const attemptKey = 'ldd_listening_attempt_v2::' + trackId + '::' + stageNumber;
+        let savedScores = [];
+        try {
+            const parsed = JSON.parse(localStorage.getItem(attemptKey) || '[]');
+            if (Array.isArray(parsed)) savedScores = parsed;
+        } catch (error) { /* Start a new attempt if local storage is unavailable. */ }
+        const scores = exercises.map((_, index) => Number.isFinite(savedScores[index]) ? savedScores[index] : null);
+        const saveAttempt = function () {
+            try { localStorage.setItem(attemptKey, JSON.stringify(scores)); } catch (error) { /* Continue grading locally. */ }
+        };
         let activeIndex = 0;
         panel.style.display = '';
         panel.hidden = false;
@@ -1578,9 +1637,11 @@
                     '<div class="ldd-listening-lesson-list" data-listening-list></div>' +
                     '<div class="ldd-listening-exercise" data-listening-exercise></div>' +
                 '</div>' +
+                '<div class="ldd-lab-actions"><button type="button" class="ldd-roadmap-btn is-primary" data-listening-stage-submit>Nộp 10 bài và chấm điểm</button></div>' +
                 '<div class="ldd-lab-feedback" data-listening-stage-feedback hidden></div>';
 
-            panel.querySelector('[data-listening-back]').addEventListener('click', () => showHub('listening'));
+            panel.querySelector('[data-listening-back]').addEventListener('click', () => { window.speechSynthesis?.cancel(); showHub('listening'); });
+            panel.querySelector('[data-listening-stage-submit]').addEventListener('click', submitStage);
             renderList();
             renderExercise(activeIndex);
         };
@@ -1597,6 +1658,7 @@
             ).join('');
             list.querySelectorAll('[data-listening-index]').forEach(button => {
                 button.addEventListener('click', function () {
+                    window.speechSynthesis?.cancel();
                     activeIndex = Number(this.dataset.listeningIndex);
                     renderList();
                     renderExercise(activeIndex);
@@ -1624,7 +1686,7 @@
                 '<div class="ldd-lab-feedback" data-listening-feedback hidden></div>' +
                 listeningSourceHtml(item);
 
-            attachListeningAudioLimit(host, trackId, stageNumber);
+            attachListeningSpeech(host, item);
             attachListeningReferenceAudio(host);
 
             const orderBank = host.querySelector('[data-spell-order-bank]');
@@ -1658,20 +1720,40 @@
             });
 
             host.querySelector('[data-listening-submit]').addEventListener('click', function () {
+                const missing = missingListeningAnswer(item, host);
+                const feedback = host.querySelector('[data-listening-feedback]');
+                if (missing) {
+                    feedback.hidden = false;
+                    feedback.className = 'ldd-lab-feedback is-review';
+                    feedback.textContent = 'Hãy trả lời đủ các câu của bài này trước khi nộp.';
+                    missing.focus();
+                    return;
+                }
                 const result = gradeListeningExercise(item, host);
                 scores[index] = result.score;
-                const feedback = host.querySelector('[data-listening-feedback]');
+                saveAttempt();
                 feedback.hidden = false;
                 feedback.className = 'ldd-lab-feedback ' + (result.score >= 80 ? 'is-success' : 'is-review');
                 feedback.innerHTML = '<span class="ldd-feedback-score">' + result.score + '/100</span><strong>' +
                     (result.score >= 80 ? 'Đạt bài này.' : 'Chưa đạt 80%.') + '</strong><p>' + escapeListening(result.detail) + '</p>';
                 renderList();
-                renderStageResultIfReady();
+                feedback.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             });
         };
 
-        const renderStageResultIfReady = function () {
-            if (scores.some(value => value === null)) return;
+        const submitStage = function () {
+            const missingIndex = scores.findIndex(value => value === null);
+            if (missingIndex !== -1) {
+                activeIndex = missingIndex;
+                renderList();
+                renderExercise(activeIndex);
+                const feedback = panel.querySelector('[data-listening-stage-feedback]');
+                feedback.hidden = false;
+                feedback.className = 'ldd-lab-feedback is-review';
+                feedback.textContent = 'Còn ' + scores.filter(value => value === null).length + ' bài chưa nộp. Hãy hoàn thành Bài ' + (missingIndex + 1) + ' trước.';
+                panel.querySelector('[data-listening-exercise]').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                return;
+            }
             const score = Math.round(scores.reduce((sum,value) => sum + value, 0) / scores.length);
             const feedback = panel.querySelector('[data-listening-stage-feedback]');
             feedback.hidden = false;
@@ -1687,7 +1769,10 @@
                 '<strong>' + (score >= SCORE_TO_COMPLETE ? 'Đã đạt Giai đoạn ' + stageNumber + '.' : 'Chưa đạt mốc 80% của giai đoạn.') + '</strong>' +
                 '<div class="ldd-lab-actions"><button type="button" class="ldd-roadmap-btn" data-listening-retry>↻ Làm lại 10 bài</button>' +
                 '<button type="button" class="ldd-roadmap-btn is-primary" data-listening-route>Về lộ trình</button></div>';
-            feedback.querySelector('[data-listening-retry]').addEventListener('click', () => openListeningLab(trackId, stageNumber));
+            feedback.querySelector('[data-listening-retry]').addEventListener('click', () => {
+                try { localStorage.removeItem(attemptKey); } catch (error) { /* Continue with a fresh attempt. */ }
+                openListeningLab(trackId, stageNumber);
+            });
             feedback.querySelector('[data-listening-route]').addEventListener('click', () => showHub('listening'));
             feedback.scrollIntoView({ behavior: 'smooth', block: 'center' });
         };
