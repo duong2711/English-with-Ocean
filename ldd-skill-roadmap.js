@@ -1723,8 +1723,8 @@
         const panel = labs.listening;
         const track = LISTENING_CURRICULUM.tracks[trackId];
         const stage = track && track.stages ? track.stages.find(item => Number(item.stage) === Number(stageNumber)) : null;
-        const exercises = listeningStageExercises(trackId, stageNumber);
-        if (!panel || !track || !stage || exercises.length !== 10) {
+        const audioBank = listeningStageExercises(trackId, stageNumber);
+        if (!panel || !track || !stage || audioBank.length !== 10) {
             showHub('listening');
             toast('Chưa tải đủ 10 bài của giai đoạn này.');
             return;
@@ -1736,16 +1736,97 @@
         progress.current = stageNumber;
         saveState();
 
-        const attemptKey = 'ldd_listening_attempt_' + (trackId === 'foundation' && stageNumber >= 2 ? 'v5' : 'v2') + '::' + trackId + '::' + stageNumber;
-        let savedScores = [];
-        try {
-            const parsed = JSON.parse(localStorage.getItem(attemptKey) || '[]');
-            if (Array.isArray(parsed)) savedScores = parsed;
-        } catch (error) { /* Start a new attempt if local storage is unavailable. */ }
-        const scores = exercises.map((_, index) => Number.isFinite(savedScores[index]) ? savedScores[index] : null);
-        const saveAttempt = function () {
-            try { localStorage.setItem(attemptKey, JSON.stringify(scores)); } catch (error) { /* Continue grading locally. */ }
+        const useAudioBank = trackId === 'foundation' && stageNumber >= 2;
+        const attemptKey = 'ldd_listening_attempt_' + (useAudioBank ? 'v6' : 'v2') + '::' + trackId + '::' + stageNumber;
+        let stored = null;
+        try { stored = JSON.parse(localStorage.getItem(attemptKey) || 'null'); }
+        catch (error) { /* Continue with a new local attempt. */ }
+        const randomOrder = function (previous) {
+            // A bank entry always carries its own recording, questions and answer key.
+            const indices = audioBank.map((_, index) => index);
+            const shuffle = values => {
+                for (let i = values.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [values[i], values[j]] = [values[j], values[i]];
+                }
+                return values;
+            };
+            if (!useAudioBank || !previous) return useAudioBank ? shuffle(indices) : indices;
+            const result = Array(indices.length).fill(-1);
+            const used = new Set();
+            const slots = shuffle(indices.slice()).sort((a,b) =>
+                indices.filter(source => audioBank[source].referenceAudioUrls[0] !==
+                    audioBank[previous[a]].referenceAudioUrls[0]).length -
+                indices.filter(source => audioBank[source].referenceAudioUrls[0] !==
+                    audioBank[previous[b]].referenceAudioUrls[0]).length);
+            const assign = depth => {
+                if (depth === slots.length) return true;
+                const slot = slots[depth];
+                for (const source of shuffle(indices.slice())) {
+                    if (used.has(source) || audioBank[source].referenceAudioUrls[0] ===
+                        audioBank[previous[slot]].referenceAudioUrls[0]) continue;
+                    used.add(source);
+                    result[slot] = source;
+                    if (assign(depth + 1)) return true;
+                    used.delete(source);
+                }
+                return false;
+            };
+            return assign(0) ? result : shuffle(indices);
         };
+        const newSeed = function () { return Math.floor(Math.random() * 2147483647); };
+        let order = useAudioBank && Array.isArray(stored && stored.order) &&
+            stored.order.length === 10 && new Set(stored.order).size === 10 &&
+            stored.order.every(index => Number.isInteger(index) && index >= 0 && index < 10)
+            ? stored.order.slice() : randomOrder(null);
+        let variants = useAudioBank && Array.isArray(stored && stored.variants) && stored.variants.length === 10
+            ? stored.variants.slice() : audioBank.map(() => newSeed());
+        let scores = audioBank.map((_, index) => {
+            const previous = useAudioBank ? stored && stored.scores : stored;
+            return Array.isArray(previous) && Number.isFinite(previous[index]) ? previous[index] : null;
+        });
+        const buildExercise = function (sourceIndex, seed) {
+            const source = audioBank[sourceIndex];
+            if (!useAudioBank) return source;
+            // Copy the bank entry so shuffling choices never changes the answer key in the curriculum.
+            const item = Object.assign({}, source);
+            const nextRandom = function () {
+                seed = (Math.imul(1664525, seed) + 1013904223) >>> 0;
+                return seed / 4294967296;
+            };
+            const shuffleQuestion = function (question) {
+                const indices = question.options.map((_, i) => i);
+                for (let i = indices.length - 1; i > 0; i--) {
+                    const j = Math.floor(nextRandom() * (i + 1));
+                    [indices[i], indices[j]] = [indices[j], indices[i]];
+                }
+                return Object.assign({}, question, {
+                    options: indices.map(index => question.options[index]),
+                    answer: indices.indexOf(Number(question.answer))
+                });
+            };
+            const variant = seed % 2;
+            if (item.coverageQuestions) item.coverageQuestions = item.coverageQuestions.map(question =>
+                shuffleQuestion(Object.assign({}, question, {text: variant ?
+                    'Nghe và chọn đáp án: ' + question.text.charAt(0).toLowerCase() + question.text.slice(1) : question.text})));
+            if (item.questions) item.questions = item.questions.map((question,index) =>
+                shuffleQuestion(Object.assign({}, question, {
+                    text: variant && question.alternateText ? question.alternateText : question.text
+                })));
+            if (item.options) {
+                const followup = shuffleQuestion({options: item.options, answer: item.answer});
+                item.options = followup.options;
+                item.answer = followup.answer;
+            }
+            return item;
+        };
+        let exercises = order.map((source,index) => buildExercise(source, variants[index]));
+        const saveAttempt = function () {
+            try { localStorage.setItem(attemptKey, JSON.stringify(useAudioBank ?
+                {order: order, variants: variants, scores: scores} : scores)); }
+            catch (error) { /* Continue grading locally. */ }
+        };
+        if (useAudioBank) saveAttempt();
         let activeIndex = 0;
         panel.style.display = '';
         panel.hidden = false;
@@ -1763,14 +1844,26 @@
                 (trackId === 'foundation' && stageNumber === 1
                     ? '<div class="ldd-listening-difficulty-legend"><span class="is-easy">Dễ</span><span>Trung bình</span><span>Khá</span><span>Khó</span><span class="is-hell">💀 Địa ngục</span></div>'
                     : '') +
-                '<div class="ldd-listening-submit-guide"><span>Trả lời đủ các câu rồi bấm <strong>Nộp bài này và xem điểm</strong>. Điểm giai đoạn hiện tự động khi nộp đủ 10 bài.</span>' +
+                '<div class="ldd-listening-submit-guide"><span>Trả lời đủ các câu rồi bấm <strong>Nộp bài này và xem điểm</strong>. Điểm giai đoạn hiện tự động khi nộp đủ 10 bài. ' + (useAudioBank ? 'Mỗi lượt rút bài nghe kèm câu hỏi từ ngân hàng MP3.' : '') + '</span>' +
                     '<strong data-listening-stage-count aria-live="polite">0/10 đã nộp</strong></div>' +
+                (useAudioBank ? '<div class="ldd-lab-actions"><button type="button" class="ldd-roadmap-btn" data-listening-new-attempt>Lượt mới · rút lại audio bank</button></div>' : '') +
                 '<div class="ldd-listening-bank">' +
                     '<div class="ldd-listening-lesson-list" data-listening-list></div>' +
                     '<div class="ldd-listening-exercise" data-listening-exercise></div>' +
                 '</div>';
 
             panel.querySelector('[data-listening-back]').addEventListener('click', () => showHub('listening'));
+            if (useAudioBank) panel.querySelector('[data-listening-new-attempt]').addEventListener('click', () => {
+                stopListeningPlayback(panel);
+                order = randomOrder(order);
+                variants = variants.map(() => newSeed());
+                scores = scores.map(() => null);
+                exercises = order.map((source,index) => buildExercise(source, variants[index]));
+                activeIndex = 0;
+                saveAttempt();
+                renderList();
+                renderExercise(activeIndex);
+            });
             renderList();
             renderExercise(activeIndex);
             if (scores.every(value => value !== null)) completeStage();
@@ -1895,7 +1988,16 @@
                             'Chưa đạt mốc 80%. Bạn có thể mở bài trong danh sách và nộp lại để cải thiện.') +
                         '</p></div>') +
                     '<div class="ldd-lab-actions"><button type="button" class="ldd-roadmap-btn is-primary" data-listening-next>' +
-                    (remainingIndex === -1 ? 'Về lộ trình →' : 'Bài tiếp theo →') + '</button></div>';
+                    (remainingIndex === -1 ? 'Về lộ trình →' : 'Bài tiếp theo →') + '</button>' +
+                    (useAudioBank ? '<button type="button" class="ldd-roadmap-btn" data-listening-retry>Đổi câu hỏi · làm lại bài này</button>' : '') + '</div>';
+                if (useAudioBank) feedback.querySelector('[data-listening-retry]').addEventListener('click', () => {
+                    variants[index] = (newSeed() & ~1) | (variants[index] % 2 ? 0 : 1);
+                    scores[index] = null;
+                    exercises[index] = buildExercise(order[index], variants[index]);
+                    saveAttempt();
+                    renderList();
+                    renderExercise(index);
+                });
                 feedback.querySelector('[data-listening-next]').addEventListener('click', () => {
                     if (remainingIndex === -1) {
                         showHub('listening');
