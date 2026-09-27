@@ -1497,7 +1497,7 @@
     }
 
     function listeningFocusHtml(item) {
-        return item.focus ? '<p class="ldd-listening-focus"><strong>Đoạn cần làm:</strong> ' +
+        return item.focus ? '<p class="ldd-listening-focus"><strong>' + (item.coverageQuestions ? 'Cặp/câu cần ghi: ' : 'Đoạn cần làm: ') + '</strong> ' +
             escapeListening(item.focus) + '</p>' : '';
     }
 
@@ -1535,6 +1535,32 @@
             ).join('') + '</div>';
     }
 
+    function renderListeningCoverage(item) {
+        const questions = item.coverageQuestions || [];
+        if (!questions.length) return '';
+        return '<div class="ldd-listening-full-coverage"><h5>Kiểm tra toàn bộ MP3 · ' + questions.length + ' câu</h5>' +
+            '<p>Nghe theo thứ tự từ đầu đến cuối file rồi trả lời đủ tất cả các câu.</p>' +
+            '<div class="ldd-listening-mcq-set">' + questions.map((question,qIndex) =>
+                '<section class="ldd-listening-mcq-question"><h5>Câu ' + (qIndex + 1) + '. ' + escapeListening(question.text) + '</h5><div class="ldd-reading-answers">' +
+                    question.options.map((option,aIndex) => '<button type="button" data-listening-q="' + qIndex + '" data-listening-a="' + aIndex + '">' + escapeListening(option) + '</button>').join('') +
+                '</div></section>'
+            ).join('') + '</div></div>';
+    }
+
+    function gradeListeningCoverage(item, host, primaryCorrect, primaryTotal) {
+        const questions = item.coverageQuestions || [];
+        let correct = 0;
+        questions.forEach((question,qIndex) => {
+            const selected = host.querySelector('[data-listening-q="' + qIndex + '"].is-selected');
+            if (selected && Number(selected.dataset.listeningA) === Number(question.answer)) correct++;
+        });
+        const weightedCorrect = primaryCorrect * 2 + correct;
+        const weightedTotal = primaryTotal * 2 + questions.length;
+        return { score: Math.round(weightedCorrect / weightedTotal * 100),
+            detail: 'Phần ghi/hiểu: ' + primaryCorrect + '/' + primaryTotal +
+                '; toàn bộ MP3: ' + correct + '/' + questions.length + ' câu.' };
+    }
+
     function missingListeningAnswer(item, host) {
         const blank = selector => Array.from(host.querySelectorAll(selector)).find(input => !input.value.trim());
         if (item.type === 'spelling') {
@@ -1544,15 +1570,24 @@
             if (item.mode !== 'spell_order' && item.mode !== 'spell_numbered' && item.mode !== 'spell_tick') return blank('[data-spell-single]');
         }
         if (item.type === 'qa_transcribe' || item.type === 'qa_choice') {
-            return blank('[data-qa-question], [data-qa-answer]') ||
+            const missing = blank('[data-qa-question], [data-qa-answer]') ||
                 (item.type === 'qa_choice' && !host.querySelector('[data-followup].is-selected') ? host.querySelector('[data-followup]') : null);
+            if (missing) return missing;
         }
-        if (item.type === 'dialogue_gap') return blank('[data-dialogue-gap]');
+        if (item.type === 'dialogue_gap') {
+            const missing = blank('[data-dialogue-gap]');
+            if (missing) return missing;
+        }
         if (item.type === 'mcq_set') {
             for (let index = 0; index < item.questions.length; index++) {
                 if (!host.querySelector('[data-listening-q="' + index + '"].is-selected')) {
                     return host.querySelector('[data-listening-q="' + index + '"]');
                 }
+            }
+        }
+        for (let index = 0; index < (item.coverageQuestions || []).length; index++) {
+            if (!host.querySelector('[data-listening-q="' + index + '"].is-selected')) {
+                return host.querySelector('[data-listening-q="' + index + '"]');
             }
         }
         return null;
@@ -1591,13 +1626,13 @@
                 const selected = host.querySelector('[data-followup].is-selected');
                 if (selected && Number(selected.dataset.followup) === Number(item.answer)) correct++;
             }
-            return { score: Math.round(correct / parts * 100), detail: 'Đúng ' + correct + '/' + parts + ' phần.' };
+            return gradeListeningCoverage(item, host, correct, parts);
         }
 
         if (item.type === 'dialogue_gap') {
             const values = Array.from(host.querySelectorAll('[data-dialogue-gap]')).map(input => normalizeListeningText(input.value));
             const correct = item.expectedBlanks.filter((line,index) => values[index] === normalizeListeningText(line)).length;
-            return { score: Math.round(correct / item.expectedBlanks.length * 100), detail: 'Điền đúng ' + correct + '/' + item.expectedBlanks.length + ' câu.' };
+            return gradeListeningCoverage(item, host, correct, item.expectedBlanks.length);
         }
 
         if (item.type === 'mcq_set') {
@@ -1629,7 +1664,7 @@
         progress.current = stageNumber;
         saveState();
 
-        const attemptKey = 'ldd_listening_attempt_' + (trackId === 'foundation' && stageNumber >= 2 ? 'v4' : 'v2') + '::' + trackId + '::' + stageNumber;
+        const attemptKey = 'ldd_listening_attempt_' + (trackId === 'foundation' && stageNumber >= 2 ? 'v5' : 'v2') + '::' + trackId + '::' + stageNumber;
         let savedScores = [];
         try {
             const parsed = JSON.parse(localStorage.getItem(attemptKey) || '[]');
@@ -1710,6 +1745,7 @@
                     '<span class="ldd-listening-progress-mini">' + scores.filter(value => value !== null).length + '/10 đã làm</span></div>' +
                 listeningAudioHtml(item, trackId, stageNumber) +
                 taskHtml +
+                renderListeningCoverage(item) +
                 '<div class="ldd-lab-actions"><button type="button" class="ldd-roadmap-btn is-primary" data-listening-submit>Nộp bài này và xem điểm</button></div>' +
                 '<div class="ldd-lab-feedback" data-listening-feedback hidden></div>';
 
