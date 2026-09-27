@@ -1454,6 +1454,22 @@
 
 
 /* ===== Listening practice bank: 6 lessons per stage ===== */
+.ldd-listening-submit-guide {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 14px 16px;
+    margin: 14px 0;
+    border: 1px solid #cdddf6;
+    border-radius: 14px;
+    background: #f4f8ff;
+    color: #344565;
+    line-height: 1.5;
+}
+.ldd-listening-submit-guide > span { flex: 1 1 280px; }
+
 .ldd-listening-bank {
     display: grid;
     grid-template-columns: minmax(220px, .72fr) minmax(0, 1.55fr);
