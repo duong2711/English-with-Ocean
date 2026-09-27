@@ -1851,3 +1851,8 @@ Nghe nhiều người nói hoặc đoạn thông tin dài, tổng hợp ý, suy 
 4. Giữ âm lượng giữa các bài tương đối đều.
 5. Không đọc câu hỏi/đáp án.
 6. Sau khi upload, mở link lddenglish tương ứng để kiểm tra.
+
+
+## Ngân hàng bài nghe và lượt làm mới (27/09/2026)
+
+Ở các giai đoạn 2–5 của lộ trình Mất gốc, mỗi mục trong ngân hàng gồm MP3 Loigiaihay, đúng bộ câu hỏi theo thứ tự nội dung âm thanh và khóa đáp án. Khi bắt đầu lượt mới, hệ thống xáo 10 mục trong cùng giai đoạn; MP3 ở mỗi vị trí đổi so với lượt trước. Các lựa chọn được trộn lại nhưng đáp án đúng vẫn được chấm theo vị trí mới. Ở giai đoạn 5 có thêm cách diễn đạt câu hỏi thứ hai cho cả 36 câu. Nút “Đổi câu hỏi · làm lại bài này” giữ MP3 hiện tại, chuyển biến thể câu hỏi và trộn đáp án; “Lượt mới · rút lại audio bank” rút lại cả MP3 và bộ câu hỏi cho 10 bài. Lượt làm dở được lưu trên thiết bị và không đổi khi tải lại trang.
