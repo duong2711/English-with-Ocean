@@ -7,7 +7,7 @@
 (function () {
   'use strict';
   window.LDD_LISTENING_CURRICULUM = {
-  "version": "2026-09-27-full-mp3-coverage",
+  "version": "2026-09-27-listening-timeline",
   "tracks": {
     "foundation": {
       "id": "foundation",
@@ -381,7 +381,7 @@
         "section": "Phần II · hội thoại 1"
       },
       "focus": "Phần II · hội thoại 1",
-      "taskPrompt": "Ở phần II, nghe hội thoại đầu tiên về món đồ chơi rồi ghi lại cả câu hỏi và câu trả lời. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.",
+      "taskPrompt": "Ở phần II, nghe hội thoại đầu tiên về món đồ chơi rồi ghi lại cả câu hỏi và câu trả lời.",
       "coverageQuestions": [
         {
           "text": "Ở phần âm đầu tiên, người đọc phát âm chữ nào?",
@@ -463,7 +463,8 @@
           ],
           "answer": 3
         }
-      ]
+      ],
+      "timelineIndex": 4
     },
     {
       "id": "f2-02",
@@ -484,7 +485,7 @@
         "section": "Phần II · hội thoại 2"
       },
       "focus": "Phần II · hội thoại 2",
-      "taskPrompt": "Ở phần II, nghe hội thoại thứ hai về con vật rồi ghi lại cả câu hỏi và câu trả lời. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.",
+      "taskPrompt": "Ở phần II, nghe hội thoại thứ hai về con vật rồi ghi lại cả câu hỏi và câu trả lời.",
       "coverageQuestions": [
         {
           "text": "Ở phần âm đầu tiên, người đọc phát âm chữ nào?",
@@ -566,7 +567,8 @@
           ],
           "answer": 3
         }
-      ]
+      ],
+      "timelineIndex": 5
     },
     {
       "id": "f2-03",
@@ -587,7 +589,7 @@
         "section": "Đoạn 1 · cặp hỏi–đáp 1"
       },
       "focus": "Đoạn 1 · cặp hỏi–đáp 1",
-      "taskPrompt": "Nghe cặp hỏi–đáp số 1 về người thân và ghi lại hai câu. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.",
+      "taskPrompt": "Nghe cặp hỏi–đáp số 1 về người thân và ghi lại hai câu.",
       "coverageQuestions": [
         {
           "text": "Ở mục 1, người được giới thiệu là ai?",
@@ -639,7 +641,8 @@
           ],
           "answer": 0
         }
-      ]
+      ],
+      "timelineIndex": 0
     },
     {
       "id": "f2-04",
@@ -660,7 +663,7 @@
         "section": "Đoạn 1 · cặp hỏi–đáp 2"
       },
       "focus": "Đoạn 1 · cặp hỏi–đáp 2",
-      "taskPrompt": "Nghe cặp hỏi–đáp số 2 về nghề nghiệp và ghi lại hai câu. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.",
+      "taskPrompt": "Nghe cặp hỏi–đáp số 2 về nghề nghiệp và ghi lại hai câu.",
       "coverageQuestions": [
         {
           "text": "Ở mục 1, người được giới thiệu là ai?",
@@ -712,7 +715,8 @@
           ],
           "answer": 0
         }
-      ]
+      ],
+      "timelineIndex": 1
     },
     {
       "id": "f2-05",
@@ -733,7 +737,7 @@
         "section": "Đoạn 1 · cặp hỏi–đáp 3"
       },
       "focus": "Đoạn 1 · cặp hỏi–đáp 3",
-      "taskPrompt": "Nghe cặp hỏi–đáp số 3 về một căn phòng và ghi lại hai câu. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.",
+      "taskPrompt": "Nghe cặp hỏi–đáp số 3 về một căn phòng và ghi lại hai câu.",
       "coverageQuestions": [
         {
           "text": "Ở mục 1, người được giới thiệu là ai?",
@@ -785,7 +789,8 @@
           ],
           "answer": 0
         }
-      ]
+      ],
+      "timelineIndex": 2
     },
     {
       "id": "f2-06",
@@ -806,7 +811,7 @@
         "section": "Đoạn 1 · cặp hỏi–đáp 5"
       },
       "focus": "Đoạn 1 · cặp hỏi–đáp 5",
-      "taskPrompt": "Nghe cặp hỏi–đáp số 5 về đồ uống và ghi lại hai câu. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.",
+      "taskPrompt": "Nghe cặp hỏi–đáp số 5 về đồ uống và ghi lại hai câu.",
       "coverageQuestions": [
         {
           "text": "Ở mục 1, người được giới thiệu là ai?",
@@ -858,7 +863,8 @@
           ],
           "answer": 0
         }
-      ]
+      ],
+      "timelineIndex": 4
     },
     {
       "id": "f2-07",
@@ -879,7 +885,7 @@
         "section": "Đoạn 2 · cặp hỏi–đáp 1"
       },
       "focus": "Đoạn 2 · cặp hỏi–đáp 1",
-      "taskPrompt": "Nghe cặp hỏi–đáp số 1 trong bài nghe thứ hai về tuổi và ghi lại hai câu. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.",
+      "taskPrompt": "Nghe cặp hỏi–đáp số 1 trong bài nghe thứ hai về tuổi và ghi lại hai câu.",
       "coverageQuestions": [
         {
           "text": "Ở mục 1, anh trai bao nhiêu tuổi?",
@@ -921,7 +927,8 @@
           ],
           "answer": 0
         }
-      ]
+      ],
+      "timelineIndex": 0
     },
     {
       "id": "f2-08",
@@ -942,7 +949,7 @@
         "section": "Đoạn 2 · cặp hỏi–đáp 2"
       },
       "focus": "Đoạn 2 · cặp hỏi–đáp 2",
-      "taskPrompt": "Nghe cặp hỏi–đáp số 2 trong bài nghe thứ hai về nghề nghiệp và ghi lại hai câu. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.",
+      "taskPrompt": "Nghe cặp hỏi–đáp số 2 trong bài nghe thứ hai về nghề nghiệp và ghi lại hai câu.",
       "coverageQuestions": [
         {
           "text": "Ở mục 1, anh trai bao nhiêu tuổi?",
@@ -984,7 +991,8 @@
           ],
           "answer": 0
         }
-      ]
+      ],
+      "timelineIndex": 1
     },
     {
       "id": "f2-09",
@@ -1005,7 +1013,7 @@
         "section": "Đoạn 2 · cặp hỏi–đáp 3"
       },
       "focus": "Đoạn 2 · cặp hỏi–đáp 3",
-      "taskPrompt": "Nghe cặp hỏi–đáp số 3 trong bài nghe thứ hai về vị trí đồ vật và ghi lại hai câu. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.",
+      "taskPrompt": "Nghe cặp hỏi–đáp số 3 trong bài nghe thứ hai về vị trí đồ vật và ghi lại hai câu.",
       "coverageQuestions": [
         {
           "text": "Ở mục 1, anh trai bao nhiêu tuổi?",
@@ -1047,7 +1055,8 @@
           ],
           "answer": 0
         }
-      ]
+      ],
+      "timelineIndex": 2
     },
     {
       "id": "f2-10",
@@ -1068,7 +1077,7 @@
         "section": "Đoạn 2 · cặp hỏi–đáp 4"
       },
       "focus": "Đoạn 2 · cặp hỏi–đáp 4",
-      "taskPrompt": "Nghe cặp hỏi–đáp số 4 trong bài nghe thứ hai về lời mời ăn và ghi lại hai câu. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.",
+      "taskPrompt": "Nghe cặp hỏi–đáp số 4 trong bài nghe thứ hai về lời mời ăn và ghi lại hai câu.",
       "coverageQuestions": [
         {
           "text": "Ở mục 1, anh trai bao nhiêu tuổi?",
@@ -1110,7 +1119,8 @@
           ],
           "answer": 0
         }
-      ]
+      ],
+      "timelineIndex": 3
     },
     {
       "id": "f3-01",
@@ -1137,7 +1147,7 @@
         "section": "Đoạn a · cặp hỏi–đáp đầu tiên"
       },
       "focus": "Đoạn a · cặp hỏi–đáp đầu tiên",
-      "taskPrompt": "Nghe đoạn được chỉ định, ghi lại câu hỏi và câu trả lời; sau đó chọn cách hiểu đúng của lời đáp. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.",
+      "taskPrompt": "Nghe đoạn được chỉ định, ghi lại câu hỏi và câu trả lời; sau đó chọn cách hiểu đúng của lời đáp.",
       "choicePrompt": "Câu trả lời trong MP3 có nghĩa là gì?",
       "coverageQuestions": [
         {
@@ -1170,7 +1180,8 @@
           ],
           "answer": 2
         }
-      ]
+      ],
+      "timelineIndex": 0
     },
     {
       "id": "f3-02",
@@ -1197,7 +1208,7 @@
         "section": "Cặp hỏi–đáp 1"
       },
       "focus": "Cặp hỏi–đáp 1",
-      "taskPrompt": "Nghe đoạn được chỉ định, ghi lại câu hỏi và câu trả lời; sau đó chọn cách hiểu đúng của lời đáp. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.",
+      "taskPrompt": "Nghe đoạn được chỉ định, ghi lại câu hỏi và câu trả lời; sau đó chọn cách hiểu đúng của lời đáp.",
       "choicePrompt": "Câu trả lời trong MP3 có nghĩa là gì?",
       "coverageQuestions": [
         {
@@ -1250,7 +1261,8 @@
           ],
           "answer": 0
         }
-      ]
+      ],
+      "timelineIndex": 0
     },
     {
       "id": "f3-03",
@@ -1277,7 +1289,7 @@
         "section": "Cặp hỏi–đáp 2"
       },
       "focus": "Cặp hỏi–đáp 2",
-      "taskPrompt": "Nghe đoạn được chỉ định, ghi lại câu hỏi và câu trả lời; sau đó chọn cách hiểu đúng của lời đáp. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.",
+      "taskPrompt": "Nghe đoạn được chỉ định, ghi lại câu hỏi và câu trả lời; sau đó chọn cách hiểu đúng của lời đáp.",
       "choicePrompt": "Câu trả lời trong MP3 có nghĩa là gì?",
       "coverageQuestions": [
         {
@@ -1330,7 +1342,8 @@
           ],
           "answer": 0
         }
-      ]
+      ],
+      "timelineIndex": 1
     },
     {
       "id": "f3-04",
@@ -1357,7 +1370,7 @@
         "section": "Đoạn a · câu hỏi về thỏ"
       },
       "focus": "Đoạn a · câu hỏi về thỏ",
-      "taskPrompt": "Nghe đoạn được chỉ định, ghi lại câu hỏi và câu trả lời; sau đó chọn cách hiểu đúng của lời đáp. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.",
+      "taskPrompt": "Nghe đoạn được chỉ định, ghi lại câu hỏi và câu trả lời; sau đó chọn cách hiểu đúng của lời đáp.",
       "choicePrompt": "Câu trả lời trong MP3 có nghĩa là gì?",
       "coverageQuestions": [
         {
@@ -1400,7 +1413,8 @@
           ],
           "answer": 0
         }
-      ]
+      ],
+      "timelineIndex": 0
     },
     {
       "id": "f3-05",
@@ -1427,7 +1441,7 @@
         "section": "Đoạn b · câu hỏi về hoạt động"
       },
       "focus": "Đoạn b · câu hỏi về hoạt động",
-      "taskPrompt": "Nghe đoạn được chỉ định, ghi lại câu hỏi và câu trả lời; sau đó chọn cách hiểu đúng của lời đáp. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.",
+      "taskPrompt": "Nghe đoạn được chỉ định, ghi lại câu hỏi và câu trả lời; sau đó chọn cách hiểu đúng của lời đáp.",
       "choicePrompt": "Câu trả lời trong MP3 có nghĩa là gì?",
       "coverageQuestions": [
         {
@@ -1450,7 +1464,8 @@
           ],
           "answer": 2
         }
-      ]
+      ],
+      "timelineIndex": 1
     },
     {
       "id": "f3-06",
@@ -1477,7 +1492,7 @@
         "section": "Cặp hỏi–đáp 5"
       },
       "focus": "Cặp hỏi–đáp 5",
-      "taskPrompt": "Nghe đoạn được chỉ định, ghi lại câu hỏi và câu trả lời; sau đó chọn cách hiểu đúng của lời đáp. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.",
+      "taskPrompt": "Nghe đoạn được chỉ định, ghi lại câu hỏi và câu trả lời; sau đó chọn cách hiểu đúng của lời đáp.",
       "choicePrompt": "Câu trả lời trong MP3 có nghĩa là gì?",
       "coverageQuestions": [
         {
@@ -1530,7 +1545,8 @@
           ],
           "answer": 0
         }
-      ]
+      ],
+      "timelineIndex": 4
     },
     {
       "id": "f3-07",
@@ -1557,7 +1573,7 @@
         "section": "Đoạn 2 · cặp hỏi–đáp 3"
       },
       "focus": "Đoạn 2 · cặp hỏi–đáp 3",
-      "taskPrompt": "Nghe đoạn được chỉ định, ghi lại câu hỏi và câu trả lời; sau đó chọn cách hiểu đúng của lời đáp. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.",
+      "taskPrompt": "Nghe đoạn được chỉ định, ghi lại câu hỏi và câu trả lời; sau đó chọn cách hiểu đúng của lời đáp.",
       "choicePrompt": "Câu trả lời trong MP3 có nghĩa là gì?",
       "coverageQuestions": [
         {
@@ -1600,7 +1616,8 @@
           ],
           "answer": 0
         }
-      ]
+      ],
+      "timelineIndex": 2
     },
     {
       "id": "f3-08",
@@ -1627,7 +1644,7 @@
         "section": "Mục b · cặp hỏi–đáp về cô ấy"
       },
       "focus": "Mục b · cặp hỏi–đáp về cô ấy",
-      "taskPrompt": "Nghe đoạn được chỉ định, ghi lại câu hỏi và câu trả lời; sau đó chọn cách hiểu đúng của lời đáp. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.",
+      "taskPrompt": "Nghe đoạn được chỉ định, ghi lại câu hỏi và câu trả lời; sau đó chọn cách hiểu đúng của lời đáp.",
       "choicePrompt": "Câu trả lời trong MP3 có nghĩa là gì?",
       "coverageQuestions": [
         {
@@ -1670,7 +1687,8 @@
           ],
           "answer": 3
         }
-      ]
+      ],
+      "timelineIndex": 1
     },
     {
       "id": "f3-09",
@@ -1697,7 +1715,7 @@
         "section": "Hội thoại số 3"
       },
       "focus": "Hội thoại số 3",
-      "taskPrompt": "Nghe đoạn được chỉ định, ghi lại câu hỏi và câu trả lời; sau đó chọn cách hiểu đúng của lời đáp. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.",
+      "taskPrompt": "Nghe đoạn được chỉ định, ghi lại câu hỏi và câu trả lời; sau đó chọn cách hiểu đúng của lời đáp.",
       "choicePrompt": "Câu trả lời trong MP3 có nghĩa là gì?",
       "coverageQuestions": [
         {
@@ -1740,7 +1758,8 @@
           ],
           "answer": 3
         }
-      ]
+      ],
+      "timelineIndex": 2
     },
     {
       "id": "f3-10",
@@ -1767,7 +1786,7 @@
         "section": "Đoạn 2 · cặp hỏi–đáp 1"
       },
       "focus": "Đoạn 2 · cặp hỏi–đáp 1",
-      "taskPrompt": "Nghe đoạn được chỉ định, ghi lại câu hỏi và câu trả lời; sau đó chọn cách hiểu đúng của lời đáp. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.",
+      "taskPrompt": "Nghe đoạn được chỉ định, ghi lại câu hỏi và câu trả lời; sau đó chọn cách hiểu đúng của lời đáp.",
       "choicePrompt": "Câu trả lời trong MP3 có nghĩa là gì?",
       "coverageQuestions": [
         {
@@ -1810,7 +1829,8 @@
           ],
           "answer": 0
         }
-      ]
+      ],
+      "timelineIndex": 0
     },
     {
       "id": "f4-01",
@@ -1843,7 +1863,7 @@
         "section": "Đoạn a · hội thoại đầu tiên"
       },
       "focus": "Đoạn a · hội thoại đầu tiên",
-      "taskPrompt": "Nghe đoạn a ở đầu MP3; điền hai lượt lời của người bạn mới. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.",
+      "taskPrompt": "Nghe đoạn a ở đầu MP3; điền hai lượt lời của người bạn mới.",
       "coverageQuestions": [
         {
           "text": "Ở hội thoại a, bạn nữ mới đến từ đâu?",
@@ -1865,7 +1885,8 @@
           ],
           "answer": 1
         }
-      ]
+      ],
+      "timelineIndex": 0
     },
     {
       "id": "f4-02",
@@ -1896,7 +1917,7 @@
         "section": "Hội thoại số 5"
       },
       "focus": "Hội thoại số 5",
-      "taskPrompt": "Nghe hội thoại số 5 trong MP3; điền câu hỏi về giờ ăn sáng và câu trả lời. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.",
+      "taskPrompt": "Nghe hội thoại số 5 trong MP3; điền câu hỏi về giờ ăn sáng và câu trả lời.",
       "coverageQuestions": [
         {
           "text": "Ở hội thoại 1, người nói đến từ đâu?",
@@ -1948,7 +1969,8 @@
           ],
           "answer": 1
         }
-      ]
+      ],
+      "timelineIndex": 4
     },
     {
       "id": "f4-03",
@@ -1981,7 +2003,7 @@
         "section": "Đoạn b · hội thoại thứ hai"
       },
       "focus": "Đoạn b · hội thoại thứ hai",
-      "taskPrompt": "Nghe đoạn b ở đầu MP3; điền hai câu trả lời của Nam về đồ ăn và đồ uống. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.",
+      "taskPrompt": "Nghe đoạn b ở đầu MP3; điền hai câu trả lời của Nam về đồ ăn và đồ uống.",
       "coverageQuestions": [
         {
           "text": "Ở hội thoại a, ai được chúc mừng sinh nhật?",
@@ -2023,7 +2045,8 @@
           ],
           "answer": 1
         }
-      ]
+      ],
+      "timelineIndex": 2
     },
     {
       "id": "f4-04",
@@ -2054,7 +2077,7 @@
         "section": "Hội thoại số 3"
       },
       "focus": "Hội thoại số 3",
-      "taskPrompt": "Nghe hội thoại số 3 trong MP3; điền câu hỏi về môn học và câu giải thích. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.",
+      "taskPrompt": "Nghe hội thoại số 3 trong MP3; điền câu hỏi về môn học và câu giải thích.",
       "coverageQuestions": [
         {
           "text": "Ở hội thoại 1, trường học nằm ở đâu?",
@@ -2106,7 +2129,8 @@
           ],
           "answer": 0
         }
-      ]
+      ],
+      "timelineIndex": 2
     },
     {
       "id": "f4-05",
@@ -2137,7 +2161,7 @@
         "section": "Hội thoại số 2"
       },
       "focus": "Hội thoại số 2",
-      "taskPrompt": "Nghe hội thoại số 2 trong MP3; điền câu hỏi về khả năng trượt patin và lời đáp. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.",
+      "taskPrompt": "Nghe hội thoại số 2 trong MP3; điền câu hỏi về khả năng trượt patin và lời đáp.",
       "coverageQuestions": [
         {
           "text": "Ở hội thoại 1, người nói đến từ đâu?",
@@ -2189,7 +2213,8 @@
           ],
           "answer": 1
         }
-      ]
+      ],
+      "timelineIndex": 1
     },
     {
       "id": "f4-06",
@@ -2220,7 +2245,7 @@
         "section": "Hội thoại số 1"
       },
       "focus": "Hội thoại số 1",
-      "taskPrompt": "Nghe hội thoại số 1 trong MP3; điền câu hỏi về thời tiết hôm qua và lời đáp. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.",
+      "taskPrompt": "Nghe hội thoại số 1 trong MP3; điền câu hỏi về thời tiết hôm qua và lời đáp.",
       "coverageQuestions": [
         {
           "text": "Ở hội thoại 1, thời tiết hôm qua ra sao?",
@@ -2272,7 +2297,8 @@
           ],
           "answer": 1
         }
-      ]
+      ],
+      "timelineIndex": 0
     },
     {
       "id": "f4-07",
@@ -2303,7 +2329,7 @@
         "section": "Hội thoại số 3"
       },
       "focus": "Hội thoại số 3",
-      "taskPrompt": "Nghe hội thoại số 3 trong MP3; điền câu hỏi về giá quyển vở và lời đáp. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.",
+      "taskPrompt": "Nghe hội thoại số 3 trong MP3; điền câu hỏi về giá quyển vở và lời đáp.",
       "coverageQuestions": [
         {
           "text": "Ở hội thoại 1, thời tiết hôm qua ra sao?",
@@ -2355,7 +2381,8 @@
           ],
           "answer": 1
         }
-      ]
+      ],
+      "timelineIndex": 2
     },
     {
       "id": "f4-08",
@@ -2386,7 +2413,7 @@
         "section": "Hội thoại số 5"
       },
       "focus": "Hội thoại số 5",
-      "taskPrompt": "Nghe hội thoại số 5 trong MP3; điền câu hỏi về hoạt động và lời đáp. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.",
+      "taskPrompt": "Nghe hội thoại số 5 trong MP3; điền câu hỏi về hoạt động và lời đáp.",
       "coverageQuestions": [
         {
           "text": "Ở hội thoại 1, thời tiết hôm qua ra sao?",
@@ -2438,7 +2465,8 @@
           ],
           "answer": 1
         }
-      ]
+      ],
+      "timelineIndex": 4
     },
     {
       "id": "f4-09",
@@ -2469,7 +2497,7 @@
         "section": "Hội thoại số 1"
       },
       "focus": "Hội thoại số 1",
-      "taskPrompt": "Nghe hội thoại số 1 trong MP3; điền câu hỏi về trường học và lời đáp. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.",
+      "taskPrompt": "Nghe hội thoại số 1 trong MP3; điền câu hỏi về trường học và lời đáp.",
       "coverageQuestions": [
         {
           "text": "Ở hội thoại 1, trường học nằm ở đâu?",
@@ -2521,7 +2549,8 @@
           ],
           "answer": 0
         }
-      ]
+      ],
+      "timelineIndex": 0
     },
     {
       "id": "f4-10",
@@ -2552,7 +2581,7 @@
         "section": "Hội thoại số 4"
       },
       "focus": "Hội thoại số 4",
-      "taskPrompt": "Nghe hội thoại số 4 trong MP3; điền câu hỏi về thứ Sáu và lời đáp. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.",
+      "taskPrompt": "Nghe hội thoại số 4 trong MP3; điền câu hỏi về thứ Sáu và lời đáp.",
       "coverageQuestions": [
         {
           "text": "Ở hội thoại 1, người nói đến từ đâu?",
@@ -2604,7 +2633,8 @@
           ],
           "answer": 1
         }
-      ]
+      ],
+      "timelineIndex": 3
     },
     {
       "id": "f5-01",
@@ -2629,16 +2659,6 @@
           "answer": 0
         },
         {
-          "text": "Bạn nhỏ cũng muốn làm nghề gì trong tương lai?",
-          "options": [
-            "Nhà văn",
-            "Bác sĩ",
-            "Lính cứu hỏa",
-            "Người làm vườn"
-          ],
-          "answer": 1
-        },
-        {
           "text": "Người nghe nói gì sau khi biết nghề của người bố?",
           "options": [
             "Goodbye!",
@@ -2647,6 +2667,16 @@
             "No, thanks."
           ],
           "answer": 2
+        },
+        {
+          "text": "Bạn nhỏ cũng muốn làm nghề gì trong tương lai?",
+          "options": [
+            "Nhà văn",
+            "Bác sĩ",
+            "Lính cứu hỏa",
+            "Người làm vườn"
+          ],
+          "answer": 1
         }
       ],
       "source": {
@@ -2688,16 +2718,6 @@
           "answer": 0
         },
         {
-          "text": "Nghề cuối cùng trong phần luyện đọc theo là gì?",
-          "options": [
-            "Người làm vườn",
-            "Nhà văn",
-            "Lính cứu hỏa",
-            "Phóng viên"
-          ],
-          "answer": 1
-        },
-        {
           "text": "Nghề thứ ba được nhắc tới là gì?",
           "options": [
             "Người làm vườn",
@@ -2706,6 +2726,16 @@
             "Phi công"
           ],
           "answer": 0
+        },
+        {
+          "text": "Nghề cuối cùng trong phần luyện đọc theo là gì?",
+          "options": [
+            "Người làm vườn",
+            "Nhà văn",
+            "Lính cứu hỏa",
+            "Phóng viên"
+          ],
+          "answer": 1
         }
       ],
       "source": {
@@ -2855,16 +2885,6 @@
           "answer": 1
         },
         {
-          "text": "Ở lượt hội thoại về tòa tháp, người được hỏi trả lời thế nào?",
-          "options": [
-            "Có",
-            "Không",
-            "Chưa rõ",
-            "Chỉ vào mùa hè"
-          ],
-          "answer": 1
-        },
-        {
           "text": "Ở lượt hội thoại về tòa nhà, người được hỏi trả lời thế nào?",
           "options": [
             "Không",
@@ -2873,6 +2893,16 @@
             "Chỉ cuối tuần"
           ],
           "answer": 2
+        },
+        {
+          "text": "Ở lượt hội thoại về tòa tháp, người được hỏi trả lời thế nào?",
+          "options": [
+            "Có",
+            "Không",
+            "Chưa rõ",
+            "Chỉ vào mùa hè"
+          ],
+          "answer": 1
         }
       ],
       "source": {
@@ -2904,6 +2934,16 @@
           "answer": 1
         },
         {
+          "text": "Trong hội thoại 2, người được hỏi nói sống ở đâu?",
+          "options": [
+            "Ngôi nhà kia",
+            "King Tower",
+            "Sunset Building",
+            "Căn hộ kia"
+          ],
+          "answer": 3
+        },
+        {
           "text": "Hội thoại số 3 nhắc tới tòa tháp nào?",
           "options": [
             "King Tower",
@@ -2922,16 +2962,6 @@
             "Trong căn hộ này"
           ],
           "answer": 1
-        },
-        {
-          "text": "Trong hội thoại 2, người được hỏi nói sống ở đâu?",
-          "options": [
-            "Ngôi nhà kia",
-            "King Tower",
-            "Sunset Building",
-            "Căn hộ kia"
-          ],
-          "answer": 3
         }
       ],
       "source": {
@@ -2953,6 +2983,16 @@
       "title": "Người bạn từ Úc",
       "questions": [
         {
+          "text": "Người nói kể chuyện bạn mới với ai?",
+          "options": [
+            "Mẹ",
+            "Thầy giáo",
+            "Bố",
+            "Anh trai"
+          ],
+          "answer": 0
+        },
+        {
           "text": "Bạn mới của người nói đến từ đâu?",
           "options": [
             "Malaysia",
@@ -2971,16 +3011,6 @@
             "Japanese"
           ],
           "answer": 2
-        },
-        {
-          "text": "Người nói kể chuyện bạn mới với ai?",
-          "options": [
-            "Mẹ",
-            "Thầy giáo",
-            "Bố",
-            "Anh trai"
-          ],
-          "answer": 0
         }
       ],
       "source": {
@@ -3022,16 +3052,6 @@
           "answer": 2
         },
         {
-          "text": "Trong mẫu câu cuối, người con gái mang quốc tịch gì?",
-          "options": [
-            "British",
-            "Japanese",
-            "Malaysian",
-            "American"
-          ],
-          "answer": 1
-        },
-        {
           "text": "Trong mẫu câu thứ ba, người con gái mang quốc tịch gì?",
           "options": [
             "American",
@@ -3040,6 +3060,16 @@
             "Australian"
           ],
           "answer": 0
+        },
+        {
+          "text": "Trong mẫu câu cuối, người con gái mang quốc tịch gì?",
+          "options": [
+            "British",
+            "Japanese",
+            "Malaysian",
+            "American"
+          ],
+          "answer": 1
         }
       ],
       "source": {
@@ -3130,16 +3160,6 @@
           "answer": 0
         },
         {
-          "text": "Nghề được nhắc đến cuối bài hát là gì?",
-          "options": [
-            "Phóng viên",
-            "Nha sĩ",
-            "Tài xế",
-            "Phi công"
-          ],
-          "answer": 2
-        },
-        {
           "text": "Nghề nào được hát ngay trước nghề tài xế?",
           "options": [
             "Lính cứu hỏa",
@@ -3148,6 +3168,16 @@
             "Bác sĩ"
           ],
           "answer": 1
+        },
+        {
+          "text": "Nghề được nhắc đến cuối bài hát là gì?",
+          "options": [
+            "Phóng viên",
+            "Nha sĩ",
+            "Tài xế",
+            "Phi công"
+          ],
+          "answer": 2
         }
       ],
       "source": {
