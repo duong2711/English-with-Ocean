@@ -1360,13 +1360,43 @@
 
     function listeningAudioHtml(item, trackId, stageNumber) {
         const maxPlays = trackId === 'foundation' && stageNumber <= 3 ? 3 : 2;
+        const references = Array.isArray(item.referenceAudioUrls) ? item.referenceAudioUrls : [];
+        const referenceHtml = references.length
+            ? '<div class="ldd-listening-reference-player">' +
+                '<strong>🎧 MP3 Loigiaihay trên Backblaze</strong>' +
+                '<p>Audio mẫu để tham khảo. Bài tập bên dưới dùng bản thu theo script riêng.</p>' +
+                (references.length > 1
+                    ? '<label>Chọn file mẫu <select data-listening-reference-select>' +
+                        references.map((url, index) => '<option value="' + escapeListening(url) + '">MP3 mẫu ' + (index + 1) + ' / ' + references.length + '</option>').join('') +
+                        '</select></label>'
+                    : '') +
+                '<audio controls preload="none" data-listening-reference-audio src="' + escapeListening(references[0]) + '"></audio>' +
+                '<a data-listening-reference-link href="' + escapeListening(references[0]) + '" target="_blank" rel="noopener noreferrer">Mở trực tiếp file .mp3 ↗</a>' +
+            '</div>'
+            : '';
         return '<div class="ldd-listening-audio-card">' +
-            '<audio controls preload="metadata" data-listening-audio src="' + escapeListening(item.audioUrl) + '"></audio>' +
-            '<div class="ldd-placement-audio-missing" data-listening-audio-missing hidden>' +
-                '<strong>🎧 Chưa có MP3</strong><span>Giáo viên thu và thêm file: <code>' + escapeListening(item.audioUrl) + '</code></span>' +
+            referenceHtml +
+            '<div class="ldd-listening-exercise-player"><strong>Audio của bài tập</strong>' +
+                '<audio controls preload="metadata" data-listening-audio src="' + escapeListening(item.audioUrl) + '"></audio>' +
+                '<div class="ldd-placement-audio-missing" data-listening-audio-missing hidden>' +
+                    '<strong>🎧 Chưa có MP3 bài tập</strong><span>Giáo viên thu và thêm file: <code>' + escapeListening(item.audioUrl) + '</code></span>' +
+                '</div>' +
+                '<small>Được nghe tối đa ' + maxPlays + ' lần.</small>' +
             '</div>' +
-            '<small>Được nghe tối đa ' + maxPlays + ' lần.</small>' +
         '</div>';
+    }
+
+    function attachListeningReferenceAudio(host) {
+        const select = host.querySelector('[data-listening-reference-select]');
+        const audio = host.querySelector('[data-listening-reference-audio]');
+        const link = host.querySelector('[data-listening-reference-link]');
+        if (!select || !audio || !link) return;
+        select.addEventListener('change', function () {
+            audio.pause();
+            audio.src = select.value;
+            audio.load();
+            link.href = select.value;
+        });
     }
 
     function attachListeningAudioLimit(host, trackId, stageNumber) {
@@ -1595,6 +1625,7 @@
                 listeningSourceHtml(item);
 
             attachListeningAudioLimit(host, trackId, stageNumber);
+            attachListeningReferenceAudio(host);
 
             const orderBank = host.querySelector('[data-spell-order-bank]');
             const orderAnswer = host.querySelector('[data-spell-order-answer]');
