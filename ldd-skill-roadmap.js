@@ -1346,8 +1346,12 @@
             .replace(/'/g, '&#39;');
     }
 
+    function isEasySpelling(item) {
+        return item.type === 'spelling' && item.difficulty === 'Dễ';
+    }
+
     function listeningAudioHtml(item) {
-        if (item.type === 'spelling') {
+        if (isEasySpelling(item)) {
             return '<div class="ldd-listening-audio-card">' +
                 '<div class="ldd-listening-exercise-player">' +
                     '<strong>🔊 Nghe đánh vần</strong>' +
@@ -1469,20 +1473,20 @@
     function renderSpellingTask(item) {
         if (item.mode === 'spell_order') {
             const display = item.words.slice().sort((a, b) => a.localeCompare(b));
-            return '<p class="ldd-listening-instruction">Nghe chuỗi từ được đánh vần rồi bấm các từ theo đúng thứ tự.</p>' +
+            return '<p class="ldd-listening-instruction">Nghe các từ rồi bấm các từ theo đúng thứ tự được đọc.</p>' +
                 '<div class="ldd-listening-word-bank" data-spell-order-bank>' +
                     display.map(word => '<button type="button" data-spell-order-word="' + escapeListening(word) + '">' + escapeListening(word) + '</button>').join('') +
                 '</div><div class="ldd-listening-order-answer" data-spell-order-answer>Chưa chọn từ nào.</div>';
         }
         if (item.mode === 'spell_numbered') {
-            return '<p class="ldd-listening-instruction">Nghe các từ được đánh vần. Điền đúng từ vào từng số.</p>' +
+            return '<p class="ldd-listening-instruction">Nghe các từ theo thứ tự rồi điền đúng từ vào từng số.</p>' +
                 '<div class="ldd-listening-word-bank is-static">' + item.bank.map(word => '<span>' + escapeListening(word) + '</span>').join('') + '</div>' +
                 '<div class="ldd-listening-fill-grid">' + item.words.map((_,i) =>
                     '<label><span>' + (i + 1) + '</span><input type="text" autocomplete="off" data-spell-number="' + i + '" placeholder="word ' + (i + 1) + '"></label>'
                 ).join('') + '</div>';
         }
         if (item.mode === 'spell_tick') {
-            return '<p class="ldd-listening-instruction">Nghe chuỗi đánh vần rồi tick tất cả các từ bạn nghe thấy.</p>' +
+            return '<p class="ldd-listening-instruction">Nghe rồi tick tất cả các từ bạn nghe thấy.</p>' +
                 '<div class="ldd-listening-check-grid">' + item.options.map(word =>
                     '<label><input type="checkbox" data-spell-tick="' + escapeListening(word) + '"><span>' + escapeListening(word) + '</span></label>'
                 ).join('') + '</div>';
@@ -1698,7 +1702,7 @@
                 '<div class="ldd-lab-actions"><button type="button" class="ldd-roadmap-btn is-primary" data-listening-submit>Kiểm tra bài này</button></div>' +
                 '<div class="ldd-lab-feedback" data-listening-feedback hidden></div>';
 
-            if (item.type === 'spelling') attachListeningSpellingSpeech(host, item);
+            if (isEasySpelling(item)) attachListeningSpellingSpeech(host, item);
             else attachListeningPlaylist(host, item);
 
             const orderBank = host.querySelector('[data-spell-order-bank]');
