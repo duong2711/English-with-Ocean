@@ -1848,6 +1848,13 @@
     align-items: center;
 }
 .ldd-listening-dialogue-gap > span { font-size: 11px; font-weight: 900; }
+.ldd-listening-full-coverage {
+    margin-top: 22px;
+    padding-top: 18px;
+    border-top: 1px solid var(--ldd-skill-line);
+}
+.ldd-listening-full-coverage > h5 { margin: 0 0 5px; color: #174ea6; font-size: 15px; }
+.ldd-listening-full-coverage > p { margin: 0 0 15px; color: #52647f; font-size: 12px; line-height: 1.5; }
 .ldd-listening-mcq-set { display: grid; gap: 14px; }
 .ldd-listening-mcq-question {
     padding: 12px;
