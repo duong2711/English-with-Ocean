@@ -2,12 +2,12 @@
  * Rebuilt for two separate tracks:
  * - Foundation/new learner: 5 stages mapped to primary grades 1–5
  * - THCS: 4 stages mapped to grades 6–9
- * Scripts are original LDD English material. Loigiaihay URLs are references for topic/task type/difficulty.
+ * Foundation stages 2–5 use questions mapped to the numbered Loigiaihay audio sections.
  */
 (function () {
   'use strict';
   window.LDD_LISTENING_CURRICULUM = {
-  "version": "2026-09-27-audio-aligned",
+  "version": "2026-09-27-audio-question-redesign",
   "tracks": {
     "foundation": {
       "id": "foundation",
@@ -32,7 +32,7 @@
           "stage": 3,
           "grade": "Nền tảng lớp 3",
           "title": "Nghe hiểu câu hỏi & câu trả lời",
-          "description": "Nghe một cặp hỏi–đáp trong MP3, gõ lại nội dung và chọn câu tiếp theo phù hợp.",
+          "description": "Nghe cặp hỏi–đáp trong MP3, ghi lại lời nói và chọn đúng ý nghĩa của câu trả lời.",
           "exerciseType": "qa_choice"
         },
         {
@@ -380,7 +380,8 @@
         "url": "https://loigiaihay.com/de-thi-hoc-ki-2-tieng-anh-2-global-success-de-so-2-a137158.html",
         "section": "Phần II · hội thoại 1"
       },
-      "focus": "Phần II · hội thoại 1"
+      "focus": "Phần II · hội thoại 1",
+      "taskPrompt": "Ở phần II, nghe hội thoại đầu tiên về món đồ chơi rồi ghi lại cả câu hỏi và câu trả lời."
     },
     {
       "id": "f2-02",
@@ -400,7 +401,8 @@
         "url": "https://loigiaihay.com/de-thi-hoc-ki-2-tieng-anh-2-global-success-de-so-2-a137158.html",
         "section": "Phần II · hội thoại 2"
       },
-      "focus": "Phần II · hội thoại 2"
+      "focus": "Phần II · hội thoại 2",
+      "taskPrompt": "Ở phần II, nghe hội thoại thứ hai về con vật rồi ghi lại cả câu hỏi và câu trả lời."
     },
     {
       "id": "f2-03",
@@ -420,7 +422,8 @@
         "url": "https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html",
         "section": "Đoạn 1 · cặp hỏi–đáp 1"
       },
-      "focus": "Đoạn 1 · cặp hỏi–đáp 1"
+      "focus": "Đoạn 1 · cặp hỏi–đáp 1",
+      "taskPrompt": "Nghe cặp hỏi–đáp số 1 về người thân và ghi lại hai câu."
     },
     {
       "id": "f2-04",
@@ -440,7 +443,8 @@
         "url": "https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html",
         "section": "Đoạn 1 · cặp hỏi–đáp 2"
       },
-      "focus": "Đoạn 1 · cặp hỏi–đáp 2"
+      "focus": "Đoạn 1 · cặp hỏi–đáp 2",
+      "taskPrompt": "Nghe cặp hỏi–đáp số 2 về nghề nghiệp và ghi lại hai câu."
     },
     {
       "id": "f2-05",
@@ -460,7 +464,8 @@
         "url": "https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html",
         "section": "Đoạn 1 · cặp hỏi–đáp 3"
       },
-      "focus": "Đoạn 1 · cặp hỏi–đáp 3"
+      "focus": "Đoạn 1 · cặp hỏi–đáp 3",
+      "taskPrompt": "Nghe cặp hỏi–đáp số 3 về một căn phòng và ghi lại hai câu."
     },
     {
       "id": "f2-06",
@@ -480,7 +485,8 @@
         "url": "https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html",
         "section": "Đoạn 1 · cặp hỏi–đáp 5"
       },
-      "focus": "Đoạn 1 · cặp hỏi–đáp 5"
+      "focus": "Đoạn 1 · cặp hỏi–đáp 5",
+      "taskPrompt": "Nghe cặp hỏi–đáp số 5 về đồ uống và ghi lại hai câu."
     },
     {
       "id": "f2-07",
@@ -500,7 +506,8 @@
         "url": "https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html",
         "section": "Đoạn 2 · cặp hỏi–đáp 1"
       },
-      "focus": "Đoạn 2 · cặp hỏi–đáp 1"
+      "focus": "Đoạn 2 · cặp hỏi–đáp 1",
+      "taskPrompt": "Nghe cặp hỏi–đáp số 1 trong bài nghe thứ hai về tuổi và ghi lại hai câu."
     },
     {
       "id": "f2-08",
@@ -520,7 +527,8 @@
         "url": "https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html",
         "section": "Đoạn 2 · cặp hỏi–đáp 2"
       },
-      "focus": "Đoạn 2 · cặp hỏi–đáp 2"
+      "focus": "Đoạn 2 · cặp hỏi–đáp 2",
+      "taskPrompt": "Nghe cặp hỏi–đáp số 2 trong bài nghe thứ hai về nghề nghiệp và ghi lại hai câu."
     },
     {
       "id": "f2-09",
@@ -540,7 +548,8 @@
         "url": "https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html",
         "section": "Đoạn 2 · cặp hỏi–đáp 3"
       },
-      "focus": "Đoạn 2 · cặp hỏi–đáp 3"
+      "focus": "Đoạn 2 · cặp hỏi–đáp 3",
+      "taskPrompt": "Nghe cặp hỏi–đáp số 3 trong bài nghe thứ hai về vị trí đồ vật và ghi lại hai câu."
     },
     {
       "id": "f2-10",
@@ -560,7 +569,8 @@
         "url": "https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html",
         "section": "Đoạn 2 · cặp hỏi–đáp 4"
       },
-      "focus": "Đoạn 2 · cặp hỏi–đáp 4"
+      "focus": "Đoạn 2 · cặp hỏi–đáp 4",
+      "taskPrompt": "Nghe cặp hỏi–đáp số 4 trong bài nghe thứ hai về lời mời ăn và ghi lại hai câu."
     },
     {
       "id": "f3-01",
@@ -577,16 +587,18 @@
       "expectedQuestion": "Hi, Mai. How are you?",
       "expectedAnswer": "Fine, thank you.",
       "options": [
-        "How old is your sister?",
-        "And you?",
-        "Where is the kitchen?"
+        "Người nói vẫn khỏe và cảm ơn.",
+        "Người nói đang hỏi tuổi của Mai.",
+        "Người nói sắp ra về."
       ],
-      "answer": 1,
+      "answer": 0,
       "source": {
         "url": "https://loigiaihay.com/tieng-anh-lop-3-unit-1-lesson-2-trang-12-global-success-a106757.html",
         "section": "Đoạn a · cặp hỏi–đáp đầu tiên"
       },
-      "focus": "Đoạn a · cặp hỏi–đáp đầu tiên"
+      "focus": "Đoạn a · cặp hỏi–đáp đầu tiên",
+      "taskPrompt": "Nghe đoạn được chỉ định, ghi lại câu hỏi và câu trả lời; sau đó chọn cách hiểu đúng của lời đáp.",
+      "choicePrompt": "Câu trả lời trong MP3 có nghĩa là gì?"
     },
     {
       "id": "f3-02",
@@ -603,16 +615,18 @@
       "expectedQuestion": "Who is this?",
       "expectedAnswer": "It's my father.",
       "options": [
-        "What's his job?",
-        "How much is it?",
-        "Is it raining?"
+        "Người nói giới thiệu bố mình.",
+        "Người nói giới thiệu anh trai.",
+        "Người nói hỏi nghề của bố."
       ],
       "answer": 0,
       "source": {
         "url": "https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html",
         "section": "Cặp hỏi–đáp 1"
       },
-      "focus": "Cặp hỏi–đáp 1"
+      "focus": "Cặp hỏi–đáp 1",
+      "taskPrompt": "Nghe đoạn được chỉ định, ghi lại câu hỏi và câu trả lời; sau đó chọn cách hiểu đúng của lời đáp.",
+      "choicePrompt": "Câu trả lời trong MP3 có nghĩa là gì?"
     },
     {
       "id": "f3-03",
@@ -629,16 +643,18 @@
       "expectedQuestion": "What's her job?",
       "expectedAnswer": "She's a doctor.",
       "options": [
-        "What time is it?",
-        "Where does she work?",
-        "Is the window open?"
+        "Cô ấy là giáo viên.",
+        "Cô ấy là bác sĩ.",
+        "Cô ấy là tài xế."
       ],
       "answer": 1,
       "source": {
         "url": "https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html",
         "section": "Cặp hỏi–đáp 2"
       },
-      "focus": "Cặp hỏi–đáp 2"
+      "focus": "Cặp hỏi–đáp 2",
+      "taskPrompt": "Nghe đoạn được chỉ định, ghi lại câu hỏi và câu trả lời; sau đó chọn cách hiểu đúng của lời đáp.",
+      "choicePrompt": "Câu trả lời trong MP3 có nghĩa là gì?"
     },
     {
       "id": "f3-04",
@@ -655,16 +671,18 @@
       "expectedQuestion": "How many rabbits do you have?",
       "expectedAnswer": "I have many.",
       "options": [
-        "And how many goldfish?",
-        "What is your address?",
-        "Can he roller skate?"
+        "Người nói có đúng hai con thỏ.",
+        "Người nói không có thỏ.",
+        "Người nói có nhiều thỏ."
       ],
-      "answer": 0,
+      "answer": 2,
       "source": {
         "url": "https://loigiaihay.com/tieng-anh-lop-3-unit-16-lesson-2-trang-42-global-success-a108135.html",
         "section": "Đoạn a · câu hỏi về thỏ"
       },
-      "focus": "Đoạn a · câu hỏi về thỏ"
+      "focus": "Đoạn a · câu hỏi về thỏ",
+      "taskPrompt": "Nghe đoạn được chỉ định, ghi lại câu hỏi và câu trả lời; sau đó chọn cách hiểu đúng của lời đáp.",
+      "choicePrompt": "Câu trả lời trong MP3 có nghĩa là gì?"
     },
     {
       "id": "f3-05",
@@ -681,16 +699,18 @@
       "expectedQuestion": "What's he doing?",
       "expectedAnswer": "He's skating.",
       "options": [
-        "What is your favourite food?",
-        "Where is he skating?",
-        "Is it Monday today?"
+        "Anh ấy đang trượt patin.",
+        "Anh ấy đang đạp xe.",
+        "Anh ấy đang thả diều."
       ],
-      "answer": 1,
+      "answer": 0,
       "source": {
         "url": "https://loigiaihay.com/tieng-anh-lop-3-unit-19-lesson-2-trang-60-global-success-a108223.html",
         "section": "Đoạn b · câu hỏi về hoạt động"
       },
-      "focus": "Đoạn b · câu hỏi về hoạt động"
+      "focus": "Đoạn b · câu hỏi về hoạt động",
+      "taskPrompt": "Nghe đoạn được chỉ định, ghi lại câu hỏi và câu trả lời; sau đó chọn cách hiểu đúng của lời đáp.",
+      "choicePrompt": "Câu trả lời trong MP3 có nghĩa là gì?"
     },
     {
       "id": "f3-06",
@@ -707,16 +727,18 @@
       "expectedQuestion": "What would you like to drink?",
       "expectedAnswer": "I'd like some milk, please.",
       "options": [
-        "Would you like something to eat?",
-        "Where is the library?",
-        "How old is your brother?"
+        "Người nói muốn uống nước ép.",
+        "Người nói muốn uống sữa.",
+        "Người nói muốn ăn thịt gà."
       ],
-      "answer": 0,
+      "answer": 1,
       "source": {
         "url": "https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html",
         "section": "Cặp hỏi–đáp 5"
       },
-      "focus": "Cặp hỏi–đáp 5"
+      "focus": "Cặp hỏi–đáp 5",
+      "taskPrompt": "Nghe đoạn được chỉ định, ghi lại câu hỏi và câu trả lời; sau đó chọn cách hiểu đúng của lời đáp.",
+      "choicePrompt": "Câu trả lời trong MP3 có nghĩa là gì?"
     },
     {
       "id": "f3-07",
@@ -733,16 +755,18 @@
       "expectedQuestion": "Where are the lamps?",
       "expectedAnswer": "They're on the table.",
       "options": [
-        "Can you swim?",
-        "And where is the clock?",
-        "What would you like to eat?"
+        "Những chiếc đèn ở trên bàn.",
+        "Những chiếc đèn ở dưới bàn.",
+        "Những chiếc đèn ở phòng bếp."
       ],
-      "answer": 1,
+      "answer": 0,
       "source": {
         "url": "https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html",
         "section": "Đoạn 2 · cặp hỏi–đáp 3"
       },
-      "focus": "Đoạn 2 · cặp hỏi–đáp 3"
+      "focus": "Đoạn 2 · cặp hỏi–đáp 3",
+      "taskPrompt": "Nghe đoạn được chỉ định, ghi lại câu hỏi và câu trả lời; sau đó chọn cách hiểu đúng của lời đáp.",
+      "choicePrompt": "Câu trả lời trong MP3 có nghĩa là gì?"
     },
     {
       "id": "f3-08",
@@ -759,16 +783,18 @@
       "expectedQuestion": "What's she doing?",
       "expectedAnswer": "She's cycling.",
       "options": [
-        "Is she wearing a helmet?",
-        "What's his job?",
-        "Where are the lamps?"
+        "Cô ấy đang trượt patin.",
+        "Cô ấy đang nhảy dây.",
+        "Cô ấy đang đạp xe."
       ],
-      "answer": 0,
+      "answer": 2,
       "source": {
         "url": "https://loigiaihay.com/tieng-anh-lop-3-unit-19-lesson-2-trang-60-global-success-a108223.html",
         "section": "Mục b · cặp hỏi–đáp về cô ấy"
       },
-      "focus": "Mục b · cặp hỏi–đáp về cô ấy"
+      "focus": "Mục b · cặp hỏi–đáp về cô ấy",
+      "taskPrompt": "Nghe đoạn được chỉ định, ghi lại câu hỏi và câu trả lời; sau đó chọn cách hiểu đúng của lời đáp.",
+      "choicePrompt": "Câu trả lời trong MP3 có nghĩa là gì?"
     },
     {
       "id": "f3-09",
@@ -785,16 +811,18 @@
       "expectedQuestion": "Hello, Minh. How are you?",
       "expectedAnswer": "Fine, thank you.",
       "options": [
-        "Goodbye, Minh.",
-        "And you?",
-        "What's your address?"
+        "Người nói tạm biệt Minh.",
+        "Người nói vẫn khỏe và cảm ơn.",
+        "Người nói hỏi Minh sống ở đâu."
       ],
       "answer": 1,
       "source": {
         "url": "https://loigiaihay.com/tieng-anh-lop-3-unit-1-lesson-2-trang-12-global-success-a106757.html",
         "section": "Hội thoại số 3"
       },
-      "focus": "Hội thoại số 3"
+      "focus": "Hội thoại số 3",
+      "taskPrompt": "Nghe đoạn được chỉ định, ghi lại câu hỏi và câu trả lời; sau đó chọn cách hiểu đúng của lời đáp.",
+      "choicePrompt": "Câu trả lời trong MP3 có nghĩa là gì?"
     },
     {
       "id": "f3-10",
@@ -811,16 +839,18 @@
       "expectedQuestion": "How old is your brother?",
       "expectedAnswer": "He's fourteen years old.",
       "options": [
-        "What does he like doing?",
-        "Is it sunny today?",
-        "Where are the shoes?"
+        "Anh trai của người nói 14 tuổi.",
+        "Anh trai của người nói 4 tuổi.",
+        "Anh trai của người nói 10 tuổi."
       ],
       "answer": 0,
       "source": {
         "url": "https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html",
         "section": "Đoạn 2 · cặp hỏi–đáp 1"
       },
-      "focus": "Đoạn 2 · cặp hỏi–đáp 1"
+      "focus": "Đoạn 2 · cặp hỏi–đáp 1",
+      "taskPrompt": "Nghe đoạn được chỉ định, ghi lại câu hỏi và câu trả lời; sau đó chọn cách hiểu đúng của lời đáp.",
+      "choicePrompt": "Câu trả lời trong MP3 có nghĩa là gì?"
     },
     {
       "id": "f4-01",
@@ -852,7 +882,8 @@
         "url": "https://loigiaihay.com/tieng-anh-lop-4-unit-1-lesson-2-trang-12-13-global-success-a134621.html",
         "section": "Đoạn a · hội thoại đầu tiên"
       },
-      "focus": "Đoạn a · hội thoại đầu tiên"
+      "focus": "Đoạn a · hội thoại đầu tiên",
+      "taskPrompt": "Nghe đoạn a ở đầu MP3; điền hai lượt lời của người bạn mới."
     },
     {
       "id": "f4-02",
@@ -882,7 +913,8 @@
         "url": "https://loigiaihay.com/tieng-anh-lop-4-review-1-trang-40-41-global-success-a136098.html",
         "section": "Hội thoại số 5"
       },
-      "focus": "Hội thoại số 5"
+      "focus": "Hội thoại số 5",
+      "taskPrompt": "Nghe hội thoại số 5 trong MP3; điền câu hỏi về giờ ăn sáng và câu trả lời."
     },
     {
       "id": "f4-03",
@@ -914,7 +946,8 @@
         "url": "https://loigiaihay.com/tieng-anh-lop-4-unit-4-lesson-2-trang-30-31-global-success-a135717.html",
         "section": "Đoạn b · hội thoại thứ hai"
       },
-      "focus": "Đoạn b · hội thoại thứ hai"
+      "focus": "Đoạn b · hội thoại thứ hai",
+      "taskPrompt": "Nghe đoạn b ở đầu MP3; điền hai câu trả lời của Nam về đồ ăn và đồ uống."
     },
     {
       "id": "f4-04",
@@ -944,7 +977,8 @@
         "url": "https://loigiaihay.com/tieng-anh-lop-4-review-2-trang-74-75-global-success-a138084.html",
         "section": "Hội thoại số 3"
       },
-      "focus": "Hội thoại số 3"
+      "focus": "Hội thoại số 3",
+      "taskPrompt": "Nghe hội thoại số 3 trong MP3; điền câu hỏi về môn học và câu giải thích."
     },
     {
       "id": "f4-05",
@@ -974,7 +1008,8 @@
         "url": "https://loigiaihay.com/tieng-anh-lop-4-review-1-trang-40-41-global-success-a136098.html",
         "section": "Hội thoại số 2"
       },
-      "focus": "Hội thoại số 2"
+      "focus": "Hội thoại số 2",
+      "taskPrompt": "Nghe hội thoại số 2 trong MP3; điền câu hỏi về khả năng trượt patin và lời đáp."
     },
     {
       "id": "f4-06",
@@ -1004,7 +1039,8 @@
         "url": "https://loigiaihay.com/tieng-anh-lop-4-review-4-trang-70-global-success-a139728.html",
         "section": "Hội thoại số 1"
       },
-      "focus": "Hội thoại số 1"
+      "focus": "Hội thoại số 1",
+      "taskPrompt": "Nghe hội thoại số 1 trong MP3; điền câu hỏi về thời tiết hôm qua và lời đáp."
     },
     {
       "id": "f4-07",
@@ -1034,7 +1070,8 @@
         "url": "https://loigiaihay.com/tieng-anh-lop-4-review-4-trang-70-global-success-a139728.html",
         "section": "Hội thoại số 3"
       },
-      "focus": "Hội thoại số 3"
+      "focus": "Hội thoại số 3",
+      "taskPrompt": "Nghe hội thoại số 3 trong MP3; điền câu hỏi về giá quyển vở và lời đáp."
     },
     {
       "id": "f4-08",
@@ -1064,7 +1101,8 @@
         "url": "https://loigiaihay.com/tieng-anh-lop-4-review-4-trang-70-global-success-a139728.html",
         "section": "Hội thoại số 5"
       },
-      "focus": "Hội thoại số 5"
+      "focus": "Hội thoại số 5",
+      "taskPrompt": "Nghe hội thoại số 5 trong MP3; điền câu hỏi về hoạt động và lời đáp."
     },
     {
       "id": "f4-09",
@@ -1094,7 +1132,8 @@
         "url": "https://loigiaihay.com/tieng-anh-lop-4-review-2-trang-74-75-global-success-a138084.html",
         "section": "Hội thoại số 1"
       },
-      "focus": "Hội thoại số 1"
+      "focus": "Hội thoại số 1",
+      "taskPrompt": "Nghe hội thoại số 1 trong MP3; điền câu hỏi về trường học và lời đáp."
     },
     {
       "id": "f4-10",
@@ -1124,7 +1163,8 @@
         "url": "https://loigiaihay.com/tieng-anh-lop-4-review-1-trang-40-41-global-success-a136098.html",
         "section": "Hội thoại số 4"
       },
-      "focus": "Hội thoại số 4"
+      "focus": "Hội thoại số 4",
+      "taskPrompt": "Nghe hội thoại số 4 trong MP3; điền câu hỏi về thứ Sáu và lời đáp."
     },
     {
       "id": "f5-01",
@@ -1139,30 +1179,30 @@
       "title": "Công việc của bố",
       "questions": [
         {
-          "text": "What does the father do?",
+          "text": "Người bố làm nghề gì?",
           "options": [
-            "Doctor",
-            "Reporter",
-            "Writer",
-            "Driver"
+            "Bác sĩ",
+            "Phóng viên",
+            "Giáo viên",
+            "Tài xế"
           ],
           "answer": 0
         },
         {
-          "text": "What job does the child also want in the future?",
+          "text": "Bạn nhỏ cũng muốn làm nghề gì trong tương lai?",
           "options": [
-            "Gardener",
-            "Doctor",
-            "Teacher",
-            "Firefighter"
+            "Nhà văn",
+            "Bác sĩ",
+            "Lính cứu hỏa",
+            "Người làm vườn"
           ],
           "answer": 1
         },
         {
-          "text": "What does the listener say when hearing the father's job?",
+          "text": "Người nghe nói gì sau khi biết nghề của người bố?",
           "options": [
-            "Sorry!",
             "Goodbye!",
+            "Sorry!",
             "Cool!",
             "No, thanks."
           ],
@@ -1172,7 +1212,8 @@
       "source": {
         "url": "https://loigiaihay.com/giai-lesson-1-unit-5-tieng-anh-5-global-success-co-dap-an-a156859.html",
         "section": "Track track-45 · nghe hiểu nội dung"
-      }
+      },
+      "taskPrompt": "Nghe toàn bộ MP3 và trả lời theo đúng lời nói trong bài."
     },
     {
       "id": "f5-02",
@@ -1187,32 +1228,32 @@
       "title": "Bốn nghề tương lai",
       "questions": [
         {
-          "text": "What is the first future job mentioned?",
+          "text": "Nghề đầu tiên được nhắc tới là gì?",
           "options": [
-            "Reporter",
-            "Firefighter",
-            "Driver",
-            "Doctor"
+            "Phóng viên",
+            "Lính cứu hỏa",
+            "Nhà văn",
+            "Người làm vườn"
           ],
           "answer": 1
         },
         {
-          "text": "What is the second future job mentioned?",
+          "text": "Nghề nào được nhắc tới ngay sau lính cứu hỏa?",
           "options": [
-            "Reporter",
-            "Teacher",
-            "Gardener",
-            "Writer"
+            "Phóng viên",
+            "Bác sĩ",
+            "Giáo viên",
+            "Tài xế"
           ],
           "answer": 0
         },
         {
-          "text": "What is the last future job mentioned?",
+          "text": "Nghề cuối cùng trong phần luyện đọc theo là gì?",
           "options": [
-            "Pilot",
-            "Writer",
-            "Dentist",
-            "Farmer"
+            "Người làm vườn",
+            "Nhà văn",
+            "Lính cứu hỏa",
+            "Phóng viên"
           ],
           "answer": 1
         }
@@ -1220,7 +1261,8 @@
       "source": {
         "url": "https://loigiaihay.com/giai-lesson-1-unit-5-tieng-anh-5-global-success-co-dap-an-a156859.html",
         "section": "Track track-46 · nghe hiểu nội dung"
-      }
+      },
+      "taskPrompt": "Nghe toàn bộ MP3 và trả lời theo đúng lời nói trong bài."
     },
     {
       "id": "f5-03",
@@ -1235,32 +1277,32 @@
       "title": "Ai muốn làm nghề gì?",
       "questions": [
         {
-          "text": "What job is named in dialogue 1?",
+          "text": "Ở đoạn hội thoại 1, bạn nhỏ muốn làm nghề gì?",
           "options": [
-            "Reporter",
-            "Writer",
-            "Gardener",
-            "Firefighter"
+            "Phóng viên",
+            "Nhà văn",
+            "Bác sĩ",
+            "Lính cứu hỏa"
           ],
           "answer": 0
         },
         {
-          "text": "What job is named in dialogue 2?",
+          "text": "Ở đoạn hội thoại 2, bạn nhỏ muốn làm nghề gì?",
           "options": [
-            "Teacher",
-            "Gardener",
-            "Doctor",
-            "Driver"
+            "Giáo viên",
+            "Người làm vườn",
+            "Phóng viên",
+            "Tài xế"
           ],
           "answer": 1
         },
         {
-          "text": "In dialogue 3, which job does the speaker choose?",
+          "text": "Ở đoạn hội thoại 3, bạn nhỏ muốn làm nghề gì thay vì lính cứu hỏa?",
           "options": [
-            "Firefighter",
-            "Dentist",
-            "Writer",
-            "Reporter"
+            "Lính cứu hỏa",
+            "Bác sĩ",
+            "Nhà văn",
+            "Phóng viên"
           ],
           "answer": 2
         }
@@ -1268,7 +1310,8 @@
       "source": {
         "url": "https://loigiaihay.com/giai-lesson-1-unit-5-tieng-anh-5-global-success-co-dap-an-a156859.html",
         "section": "Track track-47 · nghe hiểu nội dung"
-      }
+      },
+      "taskPrompt": "Nghe toàn bộ MP3 và trả lời theo đúng lời nói trong bài."
     },
     {
       "id": "f5-04",
@@ -1283,32 +1326,32 @@
       "title": "Căn hộ của bạn",
       "questions": [
         {
-          "text": "Do the two friends meet and greet each other?",
+          "text": "Đầu bài nghe, hai người gặp nhau và làm gì?",
           "options": [
-            "Yes",
-            "No",
-            "They only write letters",
-            "They only talk on the phone"
+            "Chào hỏi",
+            "Tạm biệt",
+            "Hỏi đường",
+            "Mua đồ"
           ],
           "answer": 0
         },
         {
-          "text": "Does the speaker live in this building?",
+          "text": "Người được hỏi có sống trong tòa nhà này không?",
           "options": [
-            "No",
-            "Yes",
-            "They don't know",
-            "Only at weekends"
+            "Không",
+            "Có",
+            "Chưa rõ",
+            "Chỉ cuối tuần"
           ],
           "answer": 1
         },
         {
-          "text": "What type of home does the speaker live in?",
+          "text": "Người đó sống trong loại nhà nào?",
           "options": [
-            "Tent",
-            "Houseboat",
-            "Flat",
-            "Farm"
+            "Lều",
+            "Nhà thuyền",
+            "Căn hộ",
+            "Trang trại"
           ],
           "answer": 2
         }
@@ -1316,7 +1359,8 @@
       "source": {
         "url": "https://loigiaihay.com/giai-lesson-1-unit-2-tieng-anh-5-global-success-co-dap-an-a156771.html",
         "section": "Track track-15 · nghe hiểu nội dung"
-      }
+      },
+      "taskPrompt": "Nghe toàn bộ MP3 và trả lời theo đúng lời nói trong bài."
     },
     {
       "id": "f5-05",
@@ -1331,32 +1375,32 @@
       "title": "Ngôi nhà và tòa tháp",
       "questions": [
         {
-          "text": "Does the first speaker live in this house?",
+          "text": "Ở lượt hội thoại về ngôi nhà, người được hỏi trả lời thế nào?",
           "options": [
-            "Yes",
-            "No",
-            "Not mentioned",
-            "Only in summer"
+            "Có",
+            "Không",
+            "Chưa rõ",
+            "Chỉ vào mùa hè"
           ],
           "answer": 0
         },
         {
-          "text": "Does the second speaker live in this flat?",
+          "text": "Ở lượt hội thoại về căn hộ, người được hỏi trả lời thế nào?",
           "options": [
-            "Yes",
-            "No",
-            "Not mentioned",
-            "Only in summer"
+            "Có",
+            "Không",
+            "Chưa rõ",
+            "Chỉ vào mùa hè"
           ],
           "answer": 1
         },
         {
-          "text": "Does the last speaker live in that tower?",
+          "text": "Ở lượt hội thoại về tòa tháp, người được hỏi trả lời thế nào?",
           "options": [
-            "Yes",
-            "No",
-            "Not mentioned",
-            "Only in summer"
+            "Có",
+            "Không",
+            "Chưa rõ",
+            "Chỉ vào mùa hè"
           ],
           "answer": 1
         }
@@ -1364,7 +1408,8 @@
       "source": {
         "url": "https://loigiaihay.com/giai-lesson-1-unit-2-tieng-anh-5-global-success-co-dap-an-a156771.html",
         "section": "Track track-16 · nghe hiểu nội dung"
-      }
+      },
+      "taskPrompt": "Nghe toàn bộ MP3 và trả lời theo đúng lời nói trong bài."
     },
     {
       "id": "f5-06",
@@ -1379,32 +1424,32 @@
       "title": "Nơi ở của bốn bạn",
       "questions": [
         {
-          "text": "Where does the person in dialogue 1 live?",
+          "text": "Trong hội thoại số 1, người được hỏi thực sự sống ở đâu?",
           "options": [
-            "In a flat",
-            "In a house",
-            "In a tower",
-            "In a hotel"
+            "Trong căn hộ này",
+            "Trong một ngôi nhà khác",
+            "Trong một tòa tháp",
+            "Trong khách sạn"
           ],
           "answer": 1
         },
         {
-          "text": "Where does the person in dialogue 3 live?",
+          "text": "Hội thoại số 3 nhắc tới tòa tháp nào?",
           "options": [
-            "In King Tower",
-            "In Sunset Building",
-            "Near the school",
-            "On a farm"
+            "King Tower",
+            "Sunset Building",
+            "Lotus Building",
+            "Oxford Tower"
           ],
           "answer": 0
         },
         {
-          "text": "Which building is named in dialogue 4?",
+          "text": "Trong hội thoại số 4, người được hỏi sống ở đâu?",
           "options": [
             "King Tower",
             "Sunset Building",
-            "Oxford Tower",
-            "Ba Trieu Building"
+            "Trong ngôi nhà kia",
+            "Trong căn hộ này"
           ],
           "answer": 1
         }
@@ -1412,7 +1457,8 @@
       "source": {
         "url": "https://loigiaihay.com/giai-lesson-1-unit-2-tieng-anh-5-global-success-co-dap-an-a156771.html",
         "section": "Track track-17 · nghe hiểu nội dung"
-      }
+      },
+      "taskPrompt": "Nghe toàn bộ MP3 và trả lời theo đúng lời nói trong bài."
     },
     {
       "id": "f5-07",
@@ -1427,7 +1473,7 @@
       "title": "Người bạn từ Úc",
       "questions": [
         {
-          "text": "Where is the new friend from?",
+          "text": "Bạn mới của người nói đến từ đâu?",
           "options": [
             "Malaysia",
             "Australia",
@@ -1437,7 +1483,7 @@
           "answer": 1
         },
         {
-          "text": "What is his nationality?",
+          "text": "Bạn ấy mang quốc tịch gì?",
           "options": [
             "American",
             "British",
@@ -1447,12 +1493,12 @@
           "answer": 2
         },
         {
-          "text": "Who tells their mum about a new friend?",
+          "text": "Người nói kể chuyện bạn mới với ai?",
           "options": [
-            "The child",
-            "A teacher",
-            "The father",
-            "A reporter"
+            "Mẹ",
+            "Thầy giáo",
+            "Bố",
+            "Anh trai"
           ],
           "answer": 0
         }
@@ -1460,7 +1506,8 @@
       "source": {
         "url": "https://loigiaihay.com/giai-lesson-1-unit-3-tieng-anh-5-global-success-co-dap-an-a156783.html",
         "section": "Track track-25 · nghe hiểu nội dung"
-      }
+      },
+      "taskPrompt": "Nghe toàn bộ MP3 và trả lời theo đúng lời nói trong bài."
     },
     {
       "id": "f5-08",
@@ -1475,7 +1522,7 @@
       "title": "Quốc tịch của các bạn",
       "questions": [
         {
-          "text": "What nationality is the boy in the first exchange?",
+          "text": "Trong mẫu câu đầu, người con trai mang quốc tịch gì?",
           "options": [
             "Australian",
             "Malaysian",
@@ -1485,7 +1532,7 @@
           "answer": 0
         },
         {
-          "text": "What nationality is the girl in the second exchange?",
+          "text": "Trong mẫu câu thứ hai, người con gái mang quốc tịch gì?",
           "options": [
             "American",
             "Japanese",
@@ -1495,7 +1542,7 @@
           "answer": 2
         },
         {
-          "text": "What nationality is the girl in the last exchange?",
+          "text": "Trong mẫu câu cuối, người con gái mang quốc tịch gì?",
           "options": [
             "British",
             "Japanese",
@@ -1508,7 +1555,8 @@
       "source": {
         "url": "https://loigiaihay.com/giai-lesson-1-unit-3-tieng-anh-5-global-success-co-dap-an-a156783.html",
         "section": "Track track-26 · nghe hiểu nội dung"
-      }
+      },
+      "taskPrompt": "Nghe toàn bộ MP3 và trả lời theo đúng lời nói trong bài."
     },
     {
       "id": "f5-09",
@@ -1523,17 +1571,17 @@
       "title": "Sam và bạn mới",
       "questions": [
         {
-          "text": "What is Sam doing?",
+          "text": "Sam đang làm gì?",
           "options": [
-            "Cycling",
-            "Playing football",
-            "Reading",
-            "Skating"
+            "Đạp xe",
+            "Chơi bóng đá",
+            "Đọc sách",
+            "Trượt patin"
           ],
           "answer": 1
         },
         {
-          "text": "What nationality is Sam?",
+          "text": "Sam mang quốc tịch gì?",
           "options": [
             "Japanese",
             "Australian",
@@ -1543,7 +1591,7 @@
           "answer": 0
         },
         {
-          "text": "What nationality is the new female friend?",
+          "text": "Người bạn nữ mới mang quốc tịch gì?",
           "options": [
             "Japanese",
             "Malaysian",
@@ -1556,7 +1604,8 @@
       "source": {
         "url": "https://loigiaihay.com/giai-lesson-1-unit-3-tieng-anh-5-global-success-co-dap-an-a156783.html",
         "section": "Track track-27 · nghe hiểu nội dung"
-      }
+      },
+      "taskPrompt": "Nghe toàn bộ MP3 và trả lời theo đúng lời nói trong bài."
     },
     {
       "id": "f5-10",
@@ -1571,32 +1620,32 @@
       "title": "Bài hát nghề nghiệp",
       "questions": [
         {
-          "text": "Which job is mentioned first after the question?",
+          "text": "Nghề đầu tiên trong bài hát là gì?",
           "options": [
-            "Teacher",
-            "Firefighter",
-            "Writer",
-            "Driver"
+            "Giáo viên",
+            "Lính cứu hỏa",
+            "Nhà văn",
+            "Tài xế"
           ],
           "answer": 1
         },
         {
-          "text": "Which job comes after firefighter?",
+          "text": "Sau lính cứu hỏa, bài hát nhắc đến nghề nào?",
           "options": [
-            "Teacher",
-            "Writer",
-            "Doctor",
-            "Gardener"
+            "Giáo viên",
+            "Nhà văn",
+            "Bác sĩ",
+            "Người làm vườn"
           ],
           "answer": 0
         },
         {
-          "text": "Which job is mentioned last?",
+          "text": "Nghề được nhắc đến cuối bài hát là gì?",
           "options": [
-            "Reporter",
-            "Dentist",
-            "Driver",
-            "Pilot"
+            "Phóng viên",
+            "Nha sĩ",
+            "Tài xế",
+            "Phi công"
           ],
           "answer": 2
         }
@@ -1604,7 +1653,8 @@
       "source": {
         "url": "https://loigiaihay.com/giai-lesson-1-unit-5-tieng-anh-5-global-success-co-dap-an-a156859.html",
         "section": "Track track-48 · nghe hiểu nội dung"
-      }
+      },
+      "taskPrompt": "Nghe toàn bộ bài hát và chọn đúng thứ tự những nghề được hát."
     },
     {
       "id": "m1-01",
