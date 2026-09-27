@@ -1347,14 +1347,14 @@
     }
 
     function isEasySpelling(item) {
-        return item.type === 'spelling' && item.difficulty === 'Dễ';
+        return item.type === 'spelling' && item.track === 'foundation' && Number(item.stage) === 1;
     }
 
     function listeningAudioHtml(item) {
         if (isEasySpelling(item)) {
             return '<div class="ldd-listening-audio-card">' +
                 '<div class="ldd-listening-exercise-player">' +
-                    '<strong>🔊 Nghe đánh vần</strong>' +
+                    '<strong>🔊 ' + (item.mode === 'whole_word' ? 'Nghe nguyên từ' : 'Nghe đánh vần') + '</strong>' +
                     '<button type="button" class="ldd-roadmap-btn is-primary" data-listening-spell-play>▶ Nghe giọng Anh</button>' +
                     '<button type="button" class="ldd-roadmap-btn" data-listening-spell-stop hidden>■ Dừng</button>' +
                     '<small data-listening-spell-status role="status">Nhấn để nghe, có thể nghe lại.</small>' +
@@ -1409,7 +1409,7 @@
             utterance.onstart = function () {
                 play.disabled = true;
                 stop.hidden = false;
-                status.textContent = 'Đang đọc bài đánh vần…';
+                status.textContent = item.mode === 'whole_word' ? 'Đang đọc từ…' : 'Đang đọc bài đánh vần…';
             };
             utterance.onend = function () {
                 finish();
@@ -1719,7 +1719,54 @@
         return '<div class="ldd-listening-result-detail"><h5>Kết quả từng câu</h5><ol>' + rows.join('') + '</ol></div>';
     }
 
-    function openListeningLab(trackId, stageNumber) {
+    function buildStudentSpelling(template, vocabulary, previous) {
+        const item = Object.assign({}, template);
+        const shuffle = values => {
+            for (let i = values.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [values[i], values[j]] = [values[j], values[i]];
+            }
+            return values;
+        };
+        const previousWords = new Set((previous?.words || previous?.heard ||
+            (previous?.expected ? [previous.expected] : [])).map(word => word.toLowerCase()));
+        const pick = (count, min, max, excluded = []) => {
+            const banned = new Set(excluded);
+            let candidates = vocabulary.filter(word => word.length >= min && word.length <= max &&
+                !banned.has(word) && !previousWords.has(word));
+            if (candidates.length < count) candidates = vocabulary.filter(word =>
+                word.length >= min && word.length <= max && !banned.has(word));
+            if (candidates.length < count) candidates = vocabulary.filter(word => !banned.has(word));
+            return shuffle(candidates.slice()).slice(0, count);
+        };
+        const spell = word => word.toUpperCase().split('').join(', ') + '.';
+        const lengths = {'Dễ': [2,5], 'Trung bình': [3,7], 'Khá': [4,9],
+            'Khó': [5,12], 'Địa ngục': [6,16]};
+        const range = lengths[item.difficulty] || [2,16];
+        item.title = item.title.split('·')[0].trim() + ' · ' +
+            (item.mode === 'whole_word' ? 'Nghe nguyên từ' : 'Nghe đánh vần');
+        item.referenceAudioUrls = [];
+        item.audioUrl = '';
+        if (item.mode === 'spell_single' || item.mode === 'whole_word') {
+            item.expected = pick(1, ...range)[0];
+            item.recordingScript = item.mode === 'whole_word' ? item.expected : spell(item.expected);
+        } else if (item.mode === 'spell_tick') {
+            item.heard = pick(3, ...range);
+            item.options = shuffle(item.heard.concat(pick(3, 2, 16, item.heard)));
+            item.recordingScript = item.heard.map(spell).join(' ');
+        } else {
+            const count = template.words.length;
+            item.words = shuffle(pick(count, ...range));
+            // The audio order should not be readable from the alphabetic word bank.
+            if (item.words.join('|') === item.words.slice().sort().join('|')) item.words.reverse();
+            if (item.mode === 'spell_numbered') item.bank = shuffle(item.words.slice());
+            item.recordingScript = item.words.map(spell).join(' ');
+        }
+        item.script = item.recordingScript;
+        return item;
+    }
+
+    async function openListeningLab(trackId, stageNumber) {
         const panel = labs.listening;
         const track = LISTENING_CURRICULUM.tracks[trackId];
         const stage = track && track.stages ? track.stages.find(item => Number(item.stage) === Number(stageNumber)) : null;
@@ -1736,8 +1783,41 @@
         progress.current = stageNumber;
         saveState();
 
+        const useStudentVocab = trackId === 'foundation' && stageNumber === 1;
         const useAudioBank = trackId === 'foundation' && stageNumber >= 2;
-        const attemptKey = 'ldd_listening_attempt_' + (useAudioBank ? 'v6' : 'v2') + '::' + trackId + '::' + stageNumber;
+        let vocabWords = [];
+        let vocabUserId = null;
+        if (useStudentVocab) {
+            panel.style.display = '';
+            panel.hidden = false;
+            if (hubs.listening) hubs.listening.hidden = true;
+            panel.innerHTML = '<div class="ldd-lab-feedback is-review" role="status">Đang lấy từ trong kho từ vựng của bạn…</div>';
+            try {
+                if (!window.LDDListeningVocab) throw new Error('Chưa kết nối được kho từ vựng.');
+                const result = await window.LDDListeningVocab.getWords();
+                vocabUserId = result.userId;
+                vocabWords = Array.from(new Set((result.words || []).map(word =>
+                    String(word || '').toLowerCase().trim()).filter(word => /^[a-z]{2,16}$/.test(word))));
+            } catch (error) {
+                console.error('Không tải được từ vựng cho bài nghe:', error);
+                panel.innerHTML = '<div class="ldd-lab-feedback is-review">Không tải được kho từ vựng. Hãy thử mở lại giai đoạn.</div>' +
+                    '<button type="button" class="ldd-roadmap-btn" data-listening-back>← Lộ trình Nghe</button>';
+                panel.querySelector('[data-listening-back]').addEventListener('click', () => showHub('listening'));
+                return;
+            }
+            if (!vocabUserId || vocabWords.length < 6) {
+                panel.innerHTML = '<div class="ldd-lab-feedback is-review">' +
+                    (vocabUserId ? 'Kho từ vựng của bạn hiện có ' + vocabWords.length +
+                        ' từ tiếng Anh đơn lẻ phù hợp. Hãy lưu ít nhất 6 từ để làm giai đoạn đánh vần.' :
+                        'Hãy đăng nhập để luyện nghe bằng kho từ vựng của mình.') + '</div>' +
+                    '<button type="button" class="ldd-roadmap-btn" data-listening-back>← Lộ trình Nghe</button>';
+                panel.querySelector('[data-listening-back]').addEventListener('click', () => showHub('listening'));
+                return;
+            }
+        }
+        const attemptKey = 'ldd_listening_attempt_' +
+            (useStudentVocab ? 'v3' : useAudioBank ? 'v6' : 'v2') +
+            '::' + trackId + '::' + stageNumber + (useStudentVocab ? '::' + vocabUserId : '');
         let stored = null;
         try { stored = JSON.parse(localStorage.getItem(attemptKey) || 'null'); }
         catch (error) { /* Continue with a new local attempt. */ }
@@ -1782,7 +1862,7 @@
         let variants = useAudioBank && Array.isArray(stored && stored.variants) && stored.variants.length === 10
             ? stored.variants.slice() : audioBank.map(() => newSeed());
         let scores = audioBank.map((_, index) => {
-            const previous = useAudioBank ? stored && stored.scores : stored;
+            const previous = useAudioBank || useStudentVocab ? stored && stored.scores : stored;
             return Array.isArray(previous) && Number.isFinite(previous[index]) ? previous[index] : null;
         });
         const buildExercise = function (sourceIndex, seed) {
@@ -1820,13 +1900,28 @@
             }
             return item;
         };
-        let exercises = order.map((source,index) => buildExercise(source, variants[index]));
+        const savedSpellingValid = useStudentVocab && Array.isArray(stored?.exercises) &&
+            stored.exercises.length === 10 && stored.exercises.every((item,index) => {
+                const answers = item.mode === 'spell_single' || item.mode === 'whole_word'
+                    ? [item.expected] : item.mode === 'spell_tick' ? item.heard : item.words;
+                const visible = (item.options || item.bank || []);
+                return item.mode === audioBank[index].mode &&
+                    Array.isArray(answers) && answers.length ===
+                        (audioBank[index].words?.length || audioBank[index].heard?.length || 1) &&
+                    answers.concat(visible).every(word => vocabWords.includes(word)) &&
+                    typeof item.recordingScript === 'string';
+            });
+        let exercises = savedSpellingValid ? stored.exercises : useStudentVocab
+            ? audioBank.map(template => buildStudentSpelling(template, vocabWords))
+            : order.map((source,index) => buildExercise(source, variants[index]));
+        if (useStudentVocab && !savedSpellingValid) scores = scores.map(() => null);
         const saveAttempt = function () {
             try { localStorage.setItem(attemptKey, JSON.stringify(useAudioBank ?
-                {order: order, variants: variants, scores: scores} : scores)); }
+                {order: order, variants: variants, scores: scores} :
+                useStudentVocab ? {exercises: exercises, scores: scores} : scores)); }
             catch (error) { /* Continue grading locally. */ }
         };
-        if (useAudioBank) saveAttempt();
+        if (useAudioBank || useStudentVocab) saveAttempt();
         let activeIndex = 0;
         panel.style.display = '';
         panel.hidden = false;
@@ -1844,25 +1939,51 @@
                 (trackId === 'foundation' && stageNumber === 1
                     ? '<div class="ldd-listening-difficulty-legend"><span class="is-easy">Dễ</span><span>Trung bình</span><span>Khá</span><span>Khó</span><span class="is-hell">💀 Địa ngục</span></div>'
                     : '') +
-                '<div class="ldd-listening-submit-guide"><span>Trả lời đủ các câu rồi bấm <strong>Nộp bài này và xem điểm</strong>. Điểm giai đoạn hiện tự động khi nộp đủ 10 bài. ' + (useAudioBank ? 'Mỗi lượt rút bài nghe kèm câu hỏi từ ngân hàng MP3.' : '') + '</span>' +
+                '<div class="ldd-listening-submit-guide"><span>Trả lời đủ các câu rồi bấm <strong>Nộp bài này và xem điểm</strong>. Điểm giai đoạn hiện tự động khi nộp đủ 10 bài. ' + (useStudentVocab ? 'Giọng đọc tiếng Anh dùng từ trong kho của bạn; làm mới giai đoạn để lấy bộ từ khác.' :
+                        useAudioBank ? 'Mỗi lượt rút bài nghe kèm câu hỏi từ ngân hàng MP3.' : '') + '</span>' +
                     '<strong data-listening-stage-count aria-live="polite">0/10 đã nộp</strong></div>' +
-                (useAudioBank ? '<div class="ldd-lab-actions"><button type="button" class="ldd-roadmap-btn" data-listening-new-attempt>Lượt mới · rút lại audio bank</button></div>' : '') +
+                (useAudioBank || useStudentVocab ? '<div class="ldd-lab-actions"><button type="button" class="ldd-roadmap-btn" data-listening-new-attempt>Làm mới giai đoạn</button></div>' : '') +
                 '<div class="ldd-listening-bank">' +
                     '<div class="ldd-listening-lesson-list" data-listening-list></div>' +
                     '<div class="ldd-listening-exercise" data-listening-exercise></div>' +
                 '</div>';
 
             panel.querySelector('[data-listening-back]').addEventListener('click', () => showHub('listening'));
-            if (useAudioBank) panel.querySelector('[data-listening-new-attempt]').addEventListener('click', () => {
+            if (useAudioBank || useStudentVocab) panel.querySelector('[data-listening-new-attempt]').addEventListener('click', async () => {
+                const button = panel.querySelector('[data-listening-new-attempt]');
+                button.disabled = true;
                 stopListeningPlayback(panel);
-                order = randomOrder(order);
-                variants = variants.map(() => newSeed());
+                if (useStudentVocab) {
+                    try {
+                        const result = await window.LDDListeningVocab.getWords(true);
+                        if (result.userId !== vocabUserId) { showHub('listening'); return; }
+                        const fresh = Array.from(new Set(result.words.map(word =>
+                            String(word || '').toLowerCase().trim()).filter(word => /^[a-z]{2,16}$/.test(word))));
+                        if (fresh.length < 6) {
+                            toast('Kho từ vựng cần ít nhất 6 từ tiếng Anh đơn lẻ.');
+                            button.disabled = false;
+                            return;
+                        }
+                        vocabWords = fresh;
+                    } catch (error) {
+                        console.error('Không làm mới được kho từ vựng:', error);
+                        toast('Chưa tải được kho từ vựng mới. Hãy thử lại.');
+                        button.disabled = false;
+                        return;
+                    }
+                    exercises = audioBank.map((template,index) =>
+                        buildStudentSpelling(template, vocabWords, exercises[index]));
+                } else {
+                    order = randomOrder(order);
+                    variants = variants.map(() => newSeed());
+                    exercises = order.map((source,index) => buildExercise(source, variants[index]));
+                }
                 scores = scores.map(() => null);
-                exercises = order.map((source,index) => buildExercise(source, variants[index]));
                 activeIndex = 0;
                 saveAttempt();
                 renderList();
                 renderExercise(activeIndex);
+                button.disabled = false;
             });
             renderList();
             renderExercise(activeIndex);
@@ -1989,11 +2110,15 @@
                         '</p></div>') +
                     '<div class="ldd-lab-actions"><button type="button" class="ldd-roadmap-btn is-primary" data-listening-next>' +
                     (remainingIndex === -1 ? 'Về lộ trình →' : 'Bài tiếp theo →') + '</button>' +
-                    (useAudioBank ? '<button type="button" class="ldd-roadmap-btn" data-listening-retry>Đổi câu hỏi · làm lại bài này</button>' : '') + '</div>';
-                if (useAudioBank) feedback.querySelector('[data-listening-retry]').addEventListener('click', () => {
-                    variants[index] = (newSeed() & ~1) | (variants[index] % 2 ? 0 : 1);
+                    (useAudioBank || useStudentVocab ? '<button type="button" class="ldd-roadmap-btn" data-listening-retry>' +
+                        (useStudentVocab ? 'Làm lại với từ khác' : 'Đổi câu hỏi · làm lại bài này') + '</button>' : '') + '</div>';
+                if (useAudioBank || useStudentVocab) feedback.querySelector('[data-listening-retry]').addEventListener('click', () => {
+                    if (useStudentVocab) exercises[index] = buildStudentSpelling(audioBank[index], vocabWords, exercises[index]);
+                    else {
+                        variants[index] = (newSeed() & ~1) | (variants[index] % 2 ? 0 : 1);
+                        exercises[index] = buildExercise(order[index], variants[index]);
+                    }
                     scores[index] = null;
-                    exercises[index] = buildExercise(order[index], variants[index]);
                     saveAttempt();
                     renderList();
                     renderExercise(index);
