@@ -343,1104 +343,391 @@ Giữ đúng thang Dễ → Trung bình → Khá → Khó → Địa ngục củ
 
 ---
 
-## Giai đoạn 2 — Nền tảng lớp 2 — Nhận diện câu hỏi & câu trả lời
-
-Nghe một cặp hỏi–đáp rồi gõ lại chính xác câu hỏi và câu trả lời.
-
-### F2-01 — Sinh nhật
-
-**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
-
-- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2023/0419/de-2.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2023/0419/de-2.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0419/de-2.mp3>
-**Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/de-thi-hoc-ki-2-tieng-anh-2-global-success-de-so-2-a137158.html
-
-**Phần cần nghe/đọc trên trang:** Listen and circle; Listen and tick.
-
-**File bạn tự ghi để đưa lên lddenglish:** `assets/audio/listening/foundation/stage-2/f2-01.mp3`
-
-**Link lddenglish sau khi bạn đã upload file:** https://lddenglish.page/assets/audio/listening/foundation/stage-2/f2-01.mp3
-
-**Lời cần tự ghi âm:**
-
-> A: What number is it? B: It is thirteen.
-
-**Bài trên web:** gõ lại câu hỏi **và** câu trả lời.
-
----
-
-### F2-02 — Tuổi
-
-**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
-
-- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2023/0419/de-2.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2023/0419/de-2.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0419/de-2.mp3>
-**Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/de-thi-hoc-ki-2-tieng-anh-2-global-success-de-so-2-a137158.html
-
-**Phần cần nghe/đọc trên trang:** Listen and circle; Listen and tick.
-
-**File bạn tự ghi để đưa lên lddenglish:** `assets/audio/listening/foundation/stage-2/f2-02.mp3`
-
-**Link lddenglish sau khi bạn đã upload file:** https://lddenglish.page/assets/audio/listening/foundation/stage-2/f2-02.mp3
-
-**Lời cần tự ghi âm:**
-
-> A: How old is your sister? B: She is eight.
-
-**Bài trên web:** gõ lại câu hỏi **và** câu trả lời.
-
----
-
-### F2-03 — Đồ vật
-
-**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
-
-- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-026-1.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-026-1.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0617/20201130-tienganh-2-kntt-track-026-1.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-027.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-027.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0617/20201130-tienganh-2-kntt-track-027.mp3>
-**Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/giai-lesson-2-unit-5-sgk-tieng-anh-2-moi-ket-noi-tri-thuc-voi-cuoc-song-a89783.html
-
-**Phần cần nghe/đọc trên trang:** Tiếng Anh 2 Global Success: Listen / Repeat / Tick / Circle theo các Unit.
-
-**File bạn tự ghi để đưa lên lddenglish:** `assets/audio/listening/foundation/stage-2/f2-03.mp3`
-
-**Link lddenglish sau khi bạn đã upload file:** https://lddenglish.page/assets/audio/listening/foundation/stage-2/f2-03.mp3
-
-**Lời cần tự ghi âm:**
-
-> A: Where is my red ball? B: It is under the table.
-
-**Bài trên web:** gõ lại câu hỏi **và** câu trả lời.
-
----
-
-### F2-04 — Con vật
-
-**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
-
-- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-031.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-031.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0617/20201130-tienganh-2-kntt-track-031.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-032.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-032.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0617/20201130-tienganh-2-kntt-track-032.mp3>
-**Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/giai-lesson-2-unit-6-sgk-tieng-anh-2-moi-ket-noi-tri-thuc-voi-cuoc-song-a89786.html
-
-**Phần cần nghe/đọc trên trang:** Tiếng Anh 2 Global Success: Listen / Repeat / Tick / Circle theo các Unit.
-
-**File bạn tự ghi để đưa lên lddenglish:** `assets/audio/listening/foundation/stage-2/f2-04.mp3`
-
-**Link lddenglish sau khi bạn đã upload file:** https://lddenglish.page/assets/audio/listening/foundation/stage-2/f2-04.mp3
-
-**Lời cần tự ghi âm:**
-
-> A: Is the goat on the farm? B: Yes, it is.
-
-**Bài trên web:** gõ lại câu hỏi **và** câu trả lời.
-
----
-
-### F2-05 — Đồ ăn
-
-**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
-
-- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-064-1_1.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-064-1_1.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0617/20201130-tienganh-2-kntt-track-064-1_1.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-065.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-065.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0617/20201130-tienganh-2-kntt-track-065.mp3>
-**Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/giai-lesson-2-unit-12-sgk-tieng-anh-2-moi-ket-noi-tri-thuc-voi-cuoc-song-a89808.html
-
-**Phần cần nghe/đọc trên trang:** Tiếng Anh 2 Global Success: Listen / Repeat / Tick / Circle theo các Unit.
-
-**File bạn tự ghi để đưa lên lddenglish:** `assets/audio/listening/foundation/stage-2/f2-05.mp3`
-
-**Link lddenglish sau khi bạn đã upload file:** https://lddenglish.page/assets/audio/listening/foundation/stage-2/f2-05.mp3
-
-**Lời cần tự ghi âm:**
-
-> A: What do you want? B: I want some cake, please.
-
-**Bài trên web:** gõ lại câu hỏi **và** câu trả lời.
-
----
-
-### F2-06 — Lớp học
-
-**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
-
-- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-026-1.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-026-1.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0617/20201130-tienganh-2-kntt-track-026-1.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-027.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-027.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0617/20201130-tienganh-2-kntt-track-027.mp3>
-**Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/giai-lesson-2-unit-5-sgk-tieng-anh-2-moi-ket-noi-tri-thuc-voi-cuoc-song-a89783.html
-
-**Phần cần nghe/đọc trên trang:** Tiếng Anh 2 Global Success: Listen / Repeat / Tick / Circle theo các Unit.
-
-**File bạn tự ghi để đưa lên lddenglish:** `assets/audio/listening/foundation/stage-2/f2-06.mp3`
-
-**Link lddenglish sau khi bạn đã upload file:** https://lddenglish.page/assets/audio/listening/foundation/stage-2/f2-06.mp3
-
-**Lời cần tự ghi âm:**
-
-> A: Can I open the window? B: Yes, you can.
-
-**Bài trên web:** gõ lại câu hỏi **và** câu trả lời.
-
----
-
-### F2-07 — Sở thích
-
-**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
-
-- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-008_1.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-008_1.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0617/20201130-tienganh-2-kntt-track-008_1.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-009.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-009.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0617/20201130-tienganh-2-kntt-track-009.mp3>
-**Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/giai-lesson-2-unit-2-sgk-tieng-anh-2-moi-ket-noi-tri-thuc-voi-cuoc-song-a89771.html
-
-**Phần cần nghe/đọc trên trang:** Tiếng Anh 2 Global Success: Listen / Repeat / Tick / Circle theo các Unit.
-
-**File bạn tự ghi để đưa lên lddenglish:** `assets/audio/listening/foundation/stage-2/f2-07.mp3`
-
-**Link lddenglish sau khi bạn đã upload file:** https://lddenglish.page/assets/audio/listening/foundation/stage-2/f2-07.mp3
-
-**Lời cần tự ghi âm:**
-
-> A: Do you like kites? B: Yes, I do. I have two kites.
-
-**Bài trên web:** gõ lại câu hỏi **và** câu trả lời.
-
----
-
-### F2-08 — Thời tiết
-
-**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
-
-- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-018.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-018.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0617/20201130-tienganh-2-kntt-track-018.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-019_1.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-019_1.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0617/20201130-tienganh-2-kntt-track-019_1.mp3>
-**Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/giai-lesson-2-unit-4-sgk-tieng-anh-2-moi-ket-noi-tri-thuc-voi-cuoc-song-a89778.html
-
-**Phần cần nghe/đọc trên trang:** Tiếng Anh 2 Global Success: Listen / Repeat / Tick / Circle theo các Unit.
-
-**File bạn tự ghi để đưa lên lddenglish:** `assets/audio/listening/foundation/stage-2/f2-08.mp3`
-
-**Link lddenglish sau khi bạn đã upload file:** https://lddenglish.page/assets/audio/listening/foundation/stage-2/f2-08.mp3
-
-**Lời cần tự ghi âm:**
-
-> A: Is it sunny outside? B: No, it is cloudy today.
-
-**Bài trên web:** gõ lại câu hỏi **và** câu trả lời.
-
----
-
-### F2-09 — Gia đình
-
-**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
-
-- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-077.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-077.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0617/20201130-tienganh-2-kntt-track-077.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-078.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-078.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0617/20201130-tienganh-2-kntt-track-078.mp3>
-**Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/giai-lesson-2-unit-14-sgk-tieng-anh-2-moi-ket-noi-tri-thuc-voi-cuoc-song-a89816.html
-
-**Phần cần nghe/đọc trên trang:** Tiếng Anh 2 Global Success: Listen / Repeat / Tick / Circle theo các Unit.
-
-**File bạn tự ghi để đưa lên lddenglish:** `assets/audio/listening/foundation/stage-2/f2-09.mp3`
-
-**Link lddenglish sau khi bạn đã upload file:** https://lddenglish.page/assets/audio/listening/foundation/stage-2/f2-09.mp3
-
-**Lời cần tự ghi âm:**
-
-> A: Who is that woman? B: She is my mother.
-
-**Bài trên web:** gõ lại câu hỏi **và** câu trả lời.
-
----
-
-### F2-10 — Lý do đơn giản
-
-**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
-
-- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-003.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-003.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0617/20201130-tienganh-2-kntt-track-003.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-004.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-004.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0617/20201130-tienganh-2-kntt-track-004.mp3>
-**Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/giai-lesson-2-unit-1-sgk-tieng-anh-2-moi-ket-noi-tri-thuc-voi-cuoc-song-a89768.html
-
-**Phần cần nghe/đọc trên trang:** Tiếng Anh 2 Global Success: Listen / Repeat / Tick / Circle theo các Unit.
-
-**File bạn tự ghi để đưa lên lddenglish:** `assets/audio/listening/foundation/stage-2/f2-10.mp3`
-
-**Link lddenglish sau khi bạn đã upload file:** https://lddenglish.page/assets/audio/listening/foundation/stage-2/f2-10.mp3
-
-**Lời cần tự ghi âm:**
-
-> A: Why are you happy? B: Because it is my birthday.
-
-**Bài trên web:** gõ lại câu hỏi **và** câu trả lời.
-
----
-
-## Giai đoạn 3 — Nền tảng lớp 3 — Nghe hiểu câu hỏi & câu trả lời
-
-Gõ lại cặp hỏi–đáp, sau đó chọn câu tiếp theo phù hợp để hoàn thành hội thoại.
-
-### F3-01 — Chào hỏi
-
-**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
-
-- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2022/0523/track-5_1.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2022/0523/track-5_1.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0523/track-5_1.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2022/0523/track-6_2.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2022/0523/track-6_2.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0523/track-6_2.mp3>
-**Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-lop-3-unit-1-lesson-1-trang-10-global-success-a106744.html
-
-**Phần cần nghe/đọc trên trang:** Lesson 1–3: Look, listen and repeat; Listen and circle/number.
-
-**File bạn tự ghi để đưa lên lddenglish:** `assets/audio/listening/foundation/stage-3/f3-01.mp3`
-
-**Link lddenglish sau khi bạn đã upload file:** https://lddenglish.page/assets/audio/listening/foundation/stage-3/f3-01.mp3
-
-**Lời cần tự ghi âm:**
-
-> A: How are you today? B: I am fine, thank you.
-
-**Bài trên web:** gõ lại câu hỏi + câu trả lời, sau đó chọn câu tiếp theo phù hợp để hoàn thành hội thoại.
-
----
-
-### F3-02 — Bạn bè
-
-**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
-
-- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2022/0727/track-52.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2022/0727/track-52.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-52.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2022/0727/track-53.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2022/0727/track-53.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-53.mp3>
-**Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html
-
-**Phần cần nghe/đọc trên trang:** Listen and tick; Listen and number.
-
-**File bạn tự ghi để đưa lên lddenglish:** `assets/audio/listening/foundation/stage-3/f3-02.mp3`
-
-**Link lddenglish sau khi bạn đã upload file:** https://lddenglish.page/assets/audio/listening/foundation/stage-3/f3-02.mp3
-
-**Lời cần tự ghi âm:**
-
-> A: Who is this? B: This is my friend, Lucy.
-
-**Bài trên web:** gõ lại câu hỏi + câu trả lời, sau đó chọn câu tiếp theo phù hợp để hoàn thành hội thoại.
-
----
-
-### F3-03 — Nghề nghiệp
-
-**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
-
-- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2022/0727/track-52.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2022/0727/track-52.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-52.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2022/0727/track-53.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2022/0727/track-53.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-53.mp3>
-**Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html
-
-**Phần cần nghe/đọc trên trang:** Listen and tick; Listen and number.
-
-**File bạn tự ghi để đưa lên lddenglish:** `assets/audio/listening/foundation/stage-3/f3-03.mp3`
-
-**Link lddenglish sau khi bạn đã upload file:** https://lddenglish.page/assets/audio/listening/foundation/stage-3/f3-03.mp3
-
-**Lời cần tự ghi âm:**
-
-> A: What is your father's job? B: He is a doctor.
-
-**Bài trên web:** gõ lại câu hỏi + câu trả lời, sau đó chọn câu tiếp theo phù hợp để hoàn thành hội thoại.
-
----
-
-### F3-04 — Thú cưng
-
-**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
-
-- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2022/0728/track-58.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2022/0728/track-58.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0728/track-58.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2022/0728/track-59.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2022/0728/track-59.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0728/track-59.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 3](https://img.loigiaihay.com/picture/2022/0728/track-60.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2022/0728/track-60.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0728/track-60.mp3>
-**Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-lop-3-unit-16-lesson-2-trang-42-global-success-a108135.html
-
-**Phần cần nghe/đọc trên trang:** Look, listen and repeat; Listen and number.
-
-**File bạn tự ghi để đưa lên lddenglish:** `assets/audio/listening/foundation/stage-3/f3-04.mp3`
-
-**Link lddenglish sau khi bạn đã upload file:** https://lddenglish.page/assets/audio/listening/foundation/stage-3/f3-04.mp3
-
-**Lời cần tự ghi âm:**
-
-> A: How many rabbits do you have? B: I have two rabbits.
-
-**Bài trên web:** gõ lại câu hỏi + câu trả lời, sau đó chọn câu tiếp theo phù hợp để hoàn thành hội thoại.
-
----
-
-### F3-05 — Hoạt động
-
-**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
-
-- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2022/0818/track-88.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2022/0818/track-88.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0818/track-88.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2022/0818/track-89.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2022/0818/track-89.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0818/track-89.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 3](https://img.loigiaihay.com/picture/2022/0818/track-90.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2022/0818/track-90.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0818/track-90.mp3>
-**Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-lop-3-unit-19-lesson-2-trang-60-global-success-a108223.html
-
-**Phần cần nghe/đọc trên trang:** Look, listen and repeat; Listen and number.
-
-**File bạn tự ghi để đưa lên lddenglish:** `assets/audio/listening/foundation/stage-3/f3-05.mp3`
-
-**Link lddenglish sau khi bạn đã upload file:** https://lddenglish.page/assets/audio/listening/foundation/stage-3/f3-05.mp3
-
-**Lời cần tự ghi âm:**
-
-> A: What is Ben doing? B: He is skating in the park.
-
-**Bài trên web:** gõ lại câu hỏi + câu trả lời, sau đó chọn câu tiếp theo phù hợp để hoàn thành hội thoại.
-
----
-
-### F3-06 — Đồ uống
-
-**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
-
-- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2022/0727/track-52.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2022/0727/track-52.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-52.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2022/0727/track-53.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2022/0727/track-53.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-53.mp3>
-**Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html
-
-**Phần cần nghe/đọc trên trang:** Listen and tick; Listen and number.
-
-**File bạn tự ghi để đưa lên lddenglish:** `assets/audio/listening/foundation/stage-3/f3-06.mp3`
-
-**Link lddenglish sau khi bạn đã upload file:** https://lddenglish.page/assets/audio/listening/foundation/stage-3/f3-06.mp3
-
-**Lời cần tự ghi âm:**
-
-> A: What would you like to drink? B: I would like some milk, please.
-
-**Bài trên web:** gõ lại câu hỏi + câu trả lời, sau đó chọn câu tiếp theo phù hợp để hoàn thành hội thoại.
-
----
-
-### F3-07 — Vị trí
-
-**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
-
-- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2022/0727/track-52.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2022/0727/track-52.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-52.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2022/0727/track-53.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2022/0727/track-53.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-53.mp3>
-**Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html
-
-**Phần cần nghe/đọc trên trang:** Listen and tick; Listen and number.
-
-**File bạn tự ghi để đưa lên lddenglish:** `assets/audio/listening/foundation/stage-3/f3-07.mp3`
-
-**Link lddenglish sau khi bạn đã upload file:** https://lddenglish.page/assets/audio/listening/foundation/stage-3/f3-07.mp3
-
-**Lời cần tự ghi âm:**
-
-> A: Where is your brother? B: He is in the living room.
-
-**Bài trên web:** gõ lại câu hỏi + câu trả lời, sau đó chọn câu tiếp theo phù hợp để hoàn thành hội thoại.
-
----
-
-### F3-08 — Đồ chơi
-
-**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
-
-- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2022/0818/track-88.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2022/0818/track-88.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0818/track-88.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2022/0818/track-89.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2022/0818/track-89.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0818/track-89.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 3](https://img.loigiaihay.com/picture/2022/0818/track-90.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2022/0818/track-90.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0818/track-90.mp3>
-**Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-lop-3-unit-19-lesson-2-trang-60-global-success-a108223.html
-
-**Phần cần nghe/đọc trên trang:** Look, listen and repeat; Listen and number.
-
-**File bạn tự ghi để đưa lên lddenglish:** `assets/audio/listening/foundation/stage-3/f3-08.mp3`
-
-**Link lddenglish sau khi bạn đã upload file:** https://lddenglish.page/assets/audio/listening/foundation/stage-3/f3-08.mp3
-
-**Lời cần tự ghi âm:**
-
-> A: Do you have any planes? B: Yes, I have three planes.
-
-**Bài trên web:** gõ lại câu hỏi + câu trả lời, sau đó chọn câu tiếp theo phù hợp để hoàn thành hội thoại.
-
----
-
-### F3-09 — Khả năng
-
-**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
-
-- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2022/0523/track-9.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2022/0523/track-9.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0523/track-9.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2022/0523/track-10.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2022/0523/track-10.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0523/track-10.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 3](https://img.loigiaihay.com/picture/2022/0523/track-11.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2022/0523/track-11.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0523/track-11.mp3>
-**Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-lop-3-unit-1-lesson-2-trang-12-global-success-a106757.html
-
-**Phần cần nghe/đọc trên trang:** Lesson 1–3: Look, listen and repeat; Listen and circle/number.
-
-**File bạn tự ghi để đưa lên lddenglish:** `assets/audio/listening/foundation/stage-3/f3-09.mp3`
-
-**Link lddenglish sau khi bạn đã upload file:** https://lddenglish.page/assets/audio/listening/foundation/stage-3/f3-09.mp3
-
-**Lời cần tự ghi âm:**
-
-> A: Can your sister swim? B: Yes, she can swim very well.
-
-**Bài trên web:** gõ lại câu hỏi + câu trả lời, sau đó chọn câu tiếp theo phù hợp để hoàn thành hội thoại.
-
----
-
-### F3-10 — Thời gian
-
-**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
-
-- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2022/0727/track-52.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2022/0727/track-52.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-52.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2022/0727/track-53.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2022/0727/track-53.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-53.mp3>
-**Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html
-
-**Phần cần nghe/đọc trên trang:** Listen and tick; Listen and number.
-
-**File bạn tự ghi để đưa lên lddenglish:** `assets/audio/listening/foundation/stage-3/f3-10.mp3`
-
-**Link lddenglish sau khi bạn đã upload file:** https://lddenglish.page/assets/audio/listening/foundation/stage-3/f3-10.mp3
-
-**Lời cần tự ghi âm:**
-
-> A: What time do you go to school? B: I go to school at seven o'clock.
-
-**Bài trên web:** gõ lại câu hỏi + câu trả lời, sau đó chọn câu tiếp theo phù hợp để hoàn thành hội thoại.
-
----
-
-## Giai đoạn 4 — Nền tảng lớp 4 — Nhận diện hội thoại ngắn
-
-Nghe hội thoại dưới 30 giây và điền chính xác 2 câu bị khuyết.
-
-### F4-01 — Bạn mới
-
-**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
-
-- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2023/0809/track-10.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2023/0809/track-10.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-10.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2023/0809/track-11.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2023/0809/track-11.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-11.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 3](https://img.loigiaihay.com/picture/2023/0809/track-12.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2023/0809/track-12.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-12.mp3>
-**Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-lop-4-unit-1-lesson-2-trang-12-13-global-success-a134621.html
-
-**Phần cần nghe/đọc trên trang:** Look, listen and repeat; Listen and tick.
-
-**File bạn tự ghi để đưa lên lddenglish:** `assets/audio/listening/foundation/stage-4/f4-01.mp3`
-
-**Link lddenglish sau khi bạn đã upload file:** https://lddenglish.page/assets/audio/listening/foundation/stage-4/f4-01.mp3
-
-**Lời cần tự ghi âm:**
-
-> A: Who's that? B: It's my new friend, Hana. A: Where's she from? B: She's from Japan.
-
-**Bài trên web:** điền lại 2 câu bị ẩn trong hội thoại ngắn dưới 30 giây.
-
----
-
-### F4-02 — Bữa sáng
-
-**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
-
-- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2023/0809/track-56.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2023/0809/track-56.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-56.mp3>
-**Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-lop-4-review-1-trang-40-41-global-success-a136098.html
-
-**Phần cần nghe/đọc trên trang:** Listen and tick.
-
-**File bạn tự ghi để đưa lên lddenglish:** `assets/audio/listening/foundation/stage-4/f4-02.mp3`
-
-**Link lddenglish sau khi bạn đã upload file:** https://lddenglish.page/assets/audio/listening/foundation/stage-4/f4-02.mp3
-
-**Lời cần tự ghi âm:**
-
-> A: What time do you have breakfast? B: I have breakfast at six forty-five. A: What do you have after breakfast? B: I go to school at seven fifteen.
-
-**Bài trên web:** điền lại 2 câu bị ẩn trong hội thoại ngắn dưới 30 giây.
-
----
-
-### F4-03 — Sinh nhật
-
-**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
-
-- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2023/0809/track-40.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2023/0809/track-40.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-40.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2023/0809/track-41.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2023/0809/track-41.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-41.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 3](https://img.loigiaihay.com/picture/2023/0809/track-42.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2023/0809/track-42.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-42.mp3>
-**Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-lop-4-unit-4-lesson-2-trang-30-31-global-success-a135717.html
-
-**Phần cần nghe/đọc trên trang:** Look, listen and repeat; Listen and tick.
-
-**File bạn tự ghi để đưa lên lddenglish:** `assets/audio/listening/foundation/stage-4/f4-03.mp3`
-
-**Link lddenglish sau khi bạn đã upload file:** https://lddenglish.page/assets/audio/listening/foundation/stage-4/f4-03.mp3
-
-**Lời cần tự ghi âm:**
-
-> A: Happy birthday, Ben! B: Thank you. A: What do you want to drink? B: I want some lemonade, please.
-
-**Bài trên web:** điền lại 2 câu bị ẩn trong hội thoại ngắn dưới 30 giây.
-
----
-
-### F4-04 — Môn học
-
-**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
-
-- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2023/0809/track-107.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2023/0809/track-107.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-107.mp3>
-**Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-lop-4-review-2-trang-74-75-global-success-a138084.html
-
-**Phần cần nghe/đọc trên trang:** Listen and tick.
-
-**File bạn tự ghi để đưa lên lddenglish:** `assets/audio/listening/foundation/stage-4/f4-04.mp3`
-
-**Link lddenglish sau khi bạn đã upload file:** https://lddenglish.page/assets/audio/listening/foundation/stage-4/f4-04.mp3
-
-**Lời cần tự ghi âm:**
-
-> A: When do you have music? B: I have it on Thursdays. A: What's your favourite subject? B: It's English.
-
-**Bài trên web:** điền lại 2 câu bị ẩn trong hội thoại ngắn dưới 30 giây.
-
----
-
-### F4-05 — Khả năng
-
-**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
-
-- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2023/0809/track-56.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2023/0809/track-56.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-56.mp3>
-**Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-lop-4-review-1-trang-40-41-global-success-a136098.html
-
-**Phần cần nghe/đọc trên trang:** Listen and tick.
-
-**File bạn tự ghi để đưa lên lddenglish:** `assets/audio/listening/foundation/stage-4/f4-05.mp3`
-
-**Link lddenglish sau khi bạn đã upload file:** https://lddenglish.page/assets/audio/listening/foundation/stage-4/f4-05.mp3
-
-**Lời cần tự ghi âm:**
-
-> A: Can your brother roller skate? B: Yes, he can. A: Can he ride a bike too? B: No, he can't.
-
-**Bài trên web:** điền lại 2 câu bị ẩn trong hội thoại ngắn dưới 30 giây.
-
----
-
-### F4-06 — Thời tiết
-
-**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
-
-- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2023/0808/track-102.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2023/0808/track-102.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0808/track-102.mp3>
-**Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-lop-4-review-4-trang-70-global-success-a139728.html
-
-**Phần cần nghe/đọc trên trang:** Listen and tick.
-
-**File bạn tự ghi để đưa lên lddenglish:** `assets/audio/listening/foundation/stage-4/f4-06.mp3`
-
-**Link lddenglish sau khi bạn đã upload file:** https://lddenglish.page/assets/audio/listening/foundation/stage-4/f4-06.mp3
-
-**Lời cần tự ghi âm:**
-
-> A: What was the weather like yesterday? B: It was sunny and hot. A: Did you go outside? B: Yes, I played badminton.
-
-**Bài trên web:** điền lại 2 câu bị ẩn trong hội thoại ngắn dưới 30 giây.
-
----
-
-### F4-07 — Mua sắm
-
-**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
-
-- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2023/0808/track-102.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2023/0808/track-102.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0808/track-102.mp3>
-**Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-lop-4-review-4-trang-70-global-success-a139728.html
-
-**Phần cần nghe/đọc trên trang:** Listen and tick.
-
-**File bạn tự ghi để đưa lên lddenglish:** `assets/audio/listening/foundation/stage-4/f4-07.mp3`
-
-**Link lddenglish sau khi bạn đã upload file:** https://lddenglish.page/assets/audio/listening/foundation/stage-4/f4-07.mp3
-
-**Lời cần tự ghi âm:**
-
-> A: How much is the notebook? B: It's fifteen thousand dong. A: Can I have two, please? B: Yes. Here you are.
-
-**Bài trên web:** điền lại 2 câu bị ẩn trong hội thoại ngắn dưới 30 giây.
-
----
-
-### F4-08 — Thể thao
-
-**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
-
-- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2023/0808/track-102.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2023/0808/track-102.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0808/track-102.mp3>
-**Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-lop-4-review-4-trang-70-global-success-a139728.html
-
-**Phần cần nghe/đọc trên trang:** Listen and tick.
-
-**File bạn tự ghi để đưa lên lddenglish:** `assets/audio/listening/foundation/stage-4/f4-08.mp3`
-
-**Link lddenglish sau khi bạn đã upload file:** https://lddenglish.page/assets/audio/listening/foundation/stage-4/f4-08.mp3
-
-**Lời cần tự ghi âm:**
-
-> A: What are they doing? B: They're playing football. A: Is today your sports day? B: Yes, it is.
-
-**Bài trên web:** điền lại 2 câu bị ẩn trong hội thoại ngắn dưới 30 giây.
-
----
-
-### F4-09 — Trường học
-
-**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
-
-- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2023/0809/track-107.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2023/0809/track-107.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-107.mp3>
-**Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-lop-4-review-2-trang-74-75-global-success-a138084.html
-
-**Phần cần nghe/đọc trên trang:** Listen and tick.
-
-**File bạn tự ghi để đưa lên lddenglish:** `assets/audio/listening/foundation/stage-4/f4-09.mp3`
-
-**Link lddenglish sau khi bạn đã upload file:** https://lddenglish.page/assets/audio/listening/foundation/stage-4/f4-09.mp3
-
-**Lời cần tự ghi âm:**
-
-> A: Where's your school? B: It's in the mountains. A: Is it big? B: No, but it has a new library.
-
-**Bài trên web:** điền lại 2 câu bị ẩn trong hội thoại ngắn dưới 30 giây.
-
----
-
-### F4-10 — Cuối tuần
-
-**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
-
-- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2023/0809/track-56.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2023/0809/track-56.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-56.mp3>
-**Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-lop-4-review-1-trang-40-41-global-success-a136098.html
-
-**Phần cần nghe/đọc trên trang:** Listen and tick.
-
-**File bạn tự ghi để đưa lên lddenglish:** `assets/audio/listening/foundation/stage-4/f4-10.mp3`
-
-**Link lddenglish sau khi bạn đã upload file:** https://lddenglish.page/assets/audio/listening/foundation/stage-4/f4-10.mp3
-
-**Lời cần tự ghi âm:**
-
-> A: What do you do on Saturday morning? B: I help my mother at home. A: What do you do in the afternoon? B: I play with my friends.
-
-**Bài trên web:** điền lại 2 câu bị ẩn trong hội thoại ngắn dưới 30 giây.
-
----
-
-## Giai đoạn 5 — Nền tảng lớp 5 — Hiểu hội thoại ngắn
-
-Nghe hội thoại ngắn rồi trả lời các câu hỏi trắc nghiệm về nội dung.
-
-### F5-01 — Nghề nghiệp tương lai
-
-**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
-
-- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2024/0703/track-45.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2024/0703/track-45.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-45.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2024/0703/track-46.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2024/0703/track-46.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-46.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 3](https://img.loigiaihay.com/picture/2024/0703/track-47.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2024/0703/track-47.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-47.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 4](https://img.loigiaihay.com/picture/2024/0703/track-48.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2024/0703/track-48.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-48.mp3>
-**Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/giai-lesson-1-unit-5-tieng-anh-5-global-success-co-dap-an-a156859.html
-
-**Phần cần nghe/đọc trên trang:** Lesson 1–3: Look and listen; Listen and tick.
-
-**File bạn tự ghi để đưa lên lddenglish:** `assets/audio/listening/foundation/stage-5/f5-01.mp3`
-
-**Link lddenglish sau khi bạn đã upload file:** https://lddenglish.page/assets/audio/listening/foundation/stage-5/f5-01.mp3
-
-**Lời cần tự ghi âm:**
-
-> A: What would you like to be in the future? B: I'd like to be a firefighter because I want to help people. A: That's a brave job. B: Yes, and I know I need to be strong and healthy.
-
-**Bài trên web:** 3 câu trắc nghiệm nghe hiểu.
-
----
-
-### F5-02 — Kỳ nghỉ hè
-
-**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
-
-- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2025/0811/track-1.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2025/0811/track-1.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0811/track-1.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2025/0811/track-2.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2025/0811/track-2.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0811/track-2.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 3](https://img.loigiaihay.com/picture/2025/0811/track-3.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2025/0811/track-3.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0811/track-3.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 4](https://img.loigiaihay.com/picture/2025/0811/track-4.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2025/0811/track-4.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0811/track-4.mp3>
-**Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/giai-lesson-1-unit-11-tieng-anh-5-global-success-co-dap-an-a158439.html
-
-**Phần cần nghe/đọc trên trang:** Listen and tick.
-
-**File bạn tự ghi để đưa lên lddenglish:** `assets/audio/listening/foundation/stage-5/f5-02.mp3`
-
-**Link lddenglish sau khi bạn đã upload file:** https://lddenglish.page/assets/audio/listening/foundation/stage-5/f5-02.mp3
-
-**Lời cần tự ghi âm:**
-
-> A: Where are you going this summer? B: I'm going to Da Nang with my family. A: How will you get there? B: We'll go by train because my little brother loves trains.
-
-**Bài trên web:** 3 câu trắc nghiệm nghe hiểu.
-
----
-
-### F5-03 — Thời tiết
-
-**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
-
-- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2025/0303/track-52.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2025/0303/track-52.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0303/track-52.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2025/0303/track-53.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2025/0303/track-53.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0303/track-53.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 3](https://img.loigiaihay.com/picture/2025/0303/track-54.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2025/0303/track-54.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0303/track-54.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 4](https://img.loigiaihay.com/picture/2025/0303/track-55.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2025/0303/track-55.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0303/track-55.mp3>
-**Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/giai-lesson-1-unit-16-tieng-anh-5-global-success-co-dap-an-a161839.html
-
-**Phần cần nghe/đọc trên trang:** Listen and tick.
-
-**File bạn tự ghi để đưa lên lddenglish:** `assets/audio/listening/foundation/stage-5/f5-03.mp3`
-
-**Link lddenglish sau khi bạn đã upload file:** https://lddenglish.page/assets/audio/listening/foundation/stage-5/f5-03.mp3
-
-**Lời cần tự ghi âm:**
-
-> A: What's the weather like in Hai Duong in summer? B: It's usually sunny and hot. A: What do you do on very hot days? B: I stay inside in the afternoon and go cycling in the evening.
-
-**Bài trên web:** 3 câu trắc nghiệm nghe hiểu.
-
----
-
-### F5-04 — Câu chuyện
-
-**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
-
-- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2025/0401/track-62.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2025/0401/track-62.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0401/track-62.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2025/0401/track-63.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2025/0401/track-63.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0401/track-63.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 3](https://img.loigiaihay.com/picture/2025/0401/track-64.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2025/0401/track-64.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0401/track-64.mp3>
-**Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/giai-lesson-1-unit-17-tieng-anh-5-global-success-co-dap-an-a161959.html
-
-**Phần cần nghe/đọc trên trang:** Listen and tick.
-
-**File bạn tự ghi để đưa lên lddenglish:** `assets/audio/listening/foundation/stage-5/f5-04.mp3`
-
-**Link lddenglish sau khi bạn đã upload file:** https://lddenglish.page/assets/audio/listening/foundation/stage-5/f5-04.mp3
-
-**Lời cần tự ghi âm:**
-
-> A: What are you reading? B: A story about a fox and a crow. A: Which character do you like? B: The crow, but I think the fox is more interesting.
-
-**Bài trên web:** 3 câu trắc nghiệm nghe hiểu.
-
----
-
-### F5-05 — Địa điểm tham quan
-
-**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
-
-- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2026/0522/track-72.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2026/0522/track-72.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2026/0522/track-72.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2026/0522/track-73.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2026/0522/track-73.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2026/0522/track-73.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 3](https://img.loigiaihay.com/picture/2025/0403/track-74.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2025/0403/track-74.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0403/track-74.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 4](https://img.loigiaihay.com/picture/2026/0522/track-75.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2026/0522/track-75.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2026/0522/track-75.mp3>
-**Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/giai-lesson-1-unit-18-tieng-anh-5-global-success-co-dap-an-a161975.html
-
-**Phần cần nghe/đọc trên trang:** Listen and tick.
-
-**File bạn tự ghi để đưa lên lddenglish:** `assets/audio/listening/foundation/stage-5/f5-05.mp3`
-
-**Link lddenglish sau khi bạn đã upload file:** https://lddenglish.page/assets/audio/listening/foundation/stage-5/f5-05.mp3
-
-**Lời cần tự ghi âm:**
-
-> A: It's sunny today. Let's visit somewhere in Ha Noi. B: Good idea. How about Hoan Kiem Lake? A: Great. We can walk around the lake and take some photos.
-
-**Bài trên web:** 3 câu trắc nghiệm nghe hiểu.
-
----
-
-### F5-06 — Ngôi nhà
-
-**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
-
-- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2024/0703/track-15.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2024/0703/track-15.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-15.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2024/0703/track-16.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2024/0703/track-16.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-16.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 3](https://img.loigiaihay.com/picture/2024/0703/track-17.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2024/0703/track-17.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-17.mp3>
-**Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/giai-lesson-1-unit-2-tieng-anh-5-global-success-co-dap-an-a156771.html
-
-**Phần cần nghe/đọc trên trang:** Tiếng Anh 5 Global Success: các bài Listening trong Lesson/Review.
-
-**File bạn tự ghi để đưa lên lddenglish:** `assets/audio/listening/foundation/stage-5/f5-06.mp3`
-
-**Link lddenglish sau khi bạn đã upload file:** https://lddenglish.page/assets/audio/listening/foundation/stage-5/f5-06.mp3
-
-**Lời cần tự ghi âm:**
-
-> A: Which room do you like best in your house? B: My bedroom. It has a big window and a small desk. A: What do you do there? B: I read books and do my homework.
-
-**Bài trên web:** 3 câu trắc nghiệm nghe hiểu.
-
----
-
-### F5-07 — Bạn nước ngoài
-
-**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
-
-- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2024/0703/track-25.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2024/0703/track-25.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-25.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2024/0703/track-26.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2024/0703/track-26.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-26.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 3](https://img.loigiaihay.com/picture/2024/0703/track-27.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2024/0703/track-27.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-27.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 4](https://img.loigiaihay.com/picture/2024/0703/track-28.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2024/0703/track-28.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-28.mp3>
-**Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/giai-lesson-1-unit-3-tieng-anh-5-global-success-co-dap-an-a156783.html
-
-**Phần cần nghe/đọc trên trang:** Tiếng Anh 5 Global Success: các bài Listening trong Lesson/Review.
-
-**File bạn tự ghi để đưa lên lddenglish:** `assets/audio/listening/foundation/stage-5/f5-07.mp3`
-
-**Link lddenglish sau khi bạn đã upload file:** https://lddenglish.page/assets/audio/listening/foundation/stage-5/f5-07.mp3
-
-**Lời cần tự ghi âm:**
-
-> A: Tell me about your new friend. B: His name is Leo and he's from Australia. A: What does he like? B: He likes football and drawing animals.
-
-**Bài trên web:** 3 câu trắc nghiệm nghe hiểu.
-
----
-
-### F5-08 — Sức khỏe
-
-**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
-
-- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2025/0224/track-31.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2025/0224/track-31.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0224/track-31.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2025/0224/track-32.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2025/0224/track-32.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0224/track-32.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 3](https://img.loigiaihay.com/picture/2025/0224/track-33.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2025/0224/track-33.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0224/track-33.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 4](https://img.loigiaihay.com/picture/2025/0224/track-34.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2025/0224/track-34.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0224/track-34.mp3>
-**Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/giai-lesson-1-unit-14-tieng-anh-5-global-success-co-dap-an-a159044.html
-
-**Phần cần nghe/đọc trên trang:** Tiếng Anh 5 Global Success: các bài Listening trong Lesson/Review.
-
-**File bạn tự ghi để đưa lên lddenglish:** `assets/audio/listening/foundation/stage-5/f5-08.mp3`
-
-**Link lddenglish sau khi bạn đã upload file:** https://lddenglish.page/assets/audio/listening/foundation/stage-5/f5-08.mp3
-
-**Lời cần tự ghi âm:**
-
-> A: You look tired today. B: I went to bed late last night. A: Try to sleep earlier and don't use your phone in bed. B: You're right. I'll do that tonight.
-
-**Bài trên web:** 3 câu trắc nghiệm nghe hiểu.
-
----
-
-### F5-09 — Phương tiện
-
-**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
-
-- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2026/0522/track-72.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2026/0522/track-72.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2026/0522/track-72.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2026/0522/track-73.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2026/0522/track-73.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2026/0522/track-73.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 3](https://img.loigiaihay.com/picture/2025/0403/track-74.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2025/0403/track-74.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0403/track-74.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 4](https://img.loigiaihay.com/picture/2026/0522/track-75.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2026/0522/track-75.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2026/0522/track-75.mp3>
-**Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/giai-lesson-1-unit-18-tieng-anh-5-global-success-co-dap-an-a161975.html
-
-**Phần cần nghe/đọc trên trang:** Listen and tick.
-
-**File bạn tự ghi để đưa lên lddenglish:** `assets/audio/listening/foundation/stage-5/f5-09.mp3`
-
-**Link lddenglish sau khi bạn đã upload file:** https://lddenglish.page/assets/audio/listening/foundation/stage-5/f5-09.mp3
-
-**Lời cần tự ghi âm:**
-
-> A: How far is it from Hue to Da Nang? B: About one hundred kilometres. A: Are you going by car? B: No, my family is taking the train.
-
-**Bài trên web:** 3 câu trắc nghiệm nghe hiểu.
-
----
-
-### F5-10 — Hoạt động hè
-
-**MP3 Loigiaihay — bấm để mở thẳng file `.mp3`:**
-
-- [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2025/0512/track-92.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2025/0512/track-92.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0512/track-92.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2025/0512/track-93.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2025/0512/track-93.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0512/track-93.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 3](https://img.loigiaihay.com/picture/2024/1213/track-94.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2024/1213/track-94.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/1213/track-94.mp3>
-- [▶ Mở thẳng MP3 Loigiaihay 4](https://img.loigiaihay.com/picture/2025/0512/track-95.mp3)
-  - Raw URL: <https://img.loigiaihay.com/picture/2025/0512/track-95.mp3>
-  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0512/track-95.mp3>
-**Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/giai-lesson-1-unit-20-tieng-anh-5-global-success-co-dap-an-a162065.html
-
-**Phần cần nghe/đọc trên trang:** Tiếng Anh 5 Global Success: các bài Listening trong Lesson/Review.
-
-**File bạn tự ghi để đưa lên lddenglish:** `assets/audio/listening/foundation/stage-5/f5-10.mp3`
-
-**Link lddenglish sau khi bạn đã upload file:** https://lddenglish.page/assets/audio/listening/foundation/stage-5/f5-10.mp3
-
-**Lời cần tự ghi âm:**
-
-> A: What are you going to do at summer camp? B: I'm going to swim, play games, and learn how to put up a tent. A: What are you most excited about? B: Sleeping in a tent with my friends.
-
-**Bài trên web:** 3 câu trắc nghiệm nghe hiểu.
-
----
-
+## Giai đoạn 2 — Nhận diện câu hỏi & câu trả lời
+
+Nghe đúng cặp hỏi–đáp được chỉ định trong MP3 và ghi lại hai câu.
+
+### F2-01 — Món đồ mong muốn
+
+- MP3 dùng trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0419/de-2.mp3>
+- MP3 gốc: <https://img.loigiaihay.com/picture/2023/0419/de-2.mp3>
+- Trang đối chiếu: <https://loigiaihay.com/de-thi-hoc-ki-2-tieng-anh-2-global-success-de-so-2-a137158.html>
+- Vị trí: Phần II · hội thoại 1
+- Yêu cầu: undefined
+- Đáp án hỏi–đáp: What do you want? / I want some yo-yos.
+
+### F2-02 — Con vật yêu thích
+
+- MP3 dùng trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0419/de-2.mp3>
+- MP3 gốc: <https://img.loigiaihay.com/picture/2023/0419/de-2.mp3>
+- Trang đối chiếu: <https://loigiaihay.com/de-thi-hoc-ki-2-tieng-anh-2-global-success-de-so-2-a137158.html>
+- Vị trí: Phần II · hội thoại 2
+- Yêu cầu: undefined
+- Đáp án hỏi–đáp: Do you like the zebu? / Yes, I do.
+
+### F2-03 — Người thân
+
+- MP3 dùng trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-52.mp3>
+- MP3 gốc: <https://img.loigiaihay.com/picture/2022/0727/track-52.mp3>
+- Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html>
+- Vị trí: Đoạn 1 · cặp hỏi–đáp 1
+- Yêu cầu: undefined
+- Đáp án hỏi–đáp: Who is this? / It's my father.
+
+### F2-04 — Nghề nghiệp
+
+- MP3 dùng trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-52.mp3>
+- MP3 gốc: <https://img.loigiaihay.com/picture/2022/0727/track-52.mp3>
+- Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html>
+- Vị trí: Đoạn 1 · cặp hỏi–đáp 2
+- Yêu cầu: undefined
+- Đáp án hỏi–đáp: What's her job? / She's a doctor.
+
+### F2-05 — Phòng khách
+
+- MP3 dùng trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-52.mp3>
+- MP3 gốc: <https://img.loigiaihay.com/picture/2022/0727/track-52.mp3>
+- Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html>
+- Vị trí: Đoạn 1 · cặp hỏi–đáp 3
+- Yêu cầu: undefined
+- Đáp án hỏi–đáp: Where's the living room? / It's there.
+
+### F2-06 — Đồ uống
+
+- MP3 dùng trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-52.mp3>
+- MP3 gốc: <https://img.loigiaihay.com/picture/2022/0727/track-52.mp3>
+- Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html>
+- Vị trí: Đoạn 1 · cặp hỏi–đáp 5
+- Yêu cầu: undefined
+- Đáp án hỏi–đáp: What would you like to drink? / I'd like some milk, please.
+
+### F2-07 — Tuổi của anh trai
+
+- MP3 dùng trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-53.mp3>
+- MP3 gốc: <https://img.loigiaihay.com/picture/2022/0727/track-53.mp3>
+- Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html>
+- Vị trí: Đoạn 2 · cặp hỏi–đáp 1
+- Yêu cầu: undefined
+- Đáp án hỏi–đáp: How old is your brother? / He's fourteen years old.
+
+### F2-08 — Công việc của anh ấy
+
+- MP3 dùng trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-53.mp3>
+- MP3 gốc: <https://img.loigiaihay.com/picture/2022/0727/track-53.mp3>
+- Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html>
+- Vị trí: Đoạn 2 · cặp hỏi–đáp 2
+- Yêu cầu: undefined
+- Đáp án hỏi–đáp: What's his job? / He's a driver.
+
+### F2-09 — Những chiếc đèn
+
+- MP3 dùng trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-53.mp3>
+- MP3 gốc: <https://img.loigiaihay.com/picture/2022/0727/track-53.mp3>
+- Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html>
+- Vị trí: Đoạn 2 · cặp hỏi–đáp 3
+- Yêu cầu: undefined
+- Đáp án hỏi–đáp: Where are the lamps? / They're on the table.
+
+### F2-10 — Mời ăn
+
+- MP3 dùng trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-53.mp3>
+- MP3 gốc: <https://img.loigiaihay.com/picture/2022/0727/track-53.mp3>
+- Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html>
+- Vị trí: Đoạn 2 · cặp hỏi–đáp 4
+- Yêu cầu: undefined
+- Đáp án hỏi–đáp: Would you like some chicken? / Yes, please.
+
+## Giai đoạn 3 — Nghe hiểu câu hỏi & câu trả lời
+
+Nghe, ghi lại cặp hỏi–đáp và chọn cách hiểu đúng từ những lời thật sự được phát trong MP3.
+
+### F3-01 — Hỏi thăm bạn
+
+- MP3 dùng trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0523/track-9.mp3>
+- MP3 gốc: <https://img.loigiaihay.com/picture/2022/0523/track-9.mp3>
+- Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-3-unit-1-lesson-2-trang-12-global-success-a106757.html>
+- Vị trí: Đoạn a · cặp hỏi–đáp đầu tiên
+- Yêu cầu: undefined
+- Đáp án hỏi–đáp: Hi, Mai. How are you? / Fine, thank you.
+- Chọn nghĩa đúng: And you?
+
+### F3-02 — Đây là ai?
+
+- MP3 dùng trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-52.mp3>
+- MP3 gốc: <https://img.loigiaihay.com/picture/2022/0727/track-52.mp3>
+- Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html>
+- Vị trí: Cặp hỏi–đáp 1
+- Yêu cầu: undefined
+- Đáp án hỏi–đáp: Who is this? / It's my father.
+- Chọn nghĩa đúng: What's his job?
+
+### F3-03 — Công việc
+
+- MP3 dùng trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-52.mp3>
+- MP3 gốc: <https://img.loigiaihay.com/picture/2022/0727/track-52.mp3>
+- Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html>
+- Vị trí: Cặp hỏi–đáp 2
+- Yêu cầu: undefined
+- Đáp án hỏi–đáp: What's her job? / She's a doctor.
+- Chọn nghĩa đúng: Where does she work?
+
+### F3-04 — Những chú thỏ
+
+- MP3 dùng trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0728/track-58.mp3>
+- MP3 gốc: <https://img.loigiaihay.com/picture/2022/0728/track-58.mp3>
+- Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-3-unit-16-lesson-2-trang-42-global-success-a108135.html>
+- Vị trí: Đoạn a · câu hỏi về thỏ
+- Yêu cầu: undefined
+- Đáp án hỏi–đáp: How many rabbits do you have? / I have many.
+- Chọn nghĩa đúng: And how many goldfish?
+
+### F3-05 — Trượt patin
+
+- MP3 dùng trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0818/track-88.mp3>
+- MP3 gốc: <https://img.loigiaihay.com/picture/2022/0818/track-88.mp3>
+- Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-3-unit-19-lesson-2-trang-60-global-success-a108223.html>
+- Vị trí: Đoạn b · câu hỏi về hoạt động
+- Yêu cầu: undefined
+- Đáp án hỏi–đáp: What's he doing? / He's skating.
+- Chọn nghĩa đúng: Where is he skating?
+
+### F3-06 — Gọi đồ uống
+
+- MP3 dùng trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-52.mp3>
+- MP3 gốc: <https://img.loigiaihay.com/picture/2022/0727/track-52.mp3>
+- Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html>
+- Vị trí: Cặp hỏi–đáp 5
+- Yêu cầu: undefined
+- Đáp án hỏi–đáp: What would you like to drink? / I'd like some milk, please.
+- Chọn nghĩa đúng: Would you like something to eat?
+
+### F3-07 — Những chiếc đèn
+
+- MP3 dùng trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-53.mp3>
+- MP3 gốc: <https://img.loigiaihay.com/picture/2022/0727/track-53.mp3>
+- Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html>
+- Vị trí: Đoạn 2 · cặp hỏi–đáp 3
+- Yêu cầu: undefined
+- Đáp án hỏi–đáp: Where are the lamps? / They're on the table.
+- Chọn nghĩa đúng: And where is the clock?
+
+### F3-08 — Đi xe đạp
+
+- MP3 dùng trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0818/track-89.mp3>
+- MP3 gốc: <https://img.loigiaihay.com/picture/2022/0818/track-89.mp3>
+- Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-3-unit-19-lesson-2-trang-60-global-success-a108223.html>
+- Vị trí: Mục b · cặp hỏi–đáp về cô ấy
+- Yêu cầu: undefined
+- Đáp án hỏi–đáp: What's she doing? / She's cycling.
+- Chọn nghĩa đúng: Is she wearing a helmet?
+
+### F3-09 — Chào Minh
+
+- MP3 dùng trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0523/track-11.mp3>
+- MP3 gốc: <https://img.loigiaihay.com/picture/2022/0523/track-11.mp3>
+- Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-3-unit-1-lesson-2-trang-12-global-success-a106757.html>
+- Vị trí: Hội thoại số 3
+- Yêu cầu: undefined
+- Đáp án hỏi–đáp: Hello, Minh. How are you? / Fine, thank you.
+- Chọn nghĩa đúng: And you?
+
+### F3-10 — Tuổi của anh trai
+
+- MP3 dùng trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-53.mp3>
+- MP3 gốc: <https://img.loigiaihay.com/picture/2022/0727/track-53.mp3>
+- Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html>
+- Vị trí: Đoạn 2 · cặp hỏi–đáp 1
+- Yêu cầu: undefined
+- Đáp án hỏi–đáp: How old is your brother? / He's fourteen years old.
+- Chọn nghĩa đúng: What does he like doing?
+
+## Giai đoạn 4 — Nhận diện hội thoại ngắn
+
+Nghe đoạn hội thoại được chỉ định trong MP3 và điền hai lượt lời bị ẩn.
+
+### F4-01 — Bạn mới từ Nhật
+
+- MP3 dùng trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-10.mp3>
+- MP3 gốc: <https://img.loigiaihay.com/picture/2023/0809/track-10.mp3>
+- Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-4-unit-1-lesson-2-trang-12-13-global-success-a134621.html>
+- Vị trí: Đoạn a · hội thoại đầu tiên
+- Yêu cầu: undefined
+- Hai câu cần điền: It's my new friend. / She's from Japan.
+
+### F4-02 — Giờ ăn sáng
+
+- MP3 dùng trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-56.mp3>
+- MP3 gốc: <https://img.loigiaihay.com/picture/2023/0809/track-56.mp3>
+- Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-4-review-1-trang-40-41-global-success-a136098.html>
+- Vị trí: Hội thoại số 5
+- Yêu cầu: undefined
+- Hai câu cần điền: What time do you have breakfast? / At six forty-five.
+
+### F4-03 — Ăn và uống
+
+- MP3 dùng trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-40.mp3>
+- MP3 gốc: <https://img.loigiaihay.com/picture/2023/0809/track-40.mp3>
+- Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-4-unit-4-lesson-2-trang-30-31-global-success-a135717.html>
+- Vị trí: Đoạn b · hội thoại thứ hai
+- Yêu cầu: undefined
+- Hai câu cần điền: I want some jam. / I want some juice.
+
+### F4-04 — Môn học yêu thích
+
+- MP3 dùng trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-107.mp3>
+- MP3 gốc: <https://img.loigiaihay.com/picture/2023/0809/track-107.mp3>
+- Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-4-review-2-trang-74-75-global-success-a138084.html>
+- Vị trí: Hội thoại số 3
+- Yêu cầu: undefined
+- Hai câu cần điền: What's your favourite subject? / It's English because I want to be an English teacher.
+
+### F4-05 — Trượt patin
+
+- MP3 dùng trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-56.mp3>
+- MP3 gốc: <https://img.loigiaihay.com/picture/2023/0809/track-56.mp3>
+- Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-4-review-1-trang-40-41-global-success-a136098.html>
+- Vị trí: Hội thoại số 2
+- Yêu cầu: undefined
+- Hai câu cần điền: Can he roller skate? / Yes, he can.
+
+### F4-06 — Thời tiết hôm qua
+
+- MP3 dùng trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0808/track-102.mp3>
+- MP3 gốc: <https://img.loigiaihay.com/picture/2023/0808/track-102.mp3>
+- Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-4-review-4-trang-70-global-success-a139728.html>
+- Vị trí: Hội thoại số 1
+- Yêu cầu: undefined
+- Hai câu cần điền: What was the weather like yesterday? / It was sunny.
+
+### F4-07 — Giá quyển vở
+
+- MP3 dùng trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0808/track-102.mp3>
+- MP3 gốc: <https://img.loigiaihay.com/picture/2023/0808/track-102.mp3>
+- Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-4-review-4-trang-70-global-success-a139728.html>
+- Vị trí: Hội thoại số 3
+- Yêu cầu: undefined
+- Hai câu cần điền: How much is the notebook? / It's 15,000 dong.
+
+### F4-08 — Dựng lều
+
+- MP3 dùng trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0808/track-102.mp3>
+- MP3 gốc: <https://img.loigiaihay.com/picture/2023/0808/track-102.mp3>
+- Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-4-review-4-trang-70-global-success-a139728.html>
+- Vị trí: Hội thoại số 5
+- Yêu cầu: undefined
+- Hai câu cần điền: What are they doing? / They're putting up a tent.
+
+### F4-09 — Trường trên núi
+
+- MP3 dùng trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-107.mp3>
+- MP3 gốc: <https://img.loigiaihay.com/picture/2023/0809/track-107.mp3>
+- Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-4-review-2-trang-74-75-global-success-a138084.html>
+- Vị trí: Hội thoại số 1
+- Yêu cầu: undefined
+- Hai câu cần điền: Where's your school? / It's in the mountains.
+
+### F4-10 — Ngày thứ Sáu
+
+- MP3 dùng trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-56.mp3>
+- MP3 gốc: <https://img.loigiaihay.com/picture/2023/0809/track-56.mp3>
+- Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-4-review-1-trang-40-41-global-success-a136098.html>
+- Vị trí: Hội thoại số 4
+- Yêu cầu: undefined
+- Hai câu cần điền: What do you do on Friday? / I listen to music.
+
+## Giai đoạn 5 — Hiểu hội thoại ngắn
+
+Nghe trọn MP3 và trả lời ba câu dựa vào lời nói trong file.
+
+### F5-01 — Công việc của bố
+
+- MP3 dùng trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-45.mp3>
+- MP3 gốc: <https://img.loigiaihay.com/picture/2024/0703/track-45.mp3>
+- Trang đối chiếu: <https://loigiaihay.com/giai-lesson-1-unit-5-tieng-anh-5-global-success-co-dap-an-a156859.html>
+- Vị trí: Track track-45 · nghe hiểu nội dung
+- Yêu cầu: undefined
+- Đáp án trắc nghiệm: 1. Doctor; 2. Doctor; 3. Cool!
+
+### F5-02 — Bốn nghề tương lai
+
+- MP3 dùng trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-46.mp3>
+- MP3 gốc: <https://img.loigiaihay.com/picture/2024/0703/track-46.mp3>
+- Trang đối chiếu: <https://loigiaihay.com/giai-lesson-1-unit-5-tieng-anh-5-global-success-co-dap-an-a156859.html>
+- Vị trí: Track track-46 · nghe hiểu nội dung
+- Yêu cầu: undefined
+- Đáp án trắc nghiệm: 1. Firefighter; 2. Reporter; 3. Writer
+
+### F5-03 — Ai muốn làm nghề gì?
+
+- MP3 dùng trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-47.mp3>
+- MP3 gốc: <https://img.loigiaihay.com/picture/2024/0703/track-47.mp3>
+- Trang đối chiếu: <https://loigiaihay.com/giai-lesson-1-unit-5-tieng-anh-5-global-success-co-dap-an-a156859.html>
+- Vị trí: Track track-47 · nghe hiểu nội dung
+- Yêu cầu: undefined
+- Đáp án trắc nghiệm: 1. Reporter; 2. Gardener; 3. Writer
+
+### F5-04 — Căn hộ của bạn
+
+- MP3 dùng trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-15.mp3>
+- MP3 gốc: <https://img.loigiaihay.com/picture/2024/0703/track-15.mp3>
+- Trang đối chiếu: <https://loigiaihay.com/giai-lesson-1-unit-2-tieng-anh-5-global-success-co-dap-an-a156771.html>
+- Vị trí: Track track-15 · nghe hiểu nội dung
+- Yêu cầu: undefined
+- Đáp án trắc nghiệm: 1. Yes; 2. Yes; 3. Flat
+
+### F5-05 — Ngôi nhà và tòa tháp
+
+- MP3 dùng trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-16.mp3>
+- MP3 gốc: <https://img.loigiaihay.com/picture/2024/0703/track-16.mp3>
+- Trang đối chiếu: <https://loigiaihay.com/giai-lesson-1-unit-2-tieng-anh-5-global-success-co-dap-an-a156771.html>
+- Vị trí: Track track-16 · nghe hiểu nội dung
+- Yêu cầu: undefined
+- Đáp án trắc nghiệm: 1. Yes; 2. No; 3. No
+
+### F5-06 — Nơi ở của bốn bạn
+
+- MP3 dùng trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-17.mp3>
+- MP3 gốc: <https://img.loigiaihay.com/picture/2024/0703/track-17.mp3>
+- Trang đối chiếu: <https://loigiaihay.com/giai-lesson-1-unit-2-tieng-anh-5-global-success-co-dap-an-a156771.html>
+- Vị trí: Track track-17 · nghe hiểu nội dung
+- Yêu cầu: undefined
+- Đáp án trắc nghiệm: 1. In a house; 2. In King Tower; 3. Sunset Building
+
+### F5-07 — Người bạn từ Úc
+
+- MP3 dùng trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-25.mp3>
+- MP3 gốc: <https://img.loigiaihay.com/picture/2024/0703/track-25.mp3>
+- Trang đối chiếu: <https://loigiaihay.com/giai-lesson-1-unit-3-tieng-anh-5-global-success-co-dap-an-a156783.html>
+- Vị trí: Track track-25 · nghe hiểu nội dung
+- Yêu cầu: undefined
+- Đáp án trắc nghiệm: 1. Australia; 2. Australian; 3. The child
+
+### F5-08 — Quốc tịch của các bạn
+
+- MP3 dùng trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-26.mp3>
+- MP3 gốc: <https://img.loigiaihay.com/picture/2024/0703/track-26.mp3>
+- Trang đối chiếu: <https://loigiaihay.com/giai-lesson-1-unit-3-tieng-anh-5-global-success-co-dap-an-a156783.html>
+- Vị trí: Track track-26 · nghe hiểu nội dung
+- Yêu cầu: undefined
+- Đáp án trắc nghiệm: 1. Australian; 2. Malaysian; 3. Japanese
+
+### F5-09 — Sam và bạn mới
+
+- MP3 dùng trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-27.mp3>
+- MP3 gốc: <https://img.loigiaihay.com/picture/2024/0703/track-27.mp3>
+- Trang đối chiếu: <https://loigiaihay.com/giai-lesson-1-unit-3-tieng-anh-5-global-success-co-dap-an-a156783.html>
+- Vị trí: Track track-27 · nghe hiểu nội dung
+- Yêu cầu: undefined
+- Đáp án trắc nghiệm: 1. Playing football; 2. Japanese; 3. Australian
+
+### F5-10 — Bài hát nghề nghiệp
+
+- MP3 dùng trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-48.mp3>
+- MP3 gốc: <https://img.loigiaihay.com/picture/2024/0703/track-48.mp3>
+- Trang đối chiếu: <https://loigiaihay.com/giai-lesson-1-unit-5-tieng-anh-5-global-success-co-dap-an-a156859.html>
+- Vị trí: Track track-48 · nghe hiểu nội dung
+- Yêu cầu: undefined
+- Đáp án trắc nghiệm: 1. Firefighter; 2. Teacher; 3. Driver
 
 # THCS
 
