@@ -10,9 +10,9 @@ Listening hiện có hai lộ trình tách biệt:
 
 Tổng cộng: **90 bài Listening**.
 
-### Hai loại link audio trong guide
+### Link audio trong guide
 
-1. **MP3 Loigiaihay trực tiếp**: ưu tiên hiển thị link bấm mở thẳng file `.mp3` trên `img.loigiaihay.com`, đồng thời show luôn Raw URL để bạn có thể copy hoặc mở trực tiếp. Chỉ những URL đã xác minh mới được ghi.
+1. **MP3 Loigiaihay trực tiếp và bản lưu B2**: ưu tiên hiển thị link bấm mở thẳng file `.mp3` trên `img.loigiaihay.com`, đồng thời show luôn Raw URL để bạn có thể copy hoặc mở trực tiếp. Mỗi link nguồn có thêm URL B2 tương ứng trong bucket `lddenglish`. Chỉ những URL đã xác minh mới được ghi.
 2. **File bạn tự ghi cho lddenglish**: đường dẫn `assets/audio/...` trong repo. Đây **không phải** MP3 của Loigiaihay.
 
 > Guide hiện đã được rà lại bằng HTML nguồn Loigiaihay: **90/90 bài có ít nhất một URL `.mp3` trực tiếp đã xác minh**. Với các trang tổng hợp, link đã được lần xuống bài con có audio thật; không đoán tên track.
@@ -42,6 +42,7 @@ Giữ đúng thang Dễ → Trung bình → Khá → Khó → Địa ngục củ
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/audio/cat-gb.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/audio/cat-gb.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/cat-gb.mp3>
 
 > Stage 1: các link trên là audio từ vựng Loigiaihay đã xác minh để tham khảo phát âm. Bản lddenglish vẫn tự thu đúng script đánh vần bên dưới.
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/lop-1.html
@@ -68,6 +69,7 @@ Giữ đúng thang Dễ → Trung bình → Khá → Khó → Địa ngục củ
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/audio/book-gb.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/audio/book-gb.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/book-gb.mp3>
 
 > Stage 1: các link trên là audio từ vựng Loigiaihay đã xác minh để tham khảo phát âm. Bản lddenglish vẫn tự thu đúng script đánh vần bên dưới.
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/lop-1.html
@@ -94,10 +96,13 @@ Giữ đúng thang Dễ → Trung bình → Khá → Khó → Địa ngục củ
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/audio/cat-gb.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/audio/cat-gb.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/cat-gb.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/audio/book-gb.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/audio/book-gb.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/book-gb.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 3](https://img.loigiaihay.com/picture/audio/sun-gb.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/audio/sun-gb.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/sun-gb.mp3>
 
 > Stage 1: các link trên là audio từ vựng Loigiaihay đã xác minh để tham khảo phát âm. Bản lddenglish vẫn tự thu đúng script đánh vần bên dưới.
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/lop-1.html
@@ -124,12 +129,16 @@ Giữ đúng thang Dễ → Trung bình → Khá → Khó → Địa ngục củ
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/audio/pen-gb.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/audio/pen-gb.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/pen-gb.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/audio/dog-gb.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/audio/dog-gb.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/dog-gb.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 3](https://img.loigiaihay.com/picture/audio/red-gb.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/audio/red-gb.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/red-gb.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 4](https://img.loigiaihay.com/picture/audio/milk-gb.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/audio/milk-gb.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/milk-gb.mp3>
 
 > Stage 1: các link trên là audio từ vựng Loigiaihay đã xác minh để tham khảo phát âm. Bản lddenglish vẫn tự thu đúng script đánh vần bên dưới.
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/lop-1.html
@@ -156,10 +165,13 @@ Giữ đúng thang Dễ → Trung bình → Khá → Khó → Địa ngục củ
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/audio/apple-gb.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/audio/apple-gb.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/apple-gb.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/audio/fish-gb.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/audio/fish-gb.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/fish-gb.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 3](https://img.loigiaihay.com/picture/audio/blue-gb.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/audio/blue-gb.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/blue-gb.mp3>
 
 > Stage 1: các link trên là audio từ vựng Loigiaihay đã xác minh để tham khảo phát âm. Bản lddenglish vẫn tự thu đúng script đánh vần bên dưới.
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/lop-1.html
@@ -186,10 +198,13 @@ Giữ đúng thang Dễ → Trung bình → Khá → Khó → Địa ngục củ
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/audio/table-gb.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/audio/table-gb.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/table-gb.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/audio/green-gb.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/audio/green-gb.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/green-gb.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 3](https://img.loigiaihay.com/picture/audio/water-gb.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/audio/water-gb.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/water-gb.mp3>
 
 > Stage 1: các link trên là audio từ vựng Loigiaihay đã xác minh để tham khảo phát âm. Bản lddenglish vẫn tự thu đúng script đánh vần bên dưới.
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/lop-1.html
@@ -216,10 +231,13 @@ Giữ đúng thang Dễ → Trung bình → Khá → Khó → Địa ngục củ
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/audio/book-gb.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/audio/book-gb.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/book-gb.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/audio/cake-gb.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/audio/cake-gb.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/cake-gb.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 3](https://img.loigiaihay.com/picture/audio/fish-gb.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/audio/fish-gb.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/fish-gb.mp3>
 
 > Stage 1: các link trên là audio từ vựng Loigiaihay đã xác minh để tham khảo phát âm. Bản lddenglish vẫn tự thu đúng script đánh vần bên dưới.
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/lop-1.html
@@ -246,10 +264,13 @@ Giữ đúng thang Dễ → Trung bình → Khá → Khó → Địa ngục củ
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/audio/school-gb.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/audio/school-gb.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/school-gb.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/audio/chair-gb.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/audio/chair-gb.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/chair-gb.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 3](https://img.loigiaihay.com/picture/audio/juice-gb.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/audio/juice-gb.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/juice-gb.mp3>
 
 > Stage 1: các link trên là audio từ vựng Loigiaihay đã xác minh để tham khảo phát âm. Bản lddenglish vẫn tự thu đúng script đánh vần bên dưới.
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/lop-1.html
@@ -276,6 +297,7 @@ Giữ đúng thang Dễ → Trung bình → Khá → Khó → Địa ngục củ
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/audio/school-gb.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/audio/school-gb.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/school-gb.mp3>
 
 > Stage 1: các link trên là audio từ vựng Loigiaihay đã xác minh để tham khảo phát âm. Bản lddenglish vẫn tự thu đúng script đánh vần bên dưới.
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/lop-1.html
@@ -302,6 +324,7 @@ Giữ đúng thang Dễ → Trung bình → Khá → Khó → Địa ngục củ
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/audio/window-gb.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/audio/window-gb.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/window-gb.mp3>
 
 > Stage 1: các link trên là audio từ vựng Loigiaihay đã xác minh để tham khảo phát âm. Bản lddenglish vẫn tự thu đúng script đánh vần bên dưới.
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/lop-1.html
@@ -330,6 +353,7 @@ Nghe một cặp hỏi–đáp rồi gõ lại chính xác câu hỏi và câu t
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2023/0419/de-2.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2023/0419/de-2.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0419/de-2.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/de-thi-hoc-ki-2-tieng-anh-2-global-success-de-so-2-a137158.html
 
 **Phần cần nghe/đọc trên trang:** Listen and circle; Listen and tick.
@@ -352,6 +376,7 @@ Nghe một cặp hỏi–đáp rồi gõ lại chính xác câu hỏi và câu t
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2023/0419/de-2.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2023/0419/de-2.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0419/de-2.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/de-thi-hoc-ki-2-tieng-anh-2-global-success-de-so-2-a137158.html
 
 **Phần cần nghe/đọc trên trang:** Listen and circle; Listen and tick.
@@ -374,8 +399,10 @@ Nghe một cặp hỏi–đáp rồi gõ lại chính xác câu hỏi và câu t
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-026-1.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-026-1.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0617/20201130-tienganh-2-kntt-track-026-1.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-027.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-027.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0617/20201130-tienganh-2-kntt-track-027.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/giai-lesson-2-unit-5-sgk-tieng-anh-2-moi-ket-noi-tri-thuc-voi-cuoc-song-a89783.html
 
 **Phần cần nghe/đọc trên trang:** Tiếng Anh 2 Global Success: Listen / Repeat / Tick / Circle theo các Unit.
@@ -398,8 +425,10 @@ Nghe một cặp hỏi–đáp rồi gõ lại chính xác câu hỏi và câu t
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-031.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-031.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0617/20201130-tienganh-2-kntt-track-031.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-032.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-032.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0617/20201130-tienganh-2-kntt-track-032.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/giai-lesson-2-unit-6-sgk-tieng-anh-2-moi-ket-noi-tri-thuc-voi-cuoc-song-a89786.html
 
 **Phần cần nghe/đọc trên trang:** Tiếng Anh 2 Global Success: Listen / Repeat / Tick / Circle theo các Unit.
@@ -422,8 +451,10 @@ Nghe một cặp hỏi–đáp rồi gõ lại chính xác câu hỏi và câu t
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-064-1_1.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-064-1_1.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0617/20201130-tienganh-2-kntt-track-064-1_1.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-065.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-065.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0617/20201130-tienganh-2-kntt-track-065.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/giai-lesson-2-unit-12-sgk-tieng-anh-2-moi-ket-noi-tri-thuc-voi-cuoc-song-a89808.html
 
 **Phần cần nghe/đọc trên trang:** Tiếng Anh 2 Global Success: Listen / Repeat / Tick / Circle theo các Unit.
@@ -446,8 +477,10 @@ Nghe một cặp hỏi–đáp rồi gõ lại chính xác câu hỏi và câu t
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-026-1.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-026-1.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0617/20201130-tienganh-2-kntt-track-026-1.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-027.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-027.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0617/20201130-tienganh-2-kntt-track-027.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/giai-lesson-2-unit-5-sgk-tieng-anh-2-moi-ket-noi-tri-thuc-voi-cuoc-song-a89783.html
 
 **Phần cần nghe/đọc trên trang:** Tiếng Anh 2 Global Success: Listen / Repeat / Tick / Circle theo các Unit.
@@ -470,8 +503,10 @@ Nghe một cặp hỏi–đáp rồi gõ lại chính xác câu hỏi và câu t
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-008_1.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-008_1.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0617/20201130-tienganh-2-kntt-track-008_1.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-009.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-009.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0617/20201130-tienganh-2-kntt-track-009.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/giai-lesson-2-unit-2-sgk-tieng-anh-2-moi-ket-noi-tri-thuc-voi-cuoc-song-a89771.html
 
 **Phần cần nghe/đọc trên trang:** Tiếng Anh 2 Global Success: Listen / Repeat / Tick / Circle theo các Unit.
@@ -494,8 +529,10 @@ Nghe một cặp hỏi–đáp rồi gõ lại chính xác câu hỏi và câu t
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-018.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-018.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0617/20201130-tienganh-2-kntt-track-018.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-019_1.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-019_1.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0617/20201130-tienganh-2-kntt-track-019_1.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/giai-lesson-2-unit-4-sgk-tieng-anh-2-moi-ket-noi-tri-thuc-voi-cuoc-song-a89778.html
 
 **Phần cần nghe/đọc trên trang:** Tiếng Anh 2 Global Success: Listen / Repeat / Tick / Circle theo các Unit.
@@ -518,8 +555,10 @@ Nghe một cặp hỏi–đáp rồi gõ lại chính xác câu hỏi và câu t
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-077.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-077.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0617/20201130-tienganh-2-kntt-track-077.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-078.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-078.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0617/20201130-tienganh-2-kntt-track-078.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/giai-lesson-2-unit-14-sgk-tieng-anh-2-moi-ket-noi-tri-thuc-voi-cuoc-song-a89816.html
 
 **Phần cần nghe/đọc trên trang:** Tiếng Anh 2 Global Success: Listen / Repeat / Tick / Circle theo các Unit.
@@ -542,8 +581,10 @@ Nghe một cặp hỏi–đáp rồi gõ lại chính xác câu hỏi và câu t
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-003.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-003.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0617/20201130-tienganh-2-kntt-track-003.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-004.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2021/0617/20201130-tienganh-2-kntt-track-004.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0617/20201130-tienganh-2-kntt-track-004.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/giai-lesson-2-unit-1-sgk-tieng-anh-2-moi-ket-noi-tri-thuc-voi-cuoc-song-a89768.html
 
 **Phần cần nghe/đọc trên trang:** Tiếng Anh 2 Global Success: Listen / Repeat / Tick / Circle theo các Unit.
@@ -570,8 +611,10 @@ Gõ lại cặp hỏi–đáp, sau đó chọn câu tiếp theo phù hợp để
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2022/0523/track-5_1.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2022/0523/track-5_1.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0523/track-5_1.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2022/0523/track-6_2.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2022/0523/track-6_2.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0523/track-6_2.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-lop-3-unit-1-lesson-1-trang-10-global-success-a106744.html
 
 **Phần cần nghe/đọc trên trang:** Lesson 1–3: Look, listen and repeat; Listen and circle/number.
@@ -594,8 +637,10 @@ Gõ lại cặp hỏi–đáp, sau đó chọn câu tiếp theo phù hợp để
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2022/0727/track-52.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2022/0727/track-52.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-52.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2022/0727/track-53.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2022/0727/track-53.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-53.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html
 
 **Phần cần nghe/đọc trên trang:** Listen and tick; Listen and number.
@@ -618,8 +663,10 @@ Gõ lại cặp hỏi–đáp, sau đó chọn câu tiếp theo phù hợp để
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2022/0727/track-52.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2022/0727/track-52.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-52.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2022/0727/track-53.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2022/0727/track-53.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-53.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html
 
 **Phần cần nghe/đọc trên trang:** Listen and tick; Listen and number.
@@ -642,10 +689,13 @@ Gõ lại cặp hỏi–đáp, sau đó chọn câu tiếp theo phù hợp để
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2022/0728/track-58.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2022/0728/track-58.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0728/track-58.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2022/0728/track-59.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2022/0728/track-59.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0728/track-59.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 3](https://img.loigiaihay.com/picture/2022/0728/track-60.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2022/0728/track-60.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0728/track-60.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-lop-3-unit-16-lesson-2-trang-42-global-success-a108135.html
 
 **Phần cần nghe/đọc trên trang:** Look, listen and repeat; Listen and number.
@@ -668,10 +718,13 @@ Gõ lại cặp hỏi–đáp, sau đó chọn câu tiếp theo phù hợp để
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2022/0818/track-88.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2022/0818/track-88.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0818/track-88.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2022/0818/track-89.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2022/0818/track-89.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0818/track-89.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 3](https://img.loigiaihay.com/picture/2022/0818/track-90.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2022/0818/track-90.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0818/track-90.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-lop-3-unit-19-lesson-2-trang-60-global-success-a108223.html
 
 **Phần cần nghe/đọc trên trang:** Look, listen and repeat; Listen and number.
@@ -694,8 +747,10 @@ Gõ lại cặp hỏi–đáp, sau đó chọn câu tiếp theo phù hợp để
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2022/0727/track-52.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2022/0727/track-52.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-52.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2022/0727/track-53.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2022/0727/track-53.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-53.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html
 
 **Phần cần nghe/đọc trên trang:** Listen and tick; Listen and number.
@@ -718,8 +773,10 @@ Gõ lại cặp hỏi–đáp, sau đó chọn câu tiếp theo phù hợp để
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2022/0727/track-52.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2022/0727/track-52.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-52.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2022/0727/track-53.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2022/0727/track-53.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-53.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html
 
 **Phần cần nghe/đọc trên trang:** Listen and tick; Listen and number.
@@ -742,10 +799,13 @@ Gõ lại cặp hỏi–đáp, sau đó chọn câu tiếp theo phù hợp để
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2022/0818/track-88.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2022/0818/track-88.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0818/track-88.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2022/0818/track-89.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2022/0818/track-89.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0818/track-89.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 3](https://img.loigiaihay.com/picture/2022/0818/track-90.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2022/0818/track-90.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0818/track-90.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-lop-3-unit-19-lesson-2-trang-60-global-success-a108223.html
 
 **Phần cần nghe/đọc trên trang:** Look, listen and repeat; Listen and number.
@@ -768,10 +828,13 @@ Gõ lại cặp hỏi–đáp, sau đó chọn câu tiếp theo phù hợp để
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2022/0523/track-9.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2022/0523/track-9.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0523/track-9.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2022/0523/track-10.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2022/0523/track-10.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0523/track-10.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 3](https://img.loigiaihay.com/picture/2022/0523/track-11.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2022/0523/track-11.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0523/track-11.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-lop-3-unit-1-lesson-2-trang-12-global-success-a106757.html
 
 **Phần cần nghe/đọc trên trang:** Lesson 1–3: Look, listen and repeat; Listen and circle/number.
@@ -794,8 +857,10 @@ Gõ lại cặp hỏi–đáp, sau đó chọn câu tiếp theo phù hợp để
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2022/0727/track-52.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2022/0727/track-52.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-52.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2022/0727/track-53.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2022/0727/track-53.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-53.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html
 
 **Phần cần nghe/đọc trên trang:** Listen and tick; Listen and number.
@@ -822,10 +887,13 @@ Nghe hội thoại dưới 30 giây và điền chính xác 2 câu bị khuyết
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2023/0809/track-10.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2023/0809/track-10.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-10.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2023/0809/track-11.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2023/0809/track-11.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-11.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 3](https://img.loigiaihay.com/picture/2023/0809/track-12.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2023/0809/track-12.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-12.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-lop-4-unit-1-lesson-2-trang-12-13-global-success-a134621.html
 
 **Phần cần nghe/đọc trên trang:** Look, listen and repeat; Listen and tick.
@@ -848,6 +916,7 @@ Nghe hội thoại dưới 30 giây và điền chính xác 2 câu bị khuyết
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2023/0809/track-56.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2023/0809/track-56.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-56.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-lop-4-review-1-trang-40-41-global-success-a136098.html
 
 **Phần cần nghe/đọc trên trang:** Listen and tick.
@@ -870,10 +939,13 @@ Nghe hội thoại dưới 30 giây và điền chính xác 2 câu bị khuyết
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2023/0809/track-40.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2023/0809/track-40.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-40.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2023/0809/track-41.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2023/0809/track-41.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-41.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 3](https://img.loigiaihay.com/picture/2023/0809/track-42.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2023/0809/track-42.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-42.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-lop-4-unit-4-lesson-2-trang-30-31-global-success-a135717.html
 
 **Phần cần nghe/đọc trên trang:** Look, listen and repeat; Listen and tick.
@@ -896,6 +968,7 @@ Nghe hội thoại dưới 30 giây và điền chính xác 2 câu bị khuyết
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2023/0809/track-107.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2023/0809/track-107.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-107.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-lop-4-review-2-trang-74-75-global-success-a138084.html
 
 **Phần cần nghe/đọc trên trang:** Listen and tick.
@@ -918,6 +991,7 @@ Nghe hội thoại dưới 30 giây và điền chính xác 2 câu bị khuyết
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2023/0809/track-56.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2023/0809/track-56.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-56.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-lop-4-review-1-trang-40-41-global-success-a136098.html
 
 **Phần cần nghe/đọc trên trang:** Listen and tick.
@@ -940,6 +1014,7 @@ Nghe hội thoại dưới 30 giây và điền chính xác 2 câu bị khuyết
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2023/0808/track-102.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2023/0808/track-102.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0808/track-102.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-lop-4-review-4-trang-70-global-success-a139728.html
 
 **Phần cần nghe/đọc trên trang:** Listen and tick.
@@ -962,6 +1037,7 @@ Nghe hội thoại dưới 30 giây và điền chính xác 2 câu bị khuyết
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2023/0808/track-102.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2023/0808/track-102.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0808/track-102.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-lop-4-review-4-trang-70-global-success-a139728.html
 
 **Phần cần nghe/đọc trên trang:** Listen and tick.
@@ -984,6 +1060,7 @@ Nghe hội thoại dưới 30 giây và điền chính xác 2 câu bị khuyết
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2023/0808/track-102.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2023/0808/track-102.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0808/track-102.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-lop-4-review-4-trang-70-global-success-a139728.html
 
 **Phần cần nghe/đọc trên trang:** Listen and tick.
@@ -1006,6 +1083,7 @@ Nghe hội thoại dưới 30 giây và điền chính xác 2 câu bị khuyết
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2023/0809/track-107.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2023/0809/track-107.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-107.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-lop-4-review-2-trang-74-75-global-success-a138084.html
 
 **Phần cần nghe/đọc trên trang:** Listen and tick.
@@ -1028,6 +1106,7 @@ Nghe hội thoại dưới 30 giây và điền chính xác 2 câu bị khuyết
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2023/0809/track-56.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2023/0809/track-56.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-56.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-lop-4-review-1-trang-40-41-global-success-a136098.html
 
 **Phần cần nghe/đọc trên trang:** Listen and tick.
@@ -1054,12 +1133,16 @@ Nghe hội thoại ngắn rồi trả lời các câu hỏi trắc nghiệm về
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2024/0703/track-45.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2024/0703/track-45.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-45.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2024/0703/track-46.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2024/0703/track-46.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-46.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 3](https://img.loigiaihay.com/picture/2024/0703/track-47.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2024/0703/track-47.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-47.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 4](https://img.loigiaihay.com/picture/2024/0703/track-48.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2024/0703/track-48.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-48.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/giai-lesson-1-unit-5-tieng-anh-5-global-success-co-dap-an-a156859.html
 
 **Phần cần nghe/đọc trên trang:** Lesson 1–3: Look and listen; Listen and tick.
@@ -1082,12 +1165,16 @@ Nghe hội thoại ngắn rồi trả lời các câu hỏi trắc nghiệm về
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2025/0811/track-1.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2025/0811/track-1.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0811/track-1.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2025/0811/track-2.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2025/0811/track-2.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0811/track-2.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 3](https://img.loigiaihay.com/picture/2025/0811/track-3.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2025/0811/track-3.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0811/track-3.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 4](https://img.loigiaihay.com/picture/2025/0811/track-4.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2025/0811/track-4.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0811/track-4.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/giai-lesson-1-unit-11-tieng-anh-5-global-success-co-dap-an-a158439.html
 
 **Phần cần nghe/đọc trên trang:** Listen and tick.
@@ -1110,12 +1197,16 @@ Nghe hội thoại ngắn rồi trả lời các câu hỏi trắc nghiệm về
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2025/0303/track-52.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2025/0303/track-52.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0303/track-52.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2025/0303/track-53.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2025/0303/track-53.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0303/track-53.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 3](https://img.loigiaihay.com/picture/2025/0303/track-54.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2025/0303/track-54.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0303/track-54.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 4](https://img.loigiaihay.com/picture/2025/0303/track-55.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2025/0303/track-55.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0303/track-55.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/giai-lesson-1-unit-16-tieng-anh-5-global-success-co-dap-an-a161839.html
 
 **Phần cần nghe/đọc trên trang:** Listen and tick.
@@ -1138,10 +1229,13 @@ Nghe hội thoại ngắn rồi trả lời các câu hỏi trắc nghiệm về
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2025/0401/track-62.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2025/0401/track-62.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0401/track-62.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2025/0401/track-63.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2025/0401/track-63.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0401/track-63.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 3](https://img.loigiaihay.com/picture/2025/0401/track-64.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2025/0401/track-64.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0401/track-64.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/giai-lesson-1-unit-17-tieng-anh-5-global-success-co-dap-an-a161959.html
 
 **Phần cần nghe/đọc trên trang:** Listen and tick.
@@ -1164,12 +1258,16 @@ Nghe hội thoại ngắn rồi trả lời các câu hỏi trắc nghiệm về
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2026/0522/track-72.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2026/0522/track-72.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2026/0522/track-72.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2026/0522/track-73.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2026/0522/track-73.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2026/0522/track-73.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 3](https://img.loigiaihay.com/picture/2025/0403/track-74.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2025/0403/track-74.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0403/track-74.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 4](https://img.loigiaihay.com/picture/2026/0522/track-75.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2026/0522/track-75.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2026/0522/track-75.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/giai-lesson-1-unit-18-tieng-anh-5-global-success-co-dap-an-a161975.html
 
 **Phần cần nghe/đọc trên trang:** Listen and tick.
@@ -1192,10 +1290,13 @@ Nghe hội thoại ngắn rồi trả lời các câu hỏi trắc nghiệm về
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2024/0703/track-15.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2024/0703/track-15.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-15.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2024/0703/track-16.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2024/0703/track-16.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-16.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 3](https://img.loigiaihay.com/picture/2024/0703/track-17.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2024/0703/track-17.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-17.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/giai-lesson-1-unit-2-tieng-anh-5-global-success-co-dap-an-a156771.html
 
 **Phần cần nghe/đọc trên trang:** Tiếng Anh 5 Global Success: các bài Listening trong Lesson/Review.
@@ -1218,12 +1319,16 @@ Nghe hội thoại ngắn rồi trả lời các câu hỏi trắc nghiệm về
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2024/0703/track-25.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2024/0703/track-25.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-25.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2024/0703/track-26.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2024/0703/track-26.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-26.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 3](https://img.loigiaihay.com/picture/2024/0703/track-27.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2024/0703/track-27.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-27.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 4](https://img.loigiaihay.com/picture/2024/0703/track-28.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2024/0703/track-28.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-28.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/giai-lesson-1-unit-3-tieng-anh-5-global-success-co-dap-an-a156783.html
 
 **Phần cần nghe/đọc trên trang:** Tiếng Anh 5 Global Success: các bài Listening trong Lesson/Review.
@@ -1246,12 +1351,16 @@ Nghe hội thoại ngắn rồi trả lời các câu hỏi trắc nghiệm về
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2025/0224/track-31.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2025/0224/track-31.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0224/track-31.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2025/0224/track-32.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2025/0224/track-32.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0224/track-32.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 3](https://img.loigiaihay.com/picture/2025/0224/track-33.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2025/0224/track-33.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0224/track-33.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 4](https://img.loigiaihay.com/picture/2025/0224/track-34.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2025/0224/track-34.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0224/track-34.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/giai-lesson-1-unit-14-tieng-anh-5-global-success-co-dap-an-a159044.html
 
 **Phần cần nghe/đọc trên trang:** Tiếng Anh 5 Global Success: các bài Listening trong Lesson/Review.
@@ -1274,12 +1383,16 @@ Nghe hội thoại ngắn rồi trả lời các câu hỏi trắc nghiệm về
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2026/0522/track-72.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2026/0522/track-72.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2026/0522/track-72.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2026/0522/track-73.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2026/0522/track-73.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2026/0522/track-73.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 3](https://img.loigiaihay.com/picture/2025/0403/track-74.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2025/0403/track-74.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0403/track-74.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 4](https://img.loigiaihay.com/picture/2026/0522/track-75.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2026/0522/track-75.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2026/0522/track-75.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/giai-lesson-1-unit-18-tieng-anh-5-global-success-co-dap-an-a161975.html
 
 **Phần cần nghe/đọc trên trang:** Listen and tick.
@@ -1302,12 +1415,16 @@ Nghe hội thoại ngắn rồi trả lời các câu hỏi trắc nghiệm về
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2025/0512/track-92.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2025/0512/track-92.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0512/track-92.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2025/0512/track-93.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2025/0512/track-93.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0512/track-93.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 3](https://img.loigiaihay.com/picture/2024/1213/track-94.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2024/1213/track-94.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/1213/track-94.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 4](https://img.loigiaihay.com/picture/2025/0512/track-95.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2025/0512/track-95.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0512/track-95.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/giai-lesson-1-unit-20-tieng-anh-5-global-success-co-dap-an-a162065.html
 
 **Phần cần nghe/đọc trên trang:** Tiếng Anh 5 Global Success: các bài Listening trong Lesson/Review.
@@ -1339,8 +1456,10 @@ Nghe đoạn nói/hội thoại ngắn và xác định thông tin cụ thể, �
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2021/0607/ex1-1-.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2021/0607/ex1-1-.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0607/ex1-1-.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2021/0607/ex2.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2021/0607/ex2.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0607/ex2.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/skills-2-trang-13-unit-1-sgk-tieng-anh-6-moi-c134a22004.html
 
 **Phần cần nghe/đọc trên trang:** Skills 2 – Unit 1 My New School: listen to a student talking about school.
@@ -1363,8 +1482,10 @@ Nghe đoạn nói/hội thoại ngắn và xác định thông tin cụ thể, �
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2021/0608/act1-2-.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2021/0608/act1-2-.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0608/act1-2-.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2021/0608/act2.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2021/0608/act2.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0608/act2.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/skills-2-trang-23-unit-2-sgk-tieng-anh-6-moi-c134a22015.html
 
 **Phần cần nghe/đọc trên trang:** Skills 2 – Unit 2 My House: identify items; True/False.
@@ -1387,6 +1508,7 @@ Nghe đoạn nói/hội thoại ngắn và xác định thông tin cụ thể, �
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2021/0610/act2.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2021/0610/act2.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0610/act2.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/skills-2-trang-33-unit-3-sgk-tieng-anh-6-moi-c134a22041.html
 
 **Phần cần nghe/đọc trên trang:** Skills 2 – Unit 3 My Friends: listen to students talking about friends.
@@ -1409,8 +1531,10 @@ Nghe đoạn nói/hội thoại ngắn và xác định thông tin cụ thể, �
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2021/0610/act1-3-.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2021/0610/act1-3-.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0610/act1-3-.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2021/0610/act2-1-.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2021/0610/act2-1-.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0610/act2-1-.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/skills-2-trang-45-unit-4-sgk-tieng-anh-6-moi-c134a22090.html
 
 **Phần cần nghe/đọc trên trang:** Skills 2 – Unit 4 My Neighbourhood: conversation + True/False.
@@ -1433,8 +1557,10 @@ Nghe đoạn nói/hội thoại ngắn và xác định thông tin cụ thể, �
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2021/0611/act1-6-.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2021/0611/act1-6-.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0611/act1-6-.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2021/0611/act2-2-.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2021/0611/act2-2-.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0611/act2-2-.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/skills-2-trang-55-unit-5-sgk-tieng-anh-6-moi-c134a22106.html
 
 **Phần cần nghe/đọc trên trang:** Skills 2 – Unit 5 Natural Wonders: listen to a talk and check details.
@@ -1457,8 +1583,10 @@ Nghe đoạn nói/hội thoại ngắn và xác định thông tin cụ thể, �
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2021/0607/ex1-1-.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2021/0607/ex1-1-.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0607/ex1-1-.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2021/0607/ex2.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2021/0607/ex2.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0607/ex2.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/skills-2-trang-13-unit-1-sgk-tieng-anh-6-moi-c134a22004.html
 
 **Phần cần nghe/đọc trên trang:** Skills 2 – Unit 1 My New School: listen to a student talking about school.
@@ -1481,8 +1609,10 @@ Nghe đoạn nói/hội thoại ngắn và xác định thông tin cụ thể, �
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2021/0608/act1-2-.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2021/0608/act1-2-.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0608/act1-2-.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2021/0608/act2.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2021/0608/act2.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0608/act2.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/skills-2-trang-23-unit-2-sgk-tieng-anh-6-moi-c134a22015.html
 
 **Phần cần nghe/đọc trên trang:** Skills 2 – Unit 2 My House: identify items; True/False.
@@ -1505,6 +1635,7 @@ Nghe đoạn nói/hội thoại ngắn và xác định thông tin cụ thể, �
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2021/0610/act2.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2021/0610/act2.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0610/act2.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/skills-2-trang-33-unit-3-sgk-tieng-anh-6-moi-c134a22041.html
 
 **Phần cần nghe/đọc trên trang:** Skills 2 – Unit 3 My Friends: listen to students talking about friends.
@@ -1527,8 +1658,10 @@ Nghe đoạn nói/hội thoại ngắn và xác định thông tin cụ thể, �
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2021/0610/act1-3-.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2021/0610/act1-3-.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0610/act1-3-.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2021/0610/act2-1-.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2021/0610/act2-1-.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0610/act2-1-.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/skills-2-trang-45-unit-4-sgk-tieng-anh-6-moi-c134a22090.html
 
 **Phần cần nghe/đọc trên trang:** Skills 2 – Unit 4 My Neighbourhood: conversation + True/False.
@@ -1551,8 +1684,10 @@ Nghe đoạn nói/hội thoại ngắn và xác định thông tin cụ thể, �
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2021/0611/act1-6-.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2021/0611/act1-6-.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0611/act1-6-.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2021/0611/act2-2-.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2021/0611/act2-2-.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0611/act2-2-.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/skills-2-trang-55-unit-5-sgk-tieng-anh-6-moi-c134a22106.html
 
 **Phần cần nghe/đọc trên trang:** Skills 2 – Unit 5 Natural Wonders: listen to a talk and check details.
@@ -1579,8 +1714,10 @@ Nghe bài nói dài hơn, lọc thói quen, số liệu, nguyên nhân và câu 
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2022/0705/012.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2022/0705/012.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/012.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2022/0705/013.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2022/0705/013.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/013.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-7-unit-2-skills-2-a106605.html
 
 **Phần cần nghe/đọc trên trang:** Skills 2 – Unit 2 Healthy Living: tick information + short answers.
@@ -1603,8 +1740,10 @@ Nghe bài nói dài hơn, lọc thói quen, số liệu, nguyên nhân và câu 
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2022/0705/012.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2022/0705/012.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/012.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2022/0705/013.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2022/0705/013.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/013.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-7-unit-2-skills-2-a106605.html
 
 **Phần cần nghe/đọc trên trang:** Skills 2 – Unit 2 Healthy Living: tick information + short answers.
@@ -1627,6 +1766,7 @@ Nghe bài nói dài hơn, lọc thói quen, số liệu, nguyên nhân và câu 
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2022/0815/052.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2022/0815/052.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0815/052.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-7-unit-7-skills-2-a108662.html
 
 **Phần cần nghe/đọc trên trang:** Skills 2 – Unit 7 Traffic: multiple choice + one-word/number gaps.
@@ -1649,6 +1789,7 @@ Nghe bài nói dài hơn, lọc thói quen, số liệu, nguyên nhân và câu 
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2022/0815/052.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2022/0815/052.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0815/052.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-7-unit-7-skills-2-a108662.html
 
 **Phần cần nghe/đọc trên trang:** Skills 2 – Unit 7 Traffic: multiple choice + one-word/number gaps.
@@ -1671,8 +1812,10 @@ Nghe bài nói dài hơn, lọc thói quen, số liệu, nguyên nhân và câu 
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2022/0705/012.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2022/0705/012.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/012.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2022/0705/013.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2022/0705/013.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/013.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-7-unit-2-skills-2-a106605.html
 
 **Phần cần nghe/đọc trên trang:** Skills 2 – Unit 2 Healthy Living: tick information + short answers.
@@ -1695,6 +1838,7 @@ Nghe bài nói dài hơn, lọc thói quen, số liệu, nguyên nhân và câu 
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2022/0815/052.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2022/0815/052.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0815/052.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-7-unit-7-skills-2-a108662.html
 
 **Phần cần nghe/đọc trên trang:** Skills 2 – Unit 7 Traffic: multiple choice + one-word/number gaps.
@@ -1717,8 +1861,10 @@ Nghe bài nói dài hơn, lọc thói quen, số liệu, nguyên nhân và câu 
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2022/0705/012.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2022/0705/012.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/012.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2022/0705/013.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2022/0705/013.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/013.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-7-unit-2-skills-2-a106605.html
 
 **Phần cần nghe/đọc trên trang:** Skills 2 – Unit 2 Healthy Living: tick information + short answers.
@@ -1741,6 +1887,7 @@ Nghe bài nói dài hơn, lọc thói quen, số liệu, nguyên nhân và câu 
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2022/0815/052.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2022/0815/052.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0815/052.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-7-unit-7-skills-2-a108662.html
 
 **Phần cần nghe/đọc trên trang:** Skills 2 – Unit 7 Traffic: multiple choice + one-word/number gaps.
@@ -1763,8 +1910,10 @@ Nghe bài nói dài hơn, lọc thói quen, số liệu, nguyên nhân và câu 
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2022/0705/012.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2022/0705/012.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/012.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2022/0705/013.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2022/0705/013.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/013.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-7-unit-2-skills-2-a106605.html
 
 **Phần cần nghe/đọc trên trang:** Skills 2 – Unit 2 Healthy Living: tick information + short answers.
@@ -1787,6 +1936,7 @@ Nghe bài nói dài hơn, lọc thói quen, số liệu, nguyên nhân và câu 
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2022/0815/052.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2022/0815/052.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0815/052.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-7-unit-7-skills-2-a108662.html
 
 **Phần cần nghe/đọc trên trang:** Skills 2 – Unit 7 Traffic: multiple choice + one-word/number gaps.
@@ -1813,8 +1963,10 @@ Theo dõi nhiều lượt nói, quan điểm người nói, điền thông tin v
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2023/0803/track-5.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2023/0803/track-5.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-5.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2023/0803/track-6.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2023/0803/track-6.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-6.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-8-unit-1-skills-2-a134923.html
 
 **Phần cần nghe/đọc trên trang:** Skills 2 – Unit 1 Leisure time: interview + table completion.
@@ -1837,8 +1989,10 @@ Theo dõi nhiều lượt nói, quan điểm người nói, điền thông tin v
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2023/0703/track-11.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2023/0703/track-11.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0703/track-11.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2023/0703/track-12.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2023/0703/track-12.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0703/track-12.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-8-unit-2-skills-2-a137295.html
 
 **Phần cần nghe/đọc trên trang:** Skills 2 – Unit 2 Countryside: match speakers' opinions + MCQ.
@@ -1861,8 +2015,10 @@ Theo dõi nhiều lượt nói, quan điểm người nói, điền thông tin v
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2023/0803/track-17.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2023/0803/track-17.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-17.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2023/0803/track-18.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2023/0803/track-18.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-18.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-8-unit-3-skills-2-a137331.html
 
 **Phần cần nghe/đọc trên trang:** Skills 2 – Unit 3 Teenagers: conversation MCQ + one-word gaps.
@@ -1885,8 +2041,10 @@ Theo dõi nhiều lượt nói, quan điểm người nói, điền thông tin v
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2023/0803/track-51.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2023/0803/track-51.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-51.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2023/0803/track-52.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2023/0803/track-52.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-52.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-8-unit-8-skills-2-a142616.html
 
 **Phần cần nghe/đọc trên trang:** Skills 2 – Unit 8 Shopping: gap fill + MCQ.
@@ -1909,8 +2067,10 @@ Theo dõi nhiều lượt nói, quan điểm người nói, điền thông tin v
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2023/0613/track-44.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2023/0613/track-44.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0613/track-44.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2023/0613/track-45.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2023/0613/track-45.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0613/track-45.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-8-unit-7-skills-2-a141336.html
 
 **Phần cần nghe/đọc trên trang:** Skills 2 – Unit 7 Environmental protection: listen for causes/effects/details.
@@ -1933,8 +2093,10 @@ Theo dõi nhiều lượt nói, quan điểm người nói, điền thông tin v
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2023/0803/track-17.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2023/0803/track-17.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-17.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2023/0803/track-18.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2023/0803/track-18.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-18.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-8-unit-3-skills-2-a137331.html
 
 **Phần cần nghe/đọc trên trang:** Skills 2 – Unit 3 Teenagers: conversation MCQ + one-word gaps.
@@ -1957,8 +2119,10 @@ Theo dõi nhiều lượt nói, quan điểm người nói, điền thông tin v
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2023/0803/track-5.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2023/0803/track-5.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-5.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2023/0803/track-6.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2023/0803/track-6.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-6.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-8-unit-1-skills-2-a134923.html
 
 **Phần cần nghe/đọc trên trang:** Skills 2 – Unit 1 Leisure time: interview + table completion.
@@ -1981,8 +2145,10 @@ Theo dõi nhiều lượt nói, quan điểm người nói, điền thông tin v
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2023/0703/track-11.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2023/0703/track-11.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0703/track-11.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2023/0703/track-12.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2023/0703/track-12.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0703/track-12.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-8-unit-2-skills-2-a137295.html
 
 **Phần cần nghe/đọc trên trang:** Skills 2 – Unit 2 Countryside: match speakers' opinions + MCQ.
@@ -2005,8 +2171,10 @@ Theo dõi nhiều lượt nói, quan điểm người nói, điền thông tin v
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2023/0803/track-51.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2023/0803/track-51.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-51.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2023/0803/track-52.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2023/0803/track-52.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-52.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-8-unit-8-skills-2-a142616.html
 
 **Phần cần nghe/đọc trên trang:** Skills 2 – Unit 8 Shopping: gap fill + MCQ.
@@ -2029,8 +2197,10 @@ Theo dõi nhiều lượt nói, quan điểm người nói, điền thông tin v
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2023/0613/track-44.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2023/0613/track-44.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0613/track-44.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2023/0613/track-45.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2023/0613/track-45.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0613/track-45.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-8-unit-7-skills-2-a141336.html
 
 **Phần cần nghe/đọc trên trang:** Skills 2 – Unit 7 Environmental protection: listen for causes/effects/details.
@@ -2057,8 +2227,10 @@ Nghe nhiều người nói hoặc đoạn thông tin dài, tổng hợp ý, suy 
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2024/0515/ex2-skills2-u2-ta9-global.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2024/0515/ex2-skills2-u2-ta9-global.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/ex2-skills2-u2-ta9-global.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2024/0515/ex3-skills2-u2-ta9-global.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2024/0515/ex3-skills2-u2-ta9-global.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/ex3-skills2-u2-ta9-global.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-9-unit-2-skills-2-a156636.html
 
 **Phần cần nghe/đọc trên trang:** Skills 2 – Unit 2 City life: three teenagers + T/F + MCQ.
@@ -2081,8 +2253,10 @@ Nghe nhiều người nói hoặc đoạn thông tin dài, tổng hợp ý, suy 
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2024/0515/18.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2024/0515/18.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/18.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2024/0515/19.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2024/0515/19.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/19.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-9-unit-3-skills-2-a156776.html
 
 **Phần cần nghe/đọc trên trang:** Skills 2 – Unit 3: multiple speakers on time management + MCQ.
@@ -2105,8 +2279,10 @@ Nghe nhiều người nói hoặc đoạn thông tin dài, tổng hợp ý, suy 
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2024/0515/57.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2024/0515/57.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/57.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2024/0515/58.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2024/0515/58.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/58.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-9-unit-9-skills-2-a163737.html
 
 **Phần cần nghe/đọc trên trang:** Skills 2 – Unit 9 World Englishes: T/F + no-more-than-two-word gaps.
@@ -2129,6 +2305,7 @@ Nghe nhiều người nói hoặc đoạn thông tin dài, tổng hợp ý, suy 
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2024/0515/ex1-skills2-u1-ta9-global.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2024/0515/ex1-skills2-u1-ta9-global.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/ex1-skills2-u1-ta9-global.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-9-unit-1-skills-2-a156628.html
 
 **Phần cần nghe/đọc trên trang:** Skills 2 – Unit 1 Local community: listening for specific information.
@@ -2151,8 +2328,10 @@ Nghe nhiều người nói hoặc đoạn thông tin dài, tổng hợp ý, suy 
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2024/0515/ex2-skills2-u2-ta9-global.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2024/0515/ex2-skills2-u2-ta9-global.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/ex2-skills2-u2-ta9-global.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2024/0515/ex3-skills2-u2-ta9-global.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2024/0515/ex3-skills2-u2-ta9-global.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/ex3-skills2-u2-ta9-global.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-9-unit-2-skills-2-a156636.html
 
 **Phần cần nghe/đọc trên trang:** Skills 2 – Unit 2 City life: three teenagers + T/F + MCQ.
@@ -2175,8 +2354,10 @@ Nghe nhiều người nói hoặc đoạn thông tin dài, tổng hợp ý, suy 
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2024/0515/18.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2024/0515/18.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/18.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2024/0515/19.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2024/0515/19.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/19.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-9-unit-3-skills-2-a156776.html
 
 **Phần cần nghe/đọc trên trang:** Skills 2 – Unit 3: multiple speakers on time management + MCQ.
@@ -2199,8 +2380,10 @@ Nghe nhiều người nói hoặc đoạn thông tin dài, tổng hợp ý, suy 
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2024/0515/57.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2024/0515/57.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/57.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2024/0515/58.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2024/0515/58.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/58.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-9-unit-9-skills-2-a163737.html
 
 **Phần cần nghe/đọc trên trang:** Skills 2 – Unit 9 World Englishes: T/F + no-more-than-two-word gaps.
@@ -2223,6 +2406,7 @@ Nghe nhiều người nói hoặc đoạn thông tin dài, tổng hợp ý, suy 
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2024/0515/ex1-skills2-u1-ta9-global.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2024/0515/ex1-skills2-u1-ta9-global.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/ex1-skills2-u1-ta9-global.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-9-unit-1-skills-2-a156628.html
 
 **Phần cần nghe/đọc trên trang:** Skills 2 – Unit 1 Local community: listening for specific information.
@@ -2245,8 +2429,10 @@ Nghe nhiều người nói hoặc đoạn thông tin dài, tổng hợp ý, suy 
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2024/0515/18.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2024/0515/18.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/18.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2024/0515/19.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2024/0515/19.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/19.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-9-unit-3-skills-2-a156776.html
 
 **Phần cần nghe/đọc trên trang:** Skills 2 – Unit 3: multiple speakers on time management + MCQ.
@@ -2269,8 +2455,10 @@ Nghe nhiều người nói hoặc đoạn thông tin dài, tổng hợp ý, suy 
 
 - [▶ Mở thẳng MP3 Loigiaihay 1](https://img.loigiaihay.com/picture/2024/0515/ex2-skills2-u2-ta9-global.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2024/0515/ex2-skills2-u2-ta9-global.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/ex2-skills2-u2-ta9-global.mp3>
 - [▶ Mở thẳng MP3 Loigiaihay 2](https://img.loigiaihay.com/picture/2024/0515/ex3-skills2-u2-ta9-global.mp3)
   - Raw URL: <https://img.loigiaihay.com/picture/2024/0515/ex3-skills2-u2-ta9-global.mp3>
+  - B2 URL: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/ex3-skills2-u2-ta9-global.mp3>
 **Trang bài Loigiaihay để đối chiếu:** https://loigiaihay.com/tieng-anh-9-unit-2-skills-2-a156636.html
 
 **Phần cần nghe/đọc trên trang:** Skills 2 – Unit 2 City life: three teenagers + T/F + MCQ.
