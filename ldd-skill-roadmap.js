@@ -1376,12 +1376,12 @@
             : '';
         return '<div class="ldd-listening-audio-card">' +
             referenceHtml +
-            '<div class="ldd-listening-exercise-player"><strong>Audio của bài tập</strong>' +
-                '<audio controls preload="metadata" data-listening-audio src="' + escapeListening(item.audioUrl) + '"></audio>' +
-                '<div class="ldd-placement-audio-missing" data-listening-audio-missing hidden>' +
-                    '<strong>🎧 Chưa có MP3 bài tập</strong><span>Giáo viên thu và thêm file: <code>' + escapeListening(item.audioUrl) + '</code></span>' +
+            '<div class="ldd-listening-exercise-player"><strong>Audio riêng của bài tập</strong>' +
+                '<audio controls preload="metadata" hidden data-listening-audio src="' + escapeListening(item.audioUrl) + '"></audio>' +
+                '<div class="ldd-placement-audio-missing" data-listening-audio-missing>' +
+                    '<strong>Chưa có bản thu theo script</strong><span>MP3 B2 bên trên là mẫu tham khảo; nội dung có thể khác câu hỏi của bài này.</span>' +
                 '</div>' +
-                '<small>Được nghe tối đa ' + maxPlays + ' lần.</small>' +
+                '<small>Được nghe audio bài tập tối đa ' + maxPlays + ' lần khi có bản thu.</small>' +
             '</div>' +
         '</div>';
     }
