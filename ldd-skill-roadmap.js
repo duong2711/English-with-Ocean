@@ -1496,8 +1496,14 @@
             '</p><input class="ldd-listening-text-input" type="text" autocomplete="off" data-spell-single placeholder="Type the word...">';
     }
 
+    function listeningFocusHtml(item) {
+        return item.focus ? '<p class="ldd-listening-focus"><strong>Đoạn cần làm:</strong> ' +
+            escapeListening(item.focus) + '</p>' : '';
+    }
+
     function renderQaTranscribe(item, withChoice) {
-        return '<p class="ldd-listening-instruction">Nghe và gõ lại chính xác câu hỏi và câu trả lời. Không chấm dấu câu/viết hoa.</p>' +
+        return listeningFocusHtml(item) +
+            '<p class="ldd-listening-instruction">Nghe và gõ lại câu hỏi, câu trả lời trong đoạn được chỉ định. Không chấm dấu câu/viết hoa.</p>' +
             '<div class="ldd-listening-transcribe-grid">' +
                 '<label><span>Câu hỏi</span><input type="text" autocomplete="off" data-qa-question placeholder="What...?"></label>' +
                 '<label><span>Câu trả lời</span><input type="text" autocomplete="off" data-qa-answer placeholder="..."></label>' +
@@ -1510,7 +1516,8 @@
     function renderDialogueGap(item) {
         const blanks = new Set(item.blankIndices || []);
         let blankNo = 0;
-        return '<p class="ldd-listening-instruction">Nghe đoạn hội thoại dưới 30 giây. Hai câu đã bị ẩn; hãy gõ lại đúng nội dung.</p>' +
+        return listeningFocusHtml(item) +
+            '<p class="ldd-listening-instruction">Nghe hội thoại được chỉ định. Hai câu đã bị ẩn; hãy gõ lại đúng nội dung.</p>' +
             '<div class="ldd-listening-dialogue">' + item.dialogue.map((line,index) => {
                 if (!blanks.has(index)) return '<p>' + escapeListening(line) + '</p>';
                 const speaker = line.match(/^([AB]):/) ? line.match(/^([AB]):/)[1] : '';
@@ -1622,7 +1629,7 @@
         progress.current = stageNumber;
         saveState();
 
-        const attemptKey = 'ldd_listening_attempt_v2::' + trackId + '::' + stageNumber;
+        const attemptKey = 'ldd_listening_attempt_' + (trackId === 'foundation' && stageNumber >= 2 ? 'v3' : 'v2') + '::' + trackId + '::' + stageNumber;
         let savedScores = [];
         try {
             const parsed = JSON.parse(localStorage.getItem(attemptKey) || '[]');
