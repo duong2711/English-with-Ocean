@@ -1354,10 +1354,9 @@
         return '<div class="ldd-listening-audio-card">' +
             '<div class="ldd-listening-exercise-player">' +
                 '<strong>🎧 Bài nghe</strong>' +
-                '<button type="button" class="ldd-roadmap-btn is-primary" data-listening-play>▶ Phát bài nghe</button>' +
                 '<audio controls preload="metadata" data-listening-audio src="' + escapeListening(files[0]) + '"></audio>' +
                 '<small data-listening-audio-status role="status">' +
-                    (files.length > 1 ? files.length + ' đoạn ghi âm sẽ tự phát lần lượt.' : 'Nhấn phát để nghe.') +
+                    (files.length > 1 ? files.length + ' đoạn ghi âm sẽ tự phát lần lượt.' : 'Nhấn ▶ trên trình phát để nghe.') +
                 '</small>' +
             '</div>' +
         '</div>';
@@ -1366,9 +1365,8 @@
     function attachListeningPlaylist(host, item) {
         const files = Array.isArray(item.referenceAudioUrls) ? item.referenceAudioUrls : [];
         const audio = host.querySelector('[data-listening-audio]');
-        const button = host.querySelector('[data-listening-play]');
         const status = host.querySelector('[data-listening-audio-status]');
-        if (!audio || !button || !status || !files.length) return;
+        if (!audio || !status || !files.length) return;
         let index = 0;
         const statusFor = () => 'Đang phát đoạn ' + (index + 1) + '/' + files.length + '.';
         const playCurrent = function () {
@@ -1381,19 +1379,15 @@
                 });
             }
         };
-        button.addEventListener('click', function () {
-            audio.pause();
-            index = 0;
-            audio.src = files[index];
-            audio.load();
-            playCurrent();
-        });
         audio.addEventListener('play', function () {
             status.textContent = statusFor();
         });
         audio.addEventListener('ended', function () {
             if (index + 1 >= files.length) {
-                status.textContent = 'Đã nghe hết ' + files.length + ' đoạn. Nhấn “Phát bài nghe” để nghe lại.';
+                status.textContent = 'Đã nghe hết ' + files.length + ' đoạn. Nhấn ▶ trên trình phát để nghe lại.';
+                index = 0;
+                audio.src = files[0];
+                audio.load();
                 return;
             }
             index++;
