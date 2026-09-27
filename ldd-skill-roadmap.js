@@ -1656,21 +1656,25 @@
                 (trackId === 'foundation' && stageNumber === 1
                     ? '<div class="ldd-listening-difficulty-legend"><span class="is-easy">Dễ</span><span>Trung bình</span><span>Khá</span><span>Khó</span><span class="is-hell">💀 Địa ngục</span></div>'
                     : '') +
+                '<div class="ldd-listening-submit-guide"><span>Trả lời đủ câu hỏi rồi bấm <strong>Nộp bài này và xem điểm</strong>. Làm đủ 10 bài, bấm <strong>Nộp giai đoạn và chấm điểm</strong>.</span>' +
+                    '<button type="button" class="ldd-roadmap-btn is-primary" data-listening-stage-submit>Nộp giai đoạn và chấm điểm (<span data-listening-stage-count>0/10</span>)</button></div>' +
                 '<div class="ldd-listening-bank">' +
                     '<div class="ldd-listening-lesson-list" data-listening-list></div>' +
                     '<div class="ldd-listening-exercise" data-listening-exercise></div>' +
                 '</div>' +
-                '<div class="ldd-lab-actions"><button type="button" class="ldd-roadmap-btn is-primary" data-listening-stage-submit>Nộp 10 bài và chấm điểm</button></div>' +
+                '<div class="ldd-lab-actions"><button type="button" class="ldd-roadmap-btn is-primary" data-listening-stage-submit>Nộp giai đoạn và chấm điểm</button></div>' +
                 '<div class="ldd-lab-feedback" data-listening-stage-feedback hidden></div>';
 
             panel.querySelector('[data-listening-back]').addEventListener('click', () => showHub('listening'));
-            panel.querySelector('[data-listening-stage-submit]').addEventListener('click', submitStage);
+            panel.querySelectorAll('[data-listening-stage-submit]').forEach(button => button.addEventListener('click', submitStage));
             renderList();
             renderExercise(activeIndex);
         };
 
         const renderList = function () {
             const list = panel.querySelector('[data-listening-list]');
+            const count = panel.querySelector('[data-listening-stage-count]');
+            if (count) count.textContent = scores.filter(value => value !== null).length + '/10';
             list.innerHTML = exercises.map((item,index) =>
                 '<button type="button" class="ldd-listening-lesson' + (index === activeIndex ? ' is-active' : '') + (scores[index] !== null && scores[index] >= 80 ? ' is-done' : scores[index] !== null ? ' is-wrong' : '') + '" data-listening-index="' + index + '">' +
                     '<span class="ldd-listening-lesson-no">' + String(index + 1).padStart(2, '0') + '</span>' +
@@ -1706,7 +1710,7 @@
                     '<span class="ldd-listening-progress-mini">' + scores.filter(value => value !== null).length + '/10 đã làm</span></div>' +
                 listeningAudioHtml(item, trackId, stageNumber) +
                 taskHtml +
-                '<div class="ldd-lab-actions"><button type="button" class="ldd-roadmap-btn is-primary" data-listening-submit>Kiểm tra bài này</button></div>' +
+                '<div class="ldd-lab-actions"><button type="button" class="ldd-roadmap-btn is-primary" data-listening-submit>Nộp bài này và xem điểm</button></div>' +
                 '<div class="ldd-lab-feedback" data-listening-feedback hidden></div>';
 
             if (isEasySpelling(item)) attachListeningSpellingSpeech(host, item);
@@ -1758,7 +1762,21 @@
                 feedback.hidden = false;
                 feedback.className = 'ldd-lab-feedback ' + (result.score >= 80 ? 'is-success' : 'is-review');
                 feedback.innerHTML = '<span class="ldd-feedback-score">' + result.score + '/100</span><strong>' +
-                    (result.score >= 80 ? 'Đạt bài này.' : 'Chưa đạt 80%.') + '</strong><p>' + escapeListening(result.detail) + '</p>';
+                    (result.score >= 80 ? 'Đạt bài này.' : 'Chưa đạt 80%.') + '</strong><p>' + escapeListening(result.detail) + '</p>' +
+                    '<div class="ldd-lab-actions"><button type="button" class="ldd-roadmap-btn is-primary" data-listening-next>' +
+                    (index < exercises.length - 1 ? 'Bài tiếp theo →' : 'Nộp giai đoạn và chấm điểm →') + '</button></div>';
+                feedback.querySelector('[data-listening-next]').addEventListener('click', () => {
+                    if (index === exercises.length - 1) {
+                        submitStage();
+                        return;
+                    }
+                    activeIndex = index + 1;
+                    renderList();
+                    renderExercise(activeIndex);
+                    panel.querySelector('[data-listening-exercise]').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+                const stageFeedback = panel.querySelector('[data-listening-stage-feedback]');
+                if (stageFeedback) stageFeedback.hidden = true;
                 renderList();
                 feedback.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             });
@@ -1774,6 +1792,10 @@
                 feedback.hidden = false;
                 feedback.className = 'ldd-lab-feedback is-review';
                 feedback.textContent = 'Còn ' + scores.filter(value => value === null).length + ' bài chưa nộp. Hãy hoàn thành Bài ' + (missingIndex + 1) + ' trước.';
+                const exerciseFeedback = panel.querySelector('[data-listening-feedback]');
+                exerciseFeedback.hidden = false;
+                exerciseFeedback.className = 'ldd-lab-feedback is-review';
+                exerciseFeedback.textContent = feedback.textContent;
                 panel.querySelector('[data-listening-exercise]').scrollIntoView({ behavior: 'smooth', block: 'start' });
                 return;
             }
