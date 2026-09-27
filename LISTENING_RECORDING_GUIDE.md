@@ -351,143 +351,123 @@ Nghe hết MP3: ghi lại cặp hỏi–đáp được chỉ định và nhận 
 
 - MP3 trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0419/de-2.mp3>
 - Trang đối chiếu: <https://loigiaihay.com/de-thi-hoc-ki-2-tieng-anh-2-global-success-de-so-2-a137158.html>
-- Vị trí phần ghi câu: Phần II · hội thoại 1
-- Yêu cầu: Ở phần II, nghe hội thoại đầu tiên về món đồ chơi rồi ghi lại cả câu hỏi và câu trả lời. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.
-- Cặp hỏi–đáp cần ghi: What do you want? / I want some yo-yos.
-- Câu hỏi kiểm tra toàn bộ MP3 (theo thứ tự phát):
-  1. Ở phần âm đầu tiên, người đọc phát âm chữ nào? — **z**
-  2. Ở phần âm thứ hai, người đọc phát âm chữ nào? — **a**
-  3. Ở phần âm thứ ba, người đọc phát âm chữ nào? — **n**
-  4. Ở phần âm thứ tư, người đọc phát âm tổ hợp chữ nào? — **sh**
-  5. Trong hội thoại 1, bạn nhỏ muốn gì? — **Yo-yos**
-  6. Trong hội thoại 2, bạn nhỏ có thích con zebu không? — **Có**
-  7. Ở câu số 3 phần II, họ đang làm gì? — **Chơi cầu trượt**
-  8. Ở câu cuối phần II, nho ở đâu? — **Trên bàn**
+- Câu hỏi theo thứ tự phát:
+  - Ở phần âm đầu tiên, người đọc phát âm chữ nào? — **z**
+  - Ở phần âm thứ hai, người đọc phát âm chữ nào? — **a**
+  - Ở phần âm thứ ba, người đọc phát âm chữ nào? — **n**
+  - Ở phần âm thứ tư, người đọc phát âm tổ hợp chữ nào? — **sh**
+  - **Tại đoạn này** (Phần II · hội thoại 1): Ghi: What do you want? / I want some yo-yos.
+  - Trong hội thoại 1, bạn nhỏ muốn gì? — **Yo-yos**
+  - Trong hội thoại 2, bạn nhỏ có thích con zebu không? — **Có**
+  - Ở câu số 3 phần II, họ đang làm gì? — **Chơi cầu trượt**
+  - Ở câu cuối phần II, nho ở đâu? — **Trên bàn**
 
 ### F2-02 — Con vật yêu thích
 
 - MP3 trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0419/de-2.mp3>
 - Trang đối chiếu: <https://loigiaihay.com/de-thi-hoc-ki-2-tieng-anh-2-global-success-de-so-2-a137158.html>
-- Vị trí phần ghi câu: Phần II · hội thoại 2
-- Yêu cầu: Ở phần II, nghe hội thoại thứ hai về con vật rồi ghi lại cả câu hỏi và câu trả lời. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.
-- Cặp hỏi–đáp cần ghi: Do you like the zebu? / Yes, I do.
-- Câu hỏi kiểm tra toàn bộ MP3 (theo thứ tự phát):
-  1. Ở phần âm đầu tiên, người đọc phát âm chữ nào? — **z**
-  2. Ở phần âm thứ hai, người đọc phát âm chữ nào? — **a**
-  3. Ở phần âm thứ ba, người đọc phát âm chữ nào? — **n**
-  4. Ở phần âm thứ tư, người đọc phát âm tổ hợp chữ nào? — **sh**
-  5. Trong hội thoại 1, bạn nhỏ muốn gì? — **Yo-yos**
-  6. Trong hội thoại 2, bạn nhỏ có thích con zebu không? — **Có**
-  7. Ở câu số 3 phần II, họ đang làm gì? — **Chơi cầu trượt**
-  8. Ở câu cuối phần II, nho ở đâu? — **Trên bàn**
+- Câu hỏi theo thứ tự phát:
+  - Ở phần âm đầu tiên, người đọc phát âm chữ nào? — **z**
+  - Ở phần âm thứ hai, người đọc phát âm chữ nào? — **a**
+  - Ở phần âm thứ ba, người đọc phát âm chữ nào? — **n**
+  - Ở phần âm thứ tư, người đọc phát âm tổ hợp chữ nào? — **sh**
+  - Trong hội thoại 1, bạn nhỏ muốn gì? — **Yo-yos**
+  - **Tại đoạn này** (Phần II · hội thoại 2): Ghi: Do you like the zebu? / Yes, I do.
+  - Trong hội thoại 2, bạn nhỏ có thích con zebu không? — **Có**
+  - Ở câu số 3 phần II, họ đang làm gì? — **Chơi cầu trượt**
+  - Ở câu cuối phần II, nho ở đâu? — **Trên bàn**
 
 ### F2-03 — Người thân
 
 - MP3 trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-52.mp3>
 - Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html>
-- Vị trí phần ghi câu: Đoạn 1 · cặp hỏi–đáp 1
-- Yêu cầu: Nghe cặp hỏi–đáp số 1 về người thân và ghi lại hai câu. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.
-- Cặp hỏi–đáp cần ghi: Who is this? / It's my father.
-- Câu hỏi kiểm tra toàn bộ MP3 (theo thứ tự phát):
-  1. Ở mục 1, người được giới thiệu là ai? — **Bố**
-  2. Ở mục 2, cô ấy làm nghề gì? — **Bác sĩ**
-  3. Ở mục 3, phòng khách nằm ở đâu? — **Ở kia**
-  4. Ở mục 4, cửa sổ được miêu tả như thế nào? — **Nhỏ**
-  5. Ở mục 5, người nói muốn uống gì? — **Sữa**
+- Câu hỏi theo thứ tự phát:
+  - **Tại đoạn này** (Đoạn 1 · cặp hỏi–đáp 1): Ghi: Who is this? / It's my father.
+  - Ở mục 1, người được giới thiệu là ai? — **Bố**
+  - Ở mục 2, cô ấy làm nghề gì? — **Bác sĩ**
+  - Ở mục 3, phòng khách nằm ở đâu? — **Ở kia**
+  - Ở mục 4, cửa sổ được miêu tả như thế nào? — **Nhỏ**
+  - Ở mục 5, người nói muốn uống gì? — **Sữa**
 
 ### F2-04 — Nghề nghiệp
 
 - MP3 trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-52.mp3>
 - Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html>
-- Vị trí phần ghi câu: Đoạn 1 · cặp hỏi–đáp 2
-- Yêu cầu: Nghe cặp hỏi–đáp số 2 về nghề nghiệp và ghi lại hai câu. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.
-- Cặp hỏi–đáp cần ghi: What's her job? / She's a doctor.
-- Câu hỏi kiểm tra toàn bộ MP3 (theo thứ tự phát):
-  1. Ở mục 1, người được giới thiệu là ai? — **Bố**
-  2. Ở mục 2, cô ấy làm nghề gì? — **Bác sĩ**
-  3. Ở mục 3, phòng khách nằm ở đâu? — **Ở kia**
-  4. Ở mục 4, cửa sổ được miêu tả như thế nào? — **Nhỏ**
-  5. Ở mục 5, người nói muốn uống gì? — **Sữa**
+- Câu hỏi theo thứ tự phát:
+  - Ở mục 1, người được giới thiệu là ai? — **Bố**
+  - **Tại đoạn này** (Đoạn 1 · cặp hỏi–đáp 2): Ghi: What's her job? / She's a doctor.
+  - Ở mục 2, cô ấy làm nghề gì? — **Bác sĩ**
+  - Ở mục 3, phòng khách nằm ở đâu? — **Ở kia**
+  - Ở mục 4, cửa sổ được miêu tả như thế nào? — **Nhỏ**
+  - Ở mục 5, người nói muốn uống gì? — **Sữa**
 
 ### F2-05 — Phòng khách
 
 - MP3 trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-52.mp3>
 - Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html>
-- Vị trí phần ghi câu: Đoạn 1 · cặp hỏi–đáp 3
-- Yêu cầu: Nghe cặp hỏi–đáp số 3 về một căn phòng và ghi lại hai câu. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.
-- Cặp hỏi–đáp cần ghi: Where's the living room? / It's there.
-- Câu hỏi kiểm tra toàn bộ MP3 (theo thứ tự phát):
-  1. Ở mục 1, người được giới thiệu là ai? — **Bố**
-  2. Ở mục 2, cô ấy làm nghề gì? — **Bác sĩ**
-  3. Ở mục 3, phòng khách nằm ở đâu? — **Ở kia**
-  4. Ở mục 4, cửa sổ được miêu tả như thế nào? — **Nhỏ**
-  5. Ở mục 5, người nói muốn uống gì? — **Sữa**
+- Câu hỏi theo thứ tự phát:
+  - Ở mục 1, người được giới thiệu là ai? — **Bố**
+  - Ở mục 2, cô ấy làm nghề gì? — **Bác sĩ**
+  - **Tại đoạn này** (Đoạn 1 · cặp hỏi–đáp 3): Ghi: Where's the living room? / It's there.
+  - Ở mục 3, phòng khách nằm ở đâu? — **Ở kia**
+  - Ở mục 4, cửa sổ được miêu tả như thế nào? — **Nhỏ**
+  - Ở mục 5, người nói muốn uống gì? — **Sữa**
 
 ### F2-06 — Đồ uống
 
 - MP3 trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-52.mp3>
 - Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html>
-- Vị trí phần ghi câu: Đoạn 1 · cặp hỏi–đáp 5
-- Yêu cầu: Nghe cặp hỏi–đáp số 5 về đồ uống và ghi lại hai câu. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.
-- Cặp hỏi–đáp cần ghi: What would you like to drink? / I'd like some milk, please.
-- Câu hỏi kiểm tra toàn bộ MP3 (theo thứ tự phát):
-  1. Ở mục 1, người được giới thiệu là ai? — **Bố**
-  2. Ở mục 2, cô ấy làm nghề gì? — **Bác sĩ**
-  3. Ở mục 3, phòng khách nằm ở đâu? — **Ở kia**
-  4. Ở mục 4, cửa sổ được miêu tả như thế nào? — **Nhỏ**
-  5. Ở mục 5, người nói muốn uống gì? — **Sữa**
+- Câu hỏi theo thứ tự phát:
+  - Ở mục 1, người được giới thiệu là ai? — **Bố**
+  - Ở mục 2, cô ấy làm nghề gì? — **Bác sĩ**
+  - Ở mục 3, phòng khách nằm ở đâu? — **Ở kia**
+  - Ở mục 4, cửa sổ được miêu tả như thế nào? — **Nhỏ**
+  - **Tại đoạn này** (Đoạn 1 · cặp hỏi–đáp 5): Ghi: What would you like to drink? / I'd like some milk, please.
+  - Ở mục 5, người nói muốn uống gì? — **Sữa**
 
 ### F2-07 — Tuổi của anh trai
 
 - MP3 trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-53.mp3>
 - Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html>
-- Vị trí phần ghi câu: Đoạn 2 · cặp hỏi–đáp 1
-- Yêu cầu: Nghe cặp hỏi–đáp số 1 trong bài nghe thứ hai về tuổi và ghi lại hai câu. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.
-- Cặp hỏi–đáp cần ghi: How old is your brother? / He's fourteen years old.
-- Câu hỏi kiểm tra toàn bộ MP3 (theo thứ tự phát):
-  1. Ở mục 1, anh trai bao nhiêu tuổi? — **Mười bốn**
-  2. Ở mục 2, anh ấy làm nghề gì? — **Tài xế**
-  3. Ở mục 3, những chiếc đèn ở đâu? — **Trên bàn**
-  4. Ở mục 4, người nói mời ăn món gì? — **Thịt gà**
+- Câu hỏi theo thứ tự phát:
+  - **Tại đoạn này** (Đoạn 2 · cặp hỏi–đáp 1): Ghi: How old is your brother? / He's fourteen years old.
+  - Ở mục 1, anh trai bao nhiêu tuổi? — **Mười bốn**
+  - Ở mục 2, anh ấy làm nghề gì? — **Tài xế**
+  - Ở mục 3, những chiếc đèn ở đâu? — **Trên bàn**
+  - Ở mục 4, người nói mời ăn món gì? — **Thịt gà**
 
 ### F2-08 — Công việc của anh ấy
 
 - MP3 trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-53.mp3>
 - Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html>
-- Vị trí phần ghi câu: Đoạn 2 · cặp hỏi–đáp 2
-- Yêu cầu: Nghe cặp hỏi–đáp số 2 trong bài nghe thứ hai về nghề nghiệp và ghi lại hai câu. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.
-- Cặp hỏi–đáp cần ghi: What's his job? / He's a driver.
-- Câu hỏi kiểm tra toàn bộ MP3 (theo thứ tự phát):
-  1. Ở mục 1, anh trai bao nhiêu tuổi? — **Mười bốn**
-  2. Ở mục 2, anh ấy làm nghề gì? — **Tài xế**
-  3. Ở mục 3, những chiếc đèn ở đâu? — **Trên bàn**
-  4. Ở mục 4, người nói mời ăn món gì? — **Thịt gà**
+- Câu hỏi theo thứ tự phát:
+  - Ở mục 1, anh trai bao nhiêu tuổi? — **Mười bốn**
+  - **Tại đoạn này** (Đoạn 2 · cặp hỏi–đáp 2): Ghi: What's his job? / He's a driver.
+  - Ở mục 2, anh ấy làm nghề gì? — **Tài xế**
+  - Ở mục 3, những chiếc đèn ở đâu? — **Trên bàn**
+  - Ở mục 4, người nói mời ăn món gì? — **Thịt gà**
 
 ### F2-09 — Những chiếc đèn
 
 - MP3 trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-53.mp3>
 - Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html>
-- Vị trí phần ghi câu: Đoạn 2 · cặp hỏi–đáp 3
-- Yêu cầu: Nghe cặp hỏi–đáp số 3 trong bài nghe thứ hai về vị trí đồ vật và ghi lại hai câu. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.
-- Cặp hỏi–đáp cần ghi: Where are the lamps? / They're on the table.
-- Câu hỏi kiểm tra toàn bộ MP3 (theo thứ tự phát):
-  1. Ở mục 1, anh trai bao nhiêu tuổi? — **Mười bốn**
-  2. Ở mục 2, anh ấy làm nghề gì? — **Tài xế**
-  3. Ở mục 3, những chiếc đèn ở đâu? — **Trên bàn**
-  4. Ở mục 4, người nói mời ăn món gì? — **Thịt gà**
+- Câu hỏi theo thứ tự phát:
+  - Ở mục 1, anh trai bao nhiêu tuổi? — **Mười bốn**
+  - Ở mục 2, anh ấy làm nghề gì? — **Tài xế**
+  - **Tại đoạn này** (Đoạn 2 · cặp hỏi–đáp 3): Ghi: Where are the lamps? / They're on the table.
+  - Ở mục 3, những chiếc đèn ở đâu? — **Trên bàn**
+  - Ở mục 4, người nói mời ăn món gì? — **Thịt gà**
 
 ### F2-10 — Mời ăn
 
 - MP3 trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-53.mp3>
 - Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html>
-- Vị trí phần ghi câu: Đoạn 2 · cặp hỏi–đáp 4
-- Yêu cầu: Nghe cặp hỏi–đáp số 4 trong bài nghe thứ hai về lời mời ăn và ghi lại hai câu. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.
-- Cặp hỏi–đáp cần ghi: Would you like some chicken? / Yes, please.
-- Câu hỏi kiểm tra toàn bộ MP3 (theo thứ tự phát):
-  1. Ở mục 1, anh trai bao nhiêu tuổi? — **Mười bốn**
-  2. Ở mục 2, anh ấy làm nghề gì? — **Tài xế**
-  3. Ở mục 3, những chiếc đèn ở đâu? — **Trên bàn**
-  4. Ở mục 4, người nói mời ăn món gì? — **Thịt gà**
+- Câu hỏi theo thứ tự phát:
+  - Ở mục 1, anh trai bao nhiêu tuổi? — **Mười bốn**
+  - Ở mục 2, anh ấy làm nghề gì? — **Tài xế**
+  - Ở mục 3, những chiếc đèn ở đâu? — **Trên bàn**
+  - **Tại đoạn này** (Đoạn 2 · cặp hỏi–đáp 4): Ghi: Would you like some chicken? / Yes, please.
+  - Ở mục 4, người nói mời ăn món gì? — **Thịt gà**
 
 ## Giai đoạn 3 — Nghe hiểu câu hỏi & câu trả lời
 
@@ -497,141 +477,111 @@ Nghe hết MP3: ghi cặp hỏi–đáp, chọn ý nghĩa và trả lời câu h
 
 - MP3 trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0523/track-9.mp3>
 - Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-3-unit-1-lesson-2-trang-12-global-success-a106757.html>
-- Vị trí phần ghi câu: Đoạn a · cặp hỏi–đáp đầu tiên
-- Yêu cầu: Nghe đoạn được chỉ định, ghi lại câu hỏi và câu trả lời; sau đó chọn cách hiểu đúng của lời đáp. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.
-- Cặp hỏi–đáp cần ghi: Hi, Mai. How are you? / Fine, thank you.
-- Nghĩa đúng: Người nói vẫn khỏe và cảm ơn.
-- Câu hỏi kiểm tra toàn bộ MP3 (theo thứ tự phát):
-  1. Ở đoạn a, người được chào là ai? — **Mai**
-  2. Ở đoạn a, người được hỏi đáp mình thế nào? — **Vẫn khỏe**
-  3. Ở đoạn b, hai người làm gì? — **Tạm biệt**
+- Câu hỏi theo thứ tự phát:
+  - **Tại đoạn này** (Đoạn a · cặp hỏi–đáp đầu tiên): Ghi: Hi, Mai. How are you? / Fine, thank you. · Nghĩa: Người nói vẫn khỏe và cảm ơn.
+  - Ở đoạn a, người được chào là ai? — **Mai**
+  - Ở đoạn a, người được hỏi đáp mình thế nào? — **Vẫn khỏe**
+  - Ở đoạn b, hai người làm gì? — **Tạm biệt**
 
 ### F3-02 — Đây là ai?
 
 - MP3 trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-52.mp3>
 - Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html>
-- Vị trí phần ghi câu: Cặp hỏi–đáp 1
-- Yêu cầu: Nghe đoạn được chỉ định, ghi lại câu hỏi và câu trả lời; sau đó chọn cách hiểu đúng của lời đáp. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.
-- Cặp hỏi–đáp cần ghi: Who is this? / It's my father.
-- Nghĩa đúng: Người nói giới thiệu bố mình.
-- Câu hỏi kiểm tra toàn bộ MP3 (theo thứ tự phát):
-  1. Ở mục 1, người được giới thiệu là ai? — **Bố**
-  2. Ở mục 2, cô ấy làm nghề gì? — **Bác sĩ**
-  3. Ở mục 3, phòng khách nằm ở đâu? — **Ở kia**
-  4. Ở mục 4, cửa sổ được miêu tả như thế nào? — **Nhỏ**
-  5. Ở mục 5, người nói muốn uống gì? — **Sữa**
+- Câu hỏi theo thứ tự phát:
+  - **Tại đoạn này** (Cặp hỏi–đáp 1): Ghi: Who is this? / It's my father. · Nghĩa: Người nói giới thiệu bố mình.
+  - Ở mục 1, người được giới thiệu là ai? — **Bố**
+  - Ở mục 2, cô ấy làm nghề gì? — **Bác sĩ**
+  - Ở mục 3, phòng khách nằm ở đâu? — **Ở kia**
+  - Ở mục 4, cửa sổ được miêu tả như thế nào? — **Nhỏ**
+  - Ở mục 5, người nói muốn uống gì? — **Sữa**
 
 ### F3-03 — Công việc
 
 - MP3 trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-52.mp3>
 - Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html>
-- Vị trí phần ghi câu: Cặp hỏi–đáp 2
-- Yêu cầu: Nghe đoạn được chỉ định, ghi lại câu hỏi và câu trả lời; sau đó chọn cách hiểu đúng của lời đáp. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.
-- Cặp hỏi–đáp cần ghi: What's her job? / She's a doctor.
-- Nghĩa đúng: Cô ấy là bác sĩ.
-- Câu hỏi kiểm tra toàn bộ MP3 (theo thứ tự phát):
-  1. Ở mục 1, người được giới thiệu là ai? — **Bố**
-  2. Ở mục 2, cô ấy làm nghề gì? — **Bác sĩ**
-  3. Ở mục 3, phòng khách nằm ở đâu? — **Ở kia**
-  4. Ở mục 4, cửa sổ được miêu tả như thế nào? — **Nhỏ**
-  5. Ở mục 5, người nói muốn uống gì? — **Sữa**
+- Câu hỏi theo thứ tự phát:
+  - Ở mục 1, người được giới thiệu là ai? — **Bố**
+  - **Tại đoạn này** (Cặp hỏi–đáp 2): Ghi: What's her job? / She's a doctor. · Nghĩa: Cô ấy là bác sĩ.
+  - Ở mục 2, cô ấy làm nghề gì? — **Bác sĩ**
+  - Ở mục 3, phòng khách nằm ở đâu? — **Ở kia**
+  - Ở mục 4, cửa sổ được miêu tả như thế nào? — **Nhỏ**
+  - Ở mục 5, người nói muốn uống gì? — **Sữa**
 
 ### F3-04 — Những chú thỏ
 
 - MP3 trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0728/track-58.mp3>
 - Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-3-unit-16-lesson-2-trang-42-global-success-a108135.html>
-- Vị trí phần ghi câu: Đoạn a · câu hỏi về thỏ
-- Yêu cầu: Nghe đoạn được chỉ định, ghi lại câu hỏi và câu trả lời; sau đó chọn cách hiểu đúng của lời đáp. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.
-- Cặp hỏi–đáp cần ghi: How many rabbits do you have? / I have many.
-- Nghĩa đúng: Người nói có nhiều thỏ.
-- Câu hỏi kiểm tra toàn bộ MP3 (theo thứ tự phát):
-  1. Đầu đoạn a, người nói có bao nhiêu con thỏ? — **Hai**
-  2. Bạn còn lại nói có bao nhiêu thỏ? — **Nhiều con**
-  3. Ở đoạn b, người nói giới thiệu con vật nào? — **Cá vàng**
-  4. Bạn còn lại nói mình có bao nhiêu con vật ấy? — **Một vài**
+- Câu hỏi theo thứ tự phát:
+  - **Tại đoạn này** (Đoạn a · câu hỏi về thỏ): Ghi: How many rabbits do you have? / I have many. · Nghĩa: Người nói có nhiều thỏ.
+  - Đầu đoạn a, người nói có bao nhiêu con thỏ? — **Hai**
+  - Bạn còn lại nói có bao nhiêu thỏ? — **Nhiều con**
+  - Ở đoạn b, người nói giới thiệu con vật nào? — **Cá vàng**
+  - Bạn còn lại nói mình có bao nhiêu con vật ấy? — **Một vài**
 
 ### F3-05 — Trượt patin
 
 - MP3 trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0818/track-88.mp3>
 - Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-3-unit-19-lesson-2-trang-60-global-success-a108223.html>
-- Vị trí phần ghi câu: Đoạn b · câu hỏi về hoạt động
-- Yêu cầu: Nghe đoạn được chỉ định, ghi lại câu hỏi và câu trả lời; sau đó chọn cách hiểu đúng của lời đáp. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.
-- Cặp hỏi–đáp cần ghi: What's he doing? / He's skating.
-- Nghĩa đúng: Anh ấy đang trượt patin.
-- Câu hỏi kiểm tra toàn bộ MP3 (theo thứ tự phát):
-  1. Ở đoạn a, Bill đang ở đâu? — **Ở công viên**
-  2. Ở đoạn b, Bill đang làm gì? — **Trượt patin**
+- Câu hỏi theo thứ tự phát:
+  - Ở đoạn a, Bill đang ở đâu? — **Ở công viên**
+  - **Tại đoạn này** (Đoạn b · câu hỏi về hoạt động): Ghi: What's he doing? / He's skating. · Nghĩa: Anh ấy đang trượt patin.
+  - Ở đoạn b, Bill đang làm gì? — **Trượt patin**
 
 ### F3-06 — Gọi đồ uống
 
 - MP3 trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-52.mp3>
 - Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html>
-- Vị trí phần ghi câu: Cặp hỏi–đáp 5
-- Yêu cầu: Nghe đoạn được chỉ định, ghi lại câu hỏi và câu trả lời; sau đó chọn cách hiểu đúng của lời đáp. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.
-- Cặp hỏi–đáp cần ghi: What would you like to drink? / I'd like some milk, please.
-- Nghĩa đúng: Người nói muốn uống sữa.
-- Câu hỏi kiểm tra toàn bộ MP3 (theo thứ tự phát):
-  1. Ở mục 1, người được giới thiệu là ai? — **Bố**
-  2. Ở mục 2, cô ấy làm nghề gì? — **Bác sĩ**
-  3. Ở mục 3, phòng khách nằm ở đâu? — **Ở kia**
-  4. Ở mục 4, cửa sổ được miêu tả như thế nào? — **Nhỏ**
-  5. Ở mục 5, người nói muốn uống gì? — **Sữa**
+- Câu hỏi theo thứ tự phát:
+  - Ở mục 1, người được giới thiệu là ai? — **Bố**
+  - Ở mục 2, cô ấy làm nghề gì? — **Bác sĩ**
+  - Ở mục 3, phòng khách nằm ở đâu? — **Ở kia**
+  - Ở mục 4, cửa sổ được miêu tả như thế nào? — **Nhỏ**
+  - **Tại đoạn này** (Cặp hỏi–đáp 5): Ghi: What would you like to drink? / I'd like some milk, please. · Nghĩa: Người nói muốn uống sữa.
+  - Ở mục 5, người nói muốn uống gì? — **Sữa**
 
 ### F3-07 — Những chiếc đèn
 
 - MP3 trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-53.mp3>
 - Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html>
-- Vị trí phần ghi câu: Đoạn 2 · cặp hỏi–đáp 3
-- Yêu cầu: Nghe đoạn được chỉ định, ghi lại câu hỏi và câu trả lời; sau đó chọn cách hiểu đúng của lời đáp. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.
-- Cặp hỏi–đáp cần ghi: Where are the lamps? / They're on the table.
-- Nghĩa đúng: Những chiếc đèn ở trên bàn.
-- Câu hỏi kiểm tra toàn bộ MP3 (theo thứ tự phát):
-  1. Ở mục 1, anh trai bao nhiêu tuổi? — **Mười bốn**
-  2. Ở mục 2, anh ấy làm nghề gì? — **Tài xế**
-  3. Ở mục 3, những chiếc đèn ở đâu? — **Trên bàn**
-  4. Ở mục 4, người nói mời ăn món gì? — **Thịt gà**
+- Câu hỏi theo thứ tự phát:
+  - Ở mục 1, anh trai bao nhiêu tuổi? — **Mười bốn**
+  - Ở mục 2, anh ấy làm nghề gì? — **Tài xế**
+  - **Tại đoạn này** (Đoạn 2 · cặp hỏi–đáp 3): Ghi: Where are the lamps? / They're on the table. · Nghĩa: Những chiếc đèn ở trên bàn.
+  - Ở mục 3, những chiếc đèn ở đâu? — **Trên bàn**
+  - Ở mục 4, người nói mời ăn món gì? — **Thịt gà**
 
 ### F3-08 — Đi xe đạp
 
 - MP3 trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0818/track-89.mp3>
 - Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-3-unit-19-lesson-2-trang-60-global-success-a108223.html>
-- Vị trí phần ghi câu: Mục b · cặp hỏi–đáp về cô ấy
-- Yêu cầu: Nghe đoạn được chỉ định, ghi lại câu hỏi và câu trả lời; sau đó chọn cách hiểu đúng của lời đáp. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.
-- Cặp hỏi–đáp cần ghi: What's she doing? / She's cycling.
-- Nghĩa đúng: Cô ấy đang đạp xe.
-- Câu hỏi kiểm tra toàn bộ MP3 (theo thứ tự phát):
-  1. Ở mục a, cậu bé đang làm gì? — **Trượt patin**
-  2. Ở mục b, cô bé đang làm gì? — **Đạp xe**
-  3. Ở mục c, cậu bé đang làm gì? — **Thả diều**
-  4. Ở mục d, cô bé đang làm gì? — **Nhảy dây**
+- Câu hỏi theo thứ tự phát:
+  - Ở mục a, cậu bé đang làm gì? — **Trượt patin**
+  - **Tại đoạn này** (Mục b · cặp hỏi–đáp về cô ấy): Ghi: What's she doing? / She's cycling. · Nghĩa: Cô ấy đang đạp xe.
+  - Ở mục b, cô bé đang làm gì? — **Đạp xe**
+  - Ở mục c, cậu bé đang làm gì? — **Thả diều**
+  - Ở mục d, cô bé đang làm gì? — **Nhảy dây**
 
 ### F3-09 — Chào Minh
 
 - MP3 trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0523/track-11.mp3>
 - Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-3-unit-1-lesson-2-trang-12-global-success-a106757.html>
-- Vị trí phần ghi câu: Hội thoại số 3
-- Yêu cầu: Nghe đoạn được chỉ định, ghi lại câu hỏi và câu trả lời; sau đó chọn cách hiểu đúng của lời đáp. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.
-- Cặp hỏi–đáp cần ghi: Hello, Minh. How are you? / Fine, thank you.
-- Nghĩa đúng: Người nói vẫn khỏe và cảm ơn.
-- Câu hỏi kiểm tra toàn bộ MP3 (theo thứ tự phát):
-  1. Ở hội thoại 1, Ben nói tên mình là gì? — **Ben**
-  2. Ở hội thoại 2, Ben và Mai làm gì? — **Tạm biệt**
-  3. Ở hội thoại 3, Lucy hỏi thăm ai? — **Minh**
-  4. Ở hội thoại 4, Minh nói gì với Lucy? — **Bye**
+- Câu hỏi theo thứ tự phát:
+  - Ở hội thoại 1, Ben nói tên mình là gì? — **Ben**
+  - Ở hội thoại 2, Ben và Mai làm gì? — **Tạm biệt**
+  - **Tại đoạn này** (Hội thoại số 3): Ghi: Hello, Minh. How are you? / Fine, thank you. · Nghĩa: Người nói vẫn khỏe và cảm ơn.
+  - Ở hội thoại 3, Lucy hỏi thăm ai? — **Minh**
+  - Ở hội thoại 4, Minh nói gì với Lucy? — **Bye**
 
 ### F3-10 — Tuổi của anh trai
 
 - MP3 trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-53.mp3>
 - Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html>
-- Vị trí phần ghi câu: Đoạn 2 · cặp hỏi–đáp 1
-- Yêu cầu: Nghe đoạn được chỉ định, ghi lại câu hỏi và câu trả lời; sau đó chọn cách hiểu đúng của lời đáp. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.
-- Cặp hỏi–đáp cần ghi: How old is your brother? / He's fourteen years old.
-- Nghĩa đúng: Anh trai của người nói 14 tuổi.
-- Câu hỏi kiểm tra toàn bộ MP3 (theo thứ tự phát):
-  1. Ở mục 1, anh trai bao nhiêu tuổi? — **Mười bốn**
-  2. Ở mục 2, anh ấy làm nghề gì? — **Tài xế**
-  3. Ở mục 3, những chiếc đèn ở đâu? — **Trên bàn**
-  4. Ở mục 4, người nói mời ăn món gì? — **Thịt gà**
+- Câu hỏi theo thứ tự phát:
+  - **Tại đoạn này** (Đoạn 2 · cặp hỏi–đáp 1): Ghi: How old is your brother? / He's fourteen years old. · Nghĩa: Anh trai của người nói 14 tuổi.
+  - Ở mục 1, anh trai bao nhiêu tuổi? — **Mười bốn**
+  - Ở mục 2, anh ấy làm nghề gì? — **Tài xế**
+  - Ở mục 3, những chiếc đèn ở đâu? — **Trên bàn**
+  - Ở mục 4, người nói mời ăn món gì? — **Thịt gà**
 
 ## Giai đoạn 4 — Nhận diện hội thoại ngắn
 
@@ -641,137 +591,117 @@ Nghe hết MP3: điền lời thoại được chỉ định và nhận diện t
 
 - MP3 trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-10.mp3>
 - Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-4-unit-1-lesson-2-trang-12-13-global-success-a134621.html>
-- Vị trí phần ghi câu: Đoạn a · hội thoại đầu tiên
-- Yêu cầu: Nghe đoạn a ở đầu MP3; điền hai lượt lời của người bạn mới. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.
-- Hai lượt lời cần điền: It's my new friend. / She's from Japan.
-- Câu hỏi kiểm tra toàn bộ MP3 (theo thứ tự phát):
-  1. Ở hội thoại a, bạn nữ mới đến từ đâu? — **Nhật Bản**
-  2. Ở hội thoại b, bạn nam mới đến từ đâu? — **Singapore**
+- Câu hỏi theo thứ tự phát:
+  - **Tại đoạn này** (Đoạn a · hội thoại đầu tiên): Điền: It's my new friend. / She's from Japan.
+  - Ở hội thoại a, bạn nữ mới đến từ đâu? — **Nhật Bản**
+  - Ở hội thoại b, bạn nam mới đến từ đâu? — **Singapore**
 
 ### F4-02 — Giờ ăn sáng
 
 - MP3 trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-56.mp3>
 - Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-4-review-1-trang-40-41-global-success-a136098.html>
-- Vị trí phần ghi câu: Hội thoại số 5
-- Yêu cầu: Nghe hội thoại số 5 trong MP3; điền câu hỏi về giờ ăn sáng và câu trả lời. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.
-- Hai lượt lời cần điền: What time do you have breakfast? / At six forty-five.
-- Câu hỏi kiểm tra toàn bộ MP3 (theo thứ tự phát):
-  1. Ở hội thoại 1, người nói đến từ đâu? — **Nhật Bản**
-  2. Ở hội thoại 2, cậu ấy có thể làm gì? — **Trượt patin**
-  3. Ở hội thoại 3, sinh nhật vào tháng nào? — **Tháng tư**
-  4. Ở hội thoại 4, bạn nhỏ làm gì vào thứ Sáu? — **Nghe nhạc**
-  5. Ở hội thoại 5, giờ ăn sáng là mấy giờ? — **6:45**
+- Câu hỏi theo thứ tự phát:
+  - Ở hội thoại 1, người nói đến từ đâu? — **Nhật Bản**
+  - Ở hội thoại 2, cậu ấy có thể làm gì? — **Trượt patin**
+  - Ở hội thoại 3, sinh nhật vào tháng nào? — **Tháng tư**
+  - Ở hội thoại 4, bạn nhỏ làm gì vào thứ Sáu? — **Nghe nhạc**
+  - **Tại đoạn này** (Hội thoại số 5): Điền: What time do you have breakfast? / At six forty-five.
+  - Ở hội thoại 5, giờ ăn sáng là mấy giờ? — **6:45**
 
 ### F4-03 — Ăn và uống
 
 - MP3 trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-40.mp3>
 - Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-4-unit-4-lesson-2-trang-30-31-global-success-a135717.html>
-- Vị trí phần ghi câu: Đoạn b · hội thoại thứ hai
-- Yêu cầu: Nghe đoạn b ở đầu MP3; điền hai câu trả lời của Nam về đồ ăn và đồ uống. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.
-- Hai lượt lời cần điền: I want some jam. / I want some juice.
-- Câu hỏi kiểm tra toàn bộ MP3 (theo thứ tự phát):
-  1. Ở hội thoại a, ai được chúc mừng sinh nhật? — **Lucy**
-  2. Ở hội thoại a, bạn ấy đáp lại thế nào? — **Thank you**
-  3. Ở hội thoại b, Nam muốn ăn gì? — **Mứt**
-  4. Ở hội thoại b, Nam muốn uống gì? — **Nước ép**
+- Câu hỏi theo thứ tự phát:
+  - Ở hội thoại a, ai được chúc mừng sinh nhật? — **Lucy**
+  - Ở hội thoại a, bạn ấy đáp lại thế nào? — **Thank you**
+  - **Tại đoạn này** (Đoạn b · hội thoại thứ hai): Điền: I want some jam. / I want some juice.
+  - Ở hội thoại b, Nam muốn ăn gì? — **Mứt**
+  - Ở hội thoại b, Nam muốn uống gì? — **Nước ép**
 
 ### F4-04 — Môn học yêu thích
 
 - MP3 trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-107.mp3>
 - Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-4-review-2-trang-74-75-global-success-a138084.html>
-- Vị trí phần ghi câu: Hội thoại số 3
-- Yêu cầu: Nghe hội thoại số 3 trong MP3; điền câu hỏi về môn học và câu giải thích. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.
-- Hai lượt lời cần điền: What's your favourite subject? / It's English because I want to be an English teacher.
-- Câu hỏi kiểm tra toàn bộ MP3 (theo thứ tự phát):
-  1. Ở hội thoại 1, trường học nằm ở đâu? — **Vùng núi**
-  2. Ở hội thoại 2, bạn nhỏ học âm nhạc vào thứ mấy? — **Thứ năm**
-  3. Ở hội thoại 3, môn học yêu thích là gì? — **Tiếng Anh**
-  4. Ở hội thoại 4, ngày hội thể thao thực sự vào tháng mấy? — **Tháng năm**
-  5. Ở hội thoại 5, người nói có ở trại cuối tuần trước không? — **Có**
+- Câu hỏi theo thứ tự phát:
+  - Ở hội thoại 1, trường học nằm ở đâu? — **Vùng núi**
+  - Ở hội thoại 2, bạn nhỏ học âm nhạc vào thứ mấy? — **Thứ năm**
+  - **Tại đoạn này** (Hội thoại số 3): Điền: What's your favourite subject? / It's English because I want to be an English teacher.
+  - Ở hội thoại 3, môn học yêu thích là gì? — **Tiếng Anh**
+  - Ở hội thoại 4, ngày hội thể thao thực sự vào tháng mấy? — **Tháng năm**
+  - Ở hội thoại 5, người nói có ở trại cuối tuần trước không? — **Có**
 
 ### F4-05 — Trượt patin
 
 - MP3 trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-56.mp3>
 - Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-4-review-1-trang-40-41-global-success-a136098.html>
-- Vị trí phần ghi câu: Hội thoại số 2
-- Yêu cầu: Nghe hội thoại số 2 trong MP3; điền câu hỏi về khả năng trượt patin và lời đáp. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.
-- Hai lượt lời cần điền: Can he roller skate? / Yes, he can.
-- Câu hỏi kiểm tra toàn bộ MP3 (theo thứ tự phát):
-  1. Ở hội thoại 1, người nói đến từ đâu? — **Nhật Bản**
-  2. Ở hội thoại 2, cậu ấy có thể làm gì? — **Trượt patin**
-  3. Ở hội thoại 3, sinh nhật vào tháng nào? — **Tháng tư**
-  4. Ở hội thoại 4, bạn nhỏ làm gì vào thứ Sáu? — **Nghe nhạc**
-  5. Ở hội thoại 5, giờ ăn sáng là mấy giờ? — **6:45**
+- Câu hỏi theo thứ tự phát:
+  - Ở hội thoại 1, người nói đến từ đâu? — **Nhật Bản**
+  - **Tại đoạn này** (Hội thoại số 2): Điền: Can he roller skate? / Yes, he can.
+  - Ở hội thoại 2, cậu ấy có thể làm gì? — **Trượt patin**
+  - Ở hội thoại 3, sinh nhật vào tháng nào? — **Tháng tư**
+  - Ở hội thoại 4, bạn nhỏ làm gì vào thứ Sáu? — **Nghe nhạc**
+  - Ở hội thoại 5, giờ ăn sáng là mấy giờ? — **6:45**
 
 ### F4-06 — Thời tiết hôm qua
 
 - MP3 trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0808/track-102.mp3>
 - Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-4-review-4-trang-70-global-success-a139728.html>
-- Vị trí phần ghi câu: Hội thoại số 1
-- Yêu cầu: Nghe hội thoại số 1 trong MP3; điền câu hỏi về thời tiết hôm qua và lời đáp. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.
-- Hai lượt lời cần điền: What was the weather like yesterday? / It was sunny.
-- Câu hỏi kiểm tra toàn bộ MP3 (theo thứ tự phát):
-  1. Ở hội thoại 1, thời tiết hôm qua ra sao? — **Nắng**
-  2. Ở hội thoại 2, biển báo yêu cầu làm gì? — **Rẽ phải**
-  3. Ở hội thoại 3, quyển vở giá bao nhiêu? — **15.000 đồng**
-  4. Ở hội thoại 4, các con vật là gì? — **Hà mã**
-  5. Ở hội thoại 5, họ đang làm gì? — **Dựng lều**
+- Câu hỏi theo thứ tự phát:
+  - **Tại đoạn này** (Hội thoại số 1): Điền: What was the weather like yesterday? / It was sunny.
+  - Ở hội thoại 1, thời tiết hôm qua ra sao? — **Nắng**
+  - Ở hội thoại 2, biển báo yêu cầu làm gì? — **Rẽ phải**
+  - Ở hội thoại 3, quyển vở giá bao nhiêu? — **15.000 đồng**
+  - Ở hội thoại 4, các con vật là gì? — **Hà mã**
+  - Ở hội thoại 5, họ đang làm gì? — **Dựng lều**
 
 ### F4-07 — Giá quyển vở
 
 - MP3 trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0808/track-102.mp3>
 - Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-4-review-4-trang-70-global-success-a139728.html>
-- Vị trí phần ghi câu: Hội thoại số 3
-- Yêu cầu: Nghe hội thoại số 3 trong MP3; điền câu hỏi về giá quyển vở và lời đáp. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.
-- Hai lượt lời cần điền: How much is the notebook? / It's 15,000 dong.
-- Câu hỏi kiểm tra toàn bộ MP3 (theo thứ tự phát):
-  1. Ở hội thoại 1, thời tiết hôm qua ra sao? — **Nắng**
-  2. Ở hội thoại 2, biển báo yêu cầu làm gì? — **Rẽ phải**
-  3. Ở hội thoại 3, quyển vở giá bao nhiêu? — **15.000 đồng**
-  4. Ở hội thoại 4, các con vật là gì? — **Hà mã**
-  5. Ở hội thoại 5, họ đang làm gì? — **Dựng lều**
+- Câu hỏi theo thứ tự phát:
+  - Ở hội thoại 1, thời tiết hôm qua ra sao? — **Nắng**
+  - Ở hội thoại 2, biển báo yêu cầu làm gì? — **Rẽ phải**
+  - **Tại đoạn này** (Hội thoại số 3): Điền: How much is the notebook? / It's 15,000 dong.
+  - Ở hội thoại 3, quyển vở giá bao nhiêu? — **15.000 đồng**
+  - Ở hội thoại 4, các con vật là gì? — **Hà mã**
+  - Ở hội thoại 5, họ đang làm gì? — **Dựng lều**
 
 ### F4-08 — Dựng lều
 
 - MP3 trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0808/track-102.mp3>
 - Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-4-review-4-trang-70-global-success-a139728.html>
-- Vị trí phần ghi câu: Hội thoại số 5
-- Yêu cầu: Nghe hội thoại số 5 trong MP3; điền câu hỏi về hoạt động và lời đáp. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.
-- Hai lượt lời cần điền: What are they doing? / They're putting up a tent.
-- Câu hỏi kiểm tra toàn bộ MP3 (theo thứ tự phát):
-  1. Ở hội thoại 1, thời tiết hôm qua ra sao? — **Nắng**
-  2. Ở hội thoại 2, biển báo yêu cầu làm gì? — **Rẽ phải**
-  3. Ở hội thoại 3, quyển vở giá bao nhiêu? — **15.000 đồng**
-  4. Ở hội thoại 4, các con vật là gì? — **Hà mã**
-  5. Ở hội thoại 5, họ đang làm gì? — **Dựng lều**
+- Câu hỏi theo thứ tự phát:
+  - Ở hội thoại 1, thời tiết hôm qua ra sao? — **Nắng**
+  - Ở hội thoại 2, biển báo yêu cầu làm gì? — **Rẽ phải**
+  - Ở hội thoại 3, quyển vở giá bao nhiêu? — **15.000 đồng**
+  - Ở hội thoại 4, các con vật là gì? — **Hà mã**
+  - **Tại đoạn này** (Hội thoại số 5): Điền: What are they doing? / They're putting up a tent.
+  - Ở hội thoại 5, họ đang làm gì? — **Dựng lều**
 
 ### F4-09 — Trường trên núi
 
 - MP3 trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-107.mp3>
 - Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-4-review-2-trang-74-75-global-success-a138084.html>
-- Vị trí phần ghi câu: Hội thoại số 1
-- Yêu cầu: Nghe hội thoại số 1 trong MP3; điền câu hỏi về trường học và lời đáp. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.
-- Hai lượt lời cần điền: Where's your school? / It's in the mountains.
-- Câu hỏi kiểm tra toàn bộ MP3 (theo thứ tự phát):
-  1. Ở hội thoại 1, trường học nằm ở đâu? — **Vùng núi**
-  2. Ở hội thoại 2, bạn nhỏ học âm nhạc vào thứ mấy? — **Thứ năm**
-  3. Ở hội thoại 3, môn học yêu thích là gì? — **Tiếng Anh**
-  4. Ở hội thoại 4, ngày hội thể thao thực sự vào tháng mấy? — **Tháng năm**
-  5. Ở hội thoại 5, người nói có ở trại cuối tuần trước không? — **Có**
+- Câu hỏi theo thứ tự phát:
+  - **Tại đoạn này** (Hội thoại số 1): Điền: Where's your school? / It's in the mountains.
+  - Ở hội thoại 1, trường học nằm ở đâu? — **Vùng núi**
+  - Ở hội thoại 2, bạn nhỏ học âm nhạc vào thứ mấy? — **Thứ năm**
+  - Ở hội thoại 3, môn học yêu thích là gì? — **Tiếng Anh**
+  - Ở hội thoại 4, ngày hội thể thao thực sự vào tháng mấy? — **Tháng năm**
+  - Ở hội thoại 5, người nói có ở trại cuối tuần trước không? — **Có**
 
 ### F4-10 — Ngày thứ Sáu
 
 - MP3 trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-56.mp3>
 - Trang đối chiếu: <https://loigiaihay.com/tieng-anh-lop-4-review-1-trang-40-41-global-success-a136098.html>
-- Vị trí phần ghi câu: Hội thoại số 4
-- Yêu cầu: Nghe hội thoại số 4 trong MP3; điền câu hỏi về thứ Sáu và lời đáp. Sau đó trả lời câu hỏi theo thứ tự từ đầu đến cuối toàn bộ MP3.
-- Hai lượt lời cần điền: What do you do on Friday? / I listen to music.
-- Câu hỏi kiểm tra toàn bộ MP3 (theo thứ tự phát):
-  1. Ở hội thoại 1, người nói đến từ đâu? — **Nhật Bản**
-  2. Ở hội thoại 2, cậu ấy có thể làm gì? — **Trượt patin**
-  3. Ở hội thoại 3, sinh nhật vào tháng nào? — **Tháng tư**
-  4. Ở hội thoại 4, bạn nhỏ làm gì vào thứ Sáu? — **Nghe nhạc**
-  5. Ở hội thoại 5, giờ ăn sáng là mấy giờ? — **6:45**
+- Câu hỏi theo thứ tự phát:
+  - Ở hội thoại 1, người nói đến từ đâu? — **Nhật Bản**
+  - Ở hội thoại 2, cậu ấy có thể làm gì? — **Trượt patin**
+  - Ở hội thoại 3, sinh nhật vào tháng nào? — **Tháng tư**
+  - **Tại đoạn này** (Hội thoại số 4): Điền: What do you do on Friday? / I listen to music.
+  - Ở hội thoại 4, bạn nhỏ làm gì vào thứ Sáu? — **Nghe nhạc**
+  - Ở hội thoại 5, giờ ăn sáng là mấy giờ? — **6:45**
 
 ## Giai đoạn 5 — Hiểu hội thoại ngắn
 
@@ -781,81 +711,97 @@ Nghe trọn MP3 rồi trả lời câu hỏi trải đều từ đầu đến cu
 
 - MP3 trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-45.mp3>
 - Trang đối chiếu: <https://loigiaihay.com/giai-lesson-1-unit-5-tieng-anh-5-global-success-co-dap-an-a156859.html>
-- Vị trí phần ghi câu: Track track-45 · nghe hiểu nội dung
-- Yêu cầu: Nghe toàn bộ MP3 và trả lời theo đúng lời nói trong bài.
-- Đáp án theo thứ tự câu hỏi: 1. Bác sĩ; 2. Bác sĩ; 3. Cool!
+- Câu hỏi theo thứ tự phát:
+  - Người bố làm nghề gì? — **Bác sĩ**
+  - Người nghe nói gì sau khi biết nghề của người bố? — **Cool!**
+  - Bạn nhỏ cũng muốn làm nghề gì trong tương lai? — **Bác sĩ**
 
 ### F5-02 — Bốn nghề tương lai
 
 - MP3 trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-46.mp3>
 - Trang đối chiếu: <https://loigiaihay.com/giai-lesson-1-unit-5-tieng-anh-5-global-success-co-dap-an-a156859.html>
-- Vị trí phần ghi câu: Track track-46 · nghe hiểu nội dung
-- Yêu cầu: Nghe toàn bộ MP3 và trả lời theo đúng lời nói trong bài.
-- Đáp án theo thứ tự câu hỏi: 1. Lính cứu hỏa; 2. Phóng viên; 3. Nhà văn; 4. Người làm vườn
+- Câu hỏi theo thứ tự phát:
+  - Nghề đầu tiên được nhắc tới là gì? — **Lính cứu hỏa**
+  - Nghề nào được nhắc tới ngay sau lính cứu hỏa? — **Phóng viên**
+  - Nghề thứ ba được nhắc tới là gì? — **Người làm vườn**
+  - Nghề cuối cùng trong phần luyện đọc theo là gì? — **Nhà văn**
 
 ### F5-03 — Ai muốn làm nghề gì?
 
 - MP3 trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-47.mp3>
 - Trang đối chiếu: <https://loigiaihay.com/giai-lesson-1-unit-5-tieng-anh-5-global-success-co-dap-an-a156859.html>
-- Vị trí phần ghi câu: Track track-47 · nghe hiểu nội dung
-- Yêu cầu: Nghe toàn bộ MP3 và trả lời theo đúng lời nói trong bài.
-- Đáp án theo thứ tự câu hỏi: 1. Phóng viên; 2. Người làm vườn; 3. Nhà văn; 4. Lính cứu hỏa
+- Câu hỏi theo thứ tự phát:
+  - Ở đoạn hội thoại 1, bạn nhỏ muốn làm nghề gì? — **Phóng viên**
+  - Ở đoạn hội thoại 2, bạn nhỏ muốn làm nghề gì? — **Người làm vườn**
+  - Ở đoạn hội thoại 3, bạn nhỏ muốn làm nghề gì thay vì lính cứu hỏa? — **Nhà văn**
+  - Ở hội thoại 4, người được hỏi cũng muốn làm nghề gì? — **Lính cứu hỏa**
 
 ### F5-04 — Căn hộ của bạn
 
 - MP3 trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-15.mp3>
 - Trang đối chiếu: <https://loigiaihay.com/giai-lesson-1-unit-2-tieng-anh-5-global-success-co-dap-an-a156771.html>
-- Vị trí phần ghi câu: Track track-15 · nghe hiểu nội dung
-- Yêu cầu: Nghe toàn bộ MP3 và trả lời theo đúng lời nói trong bài.
-- Đáp án theo thứ tự câu hỏi: 1. Chào hỏi; 2. Có; 3. Căn hộ
+- Câu hỏi theo thứ tự phát:
+  - Đầu bài nghe, hai người gặp nhau và làm gì? — **Chào hỏi**
+  - Người được hỏi có sống trong tòa nhà này không? — **Có**
+  - Người đó sống trong loại nhà nào? — **Căn hộ**
 
 ### F5-05 — Ngôi nhà và tòa tháp
 
 - MP3 trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-16.mp3>
 - Trang đối chiếu: <https://loigiaihay.com/giai-lesson-1-unit-2-tieng-anh-5-global-success-co-dap-an-a156771.html>
-- Vị trí phần ghi câu: Track track-16 · nghe hiểu nội dung
-- Yêu cầu: Nghe toàn bộ MP3 và trả lời theo đúng lời nói trong bài.
-- Đáp án theo thứ tự câu hỏi: 1. Có; 2. Không; 3. Không; 4. Có
+- Câu hỏi theo thứ tự phát:
+  - Ở lượt hội thoại về ngôi nhà, người được hỏi trả lời thế nào? — **Có**
+  - Ở lượt hội thoại về căn hộ, người được hỏi trả lời thế nào? — **Không**
+  - Ở lượt hội thoại về tòa nhà, người được hỏi trả lời thế nào? — **Có**
+  - Ở lượt hội thoại về tòa tháp, người được hỏi trả lời thế nào? — **Không**
 
 ### F5-06 — Nơi ở của bốn bạn
 
 - MP3 trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-17.mp3>
 - Trang đối chiếu: <https://loigiaihay.com/giai-lesson-1-unit-2-tieng-anh-5-global-success-co-dap-an-a156771.html>
-- Vị trí phần ghi câu: Track track-17 · nghe hiểu nội dung
-- Yêu cầu: Nghe toàn bộ MP3 và trả lời theo đúng lời nói trong bài.
-- Đáp án theo thứ tự câu hỏi: 1. Trong một ngôi nhà khác; 2. King Tower; 3. Sunset Building; 4. Căn hộ kia
+- Câu hỏi theo thứ tự phát:
+  - Trong hội thoại số 1, người được hỏi thực sự sống ở đâu? — **Trong một ngôi nhà khác**
+  - Trong hội thoại 2, người được hỏi nói sống ở đâu? — **Căn hộ kia**
+  - Hội thoại số 3 nhắc tới tòa tháp nào? — **King Tower**
+  - Trong hội thoại số 4, người được hỏi sống ở đâu? — **Sunset Building**
 
 ### F5-07 — Người bạn từ Úc
 
 - MP3 trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-25.mp3>
 - Trang đối chiếu: <https://loigiaihay.com/giai-lesson-1-unit-3-tieng-anh-5-global-success-co-dap-an-a156783.html>
-- Vị trí phần ghi câu: Track track-25 · nghe hiểu nội dung
-- Yêu cầu: Nghe toàn bộ MP3 và trả lời theo đúng lời nói trong bài.
-- Đáp án theo thứ tự câu hỏi: 1. Australia; 2. Australian; 3. Mẹ
+- Câu hỏi theo thứ tự phát:
+  - Người nói kể chuyện bạn mới với ai? — **Mẹ**
+  - Bạn mới của người nói đến từ đâu? — **Australia**
+  - Bạn ấy mang quốc tịch gì? — **Australian**
 
 ### F5-08 — Quốc tịch của các bạn
 
 - MP3 trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-26.mp3>
 - Trang đối chiếu: <https://loigiaihay.com/giai-lesson-1-unit-3-tieng-anh-5-global-success-co-dap-an-a156783.html>
-- Vị trí phần ghi câu: Track track-26 · nghe hiểu nội dung
-- Yêu cầu: Nghe toàn bộ MP3 và trả lời theo đúng lời nói trong bài.
-- Đáp án theo thứ tự câu hỏi: 1. Australian; 2. Malaysian; 3. Japanese; 4. American
+- Câu hỏi theo thứ tự phát:
+  - Trong mẫu câu đầu, người con trai mang quốc tịch gì? — **Australian**
+  - Trong mẫu câu thứ hai, người con gái mang quốc tịch gì? — **Malaysian**
+  - Trong mẫu câu thứ ba, người con gái mang quốc tịch gì? — **American**
+  - Trong mẫu câu cuối, người con gái mang quốc tịch gì? — **Japanese**
 
 ### F5-09 — Sam và bạn mới
 
 - MP3 trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-27.mp3>
 - Trang đối chiếu: <https://loigiaihay.com/giai-lesson-1-unit-3-tieng-anh-5-global-success-co-dap-an-a156783.html>
-- Vị trí phần ghi câu: Track track-27 · nghe hiểu nội dung
-- Yêu cầu: Nghe toàn bộ MP3 và trả lời theo đúng lời nói trong bài.
-- Đáp án theo thứ tự câu hỏi: 1. Chơi bóng đá; 2. Japanese; 3. Australian
+- Câu hỏi theo thứ tự phát:
+  - Sam đang làm gì? — **Chơi bóng đá**
+  - Sam mang quốc tịch gì? — **Japanese**
+  - Người bạn nữ mới mang quốc tịch gì? — **Australian**
 
 ### F5-10 — Bài hát nghề nghiệp
 
 - MP3 trên web: <https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-48.mp3>
 - Trang đối chiếu: <https://loigiaihay.com/giai-lesson-1-unit-5-tieng-anh-5-global-success-co-dap-an-a156859.html>
-- Vị trí phần ghi câu: Track track-48 · nghe hiểu nội dung
-- Yêu cầu: Nghe toàn bộ bài hát và chọn đúng thứ tự những nghề được hát.
-- Đáp án theo thứ tự câu hỏi: 1. Lính cứu hỏa; 2. Giáo viên; 3. Tài xế; 4. Nhà văn
+- Câu hỏi theo thứ tự phát:
+  - Nghề đầu tiên trong bài hát là gì? — **Lính cứu hỏa**
+  - Sau lính cứu hỏa, bài hát nhắc đến nghề nào? — **Giáo viên**
+  - Nghề nào được hát ngay trước nghề tài xế? — **Nhà văn**
+  - Nghề được nhắc đến cuối bài hát là gì? — **Tài xế**
 
 # THCS
 
