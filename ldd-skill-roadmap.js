@@ -1347,10 +1347,14 @@
 
     function listeningSourceHtml(item) {
         if (!item.source || !item.source.url) return '';
+        const references = Array.isArray(item.referenceAudioUrls) ? item.referenceAudioUrls : [];
         return '<details class="ldd-listening-source-details"><summary>Nguồn mẫu cho giáo viên</summary>' +
             '<a href="' + escapeListening(item.source.url) + '" target="_blank" rel="noopener noreferrer">Mở Loigiaihay ↗</a>' +
             '<p>' + escapeListening(item.source.section || '') + '</p>' +
-            '<p><b>MP3 cần thu:</b> <code>' + escapeListening(item.audioUrl) + '</code></p>' +
+            (references.length ? '<p><b>MP3 mẫu lưu trên Backblaze B2:</b></p><ol>' +
+                references.map((url, index) => '<li><a href="' + escapeListening(url) + '" target="_blank" rel="noopener noreferrer">▶ Mở MP3 mẫu ' + (index + 1) + '</a></li>').join('') +
+                '</ol>' : '') +
+            '<p><b>MP3 cần thu theo script của bài:</b> <code>' + escapeListening(item.audioUrl) + '</code></p>' +
             '</details>';
     }
 
