@@ -664,9 +664,41 @@
 
 /* Local Reading / Writing labs */
 .ldd-stage-lab {
+    --skill-accent: #4f6ef7;
+    --skill-accent-2: #6244c5;
+    --skill-soft: rgba(79, 110, 247, .1);
     width: min(920px, 100%);
     margin: 0 auto 34px;
     color: var(--ldd-skill-ink);
+}
+
+/* Lab panels are siblings of their roadmaps and need explicit theme colors. */
+#ldd-listening-lab-panel {
+    --skill-accent: #174ea6;
+    --skill-accent-2: #174ea6;
+    --skill-soft: rgba(23, 78, 166, .1);
+}
+#ldd-reading-lab-panel {
+    --skill-accent: #087451;
+    --skill-accent-2: #087451;
+}
+#ldd-writing-stage2-panel {
+    --skill-accent: #6b21a8;
+    --skill-accent-2: #6b21a8;
+}
+#ldd-listening-lab-panel .ldd-roadmap-btn.is-primary {
+    border-color: #174ea6;
+    background: #174ea6;
+    color: #fff;
+}
+#ldd-listening-lab-panel .ldd-roadmap-btn.is-primary:hover,
+#ldd-listening-lab-panel .ldd-roadmap-btn.is-primary:focus-visible {
+    background: #123d83;
+    color: #fff;
+}
+#ldd-listening-lab-panel .ldd-roadmap-btn:focus-visible {
+    outline: 3px solid #f59e0b;
+    outline-offset: 2px;
 }
 
 .ldd-stage-lab-head {
