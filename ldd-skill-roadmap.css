@@ -1532,6 +1532,8 @@
     background: #f8faff;
 }
 .ldd-listening-audio-card audio { width: 100%; display: block; }
+.ldd-listening-audio-card audio[hidden],
+.ldd-listening-audio-card [data-listening-audio-missing][hidden] { display: none; }
 
 .ldd-listening-reference-player {
     display: grid;
