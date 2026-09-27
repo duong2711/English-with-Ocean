@@ -1831,3 +1831,6 @@
 .ldd-listening-exercise-player > p { margin: 0; color: #52647f; font-size: 12px; line-height: 1.5; }
 .ldd-listening-exercise-player > button { width: fit-content; max-width: 100%; }
 .ldd-listening-reference-player [data-listening-reference-error] { color: #a52a29; font-size: 12px; }
+
+.ldd-listening-exercise-player [data-listening-audio-status] { font-size: 12px; line-height: 1.5; }
+.ldd-listening-exercise-player [data-listening-audio] { min-height: 44px; }
