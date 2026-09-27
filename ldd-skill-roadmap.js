@@ -819,7 +819,7 @@
     }
 
     function showHub(skill) {
-        if (skill === 'listening') labs.listening?.querySelector('[data-listening-audio]')?.pause();
+        if (skill === 'listening') stopListeningPlayback(labs.listening);
         hideSkillPanels(skill);
         const hub = hubs[skill];
         if (!hub) return;
@@ -1347,6 +1347,16 @@
     }
 
     function listeningAudioHtml(item) {
+        if (item.type === 'spelling') {
+            return '<div class="ldd-listening-audio-card">' +
+                '<div class="ldd-listening-exercise-player">' +
+                    '<strong>🔊 Nghe đánh vần</strong>' +
+                    '<button type="button" class="ldd-roadmap-btn is-primary" data-listening-spell-play>▶ Nghe giọng Anh</button>' +
+                    '<button type="button" class="ldd-roadmap-btn" data-listening-spell-stop hidden>■ Dừng</button>' +
+                    '<small data-listening-spell-status role="status">Nhấn để nghe, có thể nghe lại.</small>' +
+                '</div>' +
+            '</div>';
+        }
         const files = Array.isArray(item.referenceAudioUrls) ? item.referenceAudioUrls : [];
         if (!files.length) {
             return '<div class="ldd-listening-audio-card"><strong>Bài nghe chưa có tệp âm thanh.</strong></div>';
@@ -1360,6 +1370,61 @@
                 '</small>' +
             '</div>' +
         '</div>';
+    }
+
+    function stopListeningPlayback(panel) {
+        if (!panel) return;
+        panel.querySelector('[data-listening-audio]')?.pause();
+        if (panel.querySelector('[data-listening-spell-play]')) window.speechSynthesis?.cancel();
+    }
+
+    function attachListeningSpellingSpeech(host, item) {
+        const play = host.querySelector('[data-listening-spell-play]');
+        const stop = host.querySelector('[data-listening-spell-stop]');
+        const status = host.querySelector('[data-listening-spell-status]');
+        if (!play || !stop || !status) return;
+        const synth = window.speechSynthesis;
+        if (!synth || typeof window.SpeechSynthesisUtterance !== 'function') {
+            play.disabled = true;
+            status.textContent = 'Thiết bị chưa hỗ trợ giọng đọc. Hãy dùng Chrome, Edge hoặc Safari.';
+            return;
+        }
+        const finish = function () {
+            play.disabled = false;
+            stop.hidden = true;
+        };
+        play.addEventListener('click', function () {
+            synth.cancel();
+            const utterance = new SpeechSynthesisUtterance(String(item.recordingScript || item.script || ''));
+            const voices = synth.getVoices();
+            const british = voices.filter(voice => /^en-GB$/i.test(voice.lang));
+            utterance.voice = british.find(voice => /daniel|oliver|arthur|ryan|george|male/i.test(voice.name)) ||
+                british[0] || voices.find(voice => /^en/i.test(voice.lang)) || null;
+            utterance.lang = utterance.voice?.lang || 'en-GB';
+            utterance.rate = 0.72;
+            utterance.onstart = function () {
+                play.disabled = true;
+                stop.hidden = false;
+                status.textContent = 'Đang đọc bài đánh vần…';
+            };
+            utterance.onend = function () {
+                finish();
+                status.textContent = 'Đã đọc xong. Có thể nghe lại.';
+            };
+            utterance.onerror = function (event) {
+                finish();
+                if (event.error !== 'canceled' && event.error !== 'interrupted') {
+                    status.textContent = 'Không phát được giọng đọc. Hãy kiểm tra âm lượng và thử lại.';
+                }
+            };
+            status.textContent = 'Đang chuẩn bị giọng đọc…';
+            synth.speak(utterance);
+        });
+        stop.addEventListener('click', function () {
+            synth.cancel();
+            finish();
+            status.textContent = 'Đã dừng. Có thể nghe lại.';
+        });
     }
 
     function attachListeningPlaylist(host, item) {
@@ -1587,7 +1652,7 @@
                 '<div class="ldd-lab-actions"><button type="button" class="ldd-roadmap-btn is-primary" data-listening-stage-submit>Nộp 10 bài và chấm điểm</button></div>' +
                 '<div class="ldd-lab-feedback" data-listening-stage-feedback hidden></div>';
 
-            panel.querySelector('[data-listening-back]').addEventListener('click', () => { panel.querySelector('[data-listening-audio]')?.pause(); showHub('listening'); });
+            panel.querySelector('[data-listening-back]').addEventListener('click', () => showHub('listening'));
             panel.querySelector('[data-listening-stage-submit]').addEventListener('click', submitStage);
             renderList();
             renderExercise(activeIndex);
@@ -1605,7 +1670,7 @@
             ).join('');
             list.querySelectorAll('[data-listening-index]').forEach(button => {
                 button.addEventListener('click', function () {
-                    panel.querySelector('[data-listening-audio]')?.pause();
+                    stopListeningPlayback(panel);
                     activeIndex = Number(this.dataset.listeningIndex);
                     renderList();
                     renderExercise(activeIndex);
@@ -1616,7 +1681,7 @@
         const renderExercise = function (index) {
             const item = exercises[index];
             const host = panel.querySelector('[data-listening-exercise]');
-            host.querySelector('[data-listening-audio]')?.pause();
+            stopListeningPlayback(panel);
             let taskHtml = '';
             if (item.type === 'spelling') taskHtml = renderSpellingTask(item);
             else if (item.type === 'qa_transcribe') taskHtml = renderQaTranscribe(item, false);
@@ -1633,7 +1698,8 @@
                 '<div class="ldd-lab-actions"><button type="button" class="ldd-roadmap-btn is-primary" data-listening-submit>Kiểm tra bài này</button></div>' +
                 '<div class="ldd-lab-feedback" data-listening-feedback hidden></div>';
 
-            attachListeningPlaylist(host, item);
+            if (item.type === 'spelling') attachListeningSpellingSpeech(host, item);
+            else attachListeningPlaylist(host, item);
 
             const orderBank = host.querySelector('[data-spell-order-bank]');
             const orderAnswer = host.querySelector('[data-spell-order-answer]');
