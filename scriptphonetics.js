@@ -6472,7 +6472,7 @@ function toggleCompletion(symbolElement) {
             async getWords(refresh = false) {
                 const userId = currentUserId;
                 if (!userId) return { userId: null, words: [] };
-                if (myVocabLoadedForUser === userId) {
+                if (!refresh && myVocabLoadedForUser === userId) {
                     return { userId, words: myVocabList.map(row => row.word) };
                 }
                 if (!refresh && listeningVocabCache?.userId === userId) {
