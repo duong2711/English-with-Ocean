@@ -1856,3 +1856,8 @@ Nghe nhiều người nói hoặc đoạn thông tin dài, tổng hợp ý, suy 
 ## Ngân hàng bài nghe và lượt làm mới (27/09/2026)
 
 Ở các giai đoạn 2–5 của lộ trình Mất gốc, mỗi mục trong ngân hàng gồm MP3 Loigiaihay, đúng bộ câu hỏi theo thứ tự nội dung âm thanh và khóa đáp án. Khi bắt đầu lượt mới, hệ thống xáo 10 mục trong cùng giai đoạn; MP3 ở mỗi vị trí đổi so với lượt trước. Các lựa chọn được trộn lại nhưng đáp án đúng vẫn được chấm theo vị trí mới. Ở giai đoạn 5 có thêm cách diễn đạt câu hỏi thứ hai cho cả 36 câu. Nút “Đổi câu hỏi · làm lại bài này” giữ MP3 hiện tại, chuyển biến thể câu hỏi và trộn đáp án; “Lượt mới · rút lại audio bank” rút lại cả MP3 và bộ câu hỏi cho 10 bài. Lượt làm dở được lưu trên thiết bị và không đổi khi tải lại trang.
+
+
+## Giai đoạn 1: giọng đọc từ kho từ vựng học viên
+
+Giai đoạn 1 dùng giọng đọc tiếng Anh có sẵn trên thiết bị, không phát MP3. Mười bài ở năm mức Dễ → Địa ngục được rút ngẫu nhiên từ các từ tiếng Anh đơn lẻ (2–16 chữ cái) trong `user_vocabulary` của học viên đang đăng nhập. Chỉ đọc dữ liệu của chủ tài khoản theo RLS; mỗi lần mở cần ít nhất 6 từ phù hợp. Bài đang làm được lưu trên thiết bị theo tài khoản; “Làm mới giai đoạn” tạo bộ từ mới, “Làm lại với từ khác” thay từ cho một bài. Với giai đoạn 2–5, nút làm mới cũng mang nhãn “Làm mới giai đoạn” và rút lại MP3 kèm bộ câu hỏi từ audio bank.
