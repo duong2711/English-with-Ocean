@@ -819,6 +819,7 @@
     }
 
     function showHub(skill) {
+        if (skill === 'listening') labs.listening?.querySelector('[data-listening-audio]')?.pause();
         hideSkillPanels(skill);
         const hub = hubs[skill];
         if (!hub) return;
@@ -1345,112 +1346,64 @@
             .replace(/'/g, '&#39;');
     }
 
-    function listeningSourceHtml(item) {
-        if (!item.source || !item.source.url) return '';
-        const references = Array.isArray(item.referenceAudioUrls) ? item.referenceAudioUrls : [];
-        return '<details class="ldd-listening-source-details"><summary>Nguồn mẫu cho giáo viên</summary>' +
-            '<a href="' + escapeListening(item.source.url) + '" target="_blank" rel="noopener noreferrer">Mở Loigiaihay ↗</a>' +
-            '<p>' + escapeListening(item.source.section || '') + '</p>' +
-            (references.length ? '<p><b>MP3 mẫu lưu trên Backblaze B2:</b></p><ol>' +
-                references.map((url, index) => '<li><a href="' + escapeListening(url) + '" target="_blank" rel="noopener noreferrer">▶ Mở MP3 mẫu ' + (index + 1) + '</a></li>').join('') +
-                '</ol>' : '') +
-            '<p>Phần chấm điểm phát kịch bản riêng bằng giọng đọc tự động.</p>' +
-            '</details>';
-    }
-
     function listeningAudioHtml(item) {
-        const references = Array.isArray(item.referenceAudioUrls) ? item.referenceAudioUrls : [];
-        const referenceHtml = references.length
-            ? '<div class="ldd-listening-reference-player">' +
-                '<strong>🎧 MP3 Loigiaihay trên Backblaze</strong>' +
-                '<p>Bài nghe tham khảo; nội dung khác kịch bản dùng để chấm điểm bên dưới.</p>' +
-                (references.length > 1
-                    ? '<label>Chọn file mẫu <select data-listening-reference-select>' +
-                        references.map((url, index) => '<option value="' + escapeListening(url) + '">MP3 mẫu ' + (index + 1) + ' / ' + references.length + '</option>').join('') +
-                        '</select></label>'
-                    : '') +
-                '<audio controls preload="metadata" data-listening-reference-audio src="' + escapeListening(references[0]) + '"></audio>' +
-                '<a data-listening-reference-link href="' + escapeListening(references[0]) + '" target="_blank" rel="noopener noreferrer">Mở trực tiếp file .mp3 ↗</a>' +
-                '<small data-listening-reference-error hidden>Không phát được MP3 trong trình duyệt. Hãy thử liên kết mở trực tiếp ở trên.</small>' +
-            '</div>' : '';
+        const files = Array.isArray(item.referenceAudioUrls) ? item.referenceAudioUrls : [];
+        if (!files.length) {
+            return '<div class="ldd-listening-audio-card"><strong>Bài nghe chưa có tệp âm thanh.</strong></div>';
+        }
         return '<div class="ldd-listening-audio-card">' +
             '<div class="ldd-listening-exercise-player">' +
-                '<strong>🔊 Nghe nội dung của bài để làm câu hỏi</strong>' +
-                '<p>Giọng đọc tự động bằng tiếng Anh, đúng với đáp án của bài này.</p>' +
-                '<button type="button" class="ldd-roadmap-btn is-primary" data-listening-speak>▶ Phát bài nghe</button>' +
-                '<button type="button" class="ldd-roadmap-btn" data-listening-stop hidden>■ Dừng</button>' +
-                '<small data-listening-speech-status role="status">Có thể nghe lại khi cần.</small>' +
-            '</div>' + referenceHtml +
+                '<strong>🎧 Bài nghe</strong>' +
+                '<button type="button" class="ldd-roadmap-btn is-primary" data-listening-play>▶ Phát bài nghe</button>' +
+                '<audio controls preload="metadata" data-listening-audio src="' + escapeListening(files[0]) + '"></audio>' +
+                '<small data-listening-audio-status role="status">' +
+                    (files.length > 1 ? files.length + ' đoạn ghi âm sẽ tự phát lần lượt.' : 'Nhấn phát để nghe.') +
+                '</small>' +
+            '</div>' +
         '</div>';
     }
 
-    function attachListeningReferenceAudio(host) {
-        const select = host.querySelector('[data-listening-reference-select]');
-        const audio = host.querySelector('[data-listening-reference-audio]');
-        const link = host.querySelector('[data-listening-reference-link]');
-        const error = host.querySelector('[data-listening-reference-error]');
-        if (!audio) return;
-        audio.addEventListener('error', function () {
-            if (error) error.hidden = false;
-        });
-        audio.addEventListener('canplay', function () {
-            if (error) error.hidden = true;
-        });
-        if (!select || !link) return;
-        select.addEventListener('change', function () {
-            audio.pause();
-            audio.src = select.value;
-            audio.load();
-            link.href = select.value;
-            if (error) error.hidden = true;
-        });
-    }
-
-    function attachListeningSpeech(host, item) {
-        const play = host.querySelector('[data-listening-speak]');
-        const stop = host.querySelector('[data-listening-stop]');
-        const status = host.querySelector('[data-listening-speech-status]');
-        if (!play || !status) return;
-        const synth = window.speechSynthesis;
-        if (!synth || typeof window.SpeechSynthesisUtterance !== 'function') {
-            play.disabled = true;
-            status.textContent = 'Thiết bị này chưa hỗ trợ giọng đọc tự động. Hãy mở bằng Chrome, Safari hoặc Edge.';
-            return;
-        }
-        const finish = function () {
-            play.disabled = false;
-            stop.hidden = true;
+    function attachListeningPlaylist(host, item) {
+        const files = Array.isArray(item.referenceAudioUrls) ? item.referenceAudioUrls : [];
+        const audio = host.querySelector('[data-listening-audio]');
+        const button = host.querySelector('[data-listening-play]');
+        const status = host.querySelector('[data-listening-audio-status]');
+        if (!audio || !button || !status || !files.length) return;
+        let index = 0;
+        const statusFor = () => 'Đang phát đoạn ' + (index + 1) + '/' + files.length + '.';
+        const playCurrent = function () {
+            status.textContent = statusFor();
+            const attempt = audio.play();
+            if (attempt && typeof attempt.catch === 'function') {
+                attempt.catch(function () {
+                    status.textContent = 'Trình duyệt đã chặn phát tiếp. Nhấn ▶ trên trình phát để nghe đoạn ' +
+                        (index + 1) + '/' + files.length + '.';
+                });
+            }
         };
-        play.addEventListener('click', function () {
-            synth.cancel();
-            const utterance = new SpeechSynthesisUtterance(String(item.recordingScript || item.script || ''));
-            utterance.lang = 'en-US';
-            utterance.rate = 0.82;
-            const voices = synth.getVoices();
-            utterance.voice = voices.find(voice => /^en-(US|GB)/i.test(voice.lang)) ||
-                voices.find(voice => /^en/i.test(voice.lang)) || null;
-            utterance.onstart = function () {
-                play.disabled = true;
-                stop.hidden = false;
-                status.textContent = 'Đang phát bài nghe…';
-            };
-            utterance.onend = function () {
-                finish();
-                status.textContent = 'Đã phát xong. Có thể nghe lại.';
-            };
-            utterance.onerror = function (event) {
-                finish();
-                if (event.error !== 'canceled' && event.error !== 'interrupted') {
-                    status.textContent = 'Không phát được giọng đọc. Hãy kiểm tra âm lượng và thử lại.';
-                }
-            };
-            status.textContent = 'Đang chuẩn bị giọng đọc…';
-            synth.speak(utterance);
+        button.addEventListener('click', function () {
+            audio.pause();
+            index = 0;
+            audio.src = files[index];
+            audio.load();
+            playCurrent();
         });
-        stop.addEventListener('click', function () {
-            synth.cancel();
-            finish();
-            status.textContent = 'Đã dừng. Có thể phát lại.';
+        audio.addEventListener('play', function () {
+            status.textContent = statusFor();
+        });
+        audio.addEventListener('ended', function () {
+            if (index + 1 >= files.length) {
+                status.textContent = 'Đã nghe hết ' + files.length + ' đoạn. Nhấn “Phát bài nghe” để nghe lại.';
+                return;
+            }
+            index++;
+            audio.src = files[index];
+            audio.load();
+            playCurrent();
+        });
+        audio.addEventListener('error', function () {
+            status.textContent = 'Không tải được đoạn ' + (index + 1) + '/' + files.length +
+                '. Hãy thử phát lại bài nghe.';
         });
     }
 
@@ -1640,7 +1593,7 @@
                 '<div class="ldd-lab-actions"><button type="button" class="ldd-roadmap-btn is-primary" data-listening-stage-submit>Nộp 10 bài và chấm điểm</button></div>' +
                 '<div class="ldd-lab-feedback" data-listening-stage-feedback hidden></div>';
 
-            panel.querySelector('[data-listening-back]').addEventListener('click', () => { window.speechSynthesis?.cancel(); showHub('listening'); });
+            panel.querySelector('[data-listening-back]').addEventListener('click', () => { panel.querySelector('[data-listening-audio]')?.pause(); showHub('listening'); });
             panel.querySelector('[data-listening-stage-submit]').addEventListener('click', submitStage);
             renderList();
             renderExercise(activeIndex);
@@ -1658,7 +1611,7 @@
             ).join('');
             list.querySelectorAll('[data-listening-index]').forEach(button => {
                 button.addEventListener('click', function () {
-                    window.speechSynthesis?.cancel();
+                    panel.querySelector('[data-listening-audio]')?.pause();
                     activeIndex = Number(this.dataset.listeningIndex);
                     renderList();
                     renderExercise(activeIndex);
@@ -1669,6 +1622,7 @@
         const renderExercise = function (index) {
             const item = exercises[index];
             const host = panel.querySelector('[data-listening-exercise]');
+            host.querySelector('[data-listening-audio]')?.pause();
             let taskHtml = '';
             if (item.type === 'spelling') taskHtml = renderSpellingTask(item);
             else if (item.type === 'qa_transcribe') taskHtml = renderQaTranscribe(item, false);
@@ -1683,11 +1637,9 @@
                 listeningAudioHtml(item, trackId, stageNumber) +
                 taskHtml +
                 '<div class="ldd-lab-actions"><button type="button" class="ldd-roadmap-btn is-primary" data-listening-submit>Kiểm tra bài này</button></div>' +
-                '<div class="ldd-lab-feedback" data-listening-feedback hidden></div>' +
-                listeningSourceHtml(item);
+                '<div class="ldd-lab-feedback" data-listening-feedback hidden></div>';
 
-            attachListeningSpeech(host, item);
-            attachListeningReferenceAudio(host);
+            attachListeningPlaylist(host, item);
 
             const orderBank = host.querySelector('[data-spell-order-bank]');
             const orderAnswer = host.querySelector('[data-spell-order-answer]');
