@@ -1354,7 +1354,7 @@
         if (isEasySpelling(item)) {
             return '<div class="ldd-listening-audio-card">' +
                 '<div class="ldd-listening-exercise-player">' +
-                    '<strong>🔊 ' + (item.mode === 'whole_word' ? 'Nghe nguyên từ' : 'Nghe đánh vần') + '</strong>' +
+                    '<strong>🔊 ' + (item.difficulty === 'Dễ' ? 'Nghe đánh vần' : 'Nghe nguyên từ') + '</strong>' +
                     '<button type="button" class="ldd-roadmap-btn is-primary" data-listening-spell-play>▶ Nghe giọng Anh</button>' +
                     '<button type="button" class="ldd-roadmap-btn" data-listening-spell-stop hidden>■ Dừng</button>' +
                     '<small data-listening-spell-status role="status">Nhấn để nghe, có thể nghe lại.</small>' +
@@ -1409,7 +1409,7 @@
             utterance.onstart = function () {
                 play.disabled = true;
                 stop.hidden = false;
-                status.textContent = item.mode === 'whole_word' ? 'Đang đọc từ…' : 'Đang đọc bài đánh vần…';
+                status.textContent = item.difficulty === 'Dễ' ? 'Đang đọc bài đánh vần…' : 'Đang đọc nguyên từ…';
             };
             utterance.onend = function () {
                 finish();
@@ -1744,7 +1744,7 @@
             'Khó': [5,12], 'Địa ngục': [6,16]};
         const range = lengths[item.difficulty] || [2,16];
         item.title = item.title.split('·')[0].trim() + ' · ' +
-            (item.mode === 'whole_word' ? 'Nghe nguyên từ' : 'Nghe đánh vần');
+            (item.difficulty === 'Dễ' ? 'Nghe đánh vần' : 'Nghe nguyên từ');
         item.referenceAudioUrls = [];
         item.audioUrl = '';
         if (item.mode === 'spell_single' || item.mode === 'whole_word') {
@@ -1753,14 +1753,14 @@
         } else if (item.mode === 'spell_tick') {
             item.heard = pick(3, ...range);
             item.options = shuffle(item.heard.concat(pick(3, 2, 16, item.heard)));
-            item.recordingScript = item.heard.map(spell).join(' ');
+            item.recordingScript = item.heard.join('. ') + '.';
         } else {
             const count = template.words.length;
             item.words = shuffle(pick(count, ...range));
             // The audio order should not be readable from the alphabetic word bank.
             if (item.words.join('|') === item.words.slice().sort().join('|')) item.words.reverse();
             if (item.mode === 'spell_numbered') item.bank = shuffle(item.words.slice());
-            item.recordingScript = item.words.map(spell).join(' ');
+            item.recordingScript = item.words.join('. ') + '.';
         }
         item.script = item.recordingScript;
         return item;
@@ -1816,7 +1816,7 @@
             }
         }
         const attemptKey = 'ldd_listening_attempt_' +
-            (useStudentVocab ? 'v3' : useAudioBank ? 'v6' : 'v2') +
+            (useStudentVocab ? 'v4' : useAudioBank ? 'v6' : 'v2') +
             '::' + trackId + '::' + stageNumber + (useStudentVocab ? '::' + vocabUserId : '');
         let stored = null;
         try { stored = JSON.parse(localStorage.getItem(attemptKey) || 'null'); }
