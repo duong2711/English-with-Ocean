@@ -1503,12 +1503,12 @@
 
     function renderQaTranscribe(item, withChoice) {
         return listeningFocusHtml(item) +
-            '<p class="ldd-listening-instruction">Nghe và gõ lại câu hỏi, câu trả lời trong đoạn được chỉ định. Không chấm dấu câu/viết hoa.</p>' +
+            '<p class="ldd-listening-instruction">' + escapeListening(item.taskPrompt || 'Nghe và ghi lại cặp hỏi–đáp được chỉ định.') + ' Không chấm dấu câu/viết hoa.</p>' +
             '<div class="ldd-listening-transcribe-grid">' +
                 '<label><span>Câu hỏi</span><input type="text" autocomplete="off" data-qa-question placeholder="What...?"></label>' +
                 '<label><span>Câu trả lời</span><input type="text" autocomplete="off" data-qa-answer placeholder="..."></label>' +
             '</div>' +
-            (withChoice ? '<div class="ldd-listening-followup"><h5>Chọn câu tiếp theo phù hợp nhất để cuộc hội thoại tiếp tục tự nhiên:</h5><div class="ldd-reading-answers">' +
+            (withChoice ? '<div class="ldd-listening-followup"><h5>' + escapeListening(item.choicePrompt || 'Câu trả lời trong MP3 có nghĩa là gì?') + '</h5><div class="ldd-reading-answers">' +
                 item.options.map((option,index) => '<button type="button" data-followup="' + index + '">' + escapeListening(option) + '</button>').join('') +
             '</div></div>' : '');
     }
@@ -1517,7 +1517,7 @@
         const blanks = new Set(item.blankIndices || []);
         let blankNo = 0;
         return listeningFocusHtml(item) +
-            '<p class="ldd-listening-instruction">Nghe hội thoại được chỉ định. Hai câu đã bị ẩn; hãy gõ lại đúng nội dung.</p>' +
+            '<p class="ldd-listening-instruction">' + escapeListening(item.taskPrompt || 'Nghe đoạn được chỉ định và điền hai câu bị ẩn.') + ' Không chấm dấu câu/viết hoa.</p>' +
             '<div class="ldd-listening-dialogue">' + item.dialogue.map((line,index) => {
                 if (!blanks.has(index)) return '<p>' + escapeListening(line) + '</p>';
                 const speaker = line.match(/^([AB]):/) ? line.match(/^([AB]):/)[1] : '';
@@ -1527,7 +1527,7 @@
     }
 
     function renderMcqSet(item) {
-        return '<p class="ldd-listening-instruction">Nghe toàn bộ bài rồi trả lời các câu hỏi.</p>' +
+        return '<p class="ldd-listening-instruction">' + escapeListening(item.taskPrompt || 'Nghe toàn bộ bài rồi trả lời các câu hỏi.') + '</p>' +
             '<div class="ldd-listening-mcq-set">' + item.questions.map((question,qIndex) =>
                 '<section class="ldd-listening-mcq-question"><h5>Câu ' + (qIndex + 1) + '. ' + escapeListening(question.text) + '</h5><div class="ldd-reading-answers">' +
                     question.options.map((option,aIndex) => '<button type="button" data-listening-q="' + qIndex + '" data-listening-a="' + aIndex + '">' + escapeListening(option) + '</button>').join('') +
@@ -1629,7 +1629,7 @@
         progress.current = stageNumber;
         saveState();
 
-        const attemptKey = 'ldd_listening_attempt_' + (trackId === 'foundation' && stageNumber >= 2 ? 'v3' : 'v2') + '::' + trackId + '::' + stageNumber;
+        const attemptKey = 'ldd_listening_attempt_' + (trackId === 'foundation' && stageNumber >= 2 ? 'v4' : 'v2') + '::' + trackId + '::' + stageNumber;
         let savedScores = [];
         try {
             const parsed = JSON.parse(localStorage.getItem(attemptKey) || '[]');
