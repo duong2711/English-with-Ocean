@@ -1834,3 +1834,5 @@
 
 .ldd-listening-exercise-player [data-listening-audio-status] { font-size: 12px; line-height: 1.5; }
 .ldd-listening-exercise-player [data-listening-audio] { min-height: 44px; }
+
+.ldd-listening-focus { margin: 10px 0; padding: 9px 12px; border-radius: 10px; background: #edf4ff; color: #254773; font-size: 13px; line-height: 1.5; }
