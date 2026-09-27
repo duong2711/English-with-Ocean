@@ -6465,6 +6465,28 @@ function toggleCompletion(symbolElement) {
         let myVocabList = [];             // từ vựng cá nhân đã tải từ Supabase (của học viên đang đăng nhập)
         let myVocabNormSet = new Set();   // tập hợp từ (đã chuẩn hóa) để tô sáng nhanh trong bài đọc
         let myVocabLoadedForUser = null;  // userId đã tải xong — tránh gọi Supabase lặp lại không cần thiết
+        // Listening stage 1 reads the signed-in student's own bank through the existing client.
+        // Keep only a per-user word cache in RAM; never expose the Supabase client or credentials.
+        let listeningVocabCache = null;
+        window.LDDListeningVocab = {
+            async getWords(refresh = false) {
+                const userId = currentUserId;
+                if (!userId) return { userId: null, words: [] };
+                if (myVocabLoadedForUser === userId) {
+                    return { userId, words: myVocabList.map(row => row.word) };
+                }
+                if (!refresh && listeningVocabCache?.userId === userId) {
+                    return { userId, words: listeningVocabCache.words.slice() };
+                }
+                const { data, error } = await sb.from('user_vocabulary')
+                    .select('word').eq('user_id', userId).limit(1000);
+                if (error) throw error;
+                const words = (data || []).map(row => row.word);
+                listeningVocabCache = { userId, words };
+                return { userId, words: words.slice() };
+            }
+        };
+
         let wordLookupSeq = 0;            // chống việc chạm từ khác trong lúc AI đang trả lời từ trước
 
         // [MỚI] BÀI KIỂM TRA TỪ VỰNG HÀNG TUẦN — theo dõi từ nào đã "đã học" (kiểm đúng liên
