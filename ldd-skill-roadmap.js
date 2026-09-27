@@ -1509,7 +1509,7 @@
                 '<label><span>Câu trả lời</span><input type="text" autocomplete="off" data-qa-answer placeholder="..."></label>' +
             '</div>' +
             (withChoice ? '<div class="ldd-listening-followup"><h5>' + escapeListening(item.choicePrompt || 'Câu trả lời trong MP3 có nghĩa là gì?') + '</h5><div class="ldd-reading-answers">' +
-                item.options.map((option,index) => '<button type="button" data-followup="' + index + '">' + escapeListening(option) + '</button>').join('') +
+                item.options.map((option,index) => '<button type="button" data-followup="' + index + '" aria-pressed="false">' + escapeListening(option) + '</button>').join('') +
             '</div></div>' : '');
     }
 
@@ -1530,21 +1530,26 @@
         return '<p class="ldd-listening-instruction">' + escapeListening(item.taskPrompt || 'Nghe toàn bộ bài rồi trả lời các câu hỏi.') + '</p>' +
             '<div class="ldd-listening-mcq-set">' + item.questions.map((question,qIndex) =>
                 '<section class="ldd-listening-mcq-question"><h5>Câu ' + (qIndex + 1) + '. ' + escapeListening(question.text) + '</h5><div class="ldd-reading-answers">' +
-                    question.options.map((option,aIndex) => '<button type="button" data-listening-q="' + qIndex + '" data-listening-a="' + aIndex + '">' + escapeListening(option) + '</button>').join('') +
+                    question.options.map((option,aIndex) => '<button type="button" data-listening-q="' + qIndex + '" data-listening-a="' + aIndex + '" aria-pressed="false">' + escapeListening(option) + '</button>').join('') +
                 '</div></section>'
             ).join('') + '</div>';
     }
 
-    function renderListeningCoverage(item) {
+    function renderListeningTimeline(item, taskHtml) {
         const questions = item.coverageQuestions || [];
-        if (!questions.length) return '';
-        return '<div class="ldd-listening-full-coverage"><h5>Kiểm tra toàn bộ MP3 · ' + questions.length + ' câu</h5>' +
-            '<p>Nghe theo thứ tự từ đầu đến cuối file rồi trả lời đủ tất cả các câu.</p>' +
-            '<div class="ldd-listening-mcq-set">' + questions.map((question,qIndex) =>
-                '<section class="ldd-listening-mcq-question"><h5>Câu ' + (qIndex + 1) + '. ' + escapeListening(question.text) + '</h5><div class="ldd-reading-answers">' +
-                    question.options.map((option,aIndex) => '<button type="button" data-listening-q="' + qIndex + '" data-listening-a="' + aIndex + '">' + escapeListening(option) + '</button>').join('') +
-                '</div></section>'
-            ).join('') + '</div></div>';
+        if (!questions.length) return taskHtml;
+        const primary = '<section class="ldd-listening-timeline-primary"><span class="ldd-listening-timeline-label">Ghi câu ở đoạn này</span>' + taskHtml + '</section>';
+        let sections = '';
+        questions.forEach((question,qIndex) => {
+            if (qIndex === item.timelineIndex) sections += primary;
+            sections += '<section class="ldd-listening-mcq-question"><h5>Câu ' + (qIndex + 1) + '. ' + escapeListening(question.text) + '</h5><div class="ldd-reading-answers">' +
+                question.options.map((option,aIndex) => '<button type="button" data-listening-q="' + qIndex + '" data-listening-a="' + aIndex + '" aria-pressed="false">' + escapeListening(option) + '</button>').join('') +
+                '</div></section>';
+        });
+        if (item.timelineIndex === questions.length) sections += primary;
+        return '<div class="ldd-listening-full-coverage"><h5>Câu hỏi theo thứ tự MP3</h5>' +
+            '<p>Nghe từ đầu đến cuối và trả lời lần lượt. Phần ghi câu xuất hiện đúng vị trí trong bài nghe.</p>' +
+            '<div class="ldd-listening-mcq-set">' + sections + '</div></div>';
     }
 
     function gradeListeningCoverage(item, host, primaryCorrect, primaryTotal) {
@@ -1647,6 +1652,73 @@
         return { score: 0, detail: 'Chưa hỗ trợ dạng bài này.' };
     }
 
+    function listeningResultHtml(item, host) {
+        const rows = [];
+        const row = (label, given, expected, correct) => '<li class="' + (correct ? 'is-correct' : 'is-wrong') + '">' +
+            '<strong>' + escapeListening(label) + ': ' + (correct ? 'Đúng' : 'Sai') + '.</strong> ' +
+            'Bạn trả lời: ' + escapeListening(given || '—') + '. Đáp án: ' + escapeListening(expected) + '.</li>';
+        const choiceRow = (label, options, selected, answer) => {
+            const correct = selected && Number(selected.dataset.listeningA ?? selected.dataset.followup) === Number(answer);
+            return row(label, selected ? selected.textContent.trim() : '', options[answer], !!correct);
+        };
+        const primary = [];
+        if (item.type === 'qa_transcribe' || item.type === 'qa_choice') {
+            const question = host.querySelector('[data-qa-question]').value;
+            const answer = host.querySelector('[data-qa-answer]').value;
+            primary.push(row('Câu hỏi nghe được', question, item.expectedQuestion,
+                normalizeListeningText(question) === normalizeListeningText(item.expectedQuestion)));
+            primary.push(row('Câu trả lời nghe được', answer, item.expectedAnswer,
+                normalizeListeningText(answer) === normalizeListeningText(item.expectedAnswer)));
+            if (item.type === 'qa_choice') {
+                primary.push(choiceRow('Ý nghĩa câu trả lời', item.options, host.querySelector('[data-followup].is-selected'), item.answer));
+            }
+        } else if (item.type === 'dialogue_gap') {
+            host.querySelectorAll('[data-dialogue-gap]').forEach((input,index) => {
+                const expected = item.expectedBlanks[index];
+                primary.push(row('Lượt lời ' + (index + 1), input.value, expected,
+                    normalizeListeningText(input.value) === normalizeListeningText(expected)));
+            });
+        } else if (item.type === 'spelling') {
+            if (item.mode === 'spell_order') {
+                const chosen = Array.from(host.querySelectorAll('[data-spell-order-answer] [data-chosen-word]')).map(node => node.dataset.chosenWord);
+                primary.push(row('Thứ tự từ', chosen.join(' → '), item.words.join(' → '),
+                    chosen.length === item.words.length && chosen.every((word,index) => normalizeListeningText(word) === normalizeListeningText(item.words[index]))));
+            } else if (item.mode === 'spell_numbered') {
+                host.querySelectorAll('[data-spell-number]').forEach((input,index) => {
+                    primary.push(row('Từ ' + (index + 1), input.value, item.words[index],
+                        normalizeListeningText(input.value) === normalizeListeningText(item.words[index])));
+                });
+            } else if (item.mode === 'spell_tick') {
+                const chosen = Array.from(host.querySelectorAll('[data-spell-tick]:checked')).map(input => input.dataset.spellTick).sort();
+                const expected = item.heard.slice().sort();
+                primary.push(row('Từ đã nghe', chosen.join(', '), expected.join(', '), chosen.join('|') === expected.join('|')));
+            } else {
+                const value = host.querySelector('[data-spell-single]').value;
+                primary.push(row('Từ đã nghe', value, item.expected, normalizeListeningText(value) === normalizeListeningText(item.expected)));
+            }
+        }
+        const questions = item.coverageQuestions || item.questions || [];
+        questions.forEach((question,index) => {
+            if (index === item.timelineIndex) rows.push(...primary);
+            const selected = host.querySelector('[data-listening-q="' + index + '"].is-selected');
+            rows.push(choiceRow(question.text, question.options, selected, question.answer));
+            host.querySelectorAll('[data-listening-q="' + index + '"]').forEach(button => {
+                button.classList.remove('is-correct', 'is-wrong');
+                if (Number(button.dataset.listeningA) === Number(question.answer)) button.classList.add('is-correct');
+                else if (button.classList.contains('is-selected')) button.classList.add('is-wrong');
+            });
+        });
+        if (!questions.length || item.timelineIndex === questions.length) rows.push(...primary);
+        if (item.type === 'qa_choice') {
+            host.querySelectorAll('[data-followup]').forEach(button => {
+                button.classList.remove('is-correct', 'is-wrong');
+                if (Number(button.dataset.followup) === Number(item.answer)) button.classList.add('is-correct');
+                else if (button.classList.contains('is-selected')) button.classList.add('is-wrong');
+            });
+        }
+        return '<div class="ldd-listening-result-detail"><h5>Kết quả từng câu</h5><ol>' + rows.join('') + '</ol></div>';
+    }
+
     function openListeningLab(trackId, stageNumber) {
         const panel = labs.listening;
         const track = LISTENING_CURRICULUM.tracks[trackId];
@@ -1691,25 +1763,28 @@
                 (trackId === 'foundation' && stageNumber === 1
                     ? '<div class="ldd-listening-difficulty-legend"><span class="is-easy">Dễ</span><span>Trung bình</span><span>Khá</span><span>Khó</span><span class="is-hell">💀 Địa ngục</span></div>'
                     : '') +
-                '<div class="ldd-listening-submit-guide"><span>Trả lời đủ câu hỏi rồi bấm <strong>Nộp bài này và xem điểm</strong>. Làm đủ 10 bài, bấm <strong>Nộp giai đoạn và chấm điểm</strong>.</span>' +
-                    '<button type="button" class="ldd-roadmap-btn is-primary" data-listening-stage-submit>Nộp giai đoạn và chấm điểm (<span data-listening-stage-count>0/10</span>)</button></div>' +
+                '<div class="ldd-listening-submit-guide"><span>Trả lời đủ các câu rồi bấm <strong>Nộp bài này và xem điểm</strong>. Điểm giai đoạn hiện tự động khi nộp đủ 10 bài.</span>' +
+                    '<strong data-listening-stage-count aria-live="polite">0/10 đã nộp</strong></div>' +
                 '<div class="ldd-listening-bank">' +
                     '<div class="ldd-listening-lesson-list" data-listening-list></div>' +
                     '<div class="ldd-listening-exercise" data-listening-exercise></div>' +
-                '</div>' +
-                '<div class="ldd-lab-actions"><button type="button" class="ldd-roadmap-btn is-primary" data-listening-stage-submit>Nộp giai đoạn và chấm điểm</button></div>' +
-                '<div class="ldd-lab-feedback" data-listening-stage-feedback hidden></div>';
+                '</div>';
 
             panel.querySelector('[data-listening-back]').addEventListener('click', () => showHub('listening'));
-            panel.querySelectorAll('[data-listening-stage-submit]').forEach(button => button.addEventListener('click', submitStage));
             renderList();
             renderExercise(activeIndex);
+            if (scores.every(value => value !== null)) completeStage();
         };
 
         const renderList = function () {
             const list = panel.querySelector('[data-listening-list]');
             const count = panel.querySelector('[data-listening-stage-count]');
-            if (count) count.textContent = scores.filter(value => value !== null).length + '/10';
+            if (count) {
+                const finished = scores.filter(value => value !== null);
+                count.textContent = finished.length === exercises.length
+                    ? 'Đã nộp 10/10 · ' + Math.round(finished.reduce((sum,value) => sum + value, 0) / finished.length) + '/100'
+                    : finished.length + '/10 đã nộp';
+            }
             list.innerHTML = exercises.map((item,index) =>
                 '<button type="button" class="ldd-listening-lesson' + (index === activeIndex ? ' is-active' : '') + (scores[index] !== null && scores[index] >= 80 ? ' is-done' : scores[index] !== null ? ' is-wrong' : '') + '" data-listening-index="' + index + '">' +
                     '<span class="ldd-listening-lesson-no">' + String(index + 1).padStart(2, '0') + '</span>' +
@@ -1744,8 +1819,7 @@
                     '<span class="ldd-listening-audience-badge is-large">' + escapeListening(stage.grade) + (item.difficulty ? ' · ' + escapeListening(item.difficulty) : '') + '</span></div>' +
                     '<span class="ldd-listening-progress-mini">' + scores.filter(value => value !== null).length + '/10 đã làm</span></div>' +
                 listeningAudioHtml(item, trackId, stageNumber) +
-                taskHtml +
-                renderListeningCoverage(item) +
+                renderListeningTimeline(item, taskHtml) +
                 '<div class="ldd-lab-actions"><button type="button" class="ldd-roadmap-btn is-primary" data-listening-submit>Nộp bài này và xem điểm</button></div>' +
                 '<div class="ldd-lab-feedback" data-listening-feedback hidden></div>';
 
@@ -1770,15 +1844,25 @@
 
             host.querySelectorAll('[data-followup]').forEach(button => {
                 button.addEventListener('click', function () {
-                    host.querySelectorAll('[data-followup]').forEach(node => node.classList.remove('is-selected'));
+                    host.querySelectorAll('[data-followup]').forEach(node => {
+                        node.classList.remove('is-selected', 'is-correct', 'is-wrong');
+                        node.setAttribute('aria-pressed', 'false');
+                    });
                     this.classList.add('is-selected');
+                    this.setAttribute('aria-pressed', 'true');
+                    host.querySelector('[data-listening-feedback]').hidden = true;
                 });
             });
             host.querySelectorAll('[data-listening-q]').forEach(button => {
                 button.addEventListener('click', function () {
                     const q = this.dataset.listeningQ;
-                    host.querySelectorAll('[data-listening-q="' + q + '"]').forEach(node => node.classList.remove('is-selected'));
+                    host.querySelectorAll('[data-listening-q="' + q + '"]').forEach(node => {
+                        node.classList.remove('is-selected', 'is-correct', 'is-wrong');
+                        node.setAttribute('aria-pressed', 'false');
+                    });
                     this.classList.add('is-selected');
+                    this.setAttribute('aria-pressed', 'true');
+                    host.querySelector('[data-listening-feedback]').hidden = true;
                 });
             });
 
@@ -1795,67 +1879,48 @@
                 const result = gradeListeningExercise(item, host);
                 scores[index] = result.score;
                 saveAttempt();
+                const details = listeningResultHtml(item, host);
+                const stageScore = completeStage();
+                const nextIndex = scores.findIndex((value,offset) =>
+                    value === null && offset > index);
+                const remainingIndex = nextIndex !== -1 ? nextIndex : scores.findIndex(value => value === null);
                 feedback.hidden = false;
                 feedback.className = 'ldd-lab-feedback ' + (result.score >= 80 ? 'is-success' : 'is-review');
                 feedback.innerHTML = '<span class="ldd-feedback-score">' + result.score + '/100</span><strong>' +
                     (result.score >= 80 ? 'Đạt bài này.' : 'Chưa đạt 80%.') + '</strong><p>' + escapeListening(result.detail) + '</p>' +
+                    details +
+                    (stageScore === null ? '' : '<div class="ldd-listening-stage-result"><strong>Điểm giai đoạn: ' +
+                        stageScore + '/100 · 10 bài</strong><p>' +
+                        (stageScore >= SCORE_TO_COMPLETE ? 'Đã đạt giai đoạn này.' :
+                            'Chưa đạt mốc 80%. Bạn có thể mở bài trong danh sách và nộp lại để cải thiện.') +
+                        '</p></div>') +
                     '<div class="ldd-lab-actions"><button type="button" class="ldd-roadmap-btn is-primary" data-listening-next>' +
-                    (index < exercises.length - 1 ? 'Bài tiếp theo →' : 'Nộp giai đoạn và chấm điểm →') + '</button></div>';
+                    (remainingIndex === -1 ? 'Về lộ trình →' : 'Bài tiếp theo →') + '</button></div>';
                 feedback.querySelector('[data-listening-next]').addEventListener('click', () => {
-                    if (index === exercises.length - 1) {
-                        submitStage();
+                    if (remainingIndex === -1) {
+                        showHub('listening');
                         return;
                     }
-                    activeIndex = index + 1;
+                    activeIndex = remainingIndex;
                     renderList();
                     renderExercise(activeIndex);
                     panel.querySelector('[data-listening-exercise]').scrollIntoView({ behavior: 'smooth', block: 'start' });
                 });
-                const stageFeedback = panel.querySelector('[data-listening-stage-feedback]');
-                if (stageFeedback) stageFeedback.hidden = true;
                 renderList();
                 feedback.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             });
         };
 
-        const submitStage = function () {
-            const missingIndex = scores.findIndex(value => value === null);
-            if (missingIndex !== -1) {
-                activeIndex = missingIndex;
-                renderList();
-                renderExercise(activeIndex);
-                const feedback = panel.querySelector('[data-listening-stage-feedback]');
-                feedback.hidden = false;
-                feedback.className = 'ldd-lab-feedback is-review';
-                feedback.textContent = 'Còn ' + scores.filter(value => value === null).length + ' bài chưa nộp. Hãy hoàn thành Bài ' + (missingIndex + 1) + ' trước.';
-                const exerciseFeedback = panel.querySelector('[data-listening-feedback]');
-                exerciseFeedback.hidden = false;
-                exerciseFeedback.className = 'ldd-lab-feedback is-review';
-                exerciseFeedback.textContent = feedback.textContent;
-                panel.querySelector('[data-listening-exercise]').scrollIntoView({ behavior: 'smooth', block: 'start' });
-                return;
-            }
+        const completeStage = function () {
+            if (scores.some(value => value === null)) return null;
             const score = Math.round(scores.reduce((sum,value) => sum + value, 0) / scores.length);
-            const feedback = panel.querySelector('[data-listening-stage-feedback]');
-            feedback.hidden = false;
-            feedback.className = 'ldd-lab-feedback ' + (score >= SCORE_TO_COMPLETE ? 'is-success' : 'is-review');
             if (score >= SCORE_TO_COMPLETE) {
                 if (!progress.completed.includes(stageNumber)) progress.completed.push(stageNumber);
                 progress.completed.sort((a,b) => a - b);
                 progress.current = Math.min(track.stages.length, stageNumber + 1);
                 saveState();
             }
-            feedback.innerHTML =
-                '<span class="ldd-feedback-score">' + score + '/100 · 10 bài</span>' +
-                '<strong>' + (score >= SCORE_TO_COMPLETE ? 'Đã đạt Giai đoạn ' + stageNumber + '.' : 'Chưa đạt mốc 80% của giai đoạn.') + '</strong>' +
-                '<div class="ldd-lab-actions"><button type="button" class="ldd-roadmap-btn" data-listening-retry>↻ Làm lại 10 bài</button>' +
-                '<button type="button" class="ldd-roadmap-btn is-primary" data-listening-route>Về lộ trình</button></div>';
-            feedback.querySelector('[data-listening-retry]').addEventListener('click', () => {
-                try { localStorage.removeItem(attemptKey); } catch (error) { /* Continue with a fresh attempt. */ }
-                openListeningLab(trackId, stageNumber);
-            });
-            feedback.querySelector('[data-listening-route]').addEventListener('click', () => showHub('listening'));
-            feedback.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return score;
         };
 
         renderShell();
