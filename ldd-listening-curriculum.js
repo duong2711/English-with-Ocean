@@ -7,7 +7,7 @@
 (function () {
   'use strict';
   window.LDD_LISTENING_CURRICULUM = {
-  "version": "2026-09-25",
+  "version": "2026-09-27-audio-aligned",
   "tracks": {
     "foundation": {
       "id": "foundation",
@@ -25,28 +25,28 @@
           "stage": 2,
           "grade": "Nền tảng lớp 2",
           "title": "Nhận diện câu hỏi & câu trả lời",
-          "description": "Nghe một cặp hỏi–đáp rồi gõ lại chính xác câu hỏi và câu trả lời.",
+          "description": "Nghe cặp hỏi–đáp được chỉ định trong MP3 rồi gõ lại chính xác hai câu.",
           "exerciseType": "qa_transcribe"
         },
         {
           "stage": 3,
           "grade": "Nền tảng lớp 3",
           "title": "Nghe hiểu câu hỏi & câu trả lời",
-          "description": "Gõ lại cặp hỏi–đáp, sau đó chọn câu tiếp theo phù hợp để hoàn thành hội thoại.",
+          "description": "Nghe một cặp hỏi–đáp trong MP3, gõ lại nội dung và chọn câu tiếp theo phù hợp.",
           "exerciseType": "qa_choice"
         },
         {
           "stage": 4,
           "grade": "Nền tảng lớp 4",
           "title": "Nhận diện hội thoại ngắn",
-          "description": "Nghe hội thoại dưới 30 giây và điền chính xác 2 câu bị khuyết.",
+          "description": "Nghe hội thoại được chỉ định trong MP3 và điền chính xác hai câu bị khuyết.",
           "exerciseType": "dialogue_gap"
         },
         {
           "stage": 5,
           "grade": "Nền tảng lớp 5",
           "title": "Hiểu hội thoại ngắn",
-          "description": "Nghe hội thoại ngắn rồi trả lời các câu hỏi trắc nghiệm về nội dung.",
+          "description": "Nghe MP3 ngắn và trả lời câu hỏi trắc nghiệm dựa trên đúng nội dung được phát.",
           "exerciseType": "mcq_set"
         }
       ]
@@ -94,7 +94,9 @@
       "stage": 1,
       "grade": 1,
       "audioUrl": "assets/audio/listening/foundation/stage-1/f1-01.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/cat-gb.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/cat-gb.mp3"
+      ],
       "type": "spelling",
       "difficulty": "Dễ",
       "mode": "spell_single",
@@ -113,7 +115,9 @@
       "stage": 1,
       "grade": 1,
       "audioUrl": "assets/audio/listening/foundation/stage-1/f1-02.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/book-gb.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/book-gb.mp3"
+      ],
       "type": "spelling",
       "difficulty": "Dễ",
       "mode": "spell_single",
@@ -132,7 +136,11 @@
       "stage": 1,
       "grade": 1,
       "audioUrl": "assets/audio/listening/foundation/stage-1/f1-03.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/cat-gb.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/book-gb.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/sun-gb.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/cat-gb.mp3",
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/book-gb.mp3",
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/sun-gb.mp3"
+      ],
       "type": "spelling",
       "difficulty": "Trung bình",
       "mode": "spell_order",
@@ -155,7 +163,12 @@
       "stage": 1,
       "grade": 1,
       "audioUrl": "assets/audio/listening/foundation/stage-1/f1-04.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/pen-gb.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/dog-gb.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/red-gb.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/milk-gb.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/pen-gb.mp3",
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/dog-gb.mp3",
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/red-gb.mp3",
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/milk-gb.mp3"
+      ],
       "type": "spelling",
       "difficulty": "Trung bình",
       "mode": "spell_order",
@@ -179,7 +192,11 @@
       "stage": 1,
       "grade": 1,
       "audioUrl": "assets/audio/listening/foundation/stage-1/f1-05.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/apple-gb.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/fish-gb.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/blue-gb.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/apple-gb.mp3",
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/fish-gb.mp3",
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/blue-gb.mp3"
+      ],
       "type": "spelling",
       "difficulty": "Khá",
       "mode": "spell_numbered",
@@ -207,7 +224,11 @@
       "stage": 1,
       "grade": 1,
       "audioUrl": "assets/audio/listening/foundation/stage-1/f1-06.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/table-gb.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/green-gb.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/water-gb.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/table-gb.mp3",
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/green-gb.mp3",
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/water-gb.mp3"
+      ],
       "type": "spelling",
       "difficulty": "Khá",
       "mode": "spell_numbered",
@@ -235,7 +256,11 @@
       "stage": 1,
       "grade": 1,
       "audioUrl": "assets/audio/listening/foundation/stage-1/f1-07.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/book-gb.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/cake-gb.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/fish-gb.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/book-gb.mp3",
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/cake-gb.mp3",
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/fish-gb.mp3"
+      ],
       "type": "spelling",
       "difficulty": "Khó",
       "mode": "spell_tick",
@@ -266,7 +291,11 @@
       "stage": 1,
       "grade": 1,
       "audioUrl": "assets/audio/listening/foundation/stage-1/f1-08.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/school-gb.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/chair-gb.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/juice-gb.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/school-gb.mp3",
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/chair-gb.mp3",
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/juice-gb.mp3"
+      ],
       "type": "spelling",
       "difficulty": "Khó",
       "mode": "spell_tick",
@@ -297,7 +326,9 @@
       "stage": 1,
       "grade": 1,
       "audioUrl": "assets/audio/listening/foundation/stage-1/f1-09.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/school-gb.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/school-gb.mp3"
+      ],
       "type": "spelling",
       "difficulty": "Địa ngục",
       "mode": "whole_word",
@@ -316,7 +347,9 @@
       "stage": 1,
       "grade": 1,
       "audioUrl": "assets/audio/listening/foundation/stage-1/f1-10.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/window-gb.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/audio/window-gb.mp3"
+      ],
       "type": "spelling",
       "difficulty": "Địa ngục",
       "mode": "whole_word",
@@ -335,16 +368,19 @@
       "stage": 2,
       "grade": 2,
       "audioUrl": "assets/audio/listening/foundation/stage-2/f2-01.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0419/de-2.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0419/de-2.mp3"
+      ],
       "type": "qa_transcribe",
-      "title": "Sinh nhật",
-      "recordingScript": "A: What number is it? B: It is thirteen.",
-      "expectedQuestion": "What number is it?",
-      "expectedAnswer": "It is thirteen.",
+      "title": "Món đồ mong muốn",
+      "recordingScript": "What do you want? I want some yo-yos.",
+      "expectedQuestion": "What do you want?",
+      "expectedAnswer": "I want some yo-yos.",
       "source": {
         "url": "https://loigiaihay.com/de-thi-hoc-ki-2-tieng-anh-2-global-success-de-so-2-a137158.html",
-        "section": "Listen and circle; Listen and tick."
-      }
+        "section": "Phần II · hội thoại 1"
+      },
+      "focus": "Phần II · hội thoại 1"
     },
     {
       "id": "f2-02",
@@ -352,16 +388,19 @@
       "stage": 2,
       "grade": 2,
       "audioUrl": "assets/audio/listening/foundation/stage-2/f2-02.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0419/de-2.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0419/de-2.mp3"
+      ],
       "type": "qa_transcribe",
-      "title": "Tuổi",
-      "recordingScript": "A: How old is your sister? B: She is eight.",
-      "expectedQuestion": "How old is your sister?",
-      "expectedAnswer": "She is eight.",
+      "title": "Con vật yêu thích",
+      "recordingScript": "Do you like the zebu? Yes, I do.",
+      "expectedQuestion": "Do you like the zebu?",
+      "expectedAnswer": "Yes, I do.",
       "source": {
         "url": "https://loigiaihay.com/de-thi-hoc-ki-2-tieng-anh-2-global-success-de-so-2-a137158.html",
-        "section": "Listen and circle; Listen and tick."
-      }
+        "section": "Phần II · hội thoại 2"
+      },
+      "focus": "Phần II · hội thoại 2"
     },
     {
       "id": "f2-03",
@@ -369,16 +408,19 @@
       "stage": 2,
       "grade": 2,
       "audioUrl": "assets/audio/listening/foundation/stage-2/f2-03.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0617/20201130-tienganh-2-kntt-track-026-1.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0617/20201130-tienganh-2-kntt-track-027.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-52.mp3"
+      ],
       "type": "qa_transcribe",
-      "title": "Đồ vật",
-      "recordingScript": "A: Where is my red ball? B: It is under the table.",
-      "expectedQuestion": "Where is my red ball?",
-      "expectedAnswer": "It is under the table.",
+      "title": "Người thân",
+      "recordingScript": "Who is this? It's my father.",
+      "expectedQuestion": "Who is this?",
+      "expectedAnswer": "It's my father.",
       "source": {
-        "url": "https://loigiaihay.com/tieng-anh-2-ket-noi-tri-thuc-voi-cuoc-song-c622.html",
-        "section": "Tiếng Anh 2 Global Success: Listen / Repeat / Tick / Circle theo các Unit."
-      }
+        "url": "https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html",
+        "section": "Đoạn 1 · cặp hỏi–đáp 1"
+      },
+      "focus": "Đoạn 1 · cặp hỏi–đáp 1"
     },
     {
       "id": "f2-04",
@@ -386,16 +428,19 @@
       "stage": 2,
       "grade": 2,
       "audioUrl": "assets/audio/listening/foundation/stage-2/f2-04.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0617/20201130-tienganh-2-kntt-track-031.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0617/20201130-tienganh-2-kntt-track-032.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-52.mp3"
+      ],
       "type": "qa_transcribe",
-      "title": "Con vật",
-      "recordingScript": "A: Is the goat on the farm? B: Yes, it is.",
-      "expectedQuestion": "Is the goat on the farm?",
-      "expectedAnswer": "Yes, it is.",
+      "title": "Nghề nghiệp",
+      "recordingScript": "What's her job? She's a doctor.",
+      "expectedQuestion": "What's her job?",
+      "expectedAnswer": "She's a doctor.",
       "source": {
-        "url": "https://loigiaihay.com/tieng-anh-2-ket-noi-tri-thuc-voi-cuoc-song-c622.html",
-        "section": "Tiếng Anh 2 Global Success: Listen / Repeat / Tick / Circle theo các Unit."
-      }
+        "url": "https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html",
+        "section": "Đoạn 1 · cặp hỏi–đáp 2"
+      },
+      "focus": "Đoạn 1 · cặp hỏi–đáp 2"
     },
     {
       "id": "f2-05",
@@ -403,16 +448,19 @@
       "stage": 2,
       "grade": 2,
       "audioUrl": "assets/audio/listening/foundation/stage-2/f2-05.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0617/20201130-tienganh-2-kntt-track-064-1_1.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0617/20201130-tienganh-2-kntt-track-065.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-52.mp3"
+      ],
       "type": "qa_transcribe",
-      "title": "Đồ ăn",
-      "recordingScript": "A: What do you want? B: I want some cake, please.",
-      "expectedQuestion": "What do you want?",
-      "expectedAnswer": "I want some cake, please.",
+      "title": "Phòng khách",
+      "recordingScript": "Where's the living room? It's there.",
+      "expectedQuestion": "Where's the living room?",
+      "expectedAnswer": "It's there.",
       "source": {
-        "url": "https://loigiaihay.com/tieng-anh-2-ket-noi-tri-thuc-voi-cuoc-song-c622.html",
-        "section": "Tiếng Anh 2 Global Success: Listen / Repeat / Tick / Circle theo các Unit."
-      }
+        "url": "https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html",
+        "section": "Đoạn 1 · cặp hỏi–đáp 3"
+      },
+      "focus": "Đoạn 1 · cặp hỏi–đáp 3"
     },
     {
       "id": "f2-06",
@@ -420,16 +468,19 @@
       "stage": 2,
       "grade": 2,
       "audioUrl": "assets/audio/listening/foundation/stage-2/f2-06.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0617/20201130-tienganh-2-kntt-track-026-1.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0617/20201130-tienganh-2-kntt-track-027.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-52.mp3"
+      ],
       "type": "qa_transcribe",
-      "title": "Lớp học",
-      "recordingScript": "A: Can I open the window? B: Yes, you can.",
-      "expectedQuestion": "Can I open the window?",
-      "expectedAnswer": "Yes, you can.",
+      "title": "Đồ uống",
+      "recordingScript": "What would you like to drink? I'd like some milk, please.",
+      "expectedQuestion": "What would you like to drink?",
+      "expectedAnswer": "I'd like some milk, please.",
       "source": {
-        "url": "https://loigiaihay.com/tieng-anh-2-ket-noi-tri-thuc-voi-cuoc-song-c622.html",
-        "section": "Tiếng Anh 2 Global Success: Listen / Repeat / Tick / Circle theo các Unit."
-      }
+        "url": "https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html",
+        "section": "Đoạn 1 · cặp hỏi–đáp 5"
+      },
+      "focus": "Đoạn 1 · cặp hỏi–đáp 5"
     },
     {
       "id": "f2-07",
@@ -437,16 +488,19 @@
       "stage": 2,
       "grade": 2,
       "audioUrl": "assets/audio/listening/foundation/stage-2/f2-07.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0617/20201130-tienganh-2-kntt-track-008_1.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0617/20201130-tienganh-2-kntt-track-009.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-53.mp3"
+      ],
       "type": "qa_transcribe",
-      "title": "Sở thích",
-      "recordingScript": "A: Do you like kites? B: Yes, I do. I have two kites.",
-      "expectedQuestion": "Do you like kites?",
-      "expectedAnswer": "Yes, I do. I have two kites.",
+      "title": "Tuổi của anh trai",
+      "recordingScript": "How old is your brother? He's fourteen years old.",
+      "expectedQuestion": "How old is your brother?",
+      "expectedAnswer": "He's fourteen years old.",
       "source": {
-        "url": "https://loigiaihay.com/tieng-anh-2-ket-noi-tri-thuc-voi-cuoc-song-c622.html",
-        "section": "Tiếng Anh 2 Global Success: Listen / Repeat / Tick / Circle theo các Unit."
-      }
+        "url": "https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html",
+        "section": "Đoạn 2 · cặp hỏi–đáp 1"
+      },
+      "focus": "Đoạn 2 · cặp hỏi–đáp 1"
     },
     {
       "id": "f2-08",
@@ -454,16 +508,19 @@
       "stage": 2,
       "grade": 2,
       "audioUrl": "assets/audio/listening/foundation/stage-2/f2-08.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0617/20201130-tienganh-2-kntt-track-018.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0617/20201130-tienganh-2-kntt-track-019_1.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-53.mp3"
+      ],
       "type": "qa_transcribe",
-      "title": "Thời tiết",
-      "recordingScript": "A: Is it sunny outside? B: No, it is cloudy today.",
-      "expectedQuestion": "Is it sunny outside?",
-      "expectedAnswer": "No, it is cloudy today.",
+      "title": "Công việc của anh ấy",
+      "recordingScript": "What's his job? He's a driver.",
+      "expectedQuestion": "What's his job?",
+      "expectedAnswer": "He's a driver.",
       "source": {
-        "url": "https://loigiaihay.com/tieng-anh-2-ket-noi-tri-thuc-voi-cuoc-song-c622.html",
-        "section": "Tiếng Anh 2 Global Success: Listen / Repeat / Tick / Circle theo các Unit."
-      }
+        "url": "https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html",
+        "section": "Đoạn 2 · cặp hỏi–đáp 2"
+      },
+      "focus": "Đoạn 2 · cặp hỏi–đáp 2"
     },
     {
       "id": "f2-09",
@@ -471,16 +528,19 @@
       "stage": 2,
       "grade": 2,
       "audioUrl": "assets/audio/listening/foundation/stage-2/f2-09.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0617/20201130-tienganh-2-kntt-track-077.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0617/20201130-tienganh-2-kntt-track-078.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-53.mp3"
+      ],
       "type": "qa_transcribe",
-      "title": "Gia đình",
-      "recordingScript": "A: Who is that woman? B: She is my mother.",
-      "expectedQuestion": "Who is that woman?",
-      "expectedAnswer": "She is my mother.",
+      "title": "Những chiếc đèn",
+      "recordingScript": "Where are the lamps? They're on the table.",
+      "expectedQuestion": "Where are the lamps?",
+      "expectedAnswer": "They're on the table.",
       "source": {
-        "url": "https://loigiaihay.com/tieng-anh-2-ket-noi-tri-thuc-voi-cuoc-song-c622.html",
-        "section": "Tiếng Anh 2 Global Success: Listen / Repeat / Tick / Circle theo các Unit."
-      }
+        "url": "https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html",
+        "section": "Đoạn 2 · cặp hỏi–đáp 3"
+      },
+      "focus": "Đoạn 2 · cặp hỏi–đáp 3"
     },
     {
       "id": "f2-10",
@@ -488,16 +548,19 @@
       "stage": 2,
       "grade": 2,
       "audioUrl": "assets/audio/listening/foundation/stage-2/f2-10.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0617/20201130-tienganh-2-kntt-track-003.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0617/20201130-tienganh-2-kntt-track-004.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-53.mp3"
+      ],
       "type": "qa_transcribe",
-      "title": "Lý do đơn giản",
-      "recordingScript": "A: Why are you happy? B: Because it is my birthday.",
-      "expectedQuestion": "Why are you happy?",
-      "expectedAnswer": "Because it is my birthday.",
+      "title": "Mời ăn",
+      "recordingScript": "Would you like some chicken? Yes, please.",
+      "expectedQuestion": "Would you like some chicken?",
+      "expectedAnswer": "Yes, please.",
       "source": {
-        "url": "https://loigiaihay.com/tieng-anh-2-ket-noi-tri-thuc-voi-cuoc-song-c622.html",
-        "section": "Tiếng Anh 2 Global Success: Listen / Repeat / Tick / Circle theo các Unit."
-      }
+        "url": "https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html",
+        "section": "Đoạn 2 · cặp hỏi–đáp 4"
+      },
+      "focus": "Đoạn 2 · cặp hỏi–đáp 4"
     },
     {
       "id": "f3-01",
@@ -505,22 +568,25 @@
       "stage": 3,
       "grade": 3,
       "audioUrl": "assets/audio/listening/foundation/stage-3/f3-01.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0523/track-5_1.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0523/track-6_2.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0523/track-9.mp3"
+      ],
       "type": "qa_choice",
-      "title": "Chào hỏi",
-      "recordingScript": "A: How are you today? B: I am fine, thank you.",
-      "expectedQuestion": "How are you today?",
-      "expectedAnswer": "I am fine, thank you.",
+      "title": "Hỏi thăm bạn",
+      "recordingScript": "Hi, Mai. How are you? Fine, thank you.",
+      "expectedQuestion": "Hi, Mai. How are you?",
+      "expectedAnswer": "Fine, thank you.",
       "options": [
-        "Goodbye!",
+        "How old is your sister?",
         "And you?",
-        "It is a pen."
+        "Where is the kitchen?"
       ],
       "answer": 1,
       "source": {
-        "url": "https://loigiaihay.com/unit-1-hello-e25423.html",
-        "section": "Lesson 1–3: Look, listen and repeat; Listen and circle/number."
-      }
+        "url": "https://loigiaihay.com/tieng-anh-lop-3-unit-1-lesson-2-trang-12-global-success-a106757.html",
+        "section": "Đoạn a · cặp hỏi–đáp đầu tiên"
+      },
+      "focus": "Đoạn a · cặp hỏi–đáp đầu tiên"
     },
     {
       "id": "f3-02",
@@ -528,22 +594,25 @@
       "stage": 3,
       "grade": 3,
       "audioUrl": "assets/audio/listening/foundation/stage-3/f3-02.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-52.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-53.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-52.mp3"
+      ],
       "type": "qa_choice",
-      "title": "Bạn bè",
-      "recordingScript": "A: Who is this? B: This is my friend, Lucy.",
+      "title": "Đây là ai?",
+      "recordingScript": "Who is this? It's my father.",
       "expectedQuestion": "Who is this?",
-      "expectedAnswer": "This is my friend, Lucy.",
+      "expectedAnswer": "It's my father.",
       "options": [
-        "Nice to meet you, Lucy.",
-        "I have three cats.",
-        "It is Monday."
+        "What's his job?",
+        "How much is it?",
+        "Is it raining?"
       ],
       "answer": 0,
       "source": {
         "url": "https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html",
-        "section": "Listen and tick; Listen and number."
-      }
+        "section": "Cặp hỏi–đáp 1"
+      },
+      "focus": "Cặp hỏi–đáp 1"
     },
     {
       "id": "f3-03",
@@ -551,22 +620,25 @@
       "stage": 3,
       "grade": 3,
       "audioUrl": "assets/audio/listening/foundation/stage-3/f3-03.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-52.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-53.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-52.mp3"
+      ],
       "type": "qa_choice",
-      "title": "Nghề nghiệp",
-      "recordingScript": "A: What is your father's job? B: He is a doctor.",
-      "expectedQuestion": "What is your father's job?",
-      "expectedAnswer": "He is a doctor.",
+      "title": "Công việc",
+      "recordingScript": "What's her job? She's a doctor.",
+      "expectedQuestion": "What's her job?",
+      "expectedAnswer": "She's a doctor.",
       "options": [
-        "Where is the doctor?",
-        "Does he work in a hospital?",
-        "How many doctors?"
+        "What time is it?",
+        "Where does she work?",
+        "Is the window open?"
       ],
       "answer": 1,
       "source": {
         "url": "https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html",
-        "section": "Listen and tick; Listen and number."
-      }
+        "section": "Cặp hỏi–đáp 2"
+      },
+      "focus": "Cặp hỏi–đáp 2"
     },
     {
       "id": "f3-04",
@@ -574,22 +646,25 @@
       "stage": 3,
       "grade": 3,
       "audioUrl": "assets/audio/listening/foundation/stage-3/f3-04.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0728/track-58.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0728/track-59.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0728/track-60.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0728/track-58.mp3"
+      ],
       "type": "qa_choice",
-      "title": "Thú cưng",
-      "recordingScript": "A: How many rabbits do you have? B: I have two rabbits.",
+      "title": "Những chú thỏ",
+      "recordingScript": "How many rabbits do you have? I have many.",
       "expectedQuestion": "How many rabbits do you have?",
-      "expectedAnswer": "I have two rabbits.",
+      "expectedAnswer": "I have many.",
       "options": [
-        "What colour are they?",
-        "I am ten years old.",
-        "Good morning."
+        "And how many goldfish?",
+        "What is your address?",
+        "Can he roller skate?"
       ],
       "answer": 0,
       "source": {
         "url": "https://loigiaihay.com/tieng-anh-lop-3-unit-16-lesson-2-trang-42-global-success-a108135.html",
-        "section": "Look, listen and repeat; Listen and number."
-      }
+        "section": "Đoạn a · câu hỏi về thỏ"
+      },
+      "focus": "Đoạn a · câu hỏi về thỏ"
     },
     {
       "id": "f3-05",
@@ -597,22 +672,25 @@
       "stage": 3,
       "grade": 3,
       "audioUrl": "assets/audio/listening/foundation/stage-3/f3-05.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0818/track-88.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0818/track-89.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0818/track-90.mp3"],
-      "type": "qa_choice",
-      "title": "Hoạt động",
-      "recordingScript": "A: What is Ben doing? B: He is skating in the park.",
-      "expectedQuestion": "What is Ben doing?",
-      "expectedAnswer": "He is skating in the park.",
-      "options": [
-        "Can he skate well?",
-        "Where is your book?",
-        "I like milk."
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0818/track-88.mp3"
       ],
-      "answer": 0,
+      "type": "qa_choice",
+      "title": "Trượt patin",
+      "recordingScript": "What's he doing? He's skating.",
+      "expectedQuestion": "What's he doing?",
+      "expectedAnswer": "He's skating.",
+      "options": [
+        "What is your favourite food?",
+        "Where is he skating?",
+        "Is it Monday today?"
+      ],
+      "answer": 1,
       "source": {
         "url": "https://loigiaihay.com/tieng-anh-lop-3-unit-19-lesson-2-trang-60-global-success-a108223.html",
-        "section": "Look, listen and repeat; Listen and number."
-      }
+        "section": "Đoạn b · câu hỏi về hoạt động"
+      },
+      "focus": "Đoạn b · câu hỏi về hoạt động"
     },
     {
       "id": "f3-06",
@@ -620,22 +698,25 @@
       "stage": 3,
       "grade": 3,
       "audioUrl": "assets/audio/listening/foundation/stage-3/f3-06.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-52.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-53.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-52.mp3"
+      ],
       "type": "qa_choice",
-      "title": "Đồ uống",
-      "recordingScript": "A: What would you like to drink? B: I would like some milk, please.",
+      "title": "Gọi đồ uống",
+      "recordingScript": "What would you like to drink? I'd like some milk, please.",
       "expectedQuestion": "What would you like to drink?",
-      "expectedAnswer": "I would like some milk, please.",
+      "expectedAnswer": "I'd like some milk, please.",
       "options": [
-        "Here you are.",
-        "She is my teacher.",
-        "It is seven."
+        "Would you like something to eat?",
+        "Where is the library?",
+        "How old is your brother?"
       ],
       "answer": 0,
       "source": {
         "url": "https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html",
-        "section": "Listen and tick; Listen and number."
-      }
+        "section": "Cặp hỏi–đáp 5"
+      },
+      "focus": "Cặp hỏi–đáp 5"
     },
     {
       "id": "f3-07",
@@ -643,22 +724,25 @@
       "stage": 3,
       "grade": 3,
       "audioUrl": "assets/audio/listening/foundation/stage-3/f3-07.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-52.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-53.mp3"],
-      "type": "qa_choice",
-      "title": "Vị trí",
-      "recordingScript": "A: Where is your brother? B: He is in the living room.",
-      "expectedQuestion": "Where is your brother?",
-      "expectedAnswer": "He is in the living room.",
-      "options": [
-        "What is he doing?",
-        "How old is the room?",
-        "Do you like blue?"
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-53.mp3"
       ],
-      "answer": 0,
+      "type": "qa_choice",
+      "title": "Những chiếc đèn",
+      "recordingScript": "Where are the lamps? They're on the table.",
+      "expectedQuestion": "Where are the lamps?",
+      "expectedAnswer": "They're on the table.",
+      "options": [
+        "Can you swim?",
+        "And where is the clock?",
+        "What would you like to eat?"
+      ],
+      "answer": 1,
       "source": {
         "url": "https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html",
-        "section": "Listen and tick; Listen and number."
-      }
+        "section": "Đoạn 2 · cặp hỏi–đáp 3"
+      },
+      "focus": "Đoạn 2 · cặp hỏi–đáp 3"
     },
     {
       "id": "f3-08",
@@ -666,22 +750,25 @@
       "stage": 3,
       "grade": 3,
       "audioUrl": "assets/audio/listening/foundation/stage-3/f3-08.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0818/track-88.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0818/track-89.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0818/track-90.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0818/track-89.mp3"
+      ],
       "type": "qa_choice",
-      "title": "Đồ chơi",
-      "recordingScript": "A: Do you have any planes? B: Yes, I have three planes.",
-      "expectedQuestion": "Do you have any planes?",
-      "expectedAnswer": "Yes, I have three planes.",
+      "title": "Đi xe đạp",
+      "recordingScript": "What's she doing? She's cycling.",
+      "expectedQuestion": "What's she doing?",
+      "expectedAnswer": "She's cycling.",
       "options": [
-        "What colour are they?",
-        "She has a doll.",
-        "This is my school."
+        "Is she wearing a helmet?",
+        "What's his job?",
+        "Where are the lamps?"
       ],
       "answer": 0,
       "source": {
         "url": "https://loigiaihay.com/tieng-anh-lop-3-unit-19-lesson-2-trang-60-global-success-a108223.html",
-        "section": "Look, listen and repeat; Listen and number."
-      }
+        "section": "Mục b · cặp hỏi–đáp về cô ấy"
+      },
+      "focus": "Mục b · cặp hỏi–đáp về cô ấy"
     },
     {
       "id": "f3-09",
@@ -689,22 +776,25 @@
       "stage": 3,
       "grade": 3,
       "audioUrl": "assets/audio/listening/foundation/stage-3/f3-09.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0523/track-9.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0523/track-10.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0523/track-11.mp3"],
-      "type": "qa_choice",
-      "title": "Khả năng",
-      "recordingScript": "A: Can your sister swim? B: Yes, she can swim very well.",
-      "expectedQuestion": "Can your sister swim?",
-      "expectedAnswer": "Yes, she can swim very well.",
-      "options": [
-        "Does she go swimming on Sunday?",
-        "It is a big fish.",
-        "Where is the desk?"
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0523/track-11.mp3"
       ],
-      "answer": 0,
+      "type": "qa_choice",
+      "title": "Chào Minh",
+      "recordingScript": "Hello, Minh. How are you? Fine, thank you.",
+      "expectedQuestion": "Hello, Minh. How are you?",
+      "expectedAnswer": "Fine, thank you.",
+      "options": [
+        "Goodbye, Minh.",
+        "And you?",
+        "What's your address?"
+      ],
+      "answer": 1,
       "source": {
-        "url": "https://loigiaihay.com/unit-1-hello-e25423.html",
-        "section": "Lesson 1–3: Look, listen and repeat; Listen and circle/number."
-      }
+        "url": "https://loigiaihay.com/tieng-anh-lop-3-unit-1-lesson-2-trang-12-global-success-a106757.html",
+        "section": "Hội thoại số 3"
+      },
+      "focus": "Hội thoại số 3"
     },
     {
       "id": "f3-10",
@@ -712,22 +802,25 @@
       "stage": 3,
       "grade": 3,
       "audioUrl": "assets/audio/listening/foundation/stage-3/f3-10.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-52.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-53.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0727/track-53.mp3"
+      ],
       "type": "qa_choice",
-      "title": "Thời gian",
-      "recordingScript": "A: What time do you go to school? B: I go to school at seven o'clock.",
-      "expectedQuestion": "What time do you go to school?",
-      "expectedAnswer": "I go to school at seven o'clock.",
+      "title": "Tuổi của anh trai",
+      "recordingScript": "How old is your brother? He's fourteen years old.",
+      "expectedQuestion": "How old is your brother?",
+      "expectedAnswer": "He's fourteen years old.",
       "options": [
-        "How do you go there?",
-        "It is my school bag.",
-        "I can sing."
+        "What does he like doing?",
+        "Is it sunny today?",
+        "Where are the shoes?"
       ],
       "answer": 0,
       "source": {
         "url": "https://loigiaihay.com/tieng-anh-lop-3-review-3-trang-36-global-success-a108132.html",
-        "section": "Listen and tick; Listen and number."
-      }
+        "section": "Đoạn 2 · cặp hỏi–đáp 1"
+      },
+      "focus": "Đoạn 2 · cặp hỏi–đáp 1"
     },
     {
       "id": "f4-01",
@@ -735,12 +828,14 @@
       "stage": 4,
       "grade": 4,
       "audioUrl": "assets/audio/listening/foundation/stage-4/f4-01.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-10.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-11.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-12.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-10.mp3"
+      ],
       "type": "dialogue_gap",
-      "title": "Bạn mới",
+      "title": "Bạn mới từ Nhật",
       "dialogue": [
         "A: Who's that?",
-        "B: It's my new friend, Hana.",
+        "B: It's my new friend.",
         "A: Where's she from?",
         "B: She's from Japan."
       ],
@@ -749,14 +844,15 @@
         3
       ],
       "expectedBlanks": [
-        "It's my new friend, Hana.",
+        "It's my new friend.",
         "She's from Japan."
       ],
-      "recordingScript": "A: Who's that? B: It's my new friend, Hana. A: Where's she from? B: She's from Japan.",
+      "recordingScript": "A: Who's that? B: It's my new friend. A: Where's she from? B: She's from Japan.",
       "source": {
         "url": "https://loigiaihay.com/tieng-anh-lop-4-unit-1-lesson-2-trang-12-13-global-success-a134621.html",
-        "section": "Look, listen and repeat; Listen and tick."
-      }
+        "section": "Đoạn a · hội thoại đầu tiên"
+      },
+      "focus": "Đoạn a · hội thoại đầu tiên"
     },
     {
       "id": "f4-02",
@@ -764,28 +860,29 @@
       "stage": 4,
       "grade": 4,
       "audioUrl": "assets/audio/listening/foundation/stage-4/f4-02.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-56.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-56.mp3"
+      ],
       "type": "dialogue_gap",
-      "title": "Bữa sáng",
+      "title": "Giờ ăn sáng",
       "dialogue": [
         "A: What time do you have breakfast?",
-        "B: I have breakfast at six forty-five.",
-        "A: What do you have after breakfast?",
-        "B: I go to school at seven fifteen."
+        "B: At six forty-five."
       ],
       "blankIndices": [
-        1,
-        3
+        0,
+        1
       ],
       "expectedBlanks": [
-        "I have breakfast at six forty-five.",
-        "I go to school at seven fifteen."
+        "What time do you have breakfast?",
+        "At six forty-five."
       ],
-      "recordingScript": "A: What time do you have breakfast? B: I have breakfast at six forty-five. A: What do you have after breakfast? B: I go to school at seven fifteen.",
+      "recordingScript": "A: What time do you have breakfast? B: At six forty-five.",
       "source": {
         "url": "https://loigiaihay.com/tieng-anh-lop-4-review-1-trang-40-41-global-success-a136098.html",
-        "section": "Listen and tick."
-      }
+        "section": "Hội thoại số 5"
+      },
+      "focus": "Hội thoại số 5"
     },
     {
       "id": "f4-03",
@@ -793,28 +890,31 @@
       "stage": 4,
       "grade": 4,
       "audioUrl": "assets/audio/listening/foundation/stage-4/f4-03.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-40.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-41.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-42.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-40.mp3"
+      ],
       "type": "dialogue_gap",
-      "title": "Sinh nhật",
+      "title": "Ăn và uống",
       "dialogue": [
-        "A: Happy birthday, Ben!",
-        "B: Thank you.",
+        "A: What do you want to eat, Nam?",
+        "B: I want some jam.",
         "A: What do you want to drink?",
-        "B: I want some lemonade, please."
+        "B: I want some juice."
       ],
       "blankIndices": [
-        0,
+        1,
         3
       ],
       "expectedBlanks": [
-        "Happy birthday, Ben!",
-        "I want some lemonade, please."
+        "I want some jam.",
+        "I want some juice."
       ],
-      "recordingScript": "A: Happy birthday, Ben! B: Thank you. A: What do you want to drink? B: I want some lemonade, please.",
+      "recordingScript": "A: What do you want to eat, Nam? B: I want some jam. A: What do you want to drink? B: I want some juice.",
       "source": {
         "url": "https://loigiaihay.com/tieng-anh-lop-4-unit-4-lesson-2-trang-30-31-global-success-a135717.html",
-        "section": "Look, listen and repeat; Listen and tick."
-      }
+        "section": "Đoạn b · hội thoại thứ hai"
+      },
+      "focus": "Đoạn b · hội thoại thứ hai"
     },
     {
       "id": "f4-04",
@@ -822,28 +922,29 @@
       "stage": 4,
       "grade": 4,
       "audioUrl": "assets/audio/listening/foundation/stage-4/f4-04.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-107.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-107.mp3"
+      ],
       "type": "dialogue_gap",
-      "title": "Môn học",
+      "title": "Môn học yêu thích",
       "dialogue": [
-        "A: When do you have music?",
-        "B: I have it on Thursdays.",
         "A: What's your favourite subject?",
-        "B: It's English."
+        "B: It's English because I want to be an English teacher."
       ],
       "blankIndices": [
-        1,
-        3
+        0,
+        1
       ],
       "expectedBlanks": [
-        "I have it on Thursdays.",
-        "It's English."
+        "What's your favourite subject?",
+        "It's English because I want to be an English teacher."
       ],
-      "recordingScript": "A: When do you have music? B: I have it on Thursdays. A: What's your favourite subject? B: It's English.",
+      "recordingScript": "A: What's your favourite subject? B: It's English because I want to be an English teacher.",
       "source": {
         "url": "https://loigiaihay.com/tieng-anh-lop-4-review-2-trang-74-75-global-success-a138084.html",
-        "section": "Listen and tick."
-      }
+        "section": "Hội thoại số 3"
+      },
+      "focus": "Hội thoại số 3"
     },
     {
       "id": "f4-05",
@@ -851,28 +952,29 @@
       "stage": 4,
       "grade": 4,
       "audioUrl": "assets/audio/listening/foundation/stage-4/f4-05.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-56.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-56.mp3"
+      ],
       "type": "dialogue_gap",
-      "title": "Khả năng",
+      "title": "Trượt patin",
       "dialogue": [
-        "A: Can your brother roller skate?",
-        "B: Yes, he can.",
-        "A: Can he ride a bike too?",
-        "B: No, he can't."
+        "A: Can he roller skate?",
+        "B: Yes, he can."
       ],
       "blankIndices": [
-        1,
-        3
+        0,
+        1
       ],
       "expectedBlanks": [
-        "Yes, he can.",
-        "No, he can't."
+        "Can he roller skate?",
+        "Yes, he can."
       ],
-      "recordingScript": "A: Can your brother roller skate? B: Yes, he can. A: Can he ride a bike too? B: No, he can't.",
+      "recordingScript": "A: Can he roller skate? B: Yes, he can.",
       "source": {
         "url": "https://loigiaihay.com/tieng-anh-lop-4-review-1-trang-40-41-global-success-a136098.html",
-        "section": "Listen and tick."
-      }
+        "section": "Hội thoại số 2"
+      },
+      "focus": "Hội thoại số 2"
     },
     {
       "id": "f4-06",
@@ -880,28 +982,29 @@
       "stage": 4,
       "grade": 4,
       "audioUrl": "assets/audio/listening/foundation/stage-4/f4-06.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0808/track-102.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0808/track-102.mp3"
+      ],
       "type": "dialogue_gap",
-      "title": "Thời tiết",
+      "title": "Thời tiết hôm qua",
       "dialogue": [
         "A: What was the weather like yesterday?",
-        "B: It was sunny and hot.",
-        "A: Did you go outside?",
-        "B: Yes, I played badminton."
+        "B: It was sunny."
       ],
       "blankIndices": [
-        1,
-        3
+        0,
+        1
       ],
       "expectedBlanks": [
-        "It was sunny and hot.",
-        "Yes, I played badminton."
+        "What was the weather like yesterday?",
+        "It was sunny."
       ],
-      "recordingScript": "A: What was the weather like yesterday? B: It was sunny and hot. A: Did you go outside? B: Yes, I played badminton.",
+      "recordingScript": "A: What was the weather like yesterday? B: It was sunny.",
       "source": {
         "url": "https://loigiaihay.com/tieng-anh-lop-4-review-4-trang-70-global-success-a139728.html",
-        "section": "Listen and tick."
-      }
+        "section": "Hội thoại số 1"
+      },
+      "focus": "Hội thoại số 1"
     },
     {
       "id": "f4-07",
@@ -909,28 +1012,29 @@
       "stage": 4,
       "grade": 4,
       "audioUrl": "assets/audio/listening/foundation/stage-4/f4-07.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0808/track-102.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0808/track-102.mp3"
+      ],
       "type": "dialogue_gap",
-      "title": "Mua sắm",
+      "title": "Giá quyển vở",
       "dialogue": [
         "A: How much is the notebook?",
-        "B: It's fifteen thousand dong.",
-        "A: Can I have two, please?",
-        "B: Yes. Here you are."
+        "B: It's 15,000 dong."
       ],
       "blankIndices": [
         0,
-        2
+        1
       ],
       "expectedBlanks": [
         "How much is the notebook?",
-        "Can I have two, please?"
+        "It's 15,000 dong."
       ],
-      "recordingScript": "A: How much is the notebook? B: It's fifteen thousand dong. A: Can I have two, please? B: Yes. Here you are.",
+      "recordingScript": "A: How much is the notebook? B: It's 15,000 dong.",
       "source": {
         "url": "https://loigiaihay.com/tieng-anh-lop-4-review-4-trang-70-global-success-a139728.html",
-        "section": "Listen and tick."
-      }
+        "section": "Hội thoại số 3"
+      },
+      "focus": "Hội thoại số 3"
     },
     {
       "id": "f4-08",
@@ -938,28 +1042,29 @@
       "stage": 4,
       "grade": 4,
       "audioUrl": "assets/audio/listening/foundation/stage-4/f4-08.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0808/track-102.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0808/track-102.mp3"
+      ],
       "type": "dialogue_gap",
-      "title": "Thể thao",
+      "title": "Dựng lều",
       "dialogue": [
         "A: What are they doing?",
-        "B: They're playing football.",
-        "A: Is today your sports day?",
-        "B: Yes, it is."
+        "B: They're putting up a tent."
       ],
       "blankIndices": [
-        1,
-        3
+        0,
+        1
       ],
       "expectedBlanks": [
-        "They're playing football.",
-        "Yes, it is."
+        "What are they doing?",
+        "They're putting up a tent."
       ],
-      "recordingScript": "A: What are they doing? B: They're playing football. A: Is today your sports day? B: Yes, it is.",
+      "recordingScript": "A: What are they doing? B: They're putting up a tent.",
       "source": {
         "url": "https://loigiaihay.com/tieng-anh-lop-4-review-4-trang-70-global-success-a139728.html",
-        "section": "Listen and tick."
-      }
+        "section": "Hội thoại số 5"
+      },
+      "focus": "Hội thoại số 5"
     },
     {
       "id": "f4-09",
@@ -967,28 +1072,29 @@
       "stage": 4,
       "grade": 4,
       "audioUrl": "assets/audio/listening/foundation/stage-4/f4-09.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-107.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-107.mp3"
+      ],
       "type": "dialogue_gap",
-      "title": "Trường học",
+      "title": "Trường trên núi",
       "dialogue": [
         "A: Where's your school?",
-        "B: It's in the mountains.",
-        "A: Is it big?",
-        "B: No, but it has a new library."
+        "B: It's in the mountains."
       ],
       "blankIndices": [
-        1,
-        3
+        0,
+        1
       ],
       "expectedBlanks": [
-        "It's in the mountains.",
-        "No, but it has a new library."
+        "Where's your school?",
+        "It's in the mountains."
       ],
-      "recordingScript": "A: Where's your school? B: It's in the mountains. A: Is it big? B: No, but it has a new library.",
+      "recordingScript": "A: Where's your school? B: It's in the mountains.",
       "source": {
         "url": "https://loigiaihay.com/tieng-anh-lop-4-review-2-trang-74-75-global-success-a138084.html",
-        "section": "Listen and tick."
-      }
+        "section": "Hội thoại số 1"
+      },
+      "focus": "Hội thoại số 1"
     },
     {
       "id": "f4-10",
@@ -996,28 +1102,29 @@
       "stage": 4,
       "grade": 4,
       "audioUrl": "assets/audio/listening/foundation/stage-4/f4-10.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-56.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0809/track-56.mp3"
+      ],
       "type": "dialogue_gap",
-      "title": "Cuối tuần",
+      "title": "Ngày thứ Sáu",
       "dialogue": [
-        "A: What do you do on Saturday morning?",
-        "B: I help my mother at home.",
-        "A: What do you do in the afternoon?",
-        "B: I play with my friends."
+        "A: What do you do on Friday?",
+        "B: I listen to music."
       ],
       "blankIndices": [
-        1,
-        3
+        0,
+        1
       ],
       "expectedBlanks": [
-        "I help my mother at home.",
-        "I play with my friends."
+        "What do you do on Friday?",
+        "I listen to music."
       ],
-      "recordingScript": "A: What do you do on Saturday morning? B: I help my mother at home. A: What do you do in the afternoon? B: I play with my friends.",
+      "recordingScript": "A: What do you do on Friday? B: I listen to music.",
       "source": {
         "url": "https://loigiaihay.com/tieng-anh-lop-4-review-1-trang-40-41-global-success-a136098.html",
-        "section": "Listen and tick."
-      }
+        "section": "Hội thoại số 4"
+      },
+      "focus": "Hội thoại số 4"
     },
     {
       "id": "f5-01",
@@ -1025,45 +1132,46 @@
       "stage": 5,
       "grade": 5,
       "audioUrl": "assets/audio/listening/foundation/stage-5/f5-01.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-45.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-46.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-47.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-48.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-45.mp3"
+      ],
       "type": "mcq_set",
-      "title": "Nghề nghiệp tương lai",
-      "recordingScript": "A: What would you like to be in the future? B: I'd like to be a firefighter because I want to help people. A: That's a brave job. B: Yes, and I know I need to be strong and healthy.",
+      "title": "Công việc của bố",
       "questions": [
         {
-          "text": "What job does the speaker want?",
+          "text": "What does the father do?",
           "options": [
             "Doctor",
-            "Firefighter",
-            "Teacher",
-            "Pilot"
-          ],
-          "answer": 1
-        },
-        {
-          "text": "Why?",
-          "options": [
-            "To travel",
-            "To help people",
-            "To teach children",
-            "To work at home"
-          ],
-          "answer": 1
-        },
-        {
-          "text": "What does the speaker need to be?",
-          "options": [
-            "Strong and healthy",
-            "Rich",
-            "Quiet",
-            "Famous"
+            "Reporter",
+            "Writer",
+            "Driver"
           ],
           "answer": 0
+        },
+        {
+          "text": "What job does the child also want in the future?",
+          "options": [
+            "Gardener",
+            "Doctor",
+            "Teacher",
+            "Firefighter"
+          ],
+          "answer": 1
+        },
+        {
+          "text": "What does the listener say when hearing the father's job?",
+          "options": [
+            "Sorry!",
+            "Goodbye!",
+            "Cool!",
+            "No, thanks."
+          ],
+          "answer": 2
         }
       ],
       "source": {
-        "url": "https://loigiaihay.com/unit-5-my-future-job-e35294.html",
-        "section": "Lesson 1–3: Look and listen; Listen and tick."
+        "url": "https://loigiaihay.com/giai-lesson-1-unit-5-tieng-anh-5-global-success-co-dap-an-a156859.html",
+        "section": "Track track-45 · nghe hiểu nội dung"
       }
     },
     {
@@ -1072,45 +1180,46 @@
       "stage": 5,
       "grade": 5,
       "audioUrl": "assets/audio/listening/foundation/stage-5/f5-02.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0811/track-1.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0811/track-2.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0811/track-3.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0811/track-4.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-46.mp3"
+      ],
       "type": "mcq_set",
-      "title": "Kỳ nghỉ hè",
-      "recordingScript": "A: Where are you going this summer? B: I'm going to Da Nang with my family. A: How will you get there? B: We'll go by train because my little brother loves trains.",
+      "title": "Bốn nghề tương lai",
       "questions": [
         {
-          "text": "Where are they going?",
+          "text": "What is the first future job mentioned?",
           "options": [
-            "Hue",
-            "Da Nang",
-            "Ha Noi",
-            "Da Lat"
+            "Reporter",
+            "Firefighter",
+            "Driver",
+            "Doctor"
           ],
           "answer": 1
         },
         {
-          "text": "Who is going?",
+          "text": "What is the second future job mentioned?",
           "options": [
-            "Only the speaker",
-            "The family",
-            "School friends",
-            "A teacher"
+            "Reporter",
+            "Teacher",
+            "Gardener",
+            "Writer"
           ],
-          "answer": 1
+          "answer": 0
         },
         {
-          "text": "Why travel by train?",
+          "text": "What is the last future job mentioned?",
           "options": [
-            "It is cheapest",
-            "The brother loves trains",
-            "There is no bus",
-            "It is fastest"
+            "Pilot",
+            "Writer",
+            "Dentist",
+            "Farmer"
           ],
           "answer": 1
         }
       ],
       "source": {
-        "url": "https://loigiaihay.com/giai-review-4-tieng-anh-5-global-success-co-dap-a162201.html",
-        "section": "Listen and tick."
+        "url": "https://loigiaihay.com/giai-lesson-1-unit-5-tieng-anh-5-global-success-co-dap-an-a156859.html",
+        "section": "Track track-46 · nghe hiểu nội dung"
       }
     },
     {
@@ -1119,45 +1228,46 @@
       "stage": 5,
       "grade": 5,
       "audioUrl": "assets/audio/listening/foundation/stage-5/f5-03.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0303/track-52.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0303/track-53.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0303/track-54.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0303/track-55.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-47.mp3"
+      ],
       "type": "mcq_set",
-      "title": "Thời tiết",
-      "recordingScript": "A: What's the weather like in Hai Duong in summer? B: It's usually sunny and hot. A: What do you do on very hot days? B: I stay inside in the afternoon and go cycling in the evening.",
+      "title": "Ai muốn làm nghề gì?",
       "questions": [
         {
-          "text": "What is summer like?",
+          "text": "What job is named in dialogue 1?",
           "options": [
-            "Cold",
-            "Sunny and hot",
-            "Rainy all day",
-            "Windy"
+            "Reporter",
+            "Writer",
+            "Gardener",
+            "Firefighter"
+          ],
+          "answer": 0
+        },
+        {
+          "text": "What job is named in dialogue 2?",
+          "options": [
+            "Teacher",
+            "Gardener",
+            "Doctor",
+            "Driver"
           ],
           "answer": 1
         },
         {
-          "text": "When does the speaker stay inside?",
+          "text": "In dialogue 3, which job does the speaker choose?",
           "options": [
-            "Morning",
-            "Afternoon",
-            "Evening",
-            "Night"
+            "Firefighter",
+            "Dentist",
+            "Writer",
+            "Reporter"
           ],
-          "answer": 1
-        },
-        {
-          "text": "What does the speaker do in the evening?",
-          "options": [
-            "Swims",
-            "Cycles",
-            "Reads",
-            "Cooks"
-          ],
-          "answer": 1
+          "answer": 2
         }
       ],
       "source": {
-        "url": "https://loigiaihay.com/giai-review-4-tieng-anh-5-global-success-co-dap-a162201.html",
-        "section": "Listen and tick."
+        "url": "https://loigiaihay.com/giai-lesson-1-unit-5-tieng-anh-5-global-success-co-dap-an-a156859.html",
+        "section": "Track track-47 · nghe hiểu nội dung"
       }
     },
     {
@@ -1166,45 +1276,46 @@
       "stage": 5,
       "grade": 5,
       "audioUrl": "assets/audio/listening/foundation/stage-5/f5-04.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0401/track-62.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0401/track-63.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0401/track-64.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-15.mp3"
+      ],
       "type": "mcq_set",
-      "title": "Câu chuyện",
-      "recordingScript": "A: What are you reading? B: A story about a fox and a crow. A: Which character do you like? B: The crow, but I think the fox is more interesting.",
+      "title": "Căn hộ của bạn",
       "questions": [
         {
-          "text": "What is the story about?",
+          "text": "Do the two friends meet and greet each other?",
           "options": [
-            "Two children",
-            "A fox and a crow",
-            "A school",
-            "A trip"
-          ],
-          "answer": 1
-        },
-        {
-          "text": "Which character is liked?",
-          "options": [
-            "The fox",
-            "The crow",
-            "Both equally",
-            "Neither"
-          ],
-          "answer": 1
-        },
-        {
-          "text": "Who is more interesting?",
-          "options": [
-            "The fox",
-            "The crow",
-            "The teacher",
-            "The reader"
+            "Yes",
+            "No",
+            "They only write letters",
+            "They only talk on the phone"
           ],
           "answer": 0
+        },
+        {
+          "text": "Does the speaker live in this building?",
+          "options": [
+            "No",
+            "Yes",
+            "They don't know",
+            "Only at weekends"
+          ],
+          "answer": 1
+        },
+        {
+          "text": "What type of home does the speaker live in?",
+          "options": [
+            "Tent",
+            "Houseboat",
+            "Flat",
+            "Farm"
+          ],
+          "answer": 2
         }
       ],
       "source": {
-        "url": "https://loigiaihay.com/giai-review-4-tieng-anh-5-global-success-co-dap-a162201.html",
-        "section": "Listen and tick."
+        "url": "https://loigiaihay.com/giai-lesson-1-unit-2-tieng-anh-5-global-success-co-dap-an-a156771.html",
+        "section": "Track track-15 · nghe hiểu nội dung"
       }
     },
     {
@@ -1213,45 +1324,46 @@
       "stage": 5,
       "grade": 5,
       "audioUrl": "assets/audio/listening/foundation/stage-5/f5-05.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2026/0522/track-72.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2026/0522/track-73.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0403/track-74.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2026/0522/track-75.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-16.mp3"
+      ],
       "type": "mcq_set",
-      "title": "Địa điểm tham quan",
-      "recordingScript": "A: It's sunny today. Let's visit somewhere in Ha Noi. B: Good idea. How about Hoan Kiem Lake? A: Great. We can walk around the lake and take some photos.",
+      "title": "Ngôi nhà và tòa tháp",
       "questions": [
         {
-          "text": "Where are they?",
+          "text": "Does the first speaker live in this house?",
           "options": [
-            "Da Nang",
-            "Ha Noi",
-            "Hue",
-            "Hai Duong"
+            "Yes",
+            "No",
+            "Not mentioned",
+            "Only in summer"
+          ],
+          "answer": 0
+        },
+        {
+          "text": "Does the second speaker live in this flat?",
+          "options": [
+            "Yes",
+            "No",
+            "Not mentioned",
+            "Only in summer"
           ],
           "answer": 1
         },
         {
-          "text": "Where will they go?",
+          "text": "Does the last speaker live in that tower?",
           "options": [
-            "West Lake",
-            "Hoan Kiem Lake",
-            "A museum",
-            "The zoo"
-          ],
-          "answer": 1
-        },
-        {
-          "text": "What will they do there?",
-          "options": [
-            "Go fishing",
-            "Walk and take photos",
-            "Go shopping",
-            "Study"
+            "Yes",
+            "No",
+            "Not mentioned",
+            "Only in summer"
           ],
           "answer": 1
         }
       ],
       "source": {
-        "url": "https://loigiaihay.com/giai-review-4-tieng-anh-5-global-success-co-dap-a162201.html",
-        "section": "Listen and tick."
+        "url": "https://loigiaihay.com/giai-lesson-1-unit-2-tieng-anh-5-global-success-co-dap-an-a156771.html",
+        "section": "Track track-16 · nghe hiểu nội dung"
       }
     },
     {
@@ -1260,45 +1372,46 @@
       "stage": 5,
       "grade": 5,
       "audioUrl": "assets/audio/listening/foundation/stage-5/f5-06.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-15.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-16.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-17.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-17.mp3"
+      ],
       "type": "mcq_set",
-      "title": "Ngôi nhà",
-      "recordingScript": "A: Which room do you like best in your house? B: My bedroom. It has a big window and a small desk. A: What do you do there? B: I read books and do my homework.",
+      "title": "Nơi ở của bốn bạn",
       "questions": [
         {
-          "text": "Which room is preferred?",
+          "text": "Where does the person in dialogue 1 live?",
           "options": [
-            "Kitchen",
-            "Bedroom",
-            "Living room",
-            "Bathroom"
+            "In a flat",
+            "In a house",
+            "In a tower",
+            "In a hotel"
           ],
           "answer": 1
         },
         {
-          "text": "What is big?",
+          "text": "Where does the person in dialogue 3 live?",
           "options": [
-            "Desk",
-            "Window",
-            "Bed",
-            "Door"
+            "In King Tower",
+            "In Sunset Building",
+            "Near the school",
+            "On a farm"
           ],
-          "answer": 1
+          "answer": 0
         },
         {
-          "text": "What does the speaker do there?",
+          "text": "Which building is named in dialogue 4?",
           "options": [
-            "Cook",
-            "Read and study",
-            "Watch TV only",
-            "Play football"
+            "King Tower",
+            "Sunset Building",
+            "Oxford Tower",
+            "Ba Trieu Building"
           ],
           "answer": 1
         }
       ],
       "source": {
-        "url": "https://loigiaihay.com/tieng-anh-5-global-success-c1762.html",
-        "section": "Tiếng Anh 5 Global Success: các bài Listening trong Lesson/Review."
+        "url": "https://loigiaihay.com/giai-lesson-1-unit-2-tieng-anh-5-global-success-co-dap-an-a156771.html",
+        "section": "Track track-17 · nghe hiểu nội dung"
       }
     },
     {
@@ -1307,45 +1420,46 @@
       "stage": 5,
       "grade": 5,
       "audioUrl": "assets/audio/listening/foundation/stage-5/f5-07.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-25.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-26.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-27.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-28.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-25.mp3"
+      ],
       "type": "mcq_set",
-      "title": "Bạn nước ngoài",
-      "recordingScript": "A: Tell me about your new friend. B: His name is Leo and he's from Australia. A: What does he like? B: He likes football and drawing animals.",
+      "title": "Người bạn từ Úc",
       "questions": [
         {
-          "text": "What is the friend's name?",
+          "text": "Where is the new friend from?",
           "options": [
-            "Leo",
-            "Tom",
-            "Ben",
-            "Sam"
-          ],
-          "answer": 0
-        },
-        {
-          "text": "Where is he from?",
-          "options": [
-            "Canada",
+            "Malaysia",
             "Australia",
             "Japan",
-            "Singapore"
+            "Britain"
           ],
           "answer": 1
         },
         {
-          "text": "What does he like?",
+          "text": "What is his nationality?",
           "options": [
-            "Swimming only",
-            "Football and drawing",
-            "Cooking",
-            "Reading comics"
+            "American",
+            "British",
+            "Australian",
+            "Japanese"
           ],
-          "answer": 1
+          "answer": 2
+        },
+        {
+          "text": "Who tells their mum about a new friend?",
+          "options": [
+            "The child",
+            "A teacher",
+            "The father",
+            "A reporter"
+          ],
+          "answer": 0
         }
       ],
       "source": {
-        "url": "https://loigiaihay.com/tieng-anh-5-global-success-c1762.html",
-        "section": "Tiếng Anh 5 Global Success: các bài Listening trong Lesson/Review."
+        "url": "https://loigiaihay.com/giai-lesson-1-unit-3-tieng-anh-5-global-success-co-dap-an-a156783.html",
+        "section": "Track track-25 · nghe hiểu nội dung"
       }
     },
     {
@@ -1354,45 +1468,46 @@
       "stage": 5,
       "grade": 5,
       "audioUrl": "assets/audio/listening/foundation/stage-5/f5-08.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0224/track-31.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0224/track-32.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0224/track-33.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0224/track-34.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-26.mp3"
+      ],
       "type": "mcq_set",
-      "title": "Sức khỏe",
-      "recordingScript": "A: You look tired today. B: I went to bed late last night. A: Try to sleep earlier and don't use your phone in bed. B: You're right. I'll do that tonight.",
+      "title": "Quốc tịch của các bạn",
       "questions": [
         {
-          "text": "Why is the speaker tired?",
+          "text": "What nationality is the boy in the first exchange?",
           "options": [
-            "Was sick",
-            "Went to bed late",
-            "Ran a race",
-            "Skipped lunch"
+            "Australian",
+            "Malaysian",
+            "Japanese",
+            "British"
           ],
-          "answer": 1
+          "answer": 0
         },
         {
-          "text": "What advice is given?",
+          "text": "What nationality is the girl in the second exchange?",
           "options": [
-            "Exercise more",
-            "Sleep earlier",
-            "Drink juice",
-            "Study later"
+            "American",
+            "Japanese",
+            "Malaysian",
+            "Australian"
           ],
-          "answer": 1
+          "answer": 2
         },
         {
-          "text": "What should not be used in bed?",
+          "text": "What nationality is the girl in the last exchange?",
           "options": [
-            "A book",
-            "A phone",
-            "A lamp",
-            "A clock"
+            "British",
+            "Japanese",
+            "Malaysian",
+            "American"
           ],
           "answer": 1
         }
       ],
       "source": {
-        "url": "https://loigiaihay.com/tieng-anh-5-global-success-c1762.html",
-        "section": "Tiếng Anh 5 Global Success: các bài Listening trong Lesson/Review."
+        "url": "https://loigiaihay.com/giai-lesson-1-unit-3-tieng-anh-5-global-success-co-dap-an-a156783.html",
+        "section": "Track track-26 · nghe hiểu nội dung"
       }
     },
     {
@@ -1401,45 +1516,46 @@
       "stage": 5,
       "grade": 5,
       "audioUrl": "assets/audio/listening/foundation/stage-5/f5-09.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2026/0522/track-72.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2026/0522/track-73.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0403/track-74.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2026/0522/track-75.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-27.mp3"
+      ],
       "type": "mcq_set",
-      "title": "Phương tiện",
-      "recordingScript": "A: How far is it from Hue to Da Nang? B: About one hundred kilometres. A: Are you going by car? B: No, my family is taking the train.",
+      "title": "Sam và bạn mới",
       "questions": [
         {
-          "text": "What two places are mentioned?",
+          "text": "What is Sam doing?",
           "options": [
-            "Hue and Da Nang",
-            "Ha Noi and Hue",
-            "Da Nang and HCMC",
-            "Hue and Da Lat"
-          ],
-          "answer": 0
-        },
-        {
-          "text": "About how far?",
-          "options": [
-            "50 km",
-            "100 km",
-            "200 km",
-            "300 km"
+            "Cycling",
+            "Playing football",
+            "Reading",
+            "Skating"
           ],
           "answer": 1
         },
         {
-          "text": "How will they travel?",
+          "text": "What nationality is Sam?",
           "options": [
-            "Car",
-            "Bus",
-            "Train",
-            "Plane"
+            "Japanese",
+            "Australian",
+            "Malaysian",
+            "British"
+          ],
+          "answer": 0
+        },
+        {
+          "text": "What nationality is the new female friend?",
+          "options": [
+            "Japanese",
+            "Malaysian",
+            "Australian",
+            "American"
           ],
           "answer": 2
         }
       ],
       "source": {
-        "url": "https://loigiaihay.com/giai-review-4-tieng-anh-5-global-success-co-dap-a162201.html",
-        "section": "Listen and tick."
+        "url": "https://loigiaihay.com/giai-lesson-1-unit-3-tieng-anh-5-global-success-co-dap-an-a156783.html",
+        "section": "Track track-27 · nghe hiểu nội dung"
       }
     },
     {
@@ -1448,45 +1564,46 @@
       "stage": 5,
       "grade": 5,
       "audioUrl": "assets/audio/listening/foundation/stage-5/f5-10.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0512/track-92.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0512/track-93.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/1213/track-94.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0512/track-95.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0703/track-48.mp3"
+      ],
       "type": "mcq_set",
-      "title": "Hoạt động hè",
-      "recordingScript": "A: What are you going to do at summer camp? B: I'm going to swim, play games, and learn how to put up a tent. A: What are you most excited about? B: Sleeping in a tent with my friends.",
+      "title": "Bài hát nghề nghiệp",
       "questions": [
         {
-          "text": "Where is the speaker going?",
+          "text": "Which job is mentioned first after the question?",
           "options": [
-            "School",
-            "Summer camp",
-            "A hospital",
-            "A city tour"
+            "Teacher",
+            "Firefighter",
+            "Writer",
+            "Driver"
           ],
           "answer": 1
         },
         {
-          "text": "What will the speaker learn?",
+          "text": "Which job comes after firefighter?",
           "options": [
-            "How to cook rice",
-            "How to put up a tent",
-            "How to drive",
-            "How to fish"
+            "Teacher",
+            "Writer",
+            "Doctor",
+            "Gardener"
           ],
-          "answer": 1
+          "answer": 0
         },
         {
-          "text": "What is most exciting?",
+          "text": "Which job is mentioned last?",
           "options": [
-            "Swimming",
-            "Games",
-            "Sleeping in a tent with friends",
-            "Going home"
+            "Reporter",
+            "Dentist",
+            "Driver",
+            "Pilot"
           ],
           "answer": 2
         }
       ],
       "source": {
-        "url": "https://loigiaihay.com/tieng-anh-5-global-success-c1762.html",
-        "section": "Tiếng Anh 5 Global Success: các bài Listening trong Lesson/Review."
+        "url": "https://loigiaihay.com/giai-lesson-1-unit-5-tieng-anh-5-global-success-co-dap-an-a156859.html",
+        "section": "Track track-48 · nghe hiểu nội dung"
       }
     },
     {
@@ -1495,7 +1612,10 @@
       "stage": 1,
       "grade": 6,
       "audioUrl": "assets/audio/listening/thcs/stage-1/m1-01.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0607/ex1-1-.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0607/ex2.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0607/ex1-1-.mp3",
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0607/ex2.mp3"
+      ],
       "type": "mcq_set",
       "title": "My new school",
       "recordingScript": "Hi, I'm Alex. My school starts at eight o'clock. We wear blue uniforms on Mondays and Fridays. My favourite subject is science because we do experiments.",
@@ -1532,7 +1652,10 @@
       "stage": 1,
       "grade": 6,
       "audioUrl": "assets/audio/listening/thcs/stage-1/m1-02.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0608/act1-2-.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0608/act2.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0608/act1-2-.mp3",
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0608/act2.mp3"
+      ],
       "type": "mcq_set",
       "title": "My house",
       "recordingScript": "There are five rooms in my flat. My bedroom is next to the living room. There is a desk by the window, and I usually read there after dinner.",
@@ -1569,7 +1692,9 @@
       "stage": 1,
       "grade": 6,
       "audioUrl": "assets/audio/listening/thcs/stage-1/m1-03.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0610/act2.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0610/act2.mp3"
+      ],
       "type": "mcq_set",
       "title": "Best friend",
       "recordingScript": "My best friend is Mai. She has long black hair and wears glasses. She is very kind, and she always helps me with maths homework.",
@@ -1606,7 +1731,10 @@
       "stage": 1,
       "grade": 6,
       "audioUrl": "assets/audio/listening/thcs/stage-1/m1-04.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0610/act1-3-.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0610/act2-1-.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0610/act1-3-.mp3",
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0610/act2-1-.mp3"
+      ],
       "type": "mcq_set",
       "title": "Neighbourhood",
       "recordingScript": "I live near a big market. The streets are wide, and there are many small cafés. I like the people because they are friendly, but the traffic is noisy in the evening.",
@@ -1643,7 +1771,10 @@
       "stage": 1,
       "grade": 6,
       "audioUrl": "assets/audio/listening/thcs/stage-1/m1-05.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0611/act1-6-.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0611/act2-2-.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0611/act1-6-.mp3",
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0611/act2-2-.mp3"
+      ],
       "type": "mcq_set",
       "title": "Phu Quoc",
       "recordingScript": "Phu Quoc is an island in southern Viet Nam. Visitors enjoy its beaches and seafood. Many people also visit fishing villages and national parks.",
@@ -1680,7 +1811,10 @@
       "stage": 1,
       "grade": 6,
       "audioUrl": "assets/audio/listening/thcs/stage-1/m1-06.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0607/ex1-1-.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0607/ex2.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0607/ex1-1-.mp3",
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0607/ex2.mp3"
+      ],
       "type": "mcq_set",
       "title": "School club",
       "recordingScript": "Our English club meets every Wednesday at four fifteen in room twelve. This week we are practising a short play for the school festival.",
@@ -1717,7 +1851,10 @@
       "stage": 1,
       "grade": 6,
       "audioUrl": "assets/audio/listening/thcs/stage-1/m1-07.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0608/act1-2-.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0608/act2.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0608/act1-2-.mp3",
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0608/act2.mp3"
+      ],
       "type": "mcq_set",
       "title": "Bedroom",
       "recordingScript": "My room is small but bright. I have a bed, a bookshelf and a desk. The bookshelf is opposite the bed, and my school bag is under the desk.",
@@ -1754,7 +1891,9 @@
       "stage": 1,
       "grade": 6,
       "audioUrl": "assets/audio/listening/thcs/stage-1/m1-08.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0610/act2.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0610/act2.mp3"
+      ],
       "type": "mcq_set",
       "title": "Friend's hobby",
       "recordingScript": "Nam is tall and sporty. He plays badminton twice a week and collects football cards. At weekends, he often rides his bike with his cousin.",
@@ -1791,7 +1930,10 @@
       "stage": 1,
       "grade": 6,
       "audioUrl": "assets/audio/listening/thcs/stage-1/m1-09.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0610/act1-3-.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0610/act2-1-.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0610/act1-3-.mp3",
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0610/act2-1-.mp3"
+      ],
       "type": "mcq_set",
       "title": "Getting around",
       "recordingScript": "The bakery is beside the post office. To get there from school, walk straight for two blocks and turn left at the traffic lights.",
@@ -1828,7 +1970,10 @@
       "stage": 1,
       "grade": 6,
       "audioUrl": "assets/audio/listening/thcs/stage-1/m1-10.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0611/act1-6-.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0611/act2-2-.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0611/act1-6-.mp3",
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0611/act2-2-.mp3"
+      ],
       "type": "mcq_set",
       "title": "Weekend trip",
       "recordingScript": "Our class is visiting a national park on Saturday. We will leave school at six thirty in the morning. Everyone should bring water, a hat and comfortable shoes.",
@@ -1865,7 +2010,10 @@
       "stage": 2,
       "grade": 7,
       "audioUrl": "assets/audio/listening/thcs/stage-2/m2-01.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/012.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/013.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/012.mp3",
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/013.mp3"
+      ],
       "type": "mcq_set",
       "title": "Healthy breakfast",
       "recordingScript": "A healthy breakfast gives you energy for school. Try to include fruit, whole grains and some protein. Avoid having only sugary drinks because you may feel tired later.",
@@ -1912,7 +2060,10 @@
       "stage": 2,
       "grade": 7,
       "audioUrl": "assets/audio/listening/thcs/stage-2/m2-02.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/012.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/013.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/012.mp3",
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/013.mp3"
+      ],
       "type": "mcq_set",
       "title": "Sleep habits",
       "recordingScript": "Teenagers need enough sleep to stay focused. Lan turns off her phone at nine thirty and usually sleeps before ten. She says this helps her feel more active in the morning.",
@@ -1949,7 +2100,9 @@
       "stage": 2,
       "grade": 7,
       "audioUrl": "assets/audio/listening/thcs/stage-2/m2-03.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0815/052.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0815/052.mp3"
+      ],
       "type": "mcq_set",
       "title": "Cycling safely",
       "recordingScript": "When you cycle to school, always wear a helmet and use the cycle lane when possible. At busy crossings, slow down and look carefully before you turn.",
@@ -1986,7 +2139,9 @@
       "stage": 2,
       "grade": 7,
       "audioUrl": "assets/audio/listening/thcs/stage-2/m2-04.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0815/052.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0815/052.mp3"
+      ],
       "type": "mcq_set",
       "title": "Traffic jam",
       "recordingScript": "The city centre is busiest from seven to eight in the morning. Buses often move slowly because many parents drive their children to school at the same time.",
@@ -2023,7 +2178,10 @@
       "stage": 2,
       "grade": 7,
       "audioUrl": "assets/audio/listening/thcs/stage-2/m2-05.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/012.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/013.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/012.mp3",
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/013.mp3"
+      ],
       "type": "mcq_set",
       "title": "Exercise routine",
       "recordingScript": "Minh used to sit at his computer after school, but now he walks for thirty minutes every afternoon and plays basketball on Sundays. He says he sleeps better now.",
@@ -2070,7 +2228,9 @@
       "stage": 2,
       "grade": 7,
       "audioUrl": "assets/audio/listening/thcs/stage-2/m2-06.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0815/052.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0815/052.mp3"
+      ],
       "type": "mcq_set",
       "title": "Road safety poster",
       "recordingScript": "Our class made a road-safety poster. It tells students not to cross between parked cars and to wait for the green light. We will put it near the school gate tomorrow.",
@@ -2107,7 +2267,10 @@
       "stage": 2,
       "grade": 7,
       "audioUrl": "assets/audio/listening/thcs/stage-2/m2-07.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/012.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/013.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/012.mp3",
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/013.mp3"
+      ],
       "type": "mcq_set",
       "title": "Healthy lunch",
       "recordingScript": "For lunch, Mai usually brings rice, vegetables and chicken from home. On Fridays she buys noodles at school. She rarely drinks soft drinks.",
@@ -2144,7 +2307,9 @@
       "stage": 2,
       "grade": 7,
       "audioUrl": "assets/audio/listening/thcs/stage-2/m2-08.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0815/052.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0815/052.mp3"
+      ],
       "type": "mcq_set",
       "title": "Bus timetable",
       "recordingScript": "Bus number twenty-one arrives every fifteen minutes during the morning. The first bus is at six, and the last morning bus leaves at nine forty-five.",
@@ -2181,7 +2346,10 @@
       "stage": 2,
       "grade": 7,
       "audioUrl": "assets/audio/listening/thcs/stage-2/m2-09.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/012.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/013.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/012.mp3",
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/013.mp3"
+      ],
       "type": "mcq_set",
       "title": "School health campaign",
       "recordingScript": "Next month our school will run a healthy-living week. Students can join morning exercise, a fruit challenge and a talk about sleep. The talk will be on Thursday afternoon.",
@@ -2218,7 +2386,9 @@
       "stage": 2,
       "grade": 7,
       "audioUrl": "assets/audio/listening/thcs/stage-2/m2-10.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0815/052.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0815/052.mp3"
+      ],
       "type": "mcq_set",
       "title": "Crossing the road",
       "recordingScript": "Tom: Can we cross here? Mai: Not yet. The light is red. Let's wait by the crossing. Tom: Good idea. I can see a motorbike coming quickly.",
@@ -2255,7 +2425,10 @@
       "stage": 3,
       "grade": 8,
       "audioUrl": "assets/audio/listening/thcs/stage-3/m3-01.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-5.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-6.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-5.mp3",
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-6.mp3"
+      ],
       "type": "mcq_set",
       "title": "Leisure interview",
       "recordingScript": "Interviewer: What do you do after school, Mark? Mark: I usually play chess online with my cousin. Twice a week, I also go running with friends. Interviewer: Which activity do you prefer? Mark: Running, because I can talk to my friends at the same time.",
@@ -2302,7 +2475,10 @@
       "stage": 3,
       "grade": 8,
       "audioUrl": "assets/audio/listening/thcs/stage-3/m3-02.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0703/track-11.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0703/track-12.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0703/track-11.mp3",
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0703/track-12.mp3"
+      ],
       "type": "mcq_set",
       "title": "Countryside opinions",
       "recordingScript": "Speaker 1 likes the countryside because the air is clean and the roads are quiet. Speaker 2 enjoys the open space but misses shops and entertainment. Speaker 3 says the best thing is knowing most people in the village.",
@@ -2349,7 +2525,10 @@
       "stage": 3,
       "grade": 8,
       "audioUrl": "assets/audio/listening/thcs/stage-3/m3-03.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-17.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-18.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-17.mp3",
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-18.mp3"
+      ],
       "type": "mcq_set",
       "title": "Teen stress",
       "recordingScript": "Lan: I have three tests this week and I also need to finish a group project. Minh: That sounds stressful. Why don't you make a plan and do the most urgent task first? Lan: Good idea. I'll start with the science project tonight.",
@@ -2396,7 +2575,10 @@
       "stage": 3,
       "grade": 8,
       "audioUrl": "assets/audio/listening/thcs/stage-3/m3-04.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-51.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-52.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-51.mp3",
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-52.mp3"
+      ],
       "type": "mcq_set",
       "title": "Online shopping",
       "recordingScript": "Online shopping is convenient because people can compare prices quickly. However, customers cannot touch the product before buying it, and returning an item may take several days.",
@@ -2433,7 +2615,10 @@
       "stage": 3,
       "grade": 8,
       "audioUrl": "assets/audio/listening/thcs/stage-3/m3-05.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0613/track-44.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0613/track-45.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0613/track-44.mp3",
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0613/track-45.mp3"
+      ],
       "type": "mcq_set",
       "title": "Water pollution",
       "recordingScript": "The river became dirtier after heavy rain carried rubbish from streets into drains. The town is installing filters near the main drains and asking residents to reduce plastic waste.",
@@ -2480,7 +2665,10 @@
       "stage": 3,
       "grade": 8,
       "audioUrl": "assets/audio/listening/thcs/stage-3/m3-06.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-17.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-18.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-17.mp3",
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-18.mp3"
+      ],
       "type": "mcq_set",
       "title": "Club pressure",
       "recordingScript": "Three students are planning the school festival. Nam wants a bigger music show, Hoa worries about the budget, and Linh thinks they need more volunteers before adding new activities.",
@@ -2517,7 +2705,10 @@
       "stage": 3,
       "grade": 8,
       "audioUrl": "assets/audio/listening/thcs/stage-3/m3-07.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-5.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-6.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-5.mp3",
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-6.mp3"
+      ],
       "type": "mcq_set",
       "title": "Free-time balance",
       "recordingScript": "I enjoy social media, but I try not to use it while doing homework. I put my phone in another room for forty minutes, finish one task, and then take a short break.",
@@ -2564,7 +2755,10 @@
       "stage": 3,
       "grade": 8,
       "audioUrl": "assets/audio/listening/thcs/stage-3/m3-08.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0703/track-11.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0703/track-12.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0703/track-11.mp3",
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0703/track-12.mp3"
+      ],
       "type": "mcq_set",
       "title": "Village change",
       "recordingScript": "Ten years ago, our village had one small shop and no bus service. Now there are three shops and a bus to town every hour. Some people like the convenience, while others miss the quieter roads.",
@@ -2611,7 +2805,10 @@
       "stage": 3,
       "grade": 8,
       "audioUrl": "assets/audio/listening/thcs/stage-3/m3-09.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-51.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-52.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-51.mp3",
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-52.mp3"
+      ],
       "type": "mcq_set",
       "title": "Return policy",
       "recordingScript": "Customer: I'd like to return these shoes. Assistant: Of course. Do you have the receipt? Customer: Yes, but I bought them online. Assistant: That's fine. We can refund the money to your card within three working days.",
@@ -2658,7 +2855,10 @@
       "stage": 3,
       "grade": 8,
       "audioUrl": "assets/audio/listening/thcs/stage-3/m3-10.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0613/track-44.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0613/track-45.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0613/track-44.mp3",
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0613/track-45.mp3"
+      ],
       "type": "mcq_set",
       "title": "School environment",
       "recordingScript": "The eco club measured rubbish for one week and found that plastic cups were the biggest problem. They suggested reusable bottles and a water station. After a month, the number of plastic cups dropped by more than half.",
@@ -2705,7 +2905,10 @@
       "stage": 4,
       "grade": 9,
       "audioUrl": "assets/audio/listening/thcs/stage-4/m4-01.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/ex2-skills2-u2-ta9-global.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/ex3-skills2-u2-ta9-global.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/ex2-skills2-u2-ta9-global.mp3",
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/ex3-skills2-u2-ta9-global.mp3"
+      ],
       "type": "mcq_set",
       "title": "City views",
       "recordingScript": "Presenter: Three students describe city life. Minh values late buses because he studies in the evening. Mai wants more public parks instead of another mall. Khoa likes the facilities but says cycling feels unsafe on roads without protected lanes.",
@@ -2762,7 +2965,10 @@
       "stage": 4,
       "grade": 9,
       "audioUrl": "assets/audio/listening/thcs/stage-4/m4-02.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/18.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/19.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/18.mp3",
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/19.mp3"
+      ],
       "type": "mcq_set",
       "title": "Time management",
       "recordingScript": "Trang plans her week every Sunday and puts the hardest school tasks first. Phong uses a timer and studies in short focused blocks. Tom does not make a detailed plan; instead, he writes three important tasks each morning.",
@@ -2819,7 +3025,10 @@
       "stage": 4,
       "grade": 9,
       "audioUrl": "assets/audio/listening/thcs/stage-4/m4-03.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/57.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/58.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/57.mp3",
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/58.mp3"
+      ],
       "type": "mcq_set",
       "title": "Learning vocabulary",
       "recordingScript": "When Trang meets a new word, she first guesses its meaning from the sentence. Then she checks a learner's dictionary and writes one example of her own. At the weekend she reviews only words that appeared more than once.",
@@ -2876,7 +3085,9 @@
       "stage": 4,
       "grade": 9,
       "audioUrl": "assets/audio/listening/thcs/stage-4/m4-04.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/ex1-skills2-u1-ta9-global.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/ex1-skills2-u1-ta9-global.mp3"
+      ],
       "type": "mcq_set",
       "title": "Community helper",
       "recordingScript": "Mr Long volunteers at a community centre three evenings a week. He teaches children how to repair simple bicycles and helps elderly residents with small household problems. He says the best part is seeing people become more confident.",
@@ -2933,7 +3144,10 @@
       "stage": 4,
       "grade": 9,
       "audioUrl": "assets/audio/listening/thcs/stage-4/m4-05.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/ex2-skills2-u2-ta9-global.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/ex3-skills2-u2-ta9-global.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/ex2-skills2-u2-ta9-global.mp3",
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/ex3-skills2-u2-ta9-global.mp3"
+      ],
       "type": "mcq_set",
       "title": "City transport proposal",
       "recordingScript": "The council wants to reduce traffic near schools. One proposal adds bus-only lanes on two main roads. Another creates safe bicycle routes. Some shop owners worry about fewer parking spaces, but parents strongly support safer crossings.",
@@ -2990,7 +3204,10 @@
       "stage": 4,
       "grade": 9,
       "audioUrl": "assets/audio/listening/thcs/stage-4/m4-06.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/18.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/19.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/18.mp3",
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/19.mp3"
+      ],
       "type": "mcq_set",
       "title": "Study distractions",
       "recordingScript": "Linh used to study with several messaging apps open. She noticed that a twenty-minute homework task sometimes took almost twice as long. Now she silences notifications and checks messages only during planned breaks.",
@@ -3047,7 +3264,10 @@
       "stage": 4,
       "grade": 9,
       "audioUrl": "assets/audio/listening/thcs/stage-4/m4-07.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/57.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/58.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/57.mp3",
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/58.mp3"
+      ],
       "type": "mcq_set",
       "title": "English exposure",
       "recordingScript": "Four students describe how they practise English. One watches short science videos, another plays online games with international friends, the third listens to podcasts while travelling, and the fourth joins a weekly speaking club. All say regular contact with English matters.",
@@ -3104,7 +3324,9 @@
       "stage": 4,
       "grade": 9,
       "audioUrl": "assets/audio/listening/thcs/stage-4/m4-08.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/ex1-skills2-u1-ta9-global.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/ex1-skills2-u1-ta9-global.mp3"
+      ],
       "type": "mcq_set",
       "title": "Local craft",
       "recordingScript": "A pottery workshop in our area used to sell mainly to tourists. This year it began offering weekend classes for local teenagers. The owner says the classes create extra income, but more importantly they help young people understand the craft.",
@@ -3161,7 +3383,10 @@
       "stage": 4,
       "grade": 9,
       "audioUrl": "assets/audio/listening/thcs/stage-4/m4-09.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/18.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/19.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/18.mp3",
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/19.mp3"
+      ],
       "type": "mcq_set",
       "title": "Balanced schedule",
       "recordingScript": "Mai has basketball practice on Tuesday and Thursday, so she does not plan heavy homework for those evenings. She finishes major assignments on Monday and Wednesday and keeps Friday night free for family time.",
@@ -3218,7 +3443,10 @@
       "stage": 4,
       "grade": 9,
       "audioUrl": "assets/audio/listening/thcs/stage-4/m4-10.mp3",
-      "referenceAudioUrls": ["https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/ex2-skills2-u2-ta9-global.mp3","https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/ex3-skills2-u2-ta9-global.mp3"],
+      "referenceAudioUrls": [
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/ex2-skills2-u2-ta9-global.mp3",
+        "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/ex3-skills2-u2-ta9-global.mp3"
+      ],
       "type": "mcq_set",
       "title": "City air quality",
       "recordingScript": "A school survey found that students walking along the main road reported more unpleasant air than students using the riverside path. The survey cannot prove the road caused every symptom, but it suggests the school should study safer, cleaner routes.",
