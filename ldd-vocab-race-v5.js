@@ -697,7 +697,9 @@
         if (total && wrong.length === total) {
             result.title = '❌ TẤT CẢ ĂN SAI!';
             result.text = 'Tất cả xe đều ăn sai từ.';
-            result.kind = 'wrong';
+            const collision = collisionNotice(ev);
+            if (collision) result.text += ' ' + collision;
+            result.kind = collision ? 'mixed' : 'wrong';
             return result;
         }
 
@@ -717,6 +719,8 @@
                 const wrongNames = wrong.map(playerResultName).join(', ');
                 result.text = obstacleNames + ' bị chướng ngại vật loại · ' + wrongNames + ' ăn sai từ.';
             }
+            const collision = collisionNotice(ev);
+            if (collision) result.text += ' ' + collision;
             result.kind = 'mixed';
             return result;
         }
@@ -1168,7 +1172,7 @@
             cls = collision ? ' is-danger' : ' is-success';
         } else if (ev.type === 'wrong') {
             const p = players.find(x => String(x.user_id) === String(ev.user_id || ''));
-            text = '❌ ' + playerResultName(p) + ' ăn sai từ và bị loại vòng này.';
+            text = '❌ ' + playerResultName(p) + ' ăn sai từ, bị loại vòng này và -1 điểm chăm chỉ.';
             const collision = collisionNotice(ev);
             if (collision) text += ' ' + collision;
             cls = collision ? ' is-danger' : ' is-warn';
