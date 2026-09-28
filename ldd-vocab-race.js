@@ -1,4 +1,4 @@
-/* LDD English — Vocab Race bootstrap v22 · topic locked + room lifecycle */
+/* LDD English — Vocab Race bootstrap v23 · collision notices + scoring guard */
 (function () {
     'use strict';
 
@@ -22,7 +22,7 @@
     if (!document.getElementById('ldd-vocab-race-v5-script')) {
         const core = document.createElement('script');
         core.id = 'ldd-vocab-race-v5-script';
-        core.src = 'ldd-vocab-race-v5.js?v=20260921-topic-lifecycle2';
+        core.src = 'ldd-vocab-race-v5.js?v=20260928-collision-notice1';
         core.defer = true;
         document.body.appendChild(core);
     }
