@@ -657,6 +657,16 @@
         return p ? shortName(p.display_name || p.email || ('Xe ' + (p.slot || ''))) : 'Một xe';
     }
 
+    function collisionNotice(ev) {
+        if (!ev || !ev.collision_victim) return '';
+        const colliderId = ev.collider_user_id || ev.user_id || ev.winner_user_id || '';
+        const collider = players.find(p => String(p.user_id) === String(colliderId));
+        const victim = players.find(p => String(p.user_id) === String(ev.collision_victim));
+        const colliderName = playerResultName(collider);
+        const victimName = playerResultName(victim);
+        return '🚗💥 ' + colliderName + ' tông ' + victimName + '! ' + victimName + ' bị -1 điểm chăm chỉ.';
+    }
+
     function roundSummary() {
         const lr = room && room.last_result || {};
         const ev = effectiveRoundResult(lr);
@@ -667,6 +677,8 @@
             const winner = players.find(p => String(p.user_id) === String(winnerId || ''));
             result.title = '✅ ĂN ĐÚNG TỪ!';
             result.text = playerResultName(winner) + ' ăn đúng từ.';
+            const collision = collisionNotice(ev);
+            if (collision) result.text += ' ' + collision;
             result.kind = 'correct';
             return result;
         }
@@ -722,6 +734,8 @@
             const p = players.find(x => String(x.user_id) === String(ev.user_id || ''));
             result.title = '❌ ĂN SAI TỪ!';
             result.text = playerResultName(p) + ' ăn sai từ.';
+            const collision = collisionNotice(ev);
+            if (collision) result.text += ' ' + collision;
             result.kind = 'wrong';
             return result;
         }
@@ -1149,11 +1163,15 @@
         } else if (ev.type === 'correct') {
             const p = players.find(x => String(x.user_id) === String(ev.winner_user_id || ''));
             text = '✅ ' + playerResultName(p) + ' ăn đúng từ!';
-            cls = ' is-success';
+            const collision = collisionNotice(ev);
+            if (collision) text += ' ' + collision;
+            cls = collision ? ' is-danger' : ' is-success';
         } else if (ev.type === 'wrong') {
             const p = players.find(x => String(x.user_id) === String(ev.user_id || ''));
             text = '❌ ' + playerResultName(p) + ' ăn sai từ và bị loại vòng này.';
-            cls = ' is-warn';
+            const collision = collisionNotice(ev);
+            if (collision) text += ' ' + collision;
+            cls = collision ? ' is-danger' : ' is-warn';
         } else if (ev.type === 'obstacle_hit') {
             const hitIds = Array.isArray(ev.hit_user_ids) ? ev.hit_user_ids : [ev.user_id].filter(Boolean);
             const names = hitIds.map(id => playerResultName(players.find(p => String(p.user_id) === String(id)))).join(', ');
