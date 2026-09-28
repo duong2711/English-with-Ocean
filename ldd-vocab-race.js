@@ -22,7 +22,7 @@
     if (!document.getElementById('ldd-vocab-race-v5-script')) {
         const core = document.createElement('script');
         core.id = 'ldd-vocab-race-v5-script';
-        core.src = 'ldd-vocab-race-v5.js?v=20260928-collision-notice1';
+        core.src = 'ldd-vocab-race-v5.js?v=20260928-collision-notice2';
         core.defer = true;
         document.body.appendChild(core);
     }
