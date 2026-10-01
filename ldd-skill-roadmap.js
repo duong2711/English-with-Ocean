@@ -1305,7 +1305,7 @@
                                 (complete ? '<span class="ldd-stage-badge is-done">Đã đạt</span>' : '') +
                             '</div>' +
                             '<h3>' + stage.title + '</h3><p>' + stage.description + '</p>' +
-                            '<div class="ldd-stage-audiences"><span>' + count + ' bài tập</span><span>MP3 giáo viên tự thu</span></div>' +
+                            '<div class="ldd-stage-audiences"><span>' + count + ' bài tập</span><span>' + (trackId === 'thcs' ? '12 Unit · 3 MP3/Unit' : 'MP3 luyện nghe') + '</span></div>' +
                         '</div>' +
                         '<button type="button" class="ldd-stage-open" data-listening-stage="' + stage.stage + '">' + (complete ? 'Luyện lại' : 'Bắt đầu') + ' →</button>' +
                     '</li>';
@@ -1771,9 +1771,9 @@
         const track = LISTENING_CURRICULUM.tracks[trackId];
         const stage = track && track.stages ? track.stages.find(item => Number(item.stage) === Number(stageNumber)) : null;
         const audioBank = listeningStageExercises(trackId, stageNumber);
-        if (!panel || !track || !stage || audioBank.length !== 10) {
+        if (!panel || !track || !stage || !audioBank.length) {
             showHub('listening');
-            toast('Chưa tải đủ 10 bài của giai đoạn này.');
+            toast('Chưa tải được bài nghe của giai đoạn này.');
             return;
         }
 
@@ -1784,7 +1784,10 @@
         saveState();
 
         const useStudentVocab = trackId === 'foundation' && stageNumber === 1;
-        const useAudioBank = trackId === 'foundation' && stageNumber >= 2;
+        const useAudioBank = trackId === 'thcs' || (trackId === 'foundation' && stageNumber >= 2);
+        const lessonCount = audioBank.length;
+        const bankVersion = trackId === 'thcs' ? LISTENING_CURRICULUM.thcsBankVersion : '';
+        let selectedUnit = trackId === 'thcs' ? 1 : null;
         let vocabWords = [];
         let vocabUserId = null;
         if (useStudentVocab) {
@@ -1817,7 +1820,7 @@
         }
         const attemptKey = 'ldd_listening_attempt_' +
             (useStudentVocab ? 'v4' : useAudioBank ? 'v6' : 'v2') +
-            '::' + trackId + '::' + stageNumber + (useStudentVocab ? '::' + vocabUserId : '');
+            '::' + trackId + '::' + stageNumber + (useStudentVocab ? '::' + vocabUserId : '') + (bankVersion ? '::' + bankVersion : '');
         let stored = null;
         try { stored = JSON.parse(localStorage.getItem(attemptKey) || 'null'); }
         catch (error) { /* Continue with a new local attempt. */ }
@@ -1831,6 +1834,7 @@
                 }
                 return values;
             };
+            if (trackId === 'thcs') return indices;
             if (!useAudioBank || !previous) return useAudioBank ? shuffle(indices) : indices;
             const result = Array(indices.length).fill(-1);
             const used = new Set();
@@ -1856,10 +1860,10 @@
         };
         const newSeed = function () { return Math.floor(Math.random() * 2147483647); };
         let order = useAudioBank && Array.isArray(stored && stored.order) &&
-            stored.order.length === 10 && new Set(stored.order).size === 10 &&
-            stored.order.every(index => Number.isInteger(index) && index >= 0 && index < 10)
+            stored.order.length === lessonCount && new Set(stored.order).size === lessonCount &&
+            stored.order.every(index => Number.isInteger(index) && index >= 0 && index < lessonCount)
             ? stored.order.slice() : randomOrder(null);
-        let variants = useAudioBank && Array.isArray(stored && stored.variants) && stored.variants.length === 10
+        let variants = useAudioBank && Array.isArray(stored && stored.variants) && stored.variants.length === lessonCount
             ? stored.variants.slice() : audioBank.map(() => newSeed());
         let scores = audioBank.map((_, index) => {
             const previous = useAudioBank || useStudentVocab ? stored && stored.scores : stored;
@@ -1901,7 +1905,7 @@
             return item;
         };
         const savedSpellingValid = useStudentVocab && Array.isArray(stored?.exercises) &&
-            stored.exercises.length === 10 && stored.exercises.every((item,index) => {
+            stored.exercises.length === lessonCount && stored.exercises.every((item,index) => {
                 const answers = item.mode === 'spell_single' || item.mode === 'whole_word'
                     ? [item.expected] : item.mode === 'spell_tick' ? item.heard : item.words;
                 const visible = (item.options || item.bank || []);
@@ -1939,16 +1943,25 @@
                 (trackId === 'foundation' && stageNumber === 1
                     ? '<div class="ldd-listening-difficulty-legend"><span class="is-easy">Dễ</span><span>Trung bình</span><span>Khá</span><span>Khó</span><span class="is-hell">💀 Địa ngục</span></div>'
                     : '') +
-                '<div class="ldd-listening-submit-guide"><span>Trả lời đủ các câu rồi bấm <strong>Nộp bài này và xem điểm</strong>. Điểm giai đoạn hiện tự động khi nộp đủ 10 bài. ' + (useStudentVocab ? 'Giọng đọc tiếng Anh dùng từ trong kho của bạn; làm mới giai đoạn để lấy bộ từ khác.' :
-                        useAudioBank ? 'Mỗi lượt rút bài nghe kèm câu hỏi từ ngân hàng MP3.' : '') + '</span>' +
-                    '<strong data-listening-stage-count aria-live="polite">0/10 đã nộp</strong></div>' +
+                '<div class="ldd-listening-submit-guide"><span>Trả lời đủ các câu rồi bấm <strong>Nộp bài này và xem điểm</strong>. Điểm giai đoạn hiện tự động khi nộp đủ ' + lessonCount + ' bài. ' + (useStudentVocab ? 'Giọng đọc tiếng Anh dùng từ trong kho của bạn; làm mới giai đoạn để lấy bộ từ khác.' :
+                        useAudioBank ? (trackId === 'thcs' ? 'Chọn Unit để luyện; câu hỏi theo thứ tự MP3, vị trí đáp án thay đổi mỗi lượt.' : 'Mỗi lượt rút bài nghe kèm câu hỏi từ ngân hàng MP3.') : '') + '</span>' +
+                    '<strong data-listening-stage-count aria-live="polite">0/' + lessonCount + ' đã nộp</strong></div>' +
                 (useAudioBank || useStudentVocab ? '<div class="ldd-lab-actions"><button type="button" class="ldd-roadmap-btn" data-listening-new-attempt>Làm mới giai đoạn</button></div>' : '') +
+                (trackId === 'thcs' ? '<label class="ldd-listening-unit-picker">Chọn Unit <select data-listening-unit aria-label="Chọn Unit nghe">' + Array.from(new Set(audioBank.map(item => item.unit))).map(unit => '<option value="' + unit + '">Unit ' + unit + ' · 3 bài nghe</option>').join('') + '</select></label>' : '') +
                 '<div class="ldd-listening-bank">' +
                     '<div class="ldd-listening-lesson-list" data-listening-list></div>' +
                     '<div class="ldd-listening-exercise" data-listening-exercise></div>' +
                 '</div>';
 
             panel.querySelector('[data-listening-back]').addEventListener('click', () => showHub('listening'));
+            const unitPicker = panel.querySelector('[data-listening-unit]');
+            if (unitPicker) unitPicker.addEventListener('change', () => {
+                stopListeningPlayback(panel);
+                selectedUnit = Number(unitPicker.value);
+                activeIndex = exercises.findIndex(item => item.unit === selectedUnit);
+                renderList();
+                renderExercise(activeIndex);
+            });
             if (useAudioBank || useStudentVocab) panel.querySelector('[data-listening-new-attempt]').addEventListener('click', async () => {
                 const button = panel.querySelector('[data-listening-new-attempt]');
                 button.disabled = true;
@@ -1979,7 +1992,7 @@
                     exercises = order.map((source,index) => buildExercise(source, variants[index]));
                 }
                 scores = scores.map(() => null);
-                activeIndex = 0;
+                activeIndex = trackId === 'thcs' ? exercises.findIndex(item => item.unit === selectedUnit) : 0;
                 saveAttempt();
                 renderList();
                 renderExercise(activeIndex);
@@ -1996,12 +2009,12 @@
             if (count) {
                 const finished = scores.filter(value => value !== null);
                 count.textContent = finished.length === exercises.length
-                    ? 'Đã nộp 10/10 · ' + Math.round(finished.reduce((sum,value) => sum + value, 0) / finished.length) + '/100'
-                    : finished.length + '/10 đã nộp';
+                    ? 'Đã nộp ' + lessonCount + '/' + lessonCount + ' · ' + Math.round(finished.reduce((sum,value) => sum + value, 0) / finished.length) + '/100'
+                    : finished.length + '/' + lessonCount + ' đã nộp';
             }
             list.innerHTML = exercises.map((item,index) =>
-                '<button type="button" class="ldd-listening-lesson' + (index === activeIndex ? ' is-active' : '') + (scores[index] !== null && scores[index] >= 80 ? ' is-done' : scores[index] !== null ? ' is-wrong' : '') + '" data-listening-index="' + index + '">' +
-                    '<span class="ldd-listening-lesson-no">' + String(index + 1).padStart(2, '0') + '</span>' +
+                '<button type="button" class="ldd-listening-lesson' + (index === activeIndex ? ' is-active' : '') + (scores[index] !== null && scores[index] >= 80 ? ' is-done' : scores[index] !== null ? ' is-wrong' : '') + '" data-listening-index="' + index + '"' + (trackId === 'thcs' && item.unit !== selectedUnit ? ' hidden' : '') + '>' +
+                    '<span class="ldd-listening-lesson-no">' + String(trackId === 'thcs' ? item.lesson : index + 1).padStart(2, '0') + '</span>' +
                     '<span><strong>' + escapeListening(item.title) + '</strong>' +
                     (item.difficulty ? '<span class="ldd-listening-audience-badge">' + escapeListening(item.difficulty) + '</span>' : '') +
                     '<small>' + (scores[index] === null ? 'Chưa làm' : scores[index] + '/100') + '</small></span>' +
@@ -2019,6 +2032,11 @@
 
         const renderExercise = function (index) {
             const item = exercises[index];
+            if (trackId === 'thcs' && selectedUnit !== item.unit) {
+                selectedUnit = item.unit;
+                panel.querySelector('[data-listening-unit]').value = String(selectedUnit);
+                renderList();
+            }
             const host = panel.querySelector('[data-listening-exercise]');
             stopListeningPlayback(panel);
             let taskHtml = '';
@@ -2029,9 +2047,9 @@
             else if (item.type === 'mcq_set') taskHtml = renderMcqSet(item);
 
             host.innerHTML =
-                '<div class="ldd-listening-exercise-top"><div><span class="ldd-control-label">Bài ' + (index + 1) + ' / 10</span><h4>' + escapeListening(item.title) + '</h4>' +
+                '<div class="ldd-listening-exercise-top"><div><span class="ldd-control-label">' + (trackId === 'thcs' ? 'Unit ' + item.unit + ' · Bài ' + item.lesson + ' / 3' : 'Bài ' + (index + 1) + ' / ' + lessonCount) + '</span><h4>' + escapeListening(item.title) + '</h4>' +
                     '<span class="ldd-listening-audience-badge is-large">' + escapeListening(stage.grade) + (item.difficulty ? ' · ' + escapeListening(item.difficulty) : '') + '</span></div>' +
-                    '<span class="ldd-listening-progress-mini">' + scores.filter(value => value !== null).length + '/10 đã làm</span></div>' +
+                    '<span class="ldd-listening-progress-mini">' + scores.filter(value => value !== null).length + '/' + lessonCount + ' đã làm</span></div>' +
                 listeningAudioHtml(item, trackId, stageNumber) +
                 renderListeningTimeline(item, taskHtml) +
                 '<div class="ldd-lab-actions"><button type="button" class="ldd-roadmap-btn is-primary" data-listening-submit>Nộp bài này và xem điểm</button></div>' +
@@ -2104,7 +2122,7 @@
                     (result.score >= 80 ? 'Đạt bài này.' : 'Chưa đạt 80%.') + '</strong><p>' + escapeListening(result.detail) + '</p>' +
                     details +
                     (stageScore === null ? '' : '<div class="ldd-listening-stage-result"><strong>Điểm giai đoạn: ' +
-                        stageScore + '/100 · 10 bài</strong><p>' +
+                        stageScore + '/100 · ' + lessonCount + ' bài</strong><p>' +
                         (stageScore >= SCORE_TO_COMPLETE ? 'Đã đạt giai đoạn này.' :
                             'Chưa đạt mốc 80%. Bạn có thể mở bài trong danh sách và nộp lại để cải thiện.') +
                         '</p></div>') +

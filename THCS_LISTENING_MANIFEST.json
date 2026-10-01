@@ -1,0 +1,1883 @@
+{
+  "version": "2026-10-01",
+  "lessons": [
+    {
+      "id": "g6-u01-getting-started",
+      "source": {
+        "url": "https://loigiaihay.com/getting-started-trang-6-unit-1-sgk-tieng-anh-6-moi-c134a21998.html",
+        "section": "Getting Started"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2021/0607/u1-getting-started-ex1.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0607/u1-getting-started-ex1.mp3",
+      "questions": 3,
+      "bytes": 1005587,
+      "sha1": "c70eb64924ff9edc4eea3331aaf614353873b1a6",
+      "status": "ready"
+    },
+    {
+      "id": "g6-u01-communication",
+      "source": {
+        "url": "https://loigiaihay.com/communication-trang-11-unit-1-sgk-tieng-anh-6-moi-c134a22001.html",
+        "section": "Communication"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2021/0607/ex1.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0607/ex1.mp3",
+      "questions": 3,
+      "bytes": 618317,
+      "sha1": "2c6f8a36b228c37880ec0fd495740fb02bab645b",
+      "status": "ready"
+    },
+    {
+      "id": "g6-u01-skills-2",
+      "source": {
+        "url": "https://loigiaihay.com/skills-2-trang-13-unit-1-sgk-tieng-anh-6-moi-c134a22004.html",
+        "section": "Skills 2"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2021/0607/ex1-1-.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0607/ex1-1-.mp3",
+      "questions": 3,
+      "bytes": 1137954,
+      "sha1": "fb07cc1d76c923731651515397454bb1232db563",
+      "status": "ready"
+    },
+    {
+      "id": "g6-u02-getting-started",
+      "source": {
+        "url": "https://loigiaihay.com/getting-started-trang-16-unit-2-sgk-tieng-anh-6-moi-c134a22007.html",
+        "section": "Getting Started"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2021/0608/act1.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0608/act1.mp3",
+      "questions": 3,
+      "bytes": 1068707,
+      "sha1": "004730066e6506353490148037fd32df2835c88e",
+      "status": "ready"
+    },
+    {
+      "id": "g6-u02-communication",
+      "source": {
+        "url": "https://loigiaihay.com/communication-trang-20-unit-2-sgk-tieng-anh-6-moi-c134a22013.html",
+        "section": "Communication"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2021/0608/act1-1-.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0608/act1-1-.mp3",
+      "questions": 3,
+      "bytes": 641772,
+      "sha1": "d0e16eefe193b0f97b307e4a608a4e991962ccc3",
+      "status": "ready"
+    },
+    {
+      "id": "g6-u02-skills-2",
+      "source": {
+        "url": "https://loigiaihay.com/skills-2-trang-23-unit-2-sgk-tieng-anh-6-moi-c134a22015.html",
+        "section": "Skills 2"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2021/0608/act2.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0608/act2.mp3",
+      "questions": 3,
+      "bytes": 1018093,
+      "sha1": "47586e1b47d63987fb14efe4ed9279192193fa97",
+      "status": "ready"
+    },
+    {
+      "id": "g6-u03-getting-started",
+      "source": {
+        "url": "https://loigiaihay.com/getting-started-trang-26-unit-3-sgk-tieng-anh-6-moi-c134a22022.html",
+        "section": "Getting Started"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2021/0610/act1.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0610/act1.mp3",
+      "questions": 3,
+      "bytes": 1206975,
+      "sha1": "1c77cde3d20be770409817a214bac73bf2246a97",
+      "status": "ready"
+    },
+    {
+      "id": "g6-u03-communication",
+      "source": {
+        "url": "https://loigiaihay.com/communication-trang-30-unit-3-sgk-tieng-anh-6-moi-c134a22025.html",
+        "section": "Communication"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2021/0610/act1-1-.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0610/act1-1-.mp3",
+      "questions": 3,
+      "bytes": 684927,
+      "sha1": "1cbfc74ebffd8f26b621125547e626878922b1a0",
+      "status": "ready"
+    },
+    {
+      "id": "g6-u03-skills-2",
+      "source": {
+        "url": "https://loigiaihay.com/skills-2-trang-33-unit-3-sgk-tieng-anh-6-moi-c134a22041.html",
+        "section": "Skills 2"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2021/0610/act2.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0610/act2.mp3",
+      "questions": 3,
+      "bytes": 1332037,
+      "sha1": "9bf00f09b5d01d04eb3f5f386f129961a4692f97",
+      "status": "ready"
+    },
+    {
+      "id": "g6-u04-getting-started",
+      "source": {
+        "url": "https://loigiaihay.com/getting-started-trang-38-unit-4-sgk-tieng-anh-6-moi-c134a22068.html",
+        "section": "Getting Started"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2021/0720/20201130-tienganh6-kntt-b1-23.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0720/20201130-tienganh6-kntt-b1-23.mp3",
+      "questions": 3,
+      "bytes": 1247573,
+      "sha1": "f41cbc8795fe302697dcd611df92eb4dba89755a",
+      "status": "ready"
+    },
+    {
+      "id": "g6-u04-communication",
+      "source": {
+        "url": "https://loigiaihay.com/communication-trang-43-unit-4-sgk-tieng-anh-6-moi-c134a22079.html",
+        "section": "Communication"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2021/0610/act1-2-.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0610/act1-2-.mp3",
+      "questions": 3,
+      "bytes": 896507,
+      "sha1": "fc2a473fc264f5df4774b6c5289a98aac386440a",
+      "status": "ready"
+    },
+    {
+      "id": "g6-u04-skills-2",
+      "source": {
+        "url": "https://loigiaihay.com/skills-2-trang-45-unit-4-sgk-tieng-anh-6-moi-c134a22090.html",
+        "section": "Skills 2"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2021/0610/act1-3-.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0610/act1-3-.mp3",
+      "questions": 3,
+      "bytes": 1121019,
+      "sha1": "5e122718e06b187a89b540726b12d7dd14a8be27",
+      "status": "ready"
+    },
+    {
+      "id": "g6-u05-getting-started",
+      "source": {
+        "url": "https://loigiaihay.com/getting-started-trang-48-unit-5-sgk-tieng-anh-6-moi-c134a22096.html",
+        "section": "Getting Started"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2021/0611/act1-4-.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0611/act1-4-.mp3",
+      "questions": 3,
+      "bytes": 1131615,
+      "sha1": "09f04b8509aed431f34879097e729b12fdd1a1ca",
+      "status": "ready"
+    },
+    {
+      "id": "g6-u05-communication",
+      "source": {
+        "url": "https://loigiaihay.com/communication-trang-53-unit-5-sgk-tieng-anh-6-moi-c134a22102.html",
+        "section": "Communication"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2021/0611/act1-5-.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0611/act1-5-.mp3",
+      "questions": 3,
+      "bytes": 727012,
+      "sha1": "c76e38c6923dda9314b92f60473327bcc2c35216",
+      "status": "ready"
+    },
+    {
+      "id": "g6-u05-skills-2",
+      "source": {
+        "url": "https://loigiaihay.com/skills-2-trang-55-unit-5-sgk-tieng-anh-6-moi-c134a22106.html",
+        "section": "Skills 2"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2021/0611/act1-6-.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0611/act1-6-.mp3",
+      "questions": 3,
+      "bytes": 1211789,
+      "sha1": "7fa7e393cbc010df18d2b3c54478cf25a00a9332",
+      "status": "ready"
+    },
+    {
+      "id": "g6-u06-getting-started",
+      "source": {
+        "url": "https://loigiaihay.com/getting-started-trang-58-unit-6-sgk-tieng-anh-6-moi-c134a22118.html",
+        "section": "Getting Started"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2021/0611/act1-7-.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0611/act1-7-.mp3",
+      "questions": 3,
+      "bytes": 1088742,
+      "sha1": "58c067c5c38add7ecd3f142fea9177a0c103339d",
+      "status": "ready"
+    },
+    {
+      "id": "g6-u06-communication",
+      "source": {
+        "url": "https://loigiaihay.com/communication-trang-63-unit-6-sgk-tieng-anh-6-moi-c134a22133.html",
+        "section": "Communication"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2021/0611/act1.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0611/act1.mp3",
+      "questions": 3,
+      "bytes": 422661,
+      "sha1": "2c1973466441fc907f94bc2a4546c006d6c6661c",
+      "status": "ready"
+    },
+    {
+      "id": "g6-u06-skills-2",
+      "source": {
+        "url": "https://loigiaihay.com/skills-2-trang-65-unit-6-sgk-tieng-anh-6-moi-c134a22137.html",
+        "section": "Skills 2"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2021/0611/act1-1-.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0611/act1-1-.mp3",
+      "questions": 3,
+      "bytes": 1070168,
+      "sha1": "2493d6b5dd8d092fecc02b325826298a9c181991",
+      "status": "ready"
+    },
+    {
+      "id": "g6-u07-getting-started",
+      "source": {
+        "url": "https://loigiaihay.com/getting-started-trang-6-unit-7-sgk-tieng-anh-6-moi-c134a22501.html",
+        "section": "Getting Started"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2021/1111/u7-getting-ex1.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/1111/u7-getting-ex1.mp3",
+      "questions": 3,
+      "bytes": 1053402,
+      "sha1": "245cceb785a5e4574ef9e6a69717ada691bcba18",
+      "status": "ready"
+    },
+    {
+      "id": "g6-u07-communication",
+      "source": {
+        "url": "https://loigiaihay.com/communication-trang-11-unit-7-sgk-tieng-anh-6-moi-c134a22506.html",
+        "section": "Communication"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2021/1104/u7-communication-ex1.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/1104/u7-communication-ex1.mp3",
+      "questions": 3,
+      "bytes": 584707,
+      "sha1": "d73f6e14b63391eee9bc8fe791f8e346898b5509",
+      "status": "ready"
+    },
+    {
+      "id": "g6-u07-skills-2",
+      "source": {
+        "url": "https://loigiaihay.com/skills-2-trang-13-unit-7-sgk-tieng-anh-6-moi-c134a22508.html",
+        "section": "Skills 2"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2021/1104/u7-skills-2-ex1.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/1104/u7-skills-2-ex1.mp3",
+      "questions": 3,
+      "bytes": 1013348,
+      "sha1": "fdb40f264b38c60e30cdf8c8fb07102d773f0a36",
+      "status": "ready"
+    },
+    {
+      "id": "g6-u08-getting-started",
+      "source": {
+        "url": "https://loigiaihay.com/getting-started-trang-16-unit-8-sgk-tieng-anh-6-moi-c134a22514.html",
+        "section": "Getting Started"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0427/tieng-anh-6-tap-2-global-success-unit-8-sports-and-games-getting-started-1-listen-and-read-sach-mem.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0427/tieng-anh-6-tap-2-global-success-unit-8-sports-and-games-getting-started-1-listen-and-read-sach-mem.mp3",
+      "questions": 3,
+      "bytes": 1032531,
+      "sha1": "b13cffbeddf7399fd91d6a69835277123a4a831f",
+      "status": "ready",
+      "conversion": {
+        "index": 21,
+        "sourceSha1": "9abeb987fdce3d4329d57f2d22fc180895af1e16",
+        "b2Sha1": "b13cffbeddf7399fd91d6a69835277123a4a831f",
+        "operation": "WAV to MP3, libmp3lame 128 kbps, audio content preserved"
+      }
+    },
+    {
+      "id": "g6-u08-communication",
+      "source": {
+        "url": "https://loigiaihay.com/communication-trang-21-unit-8-sgk-tieng-anh-6-moi-c134a22517.html",
+        "section": "Communication"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2021/1104/u8-communication-ex1.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/1104/u8-communication-ex1.mp3",
+      "questions": 3,
+      "bytes": 642428,
+      "sha1": "4b53d45044a0f13660183304b6d2384754bc3b68",
+      "status": "ready"
+    },
+    {
+      "id": "g6-u08-skills-2",
+      "source": {
+        "url": "https://loigiaihay.com/skills-2-trang-23-unit-8-sgk-tieng-anh-6-moi-c134a22519.html",
+        "section": "Skills 2"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2021/1104/u8-skills2-ex1.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/1104/u8-skills2-ex1.mp3",
+      "questions": 3,
+      "bytes": 1103877,
+      "sha1": "4544b4dadd6ac060baae9eaf0d88d3c6d90ca8fd",
+      "status": "ready"
+    },
+    {
+      "id": "g6-u09-getting-started",
+      "source": {
+        "url": "https://loigiaihay.com/getting-started-trang-26-unit-9-sgk-tieng-anh-6-moi-c134a22525.html",
+        "section": "Getting Started"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2021/1104/gs-u9-ex1.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/1104/gs-u9-ex1.mp3",
+      "questions": 3,
+      "bytes": 1249706,
+      "sha1": "048dc881f88a0676763de9bc9a18b923286fd166",
+      "status": "ready"
+    },
+    {
+      "id": "g6-u09-communication",
+      "source": {
+        "url": "https://loigiaihay.com/communication-trang-31-unit-9-sgk-tieng-anh-6-moi-c134a22528.html",
+        "section": "Communication"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2021/1105/gs-u9-communication-ex1.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/1105/gs-u9-communication-ex1.mp3",
+      "questions": 3,
+      "bytes": 580693,
+      "sha1": "d47391ed98aedb0c69a141c1ac28b1610cb87ff5",
+      "status": "ready"
+    },
+    {
+      "id": "g6-u09-skills-2",
+      "source": {
+        "url": "https://loigiaihay.com/skills-2-trang-33-unit-9-sgk-tieng-anh-6-moi-c134a22532.html",
+        "section": "Skills 2"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2021/1105/gs-u9-skills2-ex2-1.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/1105/gs-u9-skills2-ex2-1.mp3",
+      "questions": 3,
+      "bytes": 1006258,
+      "sha1": "5683921d78fe15f71dec806c870b6b57c5849650",
+      "status": "ready"
+    },
+    {
+      "id": "g6-u10-getting-started",
+      "source": {
+        "url": "https://loigiaihay.com/getting-started-trang-38-unit-10-sgk-tieng-anh-6-moi-c134a22540.html",
+        "section": "Getting Started"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2021/1105/gs-u10-getting-started-ex1.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/1105/gs-u10-getting-started-ex1.mp3",
+      "questions": 3,
+      "bytes": 1109016,
+      "sha1": "6bd53972c2965331e95334a9732a1f33ef435ae8",
+      "status": "ready"
+    },
+    {
+      "id": "g6-u10-communication",
+      "source": {
+        "url": "https://loigiaihay.com/communication-trang-43-unit-10-sgk-tieng-anh-6-moi-c134a22543.html",
+        "section": "Communication"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2021/1105/gs-u10-communication-ex1.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/1105/gs-u10-communication-ex1.mp3",
+      "questions": 3,
+      "bytes": 624514,
+      "sha1": "8205a4fe62d419c0aeffbf17f740afe6f5fca2dd",
+      "status": "ready"
+    },
+    {
+      "id": "g6-u10-skills-2",
+      "source": {
+        "url": "https://loigiaihay.com/skills-2-trang-45-unit-10-sgk-tieng-anh-6-moi-c134a22545.html",
+        "section": "Skills 2"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2021/1105/gs-u10-skills1-ex1.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/1105/gs-u10-skills1-ex1.mp3",
+      "questions": 3,
+      "bytes": 1087951,
+      "sha1": "093cc4943c5916033cf5e852258eff314694d4cc",
+      "status": "ready"
+    },
+    {
+      "id": "g6-u11-getting-started",
+      "source": {
+        "url": "https://loigiaihay.com/getting-started-trang-48-unit-11-sgk-tieng-anh-6-moi-c134a22550.html",
+        "section": "Getting Started"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2021/1105/gs-u11-getting-started-ex1.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/1105/gs-u11-getting-started-ex1.mp3",
+      "questions": 3,
+      "bytes": 1253209,
+      "sha1": "b5be1c55070825c7b5c4dd946fef04a3ca3a7c2f",
+      "status": "ready"
+    },
+    {
+      "id": "g6-u11-communication",
+      "source": {
+        "url": "https://loigiaihay.com/communication-trang-53-unit-11-sgk-tieng-anh-6-moi-c134a22554.html",
+        "section": "Communication"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2021/1105/ta6-u11-communication-ex1.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/1105/ta6-u11-communication-ex1.mp3",
+      "questions": 3,
+      "bytes": 613551,
+      "sha1": "a275d232310dff4f48c9ef6736baff36d4402c3c",
+      "status": "ready"
+    },
+    {
+      "id": "g6-u11-skills-2",
+      "source": {
+        "url": "https://loigiaihay.com/skills-2-trang-55-unit-11-sgk-tieng-anh-6-moi-c134a22556.html",
+        "section": "Skills 2"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2021/1105/gs-u11-skills-2-ex1.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/1105/gs-u11-skills-2-ex1.mp3",
+      "questions": 3,
+      "bytes": 1353900,
+      "sha1": "9c0dae67b0a986b4a62198dcbf20d3efe2bb2036",
+      "status": "ready"
+    },
+    {
+      "id": "g6-u12-getting-started",
+      "source": {
+        "url": "https://loigiaihay.com/getting-started-trang-58-unit-12-sgk-tieng-anh-6-moi-c134a22561.html",
+        "section": "Getting Started"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2021/1105/gs-u12-getting-started-ex1.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/1105/gs-u12-getting-started-ex1.mp3",
+      "questions": 3,
+      "bytes": 1323428,
+      "sha1": "7d687eceb41abce391eb4b7f04d4e3d8096d805e",
+      "status": "ready"
+    },
+    {
+      "id": "g6-u12-communication",
+      "source": {
+        "url": "https://loigiaihay.com/communication-trang-63-unit-12-sgk-tieng-anh-6-moi-c134a22565.html",
+        "section": "Communication"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2021/1105/gs-u12-communication-ex1.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/1105/gs-u12-communication-ex1.mp3",
+      "questions": 3,
+      "bytes": 624444,
+      "sha1": "823d12666e7f804b5e3a878509dae65291802f46",
+      "status": "ready"
+    },
+    {
+      "id": "g6-u12-skills-2",
+      "source": {
+        "url": "https://loigiaihay.com/skills-2-trang-65-unit-12-sgk-tieng-anh-6-moi-c134a22567.html",
+        "section": "Skills 2"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0419/unit-12-skills-2-ex-1.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0419/unit-12-skills-2-ex-1.mp3",
+      "questions": 3,
+      "bytes": 642976,
+      "sha1": "8d41334874958debef69b7184424d93980b2f596",
+      "status": "ready"
+    },
+    {
+      "id": "g7-u01-getting-started",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-7-unit-1-getting-started-a106464.html",
+        "section": "Getting Started"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2022/0704/002.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0704/002.mp3",
+      "questions": 3,
+      "bytes": 2491494,
+      "sha1": "667bbf628b3cadacd7b5631d81898a152954403d",
+      "status": "ready"
+    },
+    {
+      "id": "g7-u01-communication",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-7-unit-1-communication-a106490.html",
+        "section": "Communication"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2022/0704/006.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0704/006.mp3",
+      "questions": 3,
+      "bytes": 1133379,
+      "sha1": "fa2bfadabcd04c272335d2bebaaaa694a290febe",
+      "status": "ready"
+    },
+    {
+      "id": "g7-u01-skills-2",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-7-unit-1-skills-2-a106507.html",
+        "section": "Skills 2"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2022/0705/007.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/007.mp3",
+      "questions": 3,
+      "bytes": 2762867,
+      "sha1": "beda2c986a2391caaed7f0cad4780402234dfee2",
+      "status": "ready"
+    },
+    {
+      "id": "g7-u02-getting-started",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-7-unit-2-getting-started-a106562.html",
+        "section": "Getting Started"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2022/0705/008.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/008.mp3",
+      "questions": 3,
+      "bytes": 2330776,
+      "sha1": "ac21c9862f7cf7b7ddb57a9a53c8954ed88f63ad",
+      "status": "ready"
+    },
+    {
+      "id": "g7-u02-communication",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-7-unit-2-communication-a106573.html",
+        "section": "Communication"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2022/0705/011.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/011.mp3",
+      "questions": 3,
+      "bytes": 1408531,
+      "sha1": "3e75d92a3c96dc9fc7db68603e28f01fe35459a0",
+      "status": "ready"
+    },
+    {
+      "id": "g7-u02-skills-2",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-7-unit-2-skills-2-a106605.html",
+        "section": "Skills 2"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2022/0705/012.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/012.mp3",
+      "questions": 3,
+      "bytes": 2580873,
+      "sha1": "1fca5c542514c9f7517ba9b4da3ec2bbcf0f0980",
+      "status": "ready"
+    },
+    {
+      "id": "g7-u03-getting-started",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-7-unit-3-getting-started-a107618.html",
+        "section": "Getting Started"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2022/0705/014.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/014.mp3",
+      "questions": 3,
+      "bytes": 2614275,
+      "sha1": "e443fbddb882682ed2483871a632635fb832fdb4",
+      "status": "ready"
+    },
+    {
+      "id": "g7-u03-communication",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-7-unit-3-communication-a107636.html",
+        "section": "Communication"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2022/0705/017.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/017.mp3",
+      "questions": 3,
+      "bytes": 1861068,
+      "sha1": "aac1bd7ce2955483d39536794d85779e8462577d",
+      "status": "ready"
+    },
+    {
+      "id": "g7-u03-skills-2",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-7-unit-3-skills-2-a107645.html",
+        "section": "Skills 2"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2022/0705/018.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/018.mp3",
+      "questions": 3,
+      "bytes": 1941505,
+      "sha1": "6f48eb7743d028abc630e92ec2f6a5db3b8a688e",
+      "status": "ready"
+    },
+    {
+      "id": "g7-u04-getting-started",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-7-unit-4-getting-started-a107675.html",
+        "section": "Getting Started"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2022/0706/022.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0706/022.mp3",
+      "questions": 3,
+      "bytes": 1856365,
+      "sha1": "d4a1f9b596ce58973465e55c63a1e0fd10c8388d",
+      "status": "ready"
+    },
+    {
+      "id": "g7-u04-communication",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-7-unit-4-communication-a107734.html",
+        "section": "Communication"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2022/0706/027.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0706/027.mp3",
+      "questions": 3,
+      "bytes": 1626867,
+      "sha1": "f0a77a1c8ed0ee3f2f769a166212e48eabbd772b",
+      "status": "ready"
+    },
+    {
+      "id": "g7-u04-skills-2",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-7-unit-4-skills-2-a107771.html",
+        "section": "Skills 2"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2022/0706/028_1.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0706/028_1.mp3",
+      "questions": 3,
+      "bytes": 2539121,
+      "sha1": "c37733eeff399736aeaeb57c7e68866f1d2e1163",
+      "status": "ready"
+    },
+    {
+      "id": "g7-u05-getting-started",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-7-unit-5-getting-started-a107785.html",
+        "section": "Getting Started"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2022/0707/030.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0707/030.mp3",
+      "questions": 3,
+      "bytes": 3232565,
+      "sha1": "64bcb5c8712e77ca47ec6665a608ff50c291c56e",
+      "status": "ready"
+    },
+    {
+      "id": "g7-u05-communication",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-7-unit-5-communication-a107824.html",
+        "section": "Communication"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2022/0707/034.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0707/034.mp3",
+      "questions": 3,
+      "bytes": 1615613,
+      "sha1": "4b4093b70d667e250a2fe419b1d62799bde7a379",
+      "status": "ready"
+    },
+    {
+      "id": "g7-u05-skills-2",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-7-unit-5-skills-2-a108575.html",
+        "section": "Skills 2"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2022/0712/036.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0712/036.mp3",
+      "questions": 3,
+      "bytes": 3158694,
+      "sha1": "14c768b1e36195cfbdcbe208da527f58488c7f54",
+      "status": "ready"
+    },
+    {
+      "id": "g7-u06-getting-started",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-7-unit-6-getting-started-a108578.html",
+        "section": "Getting Started"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2022/0713/038.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0713/038.mp3",
+      "questions": 3,
+      "bytes": 2575031,
+      "sha1": "06bb4867a2d8f865b7a9bebe227df55eb63d8b67",
+      "status": "ready"
+    },
+    {
+      "id": "g7-u06-communication",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-7-unit-6-communication-a108591.html",
+        "section": "Communication"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2022/0713/041.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0713/041.mp3",
+      "questions": 3,
+      "bytes": 1683394,
+      "sha1": "d04ce8653dd1b1adacfff7c4593b32826cda7b77",
+      "status": "ready"
+    },
+    {
+      "id": "g7-u06-skills-2",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-7-unit-6-skills-2-a108593.html",
+        "section": "Skills 2"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2022/0713/042.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0713/042.mp3",
+      "questions": 3,
+      "bytes": 3263373,
+      "sha1": "af5c6613b2a3079a6727bf950c1983ba31bbba43",
+      "status": "ready"
+    },
+    {
+      "id": "g7-u07-getting-started",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-7-unit-7-getting-started-a108621.html",
+        "section": "Getting Started"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2023/0111/047.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0111/047.mp3",
+      "questions": 3,
+      "bytes": 971500,
+      "sha1": "fe086ad1e79f4534e6761f17d229da8a51b8169b",
+      "status": "ready"
+    },
+    {
+      "id": "g7-u07-communication",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-7-unit-7-communication-a108660.html",
+        "section": "Communication"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2022/0815/050.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0815/050.mp3",
+      "questions": 3,
+      "bytes": 1359669,
+      "sha1": "6a6445bfe0a6e0b33617dc2315cfe369772fcea0",
+      "status": "ready"
+    },
+    {
+      "id": "g7-u07-skills-2",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-7-unit-7-skills-2-a108662.html",
+        "section": "Skills 2"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2022/0815/052.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0815/052.mp3",
+      "questions": 3,
+      "bytes": 2142499,
+      "sha1": "d11e9530920dc179d3a70f746fccb4e459cb03ee",
+      "status": "ready"
+    },
+    {
+      "id": "g7-u08-getting-started",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-7-unit-8-getting-started-a108693.html",
+        "section": "Getting Started"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2022/0815/054.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0815/054.mp3",
+      "questions": 3,
+      "bytes": 2706125,
+      "sha1": "2f0c9e0e21ed6d3e7a0cf68dbdb15be399829c25",
+      "status": "ready"
+    },
+    {
+      "id": "g7-u08-communication",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-7-unit-8-communication-a108700.html",
+        "section": "Communication"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2022/0815/056_1.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0815/056_1.mp3",
+      "questions": 3,
+      "bytes": 2173141,
+      "sha1": "5912cee4dda29c35b2f3f3a65ea7c7af257a1cce",
+      "status": "ready"
+    },
+    {
+      "id": "g7-u08-skills-2",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-7-unit-8-skills-2-a108730.html",
+        "section": "Skills 2"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2022/0815/059.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0815/059.mp3",
+      "questions": 3,
+      "bytes": 2773930,
+      "sha1": "f596dddd2c0a83cc1be0da8887ee3b254d1cd0df",
+      "status": "ready"
+    },
+    {
+      "id": "g7-u09-getting-started",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-7-unit-9-getting-started-a108742.html",
+        "section": "Getting Started"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2022/0815/061.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0815/061.mp3",
+      "questions": 3,
+      "bytes": 2777299,
+      "sha1": "21efd9b6c5464f5dc192a09e9a81b99069455307",
+      "status": "ready"
+    },
+    {
+      "id": "g7-u09-communication",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-7-unit-9-communication-a108755.html",
+        "section": "Communication"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2022/0815/064.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0815/064.mp3",
+      "questions": 3,
+      "bytes": 1708910,
+      "sha1": "1f7a136ebf6d1be9485d364c675678912fabd5a2",
+      "status": "ready"
+    },
+    {
+      "id": "g7-u09-skills-2",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-7-unit-9-skills-2-a108762.html",
+        "section": "Skills 2"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2022/0815/066.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0815/066.mp3",
+      "questions": 3,
+      "bytes": 2717817,
+      "sha1": "d6e90e7e013617541e2d6f1293d081cfe22e1b9f",
+      "status": "ready"
+    },
+    {
+      "id": "g7-u10-getting-started",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-7-unit-10-getting-started-a108819.html",
+        "section": "Getting Started"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2022/0816/069.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0816/069.mp3",
+      "questions": 3,
+      "bytes": 2415948,
+      "sha1": "a8a5702a7ee6e655e1b5230245fa74b1c93e79d7",
+      "status": "ready"
+    },
+    {
+      "id": "g7-u10-communication",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-7-unit-10-communication-a108825.html",
+        "section": "Communication"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2022/0816/072.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0816/072.mp3",
+      "questions": 3,
+      "bytes": 1504565,
+      "sha1": "9ccbfe96b13e55ebd3f5a7109e1e4d77ac2db37e",
+      "status": "ready"
+    },
+    {
+      "id": "g7-u10-skills-2",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-7-unit-10-skills-2-a108895.html",
+        "section": "Skills 2"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2022/0816/073.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0816/073.mp3",
+      "questions": 3,
+      "bytes": 2500720,
+      "sha1": "28cc1fb067eaac56d43acab68af18da4a6b02295",
+      "status": "ready"
+    },
+    {
+      "id": "g7-u11-getting-started",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-7-unit-11-getting-started-a108897.html",
+        "section": "Getting Started"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2022/0816/075.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0816/075.mp3",
+      "questions": 3,
+      "bytes": 2639732,
+      "sha1": "93e636c35900c9adf79b073f10fdfc31360df4a1",
+      "status": "ready"
+    },
+    {
+      "id": "g7-u11-communication",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-7-unit-11-communication-a108901.html",
+        "section": "Communication"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2022/0816/079.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0816/079.mp3",
+      "questions": 3,
+      "bytes": 1510808,
+      "sha1": "182a62448bab55a758563b9639130f87c15338d8",
+      "status": "ready"
+    },
+    {
+      "id": "g7-u11-skills-2",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-7-unit-11-skills-2-a108904.html",
+        "section": "Skills 2"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2022/0816/080.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0816/080.mp3",
+      "questions": 3,
+      "bytes": 2810903,
+      "sha1": "d7248563fb78088cdef3d43eb2283e183671573a",
+      "status": "ready"
+    },
+    {
+      "id": "g7-u12-getting-started",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-7-unit-12-getting-started-a108935.html",
+        "section": "Getting Started"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2022/0817/082.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0817/082.mp3",
+      "questions": 3,
+      "bytes": 2375470,
+      "sha1": "f6ede03753b23c2fe740c5e04c69dfd8d7442f3a",
+      "status": "ready"
+    },
+    {
+      "id": "g7-u12-communication",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-7-unit-12-communication-a109044.html",
+        "section": "Communication"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2022/0817/085.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0817/085.mp3",
+      "questions": 3,
+      "bytes": 1633990,
+      "sha1": "d7745e03de4167707eb2cc6184c17f1d50df6c76",
+      "status": "ready"
+    },
+    {
+      "id": "g7-u12-skills-2",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-7-unit-12-skills-2-a109187.html",
+        "section": "Skills 2"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2022/0817/086.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0817/086.mp3",
+      "questions": 3,
+      "bytes": 2665215,
+      "sha1": "f7857633a1fe272327448b8fe4699f0f638cbe94",
+      "status": "ready"
+    },
+    {
+      "id": "g8-u01-getting-started",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-8-unit-1-getting-started-a134902.html",
+        "section": "Getting Started"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2023/0803/track-1.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-1.mp3",
+      "questions": 3,
+      "bytes": 1414592,
+      "sha1": "14c4f86b8f025a3939329a6c6afdd7f2139243e7",
+      "status": "ready"
+    },
+    {
+      "id": "g8-u01-communication",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-8-unit-1-communication-a134919.html",
+        "section": "Communication"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2023/0803/track-4_1.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-4_1.mp3",
+      "questions": 3,
+      "bytes": 499018,
+      "sha1": "88bf9a95b4f13097e86954713548c1d519a6b2d7",
+      "status": "ready"
+    },
+    {
+      "id": "g8-u01-skills-2",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-8-unit-1-skills-2-a134923.html",
+        "section": "Skills 2"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2023/0803/track-5.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-5.mp3",
+      "questions": 3,
+      "bytes": 1470053,
+      "sha1": "82401f342f809995b937079525a41c5013253a1e",
+      "status": "ready"
+    },
+    {
+      "id": "g8-u02-getting-started",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-8-unit-2-getting-started-a137235.html",
+        "section": "Getting Started"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2023/0803/track-7.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-7.mp3",
+      "questions": 3,
+      "bytes": 1216273,
+      "sha1": "d84f6556c6758d8dfc321432572fc866ffa93c01",
+      "status": "ready"
+    },
+    {
+      "id": "g8-u02-communication",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-8-unit-2-communication-a137247.html",
+        "section": "Communication"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2023/0803/track-10.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-10.mp3",
+      "questions": 3,
+      "bytes": 537578,
+      "sha1": "dba0f5b5233e1db20e94ddb41554a5150fb5275d",
+      "status": "ready"
+    },
+    {
+      "id": "g8-u02-skills-2",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-8-unit-2-skills-2-a137295.html",
+        "section": "Skills 2"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2023/0703/track-11.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0703/track-11.mp3",
+      "questions": 3,
+      "bytes": 1100575,
+      "sha1": "f79cd903fd012e60a85450c05d001ba17786e441",
+      "status": "ready"
+    },
+    {
+      "id": "g8-u03-getting-started",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-8-unit-3-getting-started-a137312.html",
+        "section": "Getting Started"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2023/0803/track-13_1.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-13_1.mp3",
+      "questions": 3,
+      "bytes": 1663541,
+      "sha1": "4475def9fae0026f1cf3210a612d8f8f32ecbbd9",
+      "status": "ready"
+    },
+    {
+      "id": "g8-u03-communication",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-8-unit-3-communication-a137318.html",
+        "section": "Communication"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2023/0803/track-16.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-16.mp3",
+      "questions": 3,
+      "bytes": 595103,
+      "sha1": "3a9f21cba2d7d52fae931e8a28998968315e57c6",
+      "status": "ready"
+    },
+    {
+      "id": "g8-u03-skills-2",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-8-unit-3-skills-2-a137331.html",
+        "section": "Skills 2"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2023/0803/track-18.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-18.mp3",
+      "questions": 3,
+      "bytes": 979941,
+      "sha1": "bbc33e9efb68531024cf6b0036dbb5e2b99938cd",
+      "status": "ready"
+    },
+    {
+      "id": "g8-u04-getting-started",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-8-unit-4-getting-started-a137467.html",
+        "section": "Getting Started"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2023/0803/track-20.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-20.mp3",
+      "questions": 3,
+      "bytes": 1525514,
+      "sha1": "3b75dfbeb7ec0284bdc94ff0fb03cab312f7f751",
+      "status": "ready"
+    },
+    {
+      "id": "g8-u04-communication",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-8-unit-4-communication-a137490.html",
+        "section": "Communication"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2023/0803/track-23.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-23.mp3",
+      "questions": 3,
+      "bytes": 504817,
+      "sha1": "eb42ad25a814a2db350e4dc7a8d270a94422fcb1",
+      "status": "ready"
+    },
+    {
+      "id": "g8-u04-skills-2",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-8-unit-4-skills-2-a137492.html",
+        "section": "Skills 2"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2023/0803/track-24.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-24.mp3",
+      "questions": 3,
+      "bytes": 1127642,
+      "sha1": "376c9a7b07a43a338393c861ef1e16f3d16e972d",
+      "status": "ready"
+    },
+    {
+      "id": "g8-u05-getting-started",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-8-unit-5-getting-started-a137503.html",
+        "section": "Getting Started"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2023/0803/track-26.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-26.mp3",
+      "questions": 3,
+      "bytes": 1586813,
+      "sha1": "ea36852dafa16b2e15bfae45890e1815a5035bb1",
+      "status": "ready"
+    },
+    {
+      "id": "g8-u05-communication",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-8-unit-5-communication-a137519.html",
+        "section": "Communication"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2023/0803/track-29.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-29.mp3",
+      "questions": 3,
+      "bytes": 973823,
+      "sha1": "91b1d1f04f3f8b2f33f7100110a5be6d56a46e01",
+      "status": "ready"
+    },
+    {
+      "id": "g8-u05-skills-2",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-8-unit-5-skills-2-a141799.html",
+        "section": "Skills 2"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2023/0616/track-30.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0616/track-30.mp3",
+      "questions": 3,
+      "bytes": 1224584,
+      "sha1": "a1c31dd548c854747f717346da28d61bcd7bd2d8",
+      "status": "ready"
+    },
+    {
+      "id": "g8-u06-getting-started",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-8-unit-6-getting-started-a137527.html",
+        "section": "Getting Started"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2023/0803/track-32.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-32.mp3",
+      "questions": 3,
+      "bytes": 1495688,
+      "sha1": "8778b8a146db173b1d0d6c5d42ce081cbf5babef",
+      "status": "ready"
+    },
+    {
+      "id": "g8-u06-communication",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-8-unit-6-communication-a137544.html",
+        "section": "Communication"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2023/0803/track-35.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-35.mp3",
+      "questions": 3,
+      "bytes": 772829,
+      "sha1": "c823576752094217c55ab1cdcda0ea7625d84aaa",
+      "status": "ready"
+    },
+    {
+      "id": "g8-u06-skills-2",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-8-unit-6-skills-2-a137552.html",
+        "section": "Skills 2"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2023/0803/track-36.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-36.mp3",
+      "questions": 3,
+      "bytes": 1531769,
+      "sha1": "3e231b02549a6662a756eabd246af0e94af21177",
+      "status": "ready"
+    },
+    {
+      "id": "g8-u07-getting-started",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-8-unit-7-getting-started-a141320.html",
+        "section": "Getting Started"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2023/0613/track-40.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0613/track-40.mp3",
+      "questions": 3,
+      "bytes": 1646027,
+      "sha1": "48bbd55d712071e9d04705e14370b45afad3586f",
+      "status": "ready"
+    },
+    {
+      "id": "g8-u07-communication",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-8-unit-7-communication-a141332.html",
+        "section": "Communication"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2023/0613/track-43.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0613/track-43.mp3",
+      "questions": 3,
+      "bytes": 596586,
+      "sha1": "c48e79285e30409d89122fdaaffdf3f1a4c7b7fd",
+      "status": "ready"
+    },
+    {
+      "id": "g8-u07-skills-2",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-8-unit-7-skills-2-a141336.html",
+        "section": "Skills 2"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2023/0613/track-44.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0613/track-44.mp3",
+      "questions": 3,
+      "bytes": 1554287,
+      "sha1": "2da4c4df37cc242bcb15e1bfd6f48851f703dc52",
+      "status": "ready"
+    },
+    {
+      "id": "g8-u08-getting-started",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-8-unit-8-getting-started-a141846.html",
+        "section": "Getting Started"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2023/0616/track-46.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0616/track-46.mp3",
+      "questions": 3,
+      "bytes": 1561639,
+      "sha1": "f6c8a47e220e3dd6a70507f0ca5460341e19a0d8",
+      "status": "ready"
+    },
+    {
+      "id": "g8-u08-communication",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-8-unit-8-communication-a141870.html",
+        "section": "Communication"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2023/0616/track-49.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0616/track-49.mp3",
+      "questions": 3,
+      "bytes": 991337,
+      "sha1": "d955174f30d7854f30092feb01797ae97db529b0",
+      "status": "ready"
+    },
+    {
+      "id": "g8-u08-skills-2",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-8-unit-8-skills-2-a142616.html",
+        "section": "Skills 2"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2023/0803/track-51.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-51.mp3",
+      "questions": 3,
+      "bytes": 1022179,
+      "sha1": "b0006c15b84048f92197b8bc8c1154b42b14a023",
+      "status": "ready"
+    },
+    {
+      "id": "g8-u09-getting-started",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-8-unit-9-getting-started-a142630.html",
+        "section": "Getting Started"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2023/0803/track-53.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-53.mp3",
+      "questions": 3,
+      "bytes": 1602242,
+      "sha1": "7225a6ccc35acf19b056a44eff46e295b2f97fa8",
+      "status": "ready"
+    },
+    {
+      "id": "g8-u09-communication",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-8-unit-9-communication-a142633.html",
+        "section": "Communication"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2023/0803/track-57.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-57.mp3",
+      "questions": 3,
+      "bytes": 548822,
+      "sha1": "906432e99f4af149290ac4f2e2729d993e2a6b78",
+      "status": "ready"
+    },
+    {
+      "id": "g8-u09-skills-2",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-8-unit-9-skills-2-a142642.html",
+        "section": "Skills 2"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2023/0804/track-58.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0804/track-58.mp3",
+      "questions": 3,
+      "bytes": 1197836,
+      "sha1": "cd896306572a75b48d71dc6290862063135db893",
+      "status": "ready"
+    },
+    {
+      "id": "g8-u10-getting-started",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-8-unit-10-getting-started-a142709.html",
+        "section": "Getting Started"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2023/0804/track-62.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0804/track-62.mp3",
+      "questions": 3,
+      "bytes": 1443682,
+      "sha1": "d778db630888ce55bc6ab5ea0a263804d82a61c5",
+      "status": "ready"
+    },
+    {
+      "id": "g8-u10-communication",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-8-unit-10-commmunication-a142717.html",
+        "section": "Communication"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2023/0804/track-65.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0804/track-65.mp3",
+      "questions": 3,
+      "bytes": 652196,
+      "sha1": "033304d324784c49e0219f75d8ca32ef11561372",
+      "status": "ready"
+    },
+    {
+      "id": "g8-u10-skills-2",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-8-unit-10-skills-2-a142720.html",
+        "section": "Skills 2"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2023/0804/track-66.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0804/track-66.mp3",
+      "questions": 3,
+      "bytes": 1335446,
+      "sha1": "e994e29c6dff92dce875654b96812afb1d24159c",
+      "status": "ready"
+    },
+    {
+      "id": "g8-u11-getting-started",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-8-unit-11-getting-started-a142738.html",
+        "section": "Getting Started"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2023/0804/track-68.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0804/track-68.mp3",
+      "questions": 3,
+      "bytes": 1580558,
+      "sha1": "13f70ae6d19df0d52f80be6380c3cd27baaf5eb0",
+      "status": "ready"
+    },
+    {
+      "id": "g8-u11-communication",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-8-unit-11-commmunication-a142754.html",
+        "section": "Communication"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2023/0804/track-71.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0804/track-71.mp3",
+      "questions": 3,
+      "bytes": 856229,
+      "sha1": "8ae4e87aa6ee3ee79ac44f365626d3ef4aeb0d7c",
+      "status": "ready"
+    },
+    {
+      "id": "g8-u11-skills-2",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-8-unit-11-skills-2-a142756.html",
+        "section": "Skills 2"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2023/0804/track-72.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0804/track-72.mp3",
+      "questions": 3,
+      "bytes": 1218094,
+      "sha1": "8f93e4969b7008bcce93a9668b263042d0631f3b",
+      "status": "ready"
+    },
+    {
+      "id": "g8-u12-getting-started",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-8-unit-12-getting-started-a142767.html",
+        "section": "Getting Started"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2023/0804/track-74.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0804/track-74.mp3",
+      "questions": 3,
+      "bytes": 1516283,
+      "sha1": "974e89524a8064eb2e223038c5566256371ab3fc",
+      "status": "ready"
+    },
+    {
+      "id": "g8-u12-communication",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-8-unit-12-commmunication-a142771.html",
+        "section": "Communication"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2023/0804/track-77.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0804/track-77.mp3",
+      "questions": 3,
+      "bytes": 537065,
+      "sha1": "bc80aa1509dcae2d628b0c0a79bf8f2d1a7b45f2",
+      "status": "ready"
+    },
+    {
+      "id": "g8-u12-skills-2",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-8-unit-12-skills-2-a142860.html",
+        "section": "Skills 2"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2023/0804/track-78.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0804/track-78.mp3",
+      "questions": 3,
+      "bytes": 1108872,
+      "sha1": "9964cb9aa9e72cf93bce4270d95c245771d48701",
+      "status": "ready"
+    },
+    {
+      "id": "g9-u01-getting-started",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-9-unit-1-getting-started-a155966.html",
+        "section": "Getting Started"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0515/ex1-getting-u1-ta9-global.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/ex1-getting-u1-ta9-global.mp3",
+      "questions": 3,
+      "bytes": 1142625,
+      "sha1": "08fb83a8ac1b28e88281ad758fbe24e282e6babb",
+      "status": "ready"
+    },
+    {
+      "id": "g9-u01-communication",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-9-unit-1-communication-a156621.html",
+        "section": "Communication"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0515/ex1-communication-u1-ta9-global.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/ex1-communication-u1-ta9-global.mp3",
+      "questions": 3,
+      "bytes": 697841,
+      "sha1": "28b943b8be9ec371dfac793f97a19f4f9304b2a0",
+      "status": "ready"
+    },
+    {
+      "id": "g9-u01-skills-2",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-9-unit-1-skills-2-a156628.html",
+        "section": "Skills 2"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0515/ex1-skills2-u1-ta9-global.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/ex1-skills2-u1-ta9-global.mp3",
+      "questions": 3,
+      "bytes": 1127613,
+      "sha1": "25d82beeffaeaeb5c048585fa26e41c377fd044e",
+      "status": "ready"
+    },
+    {
+      "id": "g9-u02-getting-started",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-9-unit-2-getting-started-a156653.html",
+        "section": "Getting Started"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0515/ex1-getting-u2-ta9-global.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/ex1-getting-u2-ta9-global.mp3",
+      "questions": 3,
+      "bytes": 1842923,
+      "sha1": "e2dde8f2350c1201c462c257813da180425b0b26",
+      "status": "ready"
+    },
+    {
+      "id": "g9-u02-communication",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-9-unit-2-communication-a156721.html",
+        "section": "Communication"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0515/ex1-communication-u2-ta9-global.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/ex1-communication-u2-ta9-global.mp3",
+      "questions": 3,
+      "bytes": 739958,
+      "sha1": "4af3407ff4b48711c334b154db3cba5cf6aadf83",
+      "status": "ready"
+    },
+    {
+      "id": "g9-u02-skills-2",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-9-unit-2-skills-2-a156636.html",
+        "section": "Skills 2"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0515/ex2-skills2-u2-ta9-global.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/ex2-skills2-u2-ta9-global.mp3",
+      "questions": 3,
+      "bytes": 1792466,
+      "sha1": "0c63c36ca303852b8787c437633aca088ba0a906",
+      "status": "ready"
+    },
+    {
+      "id": "g9-u03-getting-started",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-9-unit-3-getting-started-a156735.html",
+        "section": "Getting Started"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0515/ex1-getting-u3-ta9-global.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/ex1-getting-u3-ta9-global.mp3",
+      "questions": 3,
+      "bytes": 1673204,
+      "sha1": "4d772f68636afe641d32de38ab3562e1e03e00f4",
+      "status": "ready"
+    },
+    {
+      "id": "g9-u03-communication",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-9-unit-3-communication-a156767.html",
+        "section": "Communication"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0515/17.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/17.mp3",
+      "questions": 3,
+      "bytes": 861305,
+      "sha1": "f63957e3f06f9f4499189eee0007e47a379ae607",
+      "status": "ready"
+    },
+    {
+      "id": "g9-u03-skills-2",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-9-unit-3-skills-2-a156776.html",
+        "section": "Skills 2"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0515/18.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/18.mp3",
+      "questions": 3,
+      "bytes": 1643597,
+      "sha1": "7cfefaad7ff1761a616bb1970d500b3285809804",
+      "status": "ready"
+    },
+    {
+      "id": "g9-u04-getting-started",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-9-unit-4-getting-started-a156823.html",
+        "section": "Getting Started"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0515/21.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/21.mp3",
+      "questions": 3,
+      "bytes": 1839587,
+      "sha1": "71a48fe02b050830fe6f83116e4546644b65caac",
+      "status": "ready"
+    },
+    {
+      "id": "g9-u04-communication",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-9-unit-4-communication-a156832.html",
+        "section": "Communication"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0515/24.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/24.mp3",
+      "questions": 3,
+      "bytes": 732452,
+      "sha1": "2affdd3e05ed4ecc7ba0b9f5f5c65ff6d29f0a2b",
+      "status": "ready"
+    },
+    {
+      "id": "g9-u04-skills-2",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-9-unit-4-skills-2-a156835.html",
+        "section": "Skills 2"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0515/25.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/25.mp3",
+      "questions": 3,
+      "bytes": 1818737,
+      "sha1": "0ef870cba3e9b7900712ba3404636ddfd4cd90b2",
+      "status": "ready"
+    },
+    {
+      "id": "g9-u05-getting-started",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-9-unit-5-getting-started-a156847.html",
+        "section": "Getting Started"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0515/27.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/27.mp3",
+      "questions": 3,
+      "bytes": 1722827,
+      "sha1": "0eb6aad01d8bada9111cbfa014fcc6c76172f399",
+      "status": "ready"
+    },
+    {
+      "id": "g9-u05-communication",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-9-unit-5-a-communication-a156862.html",
+        "section": "Communication"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0515/30.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/30.mp3",
+      "questions": 3,
+      "bytes": 854633,
+      "sha1": "c6365e98b061a7d4153d34ebfd5a034bac7bd346",
+      "status": "ready"
+    },
+    {
+      "id": "g9-u05-skills-2",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-9-unit-5-skills-2-a156887.html",
+        "section": "Skills 2"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0515/31.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/31.mp3",
+      "questions": 3,
+      "bytes": 1721993,
+      "sha1": "d3e196eb03e508fbb7b9ee0ab389f11bfcfa73e1",
+      "status": "ready"
+    },
+    {
+      "id": "g9-u06-getting-started",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-9-unit-6-getting-started-a156899.html",
+        "section": "Getting Started"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0515/33.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/33.mp3",
+      "questions": 3,
+      "bytes": 1799972,
+      "sha1": "497b14b9221ed48a54c86fd4cfafd6e6d5fe99c5",
+      "status": "ready"
+    },
+    {
+      "id": "g9-u06-communication",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-9-unit-6-communication-a156907.html",
+        "section": "Communication"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0515/36.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/36.mp3",
+      "questions": 3,
+      "bytes": 781241,
+      "sha1": "daa9c87e1e999a48451d6d7827754ba846376ee4",
+      "status": "ready"
+    },
+    {
+      "id": "g9-u06-skills-2",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-9-unit-6-skills-2-a156909.html",
+        "section": "Skills 2"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0515/37.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/37.mp3",
+      "questions": 3,
+      "bytes": 1645682,
+      "sha1": "7179b3ecec4d0df5b2612740da4569acf04bc472",
+      "status": "ready"
+    },
+    {
+      "id": "g9-u07-getting-started",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-9-unit-7-getting-started-a163685.html",
+        "section": "Getting Started"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0515/41.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/41.mp3",
+      "questions": 3,
+      "bytes": 1741592,
+      "sha1": "68311b7590408d4a3f926e8e39db81f687f80f08",
+      "status": "ready"
+    },
+    {
+      "id": "g9-u07-communication",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-9-unit-7-communication-a163688.html",
+        "section": "Communication"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0515/44.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/44.mp3",
+      "questions": 3,
+      "bytes": 811682,
+      "sha1": "ff8b1f952dfe7f56b9e64caf6d21b02dd4c57bdf",
+      "status": "ready"
+    },
+    {
+      "id": "g9-u07-skills-2",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-9-unit-7-skills-2-a163690.html",
+        "section": "Skills 2"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2025/0212/listen-to-the-passage-and-tick-the-things-you-hear-hc-liu.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0212/listen-to-the-passage-and-tick-the-things-you-hear-hc-liu.mp3",
+      "questions": 3,
+      "bytes": 1437444,
+      "sha1": "8f17047aca8400761848c469c143817f52a45aaa",
+      "status": "ready"
+    },
+    {
+      "id": "g9-u08-getting-started",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-9-unit-8-getting-started-a163693.html",
+        "section": "Getting Started"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0515/47.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/47.mp3",
+      "questions": 3,
+      "bytes": 1998047,
+      "sha1": "04e9e1c72e8d8a4474955be35a7725d9cbc0762b",
+      "status": "ready"
+    },
+    {
+      "id": "g9-u08-communication",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-9-unit-8-communication-a163696.html",
+        "section": "Communication"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0515/50.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/50.mp3",
+      "questions": 3,
+      "bytes": 737873,
+      "sha1": "387dc242059f4053121cd4309d0ca05da6aa6d94",
+      "status": "ready"
+    },
+    {
+      "id": "g9-u08-skills-2",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-9-unit-8-skills-2-a163698.html",
+        "section": "Skills 2"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0515/51.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/51.mp3",
+      "questions": 3,
+      "bytes": 1672370,
+      "sha1": "27e8a87a1576ace9f5c86c43b94f614efd693497",
+      "status": "ready"
+    },
+    {
+      "id": "g9-u09-getting-started",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-9-unit-9-getting-started-a163701.html",
+        "section": "Getting Started"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0515/53.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/53.mp3",
+      "questions": 3,
+      "bytes": 1777037,
+      "sha1": "3c1f4b86de502e44ad0928159be81dc3a9c61397",
+      "status": "ready"
+    },
+    {
+      "id": "g9-u09-communication",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-9-unit-9-communication-a163729.html",
+        "section": "Communication"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0515/56.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/56.mp3",
+      "questions": 3,
+      "bytes": 752051,
+      "sha1": "08fdfb083c2ae18447ee148fc5a107e215daea06",
+      "status": "ready"
+    },
+    {
+      "id": "g9-u09-skills-2",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-9-unit-9-skills-2-a163737.html",
+        "section": "Skills 2"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0515/57.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/57.mp3",
+      "questions": 3,
+      "bytes": 1687799,
+      "sha1": "69ba23f992e79a5e847d815619efff718dc52d50",
+      "status": "ready"
+    },
+    {
+      "id": "g9-u10-getting-started",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-9-unit-10-getting-started-a163750.html",
+        "section": "Getting Started"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0516/61.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0516/61.mp3",
+      "questions": 3,
+      "bytes": 1840421,
+      "sha1": "25d00ff8e809172e5de626a2b793a7dca660669d",
+      "status": "ready"
+    },
+    {
+      "id": "g9-u10-communication",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-9-unit-10-communication-a163765.html",
+        "section": "Communication"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0516/64.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0516/64.mp3",
+      "questions": 3,
+      "bytes": 1019348,
+      "sha1": "563ff007f5d6ee389def2e6093675529c1271d3b",
+      "status": "ready"
+    },
+    {
+      "id": "g9-u10-skills-2",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-9-unit-10-skills-2-a163773.html",
+        "section": "Skills 2"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0516/65.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0516/65.mp3",
+      "questions": 3,
+      "bytes": 1794134,
+      "sha1": "d77e336ce3ead9ddcb9279b51f85e0a5a2d8dfde",
+      "status": "ready"
+    },
+    {
+      "id": "g9-u11-getting-started",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-9-unit-11-getting-started-a163833.html",
+        "section": "Getting Started"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0516/67.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0516/67.mp3",
+      "questions": 3,
+      "bytes": 1618160,
+      "sha1": "e39acc2eb2e6a824fb2fd7c9f8068e52e9390b11",
+      "status": "ready"
+    },
+    {
+      "id": "g9-u11-communication",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-9-unit-11-communication-a163858.html",
+        "section": "Communication"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0516/70.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0516/70.mp3",
+      "questions": 3,
+      "bytes": 1055627,
+      "sha1": "0baddbb5ce829d66ee47c55f179f1d01bc1feec3",
+      "status": "ready"
+    },
+    {
+      "id": "g9-u11-skills-2",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-9-unit-11-skills-2-a163861.html",
+        "section": "Skills 2"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0516/71.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0516/71.mp3",
+      "questions": 3,
+      "bytes": 1675706,
+      "sha1": "7889d391a826b7dc9fdcb6c75187ca87b7bd7941",
+      "status": "ready"
+    },
+    {
+      "id": "g9-u12-getting-started",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-9-unit-12-getting-started-a163866.html",
+        "section": "Getting Started"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0516/73.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0516/73.mp3",
+      "questions": 3,
+      "bytes": 1850429,
+      "sha1": "8623cdd3dff7b23ec64d986a6e54a70baed90076",
+      "status": "ready"
+    },
+    {
+      "id": "g9-u12-communication",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-9-unit-12-communication-a163873.html",
+        "section": "Communication"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0516/75.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0516/75.mp3",
+      "questions": 3,
+      "bytes": 825860,
+      "sha1": "5eb7ffb5f09a8ad143a9c13d9b877da865ffb143",
+      "status": "ready"
+    },
+    {
+      "id": "g9-u12-skills-2",
+      "source": {
+        "url": "https://loigiaihay.com/tieng-anh-9-unit-12-skills-2-a163878.html",
+        "section": "Skills 2"
+      },
+      "sourceAudioUrl": "https://img.loigiaihay.com/picture/2024/0516/76.mp3",
+      "audioUrl": "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0516/76.mp3",
+      "questions": 3,
+      "bytes": 1716572,
+      "sha1": "2c146454fee2e5e2c7b114d81eef0b055b3de60c",
+      "status": "ready"
+    }
+  ]
+}

@@ -1950,3 +1950,8 @@
 .ldd-listening-exercise-player [data-listening-audio] { min-height: 44px; }
 
 .ldd-listening-focus { margin: 10px 0; padding: 9px 12px; border-radius: 10px; background: #edf4ff; color: #254773; font-size: 13px; line-height: 1.5; }
+
+/* THCS unit picker */
+.ldd-listening-unit-picker { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin:16px 0; font-weight:700; }
+.ldd-listening-unit-picker select { padding:10px 14px; border-radius:12px; border:1px solid #64748b; background:#fff; color:#172554; font:inherit; max-width:100%; }
+.ldd-listening-lesson[hidden] { display:none !important; }

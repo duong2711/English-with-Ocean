@@ -1,3 +1,5 @@
+> **Cập nhật 01/10/2026 — THCS:** Phần THCS bên dưới là hướng dẫn cũ gồm 10 bài/lớp. Bộ đang chạy trên web đã chuyển sang 12 Unit/lớp × 3 MP3/Unit, tổng 144 bài và 432 câu hỏi. Xem [tiến độ hiện tại](THCS_LISTENING_PROGRESS.md) và [manifest nguồn–B2](THCS_LISTENING_MANIFEST.json). Phần Mất gốc vẫn là lộ trình riêng.
+
 # LDD English — Listening Recording Guide v3
 
 ## Cách dùng file này
