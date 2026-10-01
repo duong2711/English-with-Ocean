@@ -343,6 +343,7 @@
 
     window.LDDThcsVocabReset = {
         refresh: sync,
-        getResetDays: resetDelayDays
+        getResetDays: resetDelayDays,
+        openUnit: navigateToUnit
     };
 })();
