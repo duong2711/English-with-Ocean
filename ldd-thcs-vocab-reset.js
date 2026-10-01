@@ -1,5 +1,5 @@
 /* =============================================================
-   LDD ENGLISH — THCS/THPT VOCAB RESET v5 · LOW EGRESS
+   LDD ENGLISH — VOCAB UNIT RESET v6 · LOW EGRESS
    completion #1 -> reset after 7 days
    completion #2 -> reset after 14 days
    completion #3+ -> permanent completion
@@ -158,7 +158,11 @@
             for (const row of rows) {
                 const count = Number(row.times_completed || 0);
                 const target = resetTarget(row);
-                if (Number(row.grade) < 6 || Number(row.grade) > 12 || !row.completed || count < 1 || count >= 3 || !target || target > now) continue;
+                // Keep reset rules aligned with the countdown UI: every row that
+                // receives a 7/14-day countdown must actually reset when due,
+                // regardless of grade. Historical Grade 4 rows were previously
+                // shown a countdown but skipped here, leaving them completed forever.
+                if (!row.completed || count < 1 || count >= 3 || !target || target > now) continue;
 
                 const patch = await request('PATCH', 'thcs_unit_progress', {
                     user_id: 'eq.' + uid,
