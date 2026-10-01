@@ -57,7 +57,7 @@
        This avoids duplicating credentials in this helper module. */
     function loadAnonKey() {
         if (anonKeyPromise) return anonKeyPromise;
-        anonKeyPromise = fetch('ldd-thcs-vocab-reset.js?v=3', { cache: 'force-cache' })
+        anonKeyPromise = fetch('ldd-thcs-vocab-reset.js?v=4', { cache: 'force-cache' })
             .then(function (r) { return r.ok ? r.text() : ''; })
             .then(function (text) {
                 const match = text.match(/SUPABASE_ANON_KEY\s*=\s*['\"]([^'\"]+)['\"]/);
