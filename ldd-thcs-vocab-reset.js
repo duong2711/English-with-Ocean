@@ -198,12 +198,18 @@
     }
 
     function readyRows() {
-        const now = Date.now();
+        // After a countdown expires, sync() clears completed_at and completed.
+        // That reset state must stay visible in "Reset & mở khóa" until the
+        // learner completes the Unit again. Do not depend on resetTarget()
+        // here because completed_at is intentionally null after the reset.
         return (rows || []).filter(function (row) {
-            const target = resetTarget(row);
             const count = Number(row.times_completed || 0);
-            return !row.completed && count >= 1 && count <= 2 && target && target <= now;
-        }).sort(function (a, b) { return resetTarget(a) - resetTarget(b); });
+            return !row.completed && count >= 1 && count <= 2 && !row.completed_at;
+        }).sort(function (a, b) {
+            const ga = Number(a.grade || 0), gb = Number(b.grade || 0);
+            if (ga !== gb) return ga - gb;
+            return unitNumber(a.unit_id) - unitNumber(b.unit_id);
+        });
     }
 
     function observeTimerList() {
@@ -227,7 +233,7 @@
             const button = document.createElement('button');
             button.type = 'button';
             button.className = 'ldd-home-timer-row ldd-grade-timer-row ldd-grade-ready ldd-thcs-vocab-reset-ready';
-            button.innerHTML = '<span class="ldd-home-timer-icon">✓</span>' +
+            button.innerHTML = '<span class="ldd-home-timer-icon">↻</span>' +
                 '<span class="ldd-home-timer-copy"><strong></strong><small>Đã reset · cần ôn lại từ vựng</small></span>' +
                 '<span class="ldd-home-timer-value">LÀM NGAY</span>';
             button.querySelector('strong').textContent = 'Lớp ' + row.grade + ' · Unit ' + (Number.isFinite(unitNumber(row.unit_id)) ? unitNumber(row.unit_id) : row.unit_id);
