@@ -1,5 +1,5 @@
 /* =============================================================
-   LDD ENGLISH — THCS/THPT VOCAB RESET v4 · LOW EGRESS
+   LDD ENGLISH — THCS/THPT VOCAB RESET v5 · LOW EGRESS
    completion #1 -> reset after 7 days
    completion #2 -> reset after 14 days
    completion #3+ -> permanent completion
@@ -137,13 +137,16 @@
         try {
             const uid = userId();
             if (!uid) return;
-            const grade = assignedGrade();
-            if (!grade || grade < 6 || grade > 12) return;
+            // Reset must be driven by the progress row itself, not by
+            // student_grade_assignments. Some valid students do not have a grade
+            // assignment row yet; previously that made the countdown reach zero
+            // while sync() returned early and left completed=true forever.
+            // Query only this user's progress (small result set), then enforce
+            // the supported THCS/THPT grade range in the reset loop below.
             const params = {
                 select: 'user_id,grade,unit_id,flashcard_done,translate_done,story_done,completed,times_completed,completed_at',
                 user_id: 'eq.' + uid,
-                order: 'grade.asc,unit_id.asc',
-                grade: 'eq.' + grade
+                order: 'grade.asc,unit_id.asc'
             };
             const result = await request('GET', 'thcs_unit_progress', params);
             if (!result.ok) return;
