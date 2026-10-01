@@ -176,6 +176,18 @@
                     completed_at: null
                 });
                 if (patch.ok) {
+                    // Reset the per-frame story progress too. Clearing only
+                    // thcs_unit_progress.story_done is not enough because the
+                    // four story frames keep their own completed flags.
+                    await request('PATCH', 'thcs_story_frame_progress', {
+                        user_id: 'eq.' + uid,
+                        grade: 'eq.' + row.grade,
+                        unit_id: 'eq.' + row.unit_id
+                    }, {
+                        completed: false,
+                        updated_at: new Date().toISOString()
+                    });
+
                     row.flashcard_done = false;
                     row.translate_done = false;
                     row.story_done = false;
