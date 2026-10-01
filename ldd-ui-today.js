@@ -378,6 +378,31 @@
             else activeTasks.push(item);
         }
 
+        // Any unit whose countdown has already reset remains an active homepage
+        // mission until the learner completes that unit again. Reset rows keep
+        // times_completed (1 or 2) but clear completed/completed_at.
+        const resetReviewUnits = (state.thcs || []).filter(function (r) {
+            const times = Number(r.times_completed || 0);
+            return !r.completed && times >= 1 && times <= 2 && !r.completed_at;
+        }).sort(function (a, b) {
+            const ga = Number(a.grade || 0), gb = Number(b.grade || 0);
+            if (ga !== gb) return ga - gb;
+            const ua = String(a.unit_id || '').match(/(\d+)(?!.*\d)/);
+            const ub = String(b.unit_id || '').match(/(\d+)(?!.*\d)/);
+            return Number(ua ? ua[1] : 0) - Number(ub ? ub[1] : 0);
+        });
+
+        resetReviewUnits.forEach(function (r) {
+            activeTasks.push(dailyTask(
+                'review-unit:' + Number(r.grade || 0) + ':' + encodeURIComponent(String(r.unit_id || '')),
+                '↻',
+                'Ôn lại · Lớp ' + r.grade + ' · ' + unitLabel(r.unit_id),
+                1,
+                'Unit',
+                'Đã hết thời gian chờ · cần hoàn thành lại Unit này'
+            ));
+        });
+
         place(
             dailyTask('vocab-poor', '🎯', 'Tập lại phát âm',
                 Math.min(DAILY_POOR_TARGET, poor), 'từ',
@@ -498,6 +523,16 @@
     function task(target, icon, title, count, note) { return { target: target, icon: icon, title: title, count: count, note: note }; }
 
     function navigateToday(target) {
+        if (String(target || '').indexOf('review-unit:') === 0) {
+            const parts = String(target).split(':');
+            const grade = Number(parts[1] || 0);
+            let unitId = parts.slice(2).join(':');
+            try { unitId = decodeURIComponent(unitId); } catch (e) {}
+            if (window.LDDThcsVocabReset && typeof window.LDDThcsVocabReset.openUnit === 'function') {
+                return window.LDDThcsVocabReset.openUnit(grade, unitId);
+            }
+            return navigateAndAct('tab-tu-vung', function () { openVocabFolder('thcs-folder-card'); });
+        }
         if (target === 'ipa') return navigateAndAct('tab-phien-am', function () { scrollToEl(document.querySelector('.ipa-chart')); });
         if (target === 'news') return navigateAndAct('tab-tu-vung', function () { openVocabFolder('news-folder-card'); });
         if (target === 'tests') return navigateAndAct('tab-kiem-tra', function () { openTestFolder('ctest-folder-card'); });
