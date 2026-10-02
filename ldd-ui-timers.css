@@ -186,9 +186,12 @@ body.ldd-ui-v2 .ldd-home-dashboard > .ldd-home-live-panel {
 }
 
 .ldd-home-timer-value {
+    min-width: 16ch;
     color: #9a5b05;
     font-size: .7rem;
     font-weight: 900;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
     white-space: nowrap;
 }
 
