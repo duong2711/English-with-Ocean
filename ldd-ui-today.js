@@ -713,28 +713,65 @@
     function prettyKey(key) { return String(key || 'Chủ đề').replace(/[-_]+/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); }); }
 
     function renderCountdowns(host, items) {
-        host.innerHTML = '';
-        if (!items.length) {
-            host.innerHTML = '<p class="ldd-home-live-empty">Hiện chưa có mục nào đang chờ reset hoặc mở theo thời gian.</p>';
-            return;
-        }
+        if (!host) return;
+
+        // Reconcile countdown rows instead of clearing the whole host.
+        // The THCS reset module owns .ldd-thcs-vocab-reset-ready rows; keeping
+        // those nodes intact prevents the two modules from removing/re-adding
+        // each other's content on every dashboard refresh.
+        const existing = new Map();
+        host.querySelectorAll('[data-ldd-live-countdown="1"]').forEach(function (row) {
+            existing.set(row.dataset.countdownKey || '', row);
+        });
+
+        const used = new Set();
         items.forEach(function (item) {
-            const row = document.createElement('div');
-            row.className = 'ldd-home-timer-row';
+            const key = String(item.kind || '') + '|' + String(item.title || '');
+            let row = existing.get(key);
+            if (!row) {
+                row = document.createElement('div');
+                row.className = 'ldd-home-timer-row';
+                row.dataset.lddLiveCountdown = '1';
+                row.dataset.countdownKey = key;
+                row.innerHTML = '<span class="ldd-home-timer-icon"></span><span class="ldd-home-timer-copy"><strong></strong><small></small></span><span class="ldd-home-timer-value" data-countdown></span>';
+            }
+
             row.dataset.targetMs = String(item.target);
-            row.innerHTML = '<span class="ldd-home-timer-icon">' + (item.kind === 'reset' ? '↻' : '🔒') + '</span><span class="ldd-home-timer-copy"><strong></strong><small></small></span><span class="ldd-home-timer-value" data-countdown></span>';
+            row.dataset.timerKind = item.kind || '';
+            row.querySelector('.ldd-home-timer-icon').textContent = item.kind === 'reset' ? '↻' : '🔒';
             row.querySelector('strong').textContent = item.title;
             row.querySelector('small').textContent = item.note;
             host.appendChild(row);
+            used.add(key);
         });
+
+        existing.forEach(function (row, key) {
+            if (!used.has(key)) row.remove();
+        });
+
+        const hasReadyRows = !!host.querySelector('.ldd-thcs-vocab-reset-ready');
+        let empty = host.querySelector(':scope > .ldd-home-live-empty');
+        if (items.length || hasReadyRows) {
+            if (empty) empty.remove();
+        } else if (!empty) {
+            empty = document.createElement('p');
+            empty.className = 'ldd-home-live-empty';
+            empty.textContent = 'Hiện chưa có mục nào đang chờ reset hoặc mở theo thời gian.';
+            host.appendChild(empty);
+        }
+
         tickCountdowns();
     }
 
     function tickCountdowns() {
         document.querySelectorAll('#tab-trang-chu [data-target-ms] [data-countdown]').forEach(function (out) {
             const row = out.closest('[data-target-ms]');
+            if (!row) return;
             const diff = Number(row.dataset.targetMs) - Date.now();
-            out.textContent = diff > 0 ? formatDuration(diff) : 'Đã tới hạn';
+            const nextText = diff > 0 ? formatDuration(diff) : 'Đã tới hạn';
+            // Avoid needless text mutations/layout work when another refresh
+            // calls tickCountdowns() inside the same second.
+            if (out.textContent !== nextText) out.textContent = nextText;
             row.classList.toggle('is-soon', diff > 0 && diff < 3600000);
         });
     }
