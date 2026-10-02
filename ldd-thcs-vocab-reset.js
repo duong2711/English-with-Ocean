@@ -240,6 +240,10 @@
         if (!host) return;
         host.querySelectorAll('.ldd-thcs-vocab-reset-ready').forEach(function (el) { el.remove(); });
         const list = readyRows();
+        if (list.length) {
+            const empty = host.querySelector(':scope > .ldd-home-live-empty');
+            if (empty) empty.remove();
+        }
         for (let i = list.length - 1; i >= 0; i--) {
             const row = list[i];
             const button = document.createElement('button');
