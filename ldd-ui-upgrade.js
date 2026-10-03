@@ -45,9 +45,9 @@
         ensureScript('ldd-vocab-dedup-script', 'ldd-vocab-dedup.js?v=1');
         ensureScript('ldd-pronunciation-fix-script', 'ldd-pronunciation-fix.js?v=3');
         ensureScript('ldd-vocab-grammar-script', 'ldd-ui-vocab-grammar.js?v=3');
-        ensureScript('ldd-home-phonetics-script', 'ldd-ui-home-phonetics.js?v=9.3');
-        ensureScript('ldd-student-grade-script', 'ldd-student-grade.js?v=2');
-        ensureScript('ldd-thcs-vocab-reset-script', 'ldd-thcs-vocab-reset.js?v=9');
+        ensureScript('ldd-home-phonetics-script', 'ldd-ui-home-phonetics.js?v=9.4');
+        ensureScript('ldd-student-grade-script', 'ldd-student-grade.js?v=3');
+        ensureScript('ldd-thcs-vocab-reset-script', 'ldd-thcs-vocab-reset.js?v=10');
         ensureScript('ldd-fast-progress-script', 'ldd-fast-progress.js?v=1');
         ensureScript('ldd-vocab-race-script', 'ldd-vocab-race.js?v=27-collision-notice');
     }

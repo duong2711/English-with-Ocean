@@ -352,6 +352,7 @@
         const host = ensureTodayHost();
         if (!host) return;
         if (!getToken() || !state) {
+            delete host.dataset.tasksSignature;
             host.innerHTML = '<div class="ldd-today-loading">Đăng nhập để xem nhiệm vụ hôm nay.</div>';
             return;
         }
@@ -431,6 +432,9 @@
             );
         }
 
+        const signature = JSON.stringify([activeTasks, completedTasks]);
+        if (host.dataset.tasksSignature === signature) return;
+        host.dataset.tasksSignature = signature;
         host.innerHTML = '';
 
         const activeGrid = document.createElement('div');
@@ -659,10 +663,15 @@
         const rankHost = panel.querySelector('#ldd-home-leaderboard');
         if (!state) {
             timerHost.innerHTML = '<p class="ldd-home-live-empty">Đăng nhập để xem countdown.</p>';
+            delete rankHost.dataset.rankSignature;
             rankHost.innerHTML = '<p class="ldd-home-live-empty">Đăng nhập để xem bảng xếp hạng.</p>';
             return;
         }
-        renderCountdowns(timerHost, buildCountdowns(state));
+        if (window.LDDStudentGrade && window.LDDStudentGrade.renderHomeTimers) {
+            window.LDDStudentGrade.renderHomeTimers(state);
+        } else {
+            renderCountdowns(timerHost, buildCountdowns(state));
+        }
         renderRank(rankHost, state.rank || []);
     }
 
@@ -764,6 +773,7 @@
     }
 
     function tickCountdowns() {
+        if (document.hidden) return;
         document.querySelectorAll('#tab-trang-chu [data-target-ms] [data-countdown]').forEach(function (out) {
             const row = out.closest('[data-target-ms]');
             if (!row) return;
@@ -785,6 +795,9 @@
     function pad(n) { return String(n).padStart(2, '0'); }
 
     function renderRank(host, rows) {
+        const signature = JSON.stringify([userId(), rows]);
+        if (host.dataset.rankSignature === signature) return;
+        host.dataset.rankSignature = signature;
         host.innerHTML = '';
         if (!rows.length) { host.innerHTML = '<p class="ldd-home-live-empty">Chưa có dữ liệu xếp hạng.</p>'; return; }
         const me = userId(), medals = ['🥇', '🥈', '🥉'];
@@ -809,3 +822,4 @@
         return Number.isFinite(n) ? n : (String(el.textContent || '').trim() ? 1 : 0);
     }
 })();
+

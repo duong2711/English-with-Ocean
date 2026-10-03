@@ -8,7 +8,7 @@ const URL='https://ywqbaksmmtvwbojcgsdd.supabase.co';
 const REF='ywqbaksmmtvwbojcgsdd';
 const KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl3cWJha3NtbXR2d2JvamNnc2RkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxNjc3NTAsImV4cCI6MjA5Nzc0Mzc1MH0.vhgt7cB6w2elm-MXY57U_wJtYkJQHDFAEsJwAArOjhQ';
 const TEACHER='lddbaiu@gmail.com', TABLE='student_grade_assignments', DAY=86400000;
-let tokenSeen=null, grade=null, timerData=null, busy=false, lastApplied=null;
+let tokenSeen=null, grade=null, timerData=null, lastApplied=null;
 
 const ready=fn=>document.readyState==='loading'?document.addEventListener('DOMContentLoaded',fn):fn();
 function token(){try{const x=JSON.parse(localStorage.getItem('sb-'+REF+'-auth-token')||'null');return x&&(x.access_token||(x.currentSession&&x.currentSession.access_token)||(Array.isArray(x)&&x[0]&&x[0].access_token))||null;}catch(e){return null;}}
@@ -50,7 +50,8 @@ async function loadOwn(silent){
  }
  const old=grade;grade=gradeNum(row&&row.grade_level);
  if(old!==grade||lastApplied!==grade){applyDefaults();document.dispatchEvent(new CustomEvent('ldd:student-grade-changed',{detail:{grade}}));}
- await loadTimers();
+ // Home data is supplied by Today; do not run a second dashboard query pipeline.
+ if(old!==grade||!silent)document.dispatchEvent(new CustomEvent('ldd:today-refresh'));
 }
 
 function applyDefaults(){
@@ -67,7 +68,13 @@ function applyDefaults(){
 
 function bindGradeEntry(){
  document.addEventListener('click',ev=>{if(!grade||teacher())return;if(ev.target.closest&&ev.target.closest('#thcs-folder-card'))setTimeout(()=>openVocabGrade(grade),100);},false);
- new MutationObserver(()=>{if(grade&&!teacher())setTimeout(applyDefaults,30);}).observe(document.body,{childList:true,subtree:true});
+ let pending=null;
+ const selector='#conj-grade-slider,#thcs-grade-tabs-nav,#thpt-grade-tabs-nav,[data-grade-filter]';
+ new MutationObserver(records=>{
+   if(!grade||teacher())return;
+   const relevant=records.some(r=>r.target.nodeType===1&&r.target.closest(selector)||Array.from(r.addedNodes).some(n=>n.nodeType===1&&(n.matches(selector)||n.querySelector(selector))));
+   if(relevant&&pending===null)pending=setTimeout(()=>{pending=null;applyDefaults();},30);
+ }).observe(document.body,{childList:true,subtree:true});
 }
 function openVocabGrade(g){
  const grid=document.getElementById('thcs-grade-grid');if(!grid||getComputedStyle(grid).display==='none')return false;
@@ -114,14 +121,9 @@ async function addAccount(){
 function filterRows(){const q=String((document.getElementById('ldd-grade-search')||{}).value||'').toLowerCase().trim();document.querySelectorAll('#ldd-grade-list .ldd-grade-row').forEach(r=>r.style.display=!q||String(r.dataset.search||'').includes(q)?'':'none');}
 
 // ---------------- Grade-aware Home countdown ----------------
-async function loadTimers(){
- if(busy||!token()||teacher())return;busy=true;try{const day=new Date().toISOString().slice(0,10);const rs=await Promise.all([
-   api('kid_topic_progress','topic_key,times_completed,completed_at',{}),
-   api('thcs_unit_progress','grade,unit_id,completed,times_completed,completed_at',grade?{grade:'eq.'+grade}:{}),
-   api('vocab_weekly_tests','id,created_at,status',{order:'created_at.desc',limit:'1'}),
-   api('conj_practice_sessions','id,session_date',{session_date:'eq.'+day})]);
-   timerData={kid:rs[0].ok?rs[0].data:[],thcs:rs[1].ok?rs[1].data:[],vocab:rs[2].ok?rs[2].data:[],conj:rs[3].ok?rs[3].data:[]};renderTimers();
- }finally{busy=false;}
+function renderHomeTimers(state){
+ timerData={kid:state.kid||[],thcs:state.thcs||[],vocab:state.vocabTests||[],conj:state.conjToday||[]};
+ renderTimers();
 }
 function target(at,times){const n=Number(times||0),days=n===1?7:n===2?14:null,st=Date.parse(at||'');return days&&Number.isFinite(st)?st+days*DAY:null;}
 function nextUtc(){const d=new Date();return Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate()+1);}
@@ -133,10 +135,37 @@ function timerItems(){
  if((timerData.conj||[]).length>=2){const t=nextUtc();a.push({title:'Luyện tập Liên từ',note:t<=now?'Đã reset lượt luyện tập':'Reset 2 lượt/ngày sau',target:t,kind:'reset',action:{type:'conj'}});}
  a.forEach(x=>x.ready=x.target<=now);a.sort((x,y)=>x.ready!==y.ready?(x.ready?-1:1):x.target-y.target);const units=a.filter(x=>x.scope==='thcs'),other=a.filter(x=>x.scope!=='thcs');return units.concat(other.slice(0,Math.max(0,12-units.length)));
 }
-function tickTimers(){if(token()&&!teacher()&&timerData)renderTimers();}
+function tickTimers(){if(!document.hidden&&token()&&timerData)renderTimers();}
+function setText(el,text){if(el.textContent!==text)el.textContent=text;}
 function renderTimers(){
- const host=document.getElementById('ldd-home-timer-list');if(!host||!timerData)return;const a=timerItems();host.innerHTML='';if(!a.length){host.innerHTML='<p class="ldd-home-live-empty">Hiện chưa có mục nào đang chờ reset hoặc mở'+(grade?' cho Lớp '+grade:'')+'.</p>';return;}
- a.forEach(it=>{const b=document.createElement('button');b.type='button';b.className='ldd-home-timer-row ldd-grade-timer-row'+(it.ready?' ldd-grade-ready':'');b.dataset.targetMs=it.target;b.innerHTML='<span class="ldd-home-timer-icon">'+(it.ready?'✓':it.kind==='reset'?'↻':'🔒')+'</span><span class="ldd-home-timer-copy"><strong></strong><small></small></span><span class="ldd-home-timer-value"></span>';b.querySelector('strong').textContent=it.title;b.querySelector('small').textContent=it.note;b.querySelector('.ldd-home-timer-value').textContent=it.ready?'LÀM NGAY':remain(it.target-Date.now());b.onclick=()=>navigate(it.action);host.appendChild(b);});
+ const host=document.getElementById('ldd-home-timer-list');if(!host||!timerData)return;
+ const a=timerItems(),existing=new Map();
+ host.querySelectorAll('[data-grade-countdown-key]').forEach(el=>existing.set(el.dataset.gradeCountdownKey,el));
+ // Remove only the old Today renderer's rows during a one-time ownership handoff.
+ host.querySelectorAll('[data-ldd-live-countdown]').forEach(el=>el.remove());
+ const used=new Set();let previous=null;
+ a.forEach(it=>{
+   const key=it.kind+'|'+it.title;let b=existing.get(key);
+   if(!b){b=document.createElement('button');b.type='button';b.dataset.gradeCountdownKey=key;
+     b.innerHTML='<span class="ldd-home-timer-icon"></span><span class="ldd-home-timer-copy"><strong></strong><small></small></span><span class="ldd-home-timer-value"></span>';
+     b.onclick=()=>navigate(b.lddTimerAction);
+   }
+   b.lddTimerAction=it.action;
+   const cls='ldd-home-timer-row ldd-grade-timer-row'+(it.ready?' ldd-grade-ready':'');
+   if(b.className!==cls)b.className=cls;
+   if(b.dataset.targetMs!==String(it.target))b.dataset.targetMs=String(it.target);
+   setText(b.querySelector('.ldd-home-timer-icon'),it.ready?'✓':it.kind==='reset'?'↻':'🔒');
+   setText(b.querySelector('strong'),it.title);setText(b.querySelector('small'),it.note);
+   setText(b.querySelector('.ldd-home-timer-value'),it.ready?'LÀM NGAY':remain(it.target-Date.now()));
+   const next=previous?previous.nextElementSibling:host.querySelector('[data-grade-countdown-key]');
+   if(b!==next)host.insertBefore(b,next||null);
+   previous=b;used.add(key);
+ });
+ existing.forEach((el,key)=>{if(!used.has(key))el.remove();});
+ let empty=host.querySelector(':scope > .ldd-home-live-empty');
+ if(a.length||host.querySelector('.ldd-thcs-vocab-reset-ready')){if(empty)empty.remove();}
+ else{if(!empty){empty=document.createElement('p');empty.className='ldd-home-live-empty';host.appendChild(empty);}
+   setText(empty,'Hiện chưa có mục nào đang chờ reset hoặc mở'+(grade?' cho Lớp '+grade:'')+'.');}
 }
 function remain(ms){let s=Math.max(0,Math.floor(ms/1000)),d=Math.floor(s/86400),h=Math.floor(s%86400/3600),m=Math.floor(s%3600/60),x=s%60;const clock=[h,m,x].map(n=>String(n).padStart(2,'0')).join(':');return d?d+' ngày '+clock:clock;}
 const pretty=s=>String(s||'Chủ đề').replace(/[-_]+/g,' ').replace(/\b\w/g,c=>c.toUpperCase());
@@ -152,5 +181,6 @@ function navigate(a){if(!a)return;
  if(a.type==='conj')go('tab-tu-vung',()=>click('conj-folder-card'));
 }
 
-window.LDDStudentGrade={getGrade:()=>grade,refresh:()=>loadOwn(false),applyDefaults};
+window.LDDStudentGrade={getGrade:()=>grade,refresh:()=>loadOwn(false),applyDefaults,renderHomeTimers};
 })();
+

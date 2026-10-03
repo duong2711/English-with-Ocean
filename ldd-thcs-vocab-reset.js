@@ -238,24 +238,35 @@
     function renderReadyRows() {
         const host = document.getElementById('ldd-home-timer-list');
         if (!host) return;
-        host.querySelectorAll('.ldd-thcs-vocab-reset-ready').forEach(function (el) { el.remove(); });
         const list = readyRows();
+        const existing = new Map();
+        host.querySelectorAll('.ldd-thcs-vocab-reset-ready').forEach(function (el) { existing.set(el.dataset.resetKey, el); });
+        const used = new Set();
+        let previous = null;
         if (list.length) {
             const empty = host.querySelector(':scope > .ldd-home-live-empty');
             if (empty) empty.remove();
         }
-        for (let i = list.length - 1; i >= 0; i--) {
-            const row = list[i];
-            const button = document.createElement('button');
-            button.type = 'button';
-            button.className = 'ldd-home-timer-row ldd-grade-timer-row ldd-grade-ready ldd-thcs-vocab-reset-ready';
-            button.innerHTML = '<span class="ldd-home-timer-icon">↻</span>' +
-                '<span class="ldd-home-timer-copy"><strong></strong><small>Đã reset · cần ôn lại từ vựng</small></span>' +
-                '<span class="ldd-home-timer-value">LÀM NGAY</span>';
-            button.querySelector('strong').textContent = 'Lớp ' + row.grade + ' · Unit ' + (Number.isFinite(unitNumber(row.unit_id)) ? unitNumber(row.unit_id) : row.unit_id);
-            button.addEventListener('click', function () { navigateToUnit(Number(row.grade), row.unit_id); });
-            host.insertBefore(button, host.firstChild);
-        }
+        list.forEach(function (row) {
+            const key = row.grade + '|' + row.unit_id;
+            let button = existing.get(key);
+            if (!button) {
+                button = document.createElement('button');
+                button.type = 'button';
+                button.dataset.resetKey = key;
+                button.className = 'ldd-home-timer-row ldd-grade-timer-row ldd-grade-ready ldd-thcs-vocab-reset-ready';
+                button.innerHTML = '<span class="ldd-home-timer-icon">↻</span>' +
+                    '<span class="ldd-home-timer-copy"><strong></strong><small>Đã reset · cần ôn lại từ vựng</small></span>' +
+                    '<span class="ldd-home-timer-value">LÀM NGAY</span>';
+                button.querySelector('strong').textContent = 'Lớp ' + row.grade + ' · Unit ' + (Number.isFinite(unitNumber(row.unit_id)) ? unitNumber(row.unit_id) : row.unit_id);
+                button.addEventListener('click', function () { navigateToUnit(Number(row.grade), row.unit_id); });
+            }
+            const next = previous ? previous.nextElementSibling : host.firstElementChild;
+            if (button !== next) host.insertBefore(button, next);
+            previous = button;
+            used.add(key);
+        });
+        existing.forEach(function (el, key) { if (!used.has(key)) el.remove(); });
     }
 
     function visibleGrade() {
