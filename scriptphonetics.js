@@ -14623,7 +14623,8 @@ function toggleCompletion(symbolElement) {
                 if (!progress.completed_at) continue; // hoàn thành từ TRƯỚC khi có tính năng này -> bỏ qua an toàn
                 const completedAtMs = new Date(progress.completed_at).getTime();
                 if (isNaN(completedAtMs) || now < completedAtMs + expireDays * 24 * 60 * 60 * 1000) continue; // chưa hết hạn
-                await thcsSaveProgress(assignedGrade, unit.id, { flashcard_done: false, translate_done: false, story_done: false, completed_at: null });
+                const reset = await thcsSaveProgress(assignedGrade, unit.id, { flashcard_done: false, translate_done: false, story_done: false, completed_at: null });
+                if (!reset) continue;
                 if (currentUnit && currentUnit.id === unit.id && currentGradeNum === assignedGrade) {
                     thcsUpdateSubtabIndicators(unit);
                 }
@@ -14723,6 +14724,18 @@ function toggleCompletion(symbolElement) {
             if (!gradeNum || !unitId) return null;
             const key = thcsProgressKey(gradeNum, unitId);
             const existing = thcsProgressMap[key] || { flashcard_done: false, translate_done: false, story_done: false, completed: false, times_completed: 0, completed_at: null };
+            const resettingStory = patch.flashcard_done === false && patch.translate_done === false && patch.story_done === false;
+            if (resettingStory && currentUserId) {
+                try {
+                    const { error } = await sb.from('thcs_story_frame_progress')
+                        .update({ completed: false, updated_at: new Date().toISOString() })
+                        .eq('user_id', currentUserId).eq('grade', gradeNum).eq('unit_id', unitId);
+                    if (error) throw error;
+                } catch (err) {
+                    console.error('Chưa reset được câu chuyện; giữ Unit để thử lại:', err.message);
+                    return null;
+                }
+            }
             const merged = Object.assign({}, existing, patch);
             merged.completed = !!(merged.flashcard_done && merged.translate_done && merged.story_done);
             merged.just_completed = false;
@@ -14753,6 +14766,7 @@ function toggleCompletion(symbolElement) {
                     .from('thcs_unit_progress')
                     .upsert(payload, { onConflict: 'user_id,grade,unit_id' });
                 if (error) {
+                    if (resettingStory) { thcsProgressMap[key] = existing; return null; }
                     console.error('Lỗi khi lưu tiến độ Unit (THCS/THPT — kiểm tra RLS/UNIQUE constraint trên bảng thcs_unit_progress):', error);
                     // [MỚI] In thêm dạng JSON chữ thuần (dễ copy trong Console hơn object thu gọn).
                     try { console.error('Chi tiết lỗi (copy dòng này gửi để debug):', JSON.stringify({ message: error.message, code: error.code, details: error.details, hint: error.hint }, null, 2)); } catch (e2) {}
@@ -14764,11 +14778,17 @@ function toggleCompletion(symbolElement) {
                     }
                 }
             } catch (err) {
+                if (resettingStory) { thcsProgressMap[key] = existing; return null; }
                 console.error('Lỗi ngoại lệ khi lưu tiến độ Unit (THCS/THPT):', err.message);
                 try { console.error('Chi tiết lỗi ngoại lệ (copy dòng này gửi để debug):', JSON.stringify({ message: err.message, name: err.name, stack: err.stack }, null, 2)); } catch (e2) {}
                 if (window.vocabTap && window.vocabTap.toast) {
                     window.vocabTap.toast('⚠️ Lưu tiến độ thất bại (lỗi kết nối/máy chủ). Tiến độ có thể mất khi tải lại trang, hãy thử lại.', 'info');
                 }
+            }
+            if (resettingStory) {
+                thcsClearFrameProgress(gradeNum, unitId);
+                if (currentUnit && currentUnit.id === unitId && currentGradeNum === gradeNum) await thcsInitStory(currentUnit);
+                document.dispatchEvent(new CustomEvent('ldd:today-refresh'));
             }
             return merged;
         }
@@ -14798,7 +14818,10 @@ function toggleCompletion(symbolElement) {
         // ldd-thcs-vocab-reset.js can reset a Unit while this page is already open. Invalidate
         // the in-memory cache immediately; otherwise the UI can keep the old three "done" flags
         // and the next completion will never advance times_completed.
-        document.addEventListener('ldd:thcs-vocab-reset', async () => {
+        document.addEventListener('ldd:thcs-vocab-reset', async (event) => {
+            const resetUnits = event.detail && event.detail.units;
+            if (resetUnits) resetUnits.forEach(row => thcsClearFrameProgress(row.grade, row.unitId));
+            else thcsFrameProgressMap = {};
             thcsProgressLoadedForUser = null;
             await thcsEnsureProgressLoaded();
             if (currentGradeNum && currentGradeUnits && thcsGrade6Panel.style.display !== 'none') {
@@ -14806,6 +14829,9 @@ function toggleCompletion(symbolElement) {
             }
             if (currentUnit && thcsUnitPanel.style.display !== 'none') {
                 thcsUpdateSubtabIndicators(currentUnit);
+                if (!resetUnits || resetUnits.some(row => row.grade === currentGradeNum && row.unitId === currentUnit.id)) {
+                    await thcsInitStory(currentUnit);
+                }
             }
         });
         function thcsNotifyLoginToSave() {
@@ -15629,6 +15655,11 @@ function toggleCompletion(symbolElement) {
             return gradeNum + '::' + unitId + '::' + frameIndex;
         }
 
+        function thcsClearFrameProgress(gradeNum, unitId) {
+            const prefix = gradeNum + '::' + unitId + '::';
+            Object.keys(thcsFrameProgressMap).forEach(key => { if (key.startsWith(prefix)) delete thcsFrameProgressMap[key]; });
+        }
+
         async function thcsLoadFrameProgress(gradeNum, unitId) {
             if (!currentUserId) return;
             try {
@@ -15639,6 +15670,7 @@ function toggleCompletion(symbolElement) {
                     .eq('grade', gradeNum)
                     .eq('unit_id', unitId);
                 if (error) throw error;
+                thcsClearFrameProgress(gradeNum, unitId);
                 (data || []).forEach(row => {
                     thcsFrameProgressMap[thcsFrameProgressKey(gradeNum, unitId, row.frame_index)] = !!row.completed;
                 });

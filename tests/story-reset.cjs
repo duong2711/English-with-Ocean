@@ -1,0 +1,31 @@
+const {JSDOM}=require('jsdom');
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const path=require('node:path');const root=path.resolve(__dirname,'..');
+(async()=>{
+ const dom=new JSDOM('',{url:'https://test.invalid',runScripts:'outside-only'}),w=dom.window;
+ Object.defineProperty(w.document,'readyState',{value:'loading'});
+ w.document.addEventListener=()=>{};let delays=[];w.setTimeout=(fn,ms)=>{delays.push(ms);return 1;};w.clearTimeout=()=>{};
+ const token='x.'+Buffer.from(JSON.stringify({sub:'test-user',email:'student@example.test'})).toString('base64')+'.x';
+ w.localStorage.setItem('sb-ywqbaksmmtvwbojcgsdd-auth-token',JSON.stringify({access_token:token}));
+ const row={grade:9,unit_id:'u1',times_completed:1,completed:true,completed_at:'2020-01-01',story_done:true};
+ let fail=true,calls=[],events=[];
+ w.document.dispatchEvent=e=>{events.push(e);return true;};
+ w.fetch=async(url,opt)=>{const table=new URL(url).pathname.split('/').pop();calls.push([opt.method,table,opt.body&&JSON.parse(opt.body)]);return{ok:!(fail&&table==='thcs_story_frame_progress'),status:200,json:async()=>opt.method==='GET'?[{...row}]:[]};};
+ let source=fs.readFileSync(path.join(root,'ldd-thcs-vocab-reset.js'),'utf8');let i=source.lastIndexOf('})();');w.eval(source.slice(0,i)+'window.testSync=sync;'+source.slice(i));
+ await w.testSync();assert.equal(calls.filter(x=>x[0]==='PATCH').length,1);assert.equal(events.length,0);assert(delays.some(x=>x>=30000&&x<=32000));
+ fail=false;calls=[];await w.testSync();assert.deepEqual(calls.filter(x=>x[0]==='PATCH').map(x=>x[1]),['thcs_story_frame_progress','thcs_unit_progress']);
+ const event=events.find(x=>x.type==='ldd:thcs-vocab-reset');assert.equal(event.detail.units[0].unitId,'u1');dom.window.close();
+ // Exercise the actual main-module reset function with a stubbed database client.
+ const main=fs.readFileSync(path.join(root,'scriptphonetics.js'),'utf8');
+ const fn=main.slice(main.indexOf('        async function thcsSaveProgress('),main.indexOf('        // Unit đầu tiên (index 0)',main.indexOf('        async function thcsSaveProgress(')));
+ const clear=main.slice(main.indexOf('        function thcsClearFrameProgress('),main.indexOf('        async function thcsLoadFrameProgress('));
+ const calls2=[];let frameFailure=true,refreshes=0;
+ const ctx={console:{error(){}},currentUserId:'u',currentUnit:{id:'u1'},currentGradeNum:9,thcsProgressMap:{'9::u1':{...row,flashcard_done:true,translate_done:true}},thcsFrameProgressMap:{'9::u1::1':true,'9::u2::1':true},thcsProgressKey:(g,u)=>g+'::'+u,window:{},document:{dispatchEvent(){}},CustomEvent:class{},thcsInitStory:async()=>{refreshes++;}};
+ ctx.sb={from:table=>({update:body=>{calls2.push(table);const q={eq:()=>q,then:resolve=>resolve({error:frameFailure?new Error('offline'):null})};return q;},upsert:async()=>{calls2.push(table);return{error:null};}})};
+ vm.createContext(ctx);vm.runInContext(clear+fn,ctx);
+ const patch={flashcard_done:false,translate_done:false,story_done:false,completed_at:null};
+ assert.equal(await ctx.thcsSaveProgress(9,'u1',patch),null);assert.equal(ctx.thcsProgressMap['9::u1'].completed,true);assert.equal(refreshes,0);
+ frameFailure=false;calls2.length=0;await ctx.thcsSaveProgress(9,'u1',patch);
+ assert.deepEqual(calls2,['thcs_story_frame_progress','thcs_unit_progress']);assert.equal(ctx.thcsFrameProgressMap['9::u1::1'],undefined);assert.equal(ctx.thcsFrameProgressMap['9::u2::1'],true);assert.equal(refreshes,1);assert.equal(ctx.thcsProgressMap['9::u1'].story_done,false);
+ console.log('PASS: both reset paths clear frames first; failed frame reset keeps Unit due and retries; cache scoped to Unit; open story refreshes.');
+})().catch(e=>{console.error(e);process.exitCode=1;});

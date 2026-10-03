@@ -114,7 +114,7 @@
         (rows || []).forEach(function (row) {
             const count = Number(row.times_completed || 0);
             const target = resetTarget(row);
-            if (row.completed && count >= 1 && count <= 2 && target && target > now) nearest = Math.min(nearest, target);
+            if (row.completed && count >= 1 && count <= 2 && target) nearest = Math.min(nearest, target > now ? target : now + 30000);
         });
         if (!Number.isFinite(nearest)) return;
         dueTimer = setTimeout(function () { sync(); }, Math.max(1000, nearest - now + 1000));
@@ -155,6 +155,7 @@
 
             const now = Date.now();
             let changed = false;
+            const resetUnits = [];
             for (const row of rows) {
                 const count = Number(row.times_completed || 0);
                 const target = resetTarget(row);
@@ -164,6 +165,17 @@
                 // shown a countdown but skipped here, leaving them completed forever.
                 if (!row.completed || count < 1 || count >= 3 || !target || target > now) continue;
 
+                // Clear frame completion first. If this fails, keep the Unit due
+                // so the next sync retries instead of permanently skipping its story.
+                const story = await request('PATCH', 'thcs_story_frame_progress', {
+                    user_id: 'eq.' + uid,
+                    grade: 'eq.' + row.grade,
+                    unit_id: 'eq.' + row.unit_id
+                }, {
+                    completed: false,
+                    updated_at: new Date().toISOString()
+                });
+                if (!story.ok) continue;
                 const patch = await request('PATCH', 'thcs_unit_progress', {
                     user_id: 'eq.' + uid,
                     grade: 'eq.' + row.grade,
@@ -176,18 +188,8 @@
                     completed_at: null
                 });
                 if (patch.ok) {
-                    // Reset the per-frame story progress too. Clearing only
-                    // thcs_unit_progress.story_done is not enough because the
-                    // four story frames keep their own completed flags.
-                    await request('PATCH', 'thcs_story_frame_progress', {
-                        user_id: 'eq.' + uid,
-                        grade: 'eq.' + row.grade,
-                        unit_id: 'eq.' + row.unit_id
-                    }, {
-                        completed: false,
-                        updated_at: new Date().toISOString()
-                    });
-
+                    resetUnits.push({ grade: Number(row.grade), unitId: row.unit_id });
+                    row.completed_at = null;
                     row.flashcard_done = false;
                     row.translate_done = false;
                     row.story_done = false;
@@ -202,7 +204,7 @@
             scheduleNextDueSync();
             if (changed) {
                 document.dispatchEvent(new CustomEvent('ldd:today-refresh'));
-                document.dispatchEvent(new CustomEvent('ldd:thcs-vocab-reset'));
+                document.dispatchEvent(new CustomEvent('ldd:thcs-vocab-reset', { detail: { units: resetUnits } }));
             }
         } finally {
             syncing = false;
