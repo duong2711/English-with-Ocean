@@ -22358,7 +22358,7 @@ function toggleCompletion(symbolElement) {
             if (paragraphs.length) {
                 paragraphs.forEach((p, i) => {
                     const speechText = (p.textContent || '').trim().replace(/\s+/g, ' ');
-                    if (speechText) pieces.push({ text: speechText, voice: i % 2 });
+                    if (speechText) pieces.push({ text: speechText, voice: p.hasAttribute('data-voice') ? (Number(p.getAttribute('data-voice')) || 0) : i % 2 });
                 });
             } else {
                 const speechText = (box.textContent || '').trim().replace(/\s+/g, ' ');
@@ -22780,6 +22780,7 @@ function toggleCompletion(symbolElement) {
     // ===== CHUYỂN ĐỔI MÀN HÌNH / MỞ - ĐÓNG FOLDER ========================
     // =====================================================================
     function showView(name) {
+        if (name !== 'take') iltStopTts();
         listView.style.display   = name === 'list'   ? 'block' : 'none';
         editorView.style.display = name === 'editor' ? 'block' : 'none';
         takeView.style.display   = name === 'take'   ? 'block' : 'none';
