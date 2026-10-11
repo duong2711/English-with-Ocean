@@ -22297,6 +22297,7 @@ function toggleCompletion(symbolElement) {
         document.removeEventListener('keydown', iltHandleHighlightUndoRedoKeydown);
         clearInterval(iltTestTimerInterval);
         iltTestTimerInterval = null;
+        iltStopTts();
         if (iltAudioEl) { if (iltAudioEl._setAllowPause) iltAudioEl._setAllowPause(); try { iltAudioEl.pause(); } catch (e) {} }
     }
 
@@ -22332,7 +22333,106 @@ function toggleCompletion(symbolElement) {
     // "Không hiện audio": dùng đối tượng Audio() thuần JS, KHÔNG gắn thẻ
     // <audio> nào lên giao diện nên học viên không thấy/điều khiển được.
     // =====================================================================
+
+    // IELTS bài luyện mới dùng transcript tự biên soạn và TTS của trình duyệt.
+    // Không phát lại khi đang thi; bài cũ vẫn sử dụng MP3 và cách phát ban đầu.
+    let iltTtsSerial = 0;
+    let iltTtsUtterance = null;
+    function iltStopTts() {
+        iltTtsSerial++;
+        if (iltTtsUtterance && 'speechSynthesis' in window) {
+            try { window.speechSynthesis.cancel(); } catch (_) {}
+        }
+        iltTtsUtterance = null;
+    }
+    function iltPrepareTtsPlayer(test, isPreview) {
+        iltStopTts();
+        takeAudioBar.innerHTML = '';
+        takeAudioBar.style.display = 'block';
+        const pieces = [];
+        (test.parts || []).forEach((part, pi) => {
+            pieces.push({ text: 'Part ' + (pi + 1) + '. Listen carefully.', voice: 0 });
+            const box = document.createElement('div');
+            box.innerHTML = part.transcript_html || '';
+            const paragraphs = Array.from(box.querySelectorAll('p'));
+            if (paragraphs.length) {
+                paragraphs.forEach((p, i) => {
+                    const speechText = (p.textContent || '').trim().replace(/\s+/g, ' ');
+                    if (speechText) pieces.push({ text: speechText, voice: i % 2 });
+                });
+            } else {
+                const speechText = (box.textContent || '').trim().replace(/\s+/g, ' ');
+                if (speechText) pieces.push({ text: speechText, voice: 0 });
+            }
+        });
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'grammar-admin-btn grammar-admin-btn-primary';
+        button.textContent = isPreview ? '▶ Nghe thử bài này (giọng máy)' : '▶ Bắt đầu nghe (chỉ một lần)';
+        const status = document.createElement('span');
+        status.setAttribute('role', 'status');
+        status.style.marginLeft = '10px';
+        status.textContent = 'Giọng đọc tiếng Anh tự động · âm thanh không phải MP3 gốc của IELTS Online Tests';
+        takeAudioBar.appendChild(button);
+        takeAudioBar.appendChild(status);
+        if (!('speechSynthesis' in window)) {
+            button.disabled = true;
+            status.textContent = 'Trình duyệt này không hỗ trợ giọng đọc. Hãy mở bằng Chrome hoặc Edge.';
+            return;
+        }
+        let used = false;
+        button.addEventListener('click', () => {
+            if (used && !isPreview) return;
+            iltStopTts();
+            const serial = iltTtsSerial;
+            const engine = window.speechSynthesis;
+            const voices = engine.getVoices().filter(v => /^en([_-]|$)/i.test(v.lang || ''));
+            voices.sort((a,b) => Number(/^en[-_]GB/i.test(b.lang)) - Number(/^en[-_]GB/i.test(a.lang)));
+            const pos = isPreview ? 0 : Math.min(Math.max(0, Math.floor(iltAudioPosition)), pieces.length);
+            used = true;
+            button.disabled = !isPreview;
+            status.textContent = 'Đang phát audio từ giọng đọc trình duyệt...';
+            function next(i) {
+                if (serial !== iltTtsSerial || currentMode === 'result') return;
+                if (i >= pieces.length) {
+                    status.textContent = 'Đã phát hết 4 Parts.';
+                    iltTtsUtterance = null;
+                    return;
+                }
+                const u = new SpeechSynthesisUtterance(pieces[i].text);
+                u.lang = 'en-GB';
+                u.rate = 0.88;
+                u.pitch = pieces[i].voice ? 1.08 : 0.96;
+                if (voices.length) u.voice = voices[pieces[i].voice % voices.length];
+                u.onend = () => {
+                    if (serial !== iltTtsSerial) return;
+                    if (!isPreview) {
+                        iltAudioPosition = i + 1;
+                        iltScheduleProgressSave();
+                    }
+                    next(i + 1);
+                };
+                u.onerror = (err) => {
+                    if (serial !== iltTtsSerial) return;
+                    status.textContent = 'Không phát được giọng đọc (' + (err.error || 'unknown') + '). Kiểm tra âm lượng và thử lại trong Chrome/Edge.';
+                    if (isPreview) button.disabled = false;
+                };
+                iltTtsUtterance = u;
+                try { engine.speak(u); } catch (e) {
+                    status.textContent = 'Lỗi giọng đọc: ' + e.message;
+                    if (isPreview) button.disabled = false;
+                }
+            }
+            next(pos);
+        });
+    }
+
     function iltStartAudioPlayback(rawUrl) {
+        if (String(rawUrl || '').startsWith('tts:')) {
+            iltPrepareTtsPlayer(currentTakeTest, false);
+            return;
+        }
+        iltStopTts();
         if (iltAudioEl) { try { iltAudioEl.pause(); } catch (e) {} iltAudioEl = null; }
         if (!rawUrl) return;
         // [MỚI] Lấy Signed URL đã qua kiểm tra băng thông TRƯỚC khi dựng đối tượng Audio — vì
@@ -22575,7 +22675,10 @@ function toggleCompletion(symbolElement) {
         takeTitleEl.textContent = '👁️ Xem thử: ' + (test.title || '');
         takeAudioBar.innerHTML = '';
         takeAudioBar.style.display = '';
-        if (test.audio_url) {
+        if (String(test.audio_url || '').startsWith('tts:')) {
+            iltPrepareTtsPlayer(test, true);
+        } else if (test.audio_url) {
+            iltStopTts();
             const audio = document.createElement('audio');
             audio.controls = true;
             audio.className = 'ilt-audio-preview ilt-take-audio';
@@ -22601,6 +22704,7 @@ function toggleCompletion(symbolElement) {
     }
     async function iltSubmitTest(auto) {
         if (!currentTakeTest) return;
+        iltStopTts();
         if (iltAudioEl) { if (iltAudioEl._setAllowPause) iltAudioEl._setAllowPause(); try { iltAudioEl.pause(); } catch (e) {} }
         clearTimeout(iltProgressSaveTimer);
         const answersSnapshot = Object.assign({}, currentAnswers);
