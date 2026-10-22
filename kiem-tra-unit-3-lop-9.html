@@ -5,79 +5,95 @@
 <title>Kiểm tra Unit 3 lớp 9 – Healthy Living for Teens | LDD English</title>
 <style>
 :root{--blue:#2457a7;--ink:#1f2937;--muted:#64748b;--line:#dbe3ef;--bg:#f4f7fb;--green:#16803c;--red:#b42318}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink)}
-header{background:#fff;border-bottom:1px solid var(--line);padding:22px 16px}header .inner,main{max-width:900px;margin:auto}
-.brand{font-size:13px;font-weight:800;letter-spacing:.08em;color:var(--blue)}h1{font-size:clamp(24px,4vw,34px);line-height:1.2;margin:8px 0}p{margin:6px 0}.sub{color:var(--muted)}
-main{padding:20px 14px 48px}.toolbar{position:sticky;top:0;z-index:2;background:#ffffffed;backdrop-filter:blur(8px);padding:12px 0;display:flex;justify-content:space-between;align-items:center;gap:12px;border-bottom:1px solid var(--line)}
-.progress{font-weight:700;color:var(--blue)}button{border:0;border-radius:10px;padding:11px 16px;font-weight:700;cursor:pointer;font-size:15px}.primary{background:var(--blue);color:#fff}.secondary{background:#e8eef8;color:var(--blue)}
-.question{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;margin:14px 0;box-shadow:0 2px 7px #10204008}.qtitle{font-weight:700;margin:0 0 12px}.num{color:var(--blue);margin-right:6px}.options{display:grid;gap:8px}.option{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);border-radius:10px;cursor:pointer}.option:has(input:checked){border-color:var(--blue);background:#f0f5ff}.option input{margin-top:5px;accent-color:var(--blue)}.feedback{display:none;margin-top:12px;padding:10px 12px;border-radius:9px;background:#f1f5f9;font-size:14px}.correct{color:var(--green);font-weight:700}.incorrect{color:var(--red);font-weight:700}.result{display:none;background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;margin:18px 0}.result h2{margin-top:0}.actions{display:flex;gap:10px;flex-wrap:wrap;margin:20px 0}.footer{text-align:center;color:var(--muted);font-size:13px;margin-top:30px}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink)}header{background:#fff;border-bottom:1px solid var(--line);padding:22px 16px}header .inner,main{max-width:900px;margin:auto}.brand{font-size:13px;font-weight:800;letter-spacing:.08em;color:var(--blue)}h1{font-size:clamp(24px,4vw,34px);line-height:1.2;margin:8px 0}h2{font-size:21px;margin:0 0 8px}p{margin:6px 0}.sub,.muted{color:var(--muted)}main{padding:18px 14px 48px}.toolbar{position:sticky;top:0;z-index:2;background:#ffffffed;backdrop-filter:blur(8px);padding:12px 0;display:flex;justify-content:space-between;align-items:center;gap:12px;border-bottom:1px solid var(--line)}.progress{font-weight:700;color:var(--blue)}button{border:0;border-radius:10px;padding:11px 16px;font-weight:700;cursor:pointer;font-size:15px}.primary{background:var(--blue);color:#fff}.secondary{background:#e8eef8;color:var(--blue)}.section{background:#eaf0fa;border:1px solid #d7e2f5;padding:14px 16px;border-radius:12px;margin:22px 0 10px}.section p{color:#4b5d78;font-size:14px}.question{background:#fff;border:1px solid var(--line);border-radius:14px;padding:17px;margin:12px 0;box-shadow:0 2px 7px #10204008}.qtitle{font-weight:700;margin:0 0 12px}.num{color:var(--blue);margin-right:6px}.options{display:grid;gap:8px}.option{display:flex;gap:10px;align-items:flex-start;padding:9px 11px;border:1px solid var(--line);border-radius:10px;cursor:pointer}.option:has(input:checked){border-color:var(--blue);background:#f0f5ff}.option input{margin-top:5px;accent-color:var(--blue)}input[type=text],textarea{width:100%;padding:11px 12px;border:1px solid #cbd5e1;border-radius:9px;font:inherit;background:#fff}textarea{min-height:88px;resize:vertical}.blank{margin-top:8px}.feedback{display:none;margin-top:11px;padding:10px 12px;border-radius:9px;background:#f1f5f9;font-size:14px}.correct{color:var(--green);font-weight:700}.incorrect{color:var(--red);font-weight:700}.model{display:none;margin-top:10px;padding:12px;border-left:3px solid var(--blue);background:#f3f6fc;border-radius:5px}.passage{padding:13px 15px;background:#fafcff;border:1px solid var(--line);border-radius:10px;margin-bottom:12px}.result{display:none;background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;margin:18px 0}.result h2{margin-top:0}.actions{display:flex;gap:10px;flex-wrap:wrap;margin:20px 0}.footer{text-align:center;color:var(--muted);font-size:13px;margin-top:30px}
 @media(max-width:560px){.toolbar{align-items:flex-start;flex-direction:column}.question{padding:14px}.option{padding:9px}}
 </style>
 </head>
 <body>
-<header><div class="inner"><div class="brand">LDD ENGLISH · WEB TỰ HỌC</div><h1>Kiểm tra Tiếng Anh 9 – Unit 3</h1><p><strong>Healthy Living for Teens – Lối sống lành mạnh cho tuổi teen</strong></p><p class="sub">40 câu trắc nghiệm · Từ vựng, ngữ pháp, giao tiếp và vận dụng · Chọn một đáp án đúng nhất cho mỗi câu.</p></div></header>
+<header><div class="inner"><div class="brand">LDD ENGLISH · WEB TỰ HỌC</div><h1>Kiểm tra Tiếng Anh 9 – Unit 3</h1><p><strong>Healthy Living for Teens – Lối sống lành mạnh cho tuổi teen</strong></p><p class="sub">40 câu · Trắc nghiệm, ngữ pháp điền từ, đọc hiểu và tự luận. Làm bài rồi nhấn nộp để xem đáp án tham khảo.</p></div></header>
 <main>
-<div class="toolbar"><div><span class="progress" id="progress">Đã làm 0/40 câu</span><div class="sub" style="font-size:13px">Điểm chỉ được tính sau khi nộp bài.</div></div><button class="primary" id="submitTop" type="button">Nộp bài</button></div>
-<form id="quiz"></form>
-<section class="result" id="result" aria-live="polite"></section>
+<div class="toolbar"><div><span class="progress" id="progress">Đã làm 0/40 câu</span><div class="muted" style="font-size:13px">30 câu chấm tự động · 10 câu tự luận có đáp án tham khảo</div></div><button class="primary" id="submitTop" type="button">Nộp bài</button></div>
+<form id="quiz"></form><section class="result" id="result" aria-live="polite"></section>
 <div class="actions"><button class="primary" id="submitBottom" type="button">Nộp bài và xem đáp án</button><button class="secondary" id="reset" type="button">Làm lại từ đầu</button></div>
 <p class="footer">LDD English · Đưa tiếng Anh vào đời sống</p>
 </main>
 <script>
-const questions = [
-["Getting enough sleep should be a _____ for every teenager.","priority","distraction","deadline","pressure","A","Priority means something that is considered more important than other things."],
-["Regular exercise helps improve your _____.","mental health","physical health","due date","distraction","B","Physical health refers to the condition of the body."],
-["Talking to someone you trust can support your _____.","physical health only","due date","mental health","priority","C","Mental health relates to emotional and psychological well-being."],
-["I have three assignments to finish, so I need to manage my time _____.","effective","effectively","effectiveness","effect","B","An adverb is needed to describe the verb manage."],
-["You should take breaks to _____ after studying for a long time.","relax","procrastinate","accomplish","distract","A","Relax means to rest and become less worried or tense."],
-["A phone notification can be a _____ when you are studying.","priority","distraction","accomplishment","routine","B","A distraction takes your attention away from what you are doing."],
-["The _____ for this project is Friday, so please submit it on time.","mental health","priority","due date","physical health","C","A due date is the date by which something must be completed."],
-["If you keep delaying work until the last minute, you _____.","accomplish","relax","balance","procrastinate","D","Procrastinate means to delay doing something that should be done."],
-["After finishing all her tasks, Mai felt she had _____ a lot.","accomplished","procrastinated","distracted","relaxed","A","Accomplish means to succeed in doing or completing something."],
-["A _____ lifestyle includes study, exercise, rest, and time with friends.","well-balanced","exhausted","distracted","overdue","A","Well-balanced describes a healthy mix of different activities."],
-["I wish I _____ more time to exercise every day.","have","will have","had","am having","C","Wish + past simple expresses a desire for a different present situation."],
-["Teenagers should avoid _____ up late every night.","stay","to stay","stayed","staying","D","Avoid is followed by a gerund (-ing form)."],
-["My brother is tired because he _____ enough sleep recently.","doesn't get","hasn't been getting","isn't get","didn't getting","B","The present perfect continuous can describe a recent ongoing pattern with a present result."],
-["If you feel stressed, you _____ talk to a parent or teacher.","should","would have","mustn't","are","A","Should is used to give advice."],
-["You _____ skip meals to lose weight; it can harm your health.","should","don't have to","shouldn't","could","C","Shouldn't gives advice against an unhealthy action."],
-["Choose the correct sentence.","She enjoys to swim after school.","She enjoys swimming after school.","She enjoy swimming after school.","She enjoying swimming after school.","B","Enjoy is followed by a gerund, and she takes enjoys."],
-["Choose the correct sentence.","He is interested in play basketball.","He interested in playing basketball.","He is interested in playing basketball.","He is interesting in playing basketball.","C","The structure is be interested in + noun or gerund."],
-["You can improve your concentration _____ studying in a quiet room.","by","at","from","for","A","By + gerund explains how something can be achieved."],
-["Lan was exhausted, _____ she went to bed early.","because","so","although","but","B","So connects a cause or situation to its result."],
-["_____ he had a lot of homework, he took a short break to relax.","Because","So","Although","Therefore","C","Although introduces a contrast."],
-["Which is the best advice for someone who feels overwhelmed by homework?","Ignore every assignment.","Make a plan and divide tasks into smaller steps.","Stay awake all night every day.","Stop asking for help.","B","Breaking work into manageable steps can make it easier to start and complete."],
-["Which activity is most likely to support physical health?","Sitting all day without breaks","Exercising regularly","Skipping breakfast every day","Sleeping only four hours","B","Regular exercise supports physical well-being."],
-["Which action can help protect mental health?","Keeping every worry secret","Comparing yourself with everyone online","Talking to a trusted person about your worries","Avoiding all friends","C","Sharing concerns with a trusted person can provide support."],
-["Nam spends hours on his phone while studying. What should he do first?","Turn off unnecessary notifications and set a study period.","Open more social media apps.","Give up on his homework.","Study with every notification turned on.","A","Reducing digital distractions can help him focus."],
-["Which sentence uses the word 'priority' correctly?","My priority is to get enough sleep before the exam.","I priority my bag under the desk.","She is priority than her friend.","We priority yesterday very quickly.","A","Priority is a noun; the sentence uses it naturally."],
-["The opposite of 'relax' is closest to _____.","rest","unwind","be under stress","take a break","C","Being under stress contrasts with relaxing."],
-["The word 'exhausted' means _____.","very tired","very excited","slightly hungry","fully prepared","A","Exhausted means extremely tired."],
-["A 'well-balanced' routine should include _____.","only studying","only entertainment","a mix of work, rest, and healthy activities","no time for sleep","C","Balance means including different important parts of life."],
-["Choose the correct question tag: You should take a break, _____?","should you","shouldn't you","do you","don't you","B","A positive statement with should takes the negative tag shouldn't you."],
-["Choose the correct form: My friends suggested _____ a study timetable.","make","to make","making","made","C","Suggest can be followed by a gerund."],
-["I feel sleepy because I _____ late for three nights in a row.","stay up","have been staying up","am stay up","stayed up tomorrow","B","The present perfect continuous fits a repeated recent activity with a present result."],
-["Choose the correct sentence with 'enough'.","I don't sleep enough to feel rested.","I don't enough sleep to feel rested.","I enough don't sleep to feel rested.","I don't sleep to enough feel rested.","A","Enough follows the verb phrase here: sleep enough."],
-["Which response is most supportive? “I'm really stressed about my deadlines.”","That's your problem.","You should plan the tasks and ask for help if needed.","Just stop doing your work.","Stress is always a good thing.","B","The response acknowledges the problem and offers practical steps."],
-["Why is it useful to set priorities?","It helps you decide which tasks are most important.","It means you never need to rest.","It makes every task disappear.","It guarantees that you will never feel stress.","A","Priorities help people focus on important tasks first."],
-["Which is a healthy way to use social media?","Use it throughout the night.","Compare your life with every post you see.","Set limits and take breaks from the screen.","Check it whenever you are doing homework.","C","Time limits and breaks can reduce distraction and protect sleep time."],
-["Choose the correct conditional sentence.","If you will feel tired, take a break.","If you feel tired, take a break.","If you felt tired tomorrow, take a break yesterday.","If you feeling tired, take a break.","B","The first conditional-style advice uses present simple in the if-clause and an imperative in the main clause."],
-["Although Minh was tired, he _____ his homework before relaxing.","finish","finishes yesterday","finished","finishing","C","Although introduces contrast; finished is the suitable past-tense verb."],
-["Which sentence expresses a suggestion correctly?","Why don't you take a short walk?","Why you don't take a short walk?","Why don't take you a short walk?","Why not you take a short walk?","A","Why don't you + base verb is a common way to make a suggestion."],
-["Read the situation: Hoa has a test tomorrow but keeps putting off revision. What is the best first step?","Wait until the test begins.","Make a short revision plan and start with one topic.","Spend the whole evening scrolling online.","Decide that revision is impossible.","B","A small, clear first task can help overcome procrastination."],
-["Which statement best describes a well-balanced lifestyle for teenagers?","It focuses only on school results.","It includes healthy habits, rest, relationships, and study.","It avoids exercise and social activities.","It requires being busy every minute.","B","A balanced lifestyle makes room for several aspects of well-being."],
+const sections = [
+{title:"PHẦN A – TỪ VỰNG VÀ NGỮ PHÁP",desc:"Câu 1–15. Chọn đáp án đúng nhất.",items:[
+{t:"mc",q:"Getting enough sleep should be a _____ for every teenager.",o:["priority","distraction","deadline","pressure"],a:0,e:"Priority means something important that should be dealt with first."},
+{t:"mc",q:"Regular exercise is good for your _____.",o:["physical health","due date","distraction","deadline"],a:0,e:"Physical health refers to the condition of the body."},
+{t:"mc",q:"Talking to a trusted adult can support your _____.",o:["due date","mental health","priority list","physical exercise"],a:1,e:"Mental health relates to emotional and psychological well-being."},
+{t:"mc",q:"You should manage your time _____.",o:["effective","effectiveness","effectively","effect"],a:2,e:"An adverb, effectively, describes the verb manage."},
+{t:"mc",q:"A phone notification can be a _____ when you are studying.",o:["distraction","accomplishment","priority","routine"],a:0,e:"A distraction takes your attention away from a task."},
+{t:"mc",q:"If you delay doing your homework again and again, you _____.",o:["relax","procrastinate","accomplish","balance"],a:1,e:"Procrastinate means to put off doing something."},
+{t:"mc",q:"A _____ lifestyle includes study, exercise, rest, and time with friends.",o:["overdue","distracted","well-balanced","exhausted"],a:2,e:"Well-balanced means having a healthy mix of different activities."},
+{t:"mc",q:"I wish I _____ more time to exercise every day.",o:["have","will have","had","am having"],a:2,e:"Wish + past simple expresses a desire for a different present situation."},
+{t:"mc",q:"Teenagers should avoid _____ up late every night.",o:["stay","to stay","staying","stayed"],a:2,e:"Avoid is followed by a gerund (verb-ing)."},
+{t:"mc",q:"You _____ skip meals to lose weight; it may harm your health.",o:["should","shouldn't","don't have to","could"],a:1,e:"Shouldn't is used to advise against an unhealthy action."},
+{t:"mc",q:"Choose the correct sentence.",o:["She enjoys to swim.","She enjoy swimming.","She enjoys swimming.","She enjoying swim."],a:2,e:"Enjoy is followed by a gerund; she takes enjoys."},
+{t:"mc",q:"You can improve concentration _____ studying in a quiet room.",o:["by","at","from","for"],a:0,e:"By + verb-ing explains the method used."},
+{t:"mc",q:"Lan was tired, _____ she went to bed early.",o:["although","but","so","because"],a:2,e:"So introduces the result."},
+{t:"mc",q:"_____ Minh had a lot of homework, he took a short break.",o:["Although","Because","So","Therefore"],a:0,e:"Although introduces a contrast."},
+{t:"mc",q:"Choose the correct question tag: You should take a break, _____?",o:["should you","shouldn't you","do you","don't you"],a:1,e:"A positive statement with should takes the negative tag shouldn't you."}
+]},
+{title:"PHẦN B – NGỮ PHÁP ĐIỀN TỪ",desc:"Câu 16–25. Điền dạng đúng của từ trong ngoặc hoặc một từ thích hợp vào chỗ trống.",items:[
+{t:"fill",q:"Teenagers should spend their free time (healthy) _____.",a:["healthily"],e:"Healthy is an adjective; healthily is the adverb."},
+{t:"fill",q:"Mai avoids _____ (use) her phone while doing homework.",a:["using"],e:"Avoid + verb-ing."},
+{t:"fill",q:"I wish I _____ (have) a better study routine.",a:["had"],e:"Wish + past simple for an unreal present wish."},
+{t:"fill",q:"If you feel stressed, you _____ talk to someone you trust. (modal verb for advice)",a:["should"],e:"Should is used to give advice."},
+{t:"fill",q:"My brother has _____ (recent) started exercising every morning.",a:["recently"],e:"Recently is the adverb form of recent."},
+{t:"fill",q:"She is interested in _____ (join) the school sports club.",a:["joining"],e:"Be interested in + noun or gerund."},
+{t:"fill",q:"You can reduce distractions _____ turning off notifications.",a:["by"],e:"By + verb-ing describes how to do something."},
+{t:"fill",q:"Although he was tired, he _____ (finish) his homework.",a:["finished"],e:"Finished is the appropriate past form in this sentence."},
+{t:"fill",q:"Getting enough sleep is _____ (importance) for teenagers.",a:["important"],e:"A form of be is followed by the adjective important."},
+{t:"fill",q:"If you plan your tasks, you _____ feel less overwhelmed. (may / will — choose one suitable answer)",a:["may","will"],e:"May or will can both express a possible result here."}
+]},
+{title:"PHẦN C – ĐỌC HIỂU",desc:"Đọc đoạn văn và chọn đáp án đúng cho câu 26–30.",passage:"Teenagers often have to balance schoolwork, hobbies, family time, and friendships. When they have too many tasks, they may feel stressed or put off important work. One useful strategy is to write a to-do list and mark the most important tasks first. Studying in short periods with regular breaks can also help students concentrate. In addition, getting enough sleep, eating balanced meals, and being physically active support both physical and mental health. Teenagers do not need to solve every problem alone. Talking to a parent, teacher, or trusted friend can help them find practical solutions.",items:[
+{t:"mc",q:"What is the main idea of the passage?",o:["Teenagers should stop having hobbies.","Healthy habits and planning can help teenagers manage their lives.","Schoolwork is the only important part of life.","Teenagers should solve every problem alone."],a:1,e:"The passage focuses on planning, healthy habits, and asking for support."},
+{t:"mc",q:"What can teenagers do first when they have many tasks?",o:["Ignore the tasks.","Stay up all night.","Write a to-do list and prioritise tasks.","Stop spending time with family."],a:2,e:"The passage recommends making a to-do list and marking the most important tasks."},
+{t:"mc",q:"Why should students take regular breaks?",o:["To help them concentrate.","To avoid finishing any work.","To spend more time online.","To reduce the hours they sleep."],a:0,e:"Short study periods with breaks can help students concentrate."},
+{t:"mc",q:"Which of the following supports both physical and mental health according to the passage?",o:["Skipping meals","Getting enough sleep","Ignoring friends","Putting off work"],a:1,e:"The passage specifically mentions getting enough sleep."},
+{t:"mc",q:"Who can teenagers talk to when they need help?",o:["Nobody","Only strangers online","A parent, teacher, or trusted friend","Only classmates they do not know"],a:2,e:"The final sentence lists parents, teachers, and trusted friends."}
+]},
+{title:"PHẦN D – TỰ LUẬN: VIẾT LẠI CÂU",desc:"Câu 31–35. Viết lại câu theo yêu cầu, giữ nguyên nghĩa. Sau khi nộp, xem câu trả lời tham khảo để tự đối chiếu.",items:[
+{t:"write",q:"I don't have enough time to exercise. (Use I wish…)",model:"I wish I had enough time to exercise.",e:"Dùng wish + past simple để diễn tả mong muốn trái với hiện tại."},
+{t:"write",q:"It is a good idea for you to take regular breaks. (Use should)",model:"You should take regular breaks.",e:"Should + động từ nguyên mẫu dùng để đưa ra lời khuyên."},
+{t:"write",q:"She improves her concentration by turning off her phone. (Make a question with How)",model:"How does she improve her concentration?",e:"Câu hỏi hiện tại đơn với she dùng does + động từ nguyên mẫu."},
+{t:"write",q:"He was tired. He finished his homework. (Join with although)",model:"Although he was tired, he finished his homework.",e:"Although nối hai ý tương phản."},
+{t:"write",q:"You should plan your time. You may feel less stressed. (Join with if)",model:"If you plan your time, you may feel less stressed.",e:"Mệnh đề if dùng hiện tại đơn; mệnh đề chính có thể dùng may + động từ."}
+]},
+{title:"PHẦN E – TỰ LUẬN: VIẾT CÂU VÀ ĐOẠN VĂN",desc:"Câu 36–40. Tự viết bằng tiếng Anh. Sau khi nộp bài, xem gợi ý tham khảo và tự đánh giá nội dung, ngữ pháp, từ vựng.",items:[
+{t:"write",q:"Viết một câu tiếng Anh nêu lời khuyên cho bạn thường xuyên thức khuya.",model:"You should go to bed earlier and get enough sleep.",e:"Câu trả lời cần có lời khuyên phù hợp, có thể dùng should/shouldn't."},
+{t:"write",q:"Viết một câu tiếng Anh có dùng từ 'priority' về việc học hoặc sức khỏe.",model:"Getting enough sleep should be a priority for every teenager.",e:"Dùng priority đúng nghĩa là điều cần được ưu tiên."},
+{t:"write",q:"Viết một câu tiếng Anh với cấu trúc 'avoid + V-ing' về thói quen tốt.",model:"I avoid using my phone while studying.",e:"Sau avoid dùng động từ thêm -ing."},
+{t:"write",q:"Viết 2–3 câu tiếng Anh về một cách em giảm căng thẳng khi học tập.",model:"When I feel stressed, I make a to-do list. I study in short periods and take breaks. I also talk to my family when I need help.",e:"Viết 2–3 câu liên quan chủ đề; kiểm tra thì, cấu trúc câu và từ vựng."},
+{t:"write",q:"Viết một đoạn văn tiếng Anh ngắn (4–5 câu) về cách thanh thiếu niên duy trì lối sống lành mạnh.",model:"Teenagers should follow a well-balanced routine. They should get enough sleep and eat balanced meals. Doing exercise regularly helps maintain physical health. They should also take breaks and talk to trusted people when they feel stressed.",e:"Tự kiểm tra đủ 4–5 câu, đúng chủ đề, có từ vựng Unit 3 và ngữ pháp cơ bản."}
+]}
 ];
-const letters=["A","B","C","D"];
-const form=document.getElementById("quiz");
-questions.forEach((q,i)=>{
- const card=document.createElement("section");card.className="question";card.id="q"+(i+1);
- const title=document.createElement("p");title.className="qtitle";title.innerHTML='<span class="num">Câu '+(i+1)+'.</span>'+q[0];card.appendChild(title);
- const opts=document.createElement("div");opts.className="options";
- for(let j=0;j<4;j++){const label=document.createElement("label");label.className="option";const input=document.createElement("input");input.type="radio";input.name="q"+i;input.value=letters[j];input.addEventListener("change",updateProgress);const span=document.createElement("span");span.textContent=letters[j]+". "+q[j+1];label.append(input,span);opts.appendChild(label);}
- card.appendChild(opts);const fb=document.createElement("div");fb.className="feedback";fb.id="fb"+i;card.appendChild(fb);form.appendChild(card);
+const form=document.getElementById("quiz");let questionIndex=0;const answerRefs=[];
+sections.forEach(section=>{
+ const head=document.createElement("div");head.className="section";head.innerHTML="<h2>"+section.title+"</h2><p>"+section.desc+"</p>";form.appendChild(head);
+ if(section.passage){const p=document.createElement("div");p.className="passage";p.textContent=section.passage;form.appendChild(p);}
+ section.items.forEach(item=>{
+  questionIndex++;const id=questionIndex;const card=document.createElement("section");card.className="question";card.id="q"+id;
+  const title=document.createElement("p");title.className="qtitle";title.innerHTML='<span class="num">Câu '+id+'.</span>';title.appendChild(document.createTextNode(item.q));card.appendChild(title);
+  if(item.t==="mc"){
+   const opts=document.createElement("div");opts.className="options";item.o.forEach((opt,j)=>{const label=document.createElement("label");label.className="option";const input=document.createElement("input");input.type="radio";input.name="q"+id;input.value=j;input.addEventListener("change",updateProgress);const span=document.createElement("span");span.textContent=String.fromCharCode(65+j)+". "+opt;label.append(input,span);opts.appendChild(label);});card.appendChild(opts);
+  }else if(item.t==="fill"){
+   const inp=document.createElement("input");inp.type="text";inp.name="q"+id;inp.autocomplete="off";inp.placeholder="Nhập câu trả lời…";inp.className="blank";inp.addEventListener("input",updateProgress);card.appendChild(inp);
+  }else{
+   const area=document.createElement("textarea");area.name="q"+id;area.placeholder="Viết câu trả lời của em…";area.addEventListener("input",updateProgress);card.appendChild(area);
+  }
+  const fb=document.createElement("div");fb.className="feedback";fb.id="fb"+id;card.appendChild(fb);
+  if(item.t==="write"){const model=document.createElement("div");model.className="model";model.id="model"+id;model.innerHTML="<strong>Gợi ý đáp án:</strong> "+item.model+"<br><span class='muted'>"+item.e+"</span>";card.appendChild(model);}
+  form.appendChild(card);answerRefs.push({id,item,card,fb});
+ });
 });
-function updateProgress(){const n=questions.reduce((sum,q,i)=>sum+(form.querySelector('input[name="q'+i+'"]:checked')?1:0),0);document.getElementById("progress").textContent='Đã làm '+n+'/40 câu';}
-function submitQuiz(){let answered=0,score=0;questions.forEach((q,i)=>{const chosen=form.querySelector('input[name="q'+i+'"]:checked');const card=document.getElementById("q"+(i+1));const fb=document.getElementById("fb"+i);fb.style.display="block";const right=q[5];if(chosen){answered++;if(chosen.value===right)score++;}fb.innerHTML=(chosen&&chosen.value===right?'<span class="correct">Chính xác.</span> ':'<span class="incorrect">'+(chosen?'Chưa chính xác.':'Chưa trả lời. Đáp án đúng: '+right+'.')+'</span> ')+q[6];card.querySelectorAll(".option").forEach((lab,j)=>{const inp=lab.querySelector("input");inp.disabled=true;if(letters[j]===right){lab.style.borderColor="#16803c";lab.style.background="#effaf2";}else if(chosen&&inp===chosen){lab.style.borderColor="#b42318";lab.style.background="#fff3f2";}});});const res=document.getElementById("result");res.style.display="block";res.innerHTML='<h2>Kết quả: '+score+'/40 ('+Math.round(score/40*100)+'%)</h2><p>Bạn đã trả lời '+answered+'/40 câu.</p><p>'+(score>=36?'Xuất sắc!':score>=30?'Tốt lắm!':score>=20?'Khá tốt, hãy xem lại các câu sai.':'Hãy xem phần giải thích và thử ôn tập lại Unit 3.')+'</p>';document.getElementById("submitTop").disabled=true;document.getElementById("submitBottom").disabled=true;res.scrollIntoView({behavior:"smooth",block:"start"});}
-document.getElementById("submitTop").addEventListener("click",submitQuiz);document.getElementById("submitBottom").addEventListener("click",submitQuiz);
-document.getElementById("reset").addEventListener("click",()=>location.reload());
-</script>
-</body></html>
+function updateProgress(){let n=0;answerRefs.forEach(({id,item})=>{const el=form.querySelector('[name="q'+id+'"]');if(item.t==="mc"){if(form.querySelector('input[name="q'+id+'"]:checked'))n++;}else if(el&&el.value.trim())n++;});document.getElementById("progress").textContent="Đã làm "+n+"/40 câu";}
+function norm(s){return s.toLowerCase().trim().replace(/[.,!?;:]/g,"").replace(/\s+/g," ");}
+function submitQuiz(){let answered=0,autoCorrect=0,autoTotal=0;answerRefs.forEach(({id,item,card,fb})=>{const el=form.querySelector('[name="q'+id+'"]');let response="";if(item.t==="mc"){const chosen=form.querySelector('input[name="q'+id+'"]:checked');if(chosen){answered++;response=chosen.value;}autoTotal++;const ok=chosen&&Number(chosen.value)===item.a;if(ok)autoCorrect++;fb.style.display="block";fb.innerHTML=(ok?'<span class="correct">Chính xác.</span> ':'<span class="incorrect">'+(chosen?'Chưa chính xác.':'Chưa trả lời. Đáp án: '+String.fromCharCode(65+item.a)+'. '+item.o[item.a]+'.')+'</span> ')+item.e;card.querySelectorAll("input[type=radio]").forEach((inp,j)=>{inp.disabled=true;if(j===item.a){inp.parentElement.style.borderColor="#16803c";inp.parentElement.style.background="#effaf2";}else if(inp.checked){inp.parentElement.style.borderColor="#b42318";inp.parentElement.style.background="#fff3f2";}});}
+ else if(item.t==="fill"){response=el.value.trim();if(response)answered++;autoTotal++;const ok=item.a.some(a=>norm(response)===norm(a));if(ok)autoCorrect++;fb.style.display="block";fb.innerHTML=(ok?'<span class="correct">Chính xác.</span> ':'<span class="incorrect">'+(response?'Hãy kiểm tra lại.':'Chưa trả lời.')+'</span> ')+(!ok?'Đáp án tham khảo: '+item.a.join(" / ")+'. ':"")+item.e;el.disabled=true;}
+ else{response=el.value.trim();if(response)answered++;fb.style.display="block";fb.innerHTML=response?'<span class="correct">Đã ghi nhận câu trả lời.</span> Hãy đối chiếu gợi ý và tự chấm theo yêu cầu đề bài.':'<span class="incorrect">Chưa trả lời.</span> Hãy xem gợi ý đáp án để ôn tập.';el.disabled=true;document.getElementById("model"+id).style.display="block";}
+ });const res=document.getElementById("result");res.style.display="block";res.innerHTML="<h2>Kết quả phần chấm tự động: "+autoCorrect+"/"+autoTotal+"</h2><p>Điểm phần khách quan: "+Math.round(autoCorrect/autoTotal*10*10)/10+"/10 (quy đổi trên thang 10 cho 30 câu trắc nghiệm và điền từ).</p><p>Bạn đã điền hoặc trả lời "+answered+"/40 câu.</p><p><strong>Phần tự luận (10 câu):</strong> chưa được hệ thống tự chấm. Hãy đối chiếu gợi ý, chú ý đúng yêu cầu, ngữ pháp, từ vựng và độ rõ ràng của câu viết.</p>";document.getElementById("submitTop").disabled=true;document.getElementById("submitBottom").disabled=true;res.scrollIntoView({behavior:"smooth",block:"start"});}
+document.getElementById("submitTop").addEventListener("click",submitQuiz);document.getElementById("submitBottom").addEventListener("click",submitQuiz);document.getElementById("reset").addEventListener("click",()=>location.reload());
+</script></body></html>
