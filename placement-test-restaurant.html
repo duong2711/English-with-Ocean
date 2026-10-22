@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kiểm tra đầu vào tiếng Anh – Nhà hàng | LDD English</title>
+<style>
+:root{color-scheme:light;--ink:#182230;--muted:#667085;--line:#e4e7ec;--brand:#175cd3;--soft:#eff8ff}
+*{box-sizing:border-box}body{margin:0;background:#f6f8fb;color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}.wrap{max-width:900px;margin:auto;padding:22px 14px 60px}.hero,.panel,.result{background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px;margin-bottom:16px}.eyebrow{color:var(--brand);font-weight:750;font-size:.8rem;letter-spacing:.08em;text-transform:uppercase}h1{font-size:clamp(1.55rem,4vw,2.25rem);line-height:1.2;margin:.4rem 0}h2{font-size:1.25rem;margin:0 0 12px}.muted,.hint{color:var(--muted)}.fields{display:grid;grid-template-columns:1fr 1fr;gap:12px}.fields label{display:block;font-weight:650}.fields input{width:100%;padding:11px;border:1px solid #cfd4dc;border-radius:10px;margin-top:5px;font:inherit}.q{padding:15px 0;border-top:1px solid var(--line)}.q:first-of-type{border-top:0}.q legend,.question{font-weight:700;margin-bottom:8px}.opts{display:grid;gap:7px}.opts label{display:flex;gap:9px;align-items:flex-start;padding:9px 11px;border:1px solid var(--line);border-radius:10px;cursor:pointer}.opts label:has(input:checked){background:var(--soft);border-color:#84caff}.opts input{margin-top:5px}.q textarea{width:100%;min-height:90px;border:1px solid #cfd4dc;border-radius:10px;padding:11px;font:inherit}.btn{border:0;border-radius:11px;background:var(--brand);color:#fff;padding:12px 18px;font:inherit;font-weight:750;cursor:pointer}.btn.secondary{background:#eef2f6;color:var(--ink)}.actions{display:flex;gap:10px;flex-wrap:wrap}.hidden{display:none!important}.score{font-size:2rem;font-weight:800}.tag{display:inline-block;padding:3px 9px;background:#f2f4f7;border-radius:99px;font-size:.82rem}.diag{padding:12px;background:#f8fafc;border-radius:10px;margin:8px 0}.small{font-size:.9rem}.foot{font-size:.85rem;color:var(--muted)}@media(max-width:600px){.fields{grid-template-columns:1fr}.hero,.panel,.result{padding:17px}}
+</style></head>
+<body><main class="wrap">
+<header class="hero"><div class="eyebrow">LDD English · Web tự học</div><h1>Kiểm tra đầu vào tiếng Anh</h1><p><b>Định hướng: Nhà hàng – dịch vụ</b></p><p class="muted">Dành cho người đã tốt nghiệp THPT và lâu ngày chưa sử dụng tiếng Anh. Bài kiểm tra nhằm tìm lỗ hổng kiến thức, không phải bài thi chứng chỉ.</p><div class="tag">60–75 phút</div> <div class="tag">40 câu + phần viết</div><p class="small">Làm bài không dùng từ điển hoặc công cụ dịch. Các câu trắc nghiệm được chấm tự động; phần viết cần giáo viên xem riêng.</p></header>
+<form id="testForm">
+<section class="panel"><h2>Thông tin học viên</h2><div class="fields"><label>Họ và tên<input name="student" required autocomplete="name"></label><label>Ngày làm bài<input name="date" type="date"></label></div></section>
+<div id="questions"></div>
+<section class="panel"><h2>Phần E · Viết câu và diễn đạt (10 điểm)</h2>
+<div class="q"><div class="question">41. Viết 5–7 câu giới thiệu bản thân. (5 điểm)</div><p class="hint small">Gợi ý: tên, tuổi, nơi sống, công việc/học tập, sở thích, lý do muốn làm trong ngành nhà hàng.</p><textarea name="writing" placeholder="Write your answer in English..."></textarea></div>
+<div class="q"><div class="question">42. Viết hội thoại ít nhất 4 lượt lời giữa nhân viên phục vụ và khách muốn gọi đồ uống. (5 điểm)</div><textarea name="dialogue" placeholder="Waiter/Server: ...&#10;Customer: ..."></textarea></div>
+</section>
+<section class="panel"><h2>Ghi chú của giáo viên (không bắt buộc)</h2><p class="hint small">Ghi chú này chỉ hiển thị trên kết quả được tạo trong trình duyệt hiện tại.</p><textarea name="teacherNotes" placeholder="Ví dụ: khó tạo câu hỏi, ngại nói, phát âm..."></textarea></section>
+<div class="actions"><button class="btn" type="submit">Nộp bài và xem kết quả</button><button class="btn secondary" type="reset">Làm lại</button></div>
+</form><section id="result" class="result hidden" aria-live="polite"></section><p class="foot">LDD English · Kết quả hiển thị trên thiết bị đang làm bài. Hãy lưu/in kết quả và gửi giáo viên để chấm phần tự luận. Trang này không tự gửi câu trả lời về cơ sở dữ liệu.</p>
+</main>
+<script>
+const sections=[
+{title:"Phần A · Ngữ pháp nền tảng (15 điểm)",items:[
+["My brother _____ a student.",["am","is","are","be"],1,"to_be"],
+["I _____ from Vietnam.",["is","are","am","be"],2,"to_be"],
+["She _____ coffee every morning.",["drink","drinks","drinking","is drink"],1,"present_simple"],
+["They _____ English at the moment.",["study","studies","are studying","studied"],2,"present_continuous"],
+["We _____ to the restaurant yesterday.",["go","goes","went","going"],2,"past_simple"],
+["There _____ three tables in this room.",["is","are","am","be"],1,"there_is_are"],
+["I don't have _____ money.",["many","much","a few","few"],1,"countable"],
+["How _____ apples do we need?",["much","many","any","a little"],1,"countable"],
+["A waiter _____ serve food to customers.",["can","cans","is can","can to"],0,"modal"],
+["You _____ wash your hands before handling food.",["should","should to","are should","should washing"],0,"modal"],
+["This table is _____ than that one.",["big","bigger","biggest","more big"],1,"comparison"],
+["The restaurant opens _____ 9 a.m.",["in","on","at","from"],2,"prepositions"],
+["I am interested _____ working in a hotel.",["on","at","in","for"],2,"prepositions"],
+["The customer _____ ordered the soup is waiting.",["who","where","when","whose"],0,"relative_clause"],
+["If I have time tomorrow, I _____ English.",["studied","will study","studying","studies"],1,"future_conditional"]]},
+{title:"Phần B · Từ vựng và tình huống (10 điểm)",items:[
+["“Thirsty” có nghĩa là gì?",["Đói","Khát","Mệt","No"],1,"basic_vocab"],
+["What do you use to eat soup?",["A spoon","A fork","A knife","A plate"],0,"everyday_vocab"],
+["A person who eats at a restaurant is a _____.",["chef","customer","driver","cashier"],1,"restaurant_vocab"],
+["What does a chef do?",["Cooks food","Cleans cars","Teaches students","Repairs computers"],0,"restaurant_vocab"],
+["“Menu” means _____.",["Hóa đơn","Thực đơn","Nhà bếp","Nhà vệ sinh"],1,"restaurant_vocab"],
+["Which word means “đắt”?",["Cheap","Expensive","Delicious","Friendly"],1,"basic_vocab"],
+["What do you say when you want to ask for the bill?",["Can I have the bill, please?","Where is my bedroom?","I am a bill.","What time is your birthday?"],0,"functional_language"],
+["“Behind” means _____.",["Phía trước","Bên cạnh","Phía sau","Ở giữa"],2,"prepositions"],
+["Which one is a drink?",["Chicken","Rice","Orange juice","Bread"],2,"food_vocab"],
+["A customer says, “The food is too cold.” What is the best response?",["You're welcome.","I'm sorry. I'll check it for you.","See you tomorrow.","I don't like cold weather."],1,"service_response"]]},
+{title:"Phần C · Sắp xếp câu, sửa lỗi và dịch (10 điểm)",items:[
+["Sắp xếp: name / your / What / is / ?",["What is your name?","What your name is?","Your what is name?","What are your name?"],0,"word_order"],
+["Chọn câu đúng: usually / work / I / in the evening",["Usually work I in the evening.","I usually work in the evening.","I work usually in evening the.","I am usually work in the evening."],1,"word_order"],
+["Sắp xếp: like / would / What / you / to drink / ?",["What you would like to drink?","What would you like to drink?","What would like you drink to?","What do would you like drink?"],1,"word_order"],
+["Tìm câu đúng.",["She work in a restaurant.","She working in a restaurant.","She works in a restaurant.","She does works in a restaurant."],2,"present_simple"],
+["Tìm câu đúng.",["I am agree with you.","I agree with you.","I agreeing with you.","I do agrees with you."],1,"sentence_structure"],
+["“Tôi là nhân viên phục vụ.”",["I am a server.","I have a server.","I serving.","I am serve."],0,"translation"],
+["“Tôi muốn một cốc nước.”",["I like water cup.","I would like a glass of water.","I want glass water.","I am want a cup of water."],1,"translation"],
+["“Nhà hàng mở cửa lúc 10 giờ sáng.”",["The restaurant opens at 10 a.m.","The restaurant open in 10 a.m.","The restaurant is open on 10 a.m.","Restaurant opens at 10 p.m. morning."],0,"translation"],
+["Chọn câu phủ định đúng của “I like coffee.”",["I no like coffee.","I don't like coffee.","I doesn't like coffee.","I am not like coffee."],1,"negatives"],
+["Hỏi “She works in a restaurant.” về nơi làm việc.",["Where she works?","Where does she work?","Where do she work?","What does she works?"],1,"wh_questions"]]},
+{title:"Phần D · Đọc hiểu (5 điểm)",reading:"Tom is 20 years old. He wants to work as a waiter because he likes meeting new people. On his first day, he arrives at the restaurant at 8 a.m. His manager shows him the dining area and the kitchen. Tom learns how to welcome customers, give them menus and take orders. He is a little nervous because his English is not very good. However, his manager is friendly and helps him practise useful sentences. Tom hopes to become a good waiter in the future.",items:[
+["How old is Tom?",["18","19","20","21"],2,"reading_detail"],
+["Why does Tom want to become a waiter?",["He likes meeting new people.","He wants to be a doctor.","He dislikes talking to people.","He wants to study cooking at university."],0,"reading_detail"],
+["What time does Tom arrive at the restaurant?",["7 a.m.","8 a.m.","9 a.m.","10 a.m."],1,"reading_detail"],
+["What does Tom learn to do?",["Repair kitchen equipment.","Cook every dish.","Welcome customers and take orders.","Manage the whole restaurant."],2,"reading_detail"],
+["Why is Tom a little nervous?",["He is late for work.","His manager is unfriendly.","He cannot find the restaurant.","His English is not very good."],3,"reading_detail"]]}
+];
+const root=document.getElementById('questions');let qNum=0;
+sections.forEach((s,si)=>{const panel=document.createElement('section');panel.className='panel';panel.innerHTML='<h2>'+s.title+'</h2>'+(s.reading?'<p>'+s.reading+'</p>':'');s.items.forEach((q,qi)=>{qNum++;const box=document.createElement('fieldset');box.className='q';box.style.border='0';box.innerHTML='<legend>'+qNum+'. '+q[0]+'</legend><div class="opts">'+q[1].map((o,i)=>'<label><input type="radio" name="q'+qNum+'" value="'+i+'" required><span><b>'+String.fromCharCode(65+i)+'.</b> '+o+'</span></label>').join('')+'</div>';box.dataset.topic=q[3];box.dataset.correct=q[2];panel.appendChild(box)});root.appendChild(panel)});
+document.querySelector('[name=date]').value=new Date().toISOString().slice(0,10);
+document.getElementById('testForm').addEventListener('submit',e=>{e.preventDefault();let score=0,answered=0;const topic={},miss=[];document.querySelectorAll('fieldset.q').forEach((el,i)=>{const chosen=document.querySelector('input[name="q'+(i+1)+'"]:checked');const t=el.dataset.topic;topic[t]??={right:0,total:0};topic[t].total++;if(chosen){answered++;if(Number(chosen.value)===Number(el.dataset.correct)){score++;topic[t].right++}else miss.push((i+1)+'. '+el.querySelector('legend').textContent.replace(/^\d+\. /,'')+' — Đáp án: '+String.fromCharCode(65+Number(el.dataset.correct)))}});
+const name=document.querySelector('[name=student]').value.trim();const writing=document.querySelector('[name=writing]').value.trim();const dialogue=document.querySelector('[name=dialogue]').value.trim();const notes=document.querySelector('[name=teacherNotes]').value.trim();const result=document.getElementById('result');const weak=Object.entries(topic).filter(([k,v])=>v.right/v.total<.6).sort((a,b)=>a[1].right/a[1].total-b[1].right/b[1].total);let band=score<=15?'Nền tảng còn rất yếu hoặc đã quên nhiều':score<=27?'Kiến thức rời rạc, cần củng cố nền tảng':score<=39?'Nền tảng tương đối, còn một số lỗ hổng':'Làm trắc nghiệm khá tốt; cần xác minh qua nghe-nói và phần viết';
+result.innerHTML='<div class="eyebrow">Kết quả bài kiểm tra</div><h2>'+escapeHtml(name)+'</h2><div class="score">'+score+' / 40</div><p><b>Nhận định sơ bộ:</b> '+band+'.</p><p class="muted small">Điểm trắc nghiệm chỉ phản ánh 40 câu khách quan; phần viết chưa được tính tự động.</p><h2>Nhóm kiến thức cần ưu tiên kiểm tra</h2>'+(weak.length?weak.map(([k,v])=>'<div class="diag"><b>'+topicName(k)+'</b>: '+v.right+'/'+v.total+' câu đúng</div>').join(''):'<p>Không có nhóm nào dưới 60%; hãy xem lại câu sai và kiểm tra phần viết/nghe/nói.</p>')+'<h2>Câu trả lời cần xem lại</h2><div class="small">'+(miss.length?miss.map(escapeHtml).join('<br>'):'Không có câu trắc nghiệm sai.')+'</div><h2>Phần tự luận để giáo viên chấm</h2><p><b>Giới thiệu bản thân:</b></p><pre>'+escapeHtml(writing||'(Chưa trả lời)')+'</pre><p><b>Hội thoại nhà hàng:</b></p><pre>'+escapeHtml(dialogue||'(Chưa trả lời)')+'</pre>'+(notes?'<p><b>Ghi chú:</b> '+escapeHtml(notes)+'</p>':'')+'<p class="foot">Kết quả được tạo trên trình duyệt này, không tự lưu lên tài khoản hoặc cơ sở dữ liệu.</p><div class="actions"><button class="btn" id="printBtn" type="button">In / Lưu PDF</button><button class="btn secondary" id="copyBtn" type="button">Sao chép tóm tắt</button></div>';
+result.classList.remove('hidden');document.getElementById('printBtn').onclick=()=>window.print();document.getElementById('copyBtn').onclick=async()=>{const txt='LDD English – Kết quả đầu vào\nHọc viên: '+name+'\nĐiểm trắc nghiệm: '+score+'/40\n'+weak.map(([k,v])=>topicName(k)+': '+v.right+'/'+v.total).join('\n')+'\n\nGiới thiệu:\n'+writing+'\n\nHội thoại:\n'+dialogue+'\n\nCâu sai:\n'+miss.join('\n');try{await navigator.clipboard.writeText(txt);document.getElementById('copyBtn').textContent='Đã sao chép'}catch{alert(txt)}};result.scrollIntoView({behavior:'smooth'});});
+function topicName(k){return ({to_be:'Động từ to be',present_simple:'Hiện tại đơn',present_continuous:'Hiện tại tiếp diễn',past_simple:'Quá khứ đơn',there_is_are:'There is/are',countable:'Danh từ đếm được và lượng từ',modal:'Động từ khuyết thiếu',comparison:'So sánh hơn',prepositions:'Giới từ',relative_clause:'Mệnh đề quan hệ',future_conditional:'Tương lai và câu điều kiện',basic_vocab:'Từ vựng cơ bản',everyday_vocab:'Từ vựng đời sống',restaurant_vocab:'Từ vựng nhà hàng',functional_language:'Ngôn ngữ chức năng',service_response:'Phản hồi tình huống dịch vụ',food_vocab:'Từ vựng đồ ăn thức uống',word_order:'Trật tự từ',sentence_structure:'Cấu trúc câu',translation:'Dịch câu cơ bản',negatives:'Câu phủ định',wh_questions:'Câu hỏi Wh-',reading_detail:'Đọc hiểu thông tin'})[k]||k}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+document.getElementById('testForm').addEventListener('reset',()=>{setTimeout(()=>document.getElementById('result').classList.add('hidden'),0)});
+</script></body></html>
