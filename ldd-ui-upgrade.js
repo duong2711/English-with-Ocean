@@ -1097,6 +1097,43 @@
             box.appendChild(wordsLine);
         }
 
+        // Keep attribution links outside the learner's sentence-by-sentence translation text.
+        const sourceUrl = String(meta.sourceUrl || '').trim();
+        const imageUrl = String(meta.imageUrl || '').trim();
+        const imageCredit = String(meta.imageCredit || '').trim();
+        const safeHttps = (url) => /^https:\/\//i.test(url);
+        if (safeHttps(sourceUrl) || imageCredit) {
+            const attribution = document.createElement('p');
+            attribution.className = 'ldd-news-source-attribution';
+            attribution.style.cssText = 'font-size:0.82rem;line-height:1.55;opacity:0.84;overflow-wrap:anywhere';
+
+            if (safeHttps(sourceUrl)) {
+                const sourceLink = document.createElement('a');
+                sourceLink.href = sourceUrl;
+                sourceLink.target = '_blank';
+                sourceLink.rel = 'noopener noreferrer';
+                sourceLink.textContent = 'Đọc bài gốc tại News in Levels ↗';
+                attribution.appendChild(sourceLink);
+            }
+
+            if (imageCredit) {
+                if (safeHttps(sourceUrl)) attribution.appendChild(document.createTextNode(' · '));
+                attribution.appendChild(document.createTextNode('Ảnh minh họa: '));
+                if (safeHttps(imageUrl)) {
+                    const photoLink = document.createElement('a');
+                    photoLink.href = imageUrl;
+                    photoLink.target = '_blank';
+                    photoLink.rel = 'noopener noreferrer';
+                    photoLink.textContent = imageCredit;
+                    attribution.appendChild(photoLink);
+                } else {
+                    attribution.appendChild(document.createTextNode(imageCredit));
+                }
+            }
+
+            box.appendChild(attribution);
+        }
+
     }
 
     function enhanceArticleMeta() {
