@@ -22,6 +22,7 @@
         };
 
         safeInit(ensureUpgradeAssets);
+        safeInit(installParentNavigationState);
         safeInit(enhanceTestCenter);
         safeInit(installTestCenterNavigationGuard);
         safeInit(observeCustomTestRows);
@@ -70,6 +71,49 @@
         script.async = false;
         script.src = src;
         document.body.appendChild(script);
+    }
+
+    function installParentNavigationState() {
+        const nav = document.getElementById('header-tabs-nav');
+        if (!nav || nav.dataset.lddParentState === '1') return;
+        nav.dataset.lddParentState = '1';
+        const parents = new Map();
+        nav.querySelectorAll('.header-tab-dropdown').forEach(function (group) {
+            const trigger = group.querySelector('.main-tab-dropdown-btn');
+            const menu = group._dropdownMenuEl || group.querySelector('.header-tab-dropdown-menu');
+            if (!trigger || !menu) return;
+            menu.querySelectorAll('[data-main-target]').forEach(function (child) {
+                parents.set(child.dataset.mainTarget, trigger);
+            });
+        });
+        let queued = false;
+        function sync() {
+            queued = false;
+            const panel = document.querySelector('.main-tab-content.active');
+            const target = panel && panel.id;
+            const parent = parents.get(target);
+            nav.querySelectorAll('.main-tab-dropdown-btn, .main-tab-btn[data-main-target]').forEach(function (button) {
+                const selected = button === parent || button.dataset.mainTarget === target;
+                button.classList.toggle('active', selected);
+                if (selected) button.setAttribute('aria-current', 'page');
+                else button.removeAttribute('aria-current');
+            });
+        }
+        function schedule() {
+            if (queued) return;
+            queued = true;
+            queueMicrotask(sync);
+        }
+        // Observe only top-level panel selection, never game frames or content updates.
+        const observer = new MutationObserver(schedule);
+        document.querySelectorAll('.main-tab-content').forEach(function (panel) {
+            observer.observe(panel, { attributes: true, attributeFilter: ['class'] });
+        });
+        document.addEventListener('click', function (event) {
+            if (event.target.closest('[data-main-target], #ldd-tab-home')) schedule();
+        });
+        window.addEventListener('popstate', schedule);
+        sync();
     }
 
     function initPremiumMotion() {
