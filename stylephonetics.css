@@ -9664,3 +9664,122 @@ body.about-me-open { overflow: hidden; }
         line-height: 1.7;
     }
 }
+
+
+/* Grade 7 HV2 exam-paper layout. Opt-in via sections[].paper_style = 'exam'.
+   Never affects unrelated custom tests. */
+.ctest-paper-mode .ctest-take-section {
+    margin: 0 0 26px;
+    padding: 0 2px 12px;
+    border-bottom: 1px solid #dfe4ec;
+}
+.ctest-paper-mode .ctest-take-section-title {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1.18rem;
+    font-weight: 800;
+    color: #1d2939;
+    letter-spacing: 0;
+    margin: 0 0 9px;
+    padding: 6px 0 8px;
+    border-bottom: 1px solid #cbd5e1;
+}
+.ctest-paper-mode .ctest-take-instructions {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    padding: 4px 0 10px;
+    margin: 0 0 8px;
+    font-size: .99rem;
+    line-height: 1.6;
+    color: #202b3c;
+    font-weight: 500;
+}
+.ctest-paper-mode .ctest-paper-instruction {
+    font-family: Georgia, "Times New Roman", serif;
+    font-weight: 700;
+    font-size: 1.025rem;
+}
+.ctest-paper-mode .ctest-paper-passage {
+    border: 1px solid #dfe4ec;
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin-top: 12px;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.8;
+    color: #17212f;
+    background: #fff;
+}
+.ctest-paper-mode .ctest-paper-passage p {
+    margin: 0 0 10px;
+    text-align: left;
+}
+.ctest-paper-mode .ctest-paper-passage p:last-child { margin-bottom: 0; }
+.ctest-paper-mode .ctest-take-qblock {
+    padding: 8px 0 14px;
+    margin: 0 0 10px;
+    border: 0;
+    border-bottom: 1px solid #e8ecf2;
+    border-radius: 0;
+    background: transparent;
+}
+.ctest-paper-mode .ctest-take-qnum {
+    color: #202b3c;
+    font-weight: 700;
+}
+.ctest-paper-mode .ctest-take-qprompt {
+    font-size: 1.035rem;
+    line-height: 1.7;
+    color: #17212f;
+    margin-bottom: 10px;
+}
+.ctest-paper-mode .ctest-take-options {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px 16px;
+}
+.ctest-paper-mode .ctest-take-option-label {
+    border: 1px solid transparent;
+    border-radius: 4px;
+    padding: 5px 8px;
+    line-height: 1.5;
+    background: transparent;
+    min-height: 34px;
+}
+.ctest-paper-mode .ctest-take-option-label:hover,
+.ctest-paper-mode .ctest-take-option-label:focus-within {
+    border-color: #cbd5e1;
+    background: #f7f9fc;
+}
+.ctest-paper-mode .ctest-take-option-label input { flex: 0 0 auto; }
+.ctest-paper-mode .ctest-take-option-label:nth-child(1) > span::before { content: "A. "; font-weight: 700; }
+.ctest-paper-mode .ctest-take-option-label:nth-child(2) > span::before { content: "B. "; font-weight: 700; }
+.ctest-paper-mode .ctest-take-option-label:nth-child(3) > span::before { content: "C. "; font-weight: 700; }
+.ctest-paper-mode .ctest-take-option-label:nth-child(4) > span::before { content: "D. "; font-weight: 700; }
+.ctest-paper-mode #ctest-result-sections .ctest-take-option-label:nth-child(1)::before { content: "A. "; font-weight: 700; }
+.ctest-paper-mode #ctest-result-sections .ctest-take-option-label:nth-child(2)::before { content: "B. "; font-weight: 700; }
+.ctest-paper-mode #ctest-result-sections .ctest-take-option-label:nth-child(3)::before { content: "C. "; font-weight: 700; }
+.ctest-paper-mode #ctest-result-sections .ctest-take-option-label:nth-child(4)::before { content: "D. "; font-weight: 700; }
+.ctest-paper-mode .ctest-paper-answer-cue {
+    display: block;
+    margin: 6px 0 0;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #435065;
+    letter-spacing: .01em;
+}
+.ctest-paper-mode .ctest-paper-writing-input {
+    background: #fff;
+    border: 1px solid #aebacd;
+    border-radius: 5px;
+    padding: 10px 12px;
+    min-height: 66px;
+    font-size: 1rem;
+    line-height: 1.6;
+}
+.ctest-paper-mode .ctest-paper-writing-input:focus-visible { outline: 2px solid #64748b; outline-offset: 1px; }
+@media (max-width: 640px) {
+    .ctest-paper-mode .ctest-take-options { grid-template-columns: minmax(0, 1fr); }
+    .ctest-paper-mode .ctest-take-section-title { font-size: 1.05rem; }
+    .ctest-paper-mode .ctest-paper-passage { padding: 10px; }
+}
