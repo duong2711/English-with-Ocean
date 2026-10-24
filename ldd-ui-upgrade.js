@@ -50,7 +50,7 @@
         ensureScript('ldd-student-grade-script', 'ldd-student-grade.js?v=3');
         ensureScript('ldd-thcs-vocab-reset-script', 'ldd-thcs-vocab-reset.js?v=11');
         ensureScript('ldd-fast-progress-script', 'ldd-fast-progress.js?v=1');
-        ensureScript('ldd-vocab-race-script', 'ldd-vocab-race.js?v=20261024-lobby-sync1');
+        ensureScript('ldd-vocab-race-script', 'ldd-vocab-race.js?v=20261024-lobby-sync2');
         ensureScript('ldd-vocab-shooter-script', 'ldd-vocab-shooter.js?v=20261024-compact-2');
     }
 
