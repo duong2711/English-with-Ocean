@@ -1137,21 +1137,29 @@
     }
 
     async function startRoom() {
-        if (!room) return;
-        const b = $('vocab-race-start-btn'); b.disabled = true;
+        if (!room || room.status !== 'lobby') return;
+        const button = $('vocab-race-start-btn');
+        button.disabled = true;
         const version = roomEventVersion;
         const roomId = room.id;
-        const { data,error } = await raceSb.rpc('vocab_race_start_room', { p_room:roomId });
-        b.disabled = false;
-        if (error) {
-            setStatus(translateError(error), 'error');
-            scheduleRefresh(650);
-        } else if (room && String(room.id) === String(roomId)) {
-            // RPC returns the committed authoritative room. Host enters the game
-            // immediately; all guests receive the DB event or the small hint.
-            if (data && data.id) handleRoomRealtime({eventType:'UPDATE',new:data});
+        try {
+            const {data,error} = await raceSb.rpc('vocab_race_start_room',{p_room:roomId});
+            if (error) throw error;
+            if (!room || String(room.id) !== String(roomId)) return;
+            // The RPC result is an authoritative committed snapshot. Host changes
+            // screen now, not after an eventually delivered WAL message.
+            if (data && data.id) {
+                handleRoomRealtime({eventType:'UPDATE',new:data});
+            } else {
+                scheduleRefresh(450);
+            }
             broadcastRaceHint('race-started');
-            scheduleRefreshIfUnchanged(version, 1400);
+            scheduleRefreshIfUnchanged(version,1400);
+        } catch (error) {
+            setStatus(translateError(error),'error');
+            scheduleRefresh(650);
+        } finally {
+            button.disabled = false;
         }
     }
 
