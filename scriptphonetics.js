@@ -1974,8 +1974,13 @@ document.addEventListener('DOMContentLoaded', () => {
         await createOrResumeApprovalRequest(user, session, false);
     }
 
+    let deviceSessionUserId = null;
     async function handleSessionChange(session) {
         const user = session && session.user;
+        // SIGNED_IN also fires when a tab regains focus. Keep an already
+        // admitted user and a pending approval flow intact for this session.
+        if (user && deviceSessionUserId === user.id) return;
+        deviceSessionUserId = user ? user.id : null;
         if (!user) {
             ++deviceGateRunSeq;
             pendingGateUser = null;
