@@ -1524,6 +1524,14 @@
             if (error) scheduleRefresh(1400);
             return;
         }
+        if (data && (data.type === 'stale_round' || data.type === 'not_paused')) {
+            // Another client already advanced or closed the pause: repair one snapshot.
+            scheduleRefresh(400);
+            setTimeout(() => {
+                if (room && room.id === roomId && Number(room.round_index) === roundAtCall) advancePending = false;
+            }, 1200);
+            return;
+        }
         // Hold the referee lock until the authoritative round-change event arrives.
         // Without this lock, a 100ms UI tick can issue the same RPC many times.
         scheduleRefreshIfUnchanged(version, 1400);
