@@ -197,7 +197,7 @@
      invalid_words:'Bộ từ có dữ liệu không hợp lệ.',create_too_fast:'Bạn đã tạo quá nhiều phòng trong thời gian ngắn.',
      room_not_found:'Không tìm thấy mã phòng.',room_full:'Phòng đã đủ người.',
      room_already_started:'Phòng đã bắt đầu.',need_full_room:'Chưa đủ số người chơi.',
-     host_only:'Chỉ chủ phòng có thể bắt đầu.',not_in_room:'Bạn không thuộc phòng này.'};
+     host_only:'Chỉ chủ phòng có thể bắt đầu.',need_2_to_4_players:'Cần từ 2 đến 4 người tham gia trước khi bắt đầu.',not_in_room:'Bạn không thuộc phòng này.'};
    for(const key in labels) if(raw.includes(key)) return labels[key];
    return raw || 'Đã xảy ra lỗi kết nối. Vui lòng thử lại.';
  }
