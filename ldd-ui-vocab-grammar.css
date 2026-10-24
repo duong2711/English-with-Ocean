@@ -195,6 +195,26 @@ body.ldd-ui-v2 #vocab-folder-grid .tab-badge-count-corner {
     right: 12px;
 }
 
+/* Tiến độ học từ hiển thị ngay cạnh tiêu đề kho từ vựng. */
+.ldd-myvocab-heading-count {
+    display: inline-flex;
+    align-items: center;
+    margin: 3px 0 3px 9px;
+    padding: 5px 10px;
+    border: 1px solid rgba(16, 185, 129, .2);
+    border-radius: 999px;
+    background: rgba(16, 185, 129, .09);
+    color: var(--success-dark, #047857);
+    font-size: .72rem;
+    font-weight: 750;
+    line-height: 1.35;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+@media (max-width: 460px) {
+    .ldd-myvocab-heading-count { margin-left: 5px; padding: 4px 8px; font-size: .68rem; }
+}
+
 /* My vocabulary / podcast / vocabulary subpanels */
 body.ldd-ui-v2 #myvocab-panel,
 body.ldd-ui-v2 #podcast-panel,

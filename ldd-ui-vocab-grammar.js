@@ -209,6 +209,17 @@
 
         injectMyVocabFilterStyles();
 
+        // Dùng cùng nguồn đếm với các bộ lọc, không tạo truy vấn Supabase mới.
+        const heading = panel.querySelector('.grammar-panel-header h3');
+        let learnedCountLabel = null;
+        if (heading) {
+            learnedCountLabel = document.createElement('span');
+            learnedCountLabel.className = 'ldd-myvocab-heading-count';
+            learnedCountLabel.setAttribute('aria-live', 'polite');
+            learnedCountLabel.textContent = 'Đã học: 0/0 từ';
+            heading.appendChild(learnedCountLabel);
+        }
+
         const toolbar = document.createElement('div');
         toolbar.className = 'ldd-myvocab-filters';
         toolbar.setAttribute('aria-label', 'Lọc kho từ vựng');
@@ -261,6 +272,10 @@
                 else counts.unlearned += 1;
                 if (state.unpronounced) counts.unpronounced += 1;
             });
+
+            if (learnedCountLabel) {
+                learnedCountLabel.textContent = 'Đã học: ' + counts.learned + '/' + counts.all + ' từ';
+            }
 
             Object.keys(counts).forEach(function (key) {
                 const out = toolbar.querySelector('[data-filter-count="' + key + '"]');
