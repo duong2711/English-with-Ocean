@@ -28,6 +28,7 @@
         var style = document.createElement('style');
         style.id = 'ldd-exam-lookup-style';
         style.textContent =
+            '#word-lookup-popup{z-index:10010 !important}' +
             '.ldd-exam-lookup-word{cursor:pointer;text-decoration:underline dotted;text-decoration-color:#6488c6;text-underline-offset:3px;border-radius:3px;touch-action:manipulation}' +
             '.ldd-exam-lookup-word:hover,.ldd-exam-lookup-word:focus{background:rgba(72,131,218,.14);outline:none}' +
             '.ldd-exam-lookup-modal{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;background:rgba(15,23,42,.6);padding:16px}' +
