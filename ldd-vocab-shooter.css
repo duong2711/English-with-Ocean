@@ -90,3 +90,6 @@
 #shooter-panel.is-shooter-fullscreen-fallback{position:fixed;z-index:999999;inset:0}
 @media(max-width:690px){#shooter-panel{margin:10px 0;padding:0}.shooter-shell{padding:12px;border-radius:16px}.shooter-entry{grid-template-columns:1fr}.shooter-roster,.shooter-scoreboard{grid-template-columns:repeat(2,minmax(0,1fr))}.shooter-head .shooter-full{margin-left:0}.shooter-stage{height:380px}.shooter-word{padding:7px;min-width:70px}.shooter-word small{font-size:9px}.shooter-box{padding:16px}.shooter-hud{grid-template-columns:1fr auto}.shooter-room-code{font-size:25px}}
 @media(prefers-reduced-motion:reduce){.shooter-explode,.shooter-laser{animation-duration:.05s}}
+
+/* Explicitly honor hidden states even when the component has an authored display rule. */
+#shooter-panel [hidden]{display:none!important}
