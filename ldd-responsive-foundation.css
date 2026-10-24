@@ -1,0 +1,50 @@
+/* LDD English responsive foundation — additive, no application state changes */
+:root { color-scheme: light; }
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; scroll-padding-top: 76px; }
+body { min-width: 0; overflow-x: clip; }
+img, video, canvas, svg { max-width: 100%; }
+img, video { height: auto; }
+iframe { max-width: 100%; }
+button, input, select, textarea { font: inherit; }
+button, [role="button"], a { -webkit-tap-highlight-color: transparent; }
+button, a, input, select, textarea { touch-action: manipulation; }
+:focus-visible { outline: 3px solid #2563eb; outline-offset: 3px; }
+:is(.container, .main-content, main, section, article, .card, .modal, .tab-content) { min-width: 0; }
+:is(.container, .main-content, main, .tab-content) { max-width: 100%; }
+:is(h1,h2,h3,p,li,td,th) { overflow-wrap: anywhere; }
+table { max-width: 100%; }
+@media (max-width: 767px) {
+  html { scroll-padding-top: 64px; }
+  body { width: 100%; }
+  input, select, textarea { font-size: 16px; }
+  button, input[type="button"], input[type="submit"], [role="button"] { min-height: 40px; }
+  :is(.ldd-test-hero, .ldd-hero-stat) { max-width: 100%; }
+  .ldd-test-hero { flex-wrap: wrap; padding: 16px; gap: 12px; }
+  :is(.modal, [role="dialog"]) { max-width: calc(100vw - 24px); }
+  :is(.table-wrapper, .table-responsive) { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+}
+@media (min-width: 768px) and (max-width: 1100px) {
+  .ldd-test-hero { gap: 14px; padding: 18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html:focus-within { scroll-behavior: auto; }
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+
+/* Interaction stability: prevent scroll anchoring jumps while switching sections. */
+html { overflow-anchor: none; }
+:is(.tab-content, .main-content, main) { overflow-anchor: none; }
+/* Touch devices must not retain hover transforms after a tap. Keep click feedback visual,
+   without moving layout or causing repeated translate/scale animations. */
+@media (hover: none) and (pointer: coarse) {
+  :is(.nav-item, .nav-link, .tab-btn, .tab-button, .menu-item, .sidebar-item, .bottom-nav-item):hover {
+    transform: none !important;
+  }
+  :is(.nav-item, .nav-link, .tab-btn, .tab-button, .menu-item, .sidebar-item, .bottom-nav-item) {
+    -webkit-tap-highlight-color: transparent;
+    transition-property: background-color, color, border-color, box-shadow, opacity !important;
+  }
+}
+/* Prevent visual bouncing on repeated taps without changing application click logic. */
+:is(button, a, [role="button"]) { -webkit-touch-callout: none; }
