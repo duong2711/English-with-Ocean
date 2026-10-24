@@ -411,11 +411,14 @@
         populateTopicSelect().catch(() => {});
         await restore;
         if (room && room.status === 'playing') startRoadAnimation();
+        else scheduleLobbySafetyCheck();
     }
 
     function closePanel() {
         if (raceFullscreenActive()) exitRaceFullscreen();
         $('vocab-race-panel').style.display = 'none';
+        clearTimeout(roomLobbySafetyTimer);
+        roomLobbySafetyTimer = null;
         const grid = $('entertainment-folder-grid');
         if (grid) grid.style.display = '';
     }
@@ -596,6 +599,8 @@
         clearTimeout(roomLobbySafetyTimer);
         roomLobbySafetyTimer = null;
         if (!room || room.status !== 'lobby') return;
+        const panel = racePanel();
+        if (!panel || panel.style.display === 'none') return;
         const id = room.id;
         const epoch = attachEpoch;
         // Rare missed Realtime events: a narrow REST check instead of 900ms polling.
@@ -1079,6 +1084,10 @@
         [roomChannel,playerChannel].forEach(ch => {
             if (ch) try { raceSb.removeChannel(ch); } catch (_) {}
         });
+        if (tickHandle) {
+            clearInterval(tickHandle);
+            tickHandle = null;
+        }
         roomChannel = playerChannel = null;
         roomReady = playerReady = false;
         pendingJoinNotice = false;
