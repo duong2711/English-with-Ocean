@@ -7074,6 +7074,7 @@ function toggleCompletion(symbolElement) {
 
         // Xử lý khi học viên chạm/bấm vào 1 từ trong lúc luyện dịch
         async function handleWordTap(wordEl) {
+            const isExamLookup = !!(wordEl && wordEl.closest && wordEl.closest('.ldd-exam-lookup-word'));
             if (!wordLookupPopup || !wordLookupBody || !wordLookupWordEl) return;
             const rawWord = wordEl.dataset.word;
             if (!rawWord) return;
@@ -7146,7 +7147,7 @@ function toggleCompletion(symbolElement) {
                 return;
             }
 
-            await runFreshWordLookup(rawWord, norm, contextSentence, sourceTitle);
+            await runFreshWordLookup(rawWord, norm, contextSentence, sourceTitle, isExamLookup);
         }
 
         // API nội bộ cho phần tra từ trong bài kiểm tra (tái dùng popup từ vựng sẵn có).
@@ -7178,7 +7179,7 @@ function toggleCompletion(symbolElement) {
             const relookupBtn = document.getElementById('word-lookup-relookup-btn');
             if (relookupBtn) {
                 relookupBtn.addEventListener('click', () => {
-                    runFreshWordLookup(rawWord, norm, contextSentence, sourceTitle);
+                    runFreshWordLookup(rawWord, norm, contextSentence, sourceTitle, sourceTitle === 'Bài kiểm tra');
                 }, { once: true });
             }
         }
@@ -7221,8 +7222,10 @@ function toggleCompletion(symbolElement) {
 
         // Gọi AI tra nghĩa thật (chỉ dùng cho từ CHƯA có trong danh sách, hoặc khi
         // học viên chủ động bấm "Tra lại" để kiểm tra nghĩa khác)
-        async function runFreshWordLookup(rawWord, norm, contextSentence, sourceTitle) {
+        const examWordLookupCache = new Map(); // RAM-only, không ghi vào bảng user_vocabulary
+        async function runFreshWordLookup(rawWord, norm, contextSentence, sourceTitle, readOnlyExam = false) {
             const mySeq = ++wordLookupSeq;
+            const cacheKey = norm + '|' + String(contextSentence || '').trim().slice(0, 160);
             wordLookupBody.innerHTML = `<div class="word-lookup-loading">🔎 Đang tra nghĩa từ "${escapeHtmlNews(rawWord)}"...</div>`;
 
             if (!aiConfigured()) {
@@ -7231,7 +7234,9 @@ function toggleCompletion(symbolElement) {
             }
 
             try {
-                const info = await fetchWordInfo(rawWord, contextSentence);
+                const info = (readOnlyExam && examWordLookupCache.has(cacheKey))
+                    ? examWordLookupCache.get(cacheKey)
+                    : await fetchWordInfo(rawWord, contextSentence);
                 if (mySeq !== wordLookupSeq) return; // học viên đã chạm từ khác trong lúc chờ
 
                 if (!info || info.found === false) {
@@ -7239,6 +7244,7 @@ function toggleCompletion(symbolElement) {
                     return;
                 }
 
+                if (readOnlyExam) examWordLookupCache.set(cacheKey, info);
                 if (wordLookupPhoneticEl) {
                     const cleanIpa = (info.phonetic || '').replace(/^\/|\/$/g, '').trim();
                     wordLookupPhoneticEl.textContent = cleanIpa ? `/${cleanIpa}/` : '';
@@ -7252,8 +7258,9 @@ function toggleCompletion(symbolElement) {
                         <div class="word-lookup-example-en">📌 ${escapeHtmlNews(info.exampleEn)}</div>
                         <div class="word-lookup-example-vi">→ ${escapeHtmlNews(info.exampleVi || '')}</div>
                     </div>` : ''}
-                    <div class="word-lookup-save-status" id="word-lookup-save-status">💾 Đang lưu vào từ vựng của bạn...</div>
+                    ${readOnlyExam ? '<div class="word-lookup-known-note">📘 Tra từ trong bài kiểm tra — không tính vi phạm, không tự động lưu từ.</div>' : '<div class="word-lookup-save-status" id="word-lookup-save-status">💾 Đang lưu vào từ vựng của bạn...</div>'}
                 `;
+                if (readOnlyExam) return; // chỉ tra nghĩa, không gọi Supabase insert/update
 
                 // Lưu vào danh sách từ vựng cá nhân — vẫn giữ kiểm tra trùng (word_norm +
                 // meaning + word_type) làm lưới an toàn cuối cùng, phòng khi AI trả về
