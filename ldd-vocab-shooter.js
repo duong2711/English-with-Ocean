@@ -104,6 +104,10 @@
    $('shooter-new').addEventListener('click',newGame);
    $('shooter-answer').addEventListener('input', e => { if (!e.isComposing) typeWord(); });
    $('shooter-answer').addEventListener('compositionend',typeWord);
+   $('shooter-answer').addEventListener('change',typeWord);
+   $('shooter-answer').addEventListener('keydown',e=>{
+     if(e.key==='Enter'){e.preventDefault();typeWord();}
+   });
    buildCompactKeyboard();
    $('shooter-input-mode').addEventListener('click',()=>{
      mobileNativeKeyboard=!mobileNativeKeyboard;
@@ -178,6 +182,7 @@
    $('shooter-keyboard').hidden=!(mobile&&!mobileNativeKeyboard);
    $('shooter-input-mode').textContent=mobileNativeKeyboard?'Bàn phím gọn':'Bàn phím điện thoại';
    input.readOnly=mobile&&!mobileNativeKeyboard;
+   if(mobile && !mobileNativeKeyboard && document.activeElement===input)input.blur();
    input.setAttribute('inputmode',mobile&&!mobileNativeKeyboard?'none':'text');
    if(mobile)updateMobileViewport();
    else {p.style.removeProperty('--shooter-vvh');p.style.removeProperty('--shooter-vvtop');}
