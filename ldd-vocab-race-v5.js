@@ -49,6 +49,14 @@
     let claimPending = false;
     let charging = null;
     let roadAnimationStarted = false;
+    let lastMotionFrameTs = 0;
+    let motionRoadNodes = [];
+    let motionTextureNodes = [];
+    let motionLanes = [];
+    let motionLaneGeometry = { start:138, end:450 };
+    let motionGeometryDirty = true;
+    let motionResizeObserver = null;
+    const reduceRaceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let clockOffsetMs = 0;
     let clockSyncPending = false;
     let lastClockSyncAt = 0;
@@ -387,6 +395,7 @@
         await populateTopicSelect();
         setStatus('Tạo phòng mới hoặc nhập mã phòng để tham gia.', 'neutral');
         await restoreRoom();
+        if (room && room.status === 'playing') startRoadAnimation();
     }
 
     function closePanel() {
@@ -988,6 +997,7 @@
         updateControls();
         updateObstacleVisuals();
         updatePauseOverlay();
+        startRoadAnimation();
     }
 
     function buildTrack(q) {
@@ -1029,6 +1039,20 @@
                 if (lane) lane.appendChild(makeCar(p));
             }
         });
+
+        // A new round creates a track once; animation holds references instead of
+        // querying the whole DOM on each animation frame.
+        motionRoadNodes = Array.from(track.querySelectorAll('.vocab-race-road-flow'));
+        motionTextureNodes = Array.from(track.querySelectorAll('.vocab-race-road-texture'));
+        motionLanes = Array.from(track.querySelectorAll('.vocab-race-lane'));
+        motionGeometryDirty = true;
+        if (motionResizeObserver) motionResizeObserver.disconnect();
+        if (typeof ResizeObserver !== 'undefined' && motionLanes[0]) {
+            if (!motionResizeObserver) motionResizeObserver = new ResizeObserver(() => {
+                motionGeometryDirty = true;
+            });
+            motionResizeObserver.observe(motionLanes[0]);
+        }
     }
 
     function findRaceCar(userId) {
@@ -1091,7 +1115,6 @@
         car.style.setProperty('transition', 'none', 'important');
         car.style.setProperty('transform', 'translateX(-50%)');
         targetLane.appendChild(car);
-        void car.offsetWidth;
 
         if (!animate) {
             car.style.removeProperty('transition');
@@ -1115,6 +1138,18 @@
             return;
         }
 
+        // Remote users' lane messages arrive with different network delays. Use
+        // the server timestamp to shorten late animations so all clients converge
+        // to the authoritative position instead of replaying stale movement.
+        const serverEnteredAt = Date.parse(p.lane_entered_at || '');
+        const lag = !isMine && Number.isFinite(serverEnteredAt)
+            ? Math.max(0, nowMs() - serverEnteredAt) : 0;
+        const moveDuration = Math.max(0, 240 - lag);
+        if (moveDuration < 35) {
+            car.style.removeProperty('transition');
+            car.style.removeProperty('transform');
+            return;
+        }
         if (typeof car.animate === 'function') {
             const animation = car.animate(
                 [
@@ -1122,7 +1157,7 @@
                     { transform: 'translateX(-50%)' }
                 ],
                 {
-                    duration: 220,
+                    duration: moveDuration,
                     easing: 'cubic-bezier(.22,.61,.36,1)',
                     fill: 'none'
                 }
@@ -1141,12 +1176,12 @@
         car.style.setProperty('transform', startTransform, 'important');
         void car.offsetWidth;
         requestAnimationFrame(function () {
-            car.style.setProperty('transition', 'transform .22s cubic-bezier(.22,.61,.36,1)', 'important');
+            car.style.setProperty('transition', 'transform ' + moveDuration + 'ms cubic-bezier(.22,.61,.36,1)', 'important');
             car.style.setProperty('transform', 'translateX(-50%)', 'important');
             setTimeout(function () {
                 car.style.removeProperty('transition');
                 car.style.removeProperty('transform');
-            }, 250);
+            }, moveDuration + 30);
         });
     }
 
@@ -1350,14 +1385,14 @@
         return [a, (a + offset) % 5];
     }
 
-    function elapsedMs() {
+    function elapsedMs(atMs) {
         const t = Date.parse(room && room.round_started_at || '');
-        return Number.isFinite(t) ? Math.max(0, nowMs() - t) : 0;
+        return Number.isFinite(t) ? Math.max(0, (atMs == null ? nowMs() : atMs) - t) : 0;
     }
 
-    function obstacleState() {
+    function obstacleState(atMs) {
         if (isRoundPaused()) return { warning:null, falling:null };
-        const elapsed = elapsedMs();
+        const elapsed = elapsedMs(atMs);
         let warning = null;
         let falling = null;
         for (let wave = 1; wave <= MAX_OBSTACLE_WAVE; wave++) {
@@ -1375,39 +1410,57 @@
         return '';
     }
 
-    function updateObstacleVisuals() {
-        const track = $('vocab-race-track');
-        if (!track) return;
-        const s = obstacleState();
-        track.querySelectorAll('.vocab-race-lane').forEach(el => {
+    function measureMotionGeometry() {
+        if (!motionGeometryDirty || !motionLanes[0]) return;
+        motionGeometryDirty = false;
+        const lane = motionLanes[0];
+        const laneHeight = lane.clientHeight || 560;
+        const style = getComputedStyle(lane);
+        const configuredStart = parseFloat(style.getPropertyValue('--race-obstacle-start'));
+        const configuredEndGap = parseFloat(style.getPropertyValue('--race-obstacle-end-gap'));
+        const start = Number.isFinite(configuredStart)
+            ? configuredStart : Math.min(138, Math.max(62, laneHeight * 0.18));
+        const endGap = Number.isFinite(configuredEndGap)
+            ? configuredEndGap : Math.min(95, Math.max(42, laneHeight * 0.12));
+        motionLaneGeometry = {
+            start,
+            end: Math.max(start + 60, laneHeight - endGap)
+        };
+    }
+
+    function updateObstacleVisuals(atMs) {
+        if (!room || room.status !== 'playing' || !motionLanes.length) return;
+        const s = obstacleState(atMs);
+        measureMotionGeometry();
+        const start = motionLaneGeometry.start;
+        const distance = motionLaneGeometry.end - start;
+        for (const el of motionLanes) {
             const lane = Number(el.dataset.lane);
+            const warned = !!(s.warning && s.warning.lanes.includes(lane));
+            const falling = !!(s.falling && s.falling.lanes.includes(lane));
+            el.classList.toggle('is-obstacle-warning', warned);
+            el.classList.toggle('is-obstacle-active', falling);
             const warn = el.querySelector('.vocab-race-obstacle-warning');
             const obs = el.querySelector('.vocab-race-obstacle');
-            el.classList.remove('is-obstacle-warning','is-obstacle-active');
-            if (warn) warn.classList.remove('is-visible');
-            if (obs) obs.classList.remove('is-visible');
-            if (s.warning && s.warning.lanes.includes(lane)) {
-                el.classList.add('is-obstacle-warning');
-                if (warn) { warn.classList.add('is-visible'); const em = warn.querySelector('em'); if (em) em.textContent = (s.warning.remaining/1000).toFixed(1) + 's'; }
-            }
-            if (s.falling && s.falling.lanes.includes(lane)) {
-                el.classList.add('is-obstacle-active');
-                if (obs) {
-                    obs.classList.add('is-visible');
-                    const laneStyles = getComputedStyle(el);
-                    const configuredStart = parseFloat(laneStyles.getPropertyValue('--race-obstacle-start'));
-                    const configuredEndGap = parseFloat(laneStyles.getPropertyValue('--race-obstacle-end-gap'));
-                    const start = Number.isFinite(configuredStart)
-                        ? configuredStart
-                        : Math.min(138, Math.max(62, el.clientHeight * 0.18));
-                    const endGap = Number.isFinite(configuredEndGap)
-                        ? configuredEndGap
-                        : Math.min(95, Math.max(42, el.clientHeight * 0.12));
-                    const end = Math.max(start + 60, el.clientHeight - endGap);
-                    obs.style.top = (start + Math.min(1, Math.max(0, s.falling.progress)) * (end - start)) + 'px';
+            if (warn) {
+                warn.classList.toggle('is-visible', warned);
+                if (warned) {
+                    const em = warn.querySelector('em');
+                    const next = (s.warning.remaining / 1000).toFixed(1) + 's';
+                    if (em && em.textContent !== next) em.textContent = next;
                 }
             }
-        });
+            if (obs) {
+                obs.classList.toggle('is-visible', falling);
+                if (falling) {
+                    // translate3d runs on the compositor; unlike top it does not
+                    // re-layout the track. Progress depends only on server time.
+                    const y = start + Math.min(1, Math.max(0, s.falling.progress)) * distance;
+                    obs.style.setProperty('transform',
+                        'translate3d(-50%, ' + y.toFixed(2) + 'px, 0)', 'important');
+                }
+            }
+        }
     }
 
     async function resolveObstacleImpacts() {
@@ -1458,7 +1511,7 @@
 
     function tick() {
         if (!room || room.status !== 'playing') return;
-        if (Date.now() - lastClockSyncAt > 60000) syncServerClock(false);
+        if (Date.now() - lastClockSyncAt > 120000) syncServerClock(false);
 
         if (isLifecyclePaused()) {
             const lifecycleClock = $('vocab-race-round-clock');
@@ -1489,7 +1542,6 @@
             clock.textContent = (remain/1000).toFixed(1) + 's';
             clock.classList.toggle('is-danger', remain <= 5000);
         }
-        updateObstacleVisuals();
         updateControls();
         resolveObstacleImpacts();
         if (remain <= 0) resolveTimeout();
@@ -1540,17 +1592,45 @@
     function startRoadAnimation() {
         if (roadAnimationStarted) return;
         roadAnimationStarted = true;
+        lastMotionFrameTs = 0;
+
         function frame(ts) {
-            const offset = (ts * 0.16) % 96;
-            const texture = (ts * 0.24) % 36;
-            document.querySelectorAll('.vocab-race-road-flow').forEach(el => {
-                el.style.transform = 'translate3d(-50%,' + (offset - 96).toFixed(1) + 'px,0)';
-            });
-            document.querySelectorAll('.vocab-race-road-texture').forEach(el => {
-                el.style.transform = 'translate3d(0,' + (texture - 36).toFixed(1) + 'px,0)';
-            });
+            if (!roadAnimationStarted) return;
+            const panel = racePanel();
+            const visible = !!(panel && panel.style.display !== 'none');
+            if (!room || room.status !== 'playing' || !visible) {
+                roadAnimationStarted = false;
+                return;
+            }
+            if (!document.hidden && (lastMotionFrameTs === 0 || ts - lastMotionFrameTs >= 32)) {
+                lastMotionFrameTs = ts;
+
+                // Derive every visual frame from the same room clock rather than
+                // local CSS animation start times (which differ across devices).
+                let at = nowMs();
+                if (isLifecyclePaused()) {
+                    const pausedAt = Date.parse(room.lifecycle_paused_at || '');
+                    if (Number.isFinite(pausedAt)) at = Math.min(at, pausedAt);
+                } else if (isRoundPaused()) {
+                    const pauseUntil = Date.parse((room.last_result || {}).pause_until || '');
+                    if (Number.isFinite(pauseUntil)) at = Math.min(at, pauseUntil - PAUSE_MS);
+                }
+                const progress = elapsedMs(at);
+                const road = reduceRaceMotion ? 0 : (progress * .030) % 96;
+                const texture = reduceRaceMotion ? 0 : (progress * .007) % 36;
+                const roadTransform = 'translate3d(-50%, ' + (road - 96).toFixed(2) + 'px, 0)';
+                const textureTransform = 'translate3d(0, ' + (texture - 36).toFixed(2) + 'px, 0)';
+                for (const el of motionRoadNodes) {
+                    el.style.setProperty('transform', roadTransform, 'important');
+                }
+                for (const el of motionTextureNodes) {
+                    el.style.setProperty('transform', textureTransform, 'important');
+                }
+                updateObstacleVisuals(at);
+            }
             requestAnimationFrame(frame);
         }
+
         requestAnimationFrame(frame);
     }
 
