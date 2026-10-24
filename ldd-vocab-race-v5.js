@@ -1232,6 +1232,8 @@
     }
 
     function renderGame() {
+        const status = $('vocab-race-status');
+        if (status && status.textContent === 'Cần 2–4 học viên.') setStatus('', '');
         const q = currentQuestion();
         if (!q) return;
         $('vocab-race-round').textContent = (room.round_index + 1) + '/20';
@@ -1273,17 +1275,12 @@
             obstacle.innerHTML = '<span>🚧</span>';
 
             laneEl.append(option, road, warning, obstacle);
-            players.filter(p => Number(p.lane) === lane).forEach(p => {
+            players.filter(p => Number(p.lane == null ? 2 : p.lane) === lane).forEach(p => {
                 if (!stealth || (me && String(p.user_id) === String(me.id))) laneEl.appendChild(makeCar(p));
             });
             track.appendChild(laneEl);
         }
-        players.filter(p => p.lane == null).forEach(p => {
-            if (!stealth || (me && String(p.user_id) === String(me.id))) {
-                const lane = track.querySelector('[data-lane="2"]');
-                if (lane) lane.appendChild(makeCar(p));
-            }
-        });
+
 
         // A new round creates a track once; animation holds references instead of
         // querying the whole DOM on each animation frame.
