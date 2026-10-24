@@ -93,3 +93,141 @@
 
 /* Explicitly honor hidden states even when the component has an authored display rule. */
 #shooter-panel [hidden]{display:none!important}
+
+
+/* PHONE MATCH LAYOUT — use the visual viewport, not a tall page below the OS keyboard. */
+.shooter-mobile-toolbar,.shooter-keyboard{display:none}
+body.ldd-shooter-lock-scroll{overflow:hidden!important}
+#shooter-panel.is-shooter-mobile-playing{
+ position:fixed!important;
+ top:var(--shooter-vvtop,0px)!important;bottom:auto!important;
+ left:0!important;right:0!important;
+ z-index:2147483000!important;
+ box-sizing:border-box!important;
+ width:100vw!important;max-width:none!important;
+ height:var(--shooter-vvh,100dvh)!important;min-height:0!important;
+ padding:env(safe-area-inset-top,0px) 4px env(safe-area-inset-bottom,0px)!important;
+ margin:0!important;overflow:hidden!important;
+ background:#08122d!important;
+ overscroll-behavior:contain;
+}
+#shooter-panel.is-shooter-mobile-playing .shooter-shell{
+ display:flex!important;flex-direction:column!important;
+ height:100%!important;min-height:0!important;max-height:100%!important;
+ padding:6px 7px!important;margin:0!important;
+ gap:0!important;border-radius:0!important;overflow:hidden!important;
+}
+#shooter-panel.is-shooter-mobile-playing .shooter-head{
+ flex:none!important;gap:7px!important;margin-bottom:4px!important;min-height:28px!important;
+}
+#shooter-panel.is-shooter-mobile-playing .shooter-head h3{
+ font-size:15px!important;line-height:1.1!important;letter-spacing:0!important;
+}
+#shooter-panel.is-shooter-mobile-playing .shooter-head p,
+#shooter-panel.is-shooter-mobile-playing .shooter-full{display:none!important}
+#shooter-panel.is-shooter-mobile-playing .shooter-back{
+ padding:6px 8px!important;font-size:12px!important;min-height:27px!important;
+}
+#shooter-panel.is-shooter-mobile-playing .shooter-info{
+ flex:none!important;min-height:0!important;margin:0!important;font-size:11px!important;
+ line-height:1.2!important;
+}
+#shooter-panel.is-shooter-mobile-playing .shooter-info:not(.is-error){display:none!important}
+#shooter-panel.is-shooter-mobile-playing #shooter-game{
+ display:flex!important;flex-direction:column!important;flex:1 1 auto!important;
+ height:100%!important;min-height:0!important;overflow:hidden!important;
+}
+#shooter-panel.is-shooter-mobile-playing .shooter-hud{
+ flex:none!important;margin:0 0 3px!important;gap:4px!important;
+}
+#shooter-panel.is-shooter-mobile-playing .shooter-match-title{
+ overflow:hidden!important;white-space:nowrap!important;text-overflow:ellipsis!important;
+ font-size:12px!important;
+}
+#shooter-panel.is-shooter-mobile-playing .shooter-progress{
+ padding:3px 7px!important;font-size:11px!important;
+}
+#shooter-panel.is-shooter-mobile-playing .shooter-track{flex:none!important;margin:0 0 4px!important;height:3px!important}
+#shooter-panel.is-shooter-mobile-playing .shooter-scoreboard{
+ display:flex!important;flex:none!important;overflow:hidden!important;
+ gap:3px!important;margin:0 0 5px!important;min-height:32px!important;
+}
+#shooter-panel.is-shooter-mobile-playing .shooter-score-person{
+ flex:1 1 0!important;width:0!important;min-width:0!important;
+ padding:5px 4px!important;border-radius:7px!important;
+ gap:3px!important;font-size:10px!important;
+}
+#shooter-panel.is-shooter-mobile-playing .shooter-score-person strong{font-size:14px!important}
+#shooter-panel.is-shooter-mobile-playing .shooter-score-person span{display:flex;align-items:center;min-width:0;gap:2px}
+#shooter-panel.is-shooter-mobile-playing .shooter-score-person b{max-width:100%;font-size:10px}
+#shooter-panel.is-shooter-mobile-playing .shooter-stage{
+ display:block!important;flex:1 1 auto!important;
+ width:100%!important;height:auto!important;min-height:105px!important;
+ margin:0!important;border-radius:10px!important;overflow:hidden!important;
+}
+#shooter-panel.is-shooter-mobile-playing .shooter-word{min-width:68px;max-width:35vw;padding:5px!important}
+#shooter-panel.is-shooter-mobile-playing .shooter-word b{font-size:13px!important}
+#shooter-panel.is-shooter-mobile-playing .shooter-word small{font-size:9px!important}
+#shooter-panel.is-shooter-mobile-playing .shooter-turret{bottom:2px;font-size:22px}
+#shooter-panel.is-shooter-mobile-playing .shooter-controls{
+ display:flex!important;flex:none!important;flex-direction:column!important;
+ width:100%!important;max-width:none!important;margin:5px 0 0!important;
+ text-align:center!important;gap:3px!important;
+}
+#shooter-panel.is-shooter-mobile-playing .shooter-controls>label,
+#shooter-panel.is-shooter-mobile-playing .shooter-hint{display:none!important}
+#shooter-panel.is-shooter-mobile-playing #shooter-answer{
+ flex:none!important;min-height:32px!important;height:32px!important;
+ font-size:16px!important;padding:3px 8px!important;
+ line-height:22px!important;border-radius:8px!important;
+}
+#shooter-panel.is-shooter-mobile-playing .shooter-mobile-toolbar{
+ display:flex!important;flex:none!important;justify-content:space-between;
+ align-items:center;min-height:19px;font-size:10px;line-height:17px;
+ color:#d5e1ff;
+}
+#shooter-panel.is-shooter-mobile-playing .shooter-mobile-toolbar button{
+ background:none;border:0;color:#9cfbf0;text-decoration:underline;
+ font:inherit;font-weight:700;padding:0 3px;cursor:pointer;
+}
+#shooter-panel.is-shooter-mobile-playing .shooter-keyboard:not([hidden]){
+ display:flex!important;flex:none!important;flex-direction:column!important;
+ gap:3px!important;width:100%;padding:0 1px 2px;
+ touch-action:manipulation;user-select:none;-webkit-user-select:none;
+}
+#shooter-panel.is-shooter-mobile-playing .shooter-keyrow{
+ display:flex;flex:none;justify-content:center;gap:3px;
+}
+#shooter-panel.is-shooter-mobile-playing .shooter-key{
+ flex:1 1 0;min-width:0;min-height:32px;height:32px;padding:0 2px;
+ text-align:center;border:1px solid #6374aa;border-bottom-width:2px;
+ border-radius:6px;color:#fff;font:800 14px/1 inherit;
+ font-family:inherit;font-size:14px;font-weight:800;
+ background:linear-gradient(#3a4672,#202d52);
+ box-shadow:0 1px 2px rgba(0,0,0,.2);
+ touch-action:manipulation;
+}
+#shooter-panel.is-shooter-mobile-playing .shooter-key:active{
+ transform:translateY(1px);background:#497fa4;
+}
+#shooter-panel.is-shooter-mobile-playing .shooter-key.is-tool{
+ font-size:11px;background:#354471;
+}
+#shooter-panel.is-shooter-mobile-playing .shooter-key[data-key="space"]{flex:3 1 0}
+#shooter-panel.is-shooter-mobile-playing .shooter-key[data-key="back"]{flex:1.6 1 0}
+#shooter-panel.is-shooter-mobile-playing .shooter-key[data-key="clear"]{flex:1.6 1 0}
+#shooter-panel.is-shooter-mobile-playing .shooter-feedback{
+ flex:none!important;font-size:11px!important;line-height:15px!important;
+ margin:0!important;min-height:15px!important;
+ white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+@media(max-height:580px){
+ #shooter-panel.is-shooter-mobile-playing .shooter-key{height:27px;min-height:27px}
+ #shooter-panel.is-shooter-mobile-playing .shooter-stage{min-height:85px!important}
+ #shooter-panel.is-shooter-mobile-playing .shooter-word small{display:none}
+ #shooter-panel.is-shooter-mobile-playing .shooter-keyrow{gap:2px}
+}
+@media(orientation:landscape) and (max-height:430px){
+ #shooter-panel.is-shooter-mobile-playing .shooter-key{height:24px;min-height:24px}
+ #shooter-panel.is-shooter-mobile-playing .shooter-stage{min-height:76px!important}
+}
