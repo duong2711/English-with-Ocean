@@ -19,7 +19,7 @@
  let pending = new Set(), nodes = new Map(), activeWords = [], uiMode = '', lastShotText = '';
  let hasSubscribed = false, lastFinishAttempt = 0, visualCountdown = -1;
  let needsRoomRefresh = false, resumeBusy = false;
- let optimisticShots = new Set(), rosterRefreshTimer = null;
+ let optimisticShots = new Set(), rosterRefreshTimer = null, mobileNativeKeyboard = false;
 
  function addUI() {
    const grid = $('entertainment-folder-grid');
@@ -76,7 +76,9 @@
          '<div class="shooter-controls">',
             '<label for="shooter-answer">⌨️ Gõ từ tiếng Anh đang rơi để bắn ngay (không cần Enter)</label>',
             '<input id="shooter-answer" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" placeholder="Gõ từ đang rơi…" maxlength="65">',
-            '<p class="shooter-hint">Ai hoàn thành chính xác trước sẽ nhận 1 điểm chăm chỉ. Từ trúng đạn biến mất trên mọi màn hình.</p>',
+            '<div class="shooter-mobile-toolbar" id="shooter-mobile-toolbar" hidden><strong>⌨️ Phím gọn</strong><button type="button" id="shooter-input-mode">Bàn phím điện thoại</button></div>',
+             '<div id="shooter-keyboard" class="shooter-keyboard" hidden></div>',
+             '<p class="shooter-hint">Ai hoàn thành chính xác trước sẽ nhận 1 điểm chăm chỉ. Từ trúng đạn biến mất trên mọi màn hình.</p>',
             '<div class="shooter-feedback" id="shooter-feedback" aria-live="polite"></div>',
          '</div>',
       '</div>',
@@ -102,7 +104,20 @@
    $('shooter-new').addEventListener('click',newGame);
    $('shooter-answer').addEventListener('input', e => { if (!e.isComposing) typeWord(); });
    $('shooter-answer').addEventListener('compositionend',typeWord);
-   $('shooter-stage').addEventListener('pointerdown',()=>{if(room && room.status==='playing')$('shooter-answer').focus({preventScroll:true});});
+   buildCompactKeyboard();
+   $('shooter-input-mode').addEventListener('click',()=>{
+     mobileNativeKeyboard=!mobileNativeKeyboard;
+     syncMobileLayout();
+     if(mobileNativeKeyboard)$('shooter-answer').focus({preventScroll:true});
+     else $('shooter-answer').blur();
+   });
+   if(window.visualViewport){
+     window.visualViewport.addEventListener('resize',updateMobileViewport,{passive:true});
+     window.visualViewport.addEventListener('scroll',updateMobileViewport,{passive:true});
+   }
+   window.addEventListener('resize',updateMobileViewport,{passive:true});
+   window.addEventListener('orientationchange',updateMobileViewport,{passive:true});
+   $('shooter-stage').addEventListener('pointerdown',()=>{if(room && room.status==='playing' && !$('shooter-panel').classList.contains('is-shooter-mobile-playing'))$('shooter-answer').focus({preventScroll:true});});
    document.addEventListener('visibilitychange',onVisibility);
    window.addEventListener('online',onVisibility);
    document.addEventListener('fullscreenchange',syncFullscreen);
@@ -115,6 +130,58 @@
    },true);
  }
 
+ // Compact in-game keyboard for phones. Do not invoke the OS keyboard by default.
+ function buildCompactKeyboard(){
+   const board=$('shooter-keyboard');
+   if(!board || board.children.length)return;
+   const rows=['QWERTYUIOP'.split(''),'ASDFGHJKL'.split(''),'ZXCVBNM'.split(''),
+     [{key:'space',label:'Dấu cách'},{key:'-',label:'-'},{key:"'",label:"'"},{key:'back',label:'⌫'},{key:'clear',label:'Xóa'}]];
+   rows.forEach((keys,i)=>{
+     const row=document.createElement('div');
+     row.className='shooter-keyrow'+(i===3?' shooter-keyrow-tools':'');
+     keys.forEach(item=>{
+       const key=typeof item==='string'?item:item.key;
+       const button=document.createElement('button');
+       button.type='button';button.className='shooter-key'+(i===3?' is-tool':'');
+       button.dataset.key=key;
+       button.textContent=typeof item==='string'?item:item.label;
+       button.setAttribute('aria-label',key==='back'?'Xóa chữ cuối':key==='clear'?'Xóa hết':key==='space'?'Dấu cách':button.textContent);
+       row.appendChild(button);
+     });
+     board.appendChild(row);
+   });
+   board.addEventListener('pointerdown',e=>{if(e.target.closest('button'))e.preventDefault();});
+   board.addEventListener('click',e=>{
+     const b=e.target.closest('button[data-key]');
+     if(!b || !room || room.status!=='playing' || getElapsed()<0)return;
+     const input=$('shooter-answer'),key=b.dataset.key;
+     if(key==='clear')input.value='';
+     else if(key==='back')input.value=Array.from(input.value).slice(0,-1).join('');
+     else input.value+=(key==='space'?' ':key.toLowerCase());
+     typeWord();
+   });
+ }
+ function updateMobileViewport(){
+   const p=$('shooter-panel');
+   if(!p || !p.classList.contains('is-shooter-mobile-playing'))return;
+   const vv=window.visualViewport;
+   p.style.setProperty('--shooter-vvh',Math.round(vv&&vv.height||window.innerHeight)+'px');
+   p.style.setProperty('--shooter-vvtop',Math.max(0,Math.round(vv&&vv.offsetTop||0))+'px');
+ }
+ function syncMobileLayout(){
+   const p=$('shooter-panel'),input=$('shooter-answer');
+   if(!p || !input)return;
+   const mobile=!!(room&&room.status==='playing'&&panelOpen&&window.matchMedia&&window.matchMedia('(max-width:740px)').matches);
+   p.classList.toggle('is-shooter-mobile-playing',mobile);
+   document.body.classList.toggle('ldd-shooter-lock-scroll',mobile);
+   $('shooter-mobile-toolbar').hidden=!mobile;
+   $('shooter-keyboard').hidden=!(mobile&&!mobileNativeKeyboard);
+   $('shooter-input-mode').textContent=mobileNativeKeyboard?'Bàn phím gọn':'Bàn phím điện thoại';
+   input.readOnly=mobile&&!mobileNativeKeyboard;
+   input.setAttribute('inputmode',mobile&&!mobileNativeKeyboard?'none':'text');
+   if(mobile)updateMobileViewport();
+   else {p.style.removeProperty('--shooter-vvh');p.style.removeProperty('--shooter-vvtop');}
+ }
  function info(message,level) {
    const el=$('shooter-info'); if(!el) return;
    el.textContent=message||'';el.className='shooter-info'+(level?' is-'+level:'');
@@ -217,6 +284,7 @@
  }
  function closePanel(keepGridHidden){
    panelOpen=false;removeFullscreen();
+   syncMobileLayout();
    $('shooter-panel').style.display='none';
    if(!keepGridHidden) $('entertainment-folder-grid').style.display='';
    unsubscribe();stopFrame();
@@ -368,6 +436,7 @@
    $('shooter-lobby').hidden=mode!=='lobby';
    $('shooter-game').hidden=mode!=='playing';
    $('shooter-finish').hidden=mode!=='finished';
+   syncMobileLayout();
    if(!room)return;
    if(mode==='lobby'){
      $('shooter-room-code').textContent=room.code;
