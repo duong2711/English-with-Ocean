@@ -18407,21 +18407,53 @@ function toggleCompletion(symbolElement) {
     // Các dạng hiện ra làm nút "+ Thêm câu hỏi" cấp PHẦN.
     const CTEST_TOP_LEVEL_TYPES = ['mcq', 'mcq_multi', 'fill_blank', 'reorder', 'reading', 'mixed', 'matching', 'wordbank', 'listening', 'essay'];
 
+    // Tự nhận diện câu Writing bị lưu nhầm là trắc nghiệm, như đề HV2:
+    // phải đồng thời là MCQ, có lựa chọn rỗng, và câu dẫn yêu cầu viết.
+    const CTEST_WRITING_ALIASES = ['writing', 'written', 'short_answer', 'free_text',
+        'open_text', 'open_ended', 'text', 'paragraph', 'essay_question',
+        'tu_luan', 'tuluan', 'sentence_ordering', 'sentence_rewriting'];
+
+    function ctestIsBlankOption(option) {
+        const html = String(option == null ? '' : option);
+        // Không coi đáp án chỉ chứa ảnh / media là lựa chọn rỗng.
+        if (/<(?:img|svg|audio|video)\b/i.test(html)) return false;
+        return !html
+            .replace(/&(?:nbsp|#160|#x0*a0);/gi, ' ')
+            .replace(/<[^>]*>/g, ' ')
+            .replace(/[\u200b-\u200d\ufeff]/g, '')
+            .trim();
+    }
+
+    function ctestIsMisclassifiedWriting(q) {
+        if (!q || !['mcq', 'mcq_multi'].includes(String(q.type || '').trim().toLowerCase())) return false;
+        if (!Array.isArray(q.options) || q.options.length < 2 || !q.options.every(ctestIsBlankOption)) return false;
+        const prompt = String(q.prompt || '')
+            .replace(/<[^>]*>/g, ' ')
+            .replace(/&nbsp;/gi, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+        return /^(?:\d+[.)]\s*)?(?:rewrite\s+(?:the|these|each|following)\b|arrange\s+(?:(?:the|these|following|given)\s+)?words\b|put\s+(?:the|these|given)\s+words\s+in\s+(?:the\s+)?(?:correct|right)\s+order\b|combine\s+(?:the|these|following)\s+sentences\b|make\s+(?:a|complete)\s+sentence\b|write\s+(?:a|the|complete)\s+sentence\b)/i.test(prompt);
+    }
+
+    function ctestEssayNeedsManualGrading(q) {
+        if (ctestIsMisclassifiedWriting(q)) return true;
+        if (q && q.manual_grading !== undefined) return !!q.manual_grading;
+        return CTEST_WRITING_ALIASES.includes(String((q && q.type) || '').trim().toLowerCase());
+    }
+
     // Nhận diện cả tên dạng Writing cũ; tuyệt đối không mặc định type lạ là MCQ.
     function ctestResolveQuestionType(q) {
         if (!q || typeof q !== 'object') return 'unsupported';
+        if (ctestIsMisclassifiedWriting(q)) return 'essay';
         const type = String(q.type || '').trim().toLowerCase();
         if (CTEST_TYPE_LABELS[type]) return type;
-        if (['writing', 'written', 'short_answer', 'free_text', 'open_text', 'open_ended',
-             'text', 'paragraph', 'essay_question', 'tu_luan', 'tuluan',
-             'sentence_ordering', 'sentence_rewriting'].includes(type)) return 'essay';
+        if (CTEST_WRITING_ALIASES.includes(type)) return 'essay';
         if (!type && Array.isArray(q.options)) return 'mcq';
         if ((!type || type === 'mcq') && typeof q.prompt === 'string'
             && !Array.isArray(q.options)
             && (typeof q.answer === 'string' || q.manual_grading === true)) return 'essay';
         return 'unsupported';
     }
-
 
     // Di chuyển 1 phần tử lên/xuống trong danh sách các phần tử anh em cùng cấp
     // (dùng chung cho cả "di chuyển câu hỏi" và "di chuyển phần lớn") — chỉ đổi
@@ -18783,6 +18815,13 @@ function toggleCompletion(symbolElement) {
     // ---- Phần "Tự luận" — dùng độc lập được, hoặc làm 1 phần bên trong câu hỏi hỗn hợp ----
     function buildEssayEditor(q) {
         const card = ctestQcardShell('essay');
+        if (ctestIsMisclassifiedWriting(q)) {
+            const notice = document.createElement('div');
+            notice.className = 'ctest-empty-msg';
+            notice.style.margin = '6px 0 12px';
+            notice.textContent = '✍️ Đã nhận diện câu tự luận bị lưu nhầm thành trắc nghiệm. Học viên sẽ thấy ô nhập câu trả lời. Hãy nhập đáp án tham khảo và lưu đề để cập nhật dữ liệu.';
+            card.appendChild(notice);
+        }
         const label1 = document.createElement('label');
         label1.className = 'news-quiz-edit-label';
         label1.textContent = 'Câu hỏi tự luận:';
@@ -18799,7 +18838,7 @@ function toggleCompletion(symbolElement) {
         const manualCheckbox = document.createElement('input');
         manualCheckbox.type = 'checkbox';
         manualCheckbox.className = 'ctest-essay-manual-checkbox';
-        manualCheckbox.checked = !!q.manual_grading;
+        manualCheckbox.checked = ctestEssayNeedsManualGrading(q);
         manualLabel.appendChild(manualCheckbox);
         manualLabel.appendChild(document.createTextNode('Chờ giảng viên chấm (không chấm tự động câu này)'));
         card.appendChild(manualLabel);
@@ -20476,7 +20515,7 @@ function toggleCompletion(symbolElement) {
         }
         const given = typeof answers[keyBase] === 'string' ? answers[keyBase] : '';
 
-        if (part.manual_grading) {
+        if (ctestEssayNeedsManualGrading(part)) {
             const ov = ctx && ctx.overrides ? ctx.overrides[keyBase] : null;
             const excluded = ov === 'excluded';
             const pending = !ov;
@@ -20643,7 +20682,7 @@ function toggleCompletion(symbolElement) {
         const ov = overrides || {};
         (test.sections || []).forEach(section => {
             (section.questions || []).forEach(q => {
-                if (ctestResolveQuestionType(q) !== 'essay' || !q.manual_grading) return;
+                if (ctestResolveQuestionType(q) !== 'essay' || !ctestEssayNeedsManualGrading(q)) return;
                 const key = keyFor(section.id, q.id);
                 if (!ov[key]) pending++;
             });
