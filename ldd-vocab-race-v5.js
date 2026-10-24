@@ -41,6 +41,17 @@
     let playerChannel = null;
     let tickHandle = null;
     let refreshTimer = null;
+    let attachEpoch = 0;
+    let roomReady = false;
+    let playerReady = false;
+    let playerEventVersion = 0;
+    let playerEventJournal = [];
+    let initialRoomReadComplete = false;
+    let subscriptionCatchupDone = false;
+    let roomLobbySafetyTimer = null;
+    let roomStatusReadPending = false;
+    let lastBroadcastCheckAt = 0;
+    let pendingJoinNotice = false;
     let roomEventVersion = 0;
     let raceHiddenSince = 0;
     let lastRecoveryRefreshAt = 0;
@@ -511,6 +522,9 @@
             });
             if (error) throw error;
             room = Array.isArray(data) ? data[0] : data;
+            players = [];
+            publishRoomState(room);
+            render();
             await attachRoom(room.id);
             setStatus('Đã tạo phòng ' + room.code + ' · Chủ đề: ' + bank.topicTitle + '.', 'success');
         } catch (e) { setStatus(translateError(e), 'error'); }
@@ -526,7 +540,12 @@
             const { data, error } = await raceSb.rpc('vocab_race_join_room', { p_code:code, p_display_name:me.name });
             if (error) throw error;
             room = Array.isArray(data) ? data[0] : data;
+            players = [];
+            publishRoomState(room);
+            render();
+            pendingJoinNotice = true;
             await attachRoom(room.id);
+            broadcastRaceHint('race-joined');
         } catch (e) { setStatus(translateError(e), 'error'); }
         finally { btn.disabled = false; }
     }
@@ -540,13 +559,153 @@
         }
     }
 
+    function broadcastRaceHint(event) {
+        if (!room || !roomReady || !roomChannel) return;
+        try {
+            const sending = roomChannel.send({
+                type:'broadcast', event, payload:{ room_id:room.id }
+            });
+            if (sending && typeof sending.catch === 'function') sending.catch(() => {});
+        } catch (_) {}
+        if (event === 'race-joined') pendingJoinNotice = false;
+    }
+
+    async function verifyRaceHint(type, payload, id) {
+        if (!room || String(room.id) !== String(id) || !payload || String(payload.room_id) !== String(id)) return;
+        if (Date.now() - lastBroadcastCheckAt < 850) return;
+        if (type === 'race-started' && room.status !== 'lobby') return;
+        if (type === 'race-joined' && room.status !== 'lobby') return;
+        lastBroadcastCheckAt = Date.now();
+        // Broadcast messages are untrusted hints, not game state. Verify in DB.
+        if (type === 'race-started') {
+            await checkRoomStatus(id);
+        } else {
+            await refreshPlayers(id);
+        }
+    }
+
+    function scheduleLobbySafetyCheck() {
+        clearTimeout(roomLobbySafetyTimer);
+        roomLobbySafetyTimer = null;
+        if (!room || room.status !== 'lobby') return;
+        const id = room.id;
+        const epoch = attachEpoch;
+        // Rare missed Realtime events: a narrow REST check instead of 900ms polling.
+        const delay = roomReady && playerReady ? 12000 : 5000;
+        roomLobbySafetyTimer = setTimeout(async () => {
+            if (epoch !== attachEpoch || !room || room.id !== id || room.status !== 'lobby') return;
+            if (!document.hidden) await checkRoomStatus(id);
+            if (epoch === attachEpoch) scheduleLobbySafetyCheck();
+        }, delay);
+    }
+
+    async function checkRoomStatus(id) {
+        if (roomStatusReadPending || !room || String(room.id) !== String(id)) return;
+        roomStatusReadPending = true;
+        try {
+            const {data,error} = await raceSb.from('vocab_race_rooms')
+                .select('id,status,round_index,round_started_at,created_at')
+                .eq('id',id).maybeSingle();
+            if (error || !data || !room || String(room.id) !== String(id)) return;
+            if (data.status !== room.status || Number(data.round_index) !== Number(room.round_index)) {
+                // Realtime packet was missed. Existing questions remain in room cache.
+                handleRoomRealtime({eventType:'UPDATE',new:data});
+                if (room.status === 'playing' && (!players.length || !myPlayer())) refreshPlayers(id);
+            }
+        } catch (_) {} finally {
+            roomStatusReadPending = false;
+        }
+    }
+
+    async function refreshPlayers(id) {
+        if (!room || String(room.id) !== String(id)) return;
+        const epoch = attachEpoch;
+        const before = playerEventVersion;
+        const {data,error} = await raceSb.from('vocab_race_players')
+            .select('*').eq('room_id',id).order('slot');
+        if (error || epoch !== attachEpoch || !room || String(room.id) !== String(id)) return;
+        let latest = data || [];
+        if (playerEventVersion !== before) {
+            for (const item of playerEventJournal.filter(x => x.version > before)) {
+                latest = mergePlayerEvent(latest,item.payload);
+            }
+        }
+        players = latest.sort((a,b) => Number(a.slot||0)-Number(b.slot||0));
+        if (room.status === 'lobby') renderLobby();
+        else if (room.status === 'playing') {
+            syncAllCarsDom(false);
+            renderScores();
+            updateControls();
+        }
+    }
+
+    function mergePlayerEvent(list, payload) {
+        const data = payload && (payload.new && payload.new.user_id ? payload.new : payload.old);
+        if (!data || !data.user_id) return list;
+        const result = list.slice();
+        const position = result.findIndex(p => String(p.user_id) === String(data.user_id));
+        if (payload.eventType === 'DELETE') {
+            if (position >= 0) result.splice(position,1);
+        } else if (position >= 0) {
+            result[position] = Object.assign({},result[position],data);
+        } else {
+            result.push(Object.assign({},data));
+        }
+        return result;
+    }
+
     async function attachRoom(id) {
         unsubscribe();
-        await syncServerClock(true);
-        roomChannel = raceSb.channel('race-room-v5-' + id).on('postgres_changes', { event:'*', schema:'public', table:'vocab_race_rooms', filter:'id=eq.' + id }, handleRoomRealtime).subscribe();
-        playerChannel = raceSb.channel('race-player-v5-' + id).on('postgres_changes', { event:'*', schema:'public', table:'vocab_race_players', filter:'room_id=eq.' + id }, applyRealtimePlayer).subscribe();
-        if (!tickHandle) tickHandle = setInterval(tick, 100);
+        const epoch = ++attachEpoch;
+        roomReady = false;
+        playerReady = false;
+        initialRoomReadComplete = false;
+        subscriptionCatchupDone = false;
+        playerEventVersion = 0;
+        playerEventJournal = [];
+        // Never block showing the new room on an extra server-clock RPC.
+        syncServerClock(false);
+        const handleStatus = (kind,status) => {
+            if (epoch !== attachEpoch) return;
+            const wasReady = kind === 'room' ? roomReady : playerReady;
+            if (kind === 'room') roomReady = status === 'SUBSCRIBED';
+            else playerReady = status === 'SUBSCRIBED';
+            if (status === 'SUBSCRIBED') {
+                if (kind === 'room' && pendingJoinNotice) broadcastRaceHint('race-joined');
+                if (initialRoomReadComplete && roomReady && playerReady) {
+                    // One catch-up query per initial connection or reconnection,
+                    // not constant polling. Covers join/start during socket setup.
+                    if (!subscriptionCatchupDone || !wasReady) {
+                        subscriptionCatchupDone = true;
+                        scheduleRefresh(300);
+                    }
+                }
+            } else if (status === 'TIMED_OUT' || status === 'CHANNEL_ERROR' || status === 'CLOSED') {
+                if (room && String(room.id) === String(id)) {
+                    setStatus('Kết nối trận đấu gián đoạn. Đang đồng bộ lại…','info');
+                    scheduleLobbySafetyCheck();
+                }
+            }
+        };
+        roomChannel = raceSb.channel('race-room-v7-' + id)
+            .on('postgres_changes',{event:'*',schema:'public',table:'vocab_race_rooms',filter:'id=eq.' + id},handleRoomRealtime)
+            .on('broadcast',{event:'race-started'},ev => verifyRaceHint('race-started',ev.payload,id))
+            .on('broadcast',{event:'race-joined'},ev => verifyRaceHint('race-joined',ev.payload,id))
+            .subscribe(status => handleStatus('room',status));
+        playerChannel = raceSb.channel('race-player-v7-' + id)
+            .on('postgres_changes',{event:'*',schema:'public',table:'vocab_race_players',filter:'room_id=eq.' + id},applyRealtimePlayer)
+            .subscribe(status => handleStatus('players',status));
+        if (!tickHandle) tickHandle = setInterval(tick,100);
+        // Fetch immediately for responsive roster; a single catch-up after the
+        // two subscriptions connect closes the subscribe-vs-snapshot race.
         await refreshRoom(id);
+        if (epoch !== attachEpoch) return;
+        initialRoomReadComplete = true;
+        scheduleLobbySafetyCheck();
+        if (roomReady && playerReady && !subscriptionCatchupDone) {
+            subscriptionCatchupDone = true;
+            scheduleRefresh(300);
+        }
     }
 
     function scheduleRefreshIfUnchanged(version, delayMs) {
