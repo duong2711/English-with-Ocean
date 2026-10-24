@@ -1,0 +1,23 @@
+/* Game-specific responsive UX: preserve gameplay logic and hit targets. */
+#shooter-panel,.vocab-race-game { max-width:100%; min-width:0; }
+#shooter-panel button,.vocab-race-game button { touch-action:manipulation; }
+@media (max-width:767px) {
+ #shooter-panel .shooter-shell { padding:12px; border-radius:15px; }
+ #shooter-panel .shooter-entry { grid-template-columns:minmax(0,1fr); gap:12px; }
+ #shooter-panel .shooter-box,#shooter-panel .shooter-room { padding:14px; }
+ #shooter-panel .shooter-roster,#shooter-panel .shooter-scoreboard { grid-template-columns:repeat(2,minmax(0,1fr)); }
+ #shooter-panel .shooter-code-row { flex-wrap:wrap; }
+ #shooter-panel .shooter-code-row > * { min-width:0; }
+ #shooter-panel .shooter-stage { height:clamp(300px,58svh,490px); }
+ #shooter-panel :is(.shooter-primary,.shooter-back,.shooter-ghost) { min-height:44px; }
+ .vocab-race-game .vocab-race-pause-card { width:min(92vw,340px)!important; padding:18px!important; min-height:0!important; }
+}
+@media (max-width:380px) {
+ #shooter-panel .shooter-room-code { font-size:clamp(19px,7vw,28px); letter-spacing:3px; }
+ #shooter-panel .shooter-score-person { padding:7px; }
+ #shooter-panel .shooter-score-person strong { font-size:17px; }
+}
+@media (orientation:landscape) and (max-height:520px) {
+ #shooter-panel .shooter-stage { height:max(240px,68svh); }
+ #shooter-panel .shooter-head { margin-bottom:8px; }
+}
