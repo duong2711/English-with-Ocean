@@ -1,0 +1,30 @@
+/* Cross-platform gameplay usability: scoped, non-destructive overrides. */
+@media (max-width: 767px) {
+ #shooter-panel { width:100%; margin:8px auto 24px; }
+ #shooter-panel .shooter-shell { padding:12px; border-radius:16px; }
+ #shooter-panel .shooter-entry { grid-template-columns:minmax(0,1fr); gap:12px; }
+ #shooter-panel .shooter-box { padding:16px; }
+ #shooter-panel .shooter-roster, #shooter-panel .shooter-scoreboard { grid-template-columns:repeat(2,minmax(0,1fr)); }
+ #shooter-panel .shooter-stage { height:clamp(210px,38dvh,360px); }
+ #shooter-panel .shooter-word { max-width:min(150px,44vw); min-width:65px; padding:6px; }
+ #shooter-panel .shooter-word b { font-size:clamp(12px,3.4vw,16px); }
+ #shooter-panel #shooter-answer { font-size:16px; min-height:48px; }
+ #shooter-panel .shooter-controls { margin-top:10px; }
+ #shooter-panel .shooter-room-code { font-size:clamp(20px,6vw,30px); letter-spacing:3px; overflow-wrap:anywhere; }
+ #shooter-panel .shooter-code-row { flex-wrap:wrap; }
+ #shooter-panel .shooter-code-row > * { min-width:0; }
+ #shooter-panel .shooter-code-row .shooter-primary { flex:1 1 120px; }
+ #shooter-panel .shooter-select-mode { flex-wrap:wrap; }
+}
+@media (max-width: 380px) {
+ #shooter-panel .shooter-shell { padding:9px; }
+ #shooter-panel .shooter-stage { height:clamp(190px,34dvh,290px); }
+ #shooter-panel .shooter-score-person { padding:7px; }
+}
+@supports (-webkit-touch-callout: none) {
+ #shooter-panel input, #shooter-panel select, #shooter-panel textarea { font-size:16px; }
+ #shooter-panel .shooter-stage { -webkit-transform:translateZ(0); }
+}
+@media (prefers-reduced-motion:reduce) {
+ #shooter-panel .shooter-laser, #shooter-panel .shooter-explode { animation-duration:.01ms!important; }
+}
