@@ -19,7 +19,7 @@
  let pending = new Set(), nodes = new Map(), activeWords = [], uiMode = '', lastShotText = '';
  let hasSubscribed = false, lastFinishAttempt = 0, visualCountdown = -1;
  let needsRoomRefresh = false, resumeBusy = false;
- let optimisticShots = new Set(), rosterRefreshTimer = null, mobileNativeKeyboard = false;
+ let optimisticShots = new Set(), rosterRefreshTimer = null, mobileNativeKeyboard = true;
  let lobbySyncTimer = null, rosterEventVersion = 0, pendingJoinNotice = false;
 
  function addUI() {
@@ -108,13 +108,6 @@
    $('shooter-answer').addEventListener('keydown',e=>{
      if(e.key==='Enter'){e.preventDefault();typeWord();}
    });
-   buildCompactKeyboard();
-   $('shooter-input-mode').addEventListener('click',()=>{
-     mobileNativeKeyboard=!mobileNativeKeyboard;
-     syncMobileLayout();
-     if(mobileNativeKeyboard)$('shooter-answer').focus({preventScroll:true});
-     else $('shooter-answer').blur();
-   });
    if(window.visualViewport){
      window.visualViewport.addEventListener('resize',updateMobileViewport,{passive:true});
      window.visualViewport.addEventListener('scroll',updateMobileViewport,{passive:true});
@@ -134,37 +127,6 @@
    },true);
  }
 
- // Compact in-game keyboard for phones. Do not invoke the OS keyboard by default.
- function buildCompactKeyboard(){
-   const board=$('shooter-keyboard');
-   if(!board || board.children.length)return;
-   const rows=['QWERTYUIOP'.split(''),'ASDFGHJKL'.split(''),'ZXCVBNM'.split(''),
-     [{key:'space',label:'Dấu cách'},{key:'-',label:'-'},{key:"'",label:"'"},{key:'back',label:'⌫'},{key:'clear',label:'Xóa'}]];
-   rows.forEach((keys,i)=>{
-     const row=document.createElement('div');
-     row.className='shooter-keyrow'+(i===3?' shooter-keyrow-tools':'');
-     keys.forEach(item=>{
-       const key=typeof item==='string'?item:item.key;
-       const button=document.createElement('button');
-       button.type='button';button.className='shooter-key'+(i===3?' is-tool':'');
-       button.dataset.key=key;
-       button.textContent=typeof item==='string'?item:item.label;
-       button.setAttribute('aria-label',key==='back'?'Xóa chữ cuối':key==='clear'?'Xóa hết':key==='space'?'Dấu cách':button.textContent);
-       row.appendChild(button);
-     });
-     board.appendChild(row);
-   });
-   board.addEventListener('pointerdown',e=>{if(e.target.closest('button'))e.preventDefault();});
-   board.addEventListener('click',e=>{
-     const b=e.target.closest('button[data-key]');
-     if(!b || !room || room.status!=='playing' || getElapsed()<0)return;
-     const input=$('shooter-answer'),key=b.dataset.key;
-     if(key==='clear')input.value='';
-     else if(key==='back')input.value=Array.from(input.value).slice(0,-1).join('');
-     else input.value+=(key==='space'?' ':key.toLowerCase());
-     typeWord();
-   });
- }
  function updateMobileViewport(){
    const p=$('shooter-panel');
    if(!p || !p.classList.contains('is-shooter-mobile-playing'))return;
@@ -177,13 +139,12 @@
    if(!p || !input)return;
    const mobile=!!(room&&room.status==='playing'&&panelOpen&&window.matchMedia&&window.matchMedia('(max-width:740px)').matches);
    p.classList.toggle('is-shooter-mobile-playing',mobile);
-   document.body.classList.toggle('ldd-shooter-lock-scroll',mobile);
+   document.body.classList.remove('ldd-shooter-lock-scroll');
    $('shooter-mobile-toolbar').hidden=!mobile;
-   $('shooter-keyboard').hidden=!(mobile&&!mobileNativeKeyboard);
-   $('shooter-input-mode').textContent=mobileNativeKeyboard?'Bàn phím gọn':'Bàn phím điện thoại';
-   input.readOnly=mobile&&!mobileNativeKeyboard;
-   if(mobile && !mobileNativeKeyboard && document.activeElement===input)input.blur();
-   input.setAttribute('inputmode',mobile&&!mobileNativeKeyboard?'none':'text');
+   $('shooter-keyboard').hidden=true;
+   $('shooter-input-mode').hidden=true;
+   input.readOnly=false;
+   input.setAttribute('inputmode','text');
    if(mobile)updateMobileViewport();
    else {p.style.removeProperty('--shooter-vvh');p.style.removeProperty('--shooter-vvtop');}
  }
@@ -394,7 +355,7 @@
      .on('postgres_changes',{event:'*',schema:'public',table:'ldd_shooter_players',filter:'room_id=eq.'+id},p=>{
         if(!room || room.id!==id)return;
         rosterEventVersion++;
-        if(p.eventType==='INSERT' && p.new && p.new.user_id){
+        if((p.eventType==='INSERT' || p.eventType==='UPDATE') && p.new && p.new.user_id){
           roster=roster.filter(x=>x.user_id!==p.new.user_id).concat(p.new).sort((a,b)=>a.slot-b.slot);
         }else if(p.eventType==='DELETE' && p.old && p.old.user_id){
           roster=roster.filter(x=>x.user_id!==p.old.user_id);
@@ -416,7 +377,7 @@
      })
      .subscribe(status=>{
        if(status==='SUBSCRIBED'){
-         hasSubscribed=true;scheduleRosterRefresh();scheduleLobbySync();
+         hasSubscribed=true;refreshSnapshot();scheduleRosterRefresh();scheduleLobbySync();
          if(pendingJoinNotice){
            pendingJoinNotice=false;
            const sent=channel.send({type:'broadcast',event:'shooter-joined',payload:{room_id:id}});

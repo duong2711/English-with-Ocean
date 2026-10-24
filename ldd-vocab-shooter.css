@@ -231,3 +231,22 @@ body.ldd-shooter-lock-scroll{overflow:hidden!important}
  #shooter-panel.is-shooter-mobile-playing .shooter-key{height:24px;min-height:24px}
  #shooter-panel.is-shooter-mobile-playing .shooter-stage{min-height:76px!important}
 }
+
+/* Native phone keyboard: keep the match in document flow so touch scrolling
+   remains available even on short landscape viewports. */
+@media (max-width:740px) {
+ #shooter-panel.is-shooter-mobile-playing {
+  position:relative!important;top:auto!important;left:auto!important;right:auto!important;
+  width:100%!important;max-width:100%!important;
+  height:auto!important;min-height:0!important;overflow:visible!important;
+  overscroll-behavior:auto;z-index:auto!important;
+ }
+ #shooter-panel.is-shooter-mobile-playing .shooter-shell,
+ #shooter-panel.is-shooter-mobile-playing #shooter-game {
+  height:auto!important;max-height:none!important;overflow:visible!important;
+ }
+ #shooter-panel.is-shooter-mobile-playing .shooter-stage {
+  flex:none!important;height:clamp(140px,calc(var(--shooter-vvh,100dvh) - 175px),420px)!important;
+ }
+ #shooter-panel.is-shooter-mobile-playing #shooter-answer {height:44px!important;min-height:44px!important}
+}

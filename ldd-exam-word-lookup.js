@@ -44,7 +44,7 @@
         return /[À-ỹĐđ]/u.test(String(value || ''));
     }
     function isEnglishWord(value) {
-        return /^[A-Za-z]+(?:[-'\\u2019][A-Za-z]+)*$/.test(String(value || '').trim());
+        return /^[A-Za-z]+(?:[-'\u2019][A-Za-z]+)*$/.test(String(value || '').trim());
     }
 
     // Chỉ thay các text node của đề, không gán lại innerHTML của form/đáp án.
