@@ -39,12 +39,12 @@
         document.head.appendChild(style);
     }
 
-    // Chỉ thay các text node của đề, không gán lại innerHTML của form/đáp án.
+    // Vietnamese text must never be tokenized into fake English fragments.\n    function isVietnameseText(value) {\n        return /[À-ỹĐđ]/u.test(String(value || ''));\n    }\n    function isEnglishWord(value) {\n        return /^[A-Za-z]+(?:[-'\\u2019][A-Za-z]+)*$/.test(String(value || '').trim());\n    }\n\n    // Chỉ thay các text node của đề, không gán lại innerHTML của form/đáp án.
     function wrapText(node) {
         if (!node || !node.parentNode || !node.parentElement) return;
         if (node.parentElement.closest(SKIP)) return;
         var original = node.nodeValue || '';
-        if (!/[a-zA-Z]{2}/.test(original)) return;
+        if (!/[a-zA-Z]{2}/.test(original) || isVietnameseText(original)) return;
         var pattern = /[A-Za-z]+(?:[-'\u2019][A-Za-z]+)*/g;
         var match;
         var offset = 0;
@@ -77,12 +77,12 @@
         if (!root || !root.isConnected) return;
         // Những từ đã được module cũ bọc tappable-word cũng phải dùng tra từ hợp lệ.
         root.querySelectorAll('.tappable-word:not(.ldd-exam-lookup-word)').forEach(function (el) {
-            if (el.closest('.word-lookup-popup, .ldd-exam-lookup-modal')) return;
+            if (el.closest('.word-lookup-popup, .ldd-exam-lookup-modal')) return;\n            if (!isEnglishWord(el.dataset.word || el.textContent) || isVietnameseText(el.parentElement && el.parentElement.textContent)) return;
             el.classList.add('ldd-exam-lookup-word');
         });
         var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
             acceptNode: function (node) {
-                if (!node.nodeValue || !/[A-Za-z]{2}/.test(node.nodeValue)) return NodeFilter.FILTER_REJECT;
+                if (!node.nodeValue || !/[A-Za-z]{2}/.test(node.nodeValue) || isVietnameseText(node.nodeValue)) return NodeFilter.FILTER_REJECT;
                 return node.parentElement && !node.parentElement.closest(SKIP)
                     ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
             }
@@ -175,7 +175,7 @@
     function onWordClick(event) {
         var el = event.target && event.target.closest
             ? event.target.closest('.ldd-exam-lookup-word') : null;
-        if (!el || !el.closest('.ldd-exam-lookup-root')) return;
+        if (!el || !el.closest('.ldd-exam-lookup-root')) return;\n        if (!isEnglishWord(el.dataset.word || el.textContent)) return;
         event.preventDefault();
         event.stopImmediatePropagation();
         if (typeof window.lddExamLookupWord === 'function') {
