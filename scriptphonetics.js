@@ -6577,6 +6577,19 @@ function toggleCompletion(symbolElement) {
         // đếm số từ CHƯA từng được chấm phát âm — dù từ đó đã "đã học" hay chưa.
         const myVocabFolderBadgeEl = document.getElementById('myvocab-folder-badge');
         function updateMyVocabPronBadge() {
+            const card = document.getElementById('myvocab-folder-card');
+            if (card) {
+                let progress = card.querySelector('.ldd-vocab-card-progress');
+                if (!progress) {
+                    progress = document.createElement('span');
+                    progress.className = 'ldd-vocab-card-progress';
+                    progress.setAttribute('aria-live', 'polite');
+                    (card.querySelector('.ldd-vocab-card-copy') || card).appendChild(progress);
+                }
+                const learned = myVocabList.filter(v => isVocabWordLearned(v.id)).length;
+                const label = 'Đã học: ' + learned + '/' + myVocabList.length + ' từ';
+                if (progress.textContent !== label) progress.textContent = label;
+            }
             if (!myVocabFolderBadgeEl) return;
             const n = myVocabList.filter(v => !isVocabWordPronounced(v.id)).length;
             if (n > 0) {

@@ -507,3 +507,6 @@ body.ldd-ui-v2 #grammar-panels [class*="grammar-"][class*="card"] {
         transition-duration: .01ms !important;
     }
 }
+
+/* Visible on the vocabulary hub before opening the personal word list. */
+#myvocab-folder-card .ldd-vocab-card-progress{display:block;margin-top:8px;color:#166534;font-size:.8rem;font-weight:750;line-height:1.45;overflow-wrap:anywhere}

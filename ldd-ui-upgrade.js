@@ -34,7 +34,7 @@
 
     function ensureUpgradeAssets() {
         ensureStylesheet('ldd-roadmap-news-style', 'ldd-ui-roadmap-news.css?v=2.4');
-        ensureStylesheet('ldd-vocab-grammar-style', 'ldd-ui-vocab-grammar.css?v=20261024-learned-count');
+        ensureStylesheet('ldd-vocab-grammar-style', 'ldd-ui-vocab-grammar.css?v=20261025-card-progress1');
         ensureStylesheet('ldd-home-phonetics-style', 'ldd-ui-home-phonetics.css?v=4.1');
         ensureStylesheet('ldd-timers-style', 'ldd-ui-timers.css?v=2.2');
         ensureStylesheet('ldd-student-grade-style', 'ldd-student-grade.css?v=1');
