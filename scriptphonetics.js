@@ -6968,6 +6968,8 @@ function toggleCompletion(symbolElement) {
         // hạn theo khu vực (Cho bé/THCS-THPT) hay theo việc từ đã lưu/đã học hay chưa nữa.
         // Giữ nguyên tham số (wordEl, norm) để không phải sửa các chỗ đang gọi hàm này.
         function wordLookupIsGatedContext(wordEl, norm) {
+            // Tra từ ngay trong bài kiểm tra là thao tác được phép: không bắt dùng micro.
+            if (wordEl && wordEl.closest && wordEl.closest('.ldd-exam-lookup-word')) return false;
             return true;
         }
 
@@ -7146,6 +7148,9 @@ function toggleCompletion(symbolElement) {
 
             await runFreshWordLookup(rawWord, norm, contextSentence, sourceTitle);
         }
+
+        // API nội bộ cho phần tra từ trong bài kiểm tra (tái dùng popup từ vựng sẵn có).
+        window.lddExamLookupWord = handleWordTap;
 
         // Hiện lại (các) nghĩa đã lưu sẵn của 1 từ đã biết — không gọi AI, không lưu thêm.
         // Có 1 nút phụ để chủ động tra lại, phòng trường hợp từ này thật sự mang nghĩa
