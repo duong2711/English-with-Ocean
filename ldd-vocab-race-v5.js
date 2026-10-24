@@ -405,9 +405,11 @@
         $('vocab-race-panel').style.display = 'block';
         if (!me) { setStatus('Bạn cần đăng nhập để chơi.', 'error'); return; }
         if (me.email === TEACHER_EMAIL) { $('vocab-race-entry').style.display = 'none'; setStatus('Tài khoản giáo viên không tham gia phòng đua.', 'info'); return; }
-        await populateTopicSelect();
+        // Restoring a running game must not wait for the topic picker to finish.
         setStatus('Tạo phòng mới hoặc nhập mã phòng để tham gia.', 'neutral');
-        await restoreRoom();
+        const restore = restoreRoom();
+        populateTopicSelect().catch(() => {});
+        await restore;
         if (room && room.status === 'playing') startRoadAnimation();
     }
 
@@ -545,7 +547,7 @@
             render();
             pendingJoinNotice = true;
             await attachRoom(room.id);
-            broadcastRaceHint('race-joined');
+            if (pendingJoinNotice) broadcastRaceHint('race-joined');
         } catch (e) { setStatus(translateError(e), 'error'); }
         finally { btn.disabled = false; }
     }
@@ -688,12 +690,16 @@
             }
         };
         roomChannel = raceSb.channel('race-room-v7-' + id)
-            .on('postgres_changes',{event:'*',schema:'public',table:'vocab_race_rooms',filter:'id=eq.' + id},handleRoomRealtime)
+            .on('postgres_changes',{event:'*',schema:'public',table:'vocab_race_rooms',filter:'id=eq.' + id},payload => {
+                if (epoch === attachEpoch) handleRoomRealtime(payload);
+            })
             .on('broadcast',{event:'race-started'},ev => verifyRaceHint('race-started',ev.payload,id))
             .on('broadcast',{event:'race-joined'},ev => verifyRaceHint('race-joined',ev.payload,id))
             .subscribe(status => handleStatus('room',status));
         playerChannel = raceSb.channel('race-player-v7-' + id)
-            .on('postgres_changes',{event:'*',schema:'public',table:'vocab_race_players',filter:'room_id=eq.' + id},applyRealtimePlayer)
+            .on('postgres_changes',{event:'*',schema:'public',table:'vocab_race_players',filter:'room_id=eq.' + id},payload => {
+                if (epoch === attachEpoch) applyRealtimePlayer(payload);
+            })
             .subscribe(status => handleStatus('players',status));
         if (!tickHandle) tickHandle = setInterval(tick,100);
         // Fetch immediately for responsive roster; a single catch-up after the
@@ -823,6 +829,10 @@
             timeoutPending = false;
         }
         if (room.status === 'finished') advancePending = false;
+        if (room.status !== 'lobby') {
+            clearTimeout(roomLobbySafetyTimer);
+            roomLobbySafetyTimer = null;
+        }
         publishRoomState(room);
 
         if (room.last_result) maybePlayResultSound(room.last_result);
@@ -951,33 +961,33 @@
 
     function applyRealtimePlayer(payload) {
         if (!payload) return;
-        if (payload.eventType === 'DELETE' || !payload.new || !payload.new.user_id) {
-            scheduleRefresh();
+        const user = (payload.new && payload.new.user_id) || (payload.old && payload.old.user_id);
+        if (!user) {
+            scheduleRefresh(650);
             return;
         }
+        const roomId = (payload.new && payload.new.room_id) || (payload.old && payload.old.room_id);
+        if (roomId && (!room || String(roomId) !== String(room.id))) return;
 
-        const incoming = Object.assign({}, payload.new);
-        const isOwnEcho = !!(me && String(incoming.user_id) === String(me.id));
-        if (
-            isOwnEcho &&
-            room &&
-            Number(laneWriteRound) === Number(room.round_index) &&
-            (laneWriteRunning || laneWriteTarget !== null) &&
-            laneVisualTarget !== null
-        ) {
-            // Do not let an acknowledgement for an earlier click pull the local car backwards.
+        playerEventVersion++;
+        playerEventJournal.push({version:playerEventVersion,payload});
+        // The journal only covers short in-flight snapshots; cap memory usage.
+        if (playerEventJournal.length > 128) playerEventJournal.shift();
+
+        const incoming = payload.new && payload.new.user_id ? Object.assign({},payload.new) : null;
+        if (incoming && me && String(incoming.user_id) === String(me.id)
+            && room && Number(laneWriteRound) === Number(room.round_index)
+            && (laneWriteRunning || laneWriteTarget !== null) && laneVisualTarget !== null) {
+            // Acknowledgements for older steering inputs cannot pull our car back.
             incoming.lane = laneVisualTarget;
         }
+        const mergedPayload = incoming ? Object.assign({},payload,{new:incoming}) : payload;
+        players = mergePlayerEvent(players,mergedPayload);
+        players.sort((a,b) => Number(a.slot||0)-Number(b.slot||0));
 
-        const index = players.findIndex(p => String(p.user_id) === String(incoming.user_id));
-        if (index >= 0) players[index] = Object.assign({}, players[index], incoming);
-        else players.push(incoming);
-        players.sort((a, b) => Number(a.slot || 0) - Number(b.slot || 0));
-
-        // Same round: move/update only this car. Never rebuild the track,
-        // otherwise road/obstacle animation restarts and looks like a reset.
         if (room && room.status === 'playing') {
-            syncCarDom(incoming, true);
+            if (payload.eventType === 'DELETE') syncAllCarsDom(false);
+            else if (incoming) syncCarDom(incoming,true);
             renderScores();
             updateControls();
         } else if (room && room.status === 'lobby') {
@@ -986,18 +996,40 @@
     }
 
     async function refreshRoom(id) {
-        const [rr, pp] = await Promise.all([
-            raceSb.from('vocab_race_rooms').select('*').eq('id', id).maybeSingle(),
-            raceSb.from('vocab_race_players').select('*').eq('room_id', id).order('slot')
+        if (!id) return;
+        const epoch = attachEpoch;
+        const startRoomVersion = roomEventVersion;
+        const startPlayerVersion = playerEventVersion;
+        const [rr,pp] = await Promise.all([
+            raceSb.from('vocab_race_rooms').select('*').eq('id',id).maybeSingle(),
+            raceSb.from('vocab_race_players').select('*').eq('room_id',id).order('slot')
         ]);
-        if (!rr.data) { leaveLocalRoom(); return; }
+        if (epoch !== attachEpoch) return;
+        if (rr.error || pp.error) {
+            setStatus('Đang đồng bộ dữ liệu phòng. Kiểm tra kết nối mạng nếu thông báo kéo dài.','info');
+            return;
+        }
+        if (!rr.data) {
+            // A successfully queried missing room really has been removed.
+            if (room && String(room.id) === String(id)) leaveLocalRoom();
+            return;
+        }
+        if (room && String(room.id) !== String(id)) return;
         const oldRound = room && room.round_index;
-        room = rr.data;
-        players = pp.data || [];
+        const oldStatus = room && room.status;
+        // Never overwrite a newer Realtime room state with a slower REST response.
+        if (roomEventVersion === startRoomVersion) room = rr.data;
+        let freshPlayers = pp.data || [];
+        if (playerEventVersion !== startPlayerVersion) {
+            for (const item of playerEventJournal.filter(x => x.version > startPlayerVersion)) {
+                freshPlayers = mergePlayerEvent(freshPlayers,item.payload);
+            }
+        }
+        players = freshPlayers.sort((a,b) => Number(a.slot||0)-Number(b.slot||0));
         publishRoomState(room);
 
-
         const roundChanged = oldRound !== room.round_index;
+        const statusChanged = oldStatus !== room.status;
         if (roundChanged) {
             claimPending = false;
             timeoutPending = false;
@@ -1009,12 +1041,9 @@
             laneWriteRunning = false;
             lastRaceSoundKey = '';
         }
-
-        // A new round/status needs a fresh track. Updates inside the same round
-        // only patch cars/HUD so moving objects keep their current animation.
         const track = $('vocab-race-track');
         const trackReady = !!(track && track.querySelectorAll('.vocab-race-lane').length === 5);
-        if (!roundChanged && room.status === 'playing' && trackReady) {
+        if (!roundChanged && !statusChanged && room.status === 'playing' && trackReady) {
             syncAllCarsDom(false);
             renderScores();
             renderEvent();
@@ -1023,11 +1052,21 @@
         } else {
             render();
         }
+        scheduleLobbySafetyCheck();
     }
 
     function unsubscribe() {
-        [roomChannel, playerChannel].forEach(ch => { if (ch) try { raceSb.removeChannel(ch); } catch (_) {} });
+        attachEpoch++;
+        clearTimeout(roomLobbySafetyTimer);
+        roomLobbySafetyTimer = null;
+        clearTimeout(refreshTimer);
+        refreshTimer = null;
+        [roomChannel,playerChannel].forEach(ch => {
+            if (ch) try { raceSb.removeChannel(ch); } catch (_) {}
+        });
         roomChannel = playerChannel = null;
+        roomReady = playerReady = false;
+        pendingJoinNotice = false;
     }
 
     function myPlayer() { return players.find(p => me && String(p.user_id) === String(me.id)) || null; }
@@ -1077,10 +1116,19 @@
         if (!room) return;
         const b = $('vocab-race-start-btn'); b.disabled = true;
         const version = roomEventVersion;
-        const { error } = await raceSb.rpc('vocab_race_start_room', { p_room:room.id });
+        const roomId = room.id;
+        const { data,error } = await raceSb.rpc('vocab_race_start_room', { p_room:roomId });
         b.disabled = false;
-        if (error) setStatus(translateError(error), 'error');
-        else scheduleRefreshIfUnchanged(version, 1400);
+        if (error) {
+            setStatus(translateError(error), 'error');
+            scheduleRefresh(650);
+        } else if (room && String(room.id) === String(roomId)) {
+            // RPC returns the committed authoritative room. Host enters the game
+            // immediately; all guests receive the DB event or the small hint.
+            if (data && data.id) handleRoomRealtime({eventType:'UPDATE',new:data});
+            broadcastRaceHint('race-started');
+            scheduleRefreshIfUnchanged(version, 1400);
+        }
     }
 
     async function replayRoom() {
