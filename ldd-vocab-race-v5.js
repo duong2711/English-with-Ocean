@@ -545,11 +545,10 @@
             players = [];
             publishRoomState(room);
             render();
-            await attachRoom(room.id);
-            // If the socket connects after this RPC, its SUBSCRIBED callback
-            // sends the hint then; the database INSERT remains authoritative.
-            pendingJoinNotice = true;
-            if (roomReady) broadcastRaceHint('race-joined');
+            await attachRoom(room.id,true);
+            // If the socket was already connected, the hint was sent there.
+            // Otherwise SUBSCRIBED sends it once; no repeated broadcasts.
+            if (pendingJoinNotice && roomReady) broadcastRaceHint('race-joined');
         } catch (e) { setStatus(translateError(e), 'error'); }
         finally { btn.disabled = false; }
     }
@@ -661,8 +660,9 @@
         return result;
     }
 
-    async function attachRoom(id) {
+    async function attachRoom(id, announceJoin) {
         unsubscribe();
+        pendingJoinNotice = !!announceJoin;
         const epoch = ++attachEpoch;
         roomReady = false;
         playerReady = false;
@@ -1581,14 +1581,43 @@
         updateControls();
         const car = document.querySelector('#vocab-race-track .vocab-race-car.is-me');
         if (car) car.classList.add('is-charging');
-        await sleep(430);
-        if (!room || Number(room.round_index) !== roundAtCall || isRoundPaused()) { claimPending = false; charging = null; return; }
-        const { error } = await raceSb.rpc('vocab_race_claim_lane', { p_room:room.id, p_lane:lane, p_round:roundAtCall });
-        if (error && !/already_answered|round_timeout|game_not_playing|stale_round/i.test(String(error.message || ''))) setStatus(translateError(error), 'error');
-        claimPending = false;
-        charging = null;
-        // Valid claims update the room/player through Realtime. Only an error needs a repair read.
-        if (error) scheduleRefresh(1400);
+        // The old fixed 430ms sleep added lag to every answer. Wait only while
+        // the latest steering write is actually in flight, so the server's
+        // lane_changed guard still sees the correct lane.
+        const pendingSince = Date.now();
+        while ((laneWriteRunning || laneWriteTarget !== null)
+            && Date.now() - pendingSince < 1800
+            && room && Number(room.round_index) === roundAtCall) {
+            await sleep(25);
+        }
+        if (!room || Number(room.round_index) !== roundAtCall || isRoundPaused()
+            || laneWriteRunning || laneWriteTarget !== null) {
+            claimPending = false;
+            charging = null;
+            if (car) car.classList.remove('is-charging');
+            updateControls();
+            if (room && Number(room.round_index) === roundAtCall && !isRoundPaused())
+                setStatus('Chưa xác nhận được làn xe. Hãy thử lại.','info');
+            return;
+        }
+        try {
+            const {error} = await raceSb.rpc('vocab_race_claim_lane', {
+                p_room:room.id,p_lane:lane,p_round:roundAtCall
+            });
+            if (error && !/already_answered|round_timeout|game_not_playing|stale_round/i.test(String(error.message||''))) {
+                setStatus(translateError(error),'error');
+            }
+            // Valid claims push room/player changes over Realtime.
+            if (error) scheduleRefresh(900);
+        } catch (error) {
+            setStatus(translateError(error),'error');
+            scheduleRefresh(900);
+        } finally {
+            claimPending = false;
+            charging = null;
+            if (car) car.classList.remove('is-charging');
+            updateControls();
+        }
     }
 
     function baseSeed() {
