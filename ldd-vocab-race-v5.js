@@ -545,9 +545,11 @@
             players = [];
             publishRoomState(room);
             render();
-            pendingJoinNotice = true;
             await attachRoom(room.id);
-            if (pendingJoinNotice) broadcastRaceHint('race-joined');
+            // If the socket connects after this RPC, its SUBSCRIBED callback
+            // sends the hint then; the database INSERT remains authoritative.
+            pendingJoinNotice = true;
+            if (roomReady) broadcastRaceHint('race-joined');
         } catch (e) { setStatus(translateError(e), 'error'); }
         finally { btn.disabled = false; }
     }
@@ -596,7 +598,10 @@
         const delay = roomReady && playerReady ? 12000 : 5000;
         roomLobbySafetyTimer = setTimeout(async () => {
             if (epoch !== attachEpoch || !room || room.id !== id || room.status !== 'lobby') return;
-            if (!document.hidden) await checkRoomStatus(id);
+            if (!document.hidden) {
+                await checkRoomStatus(id);
+                if (room && room.id === id && room.status === 'lobby') await refreshPlayers(id);
+            }
             if (epoch === attachEpoch) scheduleLobbySafetyCheck();
         }, delay);
     }
