@@ -87,6 +87,8 @@
         btn.textContent = 'Trang chủ';
         btn.addEventListener('click', function () {
             if (!isLoggedIn()) return;
+            const home = document.getElementById('tab-trang-chu');
+            if (home && home.classList.contains('active')) return;
             activateHomeDirect();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
@@ -99,7 +101,11 @@
 
         document.addEventListener('click', function (event) {
             const btn = event.target.closest('.main-tab-btn[data-main-target]');
-            if (btn && btn.dataset.mainTarget !== 'tab-trang-chu') homeTab.classList.remove('active');
+            if (btn && btn.dataset.mainTarget !== 'tab-trang-chu') {
+                homeTab.classList.remove('active');
+                const homeButton = document.getElementById('ldd-home-main-tab');
+                if (homeButton) homeButton.classList.remove('active');
+            }
         }, true);
 
         const account = document.getElementById('account-area');

@@ -48,3 +48,26 @@ html { overflow-anchor: none; }
 }
 /* Prevent visual bouncing on repeated taps without changing application click logic. */
 :is(button, a, [role="button"]) { -webkit-touch-callout: none; }
+
+/* One short opacity transition; no whole-page movement or nested replays. */
+body.ldd-motion-ready .main-tab-content.active {
+ animation:lddCalmTabEnter 120ms ease-out both!important;
+ transform:none!important;will-change:auto!important;
+}
+@keyframes lddCalmTabEnter { from {opacity:.85} to {opacity:1} }
+body.ldd-motion-ready :is(.main-tab-btn,.header-tab-btn,.main-tab-dropdown-btn),
+body.ldd-motion-ready :is(.ldd-view-enter,.ldd-view-switch),
+body.ldd-motion-ready #inside.ldd-navigation-pulse {
+ animation:none!important;will-change:auto!important;
+}
+body.ldd-motion-ready :is(.ldd-view-enter,.ldd-view-switch),
+body.ldd-motion-ready #inside.ldd-navigation-pulse {transform:none!important}
+@media (prefers-reduced-motion:reduce) {
+ body.ldd-motion-ready .main-tab-content.active {animation:none!important}
+}
+@media (hover:none) and (pointer:coarse) {
+ :is(.folder-card,.header-tab-btn,.main-tab-btn,.main-tab-dropdown-btn):hover {transform:none!important}
+}
+@media (max-width:767px) {
+ #header-tabs-nav :is(button,a),.folder-back-btn {min-height:44px}
+}
