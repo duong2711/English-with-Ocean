@@ -18407,6 +18407,22 @@ function toggleCompletion(symbolElement) {
     // Các dạng hiện ra làm nút "+ Thêm câu hỏi" cấp PHẦN.
     const CTEST_TOP_LEVEL_TYPES = ['mcq', 'mcq_multi', 'fill_blank', 'reorder', 'reading', 'mixed', 'matching', 'wordbank', 'listening', 'essay'];
 
+    // Nhận diện cả tên dạng Writing cũ; tuyệt đối không mặc định type lạ là MCQ.
+    function ctestResolveQuestionType(q) {
+        if (!q || typeof q !== 'object') return 'unsupported';
+        const type = String(q.type || '').trim().toLowerCase();
+        if (CTEST_TYPE_LABELS[type]) return type;
+        if (['writing', 'written', 'short_answer', 'free_text', 'open_text', 'open_ended',
+             'text', 'paragraph', 'essay_question', 'tu_luan', 'tuluan',
+             'sentence_ordering', 'sentence_rewriting'].includes(type)) return 'essay';
+        if (!type && Array.isArray(q.options)) return 'mcq';
+        if ((!type || type === 'mcq') && typeof q.prompt === 'string'
+            && !Array.isArray(q.options)
+            && (typeof q.answer === 'string' || q.manual_grading === true)) return 'essay';
+        return 'unsupported';
+    }
+
+
     // Di chuyển 1 phần tử lên/xuống trong danh sách các phần tử anh em cùng cấp
     // (dùng chung cho cả "di chuyển câu hỏi" và "di chuyển phần lớn") — chỉ đổi
     // vị trí trong DOM, không cần lưu thêm trường "thứ tự" nào vì lúc lưu bài,
@@ -18503,6 +18519,21 @@ function toggleCompletion(symbolElement) {
         let correct = -1;
         rows.forEach((r, i) => { if (r.querySelector('.ctest-option-correct-radio').checked) correct = i; });
         return { options, correct };
+    }
+
+    // Không làm mất dữ liệu của các câu có type chưa hỗ trợ.
+    function buildUnsupportedEditor(q) {
+        const card = ctestQcardShell('unsupported');
+        card._ctestOriginalQuestion = Object.assign({}, q);
+        const msg = document.createElement('p');
+        msg.className = 'ctest-empty-msg';
+        msg.textContent = '⚠️ Dạng câu hỏi chưa hỗ trợ: ' + (q.type || '(thiếu type)')
+            + '. Giữ nguyên dữ liệu; nếu là câu viết, bấm “Đổi thành tự luận”.';
+        card.appendChild(msg);
+        return card;
+    }
+    function collectUnsupported(card) {
+        return Object.assign({}, card._ctestOriginalQuestion);
     }
 
     // ---- 1) Trắc nghiệm ----
@@ -18665,7 +18696,7 @@ function toggleCompletion(symbolElement) {
         const subList = document.createElement('div');
         subList.className = 'ctest-subq-list ctest-reading-sublist';
         (q.sub_questions && q.sub_questions.length ? q.sub_questions : [{ prompt: '', options: ['', ''], correct: 0 }])
-            .forEach(sq => subList.appendChild(buildQuestionCard('mcq', sq)));
+            .forEach(sq => subList.appendChild(buildQuestionCard(ctestResolveQuestionType(sq), sq)));
         card.appendChild(subList);
 
         const addSubBtn = document.createElement('button');
@@ -18973,7 +19004,7 @@ function toggleCompletion(symbolElement) {
         const subList = document.createElement('div');
         subList.className = 'ctest-subq-list ctest-listening-sublist';
         (q.sub_questions && q.sub_questions.length ? q.sub_questions : [{ type: 'mcq', prompt: '', options: ['', ''], correct: 0 }])
-            .forEach(sq => subList.appendChild(buildQuestionCard(sq.type === 'fill_blank' ? 'fill_blank' : 'mcq', sq)));
+            .forEach(sq => subList.appendChild(buildQuestionCard(ctestResolveQuestionType(sq), sq)));
         card.appendChild(subList);
 
         const addRow = document.createElement('div');
@@ -19012,12 +19043,12 @@ function toggleCompletion(symbolElement) {
     const CTEST_BUILDERS = {
         mcq: buildMcqEditor, mcq_multi: buildMcqMultiEditor, fill_blank: buildFillBlankEditor, reorder: buildReorderEditor,
         reading: buildReadingEditor, mixed: buildMixedEditor, matching: buildMatchingEditor,
-        wordbank: buildWordbankEditor, listening: buildListeningEditor, essay: buildEssayEditor
+        wordbank: buildWordbankEditor, listening: buildListeningEditor, essay: buildEssayEditor, unsupported: buildUnsupportedEditor
     };
     const CTEST_COLLECTORS = {
         mcq: collectMcq, mcq_multi: collectMcqMulti, fill_blank: collectFillBlank, reorder: collectReorder,
         reading: collectReading, mixed: collectMixed, matching: collectMatching,
-        wordbank: collectWordbank, listening: collectListening, essay: collectEssay
+        wordbank: collectWordbank, listening: collectListening, essay: collectEssay, unsupported: collectUnsupported
     };
     const CTEST_DEFAULTS = {
         mcq: () => ({ prompt: '', options: ['', ''], correct: 0 }),
@@ -19029,14 +19060,16 @@ function toggleCompletion(symbolElement) {
         matching: () => ({ left: ['', ''], right: ['', ''] }),
         wordbank: () => ({ html: '' }),
         listening: () => ({ audio_url: '', sub_questions: [{ type: 'mcq', prompt: '', options: ['', ''], correct: 0 }] }),
-        essay: () => ({ prompt: '', answer: '', image_url: '' })
+        essay: () => ({ prompt: '', answer: '', image_url: '', manual_grading: true })
     };
 
     function buildQuestionCard(type, question) {
-        const q = question || CTEST_DEFAULTS[type]();
-        const card = (CTEST_BUILDERS[type] || buildMcqEditor)(q);
+        const q = question || (CTEST_DEFAULTS[type] ? CTEST_DEFAULTS[type]() : {});
+        const resolvedType = ctestResolveQuestionType(Object.assign({}, q, { type: q.type || type }));
+        const card = CTEST_BUILDERS[resolvedType](q);
         card.dataset.qid = q.id || ctestUid('q');
-        card.querySelector(':scope > .ctest-qcard-header > .ctest-qcard-remove-btn').addEventListener('click', () => {
+        const header = card.querySelector(':scope > .ctest-qcard-header');
+        header.querySelector('.ctest-qcard-remove-btn').addEventListener('click', () => {
             const list = card.parentElement;
             if (list.querySelectorAll(':scope > .ctest-qcard').length <= 1 && !list.classList.contains('ctest-subq-list')) {
                 if (!confirm('Xoá câu hỏi cuối cùng của phần này?')) return;
@@ -19044,14 +19077,40 @@ function toggleCompletion(symbolElement) {
             card.remove();
             list.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
         });
-        card.querySelector(':scope > .ctest-qcard-header > .ctest-qcard-move-up-btn').addEventListener('click', () => {
+        header.querySelector('.ctest-qcard-move-up-btn').addEventListener('click', () => {
             ctestMoveSibling(card, -1);
             card.parentElement.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
         });
-        card.querySelector(':scope > .ctest-qcard-header > .ctest-qcard-move-down-btn').addEventListener('click', () => {
+        header.querySelector('.ctest-qcard-move-down-btn').addEventListener('click', () => {
             ctestMoveSibling(card, 1);
             card.parentElement.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
         });
+        // Chỉ thay loại khi giáo viên chủ động, không âm thầm đổi đề đang được giao.
+        if (['mcq', 'mcq_multi', 'reorder', 'unsupported'].includes(resolvedType)) {
+            const convertBtn = document.createElement('button');
+            convertBtn.type = 'button';
+            convertBtn.className = 'ctest-type-btn';
+            convertBtn.textContent = '✍️ Đổi thành tự luận';
+            convertBtn.title = 'Giữ ID câu hỏi, thay lựa chọn bằng ô nhập chữ';
+            header.insertBefore(convertBtn, header.querySelector('.ctest-qcard-remove-btn'));
+            convertBtn.addEventListener('click', () => {
+                if (!confirm('Đổi câu này sang TỰ LUẬN? Nếu đã có học viên làm/nộp, thay đổi loại có thể ảnh hưởng bài làm và điểm cũ. Nên tạo bản sao đề đã giao trước khi đổi.')) return;
+                const current = collectQuestionCard(card);
+                let prompt = current.prompt || '', answer = '';
+                if (resolvedType === 'reorder') {
+                    prompt = 'Arrange the words to make a complete sentence: '
+                        + ctestEscape(ctestShuffle(ctestTokenize(current.sentence)).join(' / '));
+                    answer = current.sentence || '';
+                }
+                const replacement = buildQuestionCard('essay', {
+                    id: card.dataset.qid, type: 'essay', prompt, answer,
+                    image_url: current.image_url || '', image_width: current.image_width || null,
+                    manual_grading: true
+                });
+                card.replaceWith(replacement);
+                replacement.dispatchEvent(new Event('ctest-changed', { bubbles: true }));
+            });
+        }
         return card;
     }
     function collectQuestionCard(card) {
@@ -19716,7 +19775,7 @@ function toggleCompletion(symbolElement) {
         passage.innerHTML = q.passage || '';
         block.appendChild(passage);
         (q.sub_questions || []).forEach((sq, i) => {
-            block.appendChild(renderTakeMcq(sq, keyBase + ':sub:' + i, labelPrefix.replace(/\.$/, '') + String.fromCharCode(97 + i) + ') '));
+            block.appendChild(renderTakeQuestion(sq, keyBase + ':sub:' + i, labelPrefix.replace(/\.$/, '') + String.fromCharCode(97 + i) + ') '));
         });
         return block;
     }
@@ -19739,7 +19798,7 @@ function toggleCompletion(symbolElement) {
         textarea.className = 'news-edit-input';
         textarea.rows = 3;
         textarea.style.width = '100%';
-        textarea.value = currentAnswers[keyBase] || '';
+        textarea.value = typeof currentAnswers[keyBase] === 'string' ? currentAnswers[keyBase] : '';
         textarea.addEventListener('input', () => { currentAnswers[keyBase] = textarea.value; scheduleAnswerAutosave(); });
         block.appendChild(textarea);
         return block;
@@ -19899,14 +19958,20 @@ function toggleCompletion(symbolElement) {
         (q.sub_questions || []).forEach((sq, i) => {
             const subLabel = labelPrefix.replace(/\.$/, '') + String.fromCharCode(97 + i) + ') ';
             const subKey = keyBase + ':sub:' + i;
-            if (sq.type === 'fill_blank') block.appendChild(renderTakeFillBlankBlock(sq, subKey, subLabel));
-            else block.appendChild(renderTakeMcq(sq, subKey, subLabel));
+            block.appendChild(renderTakeQuestion(sq, subKey, subLabel));
         });
         return block;
     }
 
+    function renderTakeUnsupported(q, labelPrefix) {
+        const block = document.createElement('div');
+        block.className = 'ctest-take-qblock';
+        block.textContent = labelPrefix + '⚠️ Câu hỏi chưa được cấu hình đúng. Vui lòng báo giáo viên trước khi nộp.';
+        return block;
+    }
+
     function renderTakeQuestion(q, keyBase, labelPrefix) {
-        switch (q.type) {
+        switch (ctestResolveQuestionType(q)) {
             case 'mcq_multi': return renderTakeMcqMulti(q, keyBase, labelPrefix);
             case 'fill_blank': return renderTakeFillBlankBlock(q, keyBase, labelPrefix);
             case 'reorder': return renderTakeReorder(q, keyBase, labelPrefix);
@@ -19916,7 +19981,7 @@ function toggleCompletion(symbolElement) {
             case 'wordbank': return renderTakeWordbank(q, keyBase, labelPrefix);
             case 'listening': return renderTakeListening(q, keyBase, labelPrefix);
             case 'essay': return renderTakeEssay(q, keyBase, labelPrefix);
-            default: return renderTakeMcq(q, keyBase, labelPrefix);
+            default: return renderTakeUnsupported(q, labelPrefix);
         }
     }
 
@@ -20119,7 +20184,7 @@ function toggleCompletion(symbolElement) {
     }
 
     function ctestMissingForQuestion(q, keyBase, answers) {
-        switch (q.type) {
+        switch (ctestResolveQuestionType(q)) {
             case 'mcq':
                 return ctestValueMissing(answers[keyBase]) ? 1 : 0;
             case 'mcq_multi':
@@ -20147,7 +20212,7 @@ function toggleCompletion(symbolElement) {
             case 'essay':
                 return ctestValueMissing(answers[keyBase]) ? 1 : 0;
             default:
-                return ctestValueMissing(answers[keyBase]) ? 1 : 0;
+                return 1; // type lỗi: không cho nộp như MCQ
         }
     }
 
@@ -20393,7 +20458,7 @@ function toggleCompletion(symbolElement) {
         block.appendChild(passage);
         let correct = 0, total = 0;
         (q.sub_questions || []).forEach((sq, i) => {
-            const sub = ctestResultMcq(sq, keyBase + ':sub:' + i, answers, labelPrefix.replace(/\.$/, '') + String.fromCharCode(97 + i) + ') ', ctx);
+            const sub = ctestResultQuestion(sq, keyBase + ':sub:' + i, answers, labelPrefix.replace(/\.$/, '') + String.fromCharCode(97 + i) + ') ', ctx);
             block.appendChild(sub.el);
             correct += sub.correct; total += sub.total;
         });
@@ -20409,7 +20474,7 @@ function toggleCompletion(symbolElement) {
             ctestApplyImageWidth(img, part.image_width);
             block.appendChild(img);
         }
-        const given = answers[keyBase] || '';
+        const given = typeof answers[keyBase] === 'string' ? answers[keyBase] : '';
 
         if (part.manual_grading) {
             const ov = ctx && ctx.overrides ? ctx.overrides[keyBase] : null;
@@ -20533,15 +20598,20 @@ function toggleCompletion(symbolElement) {
         (q.sub_questions || []).forEach((sq, i) => {
             const subLabel = labelPrefix.replace(/\.$/, '') + String.fromCharCode(97 + i) + ') ';
             const subKey = keyBase + ':sub:' + i;
-            const sub = sq.type === 'fill_blank' ? ctestResultFillBlank(sq, subKey, answers, subLabel, ctx) : ctestResultMcq(sq, subKey, answers, subLabel, ctx);
+            const sub = ctestResultQuestion(sq, subKey, answers, subLabel, ctx);
             block.appendChild(sub.el);
             correct += sub.correct; total += sub.total;
         });
         return { el: block, correct, total };
     }
 
+    function ctestResultUnsupported(q, labelPrefix) {
+        const block = ctestResultQBlock(labelPrefix, '⚠️ Loại câu hỏi chưa hỗ trợ: ' + (q.type || '(thiếu type)'));
+        return { el: block, correct: 0, total: 0 };
+    }
+
     function ctestResultQuestion(q, keyBase, answers, labelPrefix, ctx) {
-        switch (q.type) {
+        switch (ctestResolveQuestionType(q)) {
             case 'mcq_multi': return ctestResultMcqMulti(q, keyBase, answers, labelPrefix, ctx);
             case 'fill_blank': return ctestResultFillBlank(q, keyBase, answers, labelPrefix, ctx);
             case 'reorder': return ctestResultReorder(q, keyBase, answers, labelPrefix, ctx);
@@ -20551,7 +20621,7 @@ function toggleCompletion(symbolElement) {
             case 'wordbank': return ctestResultWordbank(q, keyBase, answers, labelPrefix, ctx);
             case 'listening': return ctestResultListening(q, keyBase, answers, labelPrefix, ctx);
             case 'essay': return ctestResultEssay(q, keyBase, answers, labelPrefix, ctx);
-            default: return ctestResultMcq(q, keyBase, answers, labelPrefix, ctx);
+            default: return ctestResultUnsupported(q, labelPrefix);
         }
     }
 
@@ -20573,7 +20643,7 @@ function toggleCompletion(symbolElement) {
         const ov = overrides || {};
         (test.sections || []).forEach(section => {
             (section.questions || []).forEach(q => {
-                if (q.type !== 'essay' || !q.manual_grading) return;
+                if (ctestResolveQuestionType(q) !== 'essay' || !q.manual_grading) return;
                 const key = keyFor(section.id, q.id);
                 if (!ov[key]) pending++;
             });
