@@ -101,6 +101,7 @@
    $('shooter-new').addEventListener('click',newGame);
    $('shooter-answer').addEventListener('input', e => { if (!e.isComposing) typeWord(); });
    $('shooter-answer').addEventListener('compositionend',typeWord);
+   $('shooter-stage').addEventListener('pointerdown',()=>{if(room && room.status==='playing')$('shooter-answer').focus({preventScroll:true});});
    document.addEventListener('visibilitychange',onVisibility);
    window.addEventListener('online',onVisibility);
    document.addEventListener('fullscreenchange',syncFullscreen);
@@ -417,6 +418,11 @@
    }else{
      overlay.hidden=true;
      $('shooter-answer').disabled=false;
+     if(visualCountdown!==0){
+       visualCountdown=0;
+       if(window.matchMedia && window.matchMedia('(pointer:fine)').matches)
+         $('shooter-answer').focus({preventScroll:true});
+     }
      activeWords=[];
      const height=$('shooter-stage').clientHeight - 92;
      for(let i=0;i<WORD_COUNT;i++){
