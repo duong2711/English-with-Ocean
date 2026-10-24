@@ -7,7 +7,8 @@
         ['ldd-vocab-race-v6-style', 'ldd-vocab-race-v6.css?v=20260919-21'],
         ['ldd-vocab-race-v7-style', 'ldd-vocab-race-v7.css?v=20260919-21'],
         ['ldd-vocab-race-v8-style', 'ldd-vocab-race-v8.css?v=20260919-21'],
-        ['ldd-vocab-race-v9-style', 'ldd-vocab-race-v9.css?v=20260919-21']
+        ['ldd-vocab-race-v9-style', 'ldd-vocab-race-v9.css?v=20260919-21'],
+        ['ldd-vocab-race-v10-motion-style', 'ldd-vocab-race-v10-motion.css?v=20261024-clock-motion1']
     ];
 
     styles.forEach(function (item) {
@@ -22,7 +23,7 @@
     if (!document.getElementById('ldd-vocab-race-v5-script')) {
         const core = document.createElement('script');
         core.id = 'ldd-vocab-race-v5-script';
-        core.src = 'ldd-vocab-race-v5.js?v=20261024-sync-egress2';
+        core.src = 'ldd-vocab-race-v5.js?v=20261024-clock-motion1';
         core.defer = true;
         document.body.appendChild(core);
     }
