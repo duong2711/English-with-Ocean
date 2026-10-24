@@ -21,6 +21,7 @@
  let needsRoomRefresh = false, resumeBusy = false;
  let optimisticShots = new Set(), rosterRefreshTimer = null, mobileNativeKeyboard = true;
  let lobbySyncTimer = null, rosterEventVersion = 0, pendingJoinNotice = false;
+ let rosterLoadedRevision = -1;
 
  function addUI() {
    const grid = $('entertainment-folder-grid');
@@ -284,6 +285,9 @@
      const {data,error}=await sb.rpc('ldd_shooter_join',{p_code:code,p_name:me.name});
      if(error) throw error;
      setRoom(data);
+     // Notify the host immediately; send() uses HTTP until the socket is ready.
+     // The SUBSCRIBED callback repeats this signal to cover reconnect races.
+     if(!quiet)sendJoinNotice();
      if(!quiet)info('Đã tham gia phòng!','success');
    }catch(e){
      if(quiet){localStorage.removeItem('ldd-shooter-room-'+me.id);room=null;render();return;}
@@ -294,7 +298,7 @@
    if(!r)return;
    const changed=!room || room.id!==r.id;
    room=r;
-   if(changed){rosterEventVersion=0;clearTimeout(lobbySyncTimer);lobbySyncTimer=null;}
+   if(changed){rosterLoadedRevision=-1;rosterEventVersion=0;clearTimeout(lobbySyncTimer);lobbySyncTimer=null;}
    localStorage.setItem('ldd-shooter-room-'+me.id,room.code);
    if(changed){roster=[];shots.clear();pending.clear();optimisticShots.clear();resetWordNodes();needsRoomRefresh=false;}
    render();
@@ -311,6 +315,7 @@
        if(!error && data && room && room.id===id)room=data;
      }
      if(!channel)subscribeRoom();
+     scheduleLobbySync();
      await Promise.all([refreshSnapshot(),syncClock()]);
      render();playFrames();scheduleLobbySync();
    }finally{resumeBusy=false;}
@@ -331,10 +336,10 @@
    lobbySyncTimer=setTimeout(async()=>{
      lobbySyncTimer=null;
      if(!room || room.id!==id || room.status!=='lobby' || !activePanel())return;
-     try{await Promise.all([refreshPlayers(),refreshLobbyStatus(id)]);}finally{
+     try{await refreshLobbyStatus(id);}finally{
        if(room && room.id===id)scheduleLobbySync();
      }
-   },3500);
+   },1500);
   }
   async function refreshLobbyStatus(id){
    const {data,error}=await sb.from('ldd_shooter_rooms')
@@ -344,14 +349,20 @@
    if(data.status!==room.status || Number(data.roster_revision||0)!==oldRevision){
      room=Object.assign({},room,data);
      render();
-     if(room.status==='lobby')scheduleRosterRefresh();
-     else {clearTimeout(lobbySyncTimer);lobbySyncTimer=null;await refreshSnapshot();playFrames();}
+     if(room.status!=='lobby'){clearTimeout(lobbySyncTimer);lobbySyncTimer=null;await refreshSnapshot();playFrames();}
    }
+   // A revision is acknowledged only after its roster query succeeds.
+   if(room && room.id===id && room.status==='lobby' && rosterLoadedRevision!==Number(room.roster_revision||0))scheduleRosterRefresh();
+  }
+  function sendJoinNotice(){
+   if(!channel || !room)return;
+   const sent=channel.send({type:'broadcast',event:'shooter-joined',payload:{room_id:room.id}});
+   if(sent && sent.catch)sent.catch(()=>{});
   }
   function subscribeRoom(){
    if(!room||channel)return;
    const id=room.id;
-   channel=sb.channel('ldd-shooter-'+id)
+   channel=sb.channel('ldd-shooter-'+id,{config:{broadcast:{ack:true}}})
      .on('postgres_changes',{event:'*',schema:'public',table:'ldd_shooter_players',filter:'room_id=eq.'+id},p=>{
         if(!room || room.id!==id)return;
         rosterEventVersion++;
@@ -380,8 +391,7 @@
          hasSubscribed=true;refreshSnapshot();scheduleRosterRefresh();scheduleLobbySync();
          if(pendingJoinNotice){
            pendingJoinNotice=false;
-           const sent=channel.send({type:'broadcast',event:'shooter-joined',payload:{room_id:id}});
-           if(sent && sent.catch)sent.catch(()=>{});
+           sendJoinNotice();
          }
        }
        if(status==='CHANNEL_ERROR' || status==='TIMED_OUT')info('Kết nối trực tiếp gián đoạn. Hãy kiểm tra mạng.','error');
@@ -389,17 +399,17 @@
  }
  async function refreshPlayers(){
    if(!room || !sb)return;
-   const id=room.id,version=rosterEventVersion;
+   const id=room.id,version=rosterEventVersion,revision=Number(room.roster_revision||0);
    const {data,error}=await sb.from('ldd_shooter_players').select('room_id,user_id,slot,display_name').eq('room_id',id).order('slot',{ascending:true}).limit(4);
    if(error){info(errText(error),'error');return;}
    if(room && id===room.id){
      if(version!==rosterEventVersion){scheduleRosterRefresh();return;}
-     roster=data||[];render();
+     roster=data||[];rosterLoadedRevision=revision;render();
    }
  }
  async function refreshSnapshot(){
    if(!room || !sb || refreshBusy)return;
-   const id=room.id,version=rosterEventVersion;refreshBusy=true;
+   const id=room.id,version=rosterEventVersion,revision=Number(room.roster_revision||0);refreshBusy=true;
    try{
      const results=await Promise.all([
        sb.from('ldd_shooter_players').select('room_id,user_id,slot,display_name').eq('room_id',id).order('slot',{ascending:true}).limit(4),
@@ -407,7 +417,7 @@
      ]);
      for(const r of results)if(r.error)throw r.error;
      if(!room || room.id!==id)return;
-     if(version===rosterEventVersion)roster=results[0].data||[];
+     if(version===rosterEventVersion){roster=results[0].data||[];rosterLoadedRevision=revision;}
      else scheduleRosterRefresh();
      (results[1].data||[]).forEach(applyShot);
      render();
