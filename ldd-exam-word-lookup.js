@@ -75,6 +75,11 @@
 
     function scan(root) {
         if (!root || !root.isConnected) return;
+        // Những từ đã được module cũ bọc tappable-word cũng phải dùng tra từ hợp lệ.
+        root.querySelectorAll('.tappable-word:not(.ldd-exam-lookup-word)').forEach(function (el) {
+            if (el.closest('.word-lookup-popup, .ldd-exam-lookup-modal')) return;
+            el.classList.add('ldd-exam-lookup-word');
+        });
         var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
             acceptNode: function (node) {
                 if (!node.nodeValue || !/[A-Za-z]{2}/.test(node.nodeValue)) return NodeFilter.FILTER_REJECT;
