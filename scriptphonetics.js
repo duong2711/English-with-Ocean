@@ -6772,7 +6772,7 @@ function toggleCompletion(symbolElement) {
 
         // Ghi âm tối đa maxMs mili-giây (mặc định ~2.6s — đủ cho 1-2 từ tiếng Anh), tự dừng và
         // trả về { blob, mimeType }. Từ chối (reject) nếu không xin được quyền micro/không có mic.
-        function recordShortClip(maxMs) {
+        function recordShortClip(maxMs, onReady) {
             return new Promise((resolve, reject) => {
                 navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
                     try {
@@ -6784,21 +6784,28 @@ function toggleCompletion(symbolElement) {
                         const rec = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
                         const chunks = [];
                         let done = false;
+                        let timer = null;
                         rec.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunks.push(e.data); };
                         rec.onerror = (e) => {
                             if (done) return;
                             done = true;
+                            clearTimeout(timer);
                             stream.getTracks().forEach(t => t.stop());
                             reject((e && e.error) || new Error('recorder-error'));
                         };
                         rec.onstop = () => {
                             if (done) return;
                             done = true;
+                            clearTimeout(timer);
                             stream.getTracks().forEach(t => t.stop());
                             resolve({ blob: new Blob(chunks, { type: rec.mimeType || mimeType || 'audio/webm' }), mimeType: rec.mimeType || mimeType || 'audio/webm' });
                         };
+                        rec.onstart = () => {
+                            if (done) return;
+                            if (onReady) onReady();
+                            timer = setTimeout(() => { try { if (rec.state !== 'inactive') rec.stop(); } catch (err) {} }, maxMs || 2600);
+                        };
                         rec.start();
-                        setTimeout(() => { try { if (rec.state !== 'inactive') rec.stop(); } catch (err) {} }, maxMs || 2600);
                     } catch (err) {
                         stream.getTracks().forEach(t => t.stop());
                         reject(err);
@@ -6851,8 +6858,8 @@ function toggleCompletion(symbolElement) {
             if (!isMicRecordingSupported()) { callbacks.onTechError && callbacks.onTechError('unsupported'); return null; }
             let clip;
             try {
-                callbacks.onStart && callbacks.onStart();
-                clip = await recordShortClip(2600);
+                callbacks.onPreparing && callbacks.onPreparing();
+                clip = await recordShortClip(2600, () => { callbacks.onStart && callbacks.onStart(); });
             } catch (err) {
                 const name = err && err.name;
                 const code = name === 'NotAllowedError' ? 'denied' : (name === 'NotFoundError' ? 'no-mic' : 'error');
@@ -7012,6 +7019,9 @@ function toggleCompletion(symbolElement) {
                 if (!wordLookupPronounceWord || wordLookupPronounceDone) return;
                 wordLookupMicBtn.disabled = true;
                 runCFPronunciationAttempt(wordLookupPronounceWord, {
+                    onPreparing: () => {
+                        wordLookupPronounceStatus.textContent = '⏳ Đang mở micro — chờ tín hiệu Đang nghe rồi hãy đọc.';
+                    },
                     onStart: () => {
                         wordLookupMicBtn.classList.add('kf-mic-listening');
                         wordLookupPronounceStatus.textContent = '🔴 Đang nghe... hãy đọc to "' + wordLookupPronounceWord + '"';
@@ -7831,6 +7841,9 @@ function toggleCompletion(symbolElement) {
             micBtn.addEventListener('click', () => {
                 micBtn.disabled = true;
                 runCFPronunciationAttempt(v.word, {
+                    onPreparing: () => {
+                        statusEl.textContent = '⏳ Đang mở micro — chờ tín hiệu Đang nghe rồi hãy đọc.';
+                    },
                     onStart: () => {
                         micBtn.classList.add('kf-mic-listening');
                         statusEl.textContent = '🔴 Đang nghe... đọc to "' + v.word + '"';
