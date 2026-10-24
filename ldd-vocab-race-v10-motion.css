@@ -1,0 +1,42 @@
+/* LDD English — Vocab Race synchronized motion layer (2026-10-24)
+   Gameplay is server-authoritative. Visual phases are derived locally from
+   round_started_at + the calibrated server-clock offset; no frame messages. */
+
+/* Older comfort CSS launches CSS keyframes separately on each device.
+   Disable those independent timelines: JS sets compositor transforms. */
+body .vocab-race-game .vocab-race-road-flow,
+body .vocab-race-game .vocab-race-road-texture {
+    animation:none!important;
+    transition:none!important;
+    will-change:transform;
+    backface-visibility:hidden;
+}
+
+/* Top/left animation forces layout; keep a fixed origin and move the obstacle
+   using translate3d, scaled by the measured lane height on each device. */
+body .vocab-race-game .vocab-race-obstacle {
+    top:0!important;
+    transition:opacity .15s linear!important;
+    will-change:transform,opacity;
+    backface-visibility:hidden;
+}
+body .vocab-race-game .vocab-race-obstacle-warning,
+body .vocab-race-game .vocab-race-obstacle-warning.is-visible {
+    animation:none!important;
+    transition:opacity .14s linear!important;
+}
+body .vocab-race-game .vocab-race-car {
+    backface-visibility:hidden;
+}
+@media (prefers-reduced-motion:reduce) {
+    body .vocab-race-game .vocab-race-road-flow,
+    body .vocab-race-game .vocab-race-road-texture {
+        animation:none!important;
+    }
+    body .vocab-race-game .vocab-race-obstacle {
+        transition:none!important;
+    }
+    body .vocab-race-game .vocab-race-car {
+        transition-duration:.12s!important;
+    }
+}
