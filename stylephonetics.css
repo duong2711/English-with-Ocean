@@ -9783,3 +9783,51 @@ body.about-me-open { overflow: hidden; }
     .ctest-paper-mode .ctest-take-section-title { font-size: 1.05rem; }
     .ctest-paper-mode .ctest-paper-passage { padding: 10px; }
 }
+
+/* Teacher custom-test archival separation, 2026-10-24 */
+.ctest-list-group-heading {
+    font-weight: 800;
+    font-size: 1rem;
+    color: var(--text);
+    margin: 22px 0 10px;
+    padding: 8px 4px;
+    border-bottom: 1px solid var(--border);
+}
+.ctest-archive-group {
+    margin: 24px 0 10px;
+    padding: 12px;
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--surface-2);
+}
+.ctest-archive-group > summary {
+    cursor: pointer;
+    font-weight: 800;
+    line-height: 1.6;
+    color: var(--text-muted);
+}
+.ctest-archive-group .ctest-test-row {
+    background: var(--surface);
+    margin-top: 8px;
+}
+.ctest-archive-note {
+    font-size: .87rem;
+    line-height: 1.5;
+    margin: 10px 2px;
+    color: var(--text-muted);
+}
+.ctest-editor-version-banner {
+    padding: 12px 15px;
+    border-left: 4px solid var(--primary);
+    background: var(--primary-light);
+    color: var(--text);
+    font-weight: 700;
+    line-height: 1.5;
+    margin: 6px 0 16px;
+    border-radius: 6px;
+}
+.ctest-editor-version-banner.ctest-editor-backup-warning {
+    border-left-color: #b45309;
+    background: #fffbeb;
+    color: #78350f;
+}
