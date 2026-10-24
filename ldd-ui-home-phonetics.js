@@ -144,6 +144,7 @@
                     actionHtml('Aa', 'Từ vựng', 'Ôn & vận dụng', 'tab-tu-vung', 'vocab') +
                     actionHtml('G', 'Ngữ pháp', 'Học & luyện bài', 'tab-ngu-phap') +
                     actionHtml('★', 'Giải trí', 'Học mà chơi', 'tab-giai-tri') +
+                    actionHtml('✓', 'Kiểm tra', 'Bài được giao', 'tab-kiem-tra', 'tests') +
                 '</div>' +
             '</div>' +
             '<aside class="ldd-home-side ldd-today-shell">' +
@@ -175,7 +176,8 @@
 
     function bindActionBadges(dashboard) {
         const configs = {
-            vocab: ['myvocab-folder-badge', 'news-folder-badge']
+            vocab: ['myvocab-folder-badge', 'news-folder-badge'],
+            tests: ['ctest-folder-badge', 'vocab-test-folder-badge']
         };
 
         Object.keys(configs).forEach(function (key) {

@@ -738,7 +738,6 @@
         const tab = document.getElementById('tab-kiem-tra');
         const grid = document.getElementById('kiemtra-folder-grid');
         if (!tab || !grid) return;
-        addTestHero(tab, grid);
         enhanceFolderCards(grid);
     }
 
@@ -802,67 +801,6 @@
                 return true;
             }
         });
-    }
-
-    function addTestHero(tab, grid) {
-        if (tab.querySelector('.ldd-test-hero')) return;
-        const oldTitle = Array.from(tab.children).find(function (el) { return el.tagName === 'H2'; });
-        if (!oldTitle) return;
-
-        const hero = document.createElement('section');
-        hero.className = 'ldd-test-hero';
-
-        const copy = document.createElement('div');
-        copy.className = 'ldd-test-hero-copy';
-
-        const kicker = document.createElement('div');
-        kicker.className = 'ldd-test-hero-kicker';
-        kicker.textContent = 'LDD Learning Center';
-
-        const desc = document.createElement('p');
-        desc.textContent = 'Luyện tập, làm bài được giao và theo dõi các nội dung kiểm tra trong một nơi.';
-
-        copy.appendChild(kicker);
-        copy.appendChild(oldTitle);
-        copy.appendChild(desc);
-
-        const stat = document.createElement('div');
-        stat.className = 'ldd-hero-stat';
-        stat.innerHTML = '<strong class="ldd-hero-stat-value" id="ldd-pending-test-count">0</strong>' +
-                         '<span class="ldd-hero-stat-label">bài đang chờ</span>';
-
-        hero.appendChild(copy);
-        hero.appendChild(stat);
-        grid.parentNode.insertBefore(hero, grid);
-
-        const badges = [
-            document.getElementById('ctest-folder-badge'),
-            document.getElementById('vocab-test-folder-badge')
-        ].filter(Boolean);
-
-        const updatePending = function () {
-            let total = 0;
-            badges.forEach(function (badge) {
-                const style = window.getComputedStyle(badge);
-                if (style.display === 'none') return;
-                const n = parseInt((badge.textContent || '').replace(/\D/g, ''), 10);
-                if (Number.isFinite(n)) total += n;
-                else if (badge.textContent.trim()) total += 1;
-            });
-            const out = document.getElementById('ldd-pending-test-count');
-            if (out) out.textContent = String(total);
-        };
-
-        badges.forEach(function (badge) {
-            new MutationObserver(updatePending).observe(badge, {
-                childList: true,
-                characterData: true,
-                subtree: true,
-                attributes: true,
-                attributeFilter: ['style', 'class']
-            });
-        });
-        updatePending();
     }
 
     function enhanceFolderCards(grid) {
