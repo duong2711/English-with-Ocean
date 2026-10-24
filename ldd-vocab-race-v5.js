@@ -1184,7 +1184,10 @@
         $('vocab-race-start-btn').style.display = host ? '' : 'none';
         $('vocab-race-start-btn').disabled = players.length < 2 || players.length > 4;
         const topicLabel = room.topic_title ? ('Chủ đề: ' + room.topic_title + ' · ') : '';
-        $('vocab-race-lobby-hint').textContent = topicLabel + (players.length < 2 ? 'Đang chờ thêm ít nhất 1 học viên...' : (host ? 'Đủ người. Có thể bắt đầu.' : 'Đang chờ chủ phòng bắt đầu.'));
+        const roomCount = players.length + '/4 học viên';
+        const lobbyState = players.length < 2 ? 'Đang chờ thêm người chơi…'
+            : (host ? 'Đủ người, có thể bắt đầu!' : 'Đang chờ chủ phòng bắt đầu…');
+        $('vocab-race-lobby-hint').textContent = topicLabel + roomCount + ' · ' + lobbyState;
         const out = $('vocab-race-roster'); out.innerHTML = '';
         for (let slot = 1; slot <= 4; slot++) {
             const p = players.find(x => Number(x.slot) === slot);
