@@ -228,7 +228,9 @@
         document.addEventListener('fullscreenchange', syncRaceFullscreenState);
         document.addEventListener('webkitfullscreenchange', syncRaceFullscreenState);
         window.addEventListener('resize', scheduleRaceFullscreenLayout, { passive:true });
+        window.addEventListener('resize', () => { motionGeometryDirty = true; }, { passive:true });
         window.addEventListener('orientationchange', scheduleRaceFullscreenLayout, { passive:true });
+        window.addEventListener('orientationchange', () => { motionGeometryDirty = true; }, { passive:true });
         if (window.visualViewport) {
             window.visualViewport.addEventListener('resize', scheduleRaceFullscreenLayout, { passive:true });
         }
@@ -1045,6 +1047,11 @@
         motionRoadNodes = Array.from(track.querySelectorAll('.vocab-race-road-flow'));
         motionTextureNodes = Array.from(track.querySelectorAll('.vocab-race-road-texture'));
         motionLanes = Array.from(track.querySelectorAll('.vocab-race-lane'));
+        for (const lane of motionLanes) {
+            lane._raceWarning = lane.querySelector('.vocab-race-obstacle-warning');
+            lane._raceWarningText = lane._raceWarning && lane._raceWarning.querySelector('em');
+            lane._raceObstacle = lane.querySelector('.vocab-race-obstacle');
+        }
         motionGeometryDirty = true;
         if (motionResizeObserver) motionResizeObserver.disconnect();
         if (typeof ResizeObserver !== 'undefined' && motionLanes[0]) {
@@ -1440,12 +1447,12 @@
             const falling = !!(s.falling && s.falling.lanes.includes(lane));
             el.classList.toggle('is-obstacle-warning', warned);
             el.classList.toggle('is-obstacle-active', falling);
-            const warn = el.querySelector('.vocab-race-obstacle-warning');
-            const obs = el.querySelector('.vocab-race-obstacle');
+            const warn = el._raceWarning;
+            const obs = el._raceObstacle;
             if (warn) {
                 warn.classList.toggle('is-visible', warned);
                 if (warned) {
-                    const em = warn.querySelector('em');
+                    const em = el._raceWarningText;
                     const next = (s.warning.remaining / 1000).toFixed(1) + 's';
                     if (em && em.textContent !== next) em.textContent = next;
                 }
