@@ -3,7 +3,7 @@
    Goal: reduce Supabase egress without sacrificing correctness.
    - Dedupes identical in-flight REST GET requests.
    - Short-lived in-memory cache for safe/slow-changing GETs.
-   - Never caches vocab race tables.
+   - Never caches live race or shooter tables.
    - Any write invalidates cached GETs for the same table.
    - Noncritical dashboard polling is floored at 5 minutes.
    ============================================================= */
@@ -43,8 +43,8 @@
         return decodeURIComponent((rest.split('?')[0] || '').split('/')[0] || '');
     }
 
-    function isRaceTable(table) {
-        return !!table && table.indexOf('vocab_race_') === 0;
+    function isLiveGameTable(table) {
+        return !!table && (table.indexOf('vocab_race_') === 0 || table.indexOf('ldd_shooter_') === 0);
     }
 
     function headersFrom(input, init) {
@@ -111,7 +111,7 @@
     }
 
     function ttlFor(table) {
-        if (!table || isRaceTable(table)) return 0;
+        if (!table || isLiveGameTable(table)) return 0;
         return Object.prototype.hasOwnProperty.call(TTL, table) ? TTL[table] : DEFAULT_TTL;
     }
 
@@ -196,6 +196,7 @@
             pollFloorMs: POLL_FLOOR_MS,
             defaultTtlMs: DEFAULT_TTL,
             raceCached: false,
+            shooterCached: false,
             tableTtlMs: Object.assign({}, TTL)
         }
     };
