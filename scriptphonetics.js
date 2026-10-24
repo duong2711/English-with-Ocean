@@ -20076,6 +20076,7 @@ function toggleCompletion(symbolElement) {
 
     function renderTakeQuestion(q, keyBase, labelPrefix) {
         switch (ctestResolveQuestionType(q)) {
+            case 'mcq': return renderTakeMcq(q, keyBase, labelPrefix);
             case 'mcq_multi': return renderTakeMcqMulti(q, keyBase, labelPrefix);
             case 'fill_blank': return renderTakeFillBlankBlock(q, keyBase, labelPrefix);
             case 'reorder': return renderTakeReorder(q, keyBase, labelPrefix);
@@ -20719,6 +20720,7 @@ function toggleCompletion(symbolElement) {
 
     function ctestResultQuestion(q, keyBase, answers, labelPrefix, ctx) {
         switch (ctestResolveQuestionType(q)) {
+            case 'mcq': return ctestResultMcq(q, keyBase, answers, labelPrefix, ctx);
             case 'mcq_multi': return ctestResultMcqMulti(q, keyBase, answers, labelPrefix, ctx);
             case 'fill_blank': return ctestResultFillBlank(q, keyBase, answers, labelPrefix, ctx);
             case 'reorder': return ctestResultReorder(q, keyBase, answers, labelPrefix, ctx);
