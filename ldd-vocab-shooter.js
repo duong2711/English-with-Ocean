@@ -18,6 +18,7 @@
  let offset = 0, frame = 0, finishPending = false, panelOpen = false, refreshBusy = false;
  let pending = new Set(), nodes = new Map(), activeWords = [], uiMode = '', lastShotText = '';
  let hasSubscribed = false, lastFinishAttempt = 0, visualCountdown = -1;
+ let needsRoomRefresh = false, resumeBusy = false;
 
  function addUI() {
    const grid = $('entertainment-folder-grid');
@@ -105,6 +106,8 @@
    document.addEventListener('fullscreenchange',syncFullscreen);
    document.addEventListener('click',e=>{
      if(!panelOpen || !e.target || !e.target.closest) return;
+     const nav = e.target.closest('[data-main-target]');
+     if(nav && nav.getAttribute('data-main-target')!=='tab-giai-tri'){closePanel(false);return;}
      const other = e.target.closest('.folder-card');
      if(other && other.id !== 'shooter-folder-card') closePanel(true);
    },true);
@@ -222,7 +225,7 @@
    return !!(p && p.isConnected && p.getClientRects().length);
  }
  function unsubscribe() {
-   if(channel && sb){sb.removeChannel(channel);channel=null;}
+   if(channel && sb){sb.removeChannel(channel);channel=null;needsRoomRefresh=true;}
    hasSubscribed=false;
  }
  function stopFrame() {if(frame){cancelAnimationFrame(frame);frame=0;}}
@@ -253,16 +256,24 @@
    const changed=!room || room.id!==r.id;
    room=r;
    localStorage.setItem('ldd-shooter-room-'+me.id,room.code);
-   if(changed){roster=[];shots.clear();pending.clear();resetWordNodes();}
+   if(changed){roster=[];shots.clear();pending.clear();resetWordNodes();needsRoomRefresh=false;}
    render();
    if(panelOpen && !document.hidden) resumeRoom();
  }
  async function resumeRoom(){
-   if(!room||!sb||!activePanel())return;
-   if(!channel)subscribeRoom();
-   await Promise.all([refreshSnapshot(),syncClock()]);
-   render();
-   playFrames();
+   if(!room||!sb||!activePanel()||resumeBusy)return;
+   resumeBusy=true;
+   try{
+     if(needsRoomRefresh){
+       needsRoomRefresh=false;
+       const id=room.id;
+       const {data,error}=await sb.rpc('ldd_shooter_join',{p_code:room.code,p_name:me.name});
+       if(!error && data && room && room.id===id)room=data;
+     }
+     if(!channel)subscribeRoom();
+     await Promise.all([refreshSnapshot(),syncClock()]);
+     render();playFrames();
+   }finally{resumeBusy=false;}
  }
  function subscribeRoom(){
    if(!room||channel)return;
@@ -274,7 +285,9 @@
      })
      .on('postgres_changes',{event:'UPDATE',schema:'public',table:'ldd_shooter_rooms',filter:'id=eq.'+id},p=>{
        if(!p.new || !room || p.new.id!==room.id)return;
+       const previousStatus=room.status;
        room=p.new;render();if(room.status==='playing')playFrames();else stopFrame();
+       if(room.status==='finished' && previousStatus!=='finished')refreshSnapshot();
      })
      .subscribe(status=>{
        if(status==='SUBSCRIBED')hasSubscribed=true;
