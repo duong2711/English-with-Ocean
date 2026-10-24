@@ -19166,6 +19166,8 @@ function toggleCompletion(symbolElement) {
         const card = document.createElement('div');
         card.className = 'ctest-section-card';
         card.dataset.sectionId = section.id || ctestUid('sec');
+        // Preserve exam-paper formatting when the teacher edits/autosaves the test.
+        card.dataset.paperStyle = section.paper_style || '';
 
         const headerRow = document.createElement('div');
         headerRow.className = 'ctest-section-header-row';
@@ -19245,12 +19247,14 @@ function toggleCompletion(symbolElement) {
     }
     function collectSectionCard(card) {
         const questions = Array.from(card.querySelectorAll(':scope > .ctest-question-list > .ctest-qcard')).map(collectQuestionCard);
-        return {
+        const section = {
             id: card.dataset.sectionId,
             title: card.querySelector(':scope > .ctest-section-header-row > .ctest-section-title-input').value.trim(),
             instructions: ctestRichHtml(card.querySelector(':scope > .ctest-section-instructions-editor')),
             questions
         };
+        if (card.dataset.paperStyle) section.paper_style = card.dataset.paperStyle;
+        return section;
     }
 
     function renderSectionsEditor(sections) {
@@ -19835,8 +19839,14 @@ function toggleCompletion(symbolElement) {
         }
         const textarea = document.createElement('textarea');
         textarea.className = 'news-edit-input';
-        textarea.rows = 3;
+        const paperMode = currentTest && (currentTest.sections || []).some(sec => sec.paper_style === 'exam');
+        textarea.rows = paperMode ? 2 : 3;
         textarea.style.width = '100%';
+        if (paperMode) {
+            textarea.classList.add('ctest-paper-writing-input');
+            textarea.placeholder = 'Viết cả câu hoàn chỉnh vào đây...';
+            textarea.setAttribute('aria-label', 'Câu trả lời tự luận: ' + labelPrefix);
+        }
         textarea.value = typeof currentAnswers[keyBase] === 'string' ? currentAnswers[keyBase] : '';
         textarea.addEventListener('input', () => { currentAnswers[keyBase] = textarea.value; scheduleAnswerAutosave(); });
         block.appendChild(textarea);
@@ -20147,6 +20157,9 @@ function toggleCompletion(symbolElement) {
     // ===== BẮT ĐẦU / TIẾP TỤC LÀM BÀI ====================================
     // =====================================================================
     function renderTakeSections(test) {
+        // Only tests explicitly opted in use the exam-paper presentation.
+        const paperMode = (test.sections || []).some(sec => sec.paper_style === 'exam');
+        takeView.classList.toggle('ctest-paper-mode', paperMode);
         takeTitleEl.textContent = test.title || '';
         if (test.notes_html && test.notes_html.trim()) {
             takeNotesEl.style.display = 'block';
@@ -20726,6 +20739,8 @@ function toggleCompletion(symbolElement) {
         opts = opts || {};
         const editable = !!opts.editable;
         showView('result');
+        resultView.classList.toggle('ctest-paper-mode',
+            (test.sections || []).some(sec => sec.paper_style === 'exam'));
         resultTitleEl.textContent = test.title || '';
         const pendingManual = ctestManualPendingCount(test, submission.teacher_overrides || {});
         if (pendingManual > 0) {
