@@ -19,6 +19,7 @@
  let pending = new Set(), nodes = new Map(), activeWords = [], uiMode = '', lastShotText = '';
  let hasSubscribed = false, lastFinishAttempt = 0, visualCountdown = -1;
  let needsRoomRefresh = false, resumeBusy = false;
+ let optimisticShots = new Set(), rosterRefreshTimer = null;
 
  function addUI() {
    const grid = $('entertainment-folder-grid');
@@ -228,8 +229,9 @@
  function unsubscribe() {
    if(channel && sb){sb.removeChannel(channel);channel=null;needsRoomRefresh=true;}
    hasSubscribed=false;
- }
- function stopFrame() {if(frame){cancelAnimationFrame(frame);frame=0;}}
+   if(rosterRefreshTimer){clearTimeout(rosterRefreshTimer);rosterRefreshTimer=null;}
+  }
+  function stopFrame() {if(frame){cancelAnimationFrame(frame);frame=0;}}
  async function syncClock(){
    if(!sb || !room) return;
    const t0=Date.now();
@@ -257,7 +259,7 @@
    const changed=!room || room.id!==r.id;
    room=r;
    localStorage.setItem('ldd-shooter-room-'+me.id,room.code);
-   if(changed){roster=[];shots.clear();pending.clear();resetWordNodes();needsRoomRefresh=false;}
+   if(changed){roster=[];shots.clear();pending.clear();optimisticShots.clear();resetWordNodes();needsRoomRefresh=false;}
    render();
    if(panelOpen && !document.hidden) resumeRoom();
  }
@@ -276,22 +278,39 @@
      render();playFrames();
    }finally{resumeBusy=false;}
  }
- function subscribeRoom(){
+ function scheduleRosterRefresh(){
+    // Coalesce player INSERT and room revision into one small SELECT, no polling.
+    if(rosterRefreshTimer || !room || room.status!=='lobby')return;
+    rosterRefreshTimer=setTimeout(()=>{
+      rosterRefreshTimer=null;
+      if(room && room.status==='lobby' && activePanel())refreshPlayers();
+    },90);
+  }
+  function subscribeRoom(){
    if(!room||channel)return;
    const id=room.id;
    channel=sb.channel('ldd-shooter-'+id)
-     .on('postgres_changes',{event:'*',schema:'public',table:'ldd_shooter_players',filter:'room_id=eq.'+id},()=>{refreshPlayers();})
+     .on('postgres_changes',{event:'*',schema:'public',table:'ldd_shooter_players',filter:'room_id=eq.'+id},p=>{
+        if(!room || room.id!==id)return;
+        if(p.eventType==='INSERT' && p.new && p.new.user_id){
+          roster=roster.filter(x=>x.user_id!==p.new.user_id).concat(p.new).sort((a,b)=>a.slot-b.slot);
+          render();
+        }
+        scheduleRosterRefresh();
+      })
      .on('postgres_changes',{event:'INSERT',schema:'public',table:'ldd_shooter_claims',filter:'room_id=eq.'+id},p=>{
        if(p.new && p.new.room_id===id)applyShot(p.new);
      })
      .on('postgres_changes',{event:'UPDATE',schema:'public',table:'ldd_shooter_rooms',filter:'id=eq.'+id},p=>{
        if(!p.new || !room || p.new.id!==room.id)return;
        const previousStatus=room.status;
-       room=p.new;render();if(room.status==='playing')playFrames();else stopFrame();
+        const previousRevision=Number(room.roster_revision||0);
+        room=p.new;render();
+        if(room.status==='lobby' && Number(room.roster_revision||0)!==previousRevision)scheduleRosterRefresh();if(room.status==='playing')playFrames();else stopFrame();
        if(room.status==='finished' && previousStatus!=='finished')refreshSnapshot();
      })
      .subscribe(status=>{
-       if(status==='SUBSCRIBED')hasSubscribed=true;
+       if(status==='SUBSCRIBED'){hasSubscribed=true;scheduleRosterRefresh();}
        if(status==='CHANNEL_ERROR' || status==='TIMED_OUT')info('Kết nối trực tiếp gián đoạn. Hãy kiểm tra mạng.','error');
      });
  }
@@ -325,8 +344,10 @@
  }
  function applyShot(s){
    const idx=Number(s.word_index);
-   if(!Number.isInteger(idx)||idx<0||idx>=WORD_COUNT||shots.has(idx))return;
-   shots.set(idx,s);pending.delete(idx);
+   if(!Number.isInteger(idx)||idx<0||idx>=WORD_COUNT)return;
+    optimisticShots.delete(idx);
+    if(shots.has(idx))return;
+    shots.set(idx,s);pending.delete(idx);
    const el=nodes.get(idx);
    if(el){burst(el);el.remove();nodes.delete(idx);}
    if(me && s.user_id===me.id) {
@@ -428,7 +449,7 @@
      for(let i=0;i<WORD_COUNT;i++){
        const delta=time-i*SPAWN;
        let el=nodes.get(i);
-       const visible=delta>=0 && delta<=FALL && !shots.has(i);
+       const visible=delta>=0 && delta<=FALL && !shots.has(i) && !optimisticShots.has(i);
        if(!visible){if(el){el.remove();nodes.delete(i);}continue;}
        if(!el)el=buildWord(i);
        if(!el)continue;
@@ -472,12 +493,18 @@
    if(index===null)return;
    input.value='';
    lastShotText='';
+   // Visual removal is immediate; points remain server-authoritative.
+   optimisticShots.add(index);
+   activeWords=activeWords.filter(i=>i!==index);
+   const hit=nodes.get(index);
+   if(hit){burst(hit);hit.remove();nodes.delete(index);}
+   $('shooter-feedback').textContent='💥 Đã bắn! Đang xác nhận điểm…';
    claimWord(index,room.word_list[index].en);
  }
  async function claimWord(index,typed){
    if(!sb||!room||pending.has(index))return;
    const id=room.id;pending.add(index);
-   $('shooter-feedback').textContent='🎯 Đang xác nhận phát bắn…';
+   let keepHidden=false;
    try{
      const {data,error}=await sb.rpc('ldd_shooter_claim',{p_room:id,p_word_index:index,p_typed:typed});
      if(error)throw error;
@@ -488,12 +515,16 @@
        const reason=data && data.reason;
        $('shooter-feedback').textContent=reason==='already_claimed'?'⚡ Bạn khác đã bắn nhanh hơn!':
          reason==='expired'?'⌛ Từ đã rơi khỏi màn hình!':'Không ghi nhận phát bắn.';
-       if(reason==='already_claimed'){const el=nodes.get(index);if(el){el.remove();nodes.delete(index);}}
+       if(reason==='already_claimed'||reason==='expired')keepHidden=true;
      }
    }catch(e){info('Không thể ghi điểm: '+errText(e),'error');$('shooter-feedback').textContent='Mạng gián đoạn, phát bắn chưa được xác nhận.';}
-   finally{pending.delete(index);}
- }
- function burst(el){
+   finally{
+     pending.delete(index);
+     // Re-show the still-falling word if the network request failed.
+     if(!keepHidden && !shots.has(index))optimisticShots.delete(index);
+   }
+  }
+  function burst(el){
    if(!el||!$('shooter-stage'))return;
    const parent=$('shooter-stage'),a=el.getBoundingClientRect(),b=parent.getBoundingClientRect();
    const x=a.left-b.left+a.width/2,y=a.top-b.top+a.height/2;
@@ -556,7 +587,7 @@
    if(!room)return;
    const previous=room;
    unsubscribe();stopFrame();resetWordNodes();
-   room=null;roster=[];shots.clear();pending.clear();
+   room=null;roster=[];shots.clear();pending.clear();optimisticShots.clear();
    if(me)localStorage.removeItem('ldd-shooter-room-'+me.id);
    render();info('Bạn đã rời phòng.');
    try{
@@ -565,7 +596,7 @@
  }
  function newGame(){
    unsubscribe();stopFrame();resetWordNodes();
-   room=null;roster=[];shots.clear();pending.clear();
+   room=null;roster=[];shots.clear();pending.clear();optimisticShots.clear();
    if(me)localStorage.removeItem('ldd-shooter-room-'+me.id);
    render();info('Chọn chủ đề và tạo phòng mới để chơi tiếp.');
  }
