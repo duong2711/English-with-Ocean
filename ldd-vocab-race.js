@@ -22,7 +22,7 @@
     if (!document.getElementById('ldd-vocab-race-v5-script')) {
         const core = document.createElement('script');
         core.id = 'ldd-vocab-race-v5-script';
-        core.src = 'ldd-vocab-race-v5.js?v=20260928-collision-notice2';
+        core.src = 'ldd-vocab-race-v5.js?v=20261024-sync-egress1';
         core.defer = true;
         document.body.appendChild(core);
     }
@@ -31,7 +31,7 @@
     if (!document.getElementById('ldd-vocab-race-v11-script')) {
         const hostEnd = document.createElement('script');
         hostEnd.id = 'ldd-vocab-race-v11-script';
-        hostEnd.src = 'ldd-vocab-race-v11.js?v=20260919-21';
+        hostEnd.src = 'ldd-vocab-race-v11.js?v=20261024-sync-egress1';
         hostEnd.defer = true;
         document.body.appendChild(hostEnd);
     }
