@@ -7124,7 +7124,9 @@ function toggleCompletion(symbolElement) {
             // chờ await nào cả — để Safari/iOS vẫn coi đây là hành động trực tiếp của
             // người dùng và cho phép speechSynthesis.speak() chạy). Gọi qua window vì
             // speakEnglishWord được khai báo ở một khối code khác trong file.
-            if (typeof window.speakEnglishWord === 'function') window.speakEnglishWord(rawWord);
+            // Trong bài thi, không tự phát TTS làm gián đoạn IELTS Listening.
+            // Học viên vẫn có thể chủ động bấm nút loa trong popup nếu muốn.
+            if (!isExamLookup && typeof window.speakEnglishWord === 'function') window.speakEnglishWord(rawWord);
 
             // Nút loa 🔊 để học viên bấm nghe lại bất cứ lúc nào trong lúc xem giải thích
             if (wordLookupSpeakBtn) {
