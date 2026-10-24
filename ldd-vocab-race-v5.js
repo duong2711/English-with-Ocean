@@ -28,6 +28,10 @@
 
     if (!window.supabase || !window.supabase.createClient) return;
     const raceSb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // Shared client: lightweight UI extensions must not create another Auth/Realtime client.
+    window.LDDVocabRaceAPI = Object.freeze({
+        endRoomHost: roomId => raceSb.rpc('vocab_race_end_room_host', { p_room:roomId })
+    });
 
     let session = null;
     let me = null;
@@ -37,6 +41,9 @@
     let playerChannel = null;
     let tickHandle = null;
     let refreshTimer = null;
+    let roomEventVersion = 0;
+    let raceHiddenSince = 0;
+    let lastRecoveryRefreshAt = 0;
     let timeoutPending = false;
     let advancePending = false;
     let claimPending = false;
@@ -74,6 +81,14 @@
 
         // Auth state is event-driven. Polling getSession() every 1.6s created thousands of
         // unnecessary Auth/database requests while a student simply kept the page open.
+        // Event-driven recovery when devices reconnect; no background REST polling.
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) { raceHiddenSince = Date.now(); return; }
+            if (raceHiddenSince && Date.now() - raceHiddenSince >= 5000) recoverRoomSnapshot();
+            raceHiddenSince = 0;
+        });
+        window.addEventListener('online', recoverRoomSnapshot);
+
         raceSb.auth.onAuthStateChange((_event, nextSession) => {
             const oldId = session && session.user && session.user.id;
             const newId = nextSession && nextSession.user && nextSession.user.id;
@@ -86,6 +101,13 @@
             }).catch(() => {});
         });
     });
+
+    function recoverRoomSnapshot() {
+        if (!room || room.status === 'finished' || Date.now() - lastRecoveryRefreshAt < 4000) return;
+        lastRecoveryRefreshAt = Date.now();
+        syncServerClock(true);
+        refreshRoom(room.id).catch(() => {});
+    }
 
     async function syncSession() {
         const { data } = await raceSb.auth.getSession();
@@ -388,6 +410,7 @@
             code:r.code || '',
             status:r.status || '',
             host_user_id:r.host_user_id || null,
+            me_user_id:me && me.id || null,
             round_index:Number(r.round_index || 0),
             last_result:r.last_result || {},
             topic_id:r.topic_id || '',
@@ -501,7 +524,7 @@
         if (!me || room) return;
         const { data } = await raceSb.from('vocab_race_players').select('room_id,joined_at').eq('user_id', me.id).order('joined_at', { ascending:false }).limit(4);
         for (const p of (data || [])) {
-            const { data:r } = await raceSb.from('vocab_race_rooms').select('*').eq('id', p.room_id).maybeSingle();
+            const { data:r } = await raceSb.from('vocab_race_rooms').select('id,status').eq('id', p.room_id).maybeSingle();
             if (r && ['lobby','playing','finished'].includes(r.status)) { await attachRoom(r.id); return; }
         }
     }
@@ -513,6 +536,10 @@
         playerChannel = raceSb.channel('race-player-v5-' + id).on('postgres_changes', { event:'*', schema:'public', table:'vocab_race_players', filter:'room_id=eq.' + id }, applyRealtimePlayer).subscribe();
         if (!tickHandle) tickHandle = setInterval(tick, 100);
         await refreshRoom(id);
+    }
+
+    function scheduleRefreshIfUnchanged(version, delayMs) {
+        if (roomEventVersion === version) scheduleRefresh(delayMs);
     }
 
     function scheduleRefresh(delayMs) {
@@ -621,6 +648,11 @@
         const oldRound = room && room.round_index;
         const oldStatus = room && room.status;
         room = Object.assign({}, room || {}, payload.new);
+        roomEventVersion++;
+        if (room.status === 'finished' || ['round_pause','timeout_pause'].includes(String((room.last_result || {}).type || ''))) {
+            timeoutPending = false;
+        }
+        if (room.status === 'finished') advancePending = false;
         publishRoomState(room);
 
         if (room.last_result) maybePlayResultSound(room.last_result);
@@ -874,15 +906,19 @@
     async function startRoom() {
         if (!room) return;
         const b = $('vocab-race-start-btn'); b.disabled = true;
+        const version = roomEventVersion;
         const { error } = await raceSb.rpc('vocab_race_start_room', { p_room:room.id });
         b.disabled = false;
-        if (error) setStatus(translateError(error), 'error'); else { await syncServerClock(true); await refreshRoom(room.id); }
+        if (error) setStatus(translateError(error), 'error');
+        else scheduleRefreshIfUnchanged(version, 1400);
     }
 
     async function replayRoom() {
         if (!room || room.host_user_id !== (me && me.id)) return;
+        const version = roomEventVersion;
         const { error } = await raceSb.rpc('vocab_race_reset_room', { p_room:room.id });
-        if (error) setStatus(translateError(error), 'error'); else await refreshRoom(room.id);
+        if (error) setStatus(translateError(error), 'error');
+        else scheduleRefreshIfUnchanged(version, 1400);
     }
 
     async function leaveRoom() {
@@ -1297,7 +1333,8 @@
         if (error && !/already_answered|round_timeout|game_not_playing|stale_round/i.test(String(error.message || ''))) setStatus(translateError(error), 'error');
         claimPending = false;
         charging = null;
-        scheduleRefresh();
+        // Valid claims update the room/player through Realtime. Only an error needs a repair read.
+        if (error) scheduleRefresh(1400);
     }
 
     function baseSeed() {
@@ -1464,12 +1501,12 @@
         if (!Number.isFinite(startedAt) || !refereeMayActAt(startedAt + ROUND_MS)) return;
         timeoutPending = true;
         const roomId = room.id;
+        const version = roomEventVersion;
         const { data, error } = await raceSb.rpc('vocab_race_resolve_timeout', { p_room:roomId });
         timeoutPending = false;
         if (error && !/game_not_playing/i.test(String(error.message || ''))) setStatus(translateError(error), 'error');
         if (data && (data.type === 'round_pause' || data.type === 'timeout_pause') && room && room.id === roomId) room.last_result = data;
-        await syncServerClock(true);
-        await refreshRoom(roomId);
+        if (room && room.id === roomId) scheduleRefreshIfUnchanged(version, 1400);
     }
 
     async function advanceAfterPause() {
@@ -1479,12 +1516,17 @@
         advancePending = true;
         const roomId = room.id;
         const roundAtCall = Number(room.round_index);
+        const version = roomEventVersion;
         const { data, error } = await raceSb.rpc('vocab_race_advance_after_pause', { p_room:roomId, p_round:roundAtCall });
-        advancePending = false;
         if (error && !/game_not_playing|stale_round/i.test(String(error.message || ''))) setStatus(translateError(error), 'error');
-        if (data && data.type === 'too_early') return;
-        await syncServerClock(true);
-        await refreshRoom(roomId);
+        if (error || (data && data.type === 'too_early') || !room || room.id !== roomId || Number(room.round_index) !== roundAtCall) {
+            advancePending = false;
+            if (error) scheduleRefresh(1400);
+            return;
+        }
+        // Hold the referee lock until the authoritative round-change event arrives.
+        // Without this lock, a 100ms UI tick can issue the same RPC many times.
+        scheduleRefreshIfUnchanged(version, 1400);
     }
 
     function startRoadAnimation() {
