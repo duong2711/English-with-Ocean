@@ -604,7 +604,7 @@
         const id = room.id;
         const epoch = attachEpoch;
         // Rare missed Realtime events: a narrow REST check instead of 900ms polling.
-        const delay = roomReady && playerReady ? 12000 : 5000;
+        const delay = roomReady && playerReady ? 3500 : 3000;
         roomLobbySafetyTimer = setTimeout(async () => {
             if (epoch !== attachEpoch || !room || room.id !== id || room.status !== 'lobby') return;
             if (!document.hidden) {
@@ -1209,7 +1209,8 @@
         $('vocab-race-room-code').textContent = room.code;
         const host = room.host_user_id === (me && me.id);
         $('vocab-race-start-btn').style.display = host ? '' : 'none';
-        $('vocab-race-start-btn').disabled = players.length < 2 || players.length > 4;
+        // Do not lock the host out when the local roster is stale; the RPC validates 2–4.
+        $('vocab-race-start-btn').disabled = false;
         const topicLabel = room.topic_title ? ('Chủ đề: ' + room.topic_title + ' · ') : '';
         const roomCount = players.length + '/4 học viên';
         const lobbyState = players.length < 2 ? 'Đang chờ thêm người chơi…'
