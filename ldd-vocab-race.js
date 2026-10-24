@@ -23,7 +23,7 @@
     if (!document.getElementById('ldd-vocab-race-v5-script')) {
         const core = document.createElement('script');
         core.id = 'ldd-vocab-race-v5-script';
-        core.src = 'ldd-vocab-race-v5.js?v=20261024-clock-motion2';
+        core.src = 'ldd-vocab-race-v5.js?v=20261024-lobby-sync1';
         core.defer = true;
         document.body.appendChild(core);
     }
