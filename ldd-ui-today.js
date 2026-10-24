@@ -192,10 +192,6 @@
                 articles: result[4], reads: result[5], conjToday: result[6], podcasts: result[7], podcastProgress: result[8],
                 kid: result[9], thcs: result[10], vocabTests: result[11], rank: result[12], day: day
             };
-
-            state.vocabTestPending = await getVocabTestPending();
-            state.customTestCount = badgeCount(document.getElementById('ctest-folder-badge'));
-
             // Ignore results that finished after the user logged out or switched session.
             if (getToken() !== requestToken) {
                 refreshAfterCurrent = !!getToken();
@@ -408,16 +404,6 @@
             );
         }
 
-        if (state.customTestCount > 0) {
-            activeTasks.push(dailyTask('tests', '📝', 'Bài kiểm tra được giao',
-                state.customTestCount, 'bài', 'Mở danh sách bài cần làm'));
-        }
-
-        if (state.vocabTestPending) {
-            activeTasks.push(dailyTask('vocabtest', '📒', 'Kiểm tra từ vựng',
-                1, 'bài', 'Bài kiểm tra đang sẵn sàng'));
-        }
-
         place(
             dailyTask('conj', '🔗', 'Luyện tập liên từ', 1, 'lượt',
                 conjDoneToday ? 'Đã hoàn thành lượt luyện hôm nay' : 'Hoàn thành 1 lượt hôm nay'),
@@ -504,9 +490,7 @@
     function navigateToday(target) {
         if (target === 'ipa') return navigateAndAct('tab-phien-am', function () { scrollToEl(document.querySelector('.ipa-chart')); });
         if (target === 'news') return navigateAndAct('tab-tu-vung', function () { openVocabFolder('news-folder-card'); });
-        if (target === 'tests') return navigateAndAct('tab-kiem-tra', function () { openTestFolder('ctest-folder-card'); });
         if (target === 'conj') return navigateAndAct('tab-tu-vung', function () { openVocabFolder('conj-folder-card'); });
-        if (target === 'vocabtest') return navigateAndAct('tab-kiem-tra', function () { openTestFolder('vocab-test-folder'); });
         if (target === 'podcast') return navigateAndAct('tab-tu-vung', function () { openVocabFolder('podcast-folder-card'); });
         if (target === 'vocab-unpronounced') return openVocabFilter('unpronounced');
         if (target === 'vocab-poor') return openVocabFilter('poor');

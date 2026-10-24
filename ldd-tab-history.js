@@ -23,7 +23,6 @@
         'tab-luyen-noi': 'Nói',
         'tab-luyen-doc': 'Đọc',
         'tab-luyen-viet': 'Viết',
-        'tab-kiem-tra': 'Kiểm tra',
         'tab-giai-tri': 'Giải trí',
         'tab-lich-hoc': 'Lịch học',
         'tab-huong-dan': 'Hướng dẫn'
@@ -150,11 +149,13 @@
     function bindBrowserHistory() {
         window.addEventListener('popstate', function (event) {
             const state = event.state;
-            if (!state || state.lddNav !== true || !validTab(state.lddTab)) return;
+            if (!state || state.lddNav !== true) return;
+            const target = state.lddTab === 'tab-kiem-tra' ? 'tab-trang-chu' : state.lddTab;
+            if (!validTab(target)) return;
             currentIndex = Number.isFinite(state.lddIndex) ? state.lddIndex : 0;
             const storedMax = parseInt(sessionStorage.getItem(STORAGE_MAX_INDEX) || '', 10);
             if (Number.isFinite(storedMax)) maxIndex = Math.max(storedMax, currentIndex);
-            restoreTab(state.lddTab, Number.isFinite(state.lddScrollY) ? state.lddScrollY : 0);
+            restoreTab(target, Number.isFinite(state.lddScrollY) ? state.lddScrollY : 0);
             updateControls();
         });
     }
@@ -204,6 +205,7 @@
 
     function goToTab(tabId, options) {
         options = options || {};
+        if (tabId === 'tab-kiem-tra') tabId = 'tab-trang-chu';
         if (!validTab(tabId)) return false;
         const from = getActiveTabId();
         if (from === tabId) {
@@ -308,7 +310,7 @@
     }
     function validTab(tabId) {
         const el = tabId && document.getElementById(tabId);
-        return !!(el && el.classList.contains('main-tab-content'));
+        return !!(el && el.classList.contains('main-tab-content') && !el.hasAttribute('inert'));
     }
     function cssEscape(value) {
         if (window.CSS && typeof window.CSS.escape === 'function') return window.CSS.escape(value);
