@@ -19324,6 +19324,19 @@ function toggleCompletion(symbolElement) {
         notesSlot.appendChild(notesEditor);
         notesEditor.addEventListener('input', scheduleAutosave);
         renderSectionsEditor(testRow.sections && testRow.sections.length ? testRow.sections : null);
+
+        const previousBanner = editorView.querySelector('.ctest-editor-version-banner');
+        if (previousBanner) previousBanner.remove();
+        const isBackup = ctestIsArchivedBackup(testRow);
+        const isPaperExam = (testRow.sections || []).some(s => s.paper_style === 'exam');
+        if (isBackup || isPaperExam) {
+            const banner = document.createElement('div');
+            banner.className = 'ctest-editor-version-banner' + (isBackup ? ' ctest-editor-backup-warning' : '');
+            banner.textContent = isBackup
+                ? '⚠️ BẢN SAO LƯU — Đây là bản đề cũ, KHÔNG giao cho học viên. Quay lại danh sách và chọn bài trong mục “BÀI ĐANG GIAO” để sửa đúng đề HV2.'
+                : '✅ ĐỀ ĐANG GIAO — Phiên bản trình bày theo đề giấy. Khi học viên làm bài, câu hỏi được hiển thị gọn với đáp án A–D và dòng viết tự luận.';
+            editorView.insertBefore(banner, editorView.firstChild);
+        }
         deleteBtn.style.display = 'inline-block';
         publishBtn.textContent = testRow.status === 'published' ? '🔓 Đang giao bài (bấm để ẩn tạm)' : '📤 Lưu & Giao bài';
         saveStatusEl.textContent = '';
@@ -19434,6 +19447,12 @@ function toggleCompletion(symbolElement) {
         else await renderStudentList();
     }
 
+    // Bản sao lưu không phải bài đang giao. Giữ chúng để khôi phục nhưng
+    // để trong mục thu gọn, tránh giáo viên mở nhầm bài cũ.
+    function ctestIsArchivedBackup(test) {
+        return /^\s*\[(?:BẢN SAO|SAO LƯU)(?:\s|\])/i.test(String((test && test.title) || ''));
+    }
+
     async function renderTeacherList() {
         try {
             const { data: tests, error } = await sb.from('custom_tests')
@@ -19450,7 +19469,16 @@ function toggleCompletion(symbolElement) {
             (subs || []).forEach(s => { (subsByTest[s.test_id] = subsByTest[s.test_id] || []).push(s); });
 
             listContainer.innerHTML = '';
-            myTestsCache.forEach(test => {
+            const publishedGroup = document.createElement('div');
+            const draftGroup = document.createElement('div');
+            const archiveGroup = document.createElement('div');
+            // Đề đang được sử dụng hiện trước; trong mỗi nhóm, đề mới sửa đứng trước.
+            const orderedTests = myTestsCache.slice().sort((a, b) => {
+                const aa = Date.parse(a.updated_at || a.created_at || '') || 0;
+                const bb = Date.parse(b.updated_at || b.created_at || '') || 0;
+                return bb - aa;
+            });
+            orderedTests.forEach(test => {
                 const row = document.createElement('div');
                 row.className = 'ctest-test-row';
                 const totalQ = (test.sections || []).reduce((sum, s) => sum + (s.questions || []).length, 0);
@@ -19530,8 +19558,35 @@ function toggleCompletion(symbolElement) {
                     });
                     row.appendChild(statusList);
                 }
-                listContainer.appendChild(row);
+                const group = ctestIsArchivedBackup(test) ? archiveGroup
+                    : test.status === 'published' ? publishedGroup : draftGroup;
+                group.appendChild(row);
             });
+
+            function appendActiveGroup(title, group) {
+                if (!group.children.length) return;
+                const heading = document.createElement('div');
+                heading.className = 'ctest-list-group-heading';
+                heading.textContent = title + ' (' + group.children.length + ')';
+                listContainer.appendChild(heading);
+                listContainer.appendChild(group);
+            }
+            appendActiveGroup('📢 BÀI ĐANG GIAO', publishedGroup);
+            appendActiveGroup('📝 BẢN NHÁP', draftGroup);
+            if (archiveGroup.children.length) {
+                const archive = document.createElement('details');
+                archive.className = 'ctest-archive-group';
+                const summary = document.createElement('summary');
+                summary.textContent = '🗃️ BẢN SAO LƯU (' + archiveGroup.children.length +
+                    ') — Nhấn để xem đề cũ, không phải bài đang giao';
+                archive.appendChild(summary);
+                const info = document.createElement('p');
+                info.className = 'ctest-archive-note';
+                info.textContent = 'Các bản sao này chỉ dùng để khôi phục. Muốn sửa bài HV2 hiện tại, hãy chọn bài có nhãn “Đang giao bài” ở phía trên.';
+                archive.appendChild(info);
+                archive.appendChild(archiveGroup);
+                listContainer.appendChild(archive);
+            }
         } catch (err) {
             listContainer.innerHTML = '<p class="ctest-empty-msg">❌ Lỗi tải danh sách: ' + ctestEscape(err.message) + '</p>';
         }
