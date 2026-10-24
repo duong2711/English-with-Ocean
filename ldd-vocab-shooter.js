@@ -1,4 +1,4 @@
-/* LDD English — Bắn từ vựng (2 / 4 học viên, 30 từ, Realtime ít egress).
+/* LDD English — Bắn từ vựng (2–4 học viên, 30 từ, Realtime ít egress).
  * The server arbitrates claims and diligence points; animations and falling words are LOCAL.
  * Constants are paired with ldd_shooter_claim() SQL: 2200ms per spawn, 12000ms fall.
  */
@@ -20,13 +20,14 @@
  let hasSubscribed = false, lastFinishAttempt = 0, visualCountdown = -1;
  let needsRoomRefresh = false, resumeBusy = false;
  let optimisticShots = new Set(), rosterRefreshTimer = null, mobileNativeKeyboard = false;
+ let lobbySyncTimer = null, rosterEventVersion = 0, pendingJoinNotice = false;
 
  function addUI() {
    const grid = $('entertainment-folder-grid');
    if (!grid || $('shooter-folder-card')) return;
    const card = document.createElement('div');
    card.id = 'shooter-folder-card'; card.className = 'folder-card';
-   card.innerHTML = '<span class="shooter-folder-emoji">🔫</span><span><strong>Bắn từ vựng</strong><small>2 hoặc 4 người · 30 từ rơi · gõ để bắn</small></span>';
+   card.innerHTML = '<span class="shooter-folder-emoji">🔫</span><span><strong>Bắn từ vựng</strong><small>2–4 người · 30 từ rơi · gõ để bắn</small></span>';
    grid.appendChild(card);
 
    const panel = document.createElement('section');
@@ -42,8 +43,7 @@
       '<div class="shooter-entry" id="shooter-entry">',
         '<div class="shooter-box"><h4>🎮 Tạo phòng chơi</h4>',
          '<p>Chọn số người và bộ từ vựng. Cả phòng cùng nhìn thấy 30 từ giống nhau, rơi theo cùng nhịp.</p>',
-         '<div class="shooter-select-mode"><label><input type="radio" name="shooter-cap" value="2" checked> 2 người</label>',
-           '<label><input type="radio" name="shooter-cap" value="4"> 4 người</label></div>',
+         '<p class="shooter-room-note">Phòng tối đa 4 người. Có từ 2 người là chủ phòng có thể bắt đầu.</p>',
          '<label class="shooter-field">Chủ đề từ vựng<select id="shooter-topic"><option value="">Đang đọc chủ đề…</option></select></label>',
          '<button type="button" class="shooter-primary" id="shooter-create">Tạo phòng 30 từ</button>',
         '</div>',
@@ -61,7 +61,7 @@
         '<div class="shooter-roster" id="shooter-roster"></div>',
         '<div class="shooter-room-buttons"><button class="shooter-primary" type="button" id="shooter-start">🚀 Bắt đầu</button>',
          '<button class="shooter-ghost" type="button" id="shooter-leave">Rời phòng</button></div>',
-        '<p class="shooter-room-note">Chủ phòng bắt đầu khi đủ 2 hoặc 4 người đã chọn.</p>',
+        '<p class="shooter-room-note">Chủ phòng có thể bắt đầu khi có 2, 3 hoặc 4 người tham gia.</p>',
       '</div>',
       '<div id="shooter-game" hidden>',
          '<div class="shooter-hud"><div class="shooter-match-title" id="shooter-match-title">🎯 Đấu trường từ vựng</div>',
@@ -302,6 +302,7 @@
  function unsubscribe() {
    if(channel && sb){sb.removeChannel(channel);channel=null;needsRoomRefresh=true;}
    hasSubscribed=false;
+   clearTimeout(lobbySyncTimer);lobbySyncTimer=null;
    if(rosterRefreshTimer){clearTimeout(rosterRefreshTimer);rosterRefreshTimer=null;}
   }
   function stopFrame() {if(frame){cancelAnimationFrame(frame);frame=0;}}
@@ -317,6 +318,7 @@
    const layer=$('shooter-words-layer');if(layer)layer.textContent='';
  }
  async function enterRoom(code,quiet){
+   pendingJoinNotice=!quiet;
    try {
      const {data,error}=await sb.rpc('ldd_shooter_join',{p_code:code,p_name:me.name});
      if(error) throw error;
@@ -331,6 +333,7 @@
    if(!r)return;
    const changed=!room || room.id!==r.id;
    room=r;
+   if(changed){rosterEventVersion=0;clearTimeout(lobbySyncTimer);lobbySyncTimer=null;}
    localStorage.setItem('ldd-shooter-room-'+me.id,room.code);
    if(changed){roster=[];shots.clear();pending.clear();optimisticShots.clear();resetWordNodes();needsRoomRefresh=false;}
    render();
@@ -348,7 +351,7 @@
      }
      if(!channel)subscribeRoom();
      await Promise.all([refreshSnapshot(),syncClock()]);
-     render();playFrames();
+     render();playFrames();scheduleLobbySync();
    }finally{resumeBusy=false;}
  }
  function scheduleRosterRefresh(){
@@ -359,18 +362,46 @@
       if(room && room.status==='lobby' && activePanel())refreshPlayers();
     },90);
   }
+  // Only check tiny lobby rows, never stream gameplay frames or word lists.
+  function scheduleLobbySync(){
+   clearTimeout(lobbySyncTimer);lobbySyncTimer=null;
+   if(!room || room.status!=='lobby' || !activePanel())return;
+   const id=room.id;
+   lobbySyncTimer=setTimeout(async()=>{
+     lobbySyncTimer=null;
+     if(!room || room.id!==id || room.status!=='lobby' || !activePanel())return;
+     try{await Promise.all([refreshPlayers(),refreshLobbyStatus(id)]);}finally{
+       if(room && room.id===id)scheduleLobbySync();
+     }
+   },3500);
+  }
+  async function refreshLobbyStatus(id){
+   const {data,error}=await sb.from('ldd_shooter_rooms')
+     .select('id,status,started_at,roster_revision').eq('id',id).maybeSingle();
+   if(error || !data || !room || room.id!==id)return;
+   const oldRevision=Number(room.roster_revision||0);
+   if(data.status!==room.status || Number(data.roster_revision||0)!==oldRevision){
+     room=Object.assign({},room,data);
+     render();
+     if(room.status==='lobby')scheduleRosterRefresh();
+     else {clearTimeout(lobbySyncTimer);lobbySyncTimer=null;await refreshSnapshot();playFrames();}
+   }
+  }
   function subscribeRoom(){
    if(!room||channel)return;
    const id=room.id;
    channel=sb.channel('ldd-shooter-'+id)
      .on('postgres_changes',{event:'*',schema:'public',table:'ldd_shooter_players',filter:'room_id=eq.'+id},p=>{
         if(!room || room.id!==id)return;
+        rosterEventVersion++;
         if(p.eventType==='INSERT' && p.new && p.new.user_id){
           roster=roster.filter(x=>x.user_id!==p.new.user_id).concat(p.new).sort((a,b)=>a.slot-b.slot);
-          render();
+        }else if(p.eventType==='DELETE' && p.old && p.old.user_id){
+          roster=roster.filter(x=>x.user_id!==p.old.user_id);
         }
-        scheduleRosterRefresh();
+        render();scheduleRosterRefresh();
       })
+      .on('broadcast',{event:'shooter-joined'},()=>scheduleRosterRefresh())
      .on('postgres_changes',{event:'INSERT',schema:'public',table:'ldd_shooter_claims',filter:'room_id=eq.'+id},p=>{
        if(p.new && p.new.room_id===id)applyShot(p.new);
      })
@@ -379,24 +410,35 @@
        const previousStatus=room.status;
         const previousRevision=Number(room.roster_revision||0);
         room=p.new;render();
-        if(room.status==='lobby' && Number(room.roster_revision||0)!==previousRevision)scheduleRosterRefresh();if(room.status==='playing')playFrames();else stopFrame();
+        if(room.status==='lobby' && Number(room.roster_revision||0)!==previousRevision)scheduleRosterRefresh();
+        if(room.status==='playing'){clearTimeout(lobbySyncTimer);lobbySyncTimer=null;playFrames();}else{stopFrame();scheduleLobbySync();}
        if(room.status==='finished' && previousStatus!=='finished')refreshSnapshot();
      })
      .subscribe(status=>{
-       if(status==='SUBSCRIBED'){hasSubscribed=true;scheduleRosterRefresh();}
+       if(status==='SUBSCRIBED'){
+         hasSubscribed=true;scheduleRosterRefresh();scheduleLobbySync();
+         if(pendingJoinNotice){
+           pendingJoinNotice=false;
+           const sent=channel.send({type:'broadcast',event:'shooter-joined',payload:{room_id:id}});
+           if(sent && sent.catch)sent.catch(()=>{});
+         }
+       }
        if(status==='CHANNEL_ERROR' || status==='TIMED_OUT')info('Kết nối trực tiếp gián đoạn. Hãy kiểm tra mạng.','error');
      });
  }
  async function refreshPlayers(){
    if(!room || !sb)return;
-   const id=room.id;
+   const id=room.id,version=rosterEventVersion;
    const {data,error}=await sb.from('ldd_shooter_players').select('room_id,user_id,slot,display_name').eq('room_id',id).order('slot',{ascending:true}).limit(4);
    if(error){info(errText(error),'error');return;}
-   if(room && id===room.id){roster=data||[];render();}
+   if(room && id===room.id){
+     if(version!==rosterEventVersion){scheduleRosterRefresh();return;}
+     roster=data||[];render();
+   }
  }
  async function refreshSnapshot(){
    if(!room || !sb || refreshBusy)return;
-   const id=room.id;refreshBusy=true;
+   const id=room.id,version=rosterEventVersion;refreshBusy=true;
    try{
      const results=await Promise.all([
        sb.from('ldd_shooter_players').select('room_id,user_id,slot,display_name').eq('room_id',id).order('slot',{ascending:true}).limit(4),
@@ -404,7 +446,8 @@
      ]);
      for(const r of results)if(r.error)throw r.error;
      if(!room || room.id!==id)return;
-     roster=results[0].data||[];
+     if(version===rosterEventVersion)roster=results[0].data||[];
+     else scheduleRosterRefresh();
      (results[1].data||[]).forEach(applyShot);
      render();
    }catch(e){info('Không cập nhật được phòng: '+errText(e),'error');}
@@ -453,8 +496,10 @@
      }).join('');
      const owner=me && me.id===room.host_user_id;
      $('shooter-start').hidden=!owner;
-     $('shooter-start').disabled=roster.length!==room.capacity;
-     info(roster.length===room.capacity?'Đã đủ người, chủ phòng có thể bắt đầu.':'Đang chờ đủ '+room.capacity+' người chơi.');
+     // Keep the host action available: the server checks the real player count,
+     // even when a delayed Realtime packet leaves this screen at 1/4.
+     $('shooter-start').disabled=false;
+     info(roster.length>=2?'Có '+roster.length+' người, chủ phòng có thể bắt đầu.':'Cần tối thiểu 2 người để bắt đầu (tối đa '+room.capacity+').');
    } else {
      $('shooter-match-title').textContent='🎯 '+String(room.topic_title||'Bắn từ vựng');
      renderScores();
@@ -630,10 +675,10 @@
      await identity();if(!me)throw Error('Bạn cần đăng nhập để tạo phòng.');
      const topicId=$('shooter-topic').value;
      const bank=await makeWords(topicId);
-     const capacity=Number(document.querySelector('input[name="shooter-cap"]:checked').value);
+     const capacity=4; // 2–4 players may start; 4 is only the upper bound.
      const {data,error}=await sb.rpc('ldd_shooter_create',{p_words:bank.words,p_capacity:capacity,p_topic:bank.topic,p_name:me.name});
      if(error)throw error;
-     unsubscribe();setRoom(data);
+     unsubscribe();pendingJoinNotice=false;setRoom(data);
    }catch(e){info(errText(e),'error');}
    finally{btn.disabled=false;}
  }
@@ -653,7 +698,7 @@
    try{
      const {data,error}=await sb.rpc('ldd_shooter_start',{p_room:room.id});
      if(error)throw error;
-     room=data;await syncClock();render();playFrames();
+     room=data;await Promise.all([syncClock(),refreshSnapshot()]);render();playFrames();
      info('Ván chơi bắt đầu. Chuẩn bị gõ từ!');
    }catch(e){info(errText(e),'error');btn.disabled=false;}
  }
