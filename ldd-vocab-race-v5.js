@@ -524,7 +524,12 @@
             });
             if (error) throw error;
             room = Array.isArray(data) ? data[0] : data;
-            players = [];
+            // The create RPC inserts the host as slot 1 in the same transaction.
+            players = [{
+                room_id:room.id,user_id:me.id,email:me.email,
+                display_name:me.name,slot:1,score:0,wrong_count:0,
+                total_activation_ms:0,lane:2,track_pos:0,answered_round:-1
+            }];
             publishRoomState(room);
             render();
             await attachRoom(room.id);
@@ -668,6 +673,7 @@
         playerReady = false;
         initialRoomReadComplete = false;
         subscriptionCatchupDone = false;
+        lastBroadcastCheckAt = 0;
         playerEventVersion = 0;
         playerEventJournal = [];
         // Never block showing the new room on an extra server-clock RPC.
@@ -1005,8 +1011,12 @@
         const epoch = attachEpoch;
         const startRoomVersion = roomEventVersion;
         const startPlayerVersion = playerEventVersion;
+        // Question JSON is immutable during a race. Once loaded, avoid returning
+        // all 20 questions on every reconnection or occasional catch-up.
+        const needQuestions = !room || String(room.id) !== String(id) || !Array.isArray(room.questions);
+        const stateColumns = 'id,code,host_user_id,status,round_index,round_started_at,collision_enabled,last_result,created_at,ended_at,topic_id,topic_title,lifecycle_state,lifecycle_paused_at,lifecycle_deadline,lifecycle_confirm_deadline,lifecycle_reason';
         const [rr,pp] = await Promise.all([
-            raceSb.from('vocab_race_rooms').select('*').eq('id',id).maybeSingle(),
+            raceSb.from('vocab_race_rooms').select(needQuestions ? '*' : stateColumns).eq('id',id).maybeSingle(),
             raceSb.from('vocab_race_players').select('*').eq('room_id',id).order('slot')
         ]);
         if (epoch !== attachEpoch) return;
@@ -1023,7 +1033,7 @@
         const oldRound = room && room.round_index;
         const oldStatus = room && room.status;
         // Never overwrite a newer Realtime room state with a slower REST response.
-        if (roomEventVersion === startRoomVersion) room = rr.data;
+        if (roomEventVersion === startRoomVersion) room = Object.assign({},room || {},rr.data);
         let freshPlayers = pp.data || [];
         if (playerEventVersion !== startPlayerVersion) {
             for (const item of playerEventJournal.filter(x => x.version > startPlayerVersion)) {
