@@ -20185,7 +20185,7 @@ function toggleCompletion(symbolElement) {
             (section.questions || []).forEach(q => {
                 qNum++;
                 const keyBase = keyFor(section.id, q.id);
-                secEl.appendChild(renderTakeQuestion(q, keyBase, 'Câu ' + qNum + '. '));
+                secEl.appendChild(renderTakeQuestion(q, keyBase, (paperMode ? String(qNum) : 'Câu ' + qNum) + '. '));
             });
             takeSectionsEl.appendChild(secEl);
         });
@@ -20801,7 +20801,8 @@ function toggleCompletion(symbolElement) {
             (section.questions || []).forEach(q => {
                 qNum++;
                 const keyBase = keyFor(section.id, q.id);
-                const r = ctestResultQuestion(q, keyBase, submission.answers || {}, 'Câu ' + qNum + '. ', ctx);
+                const r = ctestResultQuestion(q, keyBase, submission.answers || {},
+                    ((test.sections || []).some(sec => sec.paper_style === 'exam') ? String(qNum) : 'Câu ' + qNum) + '. ', ctx);
                 secEl.appendChild(r.el);
             });
             resultSectionsEl.appendChild(secEl);
