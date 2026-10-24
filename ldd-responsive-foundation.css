@@ -31,3 +31,20 @@ table { max-width: 100%; }
   html:focus-within { scroll-behavior: auto; }
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* Interaction stability: prevent scroll anchoring jumps while switching sections. */
+html { overflow-anchor: none; }
+:is(.tab-content, .main-content, main) { overflow-anchor: none; }
+/* Touch devices must not retain hover transforms after a tap. Keep click feedback visual,
+   without moving layout or causing repeated translate/scale animations. */
+@media (hover: none) and (pointer: coarse) {
+  :is(.nav-item, .nav-link, .tab-btn, .tab-button, .menu-item, .sidebar-item, .bottom-nav-item):hover {
+    transform: none !important;
+  }
+  :is(.nav-item, .nav-link, .tab-btn, .tab-button, .menu-item, .sidebar-item, .bottom-nav-item) {
+    -webkit-tap-highlight-color: transparent;
+    transition-property: background-color, color, border-color, box-shadow, opacity !important;
+  }
+}
+/* Prevent visual bouncing on repeated taps without changing application click logic. */
+:is(button, a, [role="button"]) { -webkit-touch-callout: none; }
