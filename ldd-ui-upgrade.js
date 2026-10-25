@@ -53,8 +53,8 @@
         ensureScript('ldd-student-grade-script', 'ldd-student-grade.js?v=20261025-learning-track1');
         ensureScript('ldd-thcs-vocab-reset-script', 'ldd-thcs-vocab-reset.js?v=11');
         ensureScript('ldd-fast-progress-script', 'ldd-fast-progress.js?v=1');
-        ensureScript('ldd-vocab-race-script', 'ldd-vocab-race.js?v=20261025-single-car1');
-        ensureScript('ldd-vocab-shooter-script', 'ldd-vocab-shooter.js?v=20261025-no-overlap1');
+        ensureScript('ldd-vocab-race-script', 'ldd-vocab-race.js?v=20261025-entertainment1');
+        ensureScript('ldd-vocab-shooter-script', 'ldd-vocab-shooter.js?v=20261025-entertainment1');
         ensureScript('ldd-quick-lookup-script', 'ldd-quick-lookup.js?v=20261025-valid2');
         ensureScript('ldd-entertainment-data-script', 'ldd-entertainment-data.js?v=20261025-library1');
         ensureScript('ldd-entertainment-script', 'ldd-entertainment.js?v=20261025-library1');
