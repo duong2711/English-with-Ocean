@@ -1,6 +1,12 @@
 /* Timer and navigation occupy real grid tracks; only the paper scrolls. */
 body.ldd-exam-active { overflow: hidden; }
 body.ldd-exam-active #inside,
+body.ldd-exam-active #inside.ldd-navigation-pulse,
+body.ldd-exam-active #inside.ldd-app-wake,
+body.ldd-exam-active #tab-kiem-tra,
+body.ldd-exam-active #ctest-panel,
+body.ldd-exam-active #ilt-panel,
+body.ldd-exam-active #irt-panel,
 body.ldd-exam-active .main-tab-content.active {
     animation: none !important;
     transform: none !important;
@@ -20,6 +26,9 @@ body.ldd-exam-active .main-tab-content.active {
     grid-template: auto minmax(0, 1fr) / minmax(0, 1fr) 236px;
     background: var(--bg, #f5f7fb);
     color: var(--text, #172033);
+    animation: none !important;
+    transform: none !important;
+    will-change: auto !important;
     isolation: isolate;
     box-sizing: border-box;
 }
