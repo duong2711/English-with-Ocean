@@ -11,7 +11,40 @@
  const MAX_BYTES=6*1024*1024;
  const ENDPOINT=ROOT+"/functions/v1/comics-b2-import";
  let authClient=null,initializing=null;
+ const SESSION_KEY="sb-"+PROJECT+"-auth-token";
  let panel=null;
+
+ // Read the same persisted Supabase session used by the site's other
+ // teacher-only controls. A separate auth client is an optional fallback.
+ function storedSession(){
+  try {
+   const value=JSON.parse(localStorage.getItem(SESSION_KEY)||"null");
+   if(value?.access_token)return value;
+   if(value?.currentSession?.access_token)return value.currentSession;
+   if(Array.isArray(value)&&value[0]?.access_token)return value[0];
+  }catch(_){}
+  return null;
+ }
+ function jwtEmail(token){
+  try{
+   const part=String(token||"").split(".")[1];
+   if(!part)return "";
+   const b64=part.replace(/-/g,"+").replace(/_/g,"/");
+   const payload=JSON.parse(atob(b64.padEnd(Math.ceil(b64.length/4)*4,"=")));
+   return String(payload.email||"").trim().toLowerCase();
+  }catch(_){return "";}
+ }
+ function isTeacherSession(session){
+  return !!(session?.access_token && String(session?.user?.email||jwtEmail(session.access_token)).trim().toLowerCase()===TEACHER);
+ }
+ function teacherSession(){
+  const session=storedSession();
+  return isTeacherSession(session)?session:null;
+ }
+ function clientIfReady(){
+  if(!authClient&&window.supabase?.createClient)authClient=window.supabase.createClient(ROOT,ANON);
+  return authClient;
+ }
  function textNode(tag,content,cls){const el=document.createElement(tag);if(cls)el.className=cls;el.textContent=content;return el;}
  function gradeData(grade){
   switch(grade){
@@ -91,8 +124,8 @@
    status.textContent="Đang xác thực và tải 10 ảnh lên Backblaze B2…";
    results.replaceChildren();
    try{
-    const {data:{session}}=await client.auth.getSession();
-    if(!session?.access_token)throw Error("Phiên đăng nhập hết hạn");
+    const session=teacherSession()||(client?(await client.auth.getSession()).data?.session:null);
+    if(!isTeacherSession(session))throw Error("Hãy đăng nhập tài khoản giáo viên để tải ảnh.");
     const response=await fetch(ENDPOINT,{method:"POST",
      headers:{"Authorization":"Bearer "+session.access_token,"apikey":ANON,"Content-Type":"application/zip"},
      body:file
@@ -109,50 +142,52 @@
      link.textContent=item.name;
      results.append(link);
     });
-    status.textContent=await tryPublishEmptyGrade6Unit2(body.uploaded||[],client);
+    status.textContent=client
+     ?await tryPublishEmptyGrade6Unit2(body.uploaded||[],client)
+     :"Đã tải "+body.uploadedCount+"/10 ảnh lên B2. Ảnh được giữ để giáo viên duyệt.";
    }catch(error){
     status.textContent="Chưa hoàn tất upload: "+String(error.message||error).slice(0,150);
    }finally{input.disabled=false;input.value="";}
   });
  }
- function isTeacherSession(session) {
-  return session?.user?.email?.toLowerCase() === TEACHER;
- }
- function removeUploader() {
+ function removeUploader(){
   document.getElementById("ldd-ent-comic-upload-tool")?.remove();
+  panel=null;
  }
  async function check(){
   if(initializing)return initializing;
   initializing=(async()=>{
-   if(!window.supabase?.createClient){
-    console.warn("[LDD comics] Supabase client library unavailable");
-    return;
+   // Do not depend on an independent Supabase client's INITIAL_SESSION event:
+   // a restored site login is already present in the common storage key.
+   const client=clientIfReady();
+   const cached=teacherSession();
+   if(cached){mount(client);return;}
+   if(client){
+    const {data,error}=await client.auth.getSession();
+    if(error)throw error;
+    if(isTeacherSession(data?.session)){mount(client);return;}
    }
-   if(!authClient)authClient=window.supabase.createClient(ROOT,ANON);
-   // Use the same persisted session as the site's login. Calling getUser()
-   // over the network here previously prevented the uploader from appearing
-   // when the site UI had already restored an authenticated session.
-   const {data:{session},error}=await authClient.auth.getSession();
-   if(error)throw error;
-   if(isTeacherSession(session))mount(authClient);
-   else removeUploader();
+   removeUploader();
   })();
   try{await initializing}
   catch(error){console.warn("[LDD comics] Cannot initialize teacher uploader",error);}
-  finally{initializing=null}
+  finally{initializing=null;}
  }
  function init(){
   const tab=document.getElementById("tab-giai-tri");
   if(!tab)return;
-  // Mount immediately for a restored teacher login; don't make opening the
-  // root comic card the only opportunity to attach the uploader.
   void check();
+  // Recheck on entering comics, and when returning to the tab after login.
   tab.addEventListener("click",function(event){
-   const target=event.target;
-   if(target?.closest?.("#ldd-ent-comics-entry, #ldd-ent-comics-panel"))void check();
+   if(event.target?.closest?.("#ldd-ent-comics-entry, #ldd-ent-comics-panel"))void check();
   },true);
-  document.addEventListener("ldd:ent-comics-visible",function(){void check()});
-  // Entertainment library panels can be created after this module loads.
+  document.addEventListener("ldd:ent-comics-visible",function(){void check();});
+  document.addEventListener("visibilitychange",function(){if(!document.hidden)void check();});
+  window.addEventListener("focus",function(){void check();});
+  window.addEventListener("storage",function(event){
+   if(event.key===SESSION_KEY)void check();
+  });
+  // The Entertainment module may still be creating its panel on first load.
   if(!document.getElementById("ldd-ent-comics-panel")){
    const observer=new MutationObserver(function(){
     if(document.getElementById("ldd-ent-comics-panel")){
@@ -162,16 +197,11 @@
    });
    observer.observe(tab,{childList:true,subtree:true});
   }
-  // React to the auth client restoring/logging out without polling.
-  if(window.supabase?.createClient){
-   if(!authClient)authClient=window.supabase.createClient(ROOT,ANON);
-   authClient.auth.onAuthStateChange(function(event,session){
-    setTimeout(function(){
-     if(event==="SIGNED_OUT" || !isTeacherSession(session))removeUploader();
-     else mount(authClient);
-    },0);
-   });
-  }
+  const client=clientIfReady();
+  if(client)client.auth.onAuthStateChange(function(){
+   // Defer until the library has persisted the replacement session.
+   setTimeout(function(){void check();},0);
+  });
  }
  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);
  else init();
