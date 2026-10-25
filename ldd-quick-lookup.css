@@ -128,6 +128,10 @@ body.ldd-quick-lookup-open { overflow: hidden; }
     font-size: 15px;
 }
 .ldd-quick-lookup-input-row input::placeholder { color: #8998ad; }
+.ldd-quick-lookup-input-row input[aria-invalid="true"] {
+    border-color: #c03940;
+    box-shadow: 0 0 0 2px rgba(192, 57, 64, .1);
+}
 .ldd-quick-lookup-submit {
     flex: 0 0 auto;
     min-width: 98px;
