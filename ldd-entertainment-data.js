@@ -11,12 +11,24 @@ window.LDDEntMediaCatalog = Object.freeze({
         //   duration: '01:30', order: 1
         // }
     ],
+    // Existing first-frame thumbnails from thcs_story_frames.
+    // These are URL pointers only; they do not overwrite teacher content in Supabase.
+    chapter_thumbnails: {
+        '6/u1': 'https://i.ibb.co/ksLdkhHh/7-1-1.png',
+        '7/u1': 'https://i.ibb.co/Cpf0sHn9/1.png',
+        '7/u2': 'https://i.ibb.co/Y4FZQpYx/1.png',
+        '7/u3': 'https://i.ibb.co/MkCvxkNJ/1.png',
+        '7/u4': 'https://i.ibb.co/8DKfXtHJ/1.png',
+        '9/u1': 'https://i.ibb.co/hr7nvDX/P1.png',
+        '9/u2': 'https://i.ibb.co/PvfDm1Fd/P1.png'
+    },
     comics: [
         {
             id: 'dung-duong-school-story',
             title: 'Truyện học đường Dung và Dương',
             description: 'Hành trình học đường của Dương và Dung qua các Unit tiếng Anh lớp 6–12.',
-            thumbnail_url: '',
+            // Existing teacher-uploaded illustration from class 6, Unit 1.
+            thumbnail_url: 'https://i.ibb.co/ksLdkhHh/7-1-1.png',
             grades: [6, 7, 8, 9, 10, 11, 12],
             source: 'grade6-data.js … grade12-data.js / thcs_story_frames'
         }
