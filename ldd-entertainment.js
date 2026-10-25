@@ -147,6 +147,10 @@
 
         let currentView = 'root';
         let comicRequest = 0;
+        let readerZoom = null;
+        function closeReaderZoom() {
+            if (readerZoom) { readerZoom.close(); readerZoom.remove(); readerZoom = null; }
+        }
         let activeVideo = null;
         function releaseVideo() {
             if (!activeVideo) return;
@@ -156,6 +160,7 @@
             activeVideo = null;
         }
         function show(view) {
+            closeReaderZoom();
             comicRequest += 1;
             releaseVideo();
             currentView = view;
@@ -240,6 +245,8 @@
         }
 
         function showSeriesLibrary() {
+            closeReaderZoom();
+            comics.classList.remove('is-reading');
             comicRequest += 1;
             comicBody.replaceChildren();
             const list = Array.isArray(getCatalog().comics) ? getCatalog().comics : [];
@@ -261,6 +268,8 @@
         }
 
         function showGrades(series, selectedGrade) {
+            closeReaderZoom();
+            comics.classList.remove('is-reading');
             comicRequest += 1;
             comicBody.replaceChildren();
             const subhead = el('div', 'ldd-ent-series-header');
@@ -317,56 +326,147 @@
         }
 
 
+
         async function showChapter(series, grade, unit) {
+            closeReaderZoom();
             const request = ++comicRequest;
+            comics.classList.add('is-reading');
             comicBody.replaceChildren();
             const reader = el('article', 'ldd-ent-comic-reader');
-            const header = el('div', 'ldd-ent-reader-heading');
-            const back = el('button', 'ldd-ent-inline-back', '← Danh sách Unit');
+            const header = el('header', 'ldd-ent-reader-heading');
+            const top = el('div', 'ldd-ent-reader-topbar');
+            const back = el('button', 'ldd-ent-inline-back ldd-ent-reader-back', '← Danh sách Unit');
             back.type = 'button';
             back.addEventListener('click', () => showGrades(series, grade));
-            const title = el('h4', '', 'Lớp ' + grade + ' · Unit ' + unit.number + ': ' + (unit.titleVi || unit.title));
-            header.append(back, title);
-            const status = el('p', 'ldd-ent-reader-status', 'Đang tải toàn bộ truyện…');
+            const sizeControls = el('div', 'ldd-ent-reader-size');
+            sizeControls.setAttribute('role', 'group');
+            sizeControls.setAttribute('aria-label', 'Cỡ chữ lời truyện');
+            let textSize = 19;
+            const smaller = el('button', '', 'A−'), larger = el('button', '', 'A+');
+            smaller.type = larger.type = 'button';
+            smaller.setAttribute('aria-label', 'Giảm cỡ chữ');
+            larger.setAttribute('aria-label', 'Tăng cỡ chữ');
+            function resize(delta) {
+                textSize = Math.max(16, Math.min(25, textSize + delta));
+                reader.style.setProperty('--comic-text-size', textSize + 'px');
+                smaller.disabled = textSize <= 16;
+                larger.disabled = textSize >= 25;
+            }
+            smaller.addEventListener('click', () => resize(-1));
+            larger.addEventListener('click', () => resize(1));
+            sizeControls.append(smaller, larger);
+            top.append(back, sizeControls);
+            const hero = el('div', 'ldd-ent-reader-hero');
+            hero.append(el('p', 'ldd-ent-reader-eyebrow', 'DUNG & DƯƠNG · LỚP ' + grade + ' · UNIT ' + unit.number));
+            const title = el('h4', '', unit.titleVi || unit.title);
+            title.tabIndex = -1;
+            hero.append(title);
+            header.append(top, hero);
+            const status = el('p', 'ldd-ent-reader-status', 'Đang tải truyện…');
             status.setAttribute('role', 'status');
+            const sceneNav = el('nav', 'ldd-ent-reader-scenes');
+            sceneNav.setAttribute('aria-label', 'Chuyển nhanh đến khung truyện');
             const framesEl = el('div', 'ldd-ent-reader-frames');
-            reader.append(header, status, framesEl);
+            reader.append(header, status, sceneNav, framesEl);
             comicBody.append(reader);
             function render(frames) {
                 framesEl.replaceChildren();
+                sceneNav.replaceChildren();
                 frames.forEach(function (frame, index) {
                     const panel = el('section', 'ldd-ent-reader-frame');
                     panel.dataset.frameIndex = String(frame.frame_index);
-                    panel.append(el('h5', '', 'Khung ' + frame.frame_index));
+                    panel.id = 'comic-' + grade + '-' + unit.id + '-' + frame.frame_index;
+                    const sceneButton = el('button', 'ldd-ent-reader-scene-link', String(index + 1).padStart(2, '0'));
+                    sceneButton.type = 'button';
+                    sceneButton.setAttribute('aria-label', 'Đến khung ' + frame.frame_index);
+                    sceneButton.addEventListener('click', () => {
+                        panel.scrollIntoView({block:'start', behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'});
+                        panel.querySelector('h5').focus({preventScroll:true});
+                    });
+                    sceneNav.append(sceneButton);
+                    const art = el('div', 'ldd-ent-reader-art');
                     const url = safeAsset(frame.image_url);
                     if (url) {
+                        const zoom = el('button', 'ldd-ent-reader-zoom');
+                        zoom.type = 'button';
+                        zoom.setAttribute('aria-label', 'Phóng to ảnh khung ' + frame.frame_index);
                         const image = el('img', 'ldd-ent-reader-image');
                         image.src = url;
                         image.alt = 'Lớp ' + grade + ' – Unit ' + unit.number + ' – Khung ' + frame.frame_index;
                         image.loading = index === 0 ? 'eager' : 'lazy';
                         image.decoding = 'async';
+                        image.width = 1672;
+                        image.height = 941;
+                        const hint = el('span', 'ldd-ent-reader-zoom-hint', '⤢');
+                        hint.setAttribute('aria-hidden', 'true');
+                        zoom.append(image, hint);
+                        zoom.addEventListener('click', () => {
+                            closeReaderZoom();
+                            const dialog = el('dialog', 'ldd-ent-reader-lightbox');
+                            dialog.setAttribute('aria-label', 'Ảnh khung ' + frame.frame_index);
+                            const bar = el('div', 'ldd-ent-reader-lightbox-bar');
+                            const close = el('button', '', 'Đóng ×');
+                            close.type = 'button';
+                            bar.append(el('span', '', 'Khung ' + frame.frame_index), close);
+                            const fullImage = el('img', '');
+                            fullImage.src = url;
+                            fullImage.alt = image.alt;
+                            dialog.append(bar, fullImage);
+                            reader.append(dialog);
+                            readerZoom = dialog;
+                            close.addEventListener('click', closeReaderZoom);
+                            dialog.addEventListener('click', event => { if (event.target === dialog) closeReaderZoom(); });
+                            dialog.addEventListener('close', () => { zoom.focus({preventScroll:true}); });
+                            dialog.showModal();
+                            close.focus();
+                        });
                         image.addEventListener('error', function () {
-                            image.replaceWith(el('p', 'ldd-ent-reader-image-note', 'Ảnh khung này chưa tải được.'));
+                            art.replaceChildren(el('p', 'ldd-ent-reader-image-note', 'Ảnh khung này chưa tải được.'));
                         }, { once: true });
-                        panel.append(image);
+                        art.append(zoom);
                     } else {
-                        panel.append(el('p', 'ldd-ent-reader-image-note', 'Khung này chưa có ảnh minh họa.'));
+                        art.classList.add('is-missing');
+                        art.append(el('span', 'ldd-ent-reader-missing-number', String(index + 1).padStart(2, '0')),
+                            el('p', 'ldd-ent-reader-image-note', 'Chưa có tranh minh họa'));
                     }
+                    const copy = el('div', 'ldd-ent-reader-copy');
+                    const label = el('h5', '', 'KHUNG ' + String(index + 1).padStart(2, '0') + ' / ' + String(frames.length).padStart(2, '0'));
+                    label.tabIndex = -1;
                     const text = el('div', 'ldd-ent-reader-text');
                     text.append(comicText(frame.content_html));
-                    panel.append(text);
+                    copy.append(label, text);
+                    panel.append(art, copy);
                     framesEl.append(panel);
                 });
+                const footer = el('footer', 'ldd-ent-reader-footer');
+                footer.append(el('p', '', 'Hết Unit ' + unit.number));
+                const actions = el('div', 'ldd-ent-reader-footer-actions');
+                const list = el('button', 'ldd-ent-inline-back', 'Danh sách Unit');
+                list.type = 'button';
+                list.addEventListener('click', () => showGrades(series, grade));
+                actions.append(list);
+                const units = gradeUnits(grade).filter(item => item.storyFrames?.length);
+                const current = units.findIndex(item => item.id === unit.id);
+                const next = units[current + 1];
+                if (next) {
+                    const nextButton = el('button', 'ldd-ent-reader-next', 'Unit ' + next.number + ' →');
+                    nextButton.type = 'button';
+                    nextButton.addEventListener('click', () => showChapter(series, grade, next));
+                    actions.append(nextButton);
+                }
+                footer.append(actions);
+                framesEl.append(footer);
             }
+            reader.scrollIntoView?.({block:'start', behavior:'auto'});
             try {
                 const frames = await fetchComicFrames(grade, unit);
                 if (request !== comicRequest) return;
                 render(frames);
-                status.textContent = frames.length ? frames.length + ' khung truyện' : 'Unit này chưa có nội dung truyện.';
+                status.textContent = frames.length ? frames.length + ' khung · Đọc trọn câu chuyện' : 'Unit này chưa có nội dung truyện.';
             } catch (error) {
                 if (request !== comicRequest) return;
                 render(mergeComicFrames(unit, []));
-                status.textContent = 'Đang hiển thị bản gốc. Chưa tải được nội dung cập nhật.';
+                status.textContent = 'Bản gốc · Chưa tải được nội dung cập nhật.';
                 const retry = el('button', 'ldd-ent-inline-back', 'Thử lại');
                 retry.type = 'button';
                 retry.addEventListener('click', () => showChapter(series, grade, unit));
