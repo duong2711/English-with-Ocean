@@ -58,7 +58,7 @@
         ensureScript('ldd-quick-lookup-script', 'ldd-quick-lookup.js?v=20261025-valid2');
         ensureScript('ldd-entertainment-data-script', 'ldd-entertainment-data.js?v=20261026-comic-lookup5');
         ensureScript('ldd-entertainment-script', 'ldd-entertainment.js?v=20261026-comic-lookup5');
-        ensureScript('ldd-comic-b2-import-script', 'ldd-comic-b2-import.js?v=20261025-shared-auth3');
+        ensureScript('ldd-comic-b2-import-script', 'ldd-comic-b2-import.js?v=20261026-zip-auto2');
     }
 
     function ensureStylesheet(id, href) {
