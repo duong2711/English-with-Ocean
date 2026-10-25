@@ -305,3 +305,46 @@
 @media (prefers-reduced-motion: reduce) {
     #tab-giai-tri .ldd-ent-media-card, #tab-giai-tri .ldd-ent-chapter-card { transition: none; }
 }
+
+/* Authenticated teacher-only B2 batch ZIP import. Hidden from student accounts. */
+#tab-giai-tri .ldd-ent-b2-uploader {
+    margin: 14px 0 20px;
+    padding: clamp(13px, 3vw, 20px);
+    border: 1px solid var(--border, #dce3ee);
+    border-radius: 14px;
+    background: var(--surface-2, #f8faff);
+    min-width: 0;
+}
+#tab-giai-tri .ldd-ent-b2-uploader h4 { margin: 0 0 6px; font-size: 15px; }
+#tab-giai-tri .ldd-ent-b2-uploader .ldd-ent-b2-help {
+    margin: 0 0 10px;
+    font-size: 12px;
+    line-height: 1.55;
+    color: var(--text-muted, #66758e);
+}
+#tab-giai-tri .ldd-ent-b2-uploader input[type="file"] {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    border: 1px solid var(--border, #d6e0ef);
+    border-radius: 9px;
+    padding: 8px;
+    background: var(--surface, #fff);
+    font-size: 12px;
+}
+#tab-giai-tri .ldd-ent-b2-status { margin: 9px 0; font-size: 12.5px; line-height: 1.5; }
+#tab-giai-tri .ldd-ent-b2-results {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    max-height: 200px;
+    overflow: auto;
+}
+#tab-giai-tri .ldd-ent-b2-results p { flex-basis: 100%; margin: 0; font-size: 12px; }
+#tab-giai-tri .ldd-ent-b2-results a {
+    color: #315ad9;
+    font-size: 12px;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+}
