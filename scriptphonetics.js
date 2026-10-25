@@ -6712,11 +6712,18 @@ function toggleCompletion(symbolElement) {
         }
 
         // Gọi AI tra nghĩa 1 từ, dựa theo ngữ cảnh câu đang dịch
-        async function fetchWordInfo(word, contextSentence) {
+        async function fetchWordInfo(word, contextSentence, strictValidation = false) {
             const safeWord = word.replace(/"/g, '\\"');
             const safeContext = (contextSentence || '').replace(/"/g, '\\"');
+            const strictRule = strictValidation
+                ? 'Hãy kiểm tra nghiêm ngặt xem CHÍNH XÁC toàn bộ chuỗi được nhập có phải là từ hoặc cụm từ tiếng Anh được viết đúng chính tả và có nghĩa thực sự hay không. ' +
+                  'Nếu là tiếng Việt (kể cả tiếng Việt không dấu như "xin chao", "cam on"), chứa từ tiếng Việt xen tiếng Anh, lỗi đánh máy như "helo", "appple", từ tự chế, hoặc một nhóm từ tiếng Anh không tạo thành cụm có nghĩa, PHẢI trả về duy nhất {"found":false}. ' +
+                  'Không được tự sửa chính tả, đoán ý người dùng, dịch từ tiếng Việt hay bịa ra nghĩa. ' +
+                  'Vẫn chấp nhận từ ghép, cụm động từ và dạng viết có dấu nháy hoặc gạch nối hợp lệ như "don\'t", "well-being", "take care of". '
+                : '';
             const prompt = 'Bạn là từ điển Anh-Việt dành cho học viên Việt Nam mới bắt đầu học tiếng Anh. Hỗ trợ cả từ đơn, cụm động từ và cụm từ cố định; hãy dịch cả cụm như một đơn vị nghĩa. ' +
                 'Học viên muốn tra từ hoặc cụm từ "' + safeWord + '" trong ngữ cảnh tiếng Anh sau: "' + safeContext + '". ' +
+                strictRule +
                 'Chỉ trả lời bằng JSON hợp lệ, không thêm chữ nào khác, đúng định dạng: ' +
                 '{"found": true, ' +
                 '"phonetic": "phiên âm IPA (Anh-Anh hoặc Anh-Mỹ đều được) của riêng từ \\"' + safeWord + '\\", không kèm dấu gạch chéo, ví dụ: ˈwɔːtər", ' +
@@ -7268,9 +7275,20 @@ function toggleCompletion(symbolElement) {
             try {
                 const info = (readOnlyExam && examWordLookupCache.has(cacheKey))
                     ? examWordLookupCache.get(cacheKey)
-                    : await fetchWordInfo(rawWord, contextSentence);
+                    : await fetchWordInfo(rawWord, contextSentence, sourceTitle === 'Tra cứu nhanh');
                 if (mySeq !== wordLookupSeq) return; // học viên đã chạm từ khác trong lúc chờ
 
+                // Invalid quick searches must return to the editable bird dialog,
+                // never save an invented word or force a pronunciation attempt.
+                const isInvalidQuickLookup = sourceTitle === 'Tra cứu nhanh' && info &&
+                    (info.found !== true || !String(info.meaning || '').trim());
+                if (isInvalidQuickLookup) {
+                    closeWordLookupPopup(true);
+                    document.dispatchEvent(new CustomEvent('ldd:quick-lookup-invalid', {
+                        detail: { query: rawWord }
+                    }));
+                    return;
+                }
                 if (!info || info.found === false) {
                     wordLookupBody.innerHTML = '<div class="word-lookup-error">Không tìm thấy nghĩa phù hợp cho từ này.</div>';
                     return;
