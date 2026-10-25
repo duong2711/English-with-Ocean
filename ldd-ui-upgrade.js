@@ -39,7 +39,7 @@
         ensureStylesheet('ldd-timers-style', 'ldd-ui-timers.css?v=2.2');
         ensureStylesheet('ldd-student-grade-style', 'ldd-student-grade.css?v=1');
         ensureStylesheet('ldd-vocab-race-style', 'ldd-vocab-race.css?v=3');
-        ensureStylesheet('ldd-vocab-shooter-style', 'ldd-vocab-shooter.css?v=20261025-native-scroll1');
+        ensureStylesheet('ldd-vocab-shooter-style', 'ldd-vocab-shooter.css?v=20261025-no-overlap1');
 
         // Load first. Dynamic scripts are async by default, so ensureScript sets async=false
         // to preserve insertion order and let all helper modules benefit from the guard.
@@ -52,7 +52,7 @@
         ensureScript('ldd-thcs-vocab-reset-script', 'ldd-thcs-vocab-reset.js?v=11');
         ensureScript('ldd-fast-progress-script', 'ldd-fast-progress.js?v=1');
         ensureScript('ldd-vocab-race-script', 'ldd-vocab-race.js?v=20261025-single-car1');
-        ensureScript('ldd-vocab-shooter-script', 'ldd-vocab-shooter.js?v=20261025-slower-words1');
+        ensureScript('ldd-vocab-shooter-script', 'ldd-vocab-shooter.js?v=20261025-no-overlap1');
     }
 
     function ensureStylesheet(id, href) {
