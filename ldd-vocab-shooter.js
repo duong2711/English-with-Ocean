@@ -539,7 +539,11 @@
          $('shooter-answer').focus({preventScroll:true});
      }
      activeWords=[];
-     const height=$('shooter-stage').clientHeight - 92;
+     const stage=$('shooter-stage');
+     const height=Math.max(40,stage.clientHeight - 92);
+     const columns=Math.max(1,Math.min(4,Math.floor(stage.clientWidth/150)));
+     const gap=10, laneWidth=(stage.clientWidth-gap*(columns+1))/columns;
+     const layout=[];
      for(let i=0;i<WORD_COUNT;i++){
        const delta=time-i*spawnInterval();
        const fall=fallDuration(room.word_list[i] && room.word_list[i].en);
@@ -548,10 +552,25 @@
        if(!visible){if(el){el.remove();nodes.delete(i);}continue;}
        if(!el)el=buildWord(i);
        if(!el)continue;
-       const y=10+Math.min(1,delta/fall)*height;
-       el.style.transform='translate3d(-50%,'+Math.round(y)+'px,0)';
+       el.style.width=laneWidth+'px';
+       el.style.maxWidth=laneWidth+'px';
+       el.style.minWidth='0';
+       layout.push({el,index:i,lane:i%columns,desired:10+Math.min(1,delta/fall)*height,height:el.offsetHeight});
        activeWords.push(i);
      }
+     // Reserve disjoint horizontal lanes and pack measured cards vertically.
+     // Extra rows remain scrollable on short screens; never hide a live word.
+     const bottoms=Array(columns).fill(0);
+     let contentBottom=0;
+     layout.sort((a,b)=>a.desired-b.desired||a.index-b.index).forEach(item=>{
+       const y=Math.ceil(Math.max(item.desired,bottoms[item.lane]+gap));
+       const x=gap+item.lane*(laneWidth+gap);
+       item.el.style.left=x+'px';
+       item.el.style.transform='translate3d(0,'+y+'px,0)';
+       bottoms[item.lane]=y+item.height;
+       contentBottom=Math.max(contentBottom,bottoms[item.lane]);
+     });
+     $('shooter-words-layer').style.height=Math.max(stage.clientHeight,contentBottom+92)+'px';
      const spawned=Math.min(WORD_COUNT,Math.floor(time/spawnInterval())+1);
      $('shooter-progress').textContent=spawned+' / 30 từ đã thả';
      $('shooter-track-bar').style.width=(spawned/30*100)+'%';
