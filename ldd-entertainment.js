@@ -75,6 +75,65 @@
         return el('div', 'ldd-ent-cover-fallback', fallback);
     }
 
+
+    // Merge per frame index: a partial teacher update must not remove other panels.
+    function mergeComicFrames(unit, saved) {
+        const byIndex = new Map((unit.storyFrames || []).map((frame, i) =>
+            [i + 1, Object.assign({}, frame, { frame_index: i + 1 })]));
+        (saved || []).forEach(function (frame) {
+            const index = Number(frame.frame_index);
+            if (!Number.isInteger(index) || index < 1) return;
+            const base = byIndex.get(index) || {};
+            byIndex.set(index, Object.assign({}, base, frame, {
+                frame_index: index,
+                content_html: frame.content_html || base.content_html || '',
+                image_url: frame.image_url || base.image_url || ''
+            }));
+        });
+        return Array.from(byIndex.values()).sort((a, b) => a.frame_index - b.frame_index);
+    }
+
+    function comicText(html) {
+        const source = document.createElement('div');
+        source.innerHTML = html || '';
+        const fragment = document.createDocumentFragment();
+        function append(node, target) {
+            if (node.nodeType === 3) { target.append(document.createTextNode(node.textContent)); return; }
+            if (node.nodeType !== 1 || /^(SCRIPT|STYLE|IFRAME|OBJECT|SVG|SOURCE-FOOTNOTE)$/.test(node.tagName)) return;
+            if (node.tagName === 'BR') { target.append(document.createElement('br')); return; }
+            const block = /^(P|DIV|LI)$/.test(node.tagName);
+            const next = /^(B|STRONG)$/.test(node.tagName) ? document.createElement('strong') : target;
+            if (next !== target) target.append(next);
+            Array.from(node.childNodes).forEach(child => append(child, next));
+            if (block) target.append(document.createElement('br'));
+        }
+        Array.from(source.childNodes).forEach(node => append(node, fragment));
+        return fragment;
+    }
+
+    async function fetchComicFrames(grade, unit) {
+        const project = 'ywqbaksmmtvwbojcgsdd';
+        const apiKey = 'sb_publishable_AQZ6Jc8ZGID7kfRYPe9fLQ_Wmy7ekp_';
+        let token = '';
+        try {
+            const saved = JSON.parse(localStorage.getItem('sb-' + project + '-auth-token') || 'null');
+            token = (saved && (saved.access_token || saved.currentSession?.access_token || saved[0]?.access_token)) || '';
+        } catch (_) {}
+        const headers = { apikey: apiKey };
+        if (token) headers.Authorization = 'Bearer ' + token;
+        const query = new URLSearchParams({
+            select: 'frame_index,image_url,content_html,keywords',
+            grade: 'eq.' + Number(grade), unit_id: 'eq.' + unit.id, order: 'frame_index.asc'
+        });
+        const response = await fetch('https://' + project + '.supabase.co/rest/v1/thcs_story_frames?' + query, {
+            headers, cache: 'no-store'
+        });
+        if (!response.ok) throw Error('Không tải được truyện đã cập nhật (' + response.status + ')');
+        const rows = await response.json();
+        if (!Array.isArray(rows)) throw Error('Dữ liệu truyện không hợp lệ');
+        return mergeComicFrames(unit, rows);
+    }
+
     function init() {
         const tab = $('tab-giai-tri');
         const home = $('entertainment-folder-grid');
@@ -87,6 +146,7 @@
         movies.insertAdjacentElement('afterend', comics);
 
         let currentView = 'root';
+        let comicRequest = 0;
         let activeVideo = null;
         function releaseVideo() {
             if (!activeVideo) return;
@@ -96,6 +156,7 @@
             activeVideo = null;
         }
         function show(view) {
+            comicRequest += 1;
             releaseVideo();
             currentView = view;
             home.style.display = view === 'root' ? '' : 'none';
@@ -179,6 +240,7 @@
         }
 
         function showSeriesLibrary() {
+            comicRequest += 1;
             comicBody.replaceChildren();
             const list = Array.isArray(getCatalog().comics) ? getCatalog().comics : [];
             const grid = el('div', 'ldd-ent-media-grid');
@@ -198,7 +260,8 @@
             else comicBody.append(placeholder('Chưa có truyện', 'Bộ truyện sẽ xuất hiện ở đây khi có dữ liệu.'));
         }
 
-        function showGrades(series) {
+        function showGrades(series, selectedGrade) {
+            comicRequest += 1;
             comicBody.replaceChildren();
             const subhead = el('div', 'ldd-ent-series-header');
             const back = el('button', 'ldd-ent-inline-back', '← Danh sách bộ truyện');
@@ -235,30 +298,8 @@
                     meta.append(el('strong', '', unit.titleVi || unit.title || 'Unit ' + unit.number),
                         el('small', '', unit.storyFrames.length + ' khung truyện · Lớp ' + grade));
                     chapter.append(meta);
-                    chapter.addEventListener('click', async function () {
-                        chapter.disabled = true;
-                        const originalText = meta.querySelector('small').textContent;
-                        meta.querySelector('small').textContent = 'Đang mở câu chuyện…';
-                        try {
-                            if (!window.LDDStoryNavigation ||
-                                typeof window.LDDStoryNavigation.openChapter !== 'function') {
-                                throw Error('not-ready');
-                            }
-                            const result = await window.LDDStoryNavigation.openChapter(grade, unit.id);
-                            if (!result.ok && result.reason === 'locked') {
-                                meta.querySelector('small').textContent = '🔒 Hoàn thành Unit trước để mở chương này';
-                                return;
-                            }
-                            if (!result.ok) throw Error(result.reason);
-                        } catch (error) {
-                            meta.querySelector('small').textContent = 'Chưa mở được truyện. Vui lòng thử lại.';
-                            console.warn('[LDD comics] Unable to open chapter:', error);
-                        } finally {
-                            chapter.disabled = false;
-                            if (meta.querySelector('small').textContent === 'Đang mở câu chuyện…') {
-                                meta.querySelector('small').textContent = originalText;
-                            }
-                        }
+                    chapter.addEventListener('click', function () {
+                        showChapter(series, grade, unit);
                     });
                     chapters.append(chapter);
                 });
@@ -272,7 +313,66 @@
                 btn.addEventListener('click', function () { showGrade(Number(grade)); });
                 grades.append(btn);
             });
-            showGrade(Number(list[0] || 6));
+            showGrade(Number(selectedGrade || list[0] || 6));
+        }
+
+
+        async function showChapter(series, grade, unit) {
+            const request = ++comicRequest;
+            comicBody.replaceChildren();
+            const reader = el('article', 'ldd-ent-comic-reader');
+            const header = el('div', 'ldd-ent-reader-heading');
+            const back = el('button', 'ldd-ent-inline-back', '← Danh sách Unit');
+            back.type = 'button';
+            back.addEventListener('click', () => showGrades(series, grade));
+            const title = el('h4', '', 'Lớp ' + grade + ' · Unit ' + unit.number + ': ' + (unit.titleVi || unit.title));
+            header.append(back, title);
+            const status = el('p', 'ldd-ent-reader-status', 'Đang tải toàn bộ truyện…');
+            status.setAttribute('role', 'status');
+            const framesEl = el('div', 'ldd-ent-reader-frames');
+            reader.append(header, status, framesEl);
+            comicBody.append(reader);
+            function render(frames) {
+                framesEl.replaceChildren();
+                frames.forEach(function (frame, index) {
+                    const panel = el('section', 'ldd-ent-reader-frame');
+                    panel.dataset.frameIndex = String(frame.frame_index);
+                    panel.append(el('h5', '', 'Khung ' + frame.frame_index));
+                    const url = safeAsset(frame.image_url);
+                    if (url) {
+                        const image = el('img', 'ldd-ent-reader-image');
+                        image.src = url;
+                        image.alt = 'Lớp ' + grade + ' – Unit ' + unit.number + ' – Khung ' + frame.frame_index;
+                        image.loading = index === 0 ? 'eager' : 'lazy';
+                        image.decoding = 'async';
+                        image.addEventListener('error', function () {
+                            image.replaceWith(el('p', 'ldd-ent-reader-image-note', 'Ảnh khung này chưa tải được.'));
+                        }, { once: true });
+                        panel.append(image);
+                    } else {
+                        panel.append(el('p', 'ldd-ent-reader-image-note', 'Khung này chưa có ảnh minh họa.'));
+                    }
+                    const text = el('div', 'ldd-ent-reader-text');
+                    text.append(comicText(frame.content_html));
+                    panel.append(text);
+                    framesEl.append(panel);
+                });
+            }
+            try {
+                const frames = await fetchComicFrames(grade, unit);
+                if (request !== comicRequest) return;
+                render(frames);
+                status.textContent = frames.length ? frames.length + ' khung truyện' : 'Unit này chưa có nội dung truyện.';
+            } catch (error) {
+                if (request !== comicRequest) return;
+                render(mergeComicFrames(unit, []));
+                status.textContent = 'Đang hiển thị bản gốc. Chưa tải được nội dung cập nhật.';
+                const retry = el('button', 'ldd-ent-inline-back', 'Thử lại');
+                retry.type = 'button';
+                retry.addEventListener('click', () => showChapter(series, grade, unit));
+                status.append(' ', retry);
+                console.warn('[LDD comics]', error);
+            }
         }
 
         show('root');

@@ -348,3 +348,14 @@
     max-width: 100%;
     overflow-wrap: anywhere;
 }
+
+/* Full chapter reader: natural image ratio, complete text, no exercise locks. */
+#tab-giai-tri .ldd-ent-comic-reader { max-width: 980px; margin: 0 auto; min-width: 0; }
+#tab-giai-tri .ldd-ent-reader-heading { display: grid; gap: 12px; margin: 16px 0; }
+#tab-giai-tri .ldd-ent-reader-heading h4 { margin: 0; overflow-wrap: anywhere; }
+#tab-giai-tri .ldd-ent-reader-frames { display: grid; gap: clamp(18px, 4vw, 32px); }
+#tab-giai-tri .ldd-ent-reader-frame { min-width: 0; overflow: hidden; border: 1px solid var(--border, #dce3ee); border-radius: 14px; background: var(--surface, #fff); }
+#tab-giai-tri .ldd-ent-reader-frame h5 { margin: 0; padding: 12px 16px; font-size: 14px; }
+#tab-giai-tri .ldd-ent-reader-image { display: block; width: 100%; height: auto; max-width: 100%; object-fit: contain; }
+#tab-giai-tri .ldd-ent-reader-text { padding: clamp(14px, 3vw, 24px); font-size: clamp(16px, 2.2vw, 19px); line-height: 1.8; overflow-wrap: anywhere; white-space: normal; }
+#tab-giai-tri .ldd-ent-reader-image-note, #tab-giai-tri .ldd-ent-reader-status { padding: 10px 16px; color: var(--text-muted, #66758e); font-size: 14px; }
