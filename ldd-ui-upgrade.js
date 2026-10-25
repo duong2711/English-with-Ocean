@@ -41,6 +41,7 @@
         ensureStylesheet('ldd-vocab-race-style', 'ldd-vocab-race.css?v=3');
         ensureStylesheet('ldd-vocab-shooter-style', 'ldd-vocab-shooter.css?v=20261025-no-overlap1');
         ensureStylesheet('ldd-quick-lookup-style', 'ldd-quick-lookup.css?v=20261025-valid2');
+        ensureStylesheet('ldd-entertainment-style', 'ldd-entertainment.css?v=20261025-library1');
 
         // Load first. Dynamic scripts are async by default, so ensureScript sets async=false
         // to preserve insertion order and let all helper modules benefit from the guard.
@@ -52,9 +53,11 @@
         ensureScript('ldd-student-grade-script', 'ldd-student-grade.js?v=20261025-learning-track1');
         ensureScript('ldd-thcs-vocab-reset-script', 'ldd-thcs-vocab-reset.js?v=11');
         ensureScript('ldd-fast-progress-script', 'ldd-fast-progress.js?v=1');
-        ensureScript('ldd-vocab-race-script', 'ldd-vocab-race.js?v=20261025-single-car1');
-        ensureScript('ldd-vocab-shooter-script', 'ldd-vocab-shooter.js?v=20261025-no-overlap1');
+        ensureScript('ldd-vocab-race-script', 'ldd-vocab-race.js?v=20261025-entertainment1');
+        ensureScript('ldd-vocab-shooter-script', 'ldd-vocab-shooter.js?v=20261025-entertainment1');
         ensureScript('ldd-quick-lookup-script', 'ldd-quick-lookup.js?v=20261025-valid2');
+        ensureScript('ldd-entertainment-data-script', 'ldd-entertainment-data.js?v=20261025-library1');
+        ensureScript('ldd-entertainment-script', 'ldd-entertainment.js?v=20261025-library1');
     }
 
     function ensureStylesheet(id, href) {

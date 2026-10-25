@@ -176,7 +176,7 @@
     }
 
     function ensureGameUI() {
-        const grid = $('entertainment-folder-grid');
+        const grid = $('entertainment-games-grid');
         if (!grid || $('vocab-race-folder-card')) return;
 
         const card = document.createElement('div');
@@ -400,7 +400,7 @@
 
     async function openPanel() {
         await syncIdentity();
-        const grid = $('entertainment-folder-grid');
+        const grid = $('entertainment-games-grid');
         if (grid) grid.style.display = 'none';
         $('vocab-race-panel').style.display = 'block';
         if (!me) { setStatus('Bạn cần đăng nhập để chơi.', 'error'); return; }
@@ -419,7 +419,7 @@
         $('vocab-race-panel').style.display = 'none';
         clearTimeout(roomLobbySafetyTimer);
         roomLobbySafetyTimer = null;
-        const grid = $('entertainment-folder-grid');
+        const grid = $('entertainment-games-grid');
         if (grid) grid.style.display = '';
     }
 
