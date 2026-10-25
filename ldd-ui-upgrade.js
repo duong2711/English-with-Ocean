@@ -56,8 +56,8 @@
         ensureScript('ldd-vocab-race-script', 'ldd-vocab-race.js?v=20261025-entertainment1');
         ensureScript('ldd-vocab-shooter-script', 'ldd-vocab-shooter.js?v=20261025-entertainment1');
         ensureScript('ldd-quick-lookup-script', 'ldd-quick-lookup.js?v=20261025-valid2');
-        ensureScript('ldd-entertainment-data-script', 'ldd-entertainment-data.js?v=20261025-library1');
-        ensureScript('ldd-entertainment-script', 'ldd-entertainment.js?v=20261025-library1');
+        ensureScript('ldd-entertainment-data-script', 'ldd-entertainment-data.js?v=20261025-library-thumbs2');
+        ensureScript('ldd-entertainment-script', 'ldd-entertainment.js?v=20261025-library-thumbs2');
     }
 
     function ensureStylesheet(id, href) {
