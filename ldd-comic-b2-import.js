@@ -124,7 +124,7 @@
    const file=input.files?.[0];
    if(!file)return;
    if(!/\.zip$/i.test(file.name)||file.size<=0||file.size>MAX_BYTES){
-    status.textContent="Gói ZIP không hợp lệ hoặc lớn hơn 6 MB.";input.value="";return;
+    status.textContent="Gói ZIP không hợp lệ hoặc lớn hơn 20 MB.";input.value="";return;
    }
    input.disabled=true;
    status.textContent="Đang xác thực và tải ảnh lên Backblaze B2…";
@@ -160,23 +160,19 @@
   panel=null;
  }
  async function check(){
-  if(initializing)return initializing;
-  initializing=(async()=>{
-   // Do not depend on an independent Supabase client's INITIAL_SESSION event:
-   // a restored site login is already present in the common storage key.
-   const client=clientIfReady();
-   const cached=teacherSession();
-   if(cached){mount(client);return;}
-   if(client){
-    const {data,error}=await client.auth.getSession();
-    if(error)throw error;
-    if(isTeacherSession(data?.session)){mount(client);return;}
-   }
-   removeUploader();
-  })();
-  try{await initializing}
-  catch(error){console.warn("[LDD comics] Cannot initialize teacher uploader",error);}
-  finally{initializing=null;}
+  const client=clientIfReady();
+  // Render entry point for everyone so it cannot silently disappear because
+  // of a different session storage implementation. Server checks teacher JWT.
+  mount(client);
+  const tool=document.getElementById("ldd-ent-comic-upload-tool");
+  if(!tool)return;
+  const session=teacherSession()||(client?(await client.auth.getSession()).data?.session:null);
+  const allowed=isTeacherSession(session);
+  const input=tool.querySelector("#ldd-ent-b2-zip");
+  const status=tool.querySelector(".ldd-ent-b2-status");
+  if(input)input.disabled=!allowed;
+  if(status && !allowed)status.textContent="Đăng nhập bằng tài khoản giáo viên lddbaiu@gmail.com để bật tải ảnh.";
+  if(status && allowed && status.textContent.includes("Đăng nhập bằng tài khoản giáo viên"))status.textContent="";
  }
  function init(){
   const tab=document.getElementById("tab-giai-tri");
