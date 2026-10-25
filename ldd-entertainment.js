@@ -102,6 +102,9 @@
             games.hidden = view !== 'games';
             movies.hidden = view !== 'movies';
             comics.hidden = view !== 'comics';
+            if (view === 'comics') {
+                document.dispatchEvent(new Event('ldd:ent-comics-visible'));
+            }
         }
         $('ldd-ent-games-entry').addEventListener('click', function () { show('games'); });
         $('ldd-ent-movies-entry').addEventListener('click', function () {
