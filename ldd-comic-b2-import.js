@@ -8,7 +8,7 @@
  const ROOT="https://"+PROJECT+".supabase.co";
  const ANON="sb_publishable_AQZ6Jc8ZGID7kfRYPe9fLQ_Wmy7ekp_";
  const TEACHER="lddbaiu@gmail.com";
- const MAX_BYTES=6*1024*1024;
+ const MAX_BYTES=20*1024*1024;
  const ENDPOINT=ROOT+"/functions/v1/comics-b2-import";
  let authClient=null,initializing=null;
  const SESSION_KEY="sb-"+PROJECT+"-auth-token";
@@ -46,56 +46,54 @@
   return authClient;
  }
  function textNode(tag,content,cls){const el=document.createElement(tag);if(cls)el.className=cls;el.textContent=content;return el;}
+
  function gradeData(grade){
-  switch(grade){
-   case 6:return typeof GRADE6_UNITS!=="undefined"?GRADE6_UNITS:[];
-   case 7:return typeof GRADE7_UNITS!=="undefined"?GRADE7_UNITS:[];
-   default:return [];
-  }
+  const key="GRADE"+grade+"_UNITS";
+  try {return Function("return typeof "+key+" !== 'undefined' ? "+key+" : []")()} catch(_) {return []}
  }
- async function tryPublishEmptyGrade6Unit2(uploaded,client){
-  const matches=uploaded.filter(item=>item?.name==="g06-u02-f01.webp"||item?.name==="g06-u02-f02.webp");
-  if(matches.length!==2)return "Đã tải ảnh lên B2. Chưa liên kết Unit 2 vì thiếu ảnh phù hợp.";
-  const source=gradeData(6).find(u=>u.id==="u2");
-  if(!source||!Array.isArray(source.storyFrames)||source.storyFrames.length!==4)
-   return "Đã tải ảnh lên B2. Dữ liệu Unit 2 chưa sẵn sàng để liên kết.";
-  // If any teacher row exists, never update it or insert partial records.
-  const {data:existing,error:readError}=await client.from("thcs_story_frames")
-   .select("frame_index,image_url").eq("grade",6).eq("unit_id","u2");
-  if(readError) return "Đã tải lên B2. Không đọc được dữ liệu Unit 2, nên chưa liên kết.";
-  if(existing&&existing.length) return "Đã tải lên B2. Unit 2 đang có nội dung của giáo viên; không ghi đè.";
-  // This exact mapping is deliberately explicit, never inferred from filename slicing.
-  const byFrame={
-   1:matches.find(x=>x.name==="g06-u02-f01.webp")?.url||"",
-   2:matches.find(x=>x.name==="g06-u02-f02.webp")?.url||""
-  };
-  if(!byFrame[1]||!byFrame[2])return "Đã tải lên B2; thiếu URL công khai.";
-  // Verify the two public URLs can actually render before writing the database.
-  async function visible(url){
-   return await new Promise(resolve=>{
-    const image=new Image();
-    const timer=setTimeout(()=>{image.src="";resolve(false);},9000);
-    image.onload=()=>{clearTimeout(timer);resolve(true);};
-    image.onerror=()=>{clearTimeout(timer);resolve(false);};
-    image.src=url;
-   });
+ async function publishImages(uploaded,client){
+  if(!client)throw Error("Không thể kết nối cơ sở dữ liệu để xuất bản.");
+  const {data:{user},error:authError}=await client.auth.getUser();
+  if(authError||!user||user.email?.toLowerCase()!==TEACHER)throw Error("Phiên đăng nhập giáo viên đã hết hạn.");
+  const groups=new Map();
+  for(const item of uploaded){
+   if(!item.url||!item.grade||!item.unit_id||!item.frame_index)continue;
+   const key=item.grade+"-"+item.unit_id;
+   if(!groups.has(key))groups.set(key,[]);
+   groups.get(key).push(item);
   }
-  const checks=await Promise.all([visible(byFrame[1]),visible(byFrame[2])]);
-  if(checks.some(v=>!v))return "Ảnh đã lên B2 nhưng chưa tải được công khai; chưa liên kết website.";
-  const {data:{user}}=await client.auth.getUser();
-  const editor=user?.email||TEACHER;
-  const rows=source.storyFrames.map((f,i)=>({
-   grade:6,unit_id:"u2",frame_index:i+1,
-   content_html:f.content_html||"",keywords:Array.isArray(f.keywords)?f.keywords:[],
-   image_url:byFrame[i+1]||f.image_url||"",
-   created_by:editor,updated_by:editor,updated_at:new Date().toISOString()
-  }));
-  // INSERT only. If another editor wrote anything meanwhile, the unique index
-  // rejects the transaction, rather than overwriting the new teacher content.
-  const {error:writeError}=await client.from("thcs_story_frames").insert(rows);
-  if(writeError) return "Ảnh đã lên B2 nhưng Unit 2 chưa liên kết (dữ liệu thay đổi hoặc quyền không cho phép).";
-  document.dispatchEvent(new Event("ldd:story-frames-updated"));
-  return "Đã liên kết 2 ảnh phù hợp vào Lớp 6 – Unit 2; bảo toàn đủ 4 khung truyện và toàn bộ nội dung gốc. Các ảnh còn lại giữ ở B2 để duyệt.";
+  let success=0;const errors=[];
+  for(const [key,items] of groups){
+   const grade=Number(items[0].grade),unitId=items[0].unit_id;
+   const {data:existing,error:readError}=await client.from("thcs_story_frames")
+     .select("id,frame_index,image_url,content_html,keywords").eq("grade",grade).eq("unit_id",unitId);
+   if(readError){errors.push(key+": không đọc được nội dung");continue;}
+   const unit=gradeData(grade).find(x=>x.id===unitId);
+   const source=unit?.storyFrames||[];
+   const patches=[];
+   for(const image of items){
+    const frame=Number(image.frame_index);
+    const current=(existing||[]).find(x=>x.frame_index===frame);
+    if(current){
+     const {error}=await client.from("thcs_story_frames").update({
+      image_url:image.url,updated_by:user.email,updated_at:new Date().toISOString()
+     }).eq("id",current.id);
+     if(error)errors.push(image.name+": "+error.message);
+     else success++;
+    }else if(source[frame-1]){
+     patches.push({grade,unit_id:unitId,frame_index:frame,image_url:image.url,
+       content_html:source[frame-1].content_html||"",keywords:source[frame-1].keywords||[],
+       created_by:user.email,updated_by:user.email,updated_at:new Date().toISOString()});
+    }else errors.push(image.name+": chưa có văn bản truyện gốc, không tạo khung rỗng");
+   }
+   if(patches.length){
+    const {error}=await client.from("thcs_story_frames").insert(patches);
+    if(error)errors.push(key+": "+error.message);
+    else success+=patches.length;
+   }
+  }
+  if(success)document.dispatchEvent(new Event("ldd:story-frames-updated"));
+  return {success,errors};
  }
  function mount(client){
   if(document.getElementById("ldd-ent-comic-upload-tool"))return;
@@ -105,7 +103,7 @@
   tool.id="ldd-ent-comic-upload-tool";
   tool.className="ldd-ent-b2-uploader";
   const title=textNode("h4","📤 Tải ảnh truyện lên Backblaze B2 (ZIP)");
-  const desc=textNode("Bấm Chọn tệp → chọn ldd_dung_duong_b2_upload_pack.zip trong Tải xuống. Hệ thống upload 10 ảnh lên Backblaze B2, giữ nguyên ảnh cũ của giáo viên.","ldd-ent-b2-help");
+  const desc=textNode("Chọn ZIP chứa ảnh có tên g06-u01-f01.webp (lớp 6, Unit 1, khung 1). Hỗ trợ nhiều lớp/Unit trong một ZIP, JPG/PNG/WebP, tối đa 100 ảnh và 20 MB. Ảnh cũ chỉ thay đổi khi khung tương ứng được cập nhật.","ldd-ent-b2-help");
   const input=document.createElement("input");
   input.type="file";input.accept=".zip,application/zip";input.id="ldd-ent-b2-zip";input.setAttribute("aria-label","Chọn file ZIP ảnh Dung và Dương");
   const status=textNode("p","","ldd-ent-b2-status");status.setAttribute("role","status");status.setAttribute("aria-live","polite");
@@ -121,7 +119,7 @@
     status.textContent="Gói ZIP không hợp lệ hoặc lớn hơn 6 MB.";input.value="";return;
    }
    input.disabled=true;
-   status.textContent="Đang xác thực và tải 10 ảnh lên Backblaze B2…";
+   status.textContent="Đang xác thực và tải ảnh lên Backblaze B2…";
    results.replaceChildren();
    try{
     const session=teacherSession()||(client?(await client.auth.getSession()).data?.session:null);
@@ -132,19 +130,18 @@
     });
     const body=await response.json();
     if(!response.ok||!body.ok)throw Error(body.error||"Upload failed");
-    status.textContent="Đã upload "+body.uploadedCount+"/10 ảnh. Đang kiểm tra khả năng liên kết…";
-    const paragraph=textNode("p","Ảnh trên Backblaze B2:");
-    results.append(paragraph);
+
+    status.textContent="Đã tải "+body.uploadedCount+" ảnh lên B2. Đang cập nhật từng khung truyện…";
+    const published=await publishImages(body.uploaded||[],client);
+    const paragraph=textNode("p","Ảnh đã tải lên B2:");results.append(paragraph);
     (body.uploaded||[]).forEach(item=>{
-     if(!item.url||!item.name)return;
-     const link=document.createElement("a");
-     link.href=item.url;link.target="_blank";link.rel="noopener noreferrer";
-     link.textContent=item.name;
-     results.append(link);
+      if(!item.url||!item.name)return;
+      const link=document.createElement("a");link.href=item.url;
+      link.target="_blank";link.rel="noopener noreferrer";link.textContent=item.name;
+      results.append(link);
     });
-    status.textContent=client
-     ?await tryPublishEmptyGrade6Unit2(body.uploaded||[],client)
-     :"Đã tải "+body.uploadedCount+"/10 ảnh lên B2. Ảnh được giữ để giáo viên duyệt.";
+    status.textContent="Đã cập nhật "+published.success+"/"+body.uploadedCount+" ảnh lên website."
+      +(published.errors.length?" Lỗi: "+published.errors.join(" | "):"");
    }catch(error){
     status.textContent="Chưa hoàn tất upload: "+String(error.message||error).slice(0,150);
    }finally{input.disabled=false;input.value="";}
