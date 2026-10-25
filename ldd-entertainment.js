@@ -208,6 +208,12 @@
 
         const comicBody = el('div', 'ldd-ent-comics-body');
         comics.append(comicBody);
+        // Permanent, direct route to the teacher uploader even if optional UI fails.
+        const uploadShortcut = el('a', 'ldd-ent-comic-upload-shortcut', '📤 Tải ZIP ảnh truyện (giáo viên)');
+        uploadShortcut.href = 'comic-upload.html';
+        uploadShortcut.setAttribute('aria-label', 'Mở trang tải ZIP ảnh truyện dành cho giáo viên');
+        comics.insertBefore(uploadShortcut, comicBody);
+
         // Self-contained ZIP uploader: no secondary network script to race or fail.
         /* Teacher-only browser ZIP importer for Dung & Duong comic images.
            Sends files directly to the authorized B2 Edge Function. No Supabase Storage. */
