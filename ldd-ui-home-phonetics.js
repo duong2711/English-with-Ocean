@@ -142,9 +142,7 @@
         dashboard.innerHTML =
             '<div class="ldd-home-main">' +
                 '<div class="ldd-home-intro">' +
-                    '<div class="ldd-home-kicker">LDD English · Web tự học</div>' +
                     '<h2 class="ldd-home-title">Chào <strong data-ldd-home-name>Học viên</strong> 👋</h2>' +
-                    '<p class="ldd-home-desc">Mỗi ngày hoàn thành một nhóm nhỏ. Không cần nhìn cả danh sách dài — cứ làm từng nhiệm vụ hôm nay.</p>' +
                 '</div>' +
                 '<div class="ldd-home-actions">' +
                     actionHtml('Aa', 'Từ vựng', 'Ôn & vận dụng', 'tab-tu-vung', 'vocab') +
@@ -157,7 +155,6 @@
                 '<div class="ldd-today-head">' +
                     '<div class="ldd-today-head-copy">' +
                         '<div class="ldd-home-side-title">Nhiệm vụ hôm nay</div>' +
-                        '<div class="ldd-today-subtitle">Toàn bộ đầu việc hằng ngày nằm ở đây; hoàn thành xong sẽ chuyển xuống mục Đã hoàn thành.</div>' +
                     '</div>' +
                     '<span class="ldd-today-plan-badge">10 từ · 10 từ · 5 âm</span>' +
                 '</div>' +
@@ -175,7 +172,6 @@
         return '<button type="button" class="ldd-home-action" data-ldd-target="' + target + '">' +
             '<span class="ldd-home-action-icon" aria-hidden="true">' + icon + '</span>' +
             '<span class="ldd-home-action-title">' + title + '</span>' +
-            '<span class="ldd-home-action-sub">' + subtitle + '</span>' +
             (badgeKey ? '<span class="ldd-home-action-badge" data-home-action-badge="' + badgeKey + '" hidden>0</span>' : '') +
         '</button>';
     }
@@ -251,7 +247,7 @@
         if (!guide && !chart) return;
         const heading = document.createElement('div');
         heading.className = 'ldd-phonetics-heading';
-        heading.innerHTML = '<div class="ldd-phonetics-heading-copy"><h2>Pronunciation Studio</h2><p>Chọn một âm IPA, xem khẩu hình, nghe hướng dẫn rồi ghi âm để luyện lại.</p></div><span class="ldd-phonetics-badge">IPA · Video · Ghi âm</span>';
+        heading.innerHTML = '<div class="ldd-phonetics-heading-copy"><h2>Phiên âm</h2></div><span class="ldd-phonetics-badge">IPA · Video · Ghi âm</span>';
         tab.insertBefore(heading, guide || chart);
     }
 })();

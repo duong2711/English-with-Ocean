@@ -46,8 +46,8 @@
         ensureScript('ldd-egress-guard-script', 'ldd-egress-guard.js?v=1');
         ensureScript('ldd-vocab-dedup-script', 'ldd-vocab-dedup.js?v=1');
         ensureScript('ldd-pronunciation-fix-script', 'ldd-pronunciation-fix.js?v=3');
-        ensureScript('ldd-vocab-grammar-script', 'ldd-ui-vocab-grammar.js?v=20261024-learned-count');
-        ensureScript('ldd-home-phonetics-script', 'ldd-ui-home-phonetics.js?v=20261025-stable-nav1');
+        ensureScript('ldd-vocab-grammar-script', 'ldd-ui-vocab-grammar.js?v=20261025-concise-copy1');
+        ensureScript('ldd-home-phonetics-script', 'ldd-ui-home-phonetics.js?v=20261025-concise-copy1');
         ensureScript('ldd-student-grade-script', 'ldd-student-grade.js?v=3');
         ensureScript('ldd-thcs-vocab-reset-script', 'ldd-thcs-vocab-reset.js?v=11');
         ensureScript('ldd-fast-progress-script', 'ldd-fast-progress.js?v=1');
@@ -429,12 +429,9 @@
             title.className = 'ldd-folder-card-title';
             title.textContent = cfg.title;
 
-            const subtitle = document.createElement('span');
-            subtitle.className = 'ldd-folder-card-subtitle';
-            subtitle.textContent = cfg.subtitle;
 
             copy.appendChild(title);
-            copy.appendChild(subtitle);
+
 
             card.insertBefore(icon, card.firstChild);
             const firstBadge = Array.from(card.children).find(function (el) {
@@ -541,9 +538,7 @@
         hero.innerHTML =
             '<div class="ldd-news-hero-icon" aria-hidden="true">📰</div>' +
             '<div class="ldd-news-hero-copy">' +
-                '<div class="ldd-news-hero-kicker">LDD Reading Lab</div>' +
                 '<h4>Đọc báo để học tiếng Anh</h4>' +
-                '<p>Đọc nội dung thật, chạm từ để tra nghĩa, luyện dịch và kiểm tra mức độ hiểu bài ngay trong cùng một luồng học.</p>' +
                 '<div class="ldd-news-hero-chips">' +
                     '<span class="ldd-news-hero-chip">Đọc hiểu</span>' +
                     '<span class="ldd-news-hero-chip">Từ vựng</span>' +

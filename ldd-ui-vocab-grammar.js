@@ -189,9 +189,8 @@
 
             const copy = document.createElement('span');
             copy.className = 'ldd-vocab-card-copy';
-            copy.innerHTML = '<span class="ldd-vocab-card-title"></span><span class="ldd-vocab-card-subtitle"></span>';
+            copy.innerHTML = '<span class="ldd-vocab-card-title"></span>';
             copy.querySelector('.ldd-vocab-card-title').textContent = cfg.title;
-            copy.querySelector('.ldd-vocab-card-subtitle').textContent = cfg.subtitle;
 
             card.insertBefore(icon, card.firstChild);
             const badge = Array.from(card.children).find(function (el) {

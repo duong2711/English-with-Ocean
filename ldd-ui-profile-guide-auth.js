@@ -38,7 +38,6 @@
         brand.innerHTML =
             '<div class="ldd-auth-brand-logo">LDD</div>' +
             '<h2>Học mỗi ngày,<br>tiến bộ có dấu vết.</h2>' +
-            '<p>Một nơi để học, luyện tập và theo dõi hành trình tiếng Anh của bạn theo cách gọn gàng hơn.</p>' +
             '<div class="ldd-auth-benefits">' +
                 authBenefit('Aa', 'Từ vựng & ngữ pháp theo từng phần') +
                 authBenefit('✓', 'Bài kiểm tra, thành tựu & điểm chăm chỉ') +
@@ -80,8 +79,7 @@
         hero.className = 'ldd-profile-hero';
         hero.innerHTML =
             '<div class="ldd-profile-hero-kicker">Learning Profile</div>' +
-            '<h3>Hồ sơ học tập của <span data-ldd-profile-name>bạn</span></h3>' +
-            '<p>Ảnh đại diện, thời gian đồng hành, thành tựu và bảng xếp hạng chăm chỉ được gom vào một nơi.</p>';
+            '<h3>Hồ sơ học tập của <span data-ldd-profile-name>bạn</span></h3>';
 
         if (oldTitle) oldTitle.insertAdjacentElement('afterend', hero);
         else box.insertBefore(hero, box.firstChild);
@@ -129,8 +127,7 @@
         hero.className = 'ldd-guide-hero';
         hero.innerHTML =
             '<div class="ldd-guide-kicker">LDD Help Center</div>' +
-            '<h2>Hướng dẫn sử dụng website</h2>' +
-            '<p>Nếu chưa biết bắt đầu từ đâu, hãy xem cách học, hỏi trong khu trao đổi hoặc liên hệ admin. Bên dưới là đường đi nhanh tới 4 khu vực chính.</p>';
+            '<h2>Hướng dẫn sử dụng website</h2>';
 
         if (pageTitle) pageTitle.insertAdjacentElement('afterend', hero);
         else tab.insertBefore(hero, tab.firstChild);
@@ -172,7 +169,7 @@
         quick.className = 'ldd-guide-start';
         quick.innerHTML =
             '<div class="ldd-guide-start-head">' +
-                '<div><h3>Bắt đầu nhanh</h3><p>4 khu vực chính trên landing page.</p></div>' +
+                '<div><h3>Bắt đầu nhanh</h3></div>' +
             '</div>' +
             '<div class="ldd-guide-steps">' +
                 guideStep('01', 'Từ vựng', 'Học chủ đề, flashcard, từ đã lưu và bài đọc.', 'tab-tu-vung') +
@@ -215,7 +212,6 @@
                 '<div>' +
                     '<div class="ldd-home-leaderboard-kicker">Hall of effort</div>' +
                     '<h3>🔥 Top 3 điểm chăm chỉ</h3>' +
-                    '<p>Cùng một bảng điểm đang dùng trong Hồ sơ — không tạo cách tính mới.</p>' +
                 '</div>' +
                 '<button type="button" class="ldd-leaderboard-open-btn">Xem bảng đầy đủ →</button>' +
             '</div>' +

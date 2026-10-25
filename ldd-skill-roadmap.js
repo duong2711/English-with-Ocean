@@ -652,7 +652,6 @@
                     '<div class="ldd-skill-copy">' +
                         '<span class="ldd-skill-eyebrow">' + config.english + '</span>' +
                         '<h2>' + config.title + '</h2>' +
-                        '<p>Học từng bước. Chỉ cần tập trung vào mục được đề xuất trước.</p>' +
                     '</div>' +
                 '</div>' +
                 '<div class="ldd-skill-summary" aria-label="Tóm tắt tiến độ">' +
@@ -1264,7 +1263,7 @@
                 '<div class="ldd-skill-identity">' +
                     '<span class="ldd-skill-icon">' + iconSvg('headphones') + '</span>' +
                     '<div class="ldd-skill-copy"><span class="ldd-skill-eyebrow">Listening Lab</span><h2>Luyện Nghe</h2>' +
-                    '<p>Hai lộ trình tách hẳn nhau. THCS bị mất gốc hãy học track Mất gốc/người mới trước.</p></div>' +
+                    '</div>' +
                 '</div>' +
                 '<div class="ldd-skill-summary"><div class="ldd-skill-stat"><strong>' + done + '/' + total + '</strong><span>giai đoạn đã đạt</span></div></div>' +
             '</div>' +
