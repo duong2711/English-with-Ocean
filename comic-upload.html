@@ -13,7 +13,19 @@ label{display:block;font-weight:700;margin-bottom:10px}.picker{display:block;wid
 button{font:inherit;font-weight:700;border:0;border-radius:12px;background:#3168ed;color:white;padding:13px 20px;margin-top:18px;cursor:pointer}
 button:disabled{cursor:not-allowed;opacity:.45}#status{margin-top:18px;white-space:pre-wrap;line-height:1.55}#results{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin-top:16px}#results a{overflow-wrap:anywhere;font-size:13px}
 code{background:#f1f4fb;border-radius:5px;padding:2px 5px}.warn{color:#ad451a}.ok{color:#17683d}
+
+html.ldd-comic-embedded, html.ldd-comic-embedded body { background: #fff; }
+html.ldd-comic-embedded .layout { max-width: none; margin: 0; padding: 10px 14px 20px; }
+html.ldd-comic-embedded .top { display: none; }
+html.ldd-comic-embedded .card { border: 0; box-shadow: none; border-radius: 0; padding: 8px 4px 18px; }
+html.ldd-comic-embedded h1 { font-size: clamp(20px, 4vw, 26px); }
+html.ldd-comic-embedded .picker { padding: 18px 12px; }
+@media(max-width:600px) {
+ html.ldd-comic-embedded .layout { padding: 4px 8px 16px; }
+ html.ldd-comic-embedded .card { padding: 6px 2px 16px; }
+}
 </style>
+<script>if(new URLSearchParams(location.search).get("embed")==="1")document.documentElement.classList.add("ldd-comic-embedded");</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="grade6-data.js"></script><script src="grade7-data.js"></script><script src="grade8-data.js"></script><script src="grade9-data.js"></script><script src="grade10-data.js"></script><script src="grade11-data.js"></script><script src="grade12-data.js"></script>
 </head>
@@ -93,6 +105,7 @@ const link=document.createElement("a");link.href=item.url;link.target="_blank";l
 }
 status.className=errors.length?"warn":"ok";
 status.textContent="Đã cập nhật "+successful+"/"+items.length+" ảnh lên website."+(errors.length?"\nChưa cập nhật:\n"+errors.join("\n"):"\nBạn có thể mở lại Truyện tranh để xem ảnh.");
+if(successful>0 && window.parent!==window){window.parent.postMessage({type:"ldd:comic-images-published",success:successful},location.origin);}
 }catch(e){status.className="warn";status.textContent="Có lỗi: "+String(e.message||e);}
 finally{button.disabled=email(session)!==TEACHER;}
 });
