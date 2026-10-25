@@ -14,7 +14,7 @@ window.LDDEntMediaCatalog = Object.freeze({
     // Existing first-frame thumbnails from thcs_story_frames.
     // These are URL pointers only; they do not overwrite teacher content in Supabase.
     chapter_thumbnails: {
-        '6/u1': 'https://i.ibb.co/ksLdkhHh/7-1-1.png',
+        '6/u1': '', // Source host shows an image-not-found graphic; show a neutral fallback until replaced on B2.
         '7/u1': 'https://i.ibb.co/Cpf0sHn9/1.png',
         '7/u2': 'https://i.ibb.co/Y4FZQpYx/1.png',
         '7/u3': 'https://i.ibb.co/MkCvxkNJ/1.png',
@@ -28,7 +28,7 @@ window.LDDEntMediaCatalog = Object.freeze({
             title: 'Truyện học đường Dung và Dương',
             description: 'Hành trình học đường của Dương và Dung qua các Unit tiếng Anh lớp 6–12.',
             // Existing teacher-uploaded illustration from class 6, Unit 1.
-            thumbnail_url: 'https://i.ibb.co/ksLdkhHh/7-1-1.png',
+            thumbnail_url: '', // Avoid showing a broken imgbb cover before a verified B2 thumbnail is available.
             grades: [6, 7, 8, 9, 10, 11, 12],
             source: 'grade6-data.js … grade12-data.js / thcs_story_frames'
         }
