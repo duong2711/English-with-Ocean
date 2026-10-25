@@ -353,7 +353,8 @@
 
 /* Only the illustration and story text, swiped horizontally over a dimmed page. */
 #tab-giai-tri .ldd-comic-overlay {
-    width: min(1100px, 94vw); height: min(820px, 90dvh);
+    position: fixed; inset: 0; margin: auto;
+    width: min(1100px, 94vw); height: min(760px, 90dvh);
     max-width: 94vw; max-height: 90dvh; padding: 0; border: 0;
     border-radius: 18px; background: #fffdf8; color: #293447;
     box-shadow: 0 24px 100px #0007; overflow: hidden;
