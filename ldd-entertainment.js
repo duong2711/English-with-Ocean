@@ -223,7 +223,9 @@
                     chapter.type = 'button';
                     const poster = el('div', 'ldd-ent-chapter-poster');
                     const img = (unit.storyFrames || []).find(f => f.image_url && safeAsset(f.image_url));
-                    poster.append(picture(img && img.image_url, 'Unit ' + unit.number, '📖'));
+                    const curatedPreview = getCatalog().chapter_thumbnails &&
+                        getCatalog().chapter_thumbnails[grade + '/' + unit.id];
+                    poster.append(picture(curatedPreview || (img && img.image_url), 'Unit ' + unit.number, '📖'));
                     poster.append(el('span', 'ldd-ent-chapter-counter', 'UNIT ' + unit.number));
                     chapter.append(poster);
                     const meta = el('div', 'ldd-ent-chapter-copy');
