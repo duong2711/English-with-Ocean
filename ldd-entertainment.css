@@ -428,3 +428,65 @@ body:has(.ldd-comic-overlay[open]) { overflow: hidden; }
 #tab-giai-tri .ldd-ent-comic-upload-shortcut:focus-visible {
   outline:3px solid #87a6ff;outline-offset:3px;
 }
+
+/* Inline popup for the comic ZIP uploader */
+.ldd-ent-upload-dialog {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  padding: 0;
+  border: 1px solid #dce5f4;
+  border-radius: 18px;
+  background: #fff;
+  width: min(820px, calc(100vw - 24px));
+  height: min(740px, calc(100dvh - 24px));
+  max-width: calc(100vw - 24px);
+  max-height: calc(100dvh - 24px);
+  box-shadow: 0 22px 85px rgba(24, 39, 75, .28);
+  overflow: hidden;
+}
+.ldd-ent-upload-dialog[open] { display: flex; flex-direction: column; }
+.ldd-ent-upload-dialog::backdrop { background: rgba(14, 27, 52, .58); backdrop-filter: blur(3px); }
+.ldd-ent-upload-header {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e8edf6;
+  gap: 14px;
+}
+.ldd-ent-upload-header h2 {
+  font-size: 17px;
+  font-weight: 750;
+  color: #1f2e4a;
+  margin: 0;
+}
+.ldd-ent-upload-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font: inherit;
+  border: 1px solid #dfe6f4;
+  background: #f6f8fc;
+  color: #22314d;
+  border-radius: 10px;
+  width: 38px;
+  height: 38px;
+  flex: none;
+  cursor: pointer;
+}
+.ldd-ent-upload-close:hover { background: #e9effb; }
+.ldd-ent-upload-close:focus-visible { outline: 3px solid #6b95ed; outline-offset: 2px; }
+.ldd-ent-upload-frame { flex: 1; min-height: 0; width: 100%; border: 0; background: #fff; }
+body:has(.ldd-ent-upload-dialog[open]) { overflow: hidden; }
+@media (max-width: 600px) {
+  .ldd-ent-upload-dialog {
+    border-radius: 12px;
+    width: calc(100vw - 12px);
+    max-width: calc(100vw - 12px);
+    height: calc(100dvh - 12px);
+    max-height: calc(100dvh - 12px);
+  }
+  .ldd-ent-upload-header { padding: 9px 12px; }
+}
