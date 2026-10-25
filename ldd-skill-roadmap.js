@@ -512,7 +512,6 @@
     let placementRecognition = null;
     const hubs = {};
     const labs = {};
-    const expandedRoadmaps = new Set();
 
     function ready(fn) {
         if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
@@ -632,19 +631,6 @@
         if (!hub) return;
 
         const done = state.completed.length;
-        const focusStage = state.current || state.recommended;
-        const focus = config.stages[focusStage - 1];
-        const nextStageNumber = focusStage < config.stages.length ? focusStage + 1 : null;
-        const nextStage = nextStageNumber ? config.stages[nextStageNumber - 1] : null;
-        const weakStages = (state.weakStages || []).filter(number => number !== focusStage).slice(0, 2);
-        const expanded = expandedRoadmaps.has(skill);
-
-        const weakHtml = weakStages.length
-            ? '<div class="ldd-focus-secondary"><span class="ldd-control-label">Nên củng cố thêm</span><div class="ldd-focus-mini-list">' +
-                weakStages.map(number => '<button type="button" class="ldd-focus-mini" data-open-stage="' + number + '"><strong>Giai đoạn ' + number + '</strong><span>' + config.stages[number - 1].title + '</span></button>').join('') +
-              '</div></div>'
-            : '';
-
         hub.innerHTML =
             '<div class="ldd-skill-hero is-compact">' +
                 '<div class="ldd-skill-identity">' +
@@ -659,66 +645,27 @@
                 '</div>' +
             '</div>' +
 
-            '<section class="ldd-focus-panel">' +
-                '<div class="ldd-focus-heading">' +
-                    '<div><span class="ldd-control-label">' + (state.assessed ? 'Đề xuất sau kiểm tra đầu vào' : 'Bắt đầu nhanh') + '</span>' +
-                    '<h3>Việc nên làm ngay</h3></div>' +
-                    '<span class="ldd-focus-stage-pill">Giai đoạn ' + focusStage + '</span>' +
+            '<section class="ldd-listening-track-picker">' +
+                '<span class="ldd-control-label">Chọn mục tiêu học tập</span>' +
+                '<div class="ldd-listening-track-options">' +
+                    AUDIENCES.map(item => '<button type="button" class="ldd-listening-track-option' + (state.audience === item.id ? ' is-active' : '') + '" data-skill-audience="' + item.id + '" aria-pressed="' + (state.audience === item.id) + '"><strong>' + item.label + '</strong></button>').join('') +
                 '</div>' +
-                '<button type="button" class="ldd-focus-main" data-open-stage="' + focusStage + '">' +
-                    '<span class="ldd-focus-main-index">' + focusStage + '</span>' +
-                    '<span><strong>' + focus.title + '</strong><small>' + focus.description + '</small></span>' +
-                    '<b>' + (state.current ? 'Tiếp tục →' : 'Bắt đầu →') + '</b>' +
-                '</button>' +
-                (nextStage ? '<div class="ldd-focus-next"><span>Tiếp theo sau khi đạt 80%</span><button type="button" data-open-stage="' + nextStageNumber + '">Giai đoạn ' + nextStageNumber + ' · ' + nextStage.title + ' →</button></div>' : '') +
-                weakHtml +
+                '<div class="ldd-roadmap-actions"><button type="button" class="ldd-roadmap-btn" data-roadmap-assess>' + iconSvg('compass') + '<span>' + (state.assessed ? 'Kiểm tra lại đầu vào' : 'Kiểm tra đầu vào') + '</span></button></div>' +
             '</section>' +
 
-            '<div class="ldd-roadmap-control-panel is-simple">' +
-                '<div class="ldd-simple-goal">' +
-                    '<span class="ldd-control-label">Mục tiêu</span>' +
-                    '<select class="ldd-audience-select" data-audience-select aria-label="Chọn mục tiêu học tập">' +
-                        AUDIENCES.map(item => '<option value="' + item.id + '"' + (state.audience === item.id ? ' selected' : '') + '>' + item.label + '</option>').join('') +
-                    '</select>' +
-                '</div>' +
-                '<div class="ldd-roadmap-actions">' +
-                    '<button type="button" class="ldd-roadmap-btn" data-roadmap-assess>' + iconSvg('compass') + '<span>' + (state.assessed ? 'Kiểm tra lại đầu vào' : 'Kiểm tra đầu vào') + '</span></button>' +
-                    '<button type="button" class="ldd-roadmap-btn is-primary" data-roadmap-continue>' + iconSvg('play') + '<span>' + (state.current ? 'Tiếp tục học' : 'Bắt đầu học') + '</span></button>' +
-                '</div>' +
-            '</div>' +
-
-            '<div class="ldd-roadmap-progress">' +
-                '<div class="ldd-progress-copy"><span>Tiến độ ' + config.title.replace('Luyện ', '') + '</span><span>' + done + ' / 5</span></div>' +
-                '<div class="ldd-progress-track"><span style="width:' + (done * 20) + '%"></span></div>' +
-            '</div>' +
-
-            '<div class="ldd-roadmap-disclosure">' +
-                '<button type="button" class="ldd-roadmap-toggle" data-roadmap-toggle aria-expanded="' + expanded + '">' +
-                    (expanded ? 'Ẩn toàn bộ lộ trình ↑' : 'Xem toàn bộ 5 giai đoạn ↓') +
-                '</button>' +
-            '</div>' +
-            '<ol class="ldd-stage-list"' + (expanded ? '' : ' hidden') + '>' +
+            '<ol class="ldd-stage-list ldd-listening-stage-list">' +
                 config.stages.map((stage, index) => stageCardHtml(skill, stage, index + 1, state)).join('') +
             '</ol>';
 
-        const audienceSelect = hub.querySelector('[data-audience-select]');
-        if (audienceSelect) {
-            audienceSelect.addEventListener('change', function () {
-                const skillState = getSkillState(skill);
-                skillState.audience = this.value;
-                if (!skillState.assessed) skillState.recommended = audienceDefaultStage(this.value);
+        hub.querySelectorAll('[data-skill-audience]').forEach(button => {
+            button.addEventListener('click', function () {
+                state.audience = this.dataset.skillAudience;
+                if (!state.assessed) state.recommended = audienceDefaultStage(state.audience);
                 saveState();
                 renderHub(skill);
             });
-        }
-
-        hub.querySelector('[data-roadmap-assess]').addEventListener('click', () => openPlacement(skill));
-        hub.querySelector('[data-roadmap-continue]').addEventListener('click', () => openStage(skill, state.current || state.recommended));
-        hub.querySelector('[data-roadmap-toggle]').addEventListener('click', function () {
-            if (expandedRoadmaps.has(skill)) expandedRoadmaps.delete(skill);
-            else expandedRoadmaps.add(skill);
-            renderHub(skill);
         });
+        hub.querySelector('[data-roadmap-assess]').addEventListener('click', () => openPlacement(skill));
         hub.querySelectorAll('[data-open-stage]').forEach(button => {
             button.addEventListener('click', () => openStage(skill, Number(button.dataset.openStage)));
         });
@@ -1278,18 +1225,7 @@
                         '<strong>THCS</strong><span>Lớp 6 → lớp 9 · 4 giai đoạn · 40 bài</span>' +
                     '</button>' +
                 '</div>' +
-                '<div class="ldd-listening-track-warning"><strong>Quan trọng:</strong> học sinh đang học THCS nhưng mất gốc vẫn chọn <b>Mất gốc / người mới</b>. Hai track không dùng chung bài.</div>' +
             '</section>' +
-
-            '<section class="ldd-listening-track-head">' +
-                '<div><span class="ldd-control-label">Lộ trình đang chọn</span><h3>' + track.label + '</h3><p>' + track.note + '</p></div>' +
-                '<button type="button" class="ldd-roadmap-btn is-primary" data-listening-continue>Tiếp tục Giai đoạn ' + current + ' →</button>' +
-            '</section>' +
-
-            '<div class="ldd-roadmap-progress">' +
-                '<div class="ldd-progress-copy"><span>Tiến độ ' + track.label + '</span><span>' + done + ' / ' + total + '</span></div>' +
-                '<div class="ldd-progress-track"><span style="width:' + (total ? Math.round(done / total * 100) : 0) + '%"></span></div>' +
-            '</div>' +
 
             '<ol class="ldd-stage-list ldd-listening-stage-list">' +
                 track.stages.map(stage => {
@@ -1321,7 +1257,6 @@
                 renderListeningHub();
             });
         });
-        hub.querySelector('[data-listening-continue]').addEventListener('click', () => openListeningLab(trackId, current));
         hub.querySelectorAll('[data-listening-stage]').forEach(button => {
             button.addEventListener('click', () => openListeningLab(trackId, Number(button.dataset.listeningStage)));
         });
