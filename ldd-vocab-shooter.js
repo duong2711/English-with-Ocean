@@ -1,6 +1,6 @@
 /* LDD English — Bắn từ vựng (2–4 học viên, 30 từ, Realtime ít egress).
  * The server arbitrates claims and diligence points; animations and falling words are LOCAL.
- * Constants are paired with ldd_shooter_claim() SQL: 2200ms per spawn, 12000ms fall.
+ * Timing is paired with ldd_shooter_claim/finish; old rooms keep legacy timing.
  */
 (function () {
  'use strict';
@@ -8,8 +8,12 @@
  window.__LDDVocabShooterV1 = true;
  const URL = 'https://ywqbaksmmtvwbojcgsdd.supabase.co';
  const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl3cWJha3NtbXR2d2JvamNnc2RkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxNjc3NTAsImV4cCI6MjA5Nzc0Mzc1MH0.vhgt7cB6w2elm-MXY57U_wJtYkJQHDFAEsJwAArOjhQ';
- const SPAWN = 2200, FALL = 12000, WORD_COUNT = 30;
- const LAST_END = (WORD_COUNT - 1) * SPAWN + FALL;
+ const WORD_COUNT = 30;
+ const SLOW_TIMING_FROM = Date.parse('2026-10-25T08:35:37.582080Z');
+ function slowTiming(){return room && Date.parse(room.created_at)>=SLOW_TIMING_FROM;}
+ function spawnInterval(){return slowTiming()?4000:2200;}
+ function fallDuration(word){return slowTiming()?20000+Math.max(0,Array.from(String(word||'').trim()).length-4)*1200:12000;}
+ function lastEnd(){return Math.max(...(room.word_list||[]).map((w,i)=>i*spawnInterval()+fallDuration(w.en)));}
  const ICONS = ['🚀','🛸','🦾','🛰️'];
  const $ = id => document.getElementById(id);
  const esc = text => String(text == null ? '' : text).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -537,20 +541,21 @@
      activeWords=[];
      const height=$('shooter-stage').clientHeight - 92;
      for(let i=0;i<WORD_COUNT;i++){
-       const delta=time-i*SPAWN;
+       const delta=time-i*spawnInterval();
+       const fall=fallDuration(room.word_list[i] && room.word_list[i].en);
        let el=nodes.get(i);
-       const visible=delta>=0 && delta<=FALL && !shots.has(i) && !optimisticShots.has(i);
+       const visible=delta>=0 && delta<=fall && !shots.has(i) && !optimisticShots.has(i);
        if(!visible){if(el){el.remove();nodes.delete(i);}continue;}
        if(!el)el=buildWord(i);
        if(!el)continue;
-       const y=10+Math.min(1,delta/FALL)*height;
+       const y=10+Math.min(1,delta/fall)*height;
        el.style.transform='translate3d(-50%,'+Math.round(y)+'px,0)';
        activeWords.push(i);
      }
-     const spawned=Math.min(WORD_COUNT,Math.floor(time/SPAWN)+1);
+     const spawned=Math.min(WORD_COUNT,Math.floor(time/spawnInterval())+1);
      $('shooter-progress').textContent=spawned+' / 30 từ đã thả';
      $('shooter-track-bar').style.width=(spawned/30*100)+'%';
-     if(time>=LAST_END && !finishPending && Date.now()-lastFinishAttempt>4000)finishGame();
+     if(time>=lastEnd() && !finishPending && Date.now()-lastFinishAttempt>4000)finishGame();
    }
    frame=requestAnimationFrame(updateFrame);
  }
