@@ -98,7 +98,17 @@
         source.innerHTML = html || '';
         const fragment = document.createDocumentFragment();
         function append(node, target) {
-            if (node.nodeType === 3) { target.append(document.createTextNode(node.textContent)); return; }
+            if (node.nodeType === 3) {
+                String(node.textContent || '').split(/(\s+)/).forEach(token => {
+                    const core = token.replace(/^[^\p{L}]+|[^\p{L}]+$/gu, '');
+                    if (/^[A-Za-z]+(?:['’-][A-Za-z]+)*$/.test(core) && window.vocabTap?.wrap) {
+                        const wrapped = document.createElement('span');
+                        wrapped.innerHTML = window.vocabTap.wrap(token);
+                        while (wrapped.firstChild) target.append(wrapped.firstChild);
+                    } else target.append(document.createTextNode(token));
+                });
+                return;
+            }
             if (node.nodeType !== 1 || /^(SCRIPT|STYLE|IFRAME|OBJECT|SVG|SOURCE-FOOTNOTE)$/.test(node.tagName)) return;
             if (node.tagName === 'BR') { target.append(document.createElement('br')); return; }
             const block = /^(P|DIV|LI)$/.test(node.tagName);
@@ -336,6 +346,15 @@
             const opener = document.activeElement;
             const dialog = el('dialog', 'ldd-comic-overlay');
             dialog.setAttribute('aria-label', 'Truyện lớp ' + grade + ', Unit ' + unit.number);
+            let lookupHome = null;
+            function restoreLookup() {
+                if (!lookupHome) return;
+                const {popup, parent, next} = lookupHome;
+                popup.style.display = 'none';
+                if (next && next.parentNode === parent) parent.insertBefore(popup, next);
+                else parent.append(popup);
+                lookupHome = null;
+            }
             const close = el('button', 'ldd-comic-overlay-close', '×');
             close.type = 'button';
             close.setAttribute('aria-label', 'Đóng truyện');
@@ -357,10 +376,30 @@
                 }
             });
             dialog.addEventListener('close', () => {
+                restoreLookup();
                 if (request === comicRequest) comicRequest += 1;
                 if (readerZoom === dialog) readerZoom = null;
                 dialog.remove();
                 if (opener?.isConnected) opener.focus({preventScroll:true});
+            });
+            deck.addEventListener('click', event => {
+                const word = event.target.closest('.tappable-word');
+                if (!word || !window.vocabTap?.handleTap) return;
+                event.preventDefault();
+                event.stopPropagation();
+                const popup = document.getElementById('word-lookup-popup');
+                if (popup && popup.parentNode !== dialog) {
+                    lookupHome = {popup, parent:popup.parentNode, next:popup.nextSibling};
+                    dialog.append(popup);
+                }
+                window.vocabTap.handleTap(word);
+            });
+            dialog.addEventListener('cancel', event => {
+                const popup = lookupHome?.popup;
+                if (popup && popup.style.display !== 'none') {
+                    event.preventDefault();
+                    popup.querySelector('#word-lookup-close')?.click();
+                }
             });
             const reducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
             function move(step) {
@@ -370,6 +409,7 @@
                 deck.scrollTo({left:(index + step) * width, behavior:reducedMotion() ? 'auto' : 'smooth'});
             }
             dialog.addEventListener('keydown', event => {
+                if (lookupHome && lookupHome.popup.style.display !== 'none') return;
                 if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
                 event.preventDefault();
                 move(event.key === 'ArrowRight' ? 1 : -1);
@@ -429,6 +469,8 @@
                     }
                     const text = el('div', 'ldd-comic-swipe-text');
                     text.append(comicText(frame.content_html));
+                    text.dataset.vocabContext = text.textContent;
+                    text.dataset.vocabSource = 'Truyện Dung và Dương – Lớp ' + grade + ' – Unit ' + unit.number;
                     slide.append(text);
                     deck.append(slide);
                 });
