@@ -208,6 +208,16 @@
 
         const comicBody = el('div', 'ldd-ent-comics-body');
         comics.append(comicBody);
+        // Direct dependency: load teacher ZIP tool whenever the comics panel
+        // is created, independently of the global enhancements bootstrap.
+        if (!window.__lddComicB2ImportV1 && !document.getElementById('ldd-comic-zip-direct-loader')) {
+            const importer = document.createElement('script');
+            importer.id = 'ldd-comic-zip-direct-loader';
+            importer.src = 'ldd-comic-b2-import.js?v=20261026-zip-visible4';
+            importer.defer = true;
+            document.body.appendChild(importer);
+        }
+
         const films = el('div', 'ldd-ent-film-body');
         movies.append(films);
 
