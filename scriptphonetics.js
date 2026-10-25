@@ -6715,8 +6715,8 @@ function toggleCompletion(symbolElement) {
         async function fetchWordInfo(word, contextSentence) {
             const safeWord = word.replace(/"/g, '\\"');
             const safeContext = (contextSentence || '').replace(/"/g, '\\"');
-            const prompt = 'Bạn là từ điển Anh-Việt dành cho học viên Việt Nam mới bắt đầu học tiếng Anh. ' +
-                'Học viên vừa chạm vào từ "' + safeWord + '" trong câu tiếng Anh sau: "' + safeContext + '". ' +
+            const prompt = 'Bạn là từ điển Anh-Việt dành cho học viên Việt Nam mới bắt đầu học tiếng Anh. Hỗ trợ cả từ đơn, cụm động từ và cụm từ cố định; hãy dịch cả cụm như một đơn vị nghĩa. ' +
+                'Học viên muốn tra từ hoặc cụm từ "' + safeWord + '" trong ngữ cảnh tiếng Anh sau: "' + safeContext + '". ' +
                 'Chỉ trả lời bằng JSON hợp lệ, không thêm chữ nào khác, đúng định dạng: ' +
                 '{"found": true, ' +
                 '"phonetic": "phiên âm IPA (Anh-Anh hoặc Anh-Mỹ đều được) của riêng từ \\"' + safeWord + '\\", không kèm dấu gạch chéo, ví dụ: ˈwɔːtər", ' +
@@ -6725,7 +6725,7 @@ function toggleCompletion(symbolElement) {
                 '"usage": "một câu ngắn giải thích cách dùng từ này (khi nào dùng, hay đi kèm giới từ/cấu trúc gì)", ' +
                 '"exampleEn": "một câu ví dụ tiếng Anh đơn giản, khác với câu ở trên, có dùng từ này", ' +
                 '"exampleVi": "bản dịch tiếng Việt của câu ví dụ trên"}. ' +
-                'Nếu đây không phải là một từ tiếng Anh có nghĩa (ví dụ tên riêng, số, ký tự lạ) thì chỉ trả về {"found": false}.';
+                'Nếu đây không phải là từ hoặc cụm từ tiếng Anh có nghĩa (ví dụ tên riêng, số, ký tự lạ) thì chỉ trả về {"found": false}.';
             return callAIJSON(prompt);
         }
 
@@ -6872,7 +6872,9 @@ function toggleCompletion(symbolElement) {
             let clip;
             try {
                 callbacks.onPreparing && callbacks.onPreparing();
-                clip = await recordShortClip(2600, () => { callbacks.onStart && callbacks.onStart(); });
+                const syllableWords = String(targetWord || '').trim().split(/\s+/).filter(Boolean).length;
+                const recordMs = Math.min(8500, 2600 + Math.max(0, syllableWords - 1) * 1050);
+                clip = await recordShortClip(recordMs, () => { callbacks.onStart && callbacks.onStart(); });
             } catch (err) {
                 const name = err && err.name;
                 const code = name === 'NotAllowedError' ? 'denied' : (name === 'NotFoundError' ? 'no-mic' : 'error');
