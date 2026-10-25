@@ -12,7 +12,7 @@
 #tab-giai-tri .ldd-entertainment-root-card {
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: safe center;
     align-items: flex-start;
     gap: 8px;
     min-width: 0;
@@ -112,7 +112,7 @@
 #tab-giai-tri .ldd-ent-cover-fallback {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: safe center;
     width: 100%;
     height: 100%;
     padding: 13px;
@@ -153,7 +153,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: safe center;
     gap: 8px;
     min-height: 190px;
     margin: 14px 0;
@@ -350,76 +350,62 @@
 }
 
 
-/* Responsive comic reading surface. */
-#tab-giai-tri:has(.ldd-ent-comic-reader) > h2,
-#tab-giai-tri .ldd-ent-comics-panel.is-reading > .ldd-ent-panel-heading,
-#tab-giai-tri #ldd-ent-comics-panel.is-reading > .ldd-ent-panel-heading { display: none; }
-#tab-giai-tri .ldd-ent-comic-reader {
-    --comic-ink: #293447;
-    --comic-paper: #fffdf8;
-    --comic-accent: #9a4f2b;
-    --comic-line: #e6dfd2;
-    --comic-text-size: 19px;
-    max-width: 1180px; margin: 0 auto; min-width: 0;
-    padding: 0 0 24px; color: var(--comic-ink);
-    scroll-margin-top: 88px;
+
+/* Only the illustration and story text, swiped horizontally over a dimmed page. */
+#tab-giai-tri .ldd-comic-overlay {
+    width: min(1100px, 94vw); height: min(820px, 90dvh);
+    max-width: 94vw; max-height: 90dvh; padding: 0; border: 0;
+    border-radius: 18px; background: #fffdf8; color: #293447;
+    box-shadow: 0 24px 100px #0007; overflow: hidden;
 }
-#tab-giai-tri .ldd-ent-reader-heading { margin: 0 0 8px; }
-#tab-giai-tri .ldd-ent-reader-topbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 4px 0 20px; }
-#tab-giai-tri .ldd-ent-comic-reader button { font: inherit; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
-#tab-giai-tri .ldd-ent-comic-reader button:focus-visible,
-#tab-giai-tri .ldd-ent-reader-lightbox button:focus-visible { outline: 3px solid #ba642f; outline-offset: 4px; }
-#tab-giai-tri .ldd-ent-reader-back { width: auto; margin: 0; min-height: 44px; padding: 10px 15px; border: 1px solid var(--comic-line); background: #fffdf8; color: var(--comic-ink); border-radius: 12px; font-size: 14px; }
-#tab-giai-tri .ldd-ent-reader-size { display: flex; gap: 4px; padding: 4px; border: 1px solid var(--comic-line); border-radius: 12px; background: #fffdf8; flex: 0 0 auto; }
-#tab-giai-tri .ldd-ent-reader-size button { min-width: 44px; min-height: 40px; border: 0; background: transparent; border-radius: 8px; color: var(--comic-ink); font-weight: 700; }
-#tab-giai-tri .ldd-ent-reader-size button:disabled { opacity: .35; cursor: default; }
-#tab-giai-tri .ldd-ent-reader-hero { padding: clamp(22px, 4vw, 42px); border-radius: 22px; border: 1px solid var(--comic-line); background: linear-gradient(115deg, #fffdf8, #f3eadb); }
-#tab-giai-tri .ldd-ent-reader-eyebrow { margin: 0 0 12px; font-size: 11px; line-height: 1.7; font-weight: 800; letter-spacing: .12em; color: var(--comic-accent); }
-#tab-giai-tri .ldd-ent-reader-hero h4 { margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: clamp(26px, 4.3vw, 45px); font-weight: 700; line-height: 1.18; letter-spacing: -.025em; color: var(--comic-ink); overflow-wrap: anywhere; }
-#tab-giai-tri .ldd-ent-reader-status { margin: 0; padding: 14px 2px 8px; color: #596476; font-size: 13px; line-height: 1.7; }
-#tab-giai-tri .ldd-ent-reader-scenes { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 0 24px; }
-#tab-giai-tri .ldd-ent-reader-scene-link { min-width: 44px; min-height: 44px; border: 1px solid var(--comic-line); border-radius: 50%; background: #fffdf8; color: var(--comic-accent); font-size: 13px; font-weight: 800; }
-#tab-giai-tri .ldd-ent-reader-frames { display: grid; gap: clamp(20px, 3vw, 32px); }
-#tab-giai-tri .ldd-ent-reader-frame { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(280px, 1fr); min-width: 0; overflow: hidden; border: 1px solid var(--comic-line); border-radius: 20px; background: var(--comic-paper); box-shadow: 0 9px 30px #2c334008; scroll-margin-top: 88px; }
-#tab-giai-tri .ldd-ent-reader-art { min-width: 0; display: grid; align-content: center; background: #eee9df; }
-#tab-giai-tri .ldd-ent-reader-zoom { position: relative; display: block; width: 100%; min-width: 0; padding: 0; border: 0; background: transparent; line-height: 0; cursor: zoom-in; }
-#tab-giai-tri .ldd-ent-reader-image { display: block; width: 100%; height: auto; max-width: 100%; object-fit: contain; }
-#tab-giai-tri .ldd-ent-reader-zoom-hint { position: absolute; bottom: 12px; right: 12px; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: #fffef4e8; color: #293447; font-size: 22px; line-height: 1; box-shadow: 0 2px 12px #0002; pointer-events: none; }
-#tab-giai-tri .ldd-ent-reader-copy { min-width: 0; align-self: center; padding: clamp(22px, 3vw, 36px); }
-#tab-giai-tri .ldd-ent-reader-copy h5 { margin: 0 0 16px; font-family: inherit; font-size: 11px; letter-spacing: .14em; font-weight: 800; color: var(--comic-accent); line-height: 1.5; }
-#tab-giai-tri .ldd-ent-reader-text { font-size: var(--comic-text-size); line-height: 1.85; overflow-wrap: anywhere; color: var(--comic-ink); }
-#tab-giai-tri .ldd-ent-reader-text strong { font-weight: 750; color: #794225; text-decoration: underline; text-decoration-color: #e4bf76; text-decoration-thickness: 3px; text-underline-offset: 4px; }
-#tab-giai-tri .ldd-ent-reader-art.is-missing { min-height: 240px; padding: 24px; align-content: center; justify-items: center; background: linear-gradient(140deg, #f5eddd, #e8e3d7); }
-#tab-giai-tri .ldd-ent-reader-missing-number { font-family: Georgia, serif; font-size: 100px; line-height: 1; color: #bcb09a; }
-#tab-giai-tri .ldd-ent-reader-image-note { margin: 14px 0; padding: 12px; color: #666055; font-size: 13px; text-align: center; }
-#tab-giai-tri .ldd-ent-reader-footer { padding: 20px 0; border-top: 1px solid var(--comic-line); text-align: center; }
-#tab-giai-tri .ldd-ent-reader-footer > p { font-family: Georgia, serif; font-size: 23px; color: #596476; margin: 8px 0 20px; }
-#tab-giai-tri .ldd-ent-reader-footer-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
-#tab-giai-tri .ldd-ent-reader-footer-actions button { min-height: 46px; padding: 12px 22px; border: 1px solid var(--comic-line); border-radius: 12px; background: #fffdf8; color: var(--comic-ink); margin: 0; width: auto; }
-#tab-giai-tri .ldd-ent-reader-footer-actions .ldd-ent-reader-next { background: #293447; border-color: #293447; color: #fffdf8; font-weight: 700; }
-#tab-giai-tri .ldd-ent-reader-lightbox { max-width: min(1400px, 96vw); width: fit-content; max-height: 94dvh; padding: 0; border: 1px solid #ffffff33; border-radius: 14px; background: #171c27; color: #fff; box-shadow: 0 20px 100px #0008; overflow: auto; }
-#tab-giai-tri .ldd-ent-reader-lightbox::backdrop { background: #101522dd; }
-#tab-giai-tri .ldd-ent-reader-lightbox img { display: block; width: auto; height: auto; max-width: 92vw; max-height: 78dvh; object-fit: contain; }
-#tab-giai-tri .ldd-ent-reader-lightbox-bar { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 8px 16px; font-size: 14px; }
-#tab-giai-tri .ldd-ent-reader-lightbox button { padding: 10px 14px; min-height: 44px; border: 1px solid #ffffff44; border-radius: 9px; background: transparent; color: #fff; cursor: pointer; }
-@media (hover: hover) {
-    #tab-giai-tri .ldd-ent-reader-size button:not(:disabled):hover,
-    #tab-giai-tri .ldd-ent-reader-scene-link:hover { background: #f2e6d0; }
+#tab-giai-tri .ldd-comic-overlay::backdrop { background: #101828d9; backdrop-filter: blur(6px); }
+body:has(.ldd-comic-overlay[open]) { overflow: hidden; }
+#tab-giai-tri .ldd-comic-overlay-close {
+    position: absolute; z-index: 2; top: 10px; right: 10px;
+    width: 42px; height: 42px; display: grid; place-items: center;
+    padding: 0; border: 1px solid #ffffff99; border-radius: 50%;
+    background: #fffdf8eb; color: #293447; font: 28px/1 system-ui;
+    cursor: pointer; touch-action: manipulation; box-shadow: 0 2px 10px #0002;
 }
-@media (max-width: 850px) {
-    #tab-giai-tri .ldd-ent-reader-frame { grid-template-columns: minmax(0, 1fr); border-radius: 16px; }
-    #tab-giai-tri .ldd-ent-reader-copy { padding: clamp(18px, 4vw, 30px); }
-    #tab-giai-tri .ldd-ent-reader-art.is-missing { min-height: 160px; }
-    #tab-giai-tri .ldd-ent-reader-missing-number { font-size: 64px; }
+#tab-giai-tri .ldd-comic-overlay-close:focus-visible { outline: 3px solid #9a4f2b; outline-offset: -4px; }
+#tab-giai-tri .ldd-comic-swipe-deck {
+    display: flex; width: 100%; height: 100%; overflow-x: auto; overflow-y: hidden;
+    scroll-snap-type: x mandatory; overscroll-behavior-x: contain;
+    scrollbar-width: none; outline: none; border-radius: inherit;
 }
-@media (max-width: 480px) {
-    #tab-giai-tri .ldd-ent-reader-topbar { gap: 8px; padding-bottom: 14px; }
-    #tab-giai-tri .ldd-ent-reader-back { padding: 8px 10px; font-size: 12px; }
-    #tab-giai-tri .ldd-ent-reader-size { gap: 0; padding: 2px; }
-    #tab-giai-tri .ldd-ent-reader-size button { min-width: 38px; min-height: 42px; }
-    #tab-giai-tri .ldd-ent-reader-hero { padding: 24px 20px; border-radius: 16px; }
-    #tab-giai-tri .ldd-ent-reader-scenes { padding-bottom: 18px; }
-    #tab-giai-tri .ldd-ent-reader-text { line-height: 1.8; }
-    #tab-giai-tri .ldd-ent-reader-footer-actions { flex-direction: column; }
-    #tab-giai-tri .ldd-ent-reader-footer-actions button { width: 100%; }
+#tab-giai-tri .ldd-comic-swipe-deck::-webkit-scrollbar { display: none; }
+#tab-giai-tri .ldd-comic-swipe-slide {
+    flex: 0 0 100%; width: 100%; min-width: 0; height: 100%;
+    box-sizing: border-box; overflow-y: auto; overflow-x: hidden;
+    scroll-snap-align: start; scroll-snap-stop: always;
+    display: flex; flex-direction: column; align-items: stretch;
+    overscroll-behavior-y: contain;
 }
+#tab-giai-tri .ldd-comic-swipe-art { flex: 0 0 auto; width: 100%; min-width: 0; background: #ece7dc; cursor: grab; }
+#tab-giai-tri .ldd-comic-swipe-art:active { cursor: grabbing; }
+#tab-giai-tri .ldd-comic-swipe-image { display: block; width: 100%; height: auto; max-height: 61dvh; object-fit: contain; user-select: none; }
+#tab-giai-tri .ldd-comic-swipe-text {
+    flex: 1 0 auto; box-sizing: border-box; width: 100%; max-width: 82ch;
+    margin: 0 auto; padding: clamp(20px, 3vw, 32px) clamp(22px, 5vw, 56px);
+    font-size: clamp(17px, 1.65vw, 21px); line-height: 1.85;
+    overflow-wrap: anywhere; color: #293447;
+}
+#tab-giai-tri .ldd-comic-swipe-text strong { font-weight: 750; color: #794225; }
+#tab-giai-tri .ldd-comic-swipe-slide.is-text-only { justify-content: safe center; }
+#tab-giai-tri .ldd-comic-swipe-slide.is-text-only .ldd-comic-swipe-text { flex: 0 0 auto; padding-top: 60px; padding-bottom: 60px; }
+#tab-giai-tri .ldd-comic-loading { width: 28px; height: 28px; border: 3px solid #dbd4c6; border-top-color: #9a4f2b; border-radius: 50%; margin: auto; animation: comic-load 1s linear infinite; }
+@keyframes comic-load { to { transform: rotate(360deg); } }
+@media (max-width: 600px) {
+    #tab-giai-tri .ldd-comic-overlay { width: 96vw; max-width: 96vw; height: 86dvh; max-height: 86dvh; border-radius: 14px; }
+    #tab-giai-tri .ldd-comic-swipe-slide { justify-content: safe center; }
+    #tab-giai-tri .ldd-comic-swipe-text { flex: 0 0 auto; padding: 22px; font-size: 18px; line-height: 1.8; }
+    #tab-giai-tri .ldd-comic-swipe-image { max-height: 52dvh; }
+    #tab-giai-tri .ldd-comic-overlay-close { width: 40px; height: 40px; top: 8px; right: 8px; }
+}
+@media (max-height: 500px) and (min-width: 601px) {
+    #tab-giai-tri .ldd-comic-swipe-slide { flex-direction: row; align-items: center; }
+    #tab-giai-tri .ldd-comic-swipe-art { width: 55%; }
+    #tab-giai-tri .ldd-comic-swipe-image { max-height: 90dvh; }
+    #tab-giai-tri .ldd-comic-swipe-text { width: 45%; padding: 44px 22px 22px; font-size: 17px; align-self: stretch; overflow-y: auto; }
+}
+@media (prefers-reduced-motion: reduce) { #tab-giai-tri .ldd-comic-loading { animation: none; } }

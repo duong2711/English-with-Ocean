@@ -149,7 +149,9 @@
         let comicRequest = 0;
         let readerZoom = null;
         function closeReaderZoom() {
-            if (readerZoom) { readerZoom.close(); readerZoom.remove(); readerZoom = null; }
+            const closing = readerZoom;
+            readerZoom = null;
+            if (closing) { closing.close(); closing.remove(); }
         }
         let activeVideo = null;
         function releaseVideo() {
@@ -327,150 +329,119 @@
 
 
 
+
         async function showChapter(series, grade, unit) {
             closeReaderZoom();
             const request = ++comicRequest;
-            comics.classList.add('is-reading');
-            comicBody.replaceChildren();
-            const reader = el('article', 'ldd-ent-comic-reader');
-            const header = el('header', 'ldd-ent-reader-heading');
-            const top = el('div', 'ldd-ent-reader-topbar');
-            const back = el('button', 'ldd-ent-inline-back ldd-ent-reader-back', '← Danh sách Unit');
-            back.type = 'button';
-            back.addEventListener('click', () => showGrades(series, grade));
-            const sizeControls = el('div', 'ldd-ent-reader-size');
-            sizeControls.setAttribute('role', 'group');
-            sizeControls.setAttribute('aria-label', 'Cỡ chữ lời truyện');
-            let textSize = 19;
-            const smaller = el('button', '', 'A−'), larger = el('button', '', 'A+');
-            smaller.type = larger.type = 'button';
-            smaller.setAttribute('aria-label', 'Giảm cỡ chữ');
-            larger.setAttribute('aria-label', 'Tăng cỡ chữ');
-            function resize(delta) {
-                textSize = Math.max(16, Math.min(25, textSize + delta));
-                reader.style.setProperty('--comic-text-size', textSize + 'px');
-                smaller.disabled = textSize <= 16;
-                larger.disabled = textSize >= 25;
+            const opener = document.activeElement;
+            const dialog = el('dialog', 'ldd-comic-overlay');
+            dialog.setAttribute('aria-label', 'Truyện lớp ' + grade + ', Unit ' + unit.number);
+            const close = el('button', 'ldd-comic-overlay-close', '×');
+            close.type = 'button';
+            close.setAttribute('aria-label', 'Đóng truyện');
+            const deck = el('div', 'ldd-comic-swipe-deck');
+            deck.tabIndex = 0;
+            deck.setAttribute('aria-label', 'Vuốt ngang hoặc dùng phím mũi tên để xem truyện');
+            const loading = el('span', 'ldd-comic-loading');
+            loading.setAttribute('role', 'status');
+            loading.setAttribute('aria-label', 'Đang tải truyện');
+            deck.append(loading);
+            dialog.append(close, deck);
+            comicBody.append(dialog);
+            readerZoom = dialog;
+            close.addEventListener('click', closeReaderZoom);
+            dialog.addEventListener('click', event => {
+                if (event.target === dialog) {
+                    const rect = dialog.getBoundingClientRect();
+                    if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) closeReaderZoom();
+                }
+            });
+            dialog.addEventListener('close', () => {
+                if (request === comicRequest) comicRequest += 1;
+                if (readerZoom === dialog) readerZoom = null;
+                dialog.remove();
+                if (opener?.isConnected) opener.focus({preventScroll:true});
+            });
+            const reducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+            function move(step) {
+                const width = deck.clientWidth;
+                if (!width) return;
+                const index = Math.round(deck.scrollLeft / width);
+                deck.scrollTo({left:(index + step) * width, behavior:reducedMotion() ? 'auto' : 'smooth'});
             }
-            smaller.addEventListener('click', () => resize(-1));
-            larger.addEventListener('click', () => resize(1));
-            sizeControls.append(smaller, larger);
-            top.append(back, sizeControls);
-            const hero = el('div', 'ldd-ent-reader-hero');
-            hero.append(el('p', 'ldd-ent-reader-eyebrow', 'DUNG & DƯƠNG · LỚP ' + grade + ' · UNIT ' + unit.number));
-            const title = el('h4', '', unit.titleVi || unit.title);
-            title.tabIndex = -1;
-            hero.append(title);
-            header.append(top, hero);
-            const status = el('p', 'ldd-ent-reader-status', 'Đang tải truyện…');
-            status.setAttribute('role', 'status');
-            const sceneNav = el('nav', 'ldd-ent-reader-scenes');
-            sceneNav.setAttribute('aria-label', 'Chuyển nhanh đến khung truyện');
-            const framesEl = el('div', 'ldd-ent-reader-frames');
-            reader.append(header, status, sceneNav, framesEl);
-            comicBody.append(reader);
+            dialog.addEventListener('keydown', event => {
+                if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+                event.preventDefault();
+                move(event.key === 'ArrowRight' ? 1 : -1);
+            });
+            let lastWheel = 0;
+            deck.addEventListener('wheel', event => {
+                if (Math.abs(event.deltaX) > Math.abs(event.deltaY) || !event.deltaY || event.ctrlKey) return;
+                const slide = event.target.closest('.ldd-comic-swipe-slide');
+                if (slide && slide.scrollHeight > slide.clientHeight + 2 && event.target.closest('.ldd-comic-swipe-text')) return;
+                event.preventDefault();
+                const now = Date.now();
+                if (now - lastWheel > 450) { lastWheel = now; move(event.deltaY > 0 ? 1 : -1); }
+            }, {passive:false});
+            let drag = null;
+            deck.addEventListener('pointerdown', event => {
+                if (event.pointerType !== 'mouse' || event.button !== 0 || !event.target.closest('.ldd-comic-swipe-art')) return;
+                drag = {x:event.clientX, start:deck.scrollLeft};
+                deck.style.scrollSnapType = 'none';
+                deck.setPointerCapture?.(event.pointerId);
+            });
+            deck.addEventListener('pointermove', event => {
+                if (drag) deck.scrollLeft = drag.start + drag.x - event.clientX;
+            });
+            deck.addEventListener('pointerup', event => {
+                if (!drag) return;
+                const delta = drag.x - event.clientX;
+                const width = deck.clientWidth;
+                const startIndex = width ? Math.round(drag.start / width) : 0;
+                drag = null;
+                deck.style.scrollSnapType = '';
+                deck.scrollTo({left:(startIndex + (Math.abs(delta) > 40 ? (delta > 0 ? 1 : -1) : 0)) * width, behavior:reducedMotion() ? 'auto' : 'smooth'});
+                if (deck.hasPointerCapture?.(event.pointerId)) deck.releasePointerCapture(event.pointerId);
+            });
+            deck.addEventListener('pointercancel', () => {
+                if (drag) { deck.scrollLeft = drag.start; drag = null; deck.style.scrollSnapType = ''; }
+            });
             function render(frames) {
-                framesEl.replaceChildren();
-                sceneNav.replaceChildren();
-                frames.forEach(function (frame, index) {
-                    const panel = el('section', 'ldd-ent-reader-frame');
-                    panel.dataset.frameIndex = String(frame.frame_index);
-                    panel.id = 'comic-' + grade + '-' + unit.id + '-' + frame.frame_index;
-                    const sceneButton = el('button', 'ldd-ent-reader-scene-link', String(index + 1).padStart(2, '0'));
-                    sceneButton.type = 'button';
-                    sceneButton.setAttribute('aria-label', 'Đến khung ' + frame.frame_index);
-                    sceneButton.addEventListener('click', () => {
-                        panel.scrollIntoView({block:'start', behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'});
-                        panel.querySelector('h5').focus({preventScroll:true});
-                    });
-                    sceneNav.append(sceneButton);
-                    const art = el('div', 'ldd-ent-reader-art');
+                deck.replaceChildren();
+                frames.forEach((frame, index) => {
+                    const slide = el('section', 'ldd-comic-swipe-slide');
+                    slide.dataset.frameIndex = String(frame.frame_index);
+                    slide.setAttribute('aria-label', 'Trang ' + (index + 1) + ' trên ' + frames.length);
                     const url = safeAsset(frame.image_url);
                     if (url) {
-                        const zoom = el('button', 'ldd-ent-reader-zoom');
-                        zoom.type = 'button';
-                        zoom.setAttribute('aria-label', 'Phóng to ảnh khung ' + frame.frame_index);
-                        const image = el('img', 'ldd-ent-reader-image');
+                        const art = el('div', 'ldd-comic-swipe-art');
+                        const image = el('img', 'ldd-comic-swipe-image');
                         image.src = url;
-                        image.alt = 'Lớp ' + grade + ' – Unit ' + unit.number + ' – Khung ' + frame.frame_index;
+                        image.alt = 'Minh họa câu chuyện, trang ' + (index + 1);
+                        image.draggable = false;
                         image.loading = index === 0 ? 'eager' : 'lazy';
                         image.decoding = 'async';
-                        image.width = 1672;
-                        image.height = 941;
-                        const hint = el('span', 'ldd-ent-reader-zoom-hint', '⤢');
-                        hint.setAttribute('aria-hidden', 'true');
-                        zoom.append(image, hint);
-                        zoom.addEventListener('click', () => {
-                            closeReaderZoom();
-                            const dialog = el('dialog', 'ldd-ent-reader-lightbox');
-                            dialog.setAttribute('aria-label', 'Ảnh khung ' + frame.frame_index);
-                            const bar = el('div', 'ldd-ent-reader-lightbox-bar');
-                            const close = el('button', '', 'Đóng ×');
-                            close.type = 'button';
-                            bar.append(el('span', '', 'Khung ' + frame.frame_index), close);
-                            const fullImage = el('img', '');
-                            fullImage.src = url;
-                            fullImage.alt = image.alt;
-                            dialog.append(bar, fullImage);
-                            reader.append(dialog);
-                            readerZoom = dialog;
-                            close.addEventListener('click', closeReaderZoom);
-                            dialog.addEventListener('click', event => { if (event.target === dialog) closeReaderZoom(); });
-                            dialog.addEventListener('close', () => { zoom.focus({preventScroll:true}); });
-                            dialog.showModal();
-                            close.focus();
-                        });
-                        image.addEventListener('error', function () {
-                            art.replaceChildren(el('p', 'ldd-ent-reader-image-note', 'Ảnh khung này chưa tải được.'));
-                        }, { once: true });
-                        art.append(zoom);
+                        image.addEventListener('error', () => { art.remove(); slide.classList.add('is-text-only'); }, {once:true});
+                        art.append(image);
+                        slide.append(art);
                     } else {
-                        art.classList.add('is-missing');
-                        art.append(el('span', 'ldd-ent-reader-missing-number', String(index + 1).padStart(2, '0')),
-                            el('p', 'ldd-ent-reader-image-note', 'Chưa có tranh minh họa'));
+                        slide.classList.add('is-text-only');
                     }
-                    const copy = el('div', 'ldd-ent-reader-copy');
-                    const label = el('h5', '', 'KHUNG ' + String(index + 1).padStart(2, '0') + ' / ' + String(frames.length).padStart(2, '0'));
-                    label.tabIndex = -1;
-                    const text = el('div', 'ldd-ent-reader-text');
+                    const text = el('div', 'ldd-comic-swipe-text');
                     text.append(comicText(frame.content_html));
-                    copy.append(label, text);
-                    panel.append(art, copy);
-                    framesEl.append(panel);
+                    slide.append(text);
+                    deck.append(slide);
                 });
-                const footer = el('footer', 'ldd-ent-reader-footer');
-                footer.append(el('p', '', 'Hết Unit ' + unit.number));
-                const actions = el('div', 'ldd-ent-reader-footer-actions');
-                const list = el('button', 'ldd-ent-inline-back', 'Danh sách Unit');
-                list.type = 'button';
-                list.addEventListener('click', () => showGrades(series, grade));
-                actions.append(list);
-                const units = gradeUnits(grade).filter(item => item.storyFrames?.length);
-                const current = units.findIndex(item => item.id === unit.id);
-                const next = units[current + 1];
-                if (next) {
-                    const nextButton = el('button', 'ldd-ent-reader-next', 'Unit ' + next.number + ' →');
-                    nextButton.type = 'button';
-                    nextButton.addEventListener('click', () => showChapter(series, grade, next));
-                    actions.append(nextButton);
-                }
-                footer.append(actions);
-                framesEl.append(footer);
             }
-            reader.scrollIntoView?.({block:'start', behavior:'auto'});
+            dialog.showModal();
+            deck.focus({preventScroll:true});
             try {
                 const frames = await fetchComicFrames(grade, unit);
-                if (request !== comicRequest) return;
+                if (request !== comicRequest || !dialog.open) return;
                 render(frames);
-                status.textContent = frames.length ? frames.length + ' khung · Đọc trọn câu chuyện' : 'Unit này chưa có nội dung truyện.';
             } catch (error) {
-                if (request !== comicRequest) return;
+                if (request !== comicRequest || !dialog.open) return;
                 render(mergeComicFrames(unit, []));
-                status.textContent = 'Bản gốc · Chưa tải được nội dung cập nhật.';
-                const retry = el('button', 'ldd-ent-inline-back', 'Thử lại');
-                retry.type = 'button';
-                retry.addEventListener('click', () => showChapter(series, grade, unit));
-                status.append(' ', retry);
                 console.warn('[LDD comics]', error);
             }
         }
