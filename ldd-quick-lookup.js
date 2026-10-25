@@ -77,22 +77,42 @@
             if (restoreFocus && priorFocus && typeof priorFocus.focus === 'function') priorFocus.focus();
         }
 
-        function open() {
+        function open(term, invalid) {
             priorFocus = document.activeElement;
-            input.value = '';
+            input.value = term || '';
+            input.removeAttribute('aria-invalid');
             message.textContent = '';
             overlay.hidden = false;
             document.body.classList.add('ldd-quick-lookup-open');
             trigger.setAttribute('aria-expanded', 'true');
             input.focus();
+            if (invalid) showInvalidInput();
         }
 
-        trigger.addEventListener('click', open);
+        function showInvalidInput() {
+            message.textContent = 'Gõ sai, vui lòng nhập lại.';
+            input.setAttribute('aria-invalid', 'true');
+            input.focus();
+            input.select();
+        }
+
+        trigger.addEventListener('click', function () { open(); });
+
+        // A real-word check runs in the existing AI dictionary. For an invalid
+        // term its popup is dismissed and we bring back the editable bird input.
+        document.addEventListener('ldd:quick-lookup-invalid', function (event) {
+            const term = event.detail && event.detail.query;
+            open(typeof term === 'string' ? term : '', true);
+            priorFocus = trigger;
+        });
         closeButton.addEventListener('click', function () { hide(true); });
         overlay.addEventListener('click', function (event) {
             if (event.target === overlay) hide(true);
         });
-        input.addEventListener('input', function () { message.textContent = ''; });
+        input.addEventListener('input', function () {
+            message.textContent = '';
+            input.removeAttribute('aria-invalid');
+        });
 
         overlay.addEventListener('keydown', function (event) {
             if (event.key === 'Escape') {
@@ -114,10 +134,13 @@
         form.addEventListener('submit', function (event) {
             event.preventDefault();
             const word = input.value.replace(/\s+/g, ' ').trim();
+            // Permit normal English words, contractions and hyphenated phrases;
+            // reject Vietnamese accents, numbers, emoji, and stray punctuation
+            // locally, before issuing any AI or database request.
+            const englishTerm = /^[A-Za-z]+(?:['’-][A-Za-z]+)*(?: [A-Za-z]+(?:['’-][A-Za-z]+)*)*$/;
             if (!word || word.length > 100 || word.split(' ').length > 12 ||
-                !/^[a-zA-Z][a-zA-Z'’\- ]*$/.test(word)) {
-                message.textContent = 'Hãy nhập một từ hoặc cụm từ tiếng Anh hợp lệ (tối đa 12 từ).';
-                input.focus();
+                !englishTerm.test(word)) {
+                showInvalidInput();
                 return;
             }
             // The site handles authentication, AI, auto-save, duplicate detection and
