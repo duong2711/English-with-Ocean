@@ -1,0 +1,400 @@
+{
+  "manifest_version": "1.0",
+  "project": "LDD English",
+  "series": "Truyện học đường Dung và Dương",
+  "prepared_at": "2026-10-25",
+  "purpose": "Staged Backblaze B2 uploads and explicit, review-gated image_url links for existing story frames.",
+  "upload_has_been_performed": false,
+  "bucket_name": null,
+  "cdn_or_public_base_url": null,
+  "image_count": 10,
+  "local_image_directory": "images/",
+  "story_sources": [
+    "grade6-data.js",
+    "grade7-data.js"
+  ],
+  "story_override_table": "thcs_story_frames",
+  "story_primary_key": [
+    "grade",
+    "unit_id",
+    "frame_index"
+  ],
+  "upload_guidelines": {
+    "upload_to_staging_first": true,
+    "public_url_is_unknown_until_uploaded": true,
+    "upload_is_not_approval": true,
+    "supabase_operations_on_upload": false,
+    "preserve_teacher_uploaded_images": true,
+    "teacher_must_approve_before_using_final_image_urls": true,
+    "never_overwrite_existing_content_html_or_keywords": true,
+    "notes_vi": "B2 chỉ giữ file ảnh. URL được ghi vào image_url của đúng bản ghi thcs_story_frames sau khi kiểm tra tranh và xác nhận rằng ảnh trước đó không bị ghi đè."
+  },
+  "assets": [
+    {
+      "order": 1,
+      "source_file": "sunny_school_gate_welcome.png",
+      "source_sha256": "392def33ce3765d5d69d30678b99b04d90d6416f348f90e3f96130bcc860fef7",
+      "source_size_bytes": 2274629,
+      "source_dimensions_px": [
+        1672,
+        941
+      ],
+      "upload_file": "images/g06-u01-f01.webp",
+      "content_type": "image/webp",
+      "upload_sha256": "015f1d32b000f31be0e6bd3d405d10d3fd3c372af10cb03c8abf16aa82940191",
+      "upload_size_bytes": 220122,
+      "backblaze": {
+        "bucket_name": null,
+        "staging_key": "comics/dung-duong/staging/2026-10-25/g06-u01-f01.webp",
+        "final_key_suggestion": "comics/dung-duong/grade-6/unit-01/frame-01.webp",
+        "public_url": null,
+        "uploaded": false
+      },
+      "website_mapping": {
+        "table": "thcs_story_frames",
+        "grade": 6,
+        "unit_id": "u1",
+        "frame_index": 1,
+        "image_url": null,
+        "do_not_overwrite_existing": true,
+        "update_mode": "image_url_only_after_approval"
+      },
+      "visual_review": {
+        "status": "candidate",
+        "comment_vi": "Đúng cảnh Dương đến trường mới và Dung chào ở cổng; cần giáo viên duyệt ngoại hình trước khi phát hành.",
+        "approved_by_teacher": false,
+        "publish_ready": false
+      }
+    },
+    {
+      "order": 2,
+      "source_file": "sunny_classroom_adventures.png",
+      "source_sha256": "2609d04398608edd0ab54ab233cbb57c6837d2c891dfce7a668dad4175fad08c",
+      "source_size_bytes": 2244890,
+      "source_dimensions_px": [
+        1672,
+        941
+      ],
+      "upload_file": "images/g06-u01-f02.webp",
+      "content_type": "image/webp",
+      "upload_sha256": "b242ed9ccc5337557d0532c5b2304734db9c879829aeaa46220b5b05cd9594ad",
+      "upload_size_bytes": 217420,
+      "backblaze": {
+        "bucket_name": null,
+        "staging_key": "comics/dung-duong/staging/2026-10-25/g06-u01-f02.webp",
+        "final_key_suggestion": "comics/dung-duong/grade-6/unit-01/frame-02.webp",
+        "public_url": null,
+        "uploaded": false
+      },
+      "website_mapping": {
+        "table": "thcs_story_frames",
+        "grade": 6,
+        "unit_id": "u1",
+        "frame_index": 2,
+        "image_url": null,
+        "do_not_overwrite_existing": true,
+        "update_mode": "image_url_only_after_approval"
+      },
+      "visual_review": {
+        "status": "needs_review",
+        "comment_vi": "Có lớp học và giáo viên nhưng chưa nhấn rõ sự đối lập môn history/science trong đoạn truyện.",
+        "approved_by_teacher": false,
+        "publish_ready": false
+      }
+    },
+    {
+      "order": 3,
+      "source_file": "sunlit_anime_school_campus_walk.png",
+      "source_sha256": "4058efd204f08dbf0479f737eef3768d3fa70598bfc15cb7f5bb90baf57b4df8",
+      "source_size_bytes": 2388286,
+      "source_dimensions_px": [
+        1672,
+        941
+      ],
+      "upload_file": "images/g06-u01-f03.webp",
+      "content_type": "image/webp",
+      "upload_sha256": "d0ae90c69f9bd70c93b1f471285d24299538678389cc54310f8038b09be8b029",
+      "upload_size_bytes": 259964,
+      "backblaze": {
+        "bucket_name": null,
+        "staging_key": "comics/dung-duong/staging/2026-10-25/g06-u01-f03.webp",
+        "final_key_suggestion": "comics/dung-duong/grade-6/unit-01/frame-03.webp",
+        "public_url": null,
+        "uploaded": false
+      },
+      "website_mapping": {
+        "table": "thcs_story_frames",
+        "grade": 6,
+        "unit_id": "u1",
+        "frame_index": 3,
+        "image_url": null,
+        "do_not_overwrite_existing": true,
+        "update_mode": "image_url_only_after_approval"
+      },
+      "visual_review": {
+        "status": "needs_redraw",
+        "comment_vi": "Truyện yêu cầu Dung và Dương trực tiếp chơi bóng đá giờ ra chơi; ảnh chỉ thể hiện hai người đi dạo, sân bóng ở xa.",
+        "approved_by_teacher": false,
+        "publish_ready": false
+      }
+    },
+    {
+      "order": 4,
+      "source_file": "sunlit_anime_classroom_study_session.png",
+      "source_sha256": "a3a87a00c9bc388e573a1347c7cfc7ad1f9660bdbeb382f85745983e9af871af",
+      "source_size_bytes": 2142273,
+      "source_dimensions_px": [
+        1672,
+        941
+      ],
+      "upload_file": "images/g06-u01-f04.webp",
+      "content_type": "image/webp",
+      "upload_sha256": "2b53365803a665695627329615c3f947c2452b0760d5fc24a17badef87b535fa",
+      "upload_size_bytes": 188216,
+      "backblaze": {
+        "bucket_name": null,
+        "staging_key": "comics/dung-duong/staging/2026-10-25/g06-u01-f04.webp",
+        "final_key_suggestion": "comics/dung-duong/grade-6/unit-01/frame-04.webp",
+        "public_url": null,
+        "uploaded": false
+      },
+      "website_mapping": {
+        "table": "thcs_story_frames",
+        "grade": 6,
+        "unit_id": "u1",
+        "frame_index": 4,
+        "image_url": null,
+        "do_not_overwrite_existing": true,
+        "update_mode": "image_url_only_after_approval"
+      },
+      "visual_review": {
+        "status": "needs_review",
+        "comment_vi": "Có cảnh làm bài cùng nhau nhưng cần thấy rõ Dung cho mượn compass, Dương cất bút trong pencil case.",
+        "approved_by_teacher": false,
+        "publish_ready": false
+      }
+    },
+    {
+      "order": 5,
+      "source_file": "golden_hour_invitation_at_the_gate.png",
+      "source_sha256": "ce8c81c469184fd78352711dc60a35fb8d72a00e981b13abd7bdf6a875ebc57e",
+      "source_size_bytes": 2365145,
+      "source_dimensions_px": [
+        1672,
+        941
+      ],
+      "upload_file": "images/g06-u02-f01.webp",
+      "content_type": "image/webp",
+      "upload_sha256": "5f76ee9801ada79de4bd5122451e7885324b93f10680728885a334743ecb23dd",
+      "upload_size_bytes": 258164,
+      "backblaze": {
+        "bucket_name": null,
+        "staging_key": "comics/dung-duong/staging/2026-10-25/g06-u02-f01.webp",
+        "final_key_suggestion": "comics/dung-duong/grade-6/unit-02/frame-01.webp",
+        "public_url": null,
+        "uploaded": false
+      },
+      "website_mapping": {
+        "table": "thcs_story_frames",
+        "grade": 6,
+        "unit_id": "u2",
+        "frame_index": 1,
+        "image_url": null,
+        "do_not_overwrite_existing": true,
+        "update_mode": "image_url_only_after_approval"
+      },
+      "visual_review": {
+        "status": "candidate",
+        "comment_vi": "Phù hợp tình huống Dung mời Dương tới nhà; cần kiểm tra nhà phố và bối cảnh sân vườn.",
+        "approved_by_teacher": false,
+        "publish_ready": false
+      }
+    },
+    {
+      "order": 6,
+      "source_file": "cheerful_home_tour_in_anime_style.png",
+      "source_sha256": "afcd41da017e5e5dfe0ada9057b28d683c7f0fa6fb1e08f27f8892d39eb71365",
+      "source_size_bytes": 2235822,
+      "source_dimensions_px": [
+        1672,
+        941
+      ],
+      "upload_file": "images/g06-u02-f02.webp",
+      "content_type": "image/webp",
+      "upload_sha256": "973f7dce8d30ae2a4904ba12161155c48d55edbf44a7fcad41ffc53f65463cd6",
+      "upload_size_bytes": 213456,
+      "backblaze": {
+        "bucket_name": null,
+        "staging_key": "comics/dung-duong/staging/2026-10-25/g06-u02-f02.webp",
+        "final_key_suggestion": "comics/dung-duong/grade-6/unit-02/frame-02.webp",
+        "public_url": null,
+        "uploaded": false
+      },
+      "website_mapping": {
+        "table": "thcs_story_frames",
+        "grade": 6,
+        "unit_id": "u2",
+        "frame_index": 2,
+        "image_url": null,
+        "do_not_overwrite_existing": true,
+        "update_mode": "image_url_only_after_approval"
+      },
+      "visual_review": {
+        "status": "candidate",
+        "comment_vi": "Phòng khách có sofa và đèn; giáo viên cần xác nhận tranh treo tường và hành động đọc sách.",
+        "approved_by_teacher": false,
+        "publish_ready": false
+      }
+    },
+    {
+      "order": 7,
+      "source_file": "cozy_anime_study_room_tour.png",
+      "source_sha256": "3f752ad40f615d7361998914c952fbdb26f07405a387f4bc7cb3c0c514307305",
+      "source_size_bytes": 2172596,
+      "source_dimensions_px": [
+        1672,
+        941
+      ],
+      "upload_file": "images/g06-u02-f04.webp",
+      "content_type": "image/webp",
+      "upload_sha256": "b571cb4f481180621a7afa2ce515069b9df10c7bdf70c2c10309a2fb60964b82",
+      "upload_size_bytes": 187514,
+      "backblaze": {
+        "bucket_name": null,
+        "staging_key": "comics/dung-duong/staging/2026-10-25/g06-u02-f04.webp",
+        "final_key_suggestion": "comics/dung-duong/grade-6/unit-02/frame-04.webp",
+        "public_url": null,
+        "uploaded": false
+      },
+      "website_mapping": {
+        "table": "thcs_story_frames",
+        "grade": 6,
+        "unit_id": "u2",
+        "frame_index": 4,
+        "image_url": null,
+        "do_not_overwrite_existing": true,
+        "update_mode": "image_url_only_after_approval"
+      },
+      "visual_review": {
+        "status": "needs_redraw",
+        "comment_vi": "Truyện yêu cầu tham quan phòng ngủ, tủ quần áo, ngăn kéo và nhà tắm; ảnh giống phòng học/đọc sách, chưa đủ chi tiết.",
+        "approved_by_teacher": false,
+        "publish_ready": false
+      }
+    },
+    {
+      "order": 8,
+      "source_file": "golden_hour_balcony_garden_duo.png",
+      "source_sha256": "6c8afe4aa2f667b906c0a6226dfe41b67ef99f25eeb4888a7d99346a11f48a58",
+      "source_size_bytes": 2565289,
+      "source_dimensions_px": [
+        1672,
+        941
+      ],
+      "upload_file": "images/g07-u01-f04.webp",
+      "content_type": "image/webp",
+      "upload_sha256": "bbd292c9b60c662a4c176b92e5d539a1f4fe08fa233c374e6f57be3fd4bc8074",
+      "upload_size_bytes": 290624,
+      "backblaze": {
+        "bucket_name": null,
+        "staging_key": "comics/dung-duong/staging/2026-10-25/g07-u01-f04.webp",
+        "final_key_suggestion": "comics/dung-duong/grade-7/unit-01/frame-04.webp",
+        "public_url": null,
+        "uploaded": false
+      },
+      "website_mapping": {
+        "table": "thcs_story_frames",
+        "grade": 7,
+        "unit_id": "u1",
+        "frame_index": 4,
+        "image_url": null,
+        "do_not_overwrite_existing": true,
+        "update_mode": "image_url_only_after_approval"
+      },
+      "visual_review": {
+        "status": "needs_review",
+        "comment_vi": "Phù hợp chủ đề chăm sóc cây nhưng thiếu chi tiết Dung vẽ tranh để thể hiện creativity.",
+        "approved_by_teacher": false,
+        "publish_ready": false
+      }
+    },
+    {
+      "order": 9,
+      "source_file": "coin_collecting_under_the_school_tree.png",
+      "source_sha256": "987ff7d246662854825f86f143d26da0607a7d9523a44738d5358a8d2a9fcb55",
+      "source_size_bytes": 2409239,
+      "source_dimensions_px": [
+        1672,
+        941
+      ],
+      "upload_file": "images/g07-u01-f01.webp",
+      "content_type": "image/webp",
+      "upload_sha256": "7262c9a721392c841c392878b1071608948135b8f78b76a7d46d92720bf35167",
+      "upload_size_bytes": 243434,
+      "backblaze": {
+        "bucket_name": null,
+        "staging_key": "comics/dung-duong/staging/2026-10-25/g07-u01-f01.webp",
+        "final_key_suggestion": "comics/dung-duong/grade-7/unit-01/frame-01.webp",
+        "public_url": null,
+        "uploaded": false
+      },
+      "website_mapping": {
+        "table": "thcs_story_frames",
+        "grade": 7,
+        "unit_id": "u1",
+        "frame_index": 1,
+        "image_url": null,
+        "do_not_overwrite_existing": true,
+        "update_mode": "image_url_only_after_approval"
+      },
+      "visual_review": {
+        "status": "candidate",
+        "comment_vi": "Dương giới thiệu bộ sưu tập đồng xu với Dung, đúng trọng tâm khung 1.",
+        "approved_by_teacher": false,
+        "publish_ready": false
+      }
+    },
+    {
+      "order": 10,
+      "source_file": "sunlit_garden_hobbies_together.png",
+      "source_sha256": "e21d2097310294f3fa87a399b83d397baba73c12bc4278b1ab88c3675b8174f5",
+      "source_size_bytes": 2574790,
+      "source_dimensions_px": [
+        1672,
+        941
+      ],
+      "upload_file": "images/g07-u01-f02.webp",
+      "content_type": "image/webp",
+      "upload_sha256": "e96f3b190b889cb0d4f190f78cb7f1a39ef0e14bfbcbd6cd644ef0cb2f271291",
+      "upload_size_bytes": 289962,
+      "backblaze": {
+        "bucket_name": null,
+        "staging_key": "comics/dung-duong/staging/2026-10-25/g07-u01-f02.webp",
+        "final_key_suggestion": "comics/dung-duong/grade-7/unit-01/frame-02.webp",
+        "public_url": null,
+        "uploaded": false
+      },
+      "website_mapping": {
+        "table": "thcs_story_frames",
+        "grade": 7,
+        "unit_id": "u1",
+        "frame_index": 2,
+        "image_url": null,
+        "do_not_overwrite_existing": true,
+        "update_mode": "image_url_only_after_approval"
+      },
+      "visual_review": {
+        "status": "needs_review",
+        "comment_vi": "Có làm mô hình máy bay và vườn hoa, nhưng chưa thể hiện sở thích cưỡi ngựa của Dung.",
+        "approved_by_teacher": false,
+        "publish_ready": false
+      }
+    }
+  ],
+  "verification": {
+    "hash_checked_at": "2026-10-25",
+    "note": "10 SHA-256 checks of WebP files passed in conversation archive; B2 upload not performed.",
+    "public_url_status": "not_assigned",
+    "teacher_uploads_must_be_preserved": true
+  }
+}
