@@ -827,7 +827,7 @@
         placementModal.className = 'ldd-placement-overlay';
         placementModal.hidden = true;
         placementModal.innerHTML = '<div class="ldd-placement-dialog" role="dialog" aria-modal="true" aria-labelledby="ldd-placement-title">' +
-            '<div class="ldd-placement-head"><div><h3 id="ldd-placement-title">Kiểm tra đầu vào</h3><p>Bài kiểm tra ngắn theo đúng kỹ năng. Kết quả chỉ dùng để chọn điểm bắt đầu phù hợp.</p></div><button type="button" class="ldd-placement-close" aria-label="Đóng">×</button></div>' +
+            '<div class="ldd-placement-head"><div><h3 id="ldd-placement-title">Kiểm tra đầu vào</h3></div><button type="button" class="ldd-placement-close" aria-label="Đóng">×</button></div>' +
             '<div class="ldd-placement-progress"><span></span></div>' +
             '<div class="ldd-placement-body"></div>' +
         '</div>';
