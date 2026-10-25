@@ -41,7 +41,7 @@
         ensureStylesheet('ldd-vocab-race-style', 'ldd-vocab-race.css?v=3');
         ensureStylesheet('ldd-vocab-shooter-style', 'ldd-vocab-shooter.css?v=20261025-no-overlap1');
         ensureStylesheet('ldd-quick-lookup-style', 'ldd-quick-lookup.css?v=20261025-valid2');
-        ensureStylesheet('ldd-entertainment-style', 'ldd-entertainment.css?v=20261025-library1');
+        ensureStylesheet('ldd-entertainment-style', 'ldd-entertainment.css?v=20261025-b2-import1');
 
         // Load first. Dynamic scripts are async by default, so ensureScript sets async=false
         // to preserve insertion order and let all helper modules benefit from the guard.
