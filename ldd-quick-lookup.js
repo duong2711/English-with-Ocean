@@ -56,7 +56,7 @@
               '<form id="ldd-quick-lookup-form" autocomplete="off">' +
                 '<label class="ldd-quick-lookup-label" for="ldd-quick-lookup-input">Từ hoặc cụm từ tiếng Anh</label>' +
                 '<div class="ldd-quick-lookup-input-row">' +
-                  '<input id="ldd-quick-lookup-input" type="text" inputmode="text" maxlength="100" placeholder="Ví dụ: take care of" spellcheck="false" required />' +
+                  '<input id="ldd-quick-lookup-input" type="text" inputmode="text" maxlength="100" placeholder="Ví dụ: take care of" spellcheck="false" />' +
                   '<button class="ldd-quick-lookup-submit" type="submit">Tìm kiếm</button>' +
                 '</div>' +
                 '<p id="ldd-quick-lookup-message" class="ldd-quick-lookup-message" role="status" aria-live="polite"></p>' +
