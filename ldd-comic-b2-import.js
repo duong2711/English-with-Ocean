@@ -48,8 +48,16 @@
  function textNode(tag,content,cls){const el=document.createElement(tag);if(cls)el.className=cls;el.textContent=content;return el;}
 
  function gradeData(grade){
-  const key="GRADE"+grade+"_UNITS";
-  try {return Function("return typeof "+key+" !== 'undefined' ? "+key+" : []")()} catch(_) {return []}
+  switch(Number(grade)){
+   case 6:return typeof GRADE6_UNITS!=="undefined"?GRADE6_UNITS:[];
+   case 7:return typeof GRADE7_UNITS!=="undefined"?GRADE7_UNITS:[];
+   case 8:return typeof GRADE8_UNITS!=="undefined"?GRADE8_UNITS:[];
+   case 9:return typeof GRADE9_UNITS!=="undefined"?GRADE9_UNITS:[];
+   case 10:return typeof GRADE10_UNITS!=="undefined"?GRADE10_UNITS:[];
+   case 11:return typeof GRADE11_UNITS!=="undefined"?GRADE11_UNITS:[];
+   case 12:return typeof GRADE12_UNITS!=="undefined"?GRADE12_UNITS:[];
+   default:return [];
+  }
  }
  async function publishImages(uploaded,client){
   if(!client)throw Error("Không thể kết nối cơ sở dữ liệu để xuất bản.");
