@@ -620,6 +620,10 @@
         bindLegacyBackButtons(skill);
     }
 
+    function placementButtonHtml(state) {
+        return '<button type="button" class="ldd-roadmap-btn ldd-skill-placement" data-roadmap-assess>' + iconSvg('compass') + '<span>' + (state.assessed ? 'Kiểm tra lại đầu vào' : 'Kiểm tra đầu vào') + '</span></button>';
+    }
+
     function renderHub(skill) {
         if (skill === 'listening') {
             renderListeningHub();
@@ -640,9 +644,10 @@
                         '<h2>' + config.title + '</h2>' +
                     '</div>' +
                 '</div>' +
+                '<div class="ldd-skill-header-actions">' + placementButtonHtml(state) +
                 '<div class="ldd-skill-summary" aria-label="Tóm tắt tiến độ">' +
                     '<div class="ldd-skill-stat"><strong>' + done + '/5</strong><span>đã hoàn thành</span></div>' +
-                '</div>' +
+                '</div></div>' +
             '</div>' +
 
             '<section class="ldd-listening-track-picker">' +
@@ -650,7 +655,6 @@
                 '<div class="ldd-listening-track-options">' +
                     AUDIENCES.map(item => '<button type="button" class="ldd-listening-track-option' + (state.audience === item.id ? ' is-active' : '') + '" data-skill-audience="' + item.id + '" aria-pressed="' + (state.audience === item.id) + '"><strong>' + item.label + '</strong></button>').join('') +
                 '</div>' +
-                '<div class="ldd-roadmap-actions"><button type="button" class="ldd-roadmap-btn" data-roadmap-assess>' + iconSvg('compass') + '<span>' + (state.assessed ? 'Kiểm tra lại đầu vào' : 'Kiểm tra đầu vào') + '</span></button></div>' +
             '</section>' +
 
             '<ol class="ldd-stage-list ldd-listening-stage-list">' +
@@ -848,7 +852,9 @@
 
     function closePlacement() {
         if (!placementModal) return;
-                if (placementRecognition) {
+        window.speechSynthesis?.cancel();
+        placementModal.querySelectorAll('audio').forEach(audio => audio.pause());
+        if (placementRecognition) {
             try { placementRecognition.abort(); } catch (_) {}
             placementRecognition = null;
         }
@@ -858,6 +864,19 @@
     }
 
     function placementTestItems() {
+        if (placementSkill === 'listening') {
+            const trackId = listeningTrackId();
+            const track = LISTENING_CURRICULUM.tracks[trackId];
+            return (track ? track.stages : []).map(stage => {
+                if (trackId === 'foundation' && stage.stage === 1) {
+                    return { type: 'listening', stage: 1, speech: 'C, A, T.', question: 'Chọn từ được đánh vần.', options: ['cat', 'cap', 'can', 'car'], answer: 0 };
+                }
+                const lesson = listeningStageExercises(trackId, stage.stage).find(item =>
+                    (item.coverageQuestions || item.questions || []).some(q => q.options && Number.isInteger(q.answer)));
+                const question = lesson && (lesson.coverageQuestions || lesson.questions).find(q => q.options && Number.isInteger(q.answer));
+                return question ? { type: 'listening', stage: stage.stage, audioUrl: (lesson.referenceAudioUrls || [])[0] || lesson.audioUrl, question: question.text, options: question.options, answer: question.answer } : null;
+            }).filter(Boolean);
+        }
         return PLACEMENT_TESTS[placementSkill] || [];
     }
 
@@ -909,7 +928,7 @@
             speakButton.addEventListener('click', () => startPlacementSpeech(item, speakButton, body.querySelector('[data-speaking-status]')));
         } else {
             const listenButton = item.type === 'listening'
-                ? (item.audioUrl
+                ? (item.speech ? '<button type="button" class="ldd-roadmap-btn" data-placement-speech>▶ Nghe đánh vần</button>' : item.audioUrl
                     ? '<div class="ldd-placement-audio-wrap"><audio class="ldd-placement-audio" data-placement-audio controls preload="metadata" src="' + item.audioUrl + '"></audio><div class="ldd-placement-audio-missing" data-audio-missing hidden><strong>🎧 Chưa có file MP3</strong><span>Thêm file đúng tên vào thư mục audio là dùng được ngay.</span></div><small>Nghe tối đa 2 lần</small></div>'
                     : '<div class="ldd-placement-audio-empty"><strong>🎧 Chưa thêm audio MP3</strong><span>Giáo viên sẽ bổ sung file sau.</span></div>') +
                   (item.sourceUrl ? '<div class="ldd-placement-source">Tham khảo ý tưởng/dạng bài: <a href="' + item.sourceUrl + '" target="_blank" rel="noopener noreferrer">Loigiaihay.com ↗</a><span>Audio: giáo viên tự ghi âm và lưu trên lddenglish.</span></div>' : '')
@@ -924,6 +943,18 @@
                 back;
 
             if (item.type === 'listening') {
+                const speechButton = body.querySelector('[data-placement-speech]');
+                if (speechButton) speechButton.addEventListener('click', () => {
+                    if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) {
+                        toast('Trình duyệt chưa hỗ trợ giọng đọc. Hãy thử trình duyệt khác.');
+                        return;
+                    }
+                    window.speechSynthesis.cancel();
+                    const utterance = new window.SpeechSynthesisUtterance(item.speech);
+                    utterance.lang = 'en-GB';
+                    utterance.rate = 0.75;
+                    window.speechSynthesis.speak(utterance);
+                });
                 const audio = body.querySelector('[data-placement-audio]');
                 if (audio) {
                     const missing = body.querySelector('[data-audio-missing]');
@@ -1095,6 +1126,7 @@
         const config = SKILLS[placementSkill];
         const items = placementTestItems();
         if (!config || !items.length) return;
+        const stages = placementSkill === 'listening' ? LISTENING_CURRICULUM.tracks[listeningTrackId()].stages : config.stages;
 
         const scores = items.map((_, index) => placementAnswerScore(index) === null ? 0 : placementAnswerScore(index));
         let recommended = scores.findIndex(score => score < 2) + 1;
@@ -1114,6 +1146,7 @@
         state.assessed = true;
         state.weakStages = weakStages;
         state.assessmentScore = overallScore;
+        if (placementSkill === 'listening') ensureListeningTrackProgress(listeningTrackId()).current = recommended;
         saveState();
         renderHub(placementSkill);
 
@@ -1126,11 +1159,11 @@
                 '<div class="ldd-placement-result-mark">' + overallScore + '<small>%</small></div>' +
                 '<span class="ldd-control-label">Kết quả kiểm tra đầu vào</span>' +
                 '<h4>Nên bắt đầu từ Giai đoạn ' + recommended + '</h4>' +
-                '<p><strong>' + config.stages[recommended - 1].title + '</strong> là phần nên ưu tiên trước. Bạn không cần học lại toàn bộ từ đầu.</p>' +
+                '<p><strong>' + stages[recommended - 1].title + '</strong> là phần nên ưu tiên trước. Bạn không cần học lại toàn bộ từ đầu.</p>' +
                 '<div class="ldd-placement-recommendations">' +
-                    '<div><b>Học trước</b><span>Giai đoạn ' + recommended + ' · ' + config.stages[recommended - 1].title + '</span></div>' +
-                    (weakToShow.length ? '<div><b>Cần củng cố</b><span>' + weakToShow.map(number => 'GĐ ' + number + ' · ' + config.stages[number - 1].title).join('<br>') + '</span></div>' : '') +
-                    (nextStage ? '<div><b>Sau khi đạt 80%</b><span>Chuyển sang Giai đoạn ' + nextStage + ' · ' + config.stages[nextStage - 1].title + '</span></div>' : '<div><b>Duy trì</b><span>Luyện lại Giai đoạn ' + recommended + ' để tăng độ chắc và tốc độ.</span></div>') +
+                    '<div><b>Học trước</b><span>Giai đoạn ' + recommended + ' · ' + stages[recommended - 1].title + '</span></div>' +
+                    (weakToShow.length ? '<div><b>Cần củng cố</b><span>' + weakToShow.map(number => 'GĐ ' + number + ' · ' + stages[number - 1].title).join('<br>') + '</span></div>' : '') +
+                    (nextStage ? '<div><b>Sau khi đạt 80%</b><span>Chuyển sang Giai đoạn ' + nextStage + ' · ' + stages[nextStage - 1].title + '</span></div>' : '<div><b>Duy trì</b><span>Luyện lại Giai đoạn ' + recommended + ' để tăng độ chắc và tốc độ.</span></div>') +
                 '</div>' +
                 '<div class="ldd-placement-actions" style="justify-content:center;">' +
                     '<button type="button" class="ldd-roadmap-btn" data-result-close>Xem lộ trình</button>' +
@@ -1212,7 +1245,7 @@
                     '<div class="ldd-skill-copy"><span class="ldd-skill-eyebrow">Listening Lab</span><h2>Luyện Nghe</h2>' +
                     '</div>' +
                 '</div>' +
-                '<div class="ldd-skill-summary"><div class="ldd-skill-stat"><strong>' + done + '/' + total + '</strong><span>giai đoạn đã đạt</span></div></div>' +
+                '<div class="ldd-skill-header-actions">' + placementButtonHtml(state) + '<div class="ldd-skill-summary"><div class="ldd-skill-stat"><strong>' + done + '/' + total + '</strong><span>giai đoạn đã đạt</span></div></div></div>' +
             '</div>' +
 
             '<section class="ldd-listening-track-picker">' +
@@ -1247,6 +1280,7 @@
                 }).join('') +
             '</ol>';
 
+        hub.querySelector('[data-roadmap-assess]').addEventListener('click', () => openPlacement('listening'));
         hub.querySelectorAll('[data-listening-track]').forEach(button => {
             button.addEventListener('click', function () {
                 const nextTrack = this.dataset.listeningTrack;
