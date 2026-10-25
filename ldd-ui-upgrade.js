@@ -52,7 +52,7 @@
         ensureScript('ldd-thcs-vocab-reset-script', 'ldd-thcs-vocab-reset.js?v=11');
         ensureScript('ldd-fast-progress-script', 'ldd-fast-progress.js?v=1');
         ensureScript('ldd-vocab-race-script', 'ldd-vocab-race.js?v=20261025-single-car1');
-        ensureScript('ldd-vocab-shooter-script', 'ldd-vocab-shooter.js?v=20261025-instant-lobby1');
+        ensureScript('ldd-vocab-shooter-script', 'ldd-vocab-shooter.js?v=20261025-slower-words1');
     }
 
     function ensureStylesheet(id, href) {
