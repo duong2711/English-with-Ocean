@@ -28,7 +28,7 @@
  let rosterLoadedRevision = -1;
 
  function addUI() {
-   const grid = $('entertainment-folder-grid');
+   const grid = $('entertainment-games-grid');
    if (!grid || $('shooter-folder-card')) return;
    const card = document.createElement('div');
    card.id = 'shooter-folder-card'; card.className = 'folder-card';
@@ -239,7 +239,7 @@
  }
  async function openPanel(){
    panelOpen=true;
-   $('entertainment-folder-grid').style.display='none';
+   $('entertainment-games-grid').style.display='none';
    $('shooter-panel').style.display='block';
    try{
      await identity();
@@ -257,7 +257,7 @@
    panelOpen=false;removeFullscreen();
    syncMobileLayout();
    $('shooter-panel').style.display='none';
-   if(!keepGridHidden) $('entertainment-folder-grid').style.display='';
+   if(!keepGridHidden) $('entertainment-games-grid').style.display='';
    unsubscribe();stopFrame();
  }
  function activePanel(){
