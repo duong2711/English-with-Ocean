@@ -40,15 +40,15 @@ function watch(){
 
 async function loadOwn(silent){
  const e=email();if(!e||teacher())return;
- let r=await api(TABLE,'email,user_id,display_name,grade_level',{email:'eq.'+e,limit:'1'});
+ let r=await api(TABLE,'email,user_id,display_name,grade_level,learning_track',{email:'eq.'+e,limit:'1'});
  if(!r.ok){if(!silent)console.warn('[LDD Grade] Chưa có bảng khối lớp. Chạy diligence_scores_grade_level_setup.sql.');return;}
  let row=Array.isArray(r.data)?r.data[0]:null;
  if(!row){
    const name=String((document.getElementById('account-display-name')||{}).textContent||'').trim();
    await api(TABLE,null,{}, {method:'POST',prefer:'resolution=ignore-duplicates,return=minimal',body:{email:e,user_id:uid(),display_name:name||null,grade_level:null,updated_at:new Date().toISOString()}});
-   r=await api(TABLE,'email,user_id,display_name,grade_level',{email:'eq.'+e,limit:'1'});row=r.ok&&Array.isArray(r.data)?r.data[0]:null;
+   r=await api(TABLE,'email,user_id,display_name,grade_level,learning_track',{email:'eq.'+e,limit:'1'});row=r.ok&&Array.isArray(r.data)?r.data[0]:null;
  }
- const old=grade;grade=gradeNum(row&&row.grade_level);
+ const old=grade;grade=row&&['ielts','work'].includes(row.learning_track)?null:gradeNum(row&&row.grade_level);
  if(old!==grade||lastApplied!==grade){applyDefaults();document.dispatchEvent(new CustomEvent('ldd:student-grade-changed',{detail:{grade}}));}
  // Home data is supplied by Today; do not run a second dashboard query pipeline.
  if(old!==grade||!silent)document.dispatchEvent(new CustomEvent('ldd:today-refresh'));
