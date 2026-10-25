@@ -1,0 +1,307 @@
+/* LDD Entertainment Library · scoped presentation, responsive by construction */
+#tab-giai-tri .ldd-ent-view[hidden],
+#tab-giai-tri .ldd-ent-player[hidden] { display: none !important; }
+
+#tab-giai-tri .ldd-entertainment-root-grid,
+#tab-giai-tri .ldd-ent-game-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 225px), 1fr));
+    gap: 15px;
+    align-items: stretch;
+}
+
+#tab-giai-tri .ldd-entertainment-root-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 8px;
+    min-width: 0;
+    padding: 20px;
+    color: var(--text, #243a59);
+    background: var(--surface, #fff);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+#tab-giai-tri .ldd-ent-root-emoji { font-size: 30px; line-height: 1.1; }
+#tab-giai-tri .ldd-entertainment-root-card strong {
+    font-size: 17px;
+    font-weight: 800;
+    line-height: 1.35;
+}
+#tab-giai-tri .ldd-entertainment-root-card small {
+    color: var(--text-muted, #63718b);
+    font-size: 12.5px;
+    line-height: 1.5;
+    font-weight: 500;
+}
+#tab-giai-tri #dub-folder-card {
+    display: flex;
+    align-items: center;
+    min-height: 118px;
+    padding: 20px;
+}
+#tab-giai-tri .ldd-ent-view {
+    display: block;
+    width: 100%;
+    min-width: 0;
+}
+#tab-giai-tri .ldd-ent-panel-heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin: 0 0 18px;
+}
+#tab-giai-tri .ldd-ent-panel-heading h3 { margin: 0; min-width: 0; }
+#tab-giai-tri .ldd-ent-game-grid .folder-card { cursor: pointer; }
+#tab-giai-tri .ldd-ent-media-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 190px), 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+#tab-giai-tri .ldd-ent-media-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+    padding: 10px;
+    border: 1px solid var(--border, #d9e3f2);
+    border-radius: 16px;
+    background: var(--surface, #fff);
+    color: var(--text, #263a59);
+    text-align: left;
+    font-family: inherit;
+    cursor: pointer;
+    transition: border-color .16s ease, box-shadow .16s ease;
+}
+#tab-giai-tri .ldd-ent-media-card:hover,
+#tab-giai-tri .ldd-ent-media-card:focus-visible,
+#tab-giai-tri .ldd-ent-chapter-card:hover,
+#tab-giai-tri .ldd-ent-chapter-card:focus-visible {
+    border-color: #809ee9;
+    box-shadow: 0 5px 18px rgba(30, 56, 100, .12);
+}
+#tab-giai-tri .ldd-ent-media-card strong {
+    padding: 0 3px;
+    font-size: 14px;
+    line-height: 1.45;
+}
+#tab-giai-tri .ldd-ent-media-card small {
+    padding: 0 3px 3px;
+    color: var(--text-muted, #68758a);
+    line-height: 1.5;
+}
+#tab-giai-tri .ldd-ent-media-cover {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    border-radius: 11px;
+    background: #e7edff;
+}
+#tab-giai-tri .ldd-ent-film-cover { aspect-ratio: 16 / 9; }
+#tab-giai-tri .ldd-ent-comic-cover { aspect-ratio: 3 / 4; }
+#tab-giai-tri .ldd-ent-thumb-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+#tab-giai-tri .ldd-ent-cover-fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    padding: 13px;
+    background: linear-gradient(135deg, #d7e5ff, #e8dbff 58%, #ffe0d3);
+    color: #334e87;
+    font-size: 18px;
+    font-weight: 850;
+    text-align: center;
+    overflow-wrap: anywhere;
+}
+#tab-giai-tri .ldd-ent-comic-cover .ldd-ent-cover-fallback {
+    background: linear-gradient(150deg, #cfe7ff 5%, #e6e0ff 46%, #ffe9cf 100%);
+    color: #385a9b;
+}
+#tab-giai-tri .ldd-ent-cover-mark {
+    position: absolute;
+    top: 10px;
+    right: 9px;
+    padding: 4px 8px;
+    border-radius: 7px;
+    background: rgba(39, 58, 100, .76);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .8px;
+}
+#tab-giai-tri .ldd-ent-duration {
+    position: absolute;
+    right: 8px;
+    bottom: 8px;
+    padding: 3px 7px;
+    border-radius: 6px;
+    color: #fff;
+    background: rgba(0, 0, 0, .68);
+    font-size: 11px;
+}
+#tab-giai-tri .ldd-ent-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 190px;
+    margin: 14px 0;
+    padding: 26px;
+    border: 1px dashed var(--border, #d0dbef);
+    border-radius: 16px;
+    color: var(--text, #3a4a64);
+    background: var(--surface-2, #f8faff);
+    text-align: center;
+}
+#tab-giai-tri .ldd-ent-empty-icon { font-size: 32px; }
+#tab-giai-tri .ldd-ent-empty strong { font-size: 17px; }
+#tab-giai-tri .ldd-ent-empty p {
+    max-width: 440px;
+    margin: 0;
+    color: var(--text-muted, #66758e);
+    line-height: 1.6;
+    font-size: 13.5px;
+}
+#tab-giai-tri .ldd-ent-player {
+    max-width: 850px;
+    margin: 0 auto 16px;
+    padding: 15px;
+    border: 1px solid var(--border, #d5dfec);
+    border-radius: 16px;
+    background: var(--surface, #fff);
+}
+#tab-giai-tri .ldd-ent-player h4 { margin: 0 0 10px; }
+#tab-giai-tri .ldd-ent-player video {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16/9;
+    background: #101524;
+    border-radius: 10px;
+}
+#tab-giai-tri .ldd-ent-series-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 15px;
+}
+#tab-giai-tri .ldd-ent-series-header h4 { margin: 0; font-size: 17px; }
+#tab-giai-tri .ldd-ent-inline-back {
+    padding: 9px 13px;
+    border: 1px solid var(--border, #d4dded);
+    border-radius: 10px;
+    background: var(--surface-2, #f7f9ff);
+    color: var(--text, #344c6e);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+#tab-giai-tri .ldd-ent-grade-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 10px 0;
+}
+#tab-giai-tri .ldd-ent-grade-btn {
+    min-height: 39px;
+    padding: 9px 15px;
+    border: 1px solid var(--border, #d9e1f0);
+    border-radius: 999px;
+    background: var(--surface, #fff);
+    color: var(--text, #364960);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+#tab-giai-tri .ldd-ent-grade-btn.is-active {
+    background: #326bea;
+    border-color: #326bea;
+    color: #fff;
+}
+#tab-giai-tri .ldd-ent-library-note {
+    margin: 10px 0 14px;
+    color: var(--text-muted, #68768b);
+    font-size: 12.5px;
+    line-height: 1.5;
+}
+#tab-giai-tri .ldd-ent-chapters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 175px), 1fr));
+    gap: 13px;
+}
+#tab-giai-tri .ldd-ent-chapter-card {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-width: 0;
+    padding: 0;
+    border: 1px solid var(--border, #d8e1ef);
+    border-radius: 14px;
+    background: var(--surface, #fff);
+    color: var(--text, #2e405a);
+    text-align: left;
+    font: inherit;
+    cursor: pointer;
+    transition: border-color .16s ease, box-shadow .16s ease;
+}
+#tab-giai-tri .ldd-ent-chapter-card:disabled { opacity: .7; cursor: progress; }
+#tab-giai-tri .ldd-ent-chapter-poster {
+    position: relative;
+    height: 112px;
+    overflow: hidden;
+    background: #e2ecff;
+}
+#tab-giai-tri .ldd-ent-chapter-poster .ldd-ent-cover-fallback {
+    background: linear-gradient(140deg, #c7e1fc, #e2dcff 64%, #f6e3d8);
+    color: #3560a1;
+    font-size: 28px;
+}
+#tab-giai-tri .ldd-ent-chapter-counter {
+    position: absolute;
+    bottom: 7px;
+    left: 8px;
+    padding: 4px 7px;
+    border-radius: 6px;
+    background: rgba(22, 48, 93, .75);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 750;
+}
+#tab-giai-tri .ldd-ent-chapter-copy {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 7px;
+    padding: 12px;
+}
+#tab-giai-tri .ldd-ent-chapter-copy strong { font-size: 13.5px; line-height: 1.45; }
+#tab-giai-tri .ldd-ent-chapter-copy small { color: var(--text-muted, #69788c); font-size: 12px; line-height: 1.5; }
+@media (max-width: 620px) {
+    #tab-giai-tri .ldd-entertainment-root-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    #tab-giai-tri .ldd-entertainment-root-card { min-height: 134px; padding: 14px; }
+    #tab-giai-tri #dub-folder-card { min-height: 134px; padding: 14px; }
+    #tab-giai-tri .ldd-ent-root-emoji { font-size: 25px; }
+    #tab-giai-tri .ldd-entertainment-root-card strong { font-size: 15px; }
+    #tab-giai-tri .ldd-entertainment-root-card small { font-size: 11.5px; }
+}
+@media (max-width: 370px) {
+    #tab-giai-tri .ldd-ent-chapters-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+    #tab-giai-tri .ldd-ent-chapter-copy { padding: 9px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    #tab-giai-tri .ldd-ent-media-card, #tab-giai-tri .ldd-ent-chapter-card { transition: none; }
+}
