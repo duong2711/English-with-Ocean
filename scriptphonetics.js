@@ -7737,13 +7737,42 @@ function toggleCompletion(symbolElement) {
         }
         window.openVocabWeeklyTest = openVocabWeeklyTest; // để folder "📁 từ vựng" (tab Kiểm tra) gọi được
 
+        let weeklyNavigationSheet = null;
+        function refreshVocabWeeklyNavigation() {
+            const host = document.getElementById('vocab-weekly-question-nav');
+            if (!host || !window.LDDExamUI) return;
+            host.hidden = !currentWeeklyTest;
+            if (!currentWeeklyTest) return;
+            weeklyNavigationSheet = window.LDDExamUI.inline(host, currentWeeklyTest.items.map((item, index) => ({
+                label: String(index + 1),
+                answered: () => Boolean(item.answered || (item._examDraft || '').trim()),
+                disabled: () => {
+                    const submit = document.getElementById('vocab-weekly-submit-btn');
+                    return Boolean(submit && submit.disabled && !vocabWeeklyBodyEl.querySelector('.vocab-weekly-next-btn'));
+                },
+                go: () => {
+                    const input = document.getElementById('vocab-weekly-answer-input');
+                    const submit = document.getElementById('vocab-weekly-submit-btn');
+                    if (submit && submit.disabled && !vocabWeeklyBodyEl.querySelector('.vocab-weekly-next-btn')) return;
+                    if (input && !input.disabled && currentWeeklyTest.items[currentWeeklyTestIndex]) {
+                        currentWeeklyTest.items[currentWeeklyTestIndex]._examDraft = input.value;
+                    }
+                    currentWeeklyTestIndex = index;
+                    renderVocabWeeklyQuestion();
+                }
+            })));
+        }
+
         function renderVocabWeeklyQuestion() {
             const test = currentWeeklyTest;
             if (!test) return;
-            const idx = currentWeeklyTestIndex;
+            let idx = currentWeeklyTestIndex;
             const total = test.items.length;
-
-            if (idx >= total) { renderVocabWeeklySummary(); return; }
+            if (idx >= total) {
+                const missing = test.items.findIndex(item => !item.answered);
+                if (missing === -1) { renderVocabWeeklySummary(); return; }
+                currentWeeklyTestIndex = idx = missing;
+            }
 
             const item = test.items[idx];
             const v = item.vocab;
@@ -7775,6 +7804,27 @@ function toggleCompletion(symbolElement) {
 
             const input = document.getElementById('vocab-weekly-answer-input');
             const submitBtn = document.getElementById('vocab-weekly-submit-btn');
+            input.value = item._examDraft || '';
+            input.addEventListener('input', () => {
+                item._examDraft = input.value;
+                if (weeklyNavigationSheet) weeklyNavigationSheet.refresh();
+            });
+            refreshVocabWeeklyNavigation();
+            // Revisiting an answered question must never count as a new attempt.
+            if (item.answered) {
+                input.disabled = true;
+                submitBtn.disabled = true;
+                const feedback = document.getElementById('vocab-weekly-feedback');
+                feedback.style.display = 'block';
+                feedback.textContent = (item.is_correct ? '✅ Đã trả lời đúng. ' : 'Đã trả lời. ') + 'Đáp án: ' +
+                    (item.question_type === 1 && canFillBlankForVocab(v) ? (v.word_norm || v.word) : (v.meaning || ''));
+                const progress = vocabWordProgressMap[String(item.vocab_id)] || {};
+                const needsPronunciation = !progress.pron_first_checked || (progress.pron_passed_count || 0) < (progress.pron_tier_required || Infinity);
+                if (!item._examPronDone && needsPronunciation) renderVocabWeeklyPronounceStep(item, v, idx, total);
+                else appendVocabWeeklyNextButton(idx, total);
+                if (weeklyNavigationSheet) weeklyNavigationSheet.refresh();
+                return;
+            }
             input.focus();
             input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); submitBtn.click(); } });
 
@@ -7783,6 +7833,7 @@ function toggleCompletion(symbolElement) {
                 if (!answer) { input.focus(); return; }
                 submitBtn.disabled = true;
                 input.disabled = true;
+                if (weeklyNavigationSheet) weeklyNavigationSheet.refresh();
 
                 const isFillBlank = item.question_type === 1 && canFillBlankForVocab(v);
                 const isCorrect = isFillBlank
@@ -7819,6 +7870,7 @@ function toggleCompletion(symbolElement) {
         // Nút "Câu tiếp theo"/"Xem kết quả" — tách riêng để dùng lại được sau cả câu trả lời
         // dịch/điền từ VÀ sau bước đọc bắt buộc (renderVocabWeeklyPronounceStep).
         function appendVocabWeeklyNextButton(idx, total) {
+            if (currentWeeklyTest && currentWeeklyTest.items[idx]) currentWeeklyTest.items[idx]._examPronDone = true;
             const nextBtn = document.createElement('button');
             nextBtn.type = 'button';
             nextBtn.className = 'vocab-weekly-next-btn';
@@ -7828,6 +7880,7 @@ function toggleCompletion(symbolElement) {
                 renderVocabWeeklyQuestion();
             });
             vocabWeeklyBodyEl.appendChild(nextBtn);
+            if (weeklyNavigationSheet) weeklyNavigationSheet.refresh();
             nextBtn.focus();
         }
 
@@ -7976,6 +8029,7 @@ function toggleCompletion(symbolElement) {
             const v = myVocabList.find(x => String(x.id) === String(vocabId));
             if (!v) return;
             currentWeeklyTest = null; // đảm bảo không lẫn với luồng bài kiểm tra tuần đang làm dở
+            refreshVocabWeeklyNavigation();
 
             vocabWeeklyProgressEl.textContent = 'Ôn lại từ đã học';
             vocabWeeklyBodyEl.innerHTML = `
@@ -19715,7 +19769,10 @@ function toggleCompletion(symbolElement) {
         return sectionId + ':' + questionId + (suffix ? ':' + suffix : '');
     }
 
+    let ctestNavigationEntries = [];
+
     function scheduleAnswerAutosave() {
+        if (window.LDDExamUI) window.LDDExamUI.refresh('ctest');
         clearTimeout(answerSaveTimer);
         answerSaveTimer = setTimeout(persistAnswers, 600);
     }
@@ -20120,6 +20177,19 @@ function toggleCompletion(symbolElement) {
     }
 
     function renderTakeQuestion(q, keyBase, labelPrefix) {
+        const element = renderTakeQuestionContent(q, keyBase, labelPrefix);
+        const type = ctestResolveQuestionType(q);
+        if (!['reading', 'listening', 'mixed'].includes(type)) {
+            const label = labelPrefix.replace(/^Câu\s*/, '').trim().replace(/\.\s*([a-z])\)$/, '.$1').replace(/[.)]$/, '');
+            ctestNavigationEntries.push({
+                label, element,
+                answered: () => ctestMissingForQuestion(q, keyBase, currentAnswers) === 0
+            });
+        }
+        return element;
+    }
+
+    function renderTakeQuestionContent(q, keyBase, labelPrefix) {
         switch (ctestResolveQuestionType(q)) {
             case 'mcq': return renderTakeMcq(q, keyBase, labelPrefix);
             case 'mcq_multi': return renderTakeMcqMulti(q, keyBase, labelPrefix);
@@ -20272,6 +20342,7 @@ function toggleCompletion(symbolElement) {
         if (violationCount > 0) violationBanner.textContent = '⚠️ Bạn đã vi phạm ' + violationCount + '/3 lần trước đó trong bài này.';
 
         takeSectionsEl.innerHTML = '';
+        ctestNavigationEntries = [];
         let qNum = 0;
         (test.sections || []).forEach(section => {
             const secEl = document.createElement('div');
@@ -20290,6 +20361,7 @@ function toggleCompletion(symbolElement) {
             });
             takeSectionsEl.appendChild(secEl);
         });
+        if (window.LDDExamUI) window.LDDExamUI.setQuestions('ctest', ctestNavigationEntries);
     }
 
     async function startOrResumeTest(test, existingSubmission) {

@@ -1,0 +1,151 @@
+/* Timer and navigation occupy real grid tracks; only the paper scrolls. */
+body.ldd-exam-active { overflow: hidden; }
+body.ldd-exam-active #inside,
+body.ldd-exam-active .main-tab-content.active {
+    animation: none !important;
+    transform: none !important;
+    will-change: auto !important;
+}
+.ldd-exam-open.ldd-exam-mounted {
+    position: fixed;
+    top: var(--ldd-exam-top, 0px);
+    inset-inline: 0;
+    height: var(--ldd-exam-height, 100dvh);
+    width: auto;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    z-index: 1500;
+    display: grid !important;
+    grid-template: auto minmax(0, 1fr) / minmax(0, 1fr) 236px;
+    background: var(--bg, #f5f7fb);
+    color: var(--text, #172033);
+    isolation: isolate;
+    box-sizing: border-box;
+}
+.ldd-exam-mounted *, .ldd-exam-inline-sheet * { box-sizing: border-box; }
+.ldd-exam-toolbar {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    padding: 8px max(12px, env(safe-area-inset-right)) 8px max(12px, env(safe-area-inset-left));
+    border-bottom: 1px solid #d9e0e8;
+    background: var(--surface, #fff);
+}
+.ldd-exam-mounted .ldd-exam-clock.ctest-take-timer {
+    position: static !important;
+    inset: auto !important;
+    margin: 0 0 0 auto !important;
+    box-shadow: none;
+    flex: 0 0 auto;
+    width: auto !important;
+    max-width: 100%;
+    padding: 6px 10px;
+    font-size: clamp(.9rem, 2.8vw, 1.05rem);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+.ldd-exam-sheet-toggle {
+    display: flex; align-items: center; gap: 8px;
+    min-height: 44px; padding: 8px 12px; margin: 0;
+    background: #eef2f6; color: #243449; border: 1px solid #d2dae4;
+    border-radius: 10px; font-family: inherit; font-size: .92rem; font-weight: 700; line-height: 1.3; cursor: pointer;
+}
+.ldd-exam-count { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ldd-exam-paper {
+    grid-column: 1; grid-row: 2;
+    min-width: 0; min-height: 0;
+    overflow: auto; overscroll-behavior: contain;
+    padding: 16px max(12px, env(safe-area-inset-left)) max(32px, env(safe-area-inset-bottom));
+    scroll-padding-block: 20px;
+    -webkit-overflow-scrolling: touch;
+}
+.ldd-exam-paper > * { max-width: 1100px; margin-inline: auto; }
+.ldd-exam-paper :is(img, video, audio, iframe) { max-width: 100%; }
+.ldd-exam-paper :is(input, select, textarea) { max-width: 100%; }
+.ldd-exam-paper :is(.ctest-take-qblock, .ctest-take-option-label, .irt-mcq-option, .ilt-mcq-option) { min-width: 0; overflow-wrap: anywhere; }
+.ldd-exam-paper :is(.ctest-take-option-label, .irt-mcq-option, .ilt-mcq-option) > span { min-width: 0; }
+.ldd-exam-paper :is(input[type="radio"], input[type="checkbox"]) { flex-shrink: 0; }
+.ldd-exam-sheet {
+    grid-column: 2; grid-row: 2;
+    min-width: 0; min-height: 0; overflow: auto;
+    padding: 16px 12px max(16px, env(safe-area-inset-bottom));
+    border-inline-start: 1px solid #d9e0e8;
+    background: var(--surface, #fff);
+    overscroll-behavior: contain;
+}
+.ldd-exam-grid,
+.ldd-exam-mounted :is(.ilt-answer-sheet-grid, .irt-answer-sheet-grid) {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(42px, 1fr));
+    gap: 6px; margin: 12px 0 0; padding: 0; min-width: 0;
+}
+.ldd-exam-grid > button,
+.ldd-exam-mounted :is(.ilt-answer-sheet-item, .irt-answer-sheet-item) {
+    min-width: 0; min-height: 44px; width: 100%; height: auto;
+    padding: 6px 2px; margin: 0;
+    border: 1px solid #b8c3d0; border-radius: 8px;
+    background: #e5e7eb; color: #374151;
+    font: inherit; font-size: .9rem; font-weight: 700; line-height: 1.25;
+    overflow-wrap: anywhere; cursor: pointer;
+}
+.ldd-exam-grid > button.is-answered,
+.ldd-exam-mounted :is(.ilt-answer-sheet-item, .irt-answer-sheet-item).is-answered {
+    background: #dcfce7; color: #14532d; border-color: #16a34a;
+}
+.ldd-exam-grid > button:focus-visible,
+.ldd-exam-sheet-toggle:focus-visible,
+.ldd-exam-inline-sheet summary:focus-visible { outline: 3px solid #2563eb; outline-offset: 2px; }
+.ldd-exam-legend { display: flex; flex-wrap: wrap; gap: 6px 12px; margin-top: 8px; font-size: .8rem; color: #475569; }
+.ldd-exam-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.ldd-exam-legend i { width: 12px; height: 12px; background: #e5e7eb; border: 1px solid #b8c3d0; border-radius: 3px; }
+.ldd-exam-legend i.is-answered { background: #dcfce7; border-color: #16a34a; }
+/* Reuse the IELTS grids and callbacks, retire the overlapping bottom drawers. */
+.ldd-exam-mounted :is(.ilt-answer-sheet, .irt-answer-sheet, .ilt-answer-sheet-toggle, .irt-answer-sheet-toggle) { display: none !important; }
+.ldd-exam-mounted :is(.ilt-take-layout, .irt-take-layout) { display: block; min-width: 0; }
+#irt-take-view.ldd-exam-mounted.irt-focus-active .ctest-take-header { display: flex; }
+#irt-take-view.ldd-exam-mounted.irt-focus-active .irt-take-layout {
+    position: static; inset: auto; width: 100%; height: auto; max-width: 100%;
+    padding: 0; margin: 0; display: block; z-index: auto;
+}
+#irt-take-view.ldd-exam-mounted .irt-take-main,
+#irt-take-view.ldd-exam-mounted :is(#irt-take-body, .irt-render-root, .irt-render-part) {
+    display: block; height: auto; min-height: 0; min-width: 0; overflow: visible;
+}
+#irt-take-view.ldd-exam-mounted .irt-render-split {
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; align-items: start;
+}
+#irt-take-view.ldd-exam-mounted :is(.irt-render-passage-col, .irt-render-questions-col) {
+    position: static; flex: none; max-height: none; min-width: 0; min-height: 0;
+    overflow: visible; border: 0; margin: 0; padding: 0;
+}
+.ldd-exam-inline-sheet { width: 100%; min-width: 0; margin: 8px 0; padding: 10px; border: 1px solid #d9e0e8; border-radius: 10px; background: #fff; color: #243449; }
+.ldd-exam-inline-sheet summary { min-height: 36px; cursor: pointer; font-weight: 700; }
+.ldd-exam-inline-sheet nav { max-height: 25dvh; overflow: auto; padding: 3px; }
+@media (min-width: 801px) {
+    .ldd-exam-sheet-toggle { cursor: default; pointer-events: none; }
+    .ldd-exam-sheet-toggle > span[aria-hidden] { display: none; }
+}
+@media (max-width: 800px) {
+    .ldd-exam-open.ldd-exam-mounted { grid-template: auto auto minmax(0, 1fr) / minmax(0, 1fr); }
+    .ldd-exam-paper { grid-row: 3; padding-top: 12px; }
+    .ldd-exam-sheet { display: none; grid-column: 1; grid-row: 2; max-height: 28dvh; padding: 10px 12px; border-inline-start: 0; border-bottom: 1px solid #d9e0e8; }
+    .ldd-exam-sheet-expanded .ldd-exam-sheet { display: block; }
+    .ldd-exam-sheet > strong { display: none; }
+    .ldd-exam-sheet .ldd-exam-legend { margin-top: 0; }
+    #irt-take-view.ldd-exam-mounted .irt-render-split { grid-template-columns: minmax(0, 1fr); }
+    .ldd-exam-paper :is(.irt-render-root, .ilt-render-root) { padding: 12px; }
+    .ldd-exam-toolbar { gap: 6px; padding-block: 6px; }
+}
+@media (max-height: 450px) {
+    .ldd-exam-sheet { max-height: 35dvh; }
+    .ldd-exam-toolbar { padding-block: 2px; }
+}
+
+.ldd-exam-grid > button:disabled { cursor: wait; opacity: .65; }
+
+@media (max-width: 1100px) {
+    #irt-take-view.ldd-exam-mounted .irt-render-split { grid-template-columns: minmax(0, 1fr); }
+}
