@@ -250,3 +250,13 @@ body.ldd-shooter-lock-scroll{overflow:hidden!important}
  }
  #shooter-panel.is-shooter-mobile-playing #shooter-answer {height:44px!important;min-height:44px!important}
 }
+
+/* Measured word lanes must remain scrollable when the native keyboard reduces height. */
+#shooter-panel .shooter-stage,
+#shooter-panel.is-shooter-mobile-playing .shooter-stage {
+ overflow-x:hidden!important;
+ overflow-y:auto!important;
+ scrollbar-width:thin;
+}
+#shooter-words-layer {position:relative;min-height:100%;}
+#shooter-panel .shooter-word {box-sizing:border-box;}
