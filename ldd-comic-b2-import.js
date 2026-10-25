@@ -31,7 +31,6 @@
    .select("frame_index,image_url").eq("grade",6).eq("unit_id","u2");
   if(readError) return "Đã tải lên B2. Không đọc được dữ liệu Unit 2, nên chưa liên kết.";
   if(existing&&existing.length) return "Đã tải lên B2. Unit 2 đang có nội dung của giáo viên; không ghi đè.";
-  const urls=new Map(matches.map(x=>[Number(x.name.slice(-7,-5)),x.url]));
   // This exact mapping is deliberately explicit, never inferred from filename slicing.
   const byFrame={
    1:matches.find(x=>x.name==="g06-u02-f01.webp")?.url||"",
@@ -72,8 +71,8 @@
   const tool=document.createElement("section");
   tool.id="ldd-ent-comic-upload-tool";
   tool.className="ldd-ent-b2-uploader";
-  const title=textNode("h4","Nhập ảnh truyện lên Backblaze B2");
-  const desc=textNode("Chọn file ZIP của bộ ảnh Dung & Dương. Ảnh được upload vào vùng chờ; chỉ tự liên kết hai ảnh phù hợp của Lớp 6 – Unit 2 nếu chưa có ảnh giáo viên.","ldd-ent-b2-help");
+  const title=textNode("h4","📤 Tải ảnh truyện lên Backblaze B2 (ZIP)");
+  const desc=textNode("Bấm Chọn tệp → chọn ldd_dung_duong_b2_upload_pack.zip trong Tải xuống. Hệ thống upload 10 ảnh lên Backblaze B2, giữ nguyên ảnh cũ của giáo viên.","ldd-ent-b2-help");
   const input=document.createElement("input");
   input.type="file";input.accept=".zip,application/zip";input.id="ldd-ent-b2-zip";input.setAttribute("aria-label","Chọn file ZIP ảnh Dung và Dương");
   const status=textNode("p","","ldd-ent-b2-status");status.setAttribute("role","status");status.setAttribute("aria-live","polite");
@@ -116,26 +115,63 @@
    }finally{input.disabled=false;input.value="";}
   });
  }
+ function isTeacherSession(session) {
+  return session?.user?.email?.toLowerCase() === TEACHER;
+ }
+ function removeUploader() {
+  document.getElementById("ldd-ent-comic-upload-tool")?.remove();
+ }
  async function check(){
   if(initializing)return initializing;
   initializing=(async()=>{
-   if(!window.supabase?.createClient)return;
+   if(!window.supabase?.createClient){
+    console.warn("[LDD comics] Supabase client library unavailable");
+    return;
+   }
    if(!authClient)authClient=window.supabase.createClient(ROOT,ANON);
-   const {data:{session}}=await authClient.auth.getSession();
-   if(!session)return;
-   // Header/UI visibility is never the security boundary; edge checks user JWT.
-   const {data:{user}}=await authClient.auth.getUser();
-   if(user?.email?.toLowerCase()===TEACHER)mount(authClient);
+   // Use the same persisted session as the site's login. Calling getUser()
+   // over the network here previously prevented the uploader from appearing
+   // when the site UI had already restored an authenticated session.
+   const {data:{session},error}=await authClient.auth.getSession();
+   if(error)throw error;
+   if(isTeacherSession(session))mount(authClient);
+   else removeUploader();
   })();
-  try{await initializing}finally{initializing=null}
+  try{await initializing}
+  catch(error){console.warn("[LDD comics] Cannot initialize teacher uploader",error);}
+  finally{initializing=null}
  }
  function init(){
-  const entry=document.getElementById("ldd-ent-comics-entry");
-  if(!entry)return;
-  entry.addEventListener("click",check,{passive:true});
-  // Also handle direct reopening after a reload while the comics section is visible.
-  const comic=document.getElementById("ldd-ent-comics-panel");
-  if(comic&&!comic.hidden)check();
+  const tab=document.getElementById("tab-giai-tri");
+  if(!tab)return;
+  // Mount immediately for a restored teacher login; don't make opening the
+  // root comic card the only opportunity to attach the uploader.
+  void check();
+  tab.addEventListener("click",function(event){
+   const target=event.target;
+   if(target?.closest?.("#ldd-ent-comics-entry, #ldd-ent-comics-panel"))void check();
+  },true);
+  document.addEventListener("ldd:ent-comics-visible",function(){void check()});
+  // Entertainment library panels can be created after this module loads.
+  if(!document.getElementById("ldd-ent-comics-panel")){
+   const observer=new MutationObserver(function(){
+    if(document.getElementById("ldd-ent-comics-panel")){
+     observer.disconnect();
+     void check();
+    }
+   });
+   observer.observe(tab,{childList:true,subtree:true});
+  }
+  // React to the auth client restoring/logging out without polling.
+  if(window.supabase?.createClient){
+   if(!authClient)authClient=window.supabase.createClient(ROOT,ANON);
+   authClient.auth.onAuthStateChange(function(event,session){
+    setTimeout(function(){
+     if(event==="SIGNED_OUT" || !isTeacherSession(session))removeUploader();
+     else mount(authClient);
+    },0);
+   });
+  }
  }
  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);
  else init();
