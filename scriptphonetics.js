@@ -8791,7 +8791,7 @@ function toggleCompletion(symbolElement) {
         const lotoFolderCard = document.getElementById('loto-folder-card');
         if (!lotoFolderCard) return;
 
-        const entertainmentGrid = document.getElementById('entertainment-folder-grid');
+        const entertainmentGrid = document.getElementById('entertainment-games-grid');
         const lotoPanel         = document.getElementById('loto-panel');
         const lotoBackBtn       = document.getElementById('loto-back-btn');
         const rosterLine        = document.getElementById('loto-roster-line');
@@ -15232,6 +15232,35 @@ function toggleCompletion(symbolElement) {
             if (!wordEl) return;
             if (window.vocabTap && window.vocabTap.handleTap) window.vocabTap.handleTap(wordEl);
         });
+
+        // Entertainment comics catalog opens the canonical learning story.
+        // It reads teacher-overridden Supabase frames through thcsInitStory(),
+        // respects Unit unlock rules, and doesn't duplicate story data or fetches.
+        window.LDDStoryNavigation = {
+            async openChapter(grade, unitId) {
+                const gradeNum = Number(grade);
+                const gradeUnits = thcsGetGradeUnits(gradeNum);
+                const unit = gradeUnits && gradeUnits.find(item => item.id === unitId);
+                if (!unit) return { ok: false, reason: 'not-found' };
+                const vocabTab = document.querySelector('#header-tabs-nav [data-main-target="tab-tu-vung"]');
+                if (vocabTab) vocabTab.click();
+                thcsFolderCard.click();
+                currentGradeUnits = gradeUnits;
+                currentGradeNum = gradeNum;
+                if (thcsGradePanelTitle) thcsGradePanelTitle.textContent = '📁 Lớp ' + gradeNum + ' (Global Success)';
+                thcsPanel.style.display = 'none';
+                thcsGrade6Panel.style.display = 'block';
+                await renderUnitGrid();
+                const index = gradeUnits.indexOf(unit);
+                if (!thcsIsUnitUnlocked(gradeNum, gradeUnits, index)) {
+                    return { ok: false, reason: 'locked' };
+                }
+                await openUnit(unit);
+                const storyTab = thcsSubtabs.querySelector('[data-sub="story"]');
+                if (storyTab) storyTab.click();
+                return { ok: true };
+            }
+        };
 
         thcsSubtabs.addEventListener('click', (e) => {
             const btn = e.target.closest('.kid-subtab-btn');
