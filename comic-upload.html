@@ -13,6 +13,7 @@ label{display:block;font-weight:700;margin-bottom:10px}.picker{display:block;wid
 button{font:inherit;font-weight:700;border:0;border-radius:12px;background:#3168ed;color:white;padding:13px 20px;margin-top:18px;cursor:pointer}
 button:disabled{cursor:not-allowed;opacity:.45}#status{margin-top:18px;white-space:pre-wrap;line-height:1.55}#results{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin-top:16px}#results a{overflow-wrap:anywhere;font-size:13px}
 code{background:#f1f4fb;border-radius:5px;padding:2px 5px}.warn{color:#ad451a}.ok{color:#17683d}
+[hidden]{display:none!important}
 
 html.ldd-comic-embedded, html.ldd-comic-embedded body { background: #fff; }
 html.ldd-comic-embedded .layout { max-width: none; margin: 0; padding: 10px 14px 20px; }
@@ -32,14 +33,16 @@ html.ldd-comic-embedded .picker { padding: 18px 12px; }
 <body><main class="layout">
 <div class="top"><a href="./">← LDD English</a><a href="./">Giải trí / Truyện tranh</a></div>
 <div class="card">
-<h1>📤 Quản lý ảnh truyện</h1>
-<p class="sub">Chỉ tài khoản giáo viên <strong>lddbaiu@gmail.com</strong> được tải lên và xuất bản ảnh.</p>
 <p id="account" role="status">Đang kiểm tra tài khoản...</p>
+<div id="teacher-controls" hidden>
+<h1>📤 Quản lý ảnh truyện</h1>
+<p class="sub">Tải ảnh truyện lên Backblaze B2.</p>
 <label for="archive">Chọn tệp ZIP chứa ảnh truyện</label>
 <input class="picker" id="archive" type="file" accept=".zip,application/zip">
 <p class="sub">Tên file mẫu: <code>g06-u01-f01.webp</code> (lớp 6, Unit 1, khung 1). Hỗ trợ ảnh PNG, JPG, WebP và nhiều Unit trong cùng một ZIP. Giới hạn 20 MB/ZIP, 100 ảnh.</p>
 <button type="button" id="upload" disabled>Tải lên B2 và cập nhật web</button>
 <p id="status" role="status" aria-live="polite"></p><div id="results"></div>
+</div>
 </div></main>
 <script>
 (function(){
@@ -50,6 +53,8 @@ const TEACHER="lddbaiu@gmail.com", ENDPOINT=ROOT+"/functions/v1/comics-b2-import
 const picker=document.getElementById("archive"),button=document.getElementById("upload"),status=document.getElementById("status"),account=document.getElementById("account"),results=document.getElementById("results");
 const client=window.supabase&&window.supabase.createClient(ROOT,KEY);
 let session=null;
+const controls=document.getElementById("teacher-controls");
+let authRequest=0;
 function units(grade){
 switch(Number(grade)){
 case 6:return typeof GRADE6_UNITS!=="undefined"?GRADE6_UNITS:[];
@@ -63,21 +68,53 @@ default:return [];
 }}
 function email(s){return String(s&&s.user&&s.user.email||"").toLowerCase();}
 async function refresh(){
- if(!client){account.textContent="Không tải được thư viện đăng nhập Supabase.";return;}
- const answer=await client.auth.getSession();session=answer.data&&answer.data.session;
- const e=email(session);const allowed=e===TEACHER;
- account.textContent=allowed?"Đã xác thực giáo viên: "+e:(e?"Bạn đang đăng nhập: "+e+". Hãy dùng tài khoản "+TEACHER+".":"Chưa đăng nhập. Hãy đăng nhập tài khoản giáo viên tại trang chính rồi quay lại đây.");
- button.disabled=!allowed;
+ const request=++authRequest;
+ controls.hidden=true;
+ button.disabled=true;
+ session=null;
+ if(!client){account.textContent="Không thể kiểm tra quyền truy cập.";return;}
+ try{
+  // Verify the identity remotely before showing any ZIP upload controls.
+  const identity=await client.auth.getUser();
+  if(request!==authRequest)return;
+  const user=identity.data&&identity.data.user;
+  if(identity.error||String(user&&user.email||"").trim().toLowerCase()!==TEACHER){
+   account.textContent="Trang này chỉ dành cho tài khoản quản trị.";
+   return;
+  }
+  const current=await client.auth.getSession();
+  if(request!==authRequest)return;
+  const active=current.data&&current.data.session;
+  if(!active?.access_token||active.user?.id!==user.id){
+   account.textContent="Vui lòng đăng nhập lại tài khoản quản trị.";
+   return;
+  }
+  session=active;
+  account.textContent="Đã xác thực tài khoản quản trị.";
+  controls.hidden=false;
+  button.disabled=false;
+ }catch(error){
+  if(request===authRequest)account.textContent="Không thể xác thực tài khoản quản trị.";
+ }
 }
-if(client)client.auth.onAuthStateChange(function(){void refresh()});
-void refresh();picker.addEventListener("change",function(){status.textContent="";results.replaceChildren()});
+if(client)client.auth.onAuthStateChange(function(){
+ ++authRequest;
+ controls.hidden=true;
+ button.disabled=true;
+ session=null;
+ // Avoid a network call inside Supabase's authentication callback.
+ setTimeout(function(){void refresh();},0);
+});
+void refresh();
+picker.addEventListener("change",function(){status.textContent="";results.replaceChildren()});
 button.addEventListener("click",async function(){
 const file=picker.files&&picker.files[0];
 if(!file||!file.name.toLowerCase().endsWith(".zip")||file.size<=0||file.size>20*1024*1024){status.textContent="Vui lòng chọn tệp ZIP hợp lệ dưới 20 MB.";return}
 button.disabled=true;results.replaceChildren();
 try{
 const current=await client.auth.getSession();session=current.data&&current.data.session;
-if(email(session)!==TEACHER||!session.access_token)throw Error("Tài khoản giáo viên chưa được xác thực.");
+const verified=await client.auth.getUser();
+if(controls.hidden||verified.error||String(verified.data?.user?.email||"").trim().toLowerCase()!==TEACHER||email(session)!==TEACHER||!session.access_token)throw Error("Tài khoản giáo viên chưa được xác thực.");
 status.textContent="Đang tải ảnh lên Backblaze B2...";
 const response=await fetch(ENDPOINT,{method:"POST",headers:{"Authorization":"Bearer "+session.access_token,"apikey":KEY,"Content-Type":"application/zip"},body:file});
 const json=await response.json().catch(function(){return{}});
@@ -107,7 +144,7 @@ status.className=errors.length?"warn":"ok";
 status.textContent="Đã cập nhật "+successful+"/"+items.length+" ảnh lên website."+(errors.length?"\nChưa cập nhật:\n"+errors.join("\n"):"\nBạn có thể mở lại Truyện tranh để xem ảnh.");
 if(successful>0 && window.parent!==window){window.parent.postMessage({type:"ldd:comic-images-published",success:successful},location.origin);}
 }catch(e){status.className="warn";status.textContent="Có lỗi: "+String(e.message||e);}
-finally{button.disabled=email(session)!==TEACHER;}
+finally{button.disabled=controls.hidden||email(session)!==TEACHER;}
 });
 })();
 </script></body></html>
