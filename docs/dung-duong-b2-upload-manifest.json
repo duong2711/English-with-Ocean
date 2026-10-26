@@ -1,7 +1,7 @@
 {
   "manifest_version": "1.0",
   "project": "LDD English",
-  "series": "Truyện học đường Dung và Dương",
+  "series": "Truyện học đường",
   "prepared_at": "2026-10-25",
   "purpose": "Staged Backblaze B2 uploads and explicit, review-gated image_url links for existing story frames.",
   "upload_has_been_performed": false,
