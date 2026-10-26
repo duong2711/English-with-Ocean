@@ -113,7 +113,7 @@
   const title=textNode("h4","📤 Tải ảnh truyện lên Backblaze B2 (ZIP)");
   const desc=textNode("Chọn ZIP chứa ảnh có tên g06-u01-f01.webp (lớp 6, Unit 1, khung 1). Hỗ trợ nhiều lớp/Unit trong một ZIP, JPG/PNG/WebP, tối đa 100 ảnh và 20 MB. Ảnh cũ chỉ thay đổi khi khung tương ứng được cập nhật.","ldd-ent-b2-help");
   const input=document.createElement("input");
-  input.type="file";input.accept=".zip,application/zip";input.id="ldd-ent-b2-zip";input.setAttribute("aria-label","Chọn file ZIP ảnh Dung và Dương");
+  input.type="file";input.accept=".zip,application/zip";input.id="ldd-ent-b2-zip";input.setAttribute("aria-label","Chọn file ZIP ảnh truyện học đường");
   const status=textNode("p","","ldd-ent-b2-status");status.setAttribute("role","status");status.setAttribute("aria-live","polite");
   const results=document.createElement("div");results.className="ldd-ent-b2-results";
   tool.append(title,desc,input,status,results);
