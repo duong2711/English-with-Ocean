@@ -445,16 +445,157 @@
                 const card = el('button', 'ldd-ent-media-card ldd-ent-comic-cover-card');
                 card.type = 'button';
                 const cover = el('div', 'ldd-ent-media-cover ldd-ent-comic-cover');
-                cover.append(picture(series.thumbnail_url, 'Bìa truyện ' + series.title, 'Truyện học đường'));
+                cover.append(picture(series.thumbnail_url, 'Bìa truyện ' + series.title, series.type === 'wimpy' ? '📓' : 'Truyện học đường'));
                 cover.append(el('span', 'ldd-ent-cover-mark', 'COMIC'));
                 card.append(cover, el('strong', '', String(series.title || 'Truyện tranh')));
-                card.append(el('small', '', 'Lớp 6–12 · ' + GRADE_LIST.reduce((n, g) =>
-                    n + gradeUnits(g).filter(u => Array.isArray(u.storyFrames) && u.storyFrames.length).length, 0) + ' chương'));
-                card.addEventListener('click', function () { showGrades(series); });
+                const detail = series.type === 'wimpy' ? 'Tập 1 · Theo tháng và thứ' : 'Lớp 6–12 · ' + GRADE_LIST.reduce((n, g) =>
+                    n + gradeUnits(g).filter(u => Array.isArray(u.storyFrames) && u.storyFrames.length).length, 0) + ' chương';
+                card.append(el('small', '', detail));
+                card.addEventListener('click', function () {
+                    if (series.type === 'wimpy') showWimpyMonths(series);
+                    else showGrades(series);
+                });
                 grid.append(card);
             });
             if (grid.children.length) comicBody.append(grid);
             else comicBody.append(placeholder('Chưa có truyện', 'Bộ truyện sẽ xuất hiện ở đây khi có dữ liệu.'));
+        }
+
+        const WIMPY_ROOT = 'https://f005.backblazeb2.com/file/lddenglish/comics/wimpy-kid-book-1/';
+        const wimpyPageUrl = name => WIMPY_ROOT + encodeURIComponent(name);
+        let wimpyWordPositionsPromise = null;
+        function wimpyWordPositions() {
+            if (!wimpyWordPositionsPromise) {
+                wimpyWordPositionsPromise = fetch('ldd-wimpy-word-positions.json?v=20261027-wimpy1')
+                    .then(response => { if (!response.ok) throw new Error('Word data unavailable'); return response.json(); })
+                    .catch(error => { wimpyWordPositionsPromise = null; console.warn('[Wimpy words]', error); return {}; });
+            }
+            return wimpyWordPositionsPromise;
+        }
+        function wimpyHeader(series, backLabel, onBack) {
+            const header = el('div', 'ldd-ent-series-header');
+            const back = el('button', 'ldd-ent-inline-back', backLabel);
+            back.type = 'button'; back.addEventListener('click', onBack);
+            header.append(back, el('h4', '', series.title));
+            comicBody.append(header);
+        }
+        function showWimpyMonths(series) {
+            closeReaderZoom(); activeComicSeries = null; comicRequest += 1;
+            comics.classList.remove('is-reading'); comicBody.replaceChildren();
+            wimpyHeader(series, '← Danh sách bộ truyện', showSeriesLibrary);
+            const grid = el('div', 'ldd-wimpy-grid');
+            (window.LDDWimpyBook || []).forEach(month => {
+                const card = el('button', 'ldd-wimpy-card'); card.type = 'button';
+                const preview = el('div', 'ldd-wimpy-card-art');
+                preview.append(picture(wimpyPageUrl(month.entries[0].pages[0]), 'Trang đầu ' + month.label, '📓'));
+                card.append(preview, el('strong', '', month.label), el('small', '', month.english + ' · ' + month.entries.length + ' mẩu truyện'));
+                card.addEventListener('click', () => showWimpyDays(series, month)); grid.append(card);
+            });
+            comicBody.append(grid);
+        }
+        function showWimpyDays(series, month) {
+            closeReaderZoom(); activeComicSeries = null; comicRequest += 1;
+            comics.classList.remove('is-reading'); comicBody.replaceChildren();
+            wimpyHeader(series, '← Các tháng', () => showWimpyMonths(series));
+            comicBody.append(el('h4', 'ldd-wimpy-month-title', month.label + ' · ' + month.english));
+            const grid = el('div', 'ldd-wimpy-grid');
+            const counts = {};
+            month.entries.forEach((entry, index) => {
+                counts[entry.day] = (counts[entry.day] || 0) + 1;
+                const card = el('button', 'ldd-wimpy-card'); card.type = 'button';
+                const preview = el('div', 'ldd-wimpy-card-art');
+                preview.append(picture(wimpyPageUrl(entry.pages[0]), 'Trang đầu ' + entry.dayVi, '📖'));
+                card.append(preview, el('strong', '', entry.dayVi + ' · ' + counts[entry.day]),
+                    el('small', '', entry.day + ' · ' + entry.pages.length + ' trang'));
+                card.addEventListener('click', () => showWimpyReader(series, month, entry, index));
+                grid.append(card);
+            });
+            comicBody.append(grid);
+        }
+        function showWimpyReader(series, month, entry, entryIndex) {
+            closeReaderZoom();
+            const opener = document.activeElement;
+            const dialog = el('dialog', 'ldd-comic-overlay ldd-wimpy-reader');
+            dialog.setAttribute('aria-label', series.title + ' – ' + month.label + ' – ' + entry.dayVi);
+            const header = el('div', 'ldd-wimpy-reader-header');
+            const label = el('strong', '', month.label + ' · ' + entry.dayVi);
+            const close = el('button', 'ldd-wimpy-close', '×');
+            close.type = 'button'; close.setAttribute('aria-label', 'Đóng truyện');
+            close.addEventListener('click', () => dialog.close()); header.append(label, close);
+            const viewport = el('div', 'ldd-wimpy-viewport'); viewport.tabIndex = 0;
+            const image = el('img', 'ldd-wimpy-page'); image.alt = 'Trang truyện'; image.draggable = false;
+            const failure = el('p', 'ldd-wimpy-error', 'Không tải được trang truyện. Vui lòng thử lại.'); failure.hidden = true;
+            const pageWrap = el('div', 'ldd-wimpy-page-wrap');
+            const wordsLayer = el('div', 'ldd-wimpy-words');
+            pageWrap.append(image, wordsLayer); viewport.append(pageWrap, failure);
+            let lookupHome = null;
+            function restoreLookup() {
+                if (!lookupHome) return;
+                const {popup, parent, next} = lookupHome;
+                popup.style.display = 'none';
+                if (next && next.parentNode === parent) parent.insertBefore(popup, next); else parent.append(popup);
+                lookupHome = null;
+            }
+            wordsLayer.addEventListener('click', event => {
+                const word = event.target.closest('.tappable-word');
+                if (!word || !window.vocabTap?.handleTap) return;
+                event.preventDefault(); event.stopPropagation();
+                const popup = document.getElementById('word-lookup-popup');
+                if (popup && popup.parentNode !== dialog) {
+                    lookupHome = {popup, parent:popup.parentNode, next:popup.nextSibling}; dialog.append(popup);
+                }
+                window.vocabTap.handleTap(word);
+            });
+            dialog.addEventListener('cancel', event => {
+                if (lookupHome?.popup && lookupHome.popup.style.display !== 'none') {
+                    event.preventDefault(); lookupHome.popup.querySelector('#word-lookup-close')?.click();
+                }
+            });
+            const controls = el('div', 'ldd-wimpy-controls');
+            const prev = el('button', '', '← Trước'); prev.type = 'button';
+            const count = el('span', 'ldd-wimpy-page-count'); count.setAttribute('aria-live', 'polite');
+            const next = el('button', '', 'Tiếp →'); next.type = 'button';
+            controls.append(prev, count, next); dialog.append(header, viewport, controls);
+            comics.append(dialog); readerZoom = dialog; let page = 0;
+            let positions = {};
+            function renderWords() {
+                wordsLayer.replaceChildren();
+                const list = positions[entry.pages[page]] || [];
+                wordsLayer.dataset.vocabContext = list.map(item => item[0]).join(' ');
+                wordsLayer.dataset.vocabSource = series.title + ' – ' + month.label + ' – ' + entry.dayVi;
+                list.forEach(([word, x, y, w, h]) => {
+                    const hit = el('span', 'ldd-wimpy-word-hit');
+                    hit.style.left = x + '%'; hit.style.top = y + '%'; hit.style.width = w + '%'; hit.style.height = h + '%';
+                    hit.append(comicText(word)); wordsLayer.append(hit);
+                });
+            }
+            function renderPage() {
+                failure.hidden = true; image.hidden = false;
+                image.alt = series.title + ', ' + month.label + ', ' + entry.dayVi + ', trang ' + (page + 1);
+                image.src = wimpyPageUrl(entry.pages[page]);
+                count.textContent = (page + 1) + ' / ' + entry.pages.length;
+                prev.disabled = page === 0; next.disabled = page === entry.pages.length - 1;
+                viewport.scrollTop = 0; renderWords();
+                if (entry.pages[page + 1]) { const preload = new Image(); preload.src = wimpyPageUrl(entry.pages[page + 1]); }
+            }
+            image.addEventListener('error', () => { image.hidden = true; failure.hidden = false; });
+            prev.addEventListener('click', () => { if (page > 0) { page--; renderPage(); } });
+            next.addEventListener('click', () => { if (page + 1 < entry.pages.length) { page++; renderPage(); } });
+            dialog.addEventListener('keydown', e => {
+                if (lookupHome?.popup && lookupHome.popup.style.display !== 'none') return;
+                if (e.key === 'ArrowRight') { e.preventDefault(); next.click(); }
+                else if (e.key === 'ArrowLeft') { e.preventDefault(); prev.click(); }
+            });
+            let start = null;
+            viewport.addEventListener('touchstart', e => { if (e.touches.length === 1) start = {x:e.touches[0].clientX,y:e.touches[0].clientY}; }, {passive:true});
+            viewport.addEventListener('touchend', e => {
+                if (!start || !e.changedTouches.length) return;
+                const dx = e.changedTouches[0].clientX - start.x, dy = e.changedTouches[0].clientY - start.y;
+                start = null; if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 1.4) (dx < 0 ? next : prev).click();
+            }, {passive:true});
+            dialog.addEventListener('close', () => { restoreLookup(); if (readerZoom === dialog) readerZoom = null; dialog.remove(); if (opener?.isConnected) opener.focus({preventScroll:true}); });
+            renderPage(); dialog.showModal(); viewport.focus({preventScroll:true});
+            wimpyWordPositions().then(data => { if (dialog.open) { positions = data; renderWords(); } });
         }
 
         function showGrades(series, selectedGrade) {

@@ -493,3 +493,34 @@ body:has(.ldd-ent-upload-dialog[open]) { overflow: hidden; }
   }
   .ldd-ent-upload-header { padding: 9px 12px; }
 }
+
+/* Diary of a Wimpy Kid: month index and a full-page reader. */
+#tab-giai-tri .ldd-wimpy-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:16px; }
+#tab-giai-tri .ldd-wimpy-card { padding:0 0 13px; border:1px solid #e4d8c6; border-radius:14px; background:#fff; color:#302b26; overflow:hidden; cursor:pointer; text-align:left; box-shadow:0 4px 14px #392b1910; }
+#tab-giai-tri .ldd-wimpy-card:focus-visible { outline:3px solid #935337; outline-offset:3px; }
+#tab-giai-tri .ldd-wimpy-card strong, #tab-giai-tri .ldd-wimpy-card small { display:block; margin:8px 12px 0; }
+#tab-giai-tri .ldd-wimpy-card small { color:#6d6258; line-height:1.4; }
+#tab-giai-tri .ldd-wimpy-card-art { height:155px; overflow:hidden; background:#f5f0e6; }
+#tab-giai-tri .ldd-wimpy-card-art img { display:block; width:100%; height:100%; object-fit:cover; object-position:top; }
+#tab-giai-tri .ldd-wimpy-month-title { margin:18px 0 14px; }
+#tab-giai-tri .ldd-wimpy-reader { display:none; width:min(1000px,96vw); max-width:96vw; height:92dvh; max-height:92dvh; }
+#tab-giai-tri .ldd-wimpy-reader[open] { display:flex; flex-direction:column; }
+#tab-giai-tri .ldd-wimpy-reader-header, #tab-giai-tri .ldd-wimpy-controls { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 15px; background:#fffdf8; flex:0 0 auto; }
+#tab-giai-tri .ldd-wimpy-reader-header { border-bottom:1px solid #e7e0d5; }
+#tab-giai-tri .ldd-wimpy-close { width:40px; height:40px; border:0; border-radius:50%; background:#f2e9dd; font-size:26px; cursor:pointer; }
+#tab-giai-tri .ldd-wimpy-viewport { flex:1 1 auto; min-height:0; overflow:auto; overscroll-behavior:contain; background:#e8e4dc; text-align:center; touch-action:pan-y; }
+#tab-giai-tri .ldd-wimpy-page-wrap { position:relative; width:min(100%, 830px); margin:0 auto; }
+#tab-giai-tri .ldd-wimpy-page { display:block; width:100%; height:auto; background:white; }
+#tab-giai-tri .ldd-wimpy-words { position:absolute; inset:0; pointer-events:none; }
+#tab-giai-tri .ldd-wimpy-word-hit { position:absolute; pointer-events:auto; overflow:hidden; line-height:1; }
+#tab-giai-tri .ldd-wimpy-word-hit .tappable-word { display:block; width:100%; height:100%; overflow:hidden; color:transparent !important; background:transparent !important; border:0 !important; cursor:pointer; font-size:1px; }
+#tab-giai-tri .ldd-wimpy-word-hit:hover { background:#f7db7470; border-radius:2px; }
+#tab-giai-tri .ldd-wimpy-reader > #word-lookup-popup { position:absolute; inset:0; width:100%; height:100%; z-index:5; padding:14px; box-sizing:border-box; border-radius:inherit; }
+#tab-giai-tri .ldd-wimpy-reader .word-lookup-inner { max-width:100%; max-height:calc(90dvh - 32px); overflow-y:auto; }
+#tab-giai-tri .ldd-wimpy-controls { border-top:1px solid #e7e0d5; }
+#tab-giai-tri .ldd-wimpy-controls button { border:0; border-radius:9px; padding:10px 15px; background:#674330; color:white; font-weight:700; cursor:pointer; }
+#tab-giai-tri .ldd-wimpy-controls button:disabled { opacity:.4; cursor:default; }
+#tab-giai-tri .ldd-wimpy-page-count { font-weight:700; font-variant-numeric:tabular-nums; }
+#tab-giai-tri .ldd-wimpy-error { padding:24px; }
+#tab-giai-tri .ldd-wimpy-page[hidden], #tab-giai-tri .ldd-wimpy-error[hidden] { display:none; }
+@media (max-width:480px) { #tab-giai-tri .ldd-wimpy-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; } #tab-giai-tri .ldd-wimpy-card-art { height:135px; } #tab-giai-tri .ldd-wimpy-reader { height:94dvh; max-height:94dvh; } }
