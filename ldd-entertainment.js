@@ -343,18 +343,23 @@
         }
         async function refreshTeacherUpload() {
             const request = ++uploadAuthRequest;
-            hideTeacherUpload();
-            if (!uploadAuth) return;
+            uploadTrigger.disabled = true;
+            uploadTrigger.hidden = true;
+            if (!uploadAuth) { hideTeacherUpload(); return; }
             try {
-                // getUser verifies the current session against the Auth server.
+                // Verify identity remotely, but do not close an admin's open
+                // upload popup during a normal tab switch or refocus.
                 const { data, error } = await uploadAuth.auth.getUser();
                 if (request !== uploadAuthRequest) return;
                 if (!error && String(data?.user?.email || '').trim().toLowerCase() === TEACHER_EMAIL) {
                     teacherCanUpload = true;
                     uploadTrigger.disabled = false;
                     uploadTrigger.hidden = false;
+                } else {
+                    hideTeacherUpload();
                 }
             } catch (error) {
+                if (request === uploadAuthRequest) hideTeacherUpload();
                 console.warn('[LDD comic upload access]', error);
             }
         }
@@ -368,11 +373,17 @@
             ++uploadAuthRequest;
             hideTeacherUpload();
         }, true);
-        if (uploadAuth) uploadAuth.auth.onAuthStateChange(function () {
-            ++uploadAuthRequest;
-            hideTeacherUpload();
-            // Supabase recommends not awaiting auth API requests inside this callback.
-            if (currentView === 'comics') setTimeout(function () { void refreshTeacherUpload(); }, 0);
+        if (uploadAuth) uploadAuth.auth.onAuthStateChange(function (event, session) {
+            // Revoke immediately for logout/account switch. A routine token
+            // refresh should not interrupt a teacher uploading images.
+            if (event === 'SIGNED_OUT' || String(session?.user?.email || '').trim().toLowerCase() !== TEACHER_EMAIL) {
+                ++uploadAuthRequest;
+                hideTeacherUpload();
+            }
+            // Do not await Auth API calls inside Supabase's auth callback.
+            if (currentView === 'comics' && !uploadDialog.open) {
+                setTimeout(function () { void refreshTeacherUpload(); }, 0);
+            }
         });
 
         const films = el('div', 'ldd-ent-film-body');
