@@ -174,7 +174,7 @@
         for (const item of rows) {
             const id = String(item.unit_id || '');
             const url = safeAsset(item.image_url);
-            if (!/^u\\d{1,2}$/.test(id) || !url) continue;
+            if (!/^u[0-9]{1,2}$/.test(id) || !url) continue;
             if (!covers.has(id)) covers.set(id, []);
             covers.get(id).push({url, index: Number(item.frame_index) || 999});
         }
