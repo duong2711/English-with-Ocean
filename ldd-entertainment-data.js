@@ -44,8 +44,8 @@ window.LDDEntMediaCatalog = Object.freeze({
     comics: [
         {
             id: 'dung-duong-school-story',
-            title: 'Truyện học đường Dung và Dương',
-            description: 'Hành trình học đường của Dương và Dung qua các Unit tiếng Anh lớp 6–12.',
+            title: 'Truyện học đường',
+            description: 'Những câu chuyện về cuộc sống học đường qua các Unit tiếng Anh lớp 6–12.',
             // Existing teacher-uploaded illustration from class 6, Unit 1.
             thumbnail_url: 'https://f005.backblazeb2.com/file/lddenglish/comics/dung-duong/g06/u03/8548dcdffaef-g06-u03-f01.webp', // Uses an uploaded illustration, not a stale placeholder.
             grades: [6, 7, 8, 9, 10, 11, 12],
