@@ -445,7 +445,7 @@
                 const card = el('button', 'ldd-ent-media-card ldd-ent-comic-cover-card');
                 card.type = 'button';
                 const cover = el('div', 'ldd-ent-media-cover ldd-ent-comic-cover');
-                cover.append(picture(series.thumbnail_url, 'Bìa truyện ' + series.title, 'Dung & Dương'));
+                cover.append(picture(series.thumbnail_url, 'Bìa truyện ' + series.title, 'Truyện học đường'));
                 cover.append(el('span', 'ldd-ent-cover-mark', 'COMIC'));
                 card.append(cover, el('strong', '', String(series.title || 'Truyện tranh')));
                 card.append(el('small', '', 'Lớp 6–12 · ' + GRADE_LIST.reduce((n, g) =>
@@ -665,7 +665,7 @@
                     const text = el('div', 'ldd-comic-swipe-text');
                     text.append(comicText(frame.content_html));
                     text.dataset.vocabContext = text.textContent;
-                    text.dataset.vocabSource = 'Truyện Dung và Dương – Lớp ' + grade + ' – Unit ' + unit.number;
+                    text.dataset.vocabSource = 'Truyện học đường – Lớp ' + grade + ' – Unit ' + unit.number;
                     slide.append(text);
                     deck.append(slide);
                 });
