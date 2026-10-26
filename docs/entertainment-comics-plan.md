@@ -1,4 +1,4 @@
-# LDD English — Giải trí / Truyện Dung–Dương
+# LDD English — Giải trí / Truyện học đường
 
 ## Thiết kế được triển khai
 
@@ -8,7 +8,7 @@ Trò chơi gom Lô tô, Bắn từ vựng và Đua xe từ vựng. Cả 3 dùng 
 
 Phim ảnh là danh mục video ngắn theo thumbnail, tên, mô tả và thời lượng. Chưa có video do người quản trị cung cấp, nên danh sách hiện trống, không có đường link giả. Media sẽ chỉ được nạp sau khi chọn phim.
 
-Truyện tranh gồm bộ "Truyện học đường Dung và Dương" và các chương từ Unit lớp 6–12. Đã kiểm tra 84 Unit, 336 storyFrames trong các file tĩnh (lớp 6–9 có 12 Unit/lớp, lớp 10–12 có 10 Unit/lớp, mỗi Unit 4 khung). Toàn bộ image_url trong bản nháp tĩnh đều trống. Ảnh do giáo viên lưu trong bảng Supabase không được tính trong thống kê này.
+Truyện tranh gồm bộ "Truyện học đường" và các chương từ Unit lớp 6–12. Đã kiểm tra 84 Unit, 336 storyFrames trong các file tĩnh (lớp 6–9 có 12 Unit/lớp, lớp 10–12 có 10 Unit/lớp, mỗi Unit 4 khung). Toàn bộ image_url trong bản nháp tĩnh đều trống. Ảnh do giáo viên lưu trong bảng Supabase không được tính trong thống kê này.
 
 Quan trọng: Khi chọn chương, website điều hướng sang đúng phần Từ vựng → THCS/THPT → Lớp → Unit → Câu chuyện hiện có, tuân thủ khóa Unit và dùng nội dung hình/thoại ưu tiên từ Supabase. Danh mục tĩnh không sao chép/ghi đè nội dung học.
 
