@@ -472,6 +472,15 @@
             }
             return wimpyWordPositionsPromise;
         }
+        let wimpyTranslationsPromise = null;
+        function wimpyTranslations() {
+            if (!wimpyTranslationsPromise) {
+                wimpyTranslationsPromise = fetch('ldd-wimpy-translations.json?v=20261027-translation1')
+                    .then(response => { if (!response.ok) throw new Error('Không tải được bản dịch'); return response.json(); })
+                    .catch(error => { wimpyTranslationsPromise = null; throw error; });
+            }
+            return wimpyTranslationsPromise;
+        }
         function wimpyHeader(series, backLabel, onBack) {
             const header = el('div', 'ldd-ent-series-header');
             const back = el('button', 'ldd-ent-inline-back', backLabel);
@@ -521,13 +530,24 @@
             const label = el('strong', '', month.label + ' · ' + entry.dayVi);
             const close = el('button', 'ldd-wimpy-close', '×');
             close.type = 'button'; close.setAttribute('aria-label', 'Đóng truyện');
-            close.addEventListener('click', () => dialog.close()); header.append(label, close);
+            const headerActions = el('div', 'ldd-wimpy-reader-actions');
+            const toggleTranslation = el('button', 'ldd-wimpy-translate-toggle', 'Xem bản dịch');
+            toggleTranslation.type = 'button'; toggleTranslation.setAttribute('aria-pressed', 'false');
+            toggleTranslation.setAttribute('aria-controls', 'ldd-wimpy-translation');
+            close.addEventListener('click', () => dialog.close());
+            headerActions.append(toggleTranslation, close); header.append(label, headerActions);
             const viewport = el('div', 'ldd-wimpy-viewport'); viewport.tabIndex = 0;
             const image = el('img', 'ldd-wimpy-page'); image.alt = 'Trang truyện'; image.draggable = false;
             const failure = el('p', 'ldd-wimpy-error', 'Không tải được trang truyện. Vui lòng thử lại.'); failure.hidden = true;
             const pageWrap = el('div', 'ldd-wimpy-page-wrap');
             const wordsLayer = el('div', 'ldd-wimpy-words');
-            pageWrap.append(image, wordsLayer); viewport.append(pageWrap, failure);
+            const translation = el('section', 'ldd-wimpy-translation');
+            translation.id = 'ldd-wimpy-translation'; translation.hidden = true;
+            translation.setAttribute('aria-live', 'polite');
+            const translationHeading = el('h4', '', 'Bản dịch tiếng Việt');
+            const translationText = el('div', 'ldd-wimpy-translation-text');
+            translation.append(translationHeading, translationText);
+            pageWrap.append(image, wordsLayer); viewport.append(pageWrap, failure, translation);
             let lookupHome = null;
             function restoreLookup() {
                 if (!lookupHome) return;
@@ -557,7 +577,26 @@
             const next = el('button', '', 'Tiếp →'); next.type = 'button';
             controls.append(prev, count, next); dialog.append(header, viewport, controls);
             comics.append(dialog); readerZoom = dialog; let page = 0;
-            let positions = {};
+            let positions = {}, translations = null, translationOn = false, translationRequest = 0;
+            async function renderTranslation() {
+                const request = ++translationRequest;
+                translation.hidden = !translationOn;
+                toggleTranslation.textContent = translationOn ? 'Ẩn bản dịch' : 'Xem bản dịch';
+                toggleTranslation.setAttribute('aria-pressed', String(translationOn));
+                if (!translationOn) return;
+                const name = entry.pages[page];
+                if (!translations) {
+                    translationText.textContent = 'Đang tải bản dịch…';
+                    try { translations = await wimpyTranslations(); }
+                    catch (_) {
+                        if (request === translationRequest && dialog.open) translationText.textContent = 'Không tải được bản dịch. Hãy đóng và mở lại phần dịch để thử lại.';
+                        return;
+                    }
+                }
+                if (request !== translationRequest || !dialog.open || !translationOn || entry.pages[page] !== name) return;
+                translationText.textContent = translations[name] || 'Trang này chưa có bản dịch.';
+            }
+            toggleTranslation.addEventListener('click', () => { translationOn = !translationOn; void renderTranslation(); });
             function renderWords() {
                 wordsLayer.replaceChildren();
                 const list = positions[entry.pages[page]] || [];
@@ -575,7 +614,7 @@
                 image.src = wimpyPageUrl(entry.pages[page]);
                 count.textContent = (page + 1) + ' / ' + entry.pages.length;
                 prev.disabled = page === 0; next.disabled = page === entry.pages.length - 1;
-                viewport.scrollTop = 0; renderWords();
+                viewport.scrollTop = 0; renderWords(); void renderTranslation();
                 if (entry.pages[page + 1]) { const preload = new Image(); preload.src = wimpyPageUrl(entry.pages[page + 1]); }
             }
             image.addEventListener('error', () => { image.hidden = true; failure.hidden = false; });

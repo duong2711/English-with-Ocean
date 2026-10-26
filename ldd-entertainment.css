@@ -524,3 +524,12 @@ body:has(.ldd-ent-upload-dialog[open]) { overflow: hidden; }
 #tab-giai-tri .ldd-wimpy-error { padding:24px; }
 #tab-giai-tri .ldd-wimpy-page[hidden], #tab-giai-tri .ldd-wimpy-error[hidden] { display:none; }
 @media (max-width:480px) { #tab-giai-tri .ldd-wimpy-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; } #tab-giai-tri .ldd-wimpy-card-art { height:135px; } #tab-giai-tri .ldd-wimpy-reader { height:94dvh; max-height:94dvh; } }
+
+#tab-giai-tri .ldd-wimpy-reader-actions { display:flex; align-items:center; gap:8px; flex-shrink:0; }
+#tab-giai-tri .ldd-wimpy-translate-toggle { border:1px solid #8b6044; border-radius:9px; padding:8px 12px; background:#fff; color:#69452e; font:inherit; font-weight:700; cursor:pointer; }
+#tab-giai-tri .ldd-wimpy-translate-toggle[aria-pressed="true"] { background:#69452e; color:#fff; }
+#tab-giai-tri .ldd-wimpy-translation { max-width:830px; box-sizing:border-box; margin:0 auto; padding:18px clamp(18px,4vw,38px) 30px; background:#fffdf8; text-align:left; color:#283445; }
+#tab-giai-tri .ldd-wimpy-translation[hidden] { display:none; }
+#tab-giai-tri .ldd-wimpy-translation h4 { margin:0 0 12px; color:#69452e; }
+#tab-giai-tri .ldd-wimpy-translation-text { white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.75; font-size:clamp(16px,1.65vw,19px); }
+@media (max-width:480px) { #tab-giai-tri .ldd-wimpy-reader-header { gap:5px; } #tab-giai-tri .ldd-wimpy-reader-header strong { font-size:14px; } #tab-giai-tri .ldd-wimpy-translate-toggle { padding:8px; font-size:13px; } }
