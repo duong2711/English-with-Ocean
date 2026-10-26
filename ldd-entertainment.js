@@ -60,19 +60,22 @@
     }
 
     function picture(src, alt, fallback) {
-        const url = safeAsset(src);
-        if (url) {
-            const img = el('img', 'ldd-ent-thumb-image');
-            img.src = url;
-            img.loading = 'lazy';
-            img.decoding = 'async';
-            img.alt = alt;
-            img.addEventListener('error', function () {
-                img.replaceWith(el('div', 'ldd-ent-cover-fallback', fallback));
-            }, { once: true });
-            return img;
-        }
-        return el('div', 'ldd-ent-cover-fallback', fallback);
+        // Try the latest upload first, then other saved panels. Never leave a broken <img>.
+        const sources = (Array.isArray(src) ? src : [src]).map(safeAsset).filter(Boolean);
+        const urls = Array.from(new Set(sources));
+        if (!urls.length) return el('div', 'ldd-ent-cover-fallback', fallback);
+        const img = el('img', 'ldd-ent-thumb-image');
+        img.loading = 'lazy';
+        img.decoding = 'async';
+        img.alt = alt;
+        let index = 0;
+        img.addEventListener('error', function () {
+            index += 1;
+            if (index < urls.length) img.src = urls[index];
+            else img.replaceWith(el('div', 'ldd-ent-cover-fallback', fallback));
+        });
+        img.src = urls[0];
+        return img;
     }
 
 
@@ -144,6 +147,48 @@
         return mergeComicFrames(unit, rows);
     }
 
+    // Load only image pointers for the selected grade (max 48 rows), once per visit.
+    // Keep the static preview snapshot as an immediate, offline-safe fallback.
+    async function fetchComicCovers(grade) {
+        const project = 'ywqbaksmmtvwbojcgsdd';
+        const apiKey = 'sb_publishable_AQZ6Jc8ZGID7kfRYPe9fLQ_Wmy7ekp_';
+        let token = '';
+        try {
+            const saved = JSON.parse(localStorage.getItem('sb-' + project + '-auth-token') || 'null');
+            token = (saved && (saved.access_token || saved.currentSession?.access_token || saved[0]?.access_token)) || '';
+        } catch (_) {}
+        if (!token) return new Map();
+        const params = new URLSearchParams({
+            select: 'unit_id,frame_index,image_url',
+            grade: 'eq.' + Number(grade),
+            order: 'frame_index.asc',
+            limit: '100'
+        });
+        const response = await fetch('https://' + project + '.supabase.co/rest/v1/thcs_story_frames?' + params, {
+            headers: {apikey: apiKey, Authorization: 'Bearer ' + token}, cache: 'no-store'
+        });
+        if (!response.ok) throw Error('Comic covers: ' + response.status);
+        const rows = await response.json();
+        if (!Array.isArray(rows)) throw Error('Comic covers: invalid response');
+        const covers = new Map();
+        for (const item of rows) {
+            const id = String(item.unit_id || '');
+            const url = safeAsset(item.image_url);
+            if (!/^u\\d{1,2}$/.test(id) || !url) continue;
+            if (!covers.has(id)) covers.set(id, []);
+            covers.get(id).push({url, index: Number(item.frame_index) || 999});
+        }
+        for (const [id, entries] of covers) {
+            // Hashed upload paths supersede legacy flat paths that may be broken.
+            entries.sort((a, b) =>
+                Number(b.url.includes('/comics/dung-duong/')) - Number(a.url.includes('/comics/dung-duong/')) ||
+                a.index - b.index
+            );
+            covers.set(id, Array.from(new Set(entries.map(entry => entry.url))));
+        }
+        return covers;
+    }
+
     function init() {
         const tab = $('tab-giai-tri');
         const home = $('entertainment-folder-grid');
@@ -157,6 +202,27 @@
 
         let currentView = 'root';
         let comicRequest = 0;
+        const coverCache = new Map();
+        let activeComicSeries = null;
+        let activeComicGrade = 6;
+        function getComicCovers(grade) {
+            if (!coverCache.has(grade)) {
+                const promise = fetchComicCovers(grade).catch(error => {
+                    coverCache.delete(grade);
+                    console.warn('[LDD comic covers]', error);
+                    return new Map();
+                });
+                coverCache.set(grade, promise);
+            }
+            return coverCache.get(grade);
+        }
+        document.addEventListener('ldd:story-frames-updated', function () {
+            coverCache.clear();
+            if (currentView === 'comics' && activeComicSeries && !readerZoom?.open) {
+                showGrades(activeComicSeries, activeComicGrade);
+            }
+        });
+
         let readerZoom = null;
         function closeReaderZoom() {
             const closing = readerZoom;
@@ -349,16 +415,24 @@
                     btn.setAttribute('aria-pressed', String(on));
                 });
                 chapters.replaceChildren();
-                const units = gradeUnits(grade).filter(u => Array.isArray(u.storyFrames) && u.storyFrames.length);
+                activeComicSeries = series;
+                activeComicGrade = grade;
+                // Keep all curriculum Units visible even before pictures have been uploaded.
+                const units = gradeUnits(grade);
+                const posters = new Map();
                 units.forEach(function (unit) {
                     const chapter = el('button', 'ldd-ent-chapter-card');
                     chapter.type = 'button';
                     const poster = el('div', 'ldd-ent-chapter-poster');
-                    const img = (unit.storyFrames || []).find(f => f.image_url && safeAsset(f.image_url));
-                    const curatedPreview = getCatalog().chapter_thumbnails &&
-                        getCatalog().chapter_thumbnails[grade + '/' + unit.id];
-                    poster.append(picture(curatedPreview || (img && img.image_url), 'Unit ' + unit.number, '📖'));
-                    poster.append(el('span', 'ldd-ent-chapter-counter', 'UNIT ' + unit.number));
+                    const localArt = (unit.storyFrames || []).map(f => f.image_url).filter(Boolean);
+                    const curatedPreview = getCatalog().chapter_thumbnails?.[grade + '/' + unit.id];
+                    const badge = el('span', 'ldd-ent-chapter-counter', 'UNIT ' + unit.number);
+                    const fallback = 'Dung & Dương';
+                    const renderPoster = urls => {
+                        poster.replaceChildren(picture(urls, 'Ảnh minh họa lớp ' + grade + ', Unit ' + unit.number, fallback), badge);
+                    };
+                    renderPoster([curatedPreview, ...localArt]);
+                    posters.set(unit.id, {renderPoster, curatedPreview, localArt});
                     chapter.append(poster);
                     const meta = el('div', 'ldd-ent-chapter-copy');
                     meta.append(el('strong', '', unit.titleVi || unit.title || 'Unit ' + unit.number),
@@ -370,6 +444,15 @@
                     chapters.append(chapter);
                 });
                 if (!units.length) chapters.append(placeholder('Chưa có chương', 'Khối lớp này chưa có dữ liệu truyện.'));
+                // After loading newer teacher uploads, refresh thumbnails in place.
+                // A stale response from another grade cannot replace the current grade.
+                getComicCovers(grade).then(function (covers) {
+                    if (activeComicGrade !== grade || !chapters.isConnected) return;
+                    for (const [id, entry] of posters) {
+                        const uploaded = covers.get(id) || [];
+                        if (uploaded.length) entry.renderPoster([...uploaded, entry.curatedPreview, ...entry.localArt]);
+                    }
+                });
             }
             list.forEach(function (grade) {
                 if (!GRADE_LIST.includes(Number(grade))) return;
