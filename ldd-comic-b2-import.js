@@ -159,20 +159,23 @@
   document.getElementById("ldd-ent-comic-upload-tool")?.remove();
   panel=null;
  }
+ let latestCheck=0;
  async function check(){
+  const request=++latestCheck;
   const client=clientIfReady();
-  // Render entry point for everyone so it cannot silently disappear because
-  // of a different session storage implementation. Server checks teacher JWT.
-  mount(client);
-  const tool=document.getElementById("ldd-ent-comic-upload-tool");
-  if(!tool)return;
-  const session=teacherSession()||(client?(await client.auth.getSession()).data?.session:null);
-  const allowed=isTeacherSession(session);
-  const input=tool.querySelector("#ldd-ent-b2-zip");
-  const status=tool.querySelector(".ldd-ent-b2-status");
-  if(input)input.disabled=!allowed;
-  if(status && !allowed)status.textContent="Đăng nhập bằng tài khoản giáo viên lddbaiu@gmail.com để bật tải ảnh.";
-  if(status && allowed && status.textContent.includes("Đăng nhập bằng tài khoản giáo viên"))status.textContent="";
+  if(!client){removeUploader();return;}
+  try{
+   const {data,error}=await client.auth.getUser();
+   if(request!==latestCheck)return;
+   // Never create even a disabled ZIP field for student accounts.
+   if(error||String(data?.user?.email||"").trim().toLowerCase()!==TEACHER){
+    removeUploader();
+    return;
+   }
+   mount(client);
+  }catch(error){
+   if(request===latestCheck)removeUploader();
+  }
  }
  function init(){
   const tab=document.getElementById("tab-giai-tri");
@@ -200,7 +203,9 @@
   }
   const client=clientIfReady();
   if(client)client.auth.onAuthStateChange(function(){
-   // Defer until the library has persisted the replacement session.
+   ++latestCheck;
+   removeUploader();
+   // Defer any network auth check until after the auth state change completes.
    setTimeout(function(){void check();},0);
   });
  }
