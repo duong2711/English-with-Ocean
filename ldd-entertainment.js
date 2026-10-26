@@ -278,6 +278,9 @@
         // Its independent page remains available as a fallback.
         const uploadTrigger = el('button', 'ldd-ent-comic-upload-shortcut', '📤 Tải ZIP ảnh truyện');
         uploadTrigger.type = 'button';
+        // Students must not see administrative upload controls while auth is checked.
+        uploadTrigger.hidden = true;
+        uploadTrigger.disabled = true;
         uploadTrigger.setAttribute('aria-haspopup', 'dialog');
         uploadTrigger.setAttribute('aria-controls', 'ldd-ent-upload-dialog');
         uploadTrigger.title = 'Tải ảnh truyện lên Backblaze B2 và cập nhật từng Unit';
@@ -301,7 +304,7 @@
         document.body.appendChild(uploadDialog);
 
         uploadTrigger.addEventListener('click', function () {
-            if (uploadDialog.open) return;
+            if (!teacherCanUpload || uploadTrigger.hidden || uploadDialog.open) return;
             if (!uploadFrame.getAttribute('src')) uploadFrame.src = 'comic-upload.html?embed=1';
             uploadDialog.showModal();
         });
@@ -317,6 +320,59 @@
             if (event.data?.type === 'ldd:comic-images-published') {
                 document.dispatchEvent(new Event('ldd:story-frames-updated'));
             }
+        });
+
+        // Check the signed-in identity with Supabase Auth, rather than showing
+        // a disabled teacher upload button to every student.
+        const TEACHER_EMAIL = 'lddbaiu@gmail.com';
+        const uploadAuth = window.supabase?.createClient
+            ? window.supabase.createClient(
+                'https://ywqbaksmmtvwbojcgsdd.supabase.co',
+                'sb_publishable_AQZ6Jc8ZGID7kfRYPe9fLQ_Wmy7ekp_',
+                { auth: { detectSessionInUrl: false } }
+            )
+            : null;
+        let teacherCanUpload = false;
+        let uploadAuthRequest = 0;
+        function hideTeacherUpload() {
+            teacherCanUpload = false;
+            uploadTrigger.disabled = true;
+            uploadTrigger.hidden = true;
+            if (uploadDialog.open) uploadDialog.close();
+            uploadFrame.removeAttribute('src');
+        }
+        async function refreshTeacherUpload() {
+            const request = ++uploadAuthRequest;
+            hideTeacherUpload();
+            if (!uploadAuth) return;
+            try {
+                // getUser verifies the current session against the Auth server.
+                const { data, error } = await uploadAuth.auth.getUser();
+                if (request !== uploadAuthRequest) return;
+                if (!error && String(data?.user?.email || '').trim().toLowerCase() === TEACHER_EMAIL) {
+                    teacherCanUpload = true;
+                    uploadTrigger.disabled = false;
+                    uploadTrigger.hidden = false;
+                }
+            } catch (error) {
+                console.warn('[LDD comic upload access]', error);
+            }
+        }
+        document.addEventListener('ldd:ent-comics-visible', function () {
+            void refreshTeacherUpload();
+        });
+        document.addEventListener('visibilitychange', function () {
+            if (!document.hidden && currentView === 'comics') void refreshTeacherUpload();
+        });
+        if (logout) logout.addEventListener('click', function () {
+            ++uploadAuthRequest;
+            hideTeacherUpload();
+        }, true);
+        if (uploadAuth) uploadAuth.auth.onAuthStateChange(function () {
+            ++uploadAuthRequest;
+            hideTeacherUpload();
+            // Supabase recommends not awaiting auth API requests inside this callback.
+            if (currentView === 'comics') setTimeout(function () { void refreshTeacherUpload(); }, 0);
         });
 
         const films = el('div', 'ldd-ent-film-body');
