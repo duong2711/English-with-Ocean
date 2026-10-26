@@ -57,7 +57,7 @@
         ensureScript('ldd-vocab-shooter-script', 'ldd-vocab-shooter.js?v=20261025-entertainment1');
         ensureScript('ldd-quick-lookup-script', 'ldd-quick-lookup.js?v=20261025-valid2');
         ensureScript('ldd-entertainment-data-script', 'ldd-entertainment-data.js?v=20261026-cover-sync1');
-        ensureScript('ldd-entertainment-script', 'ldd-entertainment.js?v=20261026-comics-teacher-only1');
+        ensureScript('ldd-entertainment-script', 'ldd-entertainment.js?v=20261026-comics-teacher-only2');
     }
 
     function ensureStylesheet(id, href) {
