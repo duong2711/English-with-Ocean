@@ -14653,6 +14653,10 @@ function toggleCompletion(symbolElement) {
         // (const/let ở top-level không gắn vào window, nên phải kiểm tra bằng typeof thay vì window[...]).
         function thcsGetGradeUnits(gradeNum) {
             switch (gradeNum) {
+                case 1: return (typeof GRADE1_UNITS !== 'undefined') ? GRADE1_UNITS : null;
+                case 2: return (typeof GRADE2_UNITS !== 'undefined') ? GRADE2_UNITS : null;
+                case 3: return (typeof GRADE3_UNITS !== 'undefined') ? GRADE3_UNITS : null;
+                case 5: return (typeof GRADE5_UNITS !== 'undefined') ? GRADE5_UNITS : null;
                 case 4: return (typeof GRADE4_UNITS !== 'undefined') ? GRADE4_UNITS : null;
                 case 6: return (typeof GRADE6_UNITS !== 'undefined') ? GRADE6_UNITS : null;
                 case 7: return (typeof GRADE7_UNITS !== 'undefined') ? GRADE7_UNITS : null;
@@ -15036,10 +15040,10 @@ function toggleCompletion(symbolElement) {
             notes.forEach((freq, i) => thcsPlayTone(freq, i * 0.16, 0.24, 'sawtooth', 0.16));
         }
 
-        // ---------- Bước 1: Danh sách khối lớp (4 -> 12) ----------
+        // ---------- Bước 1: Danh sách khối lớp (1 -> 12) ----------
         function renderGradeGrid() {
             thcsGradeGrid.innerHTML = '';
-            for (let g = 4; g <= 12; g++) {
+            for (let g = 1; g <= 12; g++) {
                 const gradeUnits = thcsGetGradeUnits(g);
                 const isReady = !!gradeUnits;
                 const card = document.createElement('div');
@@ -16561,12 +16565,12 @@ function toggleCompletion(symbolElement) {
         if (thcsGrade6BackBtn) thcsGrade6BackBtn.addEventListener('click', thcsPauseGame);
 
         // [MỚI] Xuất API dùng chung để mục "Luyện nghe" (tab Luyện kỹ năng) lấy được từ vựng
-        // của tất cả Unit Tiểu học/THCS/THPT (mọi khối lớp 4-12) mà học viên đã hoàn thành, dùng làm
+        // của tất cả Unit Tiểu học/THCS/THPT (mọi khối lớp 1-12) mà học viên đã hoàn thành, dùng làm
         // kho từ vựng luyện nghe — theo đúng cách window.kidTopicsAPI đã làm cho "Cho bé".
         window.thcsUnitsAPI = {
             getAllUnits: () => {
                 const list = [];
-                for (let g = 4; g <= 12; g++) {
+                for (let g = 1; g <= 12; g++) {
                     const units = thcsGetGradeUnits(g);
                     if (units) units.forEach(unit => list.push({ gradeNum: g, unit }));
                 }
@@ -16575,7 +16579,7 @@ function toggleCompletion(symbolElement) {
             ensureProgressLoaded: thcsEnsureProgressLoaded,
             isUnitCompleted: (gradeNum, unit) => !!thcsGetProgress(gradeNum, unit.id).completed,
             // [MỚI] Tổng số LẦN HOÀN THÀNH LẠI (không tính lần hoàn thành đầu tiên) cộng dồn
-            // trên TẤT CẢ Unit (mọi khối lớp 4-12) của học viên này — dùng để cộng điểm chăm
+            // trên TẤT CẢ Unit (mọi khối lớp 1-12) của học viên này — dùng để cộng điểm chăm
             // chỉ thưởng trong renderProfileAchievements(), giống hệt kidTopicsAPI.getTotalRedoCount.
             getTotalRedoCount: () => {
                 let total = 0;
