@@ -579,6 +579,23 @@
             }
         });
 
+        // Compact article-stored image credits without removing required attribution.
+        text.querySelectorAll('p > small').forEach(function (small) {
+            const paragraph = small.parentElement;
+            const credit = small.querySelector('a[href*="commons.wikimedia.org/wiki/File:"]');
+            if (!paragraph || !credit || !/^Ảnh\\s/i.test(small.textContent.trim())) return;
+            const details = document.createElement('details');
+            details.className = 'ldd-news-image-attribution';
+            details.style.cssText = 'font-size:0.82rem;line-height:1.55;opacity:0.84';
+            const summary = document.createElement('summary');
+            summary.textContent = 'ⓘ';
+            summary.setAttribute('aria-label', 'Thông tin bản quyền ảnh');
+            summary.style.cssText = 'cursor:pointer;display:inline-block';
+            details.appendChild(summary);
+            details.appendChild(small);
+            paragraph.replaceWith(details);
+        });
+
         const anchor = text.querySelector('.ldd-news-meta-anchor[data-meta]');
         let box = document.getElementById('ldd-news-nontranslate-meta');
 
