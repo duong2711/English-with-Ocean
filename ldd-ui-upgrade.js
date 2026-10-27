@@ -34,7 +34,7 @@
 
     function ensureUpgradeAssets() {
         ensureStylesheet('ldd-roadmap-news-style', 'ldd-ui-roadmap-news.css?v=2.4');
-        ensureStylesheet('ldd-vocab-grammar-style', 'ldd-ui-vocab-grammar.css?v=20261025-card-progress1');
+        ensureStylesheet('ldd-vocab-grammar-style', 'ldd-ui-vocab-grammar.css?v=20261027-vocab-groups1');
         ensureStylesheet('ldd-home-phonetics-style', 'ldd-ui-home-phonetics.css?v=4.1');
         ensureStylesheet('ldd-timers-style', 'ldd-ui-timers.css?v=2.2');
         ensureStylesheet('ldd-student-grade-style', 'ldd-student-grade.css?v=1');
@@ -48,7 +48,7 @@
         ensureScript('ldd-egress-guard-script', 'ldd-egress-guard.js?v=1');
         ensureScript('ldd-vocab-dedup-script', 'ldd-vocab-dedup.js?v=1');
         ensureScript('ldd-pronunciation-fix-script', 'ldd-pronunciation-fix.js?v=3');
-        ensureScript('ldd-vocab-grammar-script', 'ldd-ui-vocab-grammar.js?v=20261025-concise-copy1');
+        ensureScript('ldd-vocab-grammar-script', 'ldd-ui-vocab-grammar.js?v=20261027-vocab-groups1');
         ensureScript('ldd-home-phonetics-script', 'ldd-ui-home-phonetics.js?v=20261025-concise-copy1');
         ensureScript('ldd-student-grade-script', 'ldd-student-grade.js?v=20261025-learning-track1');
         ensureScript('ldd-thcs-vocab-reset-script', 'ldd-thcs-vocab-reset.js?v=11');

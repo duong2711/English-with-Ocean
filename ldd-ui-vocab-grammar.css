@@ -510,3 +510,13 @@ body.ldd-ui-v2 #grammar-panels [class*="grammar-"][class*="card"] {
 
 /* Visible on the vocabulary hub before opening the personal word list. */
 #myvocab-folder-card .ldd-vocab-card-progress{display:block;margin-top:8px;color:#166534;font-size:.8rem;font-weight:750;line-height:1.45;overflow-wrap:anywhere}
+
+.ldd-vocab-hero-stat { cursor: pointer; font: inherit; }
+.ldd-vocab-hero-stat:focus-visible, .school-vocab-button:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
+.school-vocab-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:12px; margin:16px 0; }
+.school-vocab-button { border:1px solid var(--border-strong); border-radius:12px; padding:14px; background:var(--surface-2); color:var(--text); font:inherit; text-align:left; cursor:pointer; }
+.school-vocab-button:hover { border-color:var(--primary); }
+.school-vocab-area h4 { margin:20px 0 10px; }
+.school-vocab-list { display:grid; gap:8px; }
+.school-vocab-row { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.5fr); gap:12px; border:1px solid var(--border); border-radius:10px; padding:12px; overflow-wrap:anywhere; }
+@media(max-width:480px) { .school-vocab-grid { grid-template-columns:1fr; } .school-vocab-row { grid-template-columns:1fr; gap:5px; } }

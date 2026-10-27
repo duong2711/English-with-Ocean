@@ -25,6 +25,7 @@
         addVocabularyHero(tab, grid);
         decorateVocabularyCards(grid);
         enhanceMyVocabFilters();
+        enhanceSchoolVocabulary();
     }
 
     const VOCAB_VIEW_IDS = [
@@ -150,10 +151,21 @@
         copy.appendChild(title);
         copy.appendChild(desc);
 
-        const stat = document.createElement('div');
+        const stat = document.createElement('button');
+        stat.type = 'button';
+        stat.addEventListener('click', function () { document.getElementById('myvocab-folder-card').click(); });
         stat.className = 'ldd-vocab-hero-stat';
-        const total = grid.querySelectorAll(':scope > .folder-card').length;
-        stat.innerHTML = '<strong>' + total + '</strong><span>khu vực luyện từ</span>';
+        stat.innerHTML = '<strong>★</strong><span>Kho từ vựng của tôi</span><span class="ldd-hero-vocab-count" aria-live="polite"></span>';
+        const mine = document.getElementById('myvocab-folder-card');
+        mine.hidden = true;
+        mine.style.display = 'none';
+        function syncCount() {
+            const count = mine.querySelector('.ldd-vocab-card-progress');
+            const target = stat.querySelector('.ldd-hero-vocab-count');
+            target.textContent = count ? count.textContent : '';
+        }
+        new MutationObserver(syncCount).observe(mine, { childList: true, subtree: true, characterData: true });
+        syncCount();
 
         hero.appendChild(icon);
         hero.appendChild(copy);
@@ -165,7 +177,7 @@
         const configs = [
             { id: 'myvocab-folder-card', icon: '★', title: 'Từ vựng của tôi', subtitle: 'Kho từ bạn đã lưu khi học và đọc bài', kind: 'mine' },
             { id: 'kid-folder-card', icon: '20', title: 'Vận dụng theo chủ đề', subtitle: '20 chủ đề để dùng từ trong ngữ cảnh', kind: 'topic' },
-            { id: 'thcs-folder-card', icon: '6–12', title: 'THCS / THPT', subtitle: 'Từ vựng bám SGK Global Success', kind: 'school' },
+            { id: 'thcs-folder-card', icon: '1–12', title: 'Tiểu học / THCS / THPT', subtitle: 'Từ vựng bám SGK Global Success', kind: 'school' },
             { id: 'conj-folder-card', icon: '↔', title: 'Liên từ', subtitle: 'Kết nối ý và câu tự nhiên hơn', kind: 'conj' },
             { id: 'news-folder-card', icon: 'NEWS', title: 'Tin ngắn', subtitle: 'Đọc báo, tra từ và luyện dịch thực tế', kind: 'news' },
             { id: 'podcast-folder-card', icon: '▶', title: 'Podcast dictation', subtitle: 'Nghe – chép chính tả – học từ qua âm thanh', kind: 'podcast' }
@@ -326,6 +338,73 @@
             '.myvocab-item.ldd-myvocab-filtered-out{display:none!important}' +
             '@media(max-width:560px){.ldd-myvocab-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.ldd-myvocab-filter{justify-content:space-between;width:100%;padding:8px 10px;font-size:.72rem}}';
         document.head.appendChild(style);
+    }
+
+
+    function enhanceSchoolVocabulary() {
+        const panel = document.getElementById('thcs-panel');
+        const grid = document.getElementById('thcs-grade-grid');
+        const trigger = document.getElementById('thcs-folder-card');
+        const back = document.getElementById('thcs-back-btn');
+        if (!panel || !grid || !trigger || !back) return;
+        const title = panel.querySelector('h3');
+        if (title) title.textContent = 'Tiểu học / THCS / THPT';
+        const area = document.createElement('div');
+        area.className = 'school-vocab-area';
+        grid.parentNode.insertBefore(area, grid);
+        const lessons = {
+            'Collocations': [['do homework','làm bài tập về nhà'],['make a decision','đưa ra quyết định'],['heavy rain','mưa lớn'],['pay attention','chú ý']],
+            'Cụm động từ': [['get up','thức dậy'],['look after','chăm sóc'],['turn off','tắt'],['give up','từ bỏ']],
+            'Thành ngữ': [['break the ice','phá tan sự ngại ngùng'],['once in a blue moon','rất hiếm khi'],['a piece of cake','việc rất dễ'],['under the weather','cảm thấy không khỏe']],
+            'Mẫu giao tiếp': [['Nice to meet you.','Rất vui được gặp bạn.'],['Could you help me?','Bạn có thể giúp mình không?'],['What do you think?','Bạn nghĩ thế nào?'],['I agree with you.','Mình đồng ý với bạn.']],
+            'Đồng nghĩa và trái nghĩa': [['big – large','to – lớn (đồng nghĩa)'],['happy – glad','vui – vui mừng (đồng nghĩa)'],['hot – cold','nóng – lạnh (trái nghĩa)'],['early – late','sớm – muộn (trái nghĩa)']],
+            'Họ từ': [['care – careful – carefully','sự quan tâm – cẩn thận – một cách cẩn thận'],['success – successful – successfully','thành công (danh từ) – thành công (tính từ) – một cách thành công'],['beauty – beautiful – beautifully','vẻ đẹp – đẹp – một cách đẹp đẽ'],['help – helpful – helpless','giúp đỡ – hữu ích – bất lực']],
+            'Từ dễ nhầm': [['say / tell','say something; tell someone something'],['borrow / lend','borrow: mượn; lend: cho mượn'],['much / many','much + danh từ không đếm được; many + danh từ đếm được số nhiều'],['see / look / watch','see: nhìn thấy; look: nhìn; watch: xem, theo dõi']],
+            'Lượng từ': [['some / any','một vài, một ít; any thường dùng trong câu hỏi và phủ định'],['a few / a little','một vài + danh từ đếm được / một ít + danh từ không đếm được'],['many / much','nhiều + danh từ đếm được / không đếm được'],['a lot of','nhiều; dùng với cả danh từ đếm được và không đếm được']],
+            'Giới từ': [['in','trong; vào (tháng, năm)'],['on','trên; vào (ngày)'],['at','tại; vào (giờ)'],['between','ở giữa hai người hoặc vật']],
+            'Trạng từ mức độ': [['very','rất'],['quite','khá'],['too','quá'],['enough','đủ']]
+        };
+        const groups = {
+            'Cụm từ thông dụng': ['Collocations','Cụm động từ','Thành ngữ','Mẫu giao tiếp'],
+            'Mở rộng vốn từ': ['Đồng nghĩa và trái nghĩa','Họ từ','Từ dễ nhầm'],
+            'Từ loại và cách dùng': ['Lượng từ','Liên từ','Giới từ','Trạng từ mức độ']
+        };
+        function button(label, fn) {
+            const el = document.createElement('button');
+            el.type = 'button'; el.className = 'school-vocab-button'; el.textContent = label; el.addEventListener('click', fn); return el;
+        }
+        function clear() { area.replaceChildren(); }
+        function home() {
+            grid.style.display = 'none'; clear();
+            const buttons = document.createElement('div'); buttons.className = 'school-vocab-grid';
+            buttons.appendChild(button('Từ vựng SGK', function () { clear(); grid.style.display = ''; area.appendChild(button('← Các nhóm từ vựng', home)); }));
+            buttons.appendChild(button('Từ vựng theo chủ đề', function () { window.LDDVocabNavigation.openFolder('kid-folder-card'); }));
+            Object.keys(groups).forEach(function (group) { buttons.appendChild(button(group, function () { showGroup(group); })); });
+            area.appendChild(buttons);
+        }
+        function showGroup(group) {
+            grid.style.display = 'none'; clear(); area.appendChild(button('← Các nhóm từ vựng', home));
+            const heading = document.createElement('h4'); heading.textContent = group; area.appendChild(heading);
+            const buttons = document.createElement('div'); buttons.className = 'school-vocab-grid';
+            groups[group].forEach(function (name) { buttons.appendChild(button(name, function () {
+                if (name === 'Liên từ') { window.LDDVocabNavigation.openFolder('conj-folder-card'); return; }
+                showLesson(group, name);
+            })); }); area.appendChild(buttons);
+        }
+        function showLesson(group, name) {
+            clear(); area.appendChild(button('← ' + group, function () { showGroup(group); }));
+            const heading = document.createElement('h4'); heading.textContent = name; area.appendChild(heading);
+            const list = document.createElement('div'); list.className = 'school-vocab-list';
+            lessons[name].forEach(function (pair) {
+                const row = document.createElement('div'); row.className = 'school-vocab-row';
+                const word = document.createElement('strong'); word.textContent = pair[0];
+                const meaning = document.createElement('span'); meaning.textContent = pair[1];
+                row.append(word, meaning); list.appendChild(row);
+            }); area.appendChild(list);
+        }
+        trigger.addEventListener('click', home);
+        back.addEventListener('click', function () { grid.style.display = ''; clear(); });
+        home();
     }
 
     function enhanceGrammarHub() {
