@@ -570,6 +570,15 @@
     function renderNewsNonTranslateMeta(text) {
         if (!text) return;
 
+        // Keep editorial source references in the stored article record but
+        // omit the trailing external "Source(s)" line from the learner reading UI.
+        text.querySelectorAll('p').forEach(function (paragraph) {
+            const label = (paragraph.textContent || '').trim();
+            if (/^sources?\s*:/i.test(label) && paragraph.querySelector('a[href]')) {
+                paragraph.remove();
+            }
+        });
+
         const anchor = text.querySelector('.ldd-news-meta-anchor[data-meta]');
         let box = document.getElementById('ldd-news-nontranslate-meta');
 
@@ -628,40 +637,25 @@
             box.appendChild(wordsLine);
         }
 
-        // Keep attribution links outside the learner's sentence-by-sentence translation text.
-        const sourceUrl = String(meta.sourceUrl || '').trim();
+        // Image credits can be required by the image licence; retain those,
+        // without displaying an outbound link to the original news article.
         const imageUrl = String(meta.imageUrl || '').trim();
         const imageCredit = String(meta.imageCredit || '').trim();
-        const safeHttps = (url) => /^https:\/\//i.test(url);
-        if (safeHttps(sourceUrl) || imageCredit) {
+        if (imageCredit) {
             const attribution = document.createElement('p');
-            attribution.className = 'ldd-news-source-attribution';
+            attribution.className = 'ldd-news-image-attribution';
             attribution.style.cssText = 'font-size:0.82rem;line-height:1.55;opacity:0.84;overflow-wrap:anywhere';
-
-            if (safeHttps(sourceUrl)) {
-                const sourceLink = document.createElement('a');
-                sourceLink.href = sourceUrl;
-                sourceLink.target = '_blank';
-                sourceLink.rel = 'noopener noreferrer';
-                sourceLink.textContent = 'Đọc bài gốc tại News in Levels ↗';
-                attribution.appendChild(sourceLink);
+            attribution.appendChild(document.createTextNode('Ảnh minh họa: '));
+            if (/^https:\/\//i.test(imageUrl)) {
+                const imageLink = document.createElement('a');
+                imageLink.href = imageUrl;
+                imageLink.target = '_blank';
+                imageLink.rel = 'noopener noreferrer';
+                imageLink.textContent = imageCredit;
+                attribution.appendChild(imageLink);
+            } else {
+                attribution.appendChild(document.createTextNode(imageCredit));
             }
-
-            if (imageCredit) {
-                if (safeHttps(sourceUrl)) attribution.appendChild(document.createTextNode(' · '));
-                attribution.appendChild(document.createTextNode('Ảnh minh họa: '));
-                if (safeHttps(imageUrl)) {
-                    const photoLink = document.createElement('a');
-                    photoLink.href = imageUrl;
-                    photoLink.target = '_blank';
-                    photoLink.rel = 'noopener noreferrer';
-                    photoLink.textContent = imageCredit;
-                    attribution.appendChild(photoLink);
-                } else {
-                    attribution.appendChild(document.createTextNode(imageCredit));
-                }
-            }
-
             box.appendChild(attribution);
         }
 
