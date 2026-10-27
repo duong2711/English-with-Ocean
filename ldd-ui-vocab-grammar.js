@@ -367,7 +367,6 @@
             grid.style.display = 'none'; clear();
             const buttons = document.createElement('div'); buttons.className = 'school-vocab-grid';
             buttons.appendChild(button('Từ vựng SGK', function () { clear(); grid.style.display = ''; area.appendChild(button('← Các nhóm từ vựng', home)); }));
-            buttons.appendChild(button('Từ vựng theo chủ đề', function () { window.LDDVocabNavigation.openFolder('kid-folder-card'); }));
             ['Collocations', 'Lượng từ', 'Liên từ', 'Giới từ', 'Trạng từ mức độ'].forEach(function (name) {
                 buttons.appendChild(button(name === 'Collocations' ? 'Collocation' : name, function () {
                     if (name === 'Liên từ') window.LDDVocabNavigation.openFolder('conj-folder-card');
