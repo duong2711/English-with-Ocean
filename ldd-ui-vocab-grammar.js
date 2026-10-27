@@ -354,20 +354,9 @@
         grid.parentNode.insertBefore(area, grid);
         const lessons = {
             'Collocations': [['do homework','làm bài tập về nhà'],['make a decision','đưa ra quyết định'],['heavy rain','mưa lớn'],['pay attention','chú ý']],
-            'Cụm động từ': [['get up','thức dậy'],['look after','chăm sóc'],['turn off','tắt'],['give up','từ bỏ']],
-            'Thành ngữ': [['break the ice','phá tan sự ngại ngùng'],['once in a blue moon','rất hiếm khi'],['a piece of cake','việc rất dễ'],['under the weather','cảm thấy không khỏe']],
-            'Mẫu giao tiếp': [['Nice to meet you.','Rất vui được gặp bạn.'],['Could you help me?','Bạn có thể giúp mình không?'],['What do you think?','Bạn nghĩ thế nào?'],['I agree with you.','Mình đồng ý với bạn.']],
-            'Đồng nghĩa và trái nghĩa': [['big – large','to – lớn (đồng nghĩa)'],['happy – glad','vui – vui mừng (đồng nghĩa)'],['hot – cold','nóng – lạnh (trái nghĩa)'],['early – late','sớm – muộn (trái nghĩa)']],
-            'Họ từ': [['care – careful – carefully','sự quan tâm – cẩn thận – một cách cẩn thận'],['success – successful – successfully','thành công (danh từ) – thành công (tính từ) – một cách thành công'],['beauty – beautiful – beautifully','vẻ đẹp – đẹp – một cách đẹp đẽ'],['help – helpful – helpless','giúp đỡ – hữu ích – bất lực']],
-            'Từ dễ nhầm': [['say / tell','say something; tell someone something'],['borrow / lend','borrow: mượn; lend: cho mượn'],['much / many','much + danh từ không đếm được; many + danh từ đếm được số nhiều'],['see / look / watch','see: nhìn thấy; look: nhìn; watch: xem, theo dõi']],
             'Lượng từ': [['some / any','một vài, một ít; any thường dùng trong câu hỏi và phủ định'],['a few / a little','một vài + danh từ đếm được / một ít + danh từ không đếm được'],['many / much','nhiều + danh từ đếm được / không đếm được'],['a lot of','nhiều; dùng với cả danh từ đếm được và không đếm được']],
             'Giới từ': [['in','trong; vào (tháng, năm)'],['on','trên; vào (ngày)'],['at','tại; vào (giờ)'],['between','ở giữa hai người hoặc vật']],
             'Trạng từ mức độ': [['very','rất'],['quite','khá'],['too','quá'],['enough','đủ']]
-        };
-        const groups = {
-            'Cụm từ thông dụng': ['Collocations','Cụm động từ','Thành ngữ','Mẫu giao tiếp'],
-            'Mở rộng vốn từ': ['Đồng nghĩa và trái nghĩa','Họ từ','Từ dễ nhầm'],
-            'Từ loại và cách dùng': ['Lượng từ','Liên từ','Giới từ','Trạng từ mức độ']
         };
         function button(label, fn) {
             const el = document.createElement('button');
@@ -379,20 +368,16 @@
             const buttons = document.createElement('div'); buttons.className = 'school-vocab-grid';
             buttons.appendChild(button('Từ vựng SGK', function () { clear(); grid.style.display = ''; area.appendChild(button('← Các nhóm từ vựng', home)); }));
             buttons.appendChild(button('Từ vựng theo chủ đề', function () { window.LDDVocabNavigation.openFolder('kid-folder-card'); }));
-            Object.keys(groups).forEach(function (group) { buttons.appendChild(button(group, function () { showGroup(group); })); });
+            ['Collocations', 'Lượng từ', 'Liên từ', 'Giới từ', 'Trạng từ mức độ'].forEach(function (name) {
+                buttons.appendChild(button(name === 'Collocations' ? 'Collocation' : name, function () {
+                    if (name === 'Liên từ') window.LDDVocabNavigation.openFolder('conj-folder-card');
+                    else showLesson(name);
+                }));
+            });
             area.appendChild(buttons);
         }
-        function showGroup(group) {
-            grid.style.display = 'none'; clear(); area.appendChild(button('← Các nhóm từ vựng', home));
-            const heading = document.createElement('h4'); heading.textContent = group; area.appendChild(heading);
-            const buttons = document.createElement('div'); buttons.className = 'school-vocab-grid';
-            groups[group].forEach(function (name) { buttons.appendChild(button(name, function () {
-                if (name === 'Liên từ') { window.LDDVocabNavigation.openFolder('conj-folder-card'); return; }
-                showLesson(group, name);
-            })); }); area.appendChild(buttons);
-        }
-        function showLesson(group, name) {
-            clear(); area.appendChild(button('← ' + group, function () { showGroup(group); }));
+        function showLesson(name) {
+            clear(); area.appendChild(button('← Các mục từ vựng', home));
             const heading = document.createElement('h4'); heading.textContent = name; area.appendChild(heading);
             const list = document.createElement('div'); list.className = 'school-vocab-list';
             lessons[name].forEach(function (pair) {
