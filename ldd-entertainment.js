@@ -492,34 +492,41 @@
             closeReaderZoom(); activeComicSeries = null; comicRequest += 1;
             comics.classList.remove('is-reading'); comicBody.replaceChildren();
             wimpyHeader(series, '← Danh sách bộ truyện', showSeriesLibrary);
+            const months = Array.isArray(window.LDDWimpyBook) ? window.LDDWimpyBook : [];
+            const tabs = el('div', 'ldd-ent-grade-tabs');
+            tabs.setAttribute('role', 'group');
+            tabs.setAttribute('aria-label', 'Chọn tháng');
             const grid = el('div', 'ldd-wimpy-grid');
-            (window.LDDWimpyBook || []).forEach(month => {
-                const card = el('button', 'ldd-wimpy-card'); card.type = 'button';
-                const preview = el('div', 'ldd-wimpy-card-art');
-                preview.append(picture(wimpyPageUrl(month.entries[0].pages[0]), 'Trang đầu ' + month.label, '📓'));
-                card.append(preview, el('strong', '', month.label), el('small', '', month.english + ' · ' + month.entries.length + ' mẩu truyện'));
-                card.addEventListener('click', () => showWimpyDays(series, month)); grid.append(card);
+            const buttons = [];
+            function selectMonth(month) {
+                buttons.forEach(({button, item}) => {
+                    const selected = item === month;
+                    button.classList.toggle('is-active', selected);
+                    button.setAttribute('aria-pressed', String(selected));
+                });
+                grid.replaceChildren();
+                const counts = {};
+                month.entries.forEach((entry, index) => {
+                    counts[entry.day] = (counts[entry.day] || 0) + 1;
+                    const card = el('button', 'ldd-wimpy-card'); card.type = 'button';
+                    const preview = el('div', 'ldd-wimpy-card-art');
+                    preview.append(picture(wimpyPageUrl(entry.pages[0]), 'Trang đầu ' + entry.dayVi, '📖'));
+                    card.append(preview, el('strong', '', entry.dayVi + ' · ' + counts[entry.day]),
+                        el('small', '', entry.day + ' · ' + entry.pages.length + ' trang'));
+                    card.addEventListener('click', () => showWimpyReader(series, month, entry, index));
+                    grid.append(card);
+                });
+            }
+            months.forEach(month => {
+                const button = el('button', 'ldd-ent-grade-btn', month.label);
+                button.type = 'button';
+                button.addEventListener('click', () => selectMonth(month));
+                buttons.push({button, item: month});
+                tabs.append(button);
             });
-            comicBody.append(grid);
-        }
-        function showWimpyDays(series, month) {
-            closeReaderZoom(); activeComicSeries = null; comicRequest += 1;
-            comics.classList.remove('is-reading'); comicBody.replaceChildren();
-            wimpyHeader(series, '← Các tháng', () => showWimpyMonths(series));
-            comicBody.append(el('h4', 'ldd-wimpy-month-title', month.label + ' · ' + month.english));
-            const grid = el('div', 'ldd-wimpy-grid');
-            const counts = {};
-            month.entries.forEach((entry, index) => {
-                counts[entry.day] = (counts[entry.day] || 0) + 1;
-                const card = el('button', 'ldd-wimpy-card'); card.type = 'button';
-                const preview = el('div', 'ldd-wimpy-card-art');
-                preview.append(picture(wimpyPageUrl(entry.pages[0]), 'Trang đầu ' + entry.dayVi, '📖'));
-                card.append(preview, el('strong', '', entry.dayVi + ' · ' + counts[entry.day]),
-                    el('small', '', entry.day + ' · ' + entry.pages.length + ' trang'));
-                card.addEventListener('click', () => showWimpyReader(series, month, entry, index));
-                grid.append(card);
-            });
-            comicBody.append(grid);
+            comicBody.append(tabs, grid);
+            if (months.length) selectMonth(months[0]);
+            else grid.append(placeholder('Chưa có truyện', 'Nội dung đang được cập nhật.'));
         }
         function showWimpyReader(series, month, entry, entryIndex) {
             closeReaderZoom();
