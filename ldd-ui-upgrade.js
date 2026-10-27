@@ -642,10 +642,14 @@
         const imageUrl = String(meta.imageUrl || '').trim();
         const imageCredit = String(meta.imageCredit || '').trim();
         if (imageCredit) {
-            const attribution = document.createElement('p');
+            const attribution = document.createElement('details');
             attribution.className = 'ldd-news-image-attribution';
             attribution.style.cssText = 'font-size:0.82rem;line-height:1.55;opacity:0.84;overflow-wrap:anywhere';
-            attribution.appendChild(document.createTextNode('Ảnh minh họa: '));
+            const summary = document.createElement('summary');
+            summary.textContent = 'ⓘ';
+            summary.setAttribute('aria-label', 'Thông tin bản quyền ảnh');
+            summary.style.cssText = 'cursor:pointer;display:inline-block';
+            attribution.appendChild(summary);
             if (/^https:\/\//i.test(imageUrl)) {
                 const imageLink = document.createElement('a');
                 imageLink.href = imageUrl;
