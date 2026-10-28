@@ -192,12 +192,40 @@
     close();
     const seq = generation;
     body.replaceChildren();
-    const status = $el('p', 'ldd-film-status', 'Đang tải thư viện phim…');
-    const grid = $el('div', 'ldd-ent-media-grid');
-    const playerWrap = $el('div', 'ldd-film-lesson');
+
     const editor = $el('section', 'ldd-film-editor');
     editor.hidden = true;
-    body.append(status, editor, playerWrap, grid);
+
+    // YouTube-style watch page: player and questions on the left, real library
+    // recommendations on the right. In narrow viewports CSS stacks the sidebar last.
+    const watch = $el('div', 'ldd-film-watch-layout');
+    watch.hidden = true;
+    const primary = $el('main', 'ldd-film-watch-primary');
+    const browse = button('← Tất cả video', 'ldd-film-browse');
+    const playerWrap = $el('div', 'ldd-film-lesson');
+    primary.append(browse, playerWrap);
+
+    const suggestions = $el('aside', 'ldd-film-recommendations');
+    suggestions.setAttribute('aria-label', 'Video đề xuất');
+    const recHeading = $el('h3', 'ldd-film-rec-heading', 'Video đề xuất');
+    const recList = $el('div', 'ldd-film-rec-list');
+    suggestions.append(recHeading, recList);
+    watch.append(primary, suggestions);
+
+    const library = $el('section', 'ldd-film-library');
+    const status = $el('p', 'ldd-film-status', 'Đang tải thư viện phim…');
+    const grid = $el('div', 'ldd-ent-media-grid');
+    library.append(status, grid);
+    body.append(editor, watch, library);
+
+    browse.addEventListener('click', () => {
+      close();
+      playerWrap.replaceChildren();
+      watch.hidden = true;
+      library.hidden = false;
+      library.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
     if (!client) { status.textContent = 'Không thể kết nối hệ thống học tập.'; return; }
     let user = null;
     try {
@@ -210,6 +238,7 @@
     }
     if (seq !== generation) return;
     const isTeacher = String(user?.email || '').toLowerCase() === TEACHER;
+
     try {
       const { data, error } = await client.rpc('movie_list_lessons');
       if (error) throw error;
@@ -217,10 +246,24 @@
       const lessons = Array.isArray(data) ? data : [];
       if (isTeacher) setupEditor(editor, async () => { await mount(body, legacyMovies); }, lessons);
       status.textContent = lessons.length
-        ? 'Chọn video để xem. Video có script sẽ tự dừng ở từng câu để luyện nghe; video chưa có script vẫn phát bình thường.'
-        : 'Thư viện chưa có video. Giáo viên có thể dán link YouTube hoặc Facebook để thêm ngay, rồi nhập script sau.';
-      lessons.forEach(lesson => {
-        const card = button('', 'ldd-ent-media-card');
+        ? 'Chọn video để xem và luyện nghe. Các video khác được đề xuất bên cạnh trình phát.'
+        : 'Thư viện chưa có video. Giáo viên có thể dán link YouTube hoặc Facebook để thêm.';
+
+      const catalog = [];
+      const seen = new Set();
+      const put = lesson => {
+        if (!lesson?.video_url) return;
+        const info = providerOf(lesson.video_url);
+        if (!info) return;
+        const id = info.url;
+        if (seen.has(id)) return;
+        seen.add(id);
+        catalog.push(lesson);
+      };
+      lessons.forEach(put);
+      (legacyMovies || []).forEach(put);
+
+      const coverOf = lesson => {
         const cover = $el('div', 'ldd-ent-media-cover ldd-ent-film-cover');
         const info = providerOf(lesson.video_url);
         const thumbnail = lesson.thumbnail_url || info?.thumbnail;
@@ -228,31 +271,60 @@
           const img = $el('img', 'ldd-ent-thumb-image');
           img.src = thumbnail;
           img.loading = 'lazy';
-          img.alt = '';
+          img.alt = 'Ảnh bìa ' + (lesson.title || 'video');
           img.onerror = () => img.replaceWith($el('div', 'ldd-ent-cover-fallback', '🎬'));
           cover.append(img);
         } else cover.append($el('div', 'ldd-ent-cover-fallback', '🎬'));
-        const hasTranscript = Array.isArray(lesson.segments) && lesson.segments.length > 0;
-        card.append(cover, $el('strong', '', lesson.title),
-          $el('small', '', hasTranscript ? lesson.segments.length + ' câu luyện nghe · ' + lesson.provider : 'Xem video · Chưa có script'));
-        card.addEventListener('click', () => {
-          if (hasTranscript) void openLesson(lesson, playerWrap, seq);
-          else openStandalone(lesson, playerWrap);
-        });
+        return cover;
+      };
+      const labelOf = lesson =>
+        Array.isArray(lesson.segments) && lesson.segments.length
+          ? lesson.segments.length + ' câu luyện nghe'
+          : 'Xem video';
+      const select = lesson => {
+        if (!providerOf(lesson.video_url)) return;
+        library.hidden = true;
+        watch.hidden = false;
+        playerWrap.classList.remove('ldd-film-paused');
+        recList.replaceChildren();
+        const current = providerOf(lesson.video_url).url;
+        const other = catalog.filter(item => providerOf(item.video_url)?.url !== current);
+        if (!other.length) {
+          recList.append($el('p', 'ldd-film-rec-empty',
+            'Thư viện chưa có video khác. Video mới sẽ xuất hiện tại đây khi được thêm vào.'));
+        } else {
+          other.forEach(item => {
+            const card = button('', 'ldd-film-rec-card');
+            const desc = $el('span', 'ldd-film-rec-description');
+            desc.append($el('strong', 'ldd-film-rec-title', item.title || 'Video'));
+            desc.append($el('small', 'ldd-film-rec-subtitle',
+              labelOf(item) + ' · ' + (providerOf(item.video_url)?.provider || 'video')));
+            card.append(coverOf(item), desc);
+            card.addEventListener('click', () => select(item));
+            recList.append(card);
+          });
+        }
+        if (Array.isArray(lesson.segments) && lesson.segments.length) {
+          void openLesson(lesson, playerWrap);
+        } else {
+          openStandalone(lesson, playerWrap);
+        }
+      };
+      catalog.forEach(item => {
+        const card = button('', 'ldd-ent-media-card');
+        card.append(coverOf(item), $el('strong', '', item.title || 'Video'),
+          $el('small', '', labelOf(item)));
+        card.addEventListener('click', () => select(item));
         grid.append(card);
       });
-      // Honor old hardcoded MP4 catalog entries as regular (non-graded) videos.
-      (legacyMovies || []).forEach(item => {
-        if (!item?.video_url || !providerOf(item.video_url)) return;
-        const card = button(item.title || 'Video', 'ldd-ent-media-card');
-        card.addEventListener('click', () => openStandalone(item, playerWrap));
-        grid.append(card);
-      });
+
+      // Start in watch mode, just as YouTube does. Switching recommendations
+      // replaces the same player rather than starting multiple videos.
+      if (catalog.length) select(catalog[0]);
     } catch (e) {
       status.textContent = 'Không tải được danh sách phim: ' + (e.message || 'Lỗi kết nối');
     }
   }
-
 
   function openStandalone(lesson, wrap) {
     stopPlayer();
