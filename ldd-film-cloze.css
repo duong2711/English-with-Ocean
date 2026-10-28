@@ -1,0 +1,40 @@
+/* Film listening cloze — responsive YouTube/Facebook/MP4 video lessons */
+#tab-giai-tri .ldd-film-status{margin:10px 0 18px;color:var(--text-muted,#67758d);line-height:1.6}
+#tab-giai-tri .ldd-film-lesson{max-width:920px;margin:0 auto 20px;scroll-margin-top:80px}
+#tab-giai-tri .ldd-film-lesson:empty{display:none}
+#tab-giai-tri .ldd-film-lesson h3{font-size:clamp(18px,3vw,24px);line-height:1.4;margin:18px 0 12px;color:var(--text,#253b58)}
+#tab-giai-tri .ldd-film-screen{width:100%;aspect-ratio:16/9;background:#090d18;border-radius:14px;overflow:hidden;position:relative}
+#tab-giai-tri .ldd-film-screen iframe,#tab-giai-tri .ldd-film-screen video,#tab-giai-tri .ldd-film-screen .ldd-film-video{display:block;width:100%;height:100%;border:0;object-fit:contain}
+#tab-giai-tri .ldd-film-screen .fb-video{width:100%;height:100%;display:flex;justify-content:center;align-items:center}
+#tab-giai-tri .ldd-film-progress{font-size:13px;color:var(--text-muted,#5f6e87);margin:12px 0}
+#tab-giai-tri .ldd-film-question{background:var(--surface,#fff);color:var(--text,#243a59);border:1px solid var(--border,#dce5f4);border-radius:16px;padding:clamp(14px,3vw,24px);line-height:1.75;min-height:96px}
+#tab-giai-tri .ldd-film-question:empty{display:none}
+#tab-giai-tri .ldd-film-question-count{font-weight:700;font-size:12px;margin-bottom:10px;color:#526bb1}
+#tab-giai-tri .ldd-film-sentence{font-size:clamp(16px,2.4vw,21px);line-height:2.9;white-space:pre-wrap;overflow-wrap:anywhere}
+#tab-giai-tri .ldd-film-blank{display:inline-flex;vertical-align:middle;align-items:center;flex-wrap:wrap;gap:5px;border-bottom:1px dashed #879fe5;padding:2px 3px;max-width:100%;margin:0 3px}
+#tab-giai-tri .ldd-film-blank.done{border-color:#61ac82}
+#tab-giai-tri .ldd-film-answer{font:inherit;font-size:16px;width:clamp(90px,19vw,150px);max-width:100%;min-height:38px;padding:5px 8px;border-radius:8px;border:1px solid #c0cee7;background:var(--surface,#fff);color:var(--text,#1e3656)}
+#tab-giai-tri .ldd-film-answer:disabled{border-color:#76b39a;background:#ecf8ef;color:#244d33;opacity:1}
+#tab-giai-tri .ldd-film-check,#tab-giai-tri .ldd-film-hint{font:inherit;font-size:12px;min-height:36px;border-radius:8px;padding:6px 9px;border:1px solid #b9c9e4;cursor:pointer;background:var(--surface,#fff);color:var(--text,#244066)}
+#tab-giai-tri .ldd-film-check{background:#295cb5;border-color:#295cb5;color:white}
+#tab-giai-tri .ldd-film-hint{background:#f7f3e6;border-color:#dccb9e;color:#6f5621}
+#tab-giai-tri .ldd-film-check:disabled,#tab-giai-tri .ldd-film-hint:disabled{opacity:.55;cursor:wait}
+#tab-giai-tri .ldd-film-feedback{font-size:14px;font-weight:600;min-height:20px;line-height:1.5;color:var(--text,#254a75)}
+#tab-giai-tri .ldd-film-completed{font-size:14px;color:#23814a;font-weight:700;line-height:1.6}
+#tab-giai-tri .ldd-film-replay,#tab-giai-tri .ldd-film-editor-toggle,#tab-giai-tri .ldd-film-save{font:inherit;cursor:pointer;border:1px solid #b2c7ed;border-radius:10px;padding:10px 14px;background:var(--surface,#fff);color:var(--text,#244a88);font-weight:650;min-height:42px}
+#tab-giai-tri .ldd-film-replay{margin:12px 0 4px}
+#tab-giai-tri .ldd-film-editor{margin-bottom:16px}
+#tab-giai-tri .ldd-film-editor-form{display:grid;grid-template-columns:1fr;gap:10px;max-width:760px;margin:12px 0;border:1px solid var(--border,#cbd7eb);border-radius:15px;background:var(--surface,#fff);padding:clamp(14px,3vw,22px)}
+#tab-giai-tri .ldd-film-editor-form[hidden]{display:none}
+#tab-giai-tri .ldd-film-editor-form label{font-weight:700;font-size:13px}
+#tab-giai-tri .ldd-film-editor-form input,#tab-giai-tri .ldd-film-editor-form textarea{font:inherit;min-width:0;width:100%;border:1px solid var(--border,#bdcce0);border-radius:9px;padding:10px;background:var(--surface,#fff);color:var(--text,#283e5d)}
+#tab-giai-tri .ldd-film-editor-form input[type=file]{padding:8px}
+#tab-giai-tri .ldd-film-editor-help{font-size:12.5px;line-height:1.6;color:var(--text-muted,#63728e);margin:0}
+#tab-giai-tri .ldd-film-save{background:#2357ac;color:white;border-color:#2357ac}
+@media(max-width:600px){
+  #tab-giai-tri .ldd-film-screen{border-radius:10px}
+  #tab-giai-tri .ldd-film-blank{display:inline-flex;vertical-align:baseline;margin:4px 1px}
+  #tab-giai-tri .ldd-film-answer{width:110px;min-height:42px}
+  #tab-giai-tri .ldd-film-sentence{font-size:16px;line-height:2.7}
+  #tab-giai-tri .ldd-film-check,#tab-giai-tri .ldd-film-hint{min-height:42px}
+}
