@@ -57,7 +57,12 @@
     if (blanksIn(line).length) return line;
     const matches = [...line.matchAll(/[A-Za-z][A-Za-z'’-]{3,}/g)]
       .filter(match => !stopWords.has(match[0].toLowerCase()));
-    if (!matches.length) return '';
+    if (!matches.length) {
+      const fallback = [...line.matchAll(/[A-Za-z]+/g)];
+      if (!fallback.length) return '';
+      const last = fallback[fallback.length - 1];
+      return line.slice(0, last.index) + '{' + last[0] + '}' + line.slice(last.index + last[0].length);
+    }
     // Deterministic so editing/reopening subtitles keeps the same targets.
     const picked = matches[Math.floor(matches.length / 2)];
     return line.slice(0, picked.index) + '{' + picked[0] + '}' + line.slice(picked.index + picked[0].length);
@@ -206,8 +211,7 @@
     if (seq !== generation) return;
     if (String(user?.email || '').toLowerCase() === TEACHER) setupEditor(editor, async () => { await mount(body, legacyMovies); });
     try {
-      const { data, error } = await client.from('movie_lessons')
-        .select('id,title,video_url,provider,thumbnail_url,segments').eq('published', true).order('created_at', { ascending: false }).limit(150);
+      const { data, error } = await client.rpc('movie_list_lessons');
       if (error) throw error;
       if (seq !== generation) return;
       const lessons = Array.isArray(data) ? data : [];
@@ -313,7 +317,7 @@
         const check = button('Kiểm tra', 'ldd-film-check');
         const hint = button('Gợi ý', 'ldd-film-hint');
         if (done) {
-          input.value = part;
+          input.value = '✓';
           input.disabled = true;
           check.hidden = hint.hidden = true;
           field.classList.add('done');
@@ -338,7 +342,7 @@
                 const row = { segment_index: idx, blank_index: blankIndex, status: data.status,
                   score_change: data.already_done ? Number(data.total_delta) || 0 : Number(data.delta) || 0 };
                 answers.set(itemKey, row);
-                input.value = data.word || part;
+                input.value = data.word || (data.status === 'correct' ? input.value : '✓');
                 input.disabled = true;
                 check.hidden = hint.hidden = true;
                 field.classList.add('done');
