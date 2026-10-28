@@ -508,14 +508,18 @@
                 document.dispatchEvent(new Event('ldd:vocab-senses-updated'));
                 if (complete(idx)) {
                   manualHold = false;
-                  questionBody.append($el('p', 'ldd-film-completed', 'Hoàn thành câu! Video tiếp tục phát.'));
+                  const completedMessage = $el('p', 'ldd-film-completed',
+                    'Hoàn thành câu! Video sẽ tiếp tục phát.');
+                  questionBody.append(completedMessage);
                   setTimeout(() => {
                     if (seq !== generation || active !== idx) return;
                     active = -1;
                     if (segments.every((_, i) => complete(i))) {
-                      questionBody.replaceChildren($el('p', 'ldd-film-completed', 'Đã hoàn thành toàn bộ bài phim!'));
+                      completedMessage.textContent = 'Đã hoàn thành toàn bộ bài phim!';
                     } else {
-                      questionBody.textContent = 'Đang phát câu tiếp theo…';
+                      // Keep the entire sentence and its Vietnamese translation
+                      // in view while the next piece of video plays.
+                      completedMessage.textContent = 'Hoàn thành! Đang phát câu tiếp theo…';
                       wrap.classList.remove('ldd-film-paused');
                       adapter.play();
                     }
@@ -539,17 +543,17 @@
         if (!done) actions.append(group);
       });
       questionBody.append(sentence);
-      if (actions.childElementCount) questionBody.append(actions);
       if (segments[idx].translation_vi) {
-        const translationToggle = button('Xem bản dịch', 'ldd-film-translate-toggle');
-        const translationContent = $el('p', 'ldd-film-translation', segments[idx].translation_vi);
-        translationContent.hidden = true;
-        translationToggle.addEventListener('click', () => {
-          translationContent.hidden = !translationContent.hidden;
-          translationToggle.textContent = translationContent.hidden ? 'Xem bản dịch' : 'Ẩn bản dịch';
-        });
-        questionBody.append(translationToggle, translationContent);
+        // The complete Vietnamese translation is visible without any action.
+        // No accordions, text clamps or nested scrolling.
+        const translation = $el('div', 'ldd-film-translation');
+        translation.append(
+          $el('span', 'ldd-film-translation-label', 'Bản dịch tiếng Việt'),
+          $el('p', 'ldd-film-translation-text', segments[idx].translation_vi)
+        );
+        questionBody.append(translation);
       }
+      if (actions.childElementCount) questionBody.append(actions);
       // Keep the native mobile keyboard closed until the student taps the input.
       if (focus[0] && window.matchMedia?.('(pointer: fine) and (min-width: 740px)').matches) {
         focus[0].focus({ preventScroll: true });
