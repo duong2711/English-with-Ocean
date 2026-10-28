@@ -33,6 +33,8 @@
 #tab-giai-tri .ldd-film-save{background:#2357ac;color:white;border-color:#2357ac}
 #tab-giai-tri .ldd-film-generate{font:inherit;font-weight:700;cursor:pointer;border:1px solid #77a2cb;border-radius:11px;padding:12px 14px;background:#eaf4ff;color:#18487a;min-height:44px;text-align:center}
 #tab-giai-tri .ldd-film-generate:disabled{opacity:.6;cursor:wait}
+#tab-giai-tri .ldd-film-generate{font:inherit;font-weight:700;cursor:pointer;border:1px solid #77a2cb;border-radius:11px;padding:12px 14px;background:#eaf4ff;color:#18487a;min-height:44px;text-align:center}
+#tab-giai-tri .ldd-film-generate:disabled{opacity:.6;cursor:wait}
 #tab-giai-tri .ldd-film-generate:focus-visible{outline:2px solid #487ab5;outline-offset:2px}
 #tab-giai-tri .ldd-film-translate-toggle{font:inherit;font-size:13px;font-weight:700;background:transparent;color:#3d67b1;border:none;text-decoration:underline;cursor:pointer;padding:5px 0}
 #tab-giai-tri .ldd-film-translation{margin:5px 0;padding:8px 12px;border-left:3px solid #7a9ce1;line-height:1.7;color:var(--text-muted,#465a7b)}
