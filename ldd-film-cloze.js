@@ -209,14 +209,16 @@
       return;
     }
     if (seq !== generation) return;
-    if (String(user?.email || '').toLowerCase() === TEACHER) setupEditor(editor, async () => { await mount(body, legacyMovies); });
+    const isTeacher = String(user?.email || '').toLowerCase() === TEACHER;
     try {
       const { data, error } = await client.rpc('movie_list_lessons');
       if (error) throw error;
       if (seq !== generation) return;
       const lessons = Array.isArray(data) ? data : [];
-      status.textContent = lessons.length ? 'Chọn phim để nghe và điền từ. Video sẽ dừng sau từng câu thoại.' :
-        'Chưa có bài phim. Giáo viên có thể thêm link YouTube/Facebook kèm phụ đề SRT hoặc VTT ở phía trên.';
+      if (isTeacher) setupEditor(editor, async () => { await mount(body, legacyMovies); }, lessons);
+      status.textContent = lessons.length
+        ? 'Chọn video để xem. Video có script sẽ tự dừng ở từng câu để luyện nghe; video chưa có script vẫn phát bình thường.'
+        : 'Thư viện chưa có video. Giáo viên có thể dán link YouTube hoặc Facebook để thêm ngay, rồi nhập script sau.';
       lessons.forEach(lesson => {
         const card = button('', 'ldd-ent-media-card');
         const cover = $el('div', 'ldd-ent-media-cover ldd-ent-film-cover');
@@ -230,8 +232,13 @@
           img.onerror = () => img.replaceWith($el('div', 'ldd-ent-cover-fallback', '🎬'));
           cover.append(img);
         } else cover.append($el('div', 'ldd-ent-cover-fallback', '🎬'));
-        card.append(cover, $el('strong', '', lesson.title), $el('small', '', lesson.segments.length + ' câu · ' + lesson.provider));
-        card.addEventListener('click', () => { void openLesson(lesson, playerWrap, seq); });
+        const hasTranscript = Array.isArray(lesson.segments) && lesson.segments.length > 0;
+        card.append(cover, $el('strong', '', lesson.title),
+          $el('small', '', hasTranscript ? lesson.segments.length + ' câu luyện nghe · ' + lesson.provider : 'Xem video · Chưa có script'));
+        card.addEventListener('click', () => {
+          if (hasTranscript) void openLesson(lesson, playerWrap, seq);
+          else openStandalone(lesson, playerWrap);
+        });
         grid.append(card);
       });
       // Honor old hardcoded MP4 catalog entries as regular (non-graded) videos.
@@ -252,6 +259,49 @@
     } catch (e) {
       status.textContent = 'Không tải được danh sách phim: ' + (e.message || 'Lỗi kết nối');
     }
+  }
+
+
+  function openStandalone(lesson, wrap) {
+    stopPlayer();
+    generation++;
+    wrap.replaceChildren();
+    const parsed = providerOf(lesson.video_url);
+    if (!parsed) {
+      wrap.append($el('p', 'ldd-film-feedback', 'Link video không hợp lệ.'));
+      return;
+    }
+    const title = $el('h3', '', lesson.title);
+    const screen = $el('div', 'ldd-film-screen');
+    let media;
+    if (parsed.provider === 'youtube' || parsed.provider === 'facebook') {
+      media = $el('iframe', 'ldd-film-video');
+      media.title = lesson.title;
+      media.loading = 'eager';
+      media.allowFullscreen = true;
+      media.referrerPolicy = 'strict-origin-when-cross-origin';
+      media.allow = 'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; web-share';
+      media.src = parsed.provider === 'youtube'
+        ? 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(parsed.videoId) + '?rel=0'
+        : 'https://www.facebook.com/plugins/video.php?href=' + encodeURIComponent(parsed.url) + '&show_text=false';
+    } else {
+      media = $el('video', 'ldd-film-video');
+      media.controls = true;
+      media.playsInline = true;
+      media.preload = 'metadata';
+      media.src = parsed.url;
+    }
+    screen.append(media);
+    wrap.append(title, screen,
+      $el('p', 'ldd-film-status', 'Video đã được thêm vào thư viện. Script và bản dịch sẽ được gắn vào sau khi giáo viên nhập phụ đề.'));
+    cleanup = () => {
+      if (media.tagName === 'VIDEO') {
+        media.pause();
+        media.removeAttribute('src');
+        media.load();
+      } else media.removeAttribute('src');
+    };
+    wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   async function openLesson(lesson, wrap, parentSeq) {
@@ -418,62 +468,135 @@
     wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  function setupEditor(wrap, refresh) {
+
+  function setupEditor(wrap, refresh, lessons) {
     wrap.hidden = false;
-    const toggle = button('＋ Thêm video và phụ đề', 'ldd-film-editor-toggle');
+    const toggle = button('＋ Thêm video / Nhập script', 'ldd-film-editor-toggle');
     const form = $el('form', 'ldd-film-editor-form');
     form.hidden = true;
+    const existing = $el('select');
+    const fresh = $el('option', '', 'Thêm video mới (script có thể nhập sau)');
+    fresh.value = '';
+    existing.append(fresh);
+    const pending = (lessons || []).filter(m => !Array.isArray(m.segments) || !m.segments.length);
+    pending.forEach(m => {
+      const option = $el('option', '', 'Nhập script cho: ' + m.title);
+      option.value = String(m.id);
+      existing.append(option);
+    });
     const title = $el('input');
-    title.required = true; title.maxLength = 160; title.placeholder = 'Tên phim hoặc đoạn video';
+    title.required = true;
+    title.maxLength = 160;
+    title.placeholder = 'Tên video / đoạn phim';
     const link = $el('input');
-    link.required = true; link.type = 'url'; link.placeholder = 'Link YouTube, Facebook hoặc video MP4';
+    link.required = true;
+    link.type = 'url';
+    link.placeholder = 'https://youtu.be/... hoặc Facebook / MP4';
     const captions = $el('textarea');
-    captions.required = true; captions.rows = 7;
-    captions.placeholder = 'Dán phụ đề .srt/.vtt có mốc thời gian, ví dụ:\n00:00:01,000 --> 00:00:03,000\nI really like this movie.';
+    captions.rows = 8;
+    captions.placeholder = 'Script tiếng Anh dạng SRT/VTT có mốc thời gian. Có thể bỏ trống khi chỉ thêm video.\\n00:00:01,000 --> 00:00:03,000\\nI like this movie.';
     const upload = $el('input');
-    upload.type = 'file'; upload.accept = '.srt,.vtt,text/plain';
+    upload.type = 'file';
+    upload.accept = '.srt,.vtt,.txt,text/plain';
+    const translations = $el('textarea');
+    translations.rows = 6;
+    translations.placeholder = 'Bản dịch tiếng Việt (tùy chọn): mỗi dòng tương ứng một câu script, không cần mốc thời gian.';
+    const translationUpload = $el('input');
+    translationUpload.type = 'file';
+    translationUpload.accept = '.txt,.srt,.vtt,text/plain';
     const sample = $el('p', 'ldd-film-editor-help',
-      'Website sẽ tự chia câu và ẩn 1 từ/câu. Cần phụ đề SRT/VTT có mốc thời gian; chỉ dán link không thể tự lấy lời thoại từ mọi video.');
+      'Bước 1: Dán link để video xuất hiện ngay. Bước 2: Dùng công cụ tạo script bên ngoài rồi nhập SRT/VTT và bản dịch tại đây. Mỗi câu có script sẽ được tự tạo một ô điền từ.');
     const preview = $el('p', 'ldd-film-editor-help');
-    const save = button('Lưu bài phim', 'ldd-film-save');
+    const save = button('Lưu video / script', 'ldd-film-save');
     save.type = 'submit';
     const notice = $el('p', 'ldd-film-feedback');
+    const noticePreview = () => {
+      const s = parseSubtitles(captions.value);
+      const t = translations.value.trim().split(/\\n/).map(x => x.trim()).filter(Boolean);
+      preview.textContent = s.length + ' câu tiếng Anh, ' + (translations.value.trim() ? t.length : 0) + ' dòng dịch.';
+    };
+    existing.addEventListener('change', () => {
+      const selected = pending.find(m => String(m.id) === existing.value);
+      if (selected) {
+        title.value = selected.title;
+        link.value = selected.video_url;
+        title.readOnly = true;
+        link.readOnly = true;
+        save.textContent = 'Gắn script vào video';
+      } else {
+        title.value = '';
+        link.value = '';
+        title.readOnly = false;
+        link.readOnly = false;
+        save.textContent = 'Lưu video / script';
+      }
+      notice.textContent = '';
+    });
     toggle.addEventListener('click', () => {
       form.hidden = !form.hidden;
       toggle.setAttribute('aria-expanded', String(!form.hidden));
-      if (!form.hidden) title.focus();
+      if (!form.hidden) (pending.length ? existing : title).focus();
     });
-    captions.addEventListener('input', () => { preview.textContent = parseSubtitles(captions.value).length + ' câu được nhận diện.'; });
+    captions.addEventListener('input', noticePreview);
+    translations.addEventListener('input', noticePreview);
     upload.addEventListener('change', async () => {
       const file = upload.files?.[0];
-      if (file) { captions.value = await file.text(); captions.dispatchEvent(new Event('input')); }
+      if (file) { captions.value = await file.text(); noticePreview(); }
+    });
+    translationUpload.addEventListener('change', async () => {
+      const file = translationUpload.files?.[0];
+      if (file) { translations.value = await file.text(); noticePreview(); }
     });
     form.addEventListener('submit', async e => {
       e.preventDefault();
       const info = providerOf(link.value.trim());
-      const segments = parseSubtitles(captions.value);
-      if (!info) { notice.textContent = 'Link video không hợp lệ hoặc nền tảng chưa được hỗ trợ.'; return; }
-      if (!segments.length) { notice.textContent = 'Phụ đề thiếu mốc thời gian SRT/VTT hoặc không có từ hợp lệ.'; return; }
+      if (!info) { notice.textContent = 'Link phải là YouTube, Facebook công khai hoặc video MP4 HTTPS.'; return; }
+      if (!title.value.trim()) { notice.textContent = 'Vui lòng nhập tên video.'; return; }
+      const segments = captions.value.trim() ? parseSubtitles(captions.value) : [];
+      if (captions.value.trim() && !segments.length) {
+        notice.textContent = 'Script không có mốc thời gian SRT/VTT hợp lệ.'; return;
+      }
+      if (existing.value && !segments.length) {
+        notice.textContent = 'Hãy nhập script để gắn vào video đã có.'; return;
+      }
+      const translated = translations.value.trim()
+        ? translations.value.trim().replace(/\\r/g, '').split(/\\n/).map(x => x.trim()).filter(Boolean)
+        : [];
+      if (translated.length && translated.length !== segments.length) {
+        notice.textContent = 'Số dòng bản dịch phải khớp số câu: ' + segments.length + '.'; return;
+      }
+      const withTranslations = segments.map((segment, i) => ({
+        ...segment, ...(translated.length ? { translation_vi: translated[i] } : {})
+      }));
       save.disabled = true;
-      notice.textContent = 'Đang lưu bài phim…';
+      notice.textContent = 'Đang lưu dữ liệu…';
       try {
-        const { data: auth } = await client.auth.getUser();
-        if (String(auth.user?.email || '').toLowerCase() !== TEACHER) throw Error('Chỉ giáo viên được thêm video.');
-        const { error } = await client.from('movie_lessons').insert({
-          title: title.value.trim(), video_url: info.url, provider: info.provider,
-          thumbnail_url: info.thumbnail || null, segments, created_by: auth.user.id
-        });
+        const { data: auth, error: userError } = await client.auth.getUser();
+        if (userError || String(auth?.user?.email || '').toLowerCase() !== TEACHER)
+          throw Error('Chỉ giáo viên được thêm video và script.');
+        const { error } = existing.value
+          ? await client.from('movie_lessons').update({ segments: withTranslations })
+              .eq('id', Number(existing.value)).eq('video_url', info.url)
+          : await client.from('movie_lessons').insert({
+              title: title.value.trim(), video_url: info.url, provider: info.provider,
+              thumbnail_url: info.thumbnail || null, segments: withTranslations, created_by: auth.user.id
+            });
         if (error) throw error;
-        notice.textContent = 'Đã lưu bài phim.';
+        notice.textContent = 'Đã lưu trên website.';
         await refresh();
-      } catch (err) { notice.textContent = 'Không lưu được: ' + (err.message || 'Lỗi'); }
-      finally { save.disabled = false; }
+      } catch (error) {
+        notice.textContent = 'Không lưu được: ' + (error.message || 'Lỗi mạng');
+      } finally { save.disabled = false; }
     });
+    const description = $el('p', 'ldd-film-editor-help',
+      'Nếu chọn video có sẵn, chỉ cập nhật script, giữ nguyên video YouTube và thumbnail. Không cần tải lại video.');
     form.append(
+      $el('label', '', 'Chọn thao tác'), existing,
       $el('label', '', 'Tên video'), title,
       $el('label', '', 'Đường dẫn video'), link,
-      $el('label', '', 'Nhập phụ đề SRT/VTT'), upload, captions,
-      sample, preview, save, notice
+      $el('label', '', 'Script tiếng Anh (SRT/VTT)'), upload, captions,
+      $el('label', '', 'Bản dịch tiếng Việt (mỗi câu một dòng)'), translationUpload, translations,
+      sample, description, preview, save, notice
     );
     wrap.append(toggle, form);
   }
