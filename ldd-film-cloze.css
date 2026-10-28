@@ -358,3 +358,7 @@
     max-height:170px;
   }
 }
+
+/* Keep the back navigation visible when a lesson opens, including under fixed headers. */
+#tab-giai-tri.ldd-film-is-watching #ldd-ent-movies-panel{scroll-margin-top:70px}
+@media(max-width:600px){#tab-giai-tri.ldd-film-is-watching #ldd-ent-movies-panel{scroll-margin-top:58px}}
