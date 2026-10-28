@@ -380,7 +380,8 @@
         media.load();
       } else media.removeAttribute('src');
     };
-    stage.scrollIntoView({ behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+    const watchTop = wrap.closest('#ldd-ent-movies-panel') || stage;
+    watchTop.scrollIntoView({ behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
   }
 
   async function openLesson(lesson, wrap, parentSeq) {
@@ -609,7 +610,8 @@
         screen.replaceChildren(fallback);
       }
     }
-    stage.scrollIntoView({ behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+    const watchTop = wrap.closest('#ldd-ent-movies-panel') || stage;
+    watchTop.scrollIntoView({ behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
   }
 
 
