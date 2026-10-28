@@ -579,21 +579,24 @@
             }
         });
 
-        // Compact article-stored image credits without removing required attribution.
+        // Keep image credit on the image itself, without a separate caption or icon.
+        const articleImage = document.querySelector('#news-article-panel .news-article-img');
+        const retainImageCredit = function (credit, source) {
+            if (!articleImage) return;
+            articleImage.title = [credit, source].filter(Boolean).join(' — ');
+        };
         text.querySelectorAll('p > small').forEach(function (small) {
             const paragraph = small.parentElement;
             const credit = small.querySelector('a[href*="commons.wikimedia.org/wiki/File:"]');
             if (!paragraph || !credit || !/^Ảnh\s/i.test(small.textContent.trim())) return;
-            const details = document.createElement('details');
-            details.className = 'ldd-news-image-attribution';
-            details.style.cssText = 'font-size:0.82rem;line-height:1.55;opacity:0.84';
-            const summary = document.createElement('summary');
-            summary.textContent = 'ⓘ';
-            summary.setAttribute('aria-label', 'Thông tin bản quyền ảnh');
-            summary.style.cssText = 'cursor:pointer;display:inline-block';
-            details.appendChild(summary);
-            details.appendChild(small);
-            paragraph.replaceWith(details);
+            const links = Array.from(small.querySelectorAll('a[href]')).map(function (link) { return link.href; });
+            retainImageCredit(small.textContent.trim(), links.join(' · '));
+            paragraph.remove();
+        });
+        text.querySelectorAll('details.ldd-news-image-attribution').forEach(function (details) {
+            retainImageCredit(details.textContent.replace('ⓘ', '').trim(),
+                Array.from(details.querySelectorAll('a[href]')).map(function (link) { return link.href; }).join(' · '));
+            details.remove();
         });
 
         const anchor = text.querySelector('.ldd-news-meta-anchor[data-meta]');
@@ -654,31 +657,8 @@
             box.appendChild(wordsLine);
         }
 
-        // Image credits can be required by the image licence; retain those,
-        // without displaying an outbound link to the original news article.
-        const imageUrl = String(meta.imageUrl || '').trim();
         const imageCredit = String(meta.imageCredit || '').trim();
-        if (imageCredit) {
-            const attribution = document.createElement('details');
-            attribution.className = 'ldd-news-image-attribution';
-            attribution.style.cssText = 'font-size:0.82rem;line-height:1.55;opacity:0.84;overflow-wrap:anywhere';
-            const summary = document.createElement('summary');
-            summary.textContent = 'ⓘ';
-            summary.setAttribute('aria-label', 'Thông tin bản quyền ảnh');
-            summary.style.cssText = 'cursor:pointer;display:inline-block';
-            attribution.appendChild(summary);
-            if (/^https:\/\//i.test(imageUrl)) {
-                const imageLink = document.createElement('a');
-                imageLink.href = imageUrl;
-                imageLink.target = '_blank';
-                imageLink.rel = 'noopener noreferrer';
-                imageLink.textContent = imageCredit;
-                attribution.appendChild(imageLink);
-            } else {
-                attribution.appendChild(document.createTextNode(imageCredit));
-            }
-            box.appendChild(attribution);
-        }
+        if (imageCredit) retainImageCredit(imageCredit, String(meta.imageUrl || '').trim());
 
     }
 
