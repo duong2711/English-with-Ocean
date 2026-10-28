@@ -245,15 +245,7 @@
       (legacyMovies || []).forEach(item => {
         if (!item?.video_url || !providerOf(item.video_url)) return;
         const card = button(item.title || 'Video', 'ldd-ent-media-card');
-        card.addEventListener('click', async () => {
-          stopPlayer();
-          playerWrap.replaceChildren();
-          playerWrap.append($el('h4', '', item.title || 'Video'));
-          try {
-            const adapter = await makePlayer(playerWrap, item, msg => { status.textContent = msg; });
-            cleanup = adapter.destroy;
-          } catch (e) { playerWrap.append($el('p', 'ldd-film-error', e.message)); }
-        });
+        card.addEventListener('click', () => openStandalone(item, playerWrap));
         grid.append(card);
       });
     } catch (e) {
@@ -421,6 +413,7 @@
                 input.disabled = true;
                 check.hidden = hint.hidden = true;
                 field.classList.add('done');
+                group.remove();
                 feedback.textContent = data.status === 'hint_new' ? 'Đã thêm “' + part + '” vào kho từ vựng.' :
                   data.status === 'hint_known' ? '“' + part + '” đã có trong kho: −1 điểm.' :
                   'Chính xác! +1 điểm.';
@@ -476,7 +469,7 @@
         focus[0].focus({ preventScroll: true });
       }
       const rect = question.getBoundingClientRect();
-      if (rect.top > window.innerHeight - 72 || rect.bottom < 60) {
+      if (rect.bottom > window.innerHeight - 18 || rect.bottom < 60) {
         stage.scrollIntoView({ behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
       }
     }
