@@ -200,7 +200,7 @@
     // recommendations on the right. In narrow viewports CSS stacks the sidebar last.
     const watch = $el('div', 'ldd-film-watch-layout');
     watch.hidden = true;
-    const primary = $el('main', 'ldd-film-watch-primary');
+    const primary = $el('div', 'ldd-film-watch-primary');
     const browse = button('← Tất cả video', 'ldd-film-browse');
     const playerWrap = $el('div', 'ldd-film-lesson');
     primary.append(browse, playerWrap);
