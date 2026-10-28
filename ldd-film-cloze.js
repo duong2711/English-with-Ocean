@@ -576,8 +576,8 @@
         const raw = Array.isArray(data?.segments) ? data.segments : [];
         const segments = raw.map(item => {
           const start = Number(item.start), end = Number(item.end);
-          const text = String(item.text || '').replace(/\\s+/g, ' ').trim();
-          const translation_vi = String(item.translation_vi || '').replace(/[\\r\\n]+/g, ' ').trim();
+          const text = String(item.text || '').replace(/\s+/g, ' ').trim();
+          const translation_vi = String(item.translation_vi || '').replace(/[\r\n]+/g, ' ').trim();
           if (!Number.isFinite(start) || !Number.isFinite(end) || start < 0 || end <= start || end > 14400 ||
               text.length < 2 || text.length > 400) return null;
           const marked = markBlank(text);
@@ -590,10 +590,10 @@
         if (segments.length < 3) throw Error('Không nhận diện đủ câu nói. Video có thể hạn chế truy cập âm thanh.');
         generated = segments;
         captions.value = segments.map((segment, i) =>
-          (i + 1) + '\\n' + toSrtTime(segment.start) + ' --> ' + toSrtTime(segment.end) + '\\n' +
-          segment.text.replace(/\\{([^{}]+)\\}/g, '$1')
-        ).join('\\n\\n');
-        translations.value = segments.map(s => s.translation_vi || '').join('\\n');
+          (i + 1) + '\n' + toSrtTime(segment.start) + ' --> ' + toSrtTime(segment.end) + '\n' +
+          segment.text.replace(/\{([^{}]+)\}/g, '$1')
+        ).join('\n\n');
+        translations.value = segments.map(s => s.translation_vi || '').join('\n');
         generatedCaption = captions.value;
         generatedTranslation = translations.value;
         noticePreview();
