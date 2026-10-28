@@ -241,6 +241,7 @@
             closeReaderZoom();
             comicRequest += 1;
             releaseVideo();
+            if (view !== 'movies') window.LDDFilmCloze?.close();
             currentView = view;
             home.style.display = view === 'root' ? '' : 'none';
             games.hidden = view !== 'games';
@@ -268,6 +269,10 @@
         document.addEventListener('click', function (event) {
             const target = event.target.closest('[data-main-target="tab-giai-tri"]');
             if (target) show('root');
+        }, true);
+        document.addEventListener('click', function (event) {
+            const tab = event.target.closest('[data-main-target]');
+            if (tab && tab.dataset.mainTarget !== 'tab-giai-tri') window.LDDFilmCloze?.close();
         }, true);
         const logout = $('logout-btn');
         if (logout) logout.addEventListener('click', function () { show('root'); });
@@ -393,6 +398,10 @@
             const items = Array.isArray(getCatalog().movies) ? getCatalog().movies.slice() : [];
             const body = panel.querySelector('.ldd-ent-film-body');
             body.replaceChildren();
+            if (window.LDDFilmCloze?.mount) {
+                void window.LDDFilmCloze.mount(body, items);
+                return;
+            }
             const playerWrap = el('div', 'ldd-ent-player');
             playerWrap.hidden = true;
             body.append(playerWrap);
