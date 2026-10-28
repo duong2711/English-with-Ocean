@@ -1,28 +1,44 @@
 /* Film listening cloze — responsive YouTube/Facebook/MP4 video lessons */
-#tab-giai-tri .ldd-film-status{margin:10px 0 18px;color:var(--text-muted,#67758d);line-height:1.6}
-#tab-giai-tri .ldd-film-lesson{max-width:920px;margin:0 auto 20px;scroll-margin-top:80px}
+/* YouTube-inspired watch layout: full 16:9 image, lesson directly underneath. */
+#tab-giai-tri .ldd-film-status{margin:8px 0 14px;color:var(--text-muted,#67758d);font-size:13px;line-height:1.55}
+#tab-giai-tri .ldd-film-lesson{width:100%;max-width:1040px;min-width:0;box-sizing:border-box;margin:0 auto 24px;scroll-margin-top:76px}
 #tab-giai-tri .ldd-film-lesson:empty{display:none}
-#tab-giai-tri .ldd-film-lesson h3{font-size:clamp(18px,3vw,24px);line-height:1.4;margin:18px 0 12px;color:var(--text,#253b58)}
-#tab-giai-tri .ldd-film-screen{width:100%;aspect-ratio:16/9;background:#090d18;border-radius:14px;overflow:hidden;position:relative}
-#tab-giai-tri .ldd-film-screen iframe,#tab-giai-tri .ldd-film-screen video,#tab-giai-tri .ldd-film-screen .ldd-film-video{display:block;width:100%;height:100%;border:0;object-fit:contain}
-#tab-giai-tri .ldd-film-screen .fb-video{width:100%;height:100%;display:flex;justify-content:center;align-items:center}
-#tab-giai-tri .ldd-film-progress{font-size:13px;color:var(--text-muted,#5f6e87);margin:12px 0}
-#tab-giai-tri .ldd-film-question{background:var(--surface,#fff);color:var(--text,#243a59);border:1px solid var(--border,#dce5f4);border-radius:16px;padding:clamp(14px,3vw,24px);line-height:1.75;min-height:96px}
-#tab-giai-tri .ldd-film-question:empty{display:none}
-#tab-giai-tri .ldd-film-question-count{font-weight:700;font-size:12px;margin-bottom:10px;color:#526bb1}
-#tab-giai-tri .ldd-film-sentence{font-size:clamp(16px,2.4vw,21px);line-height:2.9;white-space:pre-wrap;overflow-wrap:anywhere}
-#tab-giai-tri .ldd-film-blank{display:inline-flex;vertical-align:middle;align-items:center;flex-wrap:wrap;gap:5px;border-bottom:1px dashed #879fe5;padding:2px 3px;max-width:100%;margin:0 3px}
-#tab-giai-tri .ldd-film-blank.done{border-color:#61ac82}
-#tab-giai-tri .ldd-film-answer{font:inherit;font-size:16px;width:clamp(90px,19vw,150px);max-width:100%;min-height:38px;padding:5px 8px;border-radius:8px;border:1px solid #c0cee7;background:var(--surface,#fff);color:var(--text,#1e3656)}
-#tab-giai-tri .ldd-film-answer:disabled{border-color:#76b39a;background:#ecf8ef;color:#244d33;opacity:1}
-#tab-giai-tri .ldd-film-check,#tab-giai-tri .ldd-film-hint{font:inherit;font-size:12px;min-height:36px;border-radius:8px;padding:6px 9px;border:1px solid #b9c9e4;cursor:pointer;background:var(--surface,#fff);color:var(--text,#244066)}
-#tab-giai-tri .ldd-film-check{background:#295cb5;border-color:#295cb5;color:white}
-#tab-giai-tri .ldd-film-hint{background:#f7f3e6;border-color:#dccb9e;color:#6f5621}
+#tab-giai-tri .ldd-film-stage{width:min(100%,98dvh,980px);min-width:0;box-sizing:border-box;margin:0 auto;display:flex;flex-direction:column;align-items:stretch}
+#tab-giai-tri .ldd-film-screen{position:relative;isolation:isolate;width:100%;height:auto;min-width:0;aspect-ratio:16/9;background:#080a0f;border-radius:15px;overflow:hidden;box-sizing:border-box}
+#tab-giai-tri .ldd-film-screen>iframe,#tab-giai-tri .ldd-film-screen>video,#tab-giai-tri .ldd-film-screen>.ldd-film-video{position:absolute;inset:0;display:block;width:100%!important;height:100%!important;max-width:100%;max-height:100%;padding:0;margin:0;border:0;object-fit:contain}
+#tab-giai-tri .ldd-film-screen .fb-video{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#080a0f}
+#tab-giai-tri .ldd-film-title{font-size:clamp(16px,2.1vw,21px);line-height:1.45;margin:13px 0 0;font-weight:750;color:var(--text,#253b58);overflow-wrap:anywhere}
+#tab-giai-tri .ldd-film-source-note{font-size:13px;line-height:1.6;color:var(--text-muted,#67758d);margin:7px 0 14px}
+#tab-giai-tri .ldd-film-controls{min-width:0;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px 14px;padding:10px 0 15px}
+#tab-giai-tri .ldd-film-progress{display:inline-flex;align-items:center;gap:6px;min-width:0;max-width:100%;margin:0;font-size:12.5px;font-weight:650;line-height:1.5;color:var(--text,#435977);overflow-wrap:anywhere}
+#tab-giai-tri .ldd-film-question{width:100%;min-width:0;box-sizing:border-box;margin:0 0 10px;overflow:hidden;background:var(--surface,#fff);color:var(--text,#243a59);border:1px solid var(--border,#dce5f4);border-radius:15px;box-shadow:0 2px 12px rgba(25,52,89,.05)}
+#tab-giai-tri .ldd-film-question-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px 12px;padding:13px clamp(14px,2.8vw,23px);border-bottom:1px solid var(--border,#e4eaf3)}
+#tab-giai-tri .ldd-film-question-title{font-size:15px;line-height:1.4;color:var(--text,#223954)}
+#tab-giai-tri .ldd-film-question-help{font-size:12px;line-height:1.5;color:var(--text-muted,#62738e)}
+#tab-giai-tri .ldd-film-question-body{padding:clamp(14px,2.6vw,22px);font-size:14px;line-height:1.65;min-height:70px;overflow-wrap:anywhere}
+#tab-giai-tri .ldd-film-question-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+#tab-giai-tri .ldd-film-question-count{font-weight:750;font-size:12px;line-height:1.3;padding:5px 10px;border-radius:999px;background:var(--surface-2,#eef4ff);color:#325f9c}
+#tab-giai-tri .ldd-film-cue-time{font-size:12px;color:var(--text-muted,#63728e);font-variant-numeric:tabular-nums}
+#tab-giai-tri .ldd-film-sentence{font-size:clamp(16px,2.25vw,20px);font-weight:500;line-height:2.2;white-space:pre-wrap;overflow-wrap:anywhere}
+#tab-giai-tri .ldd-film-blank{display:inline-flex;vertical-align:middle;align-items:center;max-width:100%;margin:3px 4px;padding:0 1px}
+#tab-giai-tri .ldd-film-answer{width:clamp(106px,20vw,156px);max-width:100%;height:auto;min-height:42px;box-sizing:border-box;padding:7px 10px;border:1.5px solid #89a7d6;border-radius:9px;font:inherit;font-size:16px;line-height:1.4;background:var(--surface,#fff);color:var(--text,#1e3656);outline-offset:2px}
+#tab-giai-tri .ldd-film-answer:focus-visible{outline:2px solid #487ab5}
+#tab-giai-tri .ldd-film-blank.done .ldd-film-answer{border-color:#60a37d}
+#tab-giai-tri .ldd-film-answer:disabled{background:#ecf8ef;color:#244d33;opacity:1}
+#tab-giai-tri .ldd-film-actions{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin-top:18px}
+#tab-giai-tri .ldd-film-action-group{display:flex;align-items:center;flex-wrap:wrap;gap:8px;min-width:0}
+#tab-giai-tri .ldd-film-action-label{font-size:12px;font-weight:650;color:var(--text-muted,#5f6e87)}
+#tab-giai-tri .ldd-film-check,#tab-giai-tri .ldd-film-hint{font:inherit;font-size:13px;font-weight:750;line-height:1.35;min-height:44px;border-radius:999px;padding:10px 17px;border:1px solid #b9c9e4;cursor:pointer;background:var(--surface,#fff);color:var(--text,#244066);white-space:nowrap}
+#tab-giai-tri .ldd-film-check{background:#1769cf;border-color:#1769cf;color:#fff}
+#tab-giai-tri .ldd-film-hint{background:var(--surface-2,#f4f7fc);border-color:var(--border,#d7e1f0);color:var(--text,#34506d)}
+#tab-giai-tri .ldd-film-check:focus-visible,#tab-giai-tri .ldd-film-hint:focus-visible,#tab-giai-tri .ldd-film-replay:focus-visible{outline:2px solid #487ab5;outline-offset:2px}
 #tab-giai-tri .ldd-film-check:disabled,#tab-giai-tri .ldd-film-hint:disabled{opacity:.55;cursor:wait}
-#tab-giai-tri .ldd-film-feedback{font-size:14px;font-weight:600;min-height:20px;line-height:1.5;color:var(--text,#254a75)}
-#tab-giai-tri .ldd-film-completed{font-size:14px;color:#23814a;font-weight:700;line-height:1.6}
-#tab-giai-tri .ldd-film-replay,#tab-giai-tri .ldd-film-editor-toggle,#tab-giai-tri .ldd-film-save{font:inherit;cursor:pointer;border:1px solid #b2c7ed;border-radius:10px;padding:10px 14px;background:var(--surface,#fff);color:var(--text,#244a88);font-weight:650;min-height:42px}
-#tab-giai-tri .ldd-film-replay{margin:12px 0 4px}
+#tab-giai-tri .ldd-film-feedback{font-size:13px;font-weight:650;line-height:1.5;color:var(--text,#254a75);min-height:0;margin:0;padding:0 clamp(14px,2.6vw,22px)}
+#tab-giai-tri .ldd-film-feedback:not(:empty){padding-top:0;padding-bottom:14px}
+#tab-giai-tri .ldd-film-completed{font-size:13px;margin:14px 0 0;color:#23814a;font-weight:700;line-height:1.6}
+#tab-giai-tri .ldd-film-replay,#tab-giai-tri .ldd-film-editor-toggle,#tab-giai-tri .ldd-film-save{font:inherit;cursor:pointer;border:1px solid #b2c7ed;border-radius:10px;padding:9px 14px;background:var(--surface,#fff);color:var(--text,#244a88);font-size:13px;font-weight:700;min-height:42px}
+#tab-giai-tri .ldd-film-replay{margin:0;white-space:nowrap}
+#tab-giai-tri .ldd-film-paused .ldd-film-question{border-color:#aac5eb;box-shadow:0 0 0 2px rgba(46,113,205,.07)}
 #tab-giai-tri .ldd-film-editor{margin-bottom:16px}
 #tab-giai-tri .ldd-film-editor-form{display:grid;grid-template-columns:1fr;gap:10px;max-width:760px;margin:12px 0;border:1px solid var(--border,#cbd7eb);border-radius:15px;background:var(--surface,#fff);padding:clamp(14px,3vw,22px)}
 #tab-giai-tri .ldd-film-editor-form[hidden]{display:none}
@@ -33,16 +49,36 @@
 #tab-giai-tri .ldd-film-save{background:#2357ac;color:white;border-color:#2357ac}
 #tab-giai-tri .ldd-film-generate{font:inherit;font-weight:700;cursor:pointer;border:1px solid #77a2cb;border-radius:11px;padding:12px 14px;background:#eaf4ff;color:#18487a;min-height:44px;text-align:center}
 #tab-giai-tri .ldd-film-generate:disabled{opacity:.6;cursor:wait}
-#tab-giai-tri .ldd-film-generate{font:inherit;font-weight:700;cursor:pointer;border:1px solid #77a2cb;border-radius:11px;padding:12px 14px;background:#eaf4ff;color:#18487a;min-height:44px;text-align:center}
-#tab-giai-tri .ldd-film-generate:disabled{opacity:.6;cursor:wait}
 #tab-giai-tri .ldd-film-generate:focus-visible{outline:2px solid #487ab5;outline-offset:2px}
 #tab-giai-tri .ldd-film-translate-toggle{font:inherit;font-size:13px;font-weight:700;background:transparent;color:#3d67b1;border:none;text-decoration:underline;cursor:pointer;padding:5px 0}
 #tab-giai-tri .ldd-film-translation{margin:5px 0;padding:8px 12px;border-left:3px solid #7a9ce1;line-height:1.7;color:var(--text-muted,#465a7b)}
 #tab-giai-tri .ldd-film-translation[hidden]{display:none}
 @media(max-width:600px){
+  #tab-giai-tri .ldd-film-lesson{scroll-margin-top:60px}
   #tab-giai-tri .ldd-film-screen{border-radius:10px}
-  #tab-giai-tri .ldd-film-blank{display:inline-flex;vertical-align:baseline;margin:4px 1px}
-  #tab-giai-tri .ldd-film-answer{width:110px;min-height:42px}
-  #tab-giai-tri .ldd-film-sentence{font-size:16px;line-height:2.7}
-  #tab-giai-tri .ldd-film-check,#tab-giai-tri .ldd-film-hint{min-height:42px}
+  #tab-giai-tri .ldd-film-title{margin-top:10px;font-size:16px}
+  #tab-giai-tri .ldd-film-controls{padding:8px 0 12px;gap:6px}
+  #tab-giai-tri .ldd-film-question{border-radius:12px}
+  #tab-giai-tri .ldd-film-question-header{padding:11px 13px}
+  #tab-giai-tri .ldd-film-question-help{font-size:11px}
+  #tab-giai-tri .ldd-film-question-body{padding:14px 13px}
+  #tab-giai-tri .ldd-film-sentence{font-size:16px;line-height:2.1}
+  #tab-giai-tri .ldd-film-blank{vertical-align:middle;margin:2px 1px}
+  #tab-giai-tri .ldd-film-answer{width:clamp(96px,30vw,138px);min-height:44px}
+  #tab-giai-tri .ldd-film-actions{gap:8px;margin-top:14px}
+  #tab-giai-tri .ldd-film-check,#tab-giai-tri .ldd-film-hint{min-height:44px;padding:9px 15px}
+  #tab-giai-tri .ldd-film-feedback{padding-inline:13px}
+  #tab-giai-tri .ldd-film-progress{font-size:12px}
+}
+@media(max-width:350px){
+  #tab-giai-tri .ldd-film-question-title{font-size:14px}
+  #tab-giai-tri .ldd-film-action-group{width:100%}
+  #tab-giai-tri .ldd-film-check,#tab-giai-tri .ldd-film-hint{flex:1}
+}
+@media(max-height:480px) and (orientation:landscape){
+  #tab-giai-tri .ldd-film-stage{width:min(100%,92dvh)}
+  #tab-giai-tri .ldd-film-lesson{scroll-margin-top:12px}
+}
+@media(prefers-reduced-motion:reduce){
+  #tab-giai-tri .ldd-film-lesson{scroll-behavior:auto}
 }
