@@ -101,7 +101,11 @@
     if (timer) { clearInterval(timer); timer = null; }
     if (cleanup) { try { cleanup(); } catch (_) {} cleanup = null; }
   }
-  function close() { generation++; stopPlayer(); }
+  function close() {
+    generation++;
+    stopPlayer();
+    document.getElementById('tab-giai-tri')?.classList.remove('ldd-film-is-watching');
+  }
 
   async function loadYT() {
     if (window.YT && window.YT.Player) return;
@@ -202,8 +206,14 @@
     watch.hidden = true;
     const primary = $el('div', 'ldd-film-watch-primary');
     const browse = button('← Tất cả video', 'ldd-film-browse');
+    browse.hidden = true;
+    const panel = body.closest('#ldd-ent-movies-panel');
+    const panelHeader = panel?.querySelector('.ldd-ent-panel-heading');
+    panelHeader?.querySelector('.ldd-film-browse')?.remove();
+    if (panelHeader) panelHeader.append(browse);
+    else primary.append(browse);
     const playerWrap = $el('div', 'ldd-film-lesson');
-    primary.append(browse, playerWrap);
+    primary.append(playerWrap);
 
     const suggestions = $el('aside', 'ldd-film-recommendations');
     suggestions.setAttribute('aria-label', 'Video đề xuất');
@@ -221,9 +231,10 @@
     browse.addEventListener('click', () => {
       close();
       playerWrap.replaceChildren();
+      browse.hidden = true;
       watch.hidden = true;
       library.hidden = false;
-      library.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      library.scrollIntoView({ behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
     });
 
     if (!client) { status.textContent = 'Không thể kết nối hệ thống học tập.'; return; }
@@ -285,6 +296,8 @@
         if (!providerOf(lesson.video_url)) return;
         library.hidden = true;
         watch.hidden = false;
+        browse.hidden = false;
+        document.getElementById('tab-giai-tri')?.classList.add('ldd-film-is-watching');
         playerWrap.classList.remove('ldd-film-paused');
         recList.replaceChildren();
         const current = providerOf(lesson.video_url).url;
@@ -541,8 +554,19 @@
         focus[0].focus({ preventScroll: true });
       }
       const rect = question.getBoundingClientRect();
-      if (rect.bottom > window.innerHeight - 18 || rect.bottom < 60) {
-        stage.scrollIntoView({ behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+      const screenTop = screen.getBoundingClientRect().top;
+      const viewHeight = window.visualViewport?.height || window.innerHeight;
+      // Only nudge down if the question is hidden. Do not jump back to the
+      // video's top as this would hide the question all over again.
+      if (rect.bottom > viewHeight - 12 && !window.matchMedia?.('(max-width: 940px)').matches) {
+        const needed = Math.max(0, rect.bottom - viewHeight + 20);
+        const available = Math.max(0, screenTop - 76);
+        if (available > 0) window.scrollBy({
+          top: Math.min(needed, available),
+          behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth'
+        });
+      } else if (rect.top > viewHeight - 72 && window.matchMedia?.('(max-width: 940px)').matches) {
+        question.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }
     }
     try {
