@@ -131,13 +131,25 @@
       await loadYT();
       const host = $el('div', 'ldd-film-video');
       container.append(host);
+      let captionsInitialized = false;
+      const disableInitialCaptions = player => {
+        if (captionsInitialized) return;
+        try {
+          if (!player.getOptions?.().includes('captions')) return;
+          // Best effort: track selection is not a guaranteed public API option.
+          // Do this only on initial module load, allowing later manual CC changes.
+          player.setOption('captions', 'track', {});
+          captionsInitialized = true;
+        } catch (_) { /* Caption preferences must never prevent playback. */ }
+      };
       const player = await new Promise((resolve, reject) => {
         const p = new window.YT.Player(host, {
           videoId: parsed.videoId,
           width: '100%', height: '100%',
-          playerVars: { playsinline: 1, rel: 0, origin: location.origin },
+          playerVars: { playsinline: 1, rel: 0, cc_load_policy: 0, origin: location.origin },
           events: {
-            onReady: () => resolve(p),
+            onReady: e => { disableInitialCaptions(e.target); resolve(p); },
+            onApiChange: e => disableInitialCaptions(e.target),
             onError: e => { onError('YouTube không cho phép phát video này (' + e.data + ').'); reject(Error('Video unavailable')); }
           }
         });
@@ -340,9 +352,9 @@
     }
   }
 
-  function openStandalone(lesson, wrap) {
+  async function openStandalone(lesson, wrap) {
     stopPlayer();
-    generation++;
+    const seq = ++generation;
     wrap.replaceChildren();
     const parsed = providerOf(lesson.video_url);
     if (!parsed) {
@@ -361,7 +373,7 @@
       media.referrerPolicy = 'strict-origin-when-cross-origin';
       media.allow = 'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; web-share';
       media.src = parsed.provider === 'youtube'
-        ? 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(parsed.videoId) + '?rel=0'
+        ? 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(parsed.videoId) + '?rel=0&cc_load_policy=0'
         : 'https://www.facebook.com/plugins/video.php?href=' + encodeURIComponent(parsed.url) + '&show_text=false';
     } else {
       media = $el('video', 'ldd-film-video');
@@ -381,6 +393,19 @@
         media.load();
       } else media.removeAttribute('src');
     };
+    if (parsed.provider === 'youtube') {
+      // Use the same caption defaults for videos with and without exercises.
+      media.removeAttribute('src');
+      screen.replaceChildren();
+      try {
+        const adapter = await makePlayer(screen, lesson, message => { description.textContent = message; });
+        if (seq !== generation) { adapter.destroy(); return; }
+        cleanup = adapter.destroy;
+      } catch (error) {
+        if (seq !== generation) return;
+        description.textContent = 'Không tải được video: ' + (error.message || 'Lỗi trình phát');
+      }
+    }
     const watchTop = wrap.closest('#ldd-ent-movies-panel') || stage;
     watchTop.scrollIntoView({ behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
   }
