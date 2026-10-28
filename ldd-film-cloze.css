@@ -50,9 +50,51 @@
 #tab-giai-tri .ldd-film-generate{font:inherit;font-weight:700;cursor:pointer;border:1px solid #77a2cb;border-radius:11px;padding:12px 14px;background:#eaf4ff;color:#18487a;min-height:44px;text-align:center}
 #tab-giai-tri .ldd-film-generate:disabled{opacity:.6;cursor:wait}
 #tab-giai-tri .ldd-film-generate:focus-visible{outline:2px solid #487ab5;outline-offset:2px}
-#tab-giai-tri .ldd-film-translate-toggle{font:inherit;font-size:13px;font-weight:700;background:transparent;color:#3d67b1;border:none;text-decoration:underline;cursor:pointer;padding:5px 0}
-#tab-giai-tri .ldd-film-translation{margin:5px 0;padding:8px 12px;border-left:3px solid #7a9ce1;line-height:1.7;color:var(--text-muted,#465a7b)}
-#tab-giai-tri .ldd-film-translation[hidden]{display:none}
+/* Full Vietnamese line shown below each English cue; never collapsed or cropped. */
+#tab-giai-tri .ldd-film-translation{
+  display:block;
+  min-width:0;
+  width:100%;
+  max-width:100%;
+  box-sizing:border-box;
+  height:auto;
+  max-height:none;
+  overflow:visible;
+  margin:12px 0 0;
+  padding:10px 12px;
+  border-left:3px solid #4a85d5;
+  border-radius:0 9px 9px 0;
+  background:var(--surface-2,#f3f7ff);
+  color:var(--text,#2b4366);
+}
+#tab-giai-tri .ldd-film-translation-label{
+  display:block;
+  margin:0 0 4px;
+  font-size:11px;
+  line-height:1.5;
+  font-weight:750;
+  letter-spacing:.01em;
+  color:var(--text-muted,#5d708c);
+}
+#tab-giai-tri .ldd-film-translation-text{
+  display:block;
+  width:100%;
+  min-width:0;
+  margin:0;
+  font-size:clamp(14px,1.65vw,17px);
+  font-weight:500;
+  line-height:1.7;
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+  word-break:normal;
+  max-height:none;
+  overflow:visible;
+}
+#tab-giai-tri .ldd-film-question-body{
+  max-height:none;
+  height:auto;
+  overflow:visible;
+}
 @media(max-width:600px){
   #tab-giai-tri .ldd-film-lesson{scroll-margin-top:60px}
   #tab-giai-tri .ldd-film-stage{width:100%;scroll-margin-top:60px}
@@ -286,9 +328,8 @@
   padding:8px 14px;
 }
 #tab-giai-tri.ldd-film-is-watching .ldd-film-translation {
-  font-size:13px;
-  margin:6px 0 0;
-  padding:6px 10px;
+  margin:10px 0 0;
+  padding:9px 12px;
 }
 @media(min-width:941px){
   #tab-giai-tri.ldd-film-is-watching .ldd-film-watch-primary .ldd-film-stage{
@@ -301,11 +342,10 @@
     scroll-margin-top:65px;
   }
   #tab-giai-tri.ldd-film-is-watching .ldd-film-question-body{
-    max-height:clamp(155px,26vh,300px);
-    max-height:clamp(155px,26dvh,300px);
-    overflow-y:auto;
-    overscroll-behavior:contain;
-    scrollbar-width:thin;
+    /* Full translation must stay readable, including long passages. */
+    max-height:none;
+    height:auto;
+    overflow:visible;
   }
 }
 @media(max-width:940px){
