@@ -217,7 +217,7 @@
 
     const suggestions = $el('aside', 'ldd-film-recommendations');
     suggestions.setAttribute('aria-label', 'Video đề xuất');
-    const recHeading = $el('h3', 'ldd-film-rec-heading', 'Video đề xuất');
+    const recHeading = $el('h3', 'ldd-film-rec-heading', 'Xem tiếp');
     const recList = $el('div', 'ldd-film-rec-list');
     suggestions.append(recHeading, recList);
     watch.append(primary, suggestions);
@@ -296,6 +296,7 @@
         if (!providerOf(lesson.video_url)) return;
         library.hidden = true;
         watch.hidden = false;
+        watch.classList.remove('ldd-film-focus-mode');
         browse.hidden = false;
         document.getElementById('tab-giai-tri')?.classList.add('ldd-film-is-watching');
         playerWrap.classList.remove('ldd-film-paused');
@@ -393,22 +394,37 @@
     const heading = $el('h3', 'ldd-film-title', lesson.title);
     const controls = $el('div', 'ldd-film-controls');
     const progress = $el('span', 'ldd-film-progress');
+    const meter = $el('progress', 'ldd-film-meter');
+    meter.setAttribute('aria-label', 'Tiến độ bài luyện nghe');
+    meter.max = 1;
+    meter.value = 0;
+    const focusMode = button('Tập trung', 'ldd-film-focus');
+    focusMode.setAttribute('aria-pressed', 'false');
+    focusMode.addEventListener('click', () => {
+      const layout = wrap.closest('.ldd-film-watch-layout');
+      const enabled = layout.classList.toggle('ldd-film-focus-mode');
+      focusMode.setAttribute('aria-pressed', String(enabled));
+      focusMode.textContent = enabled ? 'Hiện video đề xuất' : 'Tập trung';
+      fitPlayer();
+    });
     const question = $el('section', 'ldd-film-question');
     question.setAttribute('aria-label', 'Câu hỏi luyện nghe');
     const questionHeader = $el('div', 'ldd-film-question-header');
     questionHeader.append(
-      $el('strong', 'ldd-film-question-title', 'Luyện nghe · Điền từ'),
+      $el('strong', 'ldd-film-question-title', 'Nghe & hoàn thành câu'),
       $el('span', 'ldd-film-question-help', 'Video tự dừng sau từng câu thoại')
     );
     const questionBody = $el('div', 'ldd-film-question-body', 'Đang khởi tạo video…');
     const feedback = $el('p', 'ldd-film-feedback');
     feedback.setAttribute('role', 'status');
     feedback.setAttribute('aria-live', 'polite');
-    controls.append(progress);
+    controls.append(progress, focusMode);
+    progress.append(meter);
     question.append(questionHeader, questionBody, feedback);
     stage.append(screen, heading, controls, question);
     wrap.append(stage);
     const answers = new Map();
+    const drafts = new Map();
     const segments = (lesson.segments || []).filter(s => Number.isFinite(+s.end) && blanksIn(s.text).length);
     if (!segments.length) { questionBody.textContent = 'Bài phim chưa có câu hỏi.'; return; }
     try {
@@ -426,17 +442,59 @@
     }
     function tally() {
       const total = segments.reduce((n, s) => n + blanksIn(s.text).length, 0);
-      progress.textContent = 'Đã làm ' + answers.size + '/' + total + ' từ · Điểm phim: ' +
-        [...answers.values()].reduce((n, a) => n + (Number(a.score_change) || 0), 0);
+      progress.textContent = answers.size + '/' + total + ' từ hoàn thành · ' +
+        [...answers.values()].reduce((n, a) => n + (Number(a.score_change) || 0), 0) + ' điểm';
+      meter.max = total || 1;
+      meter.value = answers.size;
+      progress.append(meter);
     }
     tally();
     let adapter;
     let active = -1;
     let busy = false;
     let manualHold = false;
+    let displayedIndex = -1;
+    // Size only the player; keep the exercise wide so long translations wrap
+    // less. Recompute when feedback, fonts or viewport dimensions change.
+    let fitFrame = 0;
+    const fitPlayer = () => {
+      cancelAnimationFrame(fitFrame);
+      fitFrame = requestAnimationFrame(() => {
+        if (!wrap.isConnected || seq !== generation) return;
+        if (!window.matchMedia('(min-width: 941px)').matches) {
+          screen.style.removeProperty('height');
+          return;
+        }
+        const viewport = window.visualViewport?.height || window.innerHeight;
+        const overhead = stage.getBoundingClientRect().height - screen.getBoundingClientRect().height;
+        const panelTop = wrap.closest('#ldd-ent-movies-panel')?.getBoundingClientRect().top || 0;
+        const beforePlayer = Math.max(0, screen.getBoundingClientRect().top - panelTop);
+        const available = viewport - 70 - beforePlayer - 16 - overhead;
+        // YouTube requires a player viewport of at least 200px. On very short
+        // screens the page scrolls naturally instead of clipping the exercise.
+        const height = Math.max(200, Math.min(stage.clientWidth * 9 / 16, available));
+        screen.style.height = Math.round(height) + 'px';
+      });
+    };
+    const resizeObserver = new ResizeObserver(fitPlayer);
+    resizeObserver.observe(question);
+    resizeObserver.observe(controls);
+    resizeObserver.observe(heading);
+    resizeObserver.observe(wrap);
+    window.addEventListener('resize', fitPlayer);
+    window.visualViewport?.addEventListener('resize', fitPlayer);
+    const releaseLayout = () => {
+      resizeObserver.disconnect();
+      cancelAnimationFrame(fitFrame);
+      window.removeEventListener('resize', fitPlayer);
+      window.visualViewport?.removeEventListener('resize', fitPlayer);
+    };
+    cleanup = releaseLayout;
+    fitPlayer();
     function questionAt(idx) {
       if (idx < 0 || idx >= segments.length || idx === active) return;
       active = idx;
+      displayedIndex = idx;
       manualHold = true;
       try { adapter?.pause(); } catch (_) {}
       feedback.textContent = '';
@@ -466,11 +524,13 @@
         input.autocomplete = 'off';
         input.spellcheck = false;
         input.placeholder = 'Điền từ';
+        input.value = drafts.get(itemKey) || '';
+        input.addEventListener('input', () => drafts.set(itemKey, input.value));
         input.setAttribute('aria-label', 'Từ còn trống ' + (blankIndex + 1));
         const check = button('Kiểm tra', 'ldd-film-check');
         const hint = button('Gợi ý', 'ldd-film-hint');
         if (done) {
-          input.value = '✓';
+          input.value = done.word || drafts.get(itemKey) || '✓';
           input.disabled = true;
           check.hidden = hint.hidden = true;
           field.classList.add('done');
@@ -493,6 +553,7 @@
                 feedback.textContent = 'Chưa chính xác, hãy nghe lại và thử tiếp.';
               } else if (data.status === 'correct' || data.status === 'hint_new' || data.status === 'hint_known' || data.already_done) {
                 const row = { segment_index: idx, blank_index: blankIndex, status: data.status,
+                  word: data.word || input.value,
                   score_change: data.already_done ? Number(data.total_delta) || 0 : Number(data.delta) || 0 };
                 answers.set(itemKey, row);
                 input.value = data.word || (data.status === 'correct' ? input.value : '✓');
@@ -558,27 +619,17 @@
       if (focus[0] && window.matchMedia?.('(pointer: fine) and (min-width: 740px)').matches) {
         focus[0].focus({ preventScroll: true });
       }
-      const rect = question.getBoundingClientRect();
-      const screenTop = screen.getBoundingClientRect().top;
-      const viewHeight = window.visualViewport?.height || window.innerHeight;
-      // Only nudge down if the question is hidden. Do not jump back to the
-      // video's top as this would hide the question all over again.
-      if (rect.bottom > viewHeight - 12 && !window.matchMedia?.('(max-width: 940px)').matches) {
-        const needed = Math.max(0, rect.bottom - viewHeight + 20);
-        const available = Math.max(0, screenTop - 76);
-        if (available > 0) window.scrollBy({
-          top: Math.min(needed, available),
-          behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth'
-        });
-      } else if (rect.top > viewHeight - 72 && window.matchMedia?.('(max-width: 940px)').matches) {
-        question.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }
+      fitPlayer();
     }
     try {
       adapter = await makePlayer(screen, lesson, message => { feedback.textContent = message; });
       if (seq !== generation) { adapter.destroy(); return; }
-      cleanup = adapter.destroy;
-      questionBody.textContent = 'Nhấn Play trên video để bắt đầu. Khi video dừng, hãy điền từ còn thiếu bên dưới.';
+      cleanup = () => { releaseLayout(); adapter.destroy(); };
+      const firstPending = segments.findIndex((_, i) => !complete(i));
+      questionAt(firstPending >= 0 ? firstPending : 0);
+      active = -1;
+      manualHold = false;
+      wrap.classList.remove('ldd-film-paused');
       let lastTime = 0;
       timer = setInterval(() => {
         if (seq !== generation || manualHold || !adapter) return;
@@ -589,18 +640,18 @@
         if (idx !== -1) questionAt(idx);
         lastTime = t;
       }, 120);
-      const replay = button('Nghe lại câu', 'ldd-film-replay');
+      const replay = button('↻ Nghe lại', 'ldd-film-replay');
       replay.addEventListener('click', () => {
-        const index = active >= 0 ? active : segments.findIndex((_, i) => !complete(i));
+        const index = displayedIndex >= 0 ? displayedIndex : segments.findIndex((_, i) => !complete(i));
         if (index < 0) return;
         manualHold = false;
         active = -1;
         wrap.classList.remove('ldd-film-paused');
-        questionBody.textContent = 'Đang phát lại câu ' + (index + 1) + '…';
+        feedback.textContent = 'Đang nghe lại câu ' + (index + 1) + '…';
         adapter.seek(Math.max(0, Number(segments[index].start) - 0.4));
         adapter.play();
       });
-      controls.insertBefore(replay, progress);
+      questionHeader.append(replay);
     } catch (e) {
       questionBody.textContent = 'Không thể điều khiển video: ' + (e.message || 'Lỗi trình phát') +
         '. Với Facebook, cần video công khai và hỗ trợ nhúng; hãy thử video khác.';
