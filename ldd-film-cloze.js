@@ -271,7 +271,8 @@
       wrap.append($el('p', 'ldd-film-feedback', 'Link video không hợp lệ.'));
       return;
     }
-    const title = $el('h3', '', lesson.title);
+    const title = $el('h3', 'ldd-film-title', lesson.title);
+    const stage = $el('div', 'ldd-film-stage');
     const screen = $el('div', 'ldd-film-screen');
     let media;
     if (parsed.provider === 'youtube' || parsed.provider === 'facebook') {
@@ -292,8 +293,9 @@
       media.src = parsed.url;
     }
     screen.append(media);
-    wrap.append(title, screen,
-      $el('p', 'ldd-film-status', 'Video đã được thêm vào thư viện. Script và bản dịch sẽ được gắn vào sau khi giáo viên nhập phụ đề.'));
+    const description = $el('p', 'ldd-film-source-note', 'Xem video · Bài luyện nghe sẽ xuất hiện sau khi có script.');
+    stage.append(screen, title, description);
+    wrap.append(stage);
     cleanup = () => {
       if (media.tagName === 'VIDEO') {
         media.pause();
@@ -301,22 +303,36 @@
         media.load();
       } else media.removeAttribute('src');
     };
-    wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    stage.scrollIntoView({ behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
   }
 
   async function openLesson(lesson, wrap, parentSeq) {
     stopPlayer();
     const seq = ++generation;
     wrap.replaceChildren();
-    const heading = $el('h3', '', lesson.title);
+    const stage = $el('div', 'ldd-film-stage');
     const screen = $el('div', 'ldd-film-screen');
-    const progress = $el('div', 'ldd-film-progress');
-    const question = $el('div', 'ldd-film-question', 'Đang khởi tạo video…');
+    const heading = $el('h3', 'ldd-film-title', lesson.title);
+    const controls = $el('div', 'ldd-film-controls');
+    const progress = $el('span', 'ldd-film-progress');
+    const question = $el('section', 'ldd-film-question');
+    question.setAttribute('aria-label', 'Câu hỏi luyện nghe');
+    const questionHeader = $el('div', 'ldd-film-question-header');
+    questionHeader.append(
+      $el('strong', 'ldd-film-question-title', 'Luyện nghe · Điền từ'),
+      $el('span', 'ldd-film-question-help', 'Video tự dừng sau từng câu thoại')
+    );
+    const questionBody = $el('div', 'ldd-film-question-body', 'Đang khởi tạo video…');
     const feedback = $el('p', 'ldd-film-feedback');
-    wrap.append(heading, screen, progress, question, feedback);
+    feedback.setAttribute('role', 'status');
+    feedback.setAttribute('aria-live', 'polite');
+    controls.append(progress);
+    question.append(questionHeader, questionBody, feedback);
+    stage.append(screen, heading, controls, question);
+    wrap.append(stage);
     const answers = new Map();
     const segments = (lesson.segments || []).filter(s => Number.isFinite(+s.end) && blanksIn(s.text).length);
-    if (!segments.length) { question.textContent = 'Bài phim chưa có câu hỏi.'; return; }
+    if (!segments.length) { questionBody.textContent = 'Bài phim chưa có câu hỏi.'; return; }
     try {
       const { data, error } = await client.from('movie_cloze_progress')
         .select('segment_index,blank_index,status,score_change').eq('movie_id', lesson.id);
@@ -324,7 +340,7 @@
       if (seq !== generation) return;
       for (const row of data || []) answers.set(keyOf(row.segment_index, row.blank_index), row);
     } catch (e) {
-      question.textContent = 'Không tải được tiến độ của bạn: ' + e.message;
+      questionBody.textContent = 'Không tải được tiến độ của bạn: ' + e.message;
       return;
     }
     function complete(idx) {
@@ -346,8 +362,17 @@
       manualHold = true;
       try { adapter?.pause(); } catch (_) {}
       feedback.textContent = '';
-      question.replaceChildren($el('div', 'ldd-film-question-count', 'Câu ' + (idx + 1) + '/' + segments.length));
+      wrap.classList.add('ldd-film-paused');
+      const questionTop = $el('div', 'ldd-film-question-top');
+      questionTop.append(
+        $el('span', 'ldd-film-question-count', 'Câu ' + (idx + 1) + ' / ' + segments.length),
+        $el('span', 'ldd-film-cue-time', 'Tại ' +
+          Math.floor(Number(segments[idx].start) / 60) + ':' +
+          String(Math.floor(Number(segments[idx].start) % 60)).padStart(2, '0'))
+      );
+      questionBody.replaceChildren(questionTop);
       const sentence = $el('div', 'ldd-film-sentence');
+      const actions = $el('div', 'ldd-film-actions');
       const parts = segments[idx].text.split(/\{([^{}]+)\}/g);
       const focus = [];
       parts.forEach((part, j) => {
@@ -404,13 +429,17 @@
                 document.dispatchEvent(new Event('ldd:vocab-senses-updated'));
                 if (complete(idx)) {
                   manualHold = false;
-                  question.append($el('p', 'ldd-film-completed', 'Hoàn thành câu! Video tiếp tục phát.'));
+                  questionBody.append($el('p', 'ldd-film-completed', 'Hoàn thành câu! Video tiếp tục phát.'));
                   setTimeout(() => {
                     if (seq !== generation || active !== idx) return;
                     active = -1;
                     if (segments.every((_, i) => complete(i))) {
-                      question.replaceChildren($el('p', 'ldd-film-completed', 'Đã hoàn thành toàn bộ bài phim!'));
-                    } else { question.replaceChildren(); adapter.play(); }
+                      questionBody.replaceChildren($el('p', 'ldd-film-completed', 'Đã hoàn thành toàn bộ bài phim!'));
+                    } else {
+                      questionBody.textContent = 'Đang phát câu tiếp theo…';
+                      wrap.classList.remove('ldd-film-paused');
+                      adapter.play();
+                    }
                   }, 600);
                 }
               } else feedback.textContent = 'Phản hồi chưa được ghi nhận, thử lại.';
@@ -421,10 +450,17 @@
           hint.addEventListener('click', () => void submit(true));
           input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); void submit(false); } });
         }
-        field.append(input, check, hint);
+        const group = $el('div', 'ldd-film-action-group');
+        if (blanksIn(segments[idx].text).length > 1) {
+          group.append($el('span', 'ldd-film-action-label', 'Từ trống ' + (blankIndex + 1)));
+        }
+        group.append(check, hint);
+        field.append(input);
         sentence.append(field);
+        if (!done) actions.append(group);
       });
-      question.append(sentence);
+      questionBody.append(sentence);
+      if (actions.childElementCount) questionBody.append(actions);
       if (segments[idx].translation_vi) {
         const translationToggle = button('Xem bản dịch', 'ldd-film-translate-toggle');
         const translationContent = $el('p', 'ldd-film-translation', segments[idx].translation_vi);
@@ -433,15 +469,22 @@
           translationContent.hidden = !translationContent.hidden;
           translationToggle.textContent = translationContent.hidden ? 'Xem bản dịch' : 'Ẩn bản dịch';
         });
-        question.append(translationToggle, translationContent);
+        questionBody.append(translationToggle, translationContent);
       }
-      if (focus[0]) focus[0].focus({ preventScroll: true });
+      // Keep the native mobile keyboard closed until the student taps the input.
+      if (focus[0] && window.matchMedia?.('(pointer: fine) and (min-width: 740px)').matches) {
+        focus[0].focus({ preventScroll: true });
+      }
+      const rect = question.getBoundingClientRect();
+      if (rect.top > window.innerHeight - 72 || rect.bottom < 60) {
+        stage.scrollIntoView({ behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+      }
     }
     try {
       adapter = await makePlayer(screen, lesson, message => { feedback.textContent = message; });
       if (seq !== generation) { adapter.destroy(); return; }
       cleanup = adapter.destroy;
-      question.textContent = 'Nhấn Play để bắt đầu nghe phim.';
+      questionBody.textContent = 'Nhấn Play trên video để bắt đầu. Khi video dừng, hãy điền từ còn thiếu bên dưới.';
       let lastTime = 0;
       timer = setInterval(() => {
         if (seq !== generation || manualHold || !adapter) return;
@@ -458,12 +501,14 @@
         if (index < 0) return;
         manualHold = false;
         active = -1;
+        wrap.classList.remove('ldd-film-paused');
+        questionBody.textContent = 'Đang phát lại câu ' + (index + 1) + '…';
         adapter.seek(Math.max(0, Number(segments[index].start) - 0.4));
         adapter.play();
       });
-      wrap.insertBefore(replay, progress);
+      controls.insertBefore(replay, progress);
     } catch (e) {
-      question.textContent = 'Không thể điều khiển video: ' + (e.message || 'Lỗi trình phát') +
+      questionBody.textContent = 'Không thể điều khiển video: ' + (e.message || 'Lỗi trình phát') +
         '. Với Facebook, cần video công khai và hỗ trợ nhúng; hãy thử video khác.';
       const p = providerOf(lesson.video_url);
       if (p?.provider === 'facebook') {
@@ -475,7 +520,7 @@
         screen.replaceChildren(fallback);
       }
     }
-    wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    stage.scrollIntoView({ behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
   }
 
 
