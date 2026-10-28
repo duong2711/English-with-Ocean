@@ -27,10 +27,13 @@
 #tab-giai-tri .ldd-film-editor-form{display:grid;grid-template-columns:1fr;gap:10px;max-width:760px;margin:12px 0;border:1px solid var(--border,#cbd7eb);border-radius:15px;background:var(--surface,#fff);padding:clamp(14px,3vw,22px)}
 #tab-giai-tri .ldd-film-editor-form[hidden]{display:none}
 #tab-giai-tri .ldd-film-editor-form label{font-weight:700;font-size:13px}
-#tab-giai-tri .ldd-film-editor-form input,#tab-giai-tri .ldd-film-editor-form textarea{font:inherit;min-width:0;width:100%;border:1px solid var(--border,#bdcce0);border-radius:9px;padding:10px;background:var(--surface,#fff);color:var(--text,#283e5d)}
+#tab-giai-tri .ldd-film-editor-form input,#tab-giai-tri .ldd-film-editor-form textarea,#tab-giai-tri .ldd-film-editor-form select{font:inherit;min-width:0;width:100%;border:1px solid var(--border,#bdcce0);border-radius:9px;padding:10px;background:var(--surface,#fff);color:var(--text,#283e5d)}
 #tab-giai-tri .ldd-film-editor-form input[type=file]{padding:8px}
 #tab-giai-tri .ldd-film-editor-help{font-size:12.5px;line-height:1.6;color:var(--text-muted,#63728e);margin:0}
 #tab-giai-tri .ldd-film-save{background:#2357ac;color:white;border-color:#2357ac}
+#tab-giai-tri .ldd-film-translate-toggle{font:inherit;font-size:13px;font-weight:700;background:transparent;color:#3d67b1;border:none;text-decoration:underline;cursor:pointer;padding:5px 0}
+#tab-giai-tri .ldd-film-translation{margin:5px 0;padding:8px 12px;border-left:3px solid #7a9ce1;line-height:1.7;color:var(--text-muted,#465a7b)}
+#tab-giai-tri .ldd-film-translation[hidden]{display:none}
 @media(max-width:600px){
   #tab-giai-tri .ldd-film-screen{border-radius:10px}
   #tab-giai-tri .ldd-film-blank{display:inline-flex;vertical-align:baseline;margin:4px 1px}
