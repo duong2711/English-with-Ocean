@@ -425,6 +425,16 @@
         sentence.append(field);
       });
       question.append(sentence);
+      if (segments[idx].translation_vi) {
+        const translationToggle = button('Xem bản dịch', 'ldd-film-translate-toggle');
+        const translationContent = $el('p', 'ldd-film-translation', segments[idx].translation_vi);
+        translationContent.hidden = true;
+        translationToggle.addEventListener('click', () => {
+          translationContent.hidden = !translationContent.hidden;
+          translationToggle.textContent = translationContent.hidden ? 'Xem bản dịch' : 'Ẩn bản dịch';
+        });
+        question.append(translationToggle, translationContent);
+      }
       if (focus[0]) focus[0].focus({ preventScroll: true });
     }
     try {
@@ -494,7 +504,7 @@
     link.placeholder = 'https://youtu.be/... hoặc Facebook / MP4';
     const captions = $el('textarea');
     captions.rows = 8;
-    captions.placeholder = 'Script tiếng Anh dạng SRT/VTT có mốc thời gian. Có thể bỏ trống khi chỉ thêm video.\\n00:00:01,000 --> 00:00:03,000\\nI like this movie.';
+    captions.placeholder = 'Script tiếng Anh dạng SRT/VTT có mốc thời gian. Có thể bỏ trống khi chỉ thêm video.\n00:00:01,000 --> 00:00:03,000\nI like this movie.';
     const upload = $el('input');
     upload.type = 'file';
     upload.accept = '.srt,.vtt,.txt,text/plain';
@@ -512,7 +522,7 @@
     const notice = $el('p', 'ldd-film-feedback');
     const noticePreview = () => {
       const s = parseSubtitles(captions.value);
-      const t = translations.value.trim().split(/\\n/).map(x => x.trim()).filter(Boolean);
+      const t = translations.value.trim().split(/\n/).map(x => x.trim()).filter(Boolean);
       preview.textContent = s.length + ' câu tiếng Anh, ' + (translations.value.trim() ? t.length : 0) + ' dòng dịch.';
     };
     existing.addEventListener('change', () => {
@@ -560,7 +570,7 @@
         notice.textContent = 'Hãy nhập script để gắn vào video đã có.'; return;
       }
       const translated = translations.value.trim()
-        ? translations.value.trim().replace(/\\r/g, '').split(/\\n/).map(x => x.trim()).filter(Boolean)
+        ? translations.value.trim().replace(/\r/g, '').split(/\n/).map(x => x.trim()).filter(Boolean)
         : [];
       if (translated.length && translated.length !== segments.length) {
         notice.textContent = 'Số dòng bản dịch phải khớp số câu: ' + segments.length + '.'; return;
