@@ -193,3 +193,168 @@
 @media (prefers-reduced-motion:reduce) {
   #tab-giai-tri .ldd-film-rec-card{transition:none;}
 }
+
+
+/* Study-first watch mode. The previous header + fixed player width used up the
+   laptop viewport and hid the actual exercise. Keep both in sight. */
+#tab-giai-tri.ldd-film-is-watching > h2 {display:none!important}
+#tab-giai-tri.ldd-film-is-watching #ldd-ent-movies-panel > .ldd-ent-panel-heading {
+  position:static!important;
+  display:flex!important;
+  height:auto!important;
+  min-height:0!important;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:7px 14px;
+  margin:0 0 9px!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+#tab-giai-tri.ldd-film-is-watching #ldd-ent-movies-panel > .ldd-ent-panel-heading h3 {
+  font-size:15px!important;
+  line-height:1.35;
+  margin:0!important;
+  padding:0!important;
+  flex:0 1 auto;
+}
+#tab-giai-tri.ldd-film-is-watching #ldd-ent-movies-panel > .ldd-ent-panel-heading [data-ent-back]{
+  min-height:34px!important;
+  height:auto!important;
+  padding:5px 11px!important;
+  border-radius:9px;
+  font-size:12.5px!important;
+  line-height:1.35!important;
+  margin:0!important;
+}
+#tab-giai-tri .ldd-film-browse[hidden]{display:none!important}
+#tab-giai-tri.ldd-film-is-watching .ldd-film-browse {
+  margin:0 0 0 auto;
+  padding:5px 11px;
+  min-height:34px;
+  border-radius:9px;
+  background:var(--surface,#fff);
+  white-space:nowrap;
+}
+#tab-giai-tri.ldd-film-is-watching .ldd-film-watch-layout{
+  max-width:1200px;
+  margin:0 auto;
+  gap:22px;
+  grid-template-columns:minmax(0,1fr) minmax(285px,330px);
+  align-items:start;
+}
+#tab-giai-tri.ldd-film-is-watching .ldd-film-watch-primary .ldd-film-lesson {
+  margin:0;
+}
+#tab-giai-tri.ldd-film-is-watching .ldd-film-recommendations{
+  top:66px;
+}
+#tab-giai-tri.ldd-film-is-watching .ldd-film-title {
+  margin:9px 0 0;
+  font-size:clamp(16px,1.7vw,19px);
+  line-height:1.33;
+}
+#tab-giai-tri.ldd-film-is-watching .ldd-film-controls {
+  padding:7px 0 9px;
+  gap:6px 12px;
+}
+#tab-giai-tri.ldd-film-is-watching .ldd-film-question {
+  margin-bottom:8px;
+  border-radius:13px;
+}
+#tab-giai-tri.ldd-film-is-watching .ldd-film-question-header {
+  padding:9px 14px;
+  gap:4px 8px;
+}
+#tab-giai-tri.ldd-film-is-watching .ldd-film-question-title{font-size:14px}
+#tab-giai-tri.ldd-film-is-watching .ldd-film-question-body {
+  padding:10px 14px 12px;
+}
+#tab-giai-tri.ldd-film-is-watching .ldd-film-question-top {margin:0 0 8px}
+#tab-giai-tri.ldd-film-is-watching .ldd-film-sentence {
+  font-size:clamp(16px,1.75vw,19px);
+  line-height:2;
+}
+#tab-giai-tri.ldd-film-is-watching .ldd-film-actions {
+  margin-top:10px;
+  gap:8px 12px;
+}
+#tab-giai-tri.ldd-film-is-watching .ldd-film-check,
+#tab-giai-tri.ldd-film-is-watching .ldd-film-hint{
+  min-height:40px;
+  padding:8px 14px;
+}
+#tab-giai-tri.ldd-film-is-watching .ldd-film-translation {
+  font-size:13px;
+  margin:6px 0 0;
+  padding:6px 10px;
+}
+@media(min-width:941px){
+  #tab-giai-tri.ldd-film-is-watching .ldd-film-watch-primary .ldd-film-stage{
+    /* dVH-based fit: less space for the video on short laptop displays,
+       while keeping it large on desktop displays. No cropping. */
+    width:min(100%,clamp(520px,calc(177.78dvh - 764px),820px));
+    max-width:100%;
+    margin:0 auto;
+    scroll-margin-top:65px;
+  }
+  #tab-giai-tri.ldd-film-is-watching .ldd-film-question-body{
+    max-height:clamp(155px,26dvh,300px);
+    overflow-y:auto;
+    overscroll-behavior:contain;
+    scrollbar-width:thin;
+  }
+}
+@media(max-width:940px){
+  #tab-giai-tri.ldd-film-is-watching .ldd-film-watch-layout{
+    max-width:100%;
+    grid-template-columns:minmax(0,1fr);
+    gap:10px;
+  }
+  #tab-giai-tri.ldd-film-is-watching .ldd-film-watch-primary .ldd-film-stage{
+    width:100%;
+    max-width:100%;
+    margin:0;
+  }
+  #tab-giai-tri.ldd-film-is-watching .ldd-film-recommendations{
+    position:static;
+    top:auto;
+    max-height:none;
+    overflow:visible;
+  }
+  #tab-giai-tri.ldd-film-is-watching .ldd-film-question-body{
+    max-height:none;
+    overflow:visible;
+  }
+}
+@media(max-width:480px){
+  #tab-giai-tri.ldd-film-is-watching #ldd-ent-movies-panel > .ldd-ent-panel-heading {
+    gap:6px 8px;
+    margin-bottom:8px!important;
+  }
+  #tab-giai-tri.ldd-film-is-watching #ldd-ent-movies-panel > .ldd-ent-panel-heading h3{
+    font-size:14px!important;
+  }
+  #tab-giai-tri.ldd-film-is-watching #ldd-ent-movies-panel > .ldd-ent-panel-heading [data-ent-back]{
+    padding:5px 8px!important;
+    font-size:12px!important;
+  }
+  #tab-giai-tri.ldd-film-is-watching .ldd-film-browse{
+    padding:5px 9px;
+    font-size:12px;
+    margin-left:auto;
+  }
+  #tab-giai-tri.ldd-film-is-watching .ldd-film-title{font-size:15px;margin-top:9px}
+  #tab-giai-tri.ldd-film-is-watching .ldd-film-controls{padding:7px 0 10px}
+  #tab-giai-tri.ldd-film-is-watching .ldd-film-question-header{padding:10px 12px}
+  #tab-giai-tri.ldd-film-is-watching .ldd-film-question-body{padding:12px}
+}
+@media(max-height:580px) and (min-width:941px){
+  #tab-giai-tri.ldd-film-is-watching .ldd-film-watch-primary .ldd-film-stage {
+    width:min(100%,480px);
+  }
+  #tab-giai-tri.ldd-film-is-watching .ldd-film-question-body{
+    max-height:170px;
+  }
+}
