@@ -479,41 +479,10 @@
     let busy = false;
     let manualHold = false;
     let displayedIndex = -1;
-    // Size only the player; keep the exercise wide so long translations wrap
-    // less. Recompute when feedback, fonts or viewport dimensions change.
-    let fitFrame = 0;
-    const fitPlayer = () => {
-      cancelAnimationFrame(fitFrame);
-      fitFrame = requestAnimationFrame(() => {
-        if (!wrap.isConnected || seq !== generation) return;
-        if (!window.matchMedia('(min-width: 941px)').matches) {
-          screen.style.removeProperty('height');
-          return;
-        }
-        const viewport = window.visualViewport?.height || window.innerHeight;
-        const overhead = stage.getBoundingClientRect().height - screen.getBoundingClientRect().height;
-        const panelTop = wrap.closest('#ldd-ent-movies-panel')?.getBoundingClientRect().top || 0;
-        const beforePlayer = Math.max(0, screen.getBoundingClientRect().top - panelTop);
-        const available = viewport - 70 - beforePlayer - 16 - overhead;
-        // YouTube requires a player viewport of at least 200px. On very short
-        // screens the page scrolls naturally instead of clipping the exercise.
-        const height = Math.max(200, Math.min(stage.clientWidth * 9 / 16, available));
-        screen.style.height = Math.round(height) + 'px';
-      });
-    };
-    const resizeObserver = new ResizeObserver(fitPlayer);
-    resizeObserver.observe(question);
-    resizeObserver.observe(controls);
-    resizeObserver.observe(heading);
-    resizeObserver.observe(wrap);
-    window.addEventListener('resize', fitPlayer);
-    window.visualViewport?.addEventListener('resize', fitPlayer);
-    const releaseLayout = () => {
-      resizeObserver.disconnect();
-      cancelAnimationFrame(fitFrame);
-      window.removeEventListener('resize', fitPlayer);
-      window.visualViewport?.removeEventListener('resize', fitPlayer);
-    };
+    // CSS owns the video dimensions: at most 720px wide and always 16:9.
+    // Keep the exercise and translation at full column width below the player.
+    const fitPlayer = () => screen.style.removeProperty('height');
+    const releaseLayout = () => screen.style.removeProperty('height');
     cleanup = releaseLayout;
     fitPlayer();
     function questionAt(idx) {
