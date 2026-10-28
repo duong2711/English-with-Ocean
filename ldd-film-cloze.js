@@ -515,10 +515,19 @@
     translationUpload.type = 'file';
     translationUpload.accept = '.txt,.srt,.vtt,text/plain';
     const sample = $el('p', 'ldd-film-editor-help',
-      'Bước 1: Dán link để video xuất hiện ngay. Bước 2: Dùng công cụ tạo script bên ngoài rồi nhập SRT/VTT và bản dịch tại đây. Mỗi câu có script sẽ được tự tạo một ô điền từ.');
+      'Dán link YouTube rồi bấm Tạo script + dịch tự động. Hoặc tải SRT/VTT thủ công. Kiểm tra nội dung trước khi lưu để học viên không bị chấm sai.');
     const preview = $el('p', 'ldd-film-editor-help');
     const save = button('Lưu video / script', 'ldd-film-save');
     save.type = 'submit';
+    const generate = button('✨ Tạo script + dịch tự động từ YouTube', 'ldd-film-generate');
+    let generated = null;
+    let generatedCaption = '';
+    let generatedTranslation = '';
+    const toSrtTime = seconds => {
+      const ms = Math.max(0, Math.round(seconds * 1000));
+      return [Math.floor(ms / 3600000), Math.floor(ms / 60000) % 60, Math.floor(ms / 1000) % 60]
+        .map(n => String(n).padStart(2, '0')).join(':') + ',' + String(ms % 1000).padStart(3, '0');
+    };
     const notice = $el('p', 'ldd-film-feedback');
     const noticePreview = () => {
       const s = parseSubtitles(captions.value);
@@ -541,11 +550,62 @@
         save.textContent = 'Lưu video / script';
       }
       notice.textContent = '';
+      generated = null;
+      generatedCaption = '';
+      generatedTranslation = '';
     });
     toggle.addEventListener('click', () => {
       form.hidden = !form.hidden;
       toggle.setAttribute('aria-expanded', String(!form.hidden));
       if (!form.hidden) (pending.length ? existing : title).focus();
+    });
+    generate.addEventListener('click', async () => {
+      const info = providerOf(link.value.trim());
+      if (!info || info.provider !== 'youtube') {
+        notice.textContent = 'Tự động nhận dạng hiện hỗ trợ YouTube công khai. Facebook/MP4 cần nhập phụ đề.';
+        return;
+      }
+      generate.disabled = true;
+      save.disabled = true;
+      notice.textContent = 'AI đang nghe video, xác định thời gian từng câu và dịch sang tiếng Việt…';
+      try {
+        const { data, error } = await client.functions.invoke('movie-transcribe-youtube', {
+          body: { videoId: info.videoId }
+        });
+        if (error) throw Error(data?.error || error.message || 'Không thể tạo script.');
+        const raw = Array.isArray(data?.segments) ? data.segments : [];
+        const segments = raw.map(item => {
+          const start = Number(item.start), end = Number(item.end);
+          const text = String(item.text || '').replace(/\\s+/g, ' ').trim();
+          const translation_vi = String(item.translation_vi || '').replace(/[\\r\\n]+/g, ' ').trim();
+          if (!Number.isFinite(start) || !Number.isFinite(end) || start < 0 || end <= start || end > 14400 ||
+              text.length < 2 || text.length > 400) return null;
+          const marked = markBlank(text);
+          return marked && blanksIn(marked).length ? {
+            start: Math.round(start * 100) / 100,
+            end: Math.round(end * 100) / 100,
+            text: marked, ...(translation_vi ? { translation_vi } : {})
+          } : null;
+        }).filter(Boolean).sort((a,b) => a.start-b.start);
+        if (segments.length < 3) throw Error('Không nhận diện đủ câu nói. Video có thể hạn chế truy cập âm thanh.');
+        generated = segments;
+        captions.value = segments.map((segment, i) =>
+          (i + 1) + '\\n' + toSrtTime(segment.start) + ' --> ' + toSrtTime(segment.end) + '\\n' +
+          segment.text.replace(/\\{([^{}]+)\\}/g, '$1')
+        ).join('\\n\\n');
+        translations.value = segments.map(s => s.translation_vi || '').join('\\n');
+        generatedCaption = captions.value;
+        generatedTranslation = translations.value;
+        noticePreview();
+        notice.textContent = 'AI đã tạo ' + segments.length +
+          ' câu. Kiểm tra lại lời thoại, mốc dừng và bản dịch trước khi lưu vì AI có thể nghe nhầm.';
+      } catch (error) {
+        generated = null;
+        notice.textContent = 'Không tạo được script: ' + (error.message || 'Lỗi xử lý video');
+      } finally {
+        generate.disabled = false;
+        save.disabled = false;
+      }
     });
     captions.addEventListener('input', noticePreview);
     translations.addEventListener('input', noticePreview);
@@ -562,14 +622,16 @@
       const info = providerOf(link.value.trim());
       if (!info) { notice.textContent = 'Link phải là YouTube, Facebook công khai hoặc video MP4 HTTPS.'; return; }
       if (!title.value.trim()) { notice.textContent = 'Vui lòng nhập tên video.'; return; }
-      const segments = captions.value.trim() ? parseSubtitles(captions.value) : [];
+      const useGenerated = generated && captions.value === generatedCaption &&
+        translations.value === generatedTranslation;
+      const segments = useGenerated ? generated : captions.value.trim() ? parseSubtitles(captions.value) : [];
       if (captions.value.trim() && !segments.length) {
         notice.textContent = 'Script không có mốc thời gian SRT/VTT hợp lệ.'; return;
       }
       if (existing.value && !segments.length) {
         notice.textContent = 'Hãy nhập script để gắn vào video đã có.'; return;
       }
-      const translated = translations.value.trim()
+      const translated = !useGenerated && translations.value.trim()
         ? translations.value.trim().replace(/\r/g, '').split(/\n/).map(x => x.trim()).filter(Boolean)
         : [];
       if (translated.length && translated.length !== segments.length) {
@@ -604,6 +666,7 @@
       $el('label', '', 'Chọn thao tác'), existing,
       $el('label', '', 'Tên video'), title,
       $el('label', '', 'Đường dẫn video'), link,
+      generate,
       $el('label', '', 'Script tiếng Anh (SRT/VTT)'), upload, captions,
       $el('label', '', 'Bản dịch tiếng Việt (mỗi câu một dòng)'), translationUpload, translations,
       sample, description, preview, save, notice
