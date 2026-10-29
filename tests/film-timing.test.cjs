@@ -53,5 +53,5 @@ test('a subtitle cue containing two sentences is not split by guessed durations'
   assert.equal(cues.length, 2);
   assert.equal(cues[0].start, 1);
   assert.equal(cues[0].end, 5);
-  assert.match(cues[0].text, /She is kind/);
+  assert.match(cues[0].text, /She is \{kind\}/);
 });
