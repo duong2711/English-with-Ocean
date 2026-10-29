@@ -467,22 +467,10 @@
         inputs.push({ input, blankIndex, key });
       });
 
-      const translation = $el('p', 'ldd-film-caption-translation', cue.translation_vi || 'Bản dịch chưa có.');
-      translation.hidden = true;
-      translation.id = 'ldd-film-tran-' + lesson.id + '-' + idx;
-      const translate = button('Dịch tiếng Việt', 'ldd-film-caption-translate-toggle');
-      translate.setAttribute('aria-expanded', 'false');
-      translate.setAttribute('aria-controls', translation.id);
-      const toggleTranslation = () => {
-        translation.hidden = !translation.hidden;
-        translate.setAttribute('aria-expanded', String(!translation.hidden));
-        translate.textContent = translation.hidden ? 'Dịch tiếng Việt' : 'Ẩn bản dịch';
-      };
-      translate.addEventListener('click', toggleTranslation);
-      sentence.addEventListener('click', e => {
-        if (e.target.closest('input, button')) return;
-        toggleTranslation();
-      });
+      // Always show the Vietnamese translation below its English cloze line.
+      // Learners can listen and type without having to reveal a second panel.
+      const translation = $el('p', 'ldd-film-caption-translation',
+        cue.translation_vi || 'Bản dịch chưa có.');
 
       for (const field of inputs) {
         const check = button('Kiểm tra', 'ldd-film-check ldd-film-caption-check');
@@ -575,7 +563,7 @@
         actionRow.append(check, hint);
       }
 
-      item.append(heading, sentence, actionRow, translate, translation, feedback);
+      item.append(heading, sentence, translation, actionRow, feedback);
       list.append(item);
       items.push({ start: Number(cue.start), end: Number(cue.end), item, seek, fields });
     });
@@ -585,7 +573,7 @@
     }
     panel.querySelector('.ldd-film-caption-title').textContent = 'Luyện nghe · Điền từ';
     panel.querySelector('.ldd-film-caption-source').textContent =
-      'Nghe và điền từ còn thiếu · bấm vào câu để xem dịch';
+      'Nghe và điền từ còn thiếu · bản dịch tiếng Việt nằm ngay dưới mỗi câu';
     const state = panel.querySelector('.ldd-film-caption-state');
     state.setAttribute('aria-live', 'polite');
     panel.append(tally, list);
@@ -792,7 +780,7 @@
             if (Array.isArray(lesson.segments) && lesson.segments.length) {
               await renderCaptionExercise(lesson, captionPanel, adapter, seq);
               if (seq === generation) {
-                description.textContent = 'Luyện nghe điền từ trong khung cuộn bên cạnh video. Nhấn vào mỗi câu để xem bản dịch tiếng Việt.';
+                description.textContent = 'Luyện nghe điền từ trong khung cuộn cạnh video, với bản dịch tiếng Việt hiện sẵn dưới từng câu.';
               }
               (wrap.closest('#ldd-ent-movies-panel') || stage).scrollIntoView({
                 behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
