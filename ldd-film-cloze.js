@@ -455,12 +455,27 @@
     const drafts = new Map();
     const incoming = Array.isArray(lesson.segments) ? lesson.segments : [];
     const check = filmTiming?.check(incoming, { allowEmpty: true });
-    if (!check || !check.ok) {
-      questionBody.textContent = 'Script chưa đạt kiểm tra thời gian. Giáo viên cần sửa trước khi học viên làm bài.';
+    const segments = check?.ok ? incoming.filter(s => blanksIn(s.text).length) : [];
+    if (!segments.length) {
+      questionHeader.textContent = 'Xem video';
+      questionBody.textContent = check?.ok
+        ? 'Bài luyện nghe đang được chuẩn bị. Bạn vẫn có thể xem video.'
+        : 'Script đang được kiểm tra lại. Video vẫn xem được; phần câu hỏi tạm khóa để tránh chấm sai.';
+      progress.remove();
+      try {
+        const viewOnly = await makePlayer(screen, lesson, message => {
+          feedback.textContent = message;
+        });
+        if (seq !== generation) {
+          viewOnly.destroy();
+          return;
+        }
+        cleanup = viewOnly.destroy;
+      } catch (error) {
+        feedback.textContent = 'Không thể tải video: ' + (error.message || 'Lỗi trình phát');
+      }
       return;
     }
-    const segments = incoming.filter(s => blanksIn(s.text).length);
-    if (!segments.length) { questionBody.textContent = 'Bài phim chưa có câu hỏi.'; return; }
     try {
       const { data, error } = await client.from('movie_cloze_progress')
         .select('segment_index,blank_index,status,score_change').eq('movie_id', lesson.id);
