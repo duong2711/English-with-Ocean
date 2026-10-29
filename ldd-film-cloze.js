@@ -741,6 +741,7 @@
       // An empty video has no answerable blanks. Never attempt server grading.
       if (seq !== generation) return;
       captionPanel.querySelector('.ldd-film-caption-empty')?.remove();
+      captionPanel.classList.add('is-empty');
       const empty = $el('div', 'ldd-film-caption-empty');
       empty.append(
         $el('strong', 'ldd-film-caption-empty-title', 'Chưa có bài luyện nghe'),
