@@ -188,3 +188,13 @@ test('signed-in teacher can open the existing script editor from the current vid
   assert.match(js, /String\(auth\?\.user\?\.email \|\| ''\)\.toLowerCase\(\) !== TEACHER/);
   assert.match(css, /\.ldd-film-edit-current\[hidden\] \{display:none!important\}/);
 });
+
+test('teacher editor prioritizes an unpublished merged draft and saves drafts separately', () => {
+  assert.match(js, /const cues = savedCues\.length \? savedCues : publishedCues;/);
+  assert.match(js, /pendingAudioReview = savedCues\.length > 0;/);
+  assert.match(js, /saveDraft = button\('Lưu bản nháp'/);
+  assert.match(js, /\.update\(\{ draft_segments: nextDraft \}\)/);
+  assert.match(js, /saveDraft, save, notice/);
+  assert.match(js, /String\(auth\?\.user\?\.email \|\| ''\)\.toLowerCase\(\) !== TEACHER/);
+  assert.match(js, /Bài và điểm học viên hiện tại không thay đổi/);
+});
