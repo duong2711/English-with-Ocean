@@ -623,7 +623,11 @@
     updateRowStates();
 
     const focusGate = () => {
-      if (gateIndex < 0) return;
+      if (gateIndex < 0) {
+        try { adapter.pause(); } catch (_) {}
+        state.textContent = 'Bạn đã hoàn thành toàn bộ bài. Có thể nhấn Nghe lại ở bất kỳ câu nào.';
+        return;
+      }
       const row = items[gateIndex];
       // An initial seek does not autoplay, which is blocked on some devices.
       seekPendingUntil = Date.now() + 2800;
