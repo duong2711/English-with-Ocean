@@ -729,7 +729,7 @@
       'Dán link YouTube rồi bấm Tạo script + dịch tự động. Hoặc tải SRT/VTT thủ công. Kiểm tra nội dung trước khi lưu để học viên không bị chấm sai.');
     const preview = $el('p', 'ldd-film-editor-help');
     const verifiedRow = $el('label', 'ldd-film-editor-help');
-    verifiedRow.style.display = 'none';
+    verifiedRow.style.display = 'block';
     const verifiedCheckbox = $el('input');
     verifiedCheckbox.type = 'checkbox';
     verifiedRow.append(verifiedCheckbox, document.createTextNode(
@@ -781,7 +781,7 @@
       translations.value = '';
       timingConfirm.checked = false;
       verifiedCheckbox.checked = false;
-      verifiedRow.style.display = 'none';
+      verifiedRow.style.display = 'block';
       pendingAudioReview = false;
       title.value = selected?.title || '';
       link.value = selected?.video_url || '';
@@ -801,7 +801,7 @@
         const publishedCues = Array.isArray(data?.segments) ? data.segments : [];
         const savedCues = Array.isArray(data?.draft_segments) ? data.draft_segments : [];
         pendingAudioReview = !publishedCues.length && savedCues.length > 0;
-        verifiedRow.style.display = pendingAudioReview ? 'block' : 'none';
+        verifiedRow.style.display = 'block';
         verifiedCheckbox.checked = false;
         const cues = publishedCues.length ? publishedCues : savedCues;
         captions.value = cues.map((s, i) =>
@@ -924,8 +924,8 @@
           (checked?.errors || ['Không tải được bộ kiểm tra.']).join(' ');
         return;
       }
-      if (pendingAudioReview && !verifiedCheckbox.checked) {
-        notice.textContent = 'Đã khóa đăng lại: script cũ bị lệch thời gian. Cần đối chiếu trực tiếp từng câu với video và xác nhận trước khi mở lại bài luyện.';
+      if (withTranslations.length && !verifiedCheckbox.checked) {
+        notice.textContent = 'Chưa thể đăng script: cần nghe và đối chiếu TỪNG câu với âm thanh thực tế, sau đó xác nhận. Mốc thời gian có thứ tự không đồng nghĩa đã đồng bộ.';
         return;
       }
       if (checked.warnings.length && !timingConfirm.checked) {
