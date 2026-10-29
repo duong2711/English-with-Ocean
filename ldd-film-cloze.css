@@ -526,3 +526,84 @@
     margin:0;
   }
 }
+
+
+/* Source-caption companion to a watch-only film. Keeps video left,
+   timecoded transcript right from tablet widths, with no clipped dialogue. */
+#tab-giai-tri .ldd-film-caption-panel {
+  min-width:0;max-width:100%;width:100%;box-sizing:border-box;
+  border:1px solid var(--border,#dde7ed);border-radius:16px;
+  padding:clamp(13px,1.8vw,20px);
+  background:var(--surface,#fff);
+  color:var(--text,#223954);
+}
+#tab-giai-tri .ldd-film-caption-title {
+  font-size:16px;line-height:1.4;font-weight:750;margin:0 0 4px;
+}
+#tab-giai-tri .ldd-film-caption-source,
+#tab-giai-tri .ldd-film-caption-state {
+  margin:0 0 12px;font-size:12px;line-height:1.6;
+  color:var(--text-muted,#62738e);
+}
+#tab-giai-tri .ldd-film-caption-list {
+  list-style:none;display:flex;flex-direction:column;gap:4px;
+  padding:0;margin:0;min-width:0;max-height:none;overflow:visible;
+}
+#tab-giai-tri .ldd-film-caption-item {
+  list-style:none;margin:0;padding:0;min-width:0;
+}
+#tab-giai-tri .ldd-film-caption-jump {
+  width:100%;min-width:0;display:grid;
+  grid-template-columns:45px minmax(0,1fr);gap:10px;
+  font:inherit;text-align:left;align-items:start;
+  margin:0;padding:9px 8px;border:0;border-radius:9px;
+  background:transparent;color:var(--text,#263a59);cursor:pointer;
+}
+#tab-giai-tri .ldd-film-caption-jump:hover,
+#tab-giai-tri .ldd-film-caption-jump:focus-visible,
+#tab-giai-tri .ldd-film-caption-jump.is-current {
+  background:var(--surface-2,#eaf5f1);
+}
+#tab-giai-tri .ldd-film-caption-jump:focus-visible {
+  outline:2px solid #0c8a78;outline-offset:1px;
+}
+#tab-giai-tri .ldd-film-caption-clock {
+  color:#087b69;font-variant-numeric:tabular-nums;font-weight:700;
+  font-size:12px;line-height:1.65;
+}
+#tab-giai-tri .ldd-film-caption-text {
+  white-space:normal;overflow-wrap:anywhere;word-break:normal;
+  font-size:13.5px;line-height:1.65;
+}
+@media(min-width:740px) {
+  #tab-giai-tri.ldd-film-is-watching .ldd-film-watch-primary .ldd-film-stage--video-only.ldd-film-stage--with-transcript {
+    display:grid;max-width:none;width:100%;
+    grid-template-columns:minmax(0,1.22fr) minmax(0,1fr);
+    grid-template-areas:"screen captions" "title captions" "note captions";
+    grid-template-rows:auto auto 1fr;
+    column-gap:clamp(16px,2.4vw,30px);row-gap:0;
+    align-items:start;align-content:start;
+  }
+  #tab-giai-tri.ldd-film-is-watching .ldd-film-stage--with-transcript > .ldd-film-screen {
+    grid-area:screen;width:100%;max-width:720px;min-width:0;
+  }
+  #tab-giai-tri.ldd-film-is-watching .ldd-film-stage--with-transcript > .ldd-film-title {
+    grid-area:title;min-width:0;
+  }
+  #tab-giai-tri.ldd-film-is-watching .ldd-film-stage--with-transcript > .ldd-film-source-note {
+    grid-area:note;min-width:0;
+  }
+  #tab-giai-tri.ldd-film-is-watching .ldd-film-stage--with-transcript > .ldd-film-caption-panel {
+    grid-area:captions;min-width:0;align-self:start;
+  }
+}
+@media(max-width:739px) {
+  #tab-giai-tri.ldd-film-is-watching .ldd-film-stage--with-transcript {
+    width:100%;max-width:100%;display:flex;flex-direction:column;
+    align-items:stretch;gap:10px;
+  }
+  #tab-giai-tri.ldd-film-is-watching .ldd-film-stage--with-transcript > .ldd-film-screen {
+    width:100%;max-width:100%;
+  }
+  #tab-giai-tri .ldd-film-caption-panel {border-radius:14px;padding:13px;}
+}
