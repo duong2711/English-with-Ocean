@@ -30,9 +30,17 @@ test('recommended videos are below the lesson and form 3/2/1 grid by width', () 
   assert.ok(css.indexOf('.ldd-film-watch-layout') < tabletStart, 'tablet style overrides earlier layout');
 });
 
-test('video-only lessons avoid the empty exercise column', () => {
-  assert.match(js, /ldd-film-stage ldd-film-stage--video-only/);
-  assert.match(js, /stage\.append\(screen, heading, controls, question\)/);
+test('every film uses the same player and independent transcript layout', () => {
+  const selection = js.slice(js.indexOf('const select = lesson => {'), js.indexOf('catalog.forEach(item => {'));
+  const watch = js.slice(js.indexOf('async function openStandalone('), js.indexOf('async function openLesson('));
+  assert.match(selection, /void openStandalone\(lesson, playerWrap, isTeacher\)/);
+  assert.doesNotMatch(selection, /openLesson\(/);
+  assert.doesNotMatch(selection, /videoId === 'HeDpbMnrlRc'/);
+  assert.match(watch, /ldd-film-stage--video-only ldd-film-stage--with-transcript/);
+  assert.match(watch, /stage\.append\(screen, captionPanel\)/);
+  assert.match(watch, /if \(hasScript \|\| parsed\.provider === 'youtube'\)/);
+  assert.match(watch, /await renderCaptionExercise\(lesson, captionPanel, adapter, seq, teacherPreview\)/);
+  assert.match(watch, /fallbackVideo\(\);\s*emptyNote\(\);/);
   assert.match(js, /watch\.append\(primary, suggestions\)/);
 });
 
@@ -55,12 +63,13 @@ test('opening Phim ảnh first shows all videos and never automatically selects 
   assert.match(mount, /browse\.addEventListener\('click', \(\) => \{[\s\S]*?library\.hidden = false;/);
 });
 
-test('watch-only sourced captions appear beside the film, with time-seek and safe fallback', () => {
-  assert.match(js, /hasSourceCaptions = parsed\.provider === 'youtube' && parsed\.videoId === 'HeDpbMnrlRc'/);
-  assert.match(js, /client\.functions\.invoke\('movie-caption-reader'/);
-  assert.match(js, /captionPanel\.append\(transcriptList\)/);
-  assert.match(js, /adapter\.seek\(start\); adapter\.play\(\)/);
-  assert.match(js, /state\.textContent = 'Chưa tải được phụ đề:/);
+test('all YouTube videos without a verified script show source captions or a clear empty state', () => {
+  const watch = js.slice(js.indexOf('async function openStandalone('), js.indexOf('async function openLesson('));
+  assert.match(watch, /if \(hasScript \|\| parsed\.provider === 'youtube'\)/);
+  assert.match(watch, /client\.functions\.invoke\('movie-caption-reader'/);
+  assert.match(watch, /captionPanel\.append\(transcriptList\)/);
+  assert.match(watch, /adapter\.seek\(first\); adapter\.play\(\)/);
+  assert.match(watch, /emptyNote\('Giáo viên chưa thêm script/);
   assert.match(css, /\.ldd-film-stage--video-only\.ldd-film-stage--with-transcript\s*\{[^}]*grid-template-columns:minmax\(0,1\.22fr\) minmax\(0,1fr\)/s);
   assert.match(css, /\.ldd-film-caption-list\s*\{[^}]*overflow-y:auto;overflow-x:hidden;[^}]*overscroll-behavior-y:contain;/s);
   assert.match(css, /@media\(max-width:739px\)\s*\{[\s\S]*\.ldd-film-stage--with-transcript\s*\{/);
@@ -71,10 +80,10 @@ test('captions scroll within their own area without sending the video off screen
   assert.match(css, /\.ldd-film-caption-list\s*\{[^}]*flex:1 1 auto;min-height:0;[^}]*overflow-y:auto;overflow-x:hidden;[^}]*overscroll-behavior-y:contain;/s);
   assert.match(css, /@media\(max-width:739px\)\s*\{[\s\S]*?height:clamp\(210px,40dvh,350px\);/);
   assert.match(js, /transcriptList\.tabIndex = 0;/);
-  assert.match(js, /transcriptList\.addEventListener\('wheel', markManualScroll/);
-  assert.match(js, /transcriptList\.addEventListener\('touchstart', markManualScroll/);
-  assert.match(js, /captionSizeObserver\?\.disconnect\(\)/);
-  assert.match(js, /transcriptList\.scrollTop \+= lineRect\.top - listRect\.top/);
+  assert.match(js, /transcriptList\.addEventListener\('wheel', hold/);
+  assert.match(js, /transcriptList\.addEventListener\('touchstart', hold/);
+  assert.match(js, /observer\?\.disconnect\(\)/);
+  assert.match(js, /transcriptList\.scrollTop \+= rect\.top - view\.top - 10/);
   const standalone = js.slice(js.indexOf('async function openStandalone('), js.indexOf('async function openLesson('));
   assert.doesNotMatch(standalone, /current\.scrollIntoView\(/);
   assert.doesNotMatch(standalone, /transcriptList\.scrollIntoView\(/);
@@ -105,13 +114,14 @@ test('caption-practice controls remain usable on tablets and phones inside bound
   assert.doesNotMatch(css, /\.ldd-film-caption-translation\[hidden\]/);
   assert.match(css, /\.ldd-film-caption-input\s*\{[^}]*min-height:40px;/s);
   assert.match(css, /@media\(max-width:739px\)\{[\s\S]*?\.ldd-film-caption-input\s*\{width:110px;min-height:44px\}/);
-  assert.match(js, /videoId === 'HeDpbMnrlRc'\) \{[\s\S]*?void openStandalone\(lesson, playerWrap, isTeacher\)/);
+  assert.match(js, /void openStandalone\(lesson, playerWrap, isTeacher\)/);
+  assert.doesNotMatch(js.slice(js.indexOf('const select = lesson => {'), js.indexOf('catalog.forEach(item => {')), /openLesson\(/);
 });
 
 test('film pauses after each audible cue and advances only after graded completion', () => {
   const exercise = js.slice(js.indexOf('async function renderCaptionExercise('), js.indexOf('async function openStandalone('));
   assert.match(exercise, /const isComplete = idx => \{/);
-  assert.match(exercise, /let gateIndex = raw\.findIndex\(\(_, idx\) => !isComplete\(idx\)\)/);
+  assert.match(exercise, /let gateIndex = gradedIndices\.find\(idx => !isComplete\(idx\)\) \?\? -1;/);
   assert.match(exercise, /button\('▶ Nghe lại · ' \+ padTime/);
   assert.match(exercise, /seek\.addEventListener\('click', \(\) => playCue\(idx\)\)/);
   assert.match(exercise, /row\.seek\.disabled = locked;/);
@@ -120,7 +130,7 @@ test('film pauses after each audible cue and advances only after graded completi
   assert.match(exercise, /if \(!heardGate\) \{/);
   assert.match(exercise, /if \(data\?\.status === 'wrong'\) \{/);
   assert.match(exercise, /if \(isComplete\(idx\) && idx === gateIndex\) \{/);
-  assert.match(exercise, /gateIndex = raw\.findIndex\(\(_, i\) => !isComplete\(i\)\)/);
+  assert.match(exercise, /gateIndex = gradedIndices\.find\(i => !isComplete\(i\)\) \?\? -1;/);
   assert.match(exercise, /playCue\(gateIndex\)/);
   assert.match(exercise, /const finished = !outside && t >= cue\.end - 0\.045/);
   assert.match(exercise, /adapter\.pause\(\);/);
@@ -159,9 +169,9 @@ test('film lesson omits redundant headings, explanation text and running status'
   const exercise = js.slice(js.indexOf('async function renderCaptionExercise('), js.indexOf('async function openStandalone('));
   const watch = js.slice(js.indexOf('async function openStandalone('), js.indexOf('async function openLesson('));
   assert.doesNotMatch(exercise, /ldd-film-caption-title|ldd-film-caption-source/);
-  assert.match(watch, /if \(!hasSourceCaptions\) stage\.append\(title, description\);/);
+  assert.match(watch, /stage\.append\(screen, captionPanel\)/);
   assert.doesNotMatch(watch, /stage\.append\(screen, title, description\)/);
-  assert.match(watch, /captionPanel\.append\(\$el\('p', 'ldd-film-caption-state', 'Đang tải phụ đề…'\)\)/);
+  assert.match(watch, /const state = \$el\('p', 'ldd-film-caption-state', 'Đang chuẩn bị bài luyện nghe…'\)/);
   assert.doesNotMatch(watch, /ldd-film-caption-title|ldd-film-caption-source/);
   assert.match(css, /\.ldd-film-caption-state:not\(\.is-error\)\s*\{[^}]*clip-path:inset\(50%\)/s);
   assert.match(css, /grid-template-areas:"screen captions" "error captions";/);
@@ -214,4 +224,24 @@ test('teacher can replay any subtitle while students remain gated in order', () 
   assert.match(exercise, /if \(busy \|\| answers\.has\(field\.key\) \|\| idx !== gateIndex\) return;/);
   assert.match(exercise, /if \(finished && !outside && boundedIndex === gateIndex\) \{/);
   assert.match(exercise, /adapter\.pause\(\);\s*adapter\.seek\(items\[idx\]\.start\);\s*adapter\.play\(\);/);
+});
+
+test('mixed cue scripts skip unanswerable lines without blocking graded progress', () => {
+  const exercise = js.slice(js.indexOf('async function renderCaptionExercise('), js.indexOf('async function openStandalone('));
+  assert.match(exercise, /const gradedIndices = raw\.map\(\(cue, idx\) => blanksIn\(cue\?\.text\)\.length \? idx : -1\)/);
+  assert.match(exercise, /let gateIndex = gradedIndices\.find\(idx => !isComplete\(idx\)\) \?\? -1;/);
+  assert.match(exercise, /gradedIndices\.flatMap\(idx =>/);
+  assert.doesNotMatch(exercise, /throw Error\('Không tìm thấy câu hỏi điền từ\.'\)/);
+});
+
+test('one visual template spans Youtube, Facebook and MP4, with no fabricated exercises', () => {
+  const watch = js.slice(js.indexOf('async function openStandalone('), js.indexOf('async function openLesson('));
+  assert.match(watch, /const hasScript = Array\.isArray\(lesson\.segments\) && lesson\.segments\.length > 0;/);
+  assert.match(watch, /if \(hasScript \|\| parsed\.provider === 'youtube'\)/);
+  assert.match(watch, /await makePlayer\(screen, lesson, showPlaybackError\)/);
+  assert.match(watch, /parsed\.provider === 'mp4'/);
+  assert.match(watch, /parsed\.provider === 'facebook'/);
+  assert.match(watch, /fallbackVideo\(\);\s*emptyNote\(\);/);
+  assert.match(watch, /const observer = typeof ResizeObserver === 'function'/);
+  assert.match(watch, /captionPanel\.style\.setProperty\('--ldd-film-video-height'/);
 });
