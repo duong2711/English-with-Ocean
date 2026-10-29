@@ -336,10 +336,14 @@
             recList.append(card);
           });
         }
-        if (Array.isArray(lesson.segments) && lesson.segments.length) {
+        if (providerOf(lesson.video_url)?.videoId === 'HeDpbMnrlRc') {
+          // Film has a transcript-wide exercise: every caption has its own
+          // input, translation reveal and server-side grading.
+          void openStandalone(lesson, playerWrap);
+        } else if (Array.isArray(lesson.segments) && lesson.segments.length) {
           void openLesson(lesson, playerWrap);
         } else {
-          openStandalone(lesson, playerWrap);
+          void openStandalone(lesson, playerWrap);
         }
       };
       catalog.forEach(item => {
@@ -359,6 +363,213 @@
     } catch (e) {
       status.textContent = 'Không tải được danh sách phim: ' + (e.message || 'Lỗi kết nối');
     }
+  }
+
+
+  async function renderCaptionExercise(lesson, panel, adapter, seq) {
+    const raw = Array.isArray(lesson.segments) ? lesson.segments : [];
+    const checkTiming = filmTiming?.check(raw);
+    if (!raw.length || !checkTiming?.ok) {
+      throw Error('Dữ liệu thời gian bài tập chưa hợp lệ.');
+    }
+    if (!client) throw Error('Bạn cần đăng nhập để làm bài.');
+    const { data: saved, error } = await client.from('movie_cloze_progress')
+      .select('segment_index,blank_index,status,score_change')
+      .eq('movie_id', lesson.id);
+    if (error) throw error;
+    if (seq !== generation) return;
+
+    const answers = new Map((saved || []).map(item =>
+      [keyOf(item.segment_index, item.blank_index), item]));
+    const drafts = new Map();
+    const tally = $el('p', 'ldd-film-caption-progress');
+    tally.setAttribute('aria-live', 'polite');
+    const count = () => {
+      const earned = [...answers.values()].reduce((sum, row) => sum + Number(row.score_change || 0), 0);
+      tally.textContent = answers.size + ' / ' + raw.length + ' câu đã làm · ' + earned + ' điểm';
+    };
+    count();
+
+    const list = $el('ol', 'ldd-film-caption-list ldd-film-caption-practice-list');
+    list.tabIndex = 0;
+    list.setAttribute('aria-label', 'Bài luyện nghe: cuộn danh sách câu hỏi mà không cuộn video');
+    let manualScrollUntil = 0;
+    const holdScroll = () => { manualScrollUntil = Date.now() + 7000; };
+    list.addEventListener('wheel', holdScroll, { passive: true });
+    list.addEventListener('touchstart', holdScroll, { passive: true });
+    list.addEventListener('keydown', holdScroll);
+    const padTime = seconds => Math.floor(seconds / 60) + ':' +
+      String(Math.floor(seconds % 60)).padStart(2, '0');
+    const items = [];
+
+    raw.forEach((cue, idx) => {
+      const item = $el('li', 'ldd-film-caption-item ldd-film-caption-exercise');
+      const heading = $el('div', 'ldd-film-caption-line-heading');
+      const seek = button(padTime(Number(cue.start)), 'ldd-film-caption-seek');
+      seek.title = 'Phát lại câu thoại tại ' + padTime(Number(cue.start));
+      seek.setAttribute('aria-label', 'Nghe lại câu ' + (idx + 1));
+      seek.addEventListener('click', () => {
+        try { adapter.seek(Number(cue.start)); adapter.play(); }
+        catch (_) { status.textContent = 'Không tua lại được đoạn này.'; }
+      });
+      const number = $el('span', 'ldd-film-caption-number', 'Câu ' + (idx + 1));
+      heading.append(number, seek);
+
+      const sentence = $el('div', 'ldd-film-caption-sentence');
+      const parts = String(cue.text || '').split(/\{([^{}]+)\}/g);
+      let blanks = 0;
+      const inputs = [];
+      const actionRow = $el('div', 'ldd-film-caption-actions');
+      const feedback = $el('p', 'ldd-film-caption-feedback');
+      feedback.setAttribute('role', 'status');
+      feedback.setAttribute('aria-live', 'polite');
+
+      parts.forEach((part, i) => {
+        if (i % 2 === 0) {
+          sentence.append(document.createTextNode(part));
+          return;
+        }
+        const blankIndex = blanks++;
+        const key = keyOf(idx, blankIndex);
+        const input = $el('input', 'ldd-film-answer ldd-film-caption-input');
+        input.type = 'text';
+        input.maxLength = 64;
+        input.autocomplete = 'off';
+        input.autocapitalize = 'off';
+        input.spellcheck = false;
+        input.placeholder = 'Điền từ';
+        input.setAttribute('aria-label', 'Câu ' + (idx + 1) + ': từ còn thiếu');
+        input.value = drafts.get(key) || '';
+        input.addEventListener('input', () => drafts.set(key, input.value));
+        if (answers.has(key)) {
+          input.value = '✓';
+          input.disabled = true;
+          input.classList.add('done');
+        }
+        sentence.append(input);
+        inputs.push({ input, blankIndex, key });
+      });
+
+      const translation = $el('p', 'ldd-film-caption-translation', cue.translation_vi || 'Bản dịch chưa có.');
+      translation.hidden = true;
+      translation.id = 'ldd-film-tran-' + lesson.id + '-' + idx;
+      const translate = button('Dịch tiếng Việt', 'ldd-film-caption-translate-toggle');
+      translate.setAttribute('aria-expanded', 'false');
+      translate.setAttribute('aria-controls', translation.id);
+      const toggleTranslation = () => {
+        translation.hidden = !translation.hidden;
+        translate.setAttribute('aria-expanded', String(!translation.hidden));
+        translate.textContent = translation.hidden ? 'Dịch tiếng Việt' : 'Ẩn bản dịch';
+      };
+      translate.addEventListener('click', toggleTranslation);
+      sentence.addEventListener('click', e => {
+        if (e.target.closest('input, button')) return;
+        toggleTranslation();
+      });
+
+      for (const field of inputs) {
+        const check = button('Kiểm tra', 'ldd-film-check ldd-film-caption-check');
+        const hint = button('Gợi ý', 'ldd-film-hint ldd-film-caption-hint');
+        if (answers.has(field.key)) {
+          check.hidden = true;
+          hint.hidden = true;
+          feedback.textContent = 'Đã hoàn thành';
+        }
+        let busy = false;
+        const submit = async askHint => {
+          if (busy || answers.has(field.key)) return;
+          if (!askHint && !field.input.value.trim()) {
+            feedback.textContent = 'Hãy điền từ trước khi kiểm tra.';
+            field.input.focus();
+            return;
+          }
+          busy = true;
+          check.disabled = hint.disabled = true;
+          feedback.textContent = 'Đang kiểm tra…';
+          try {
+            const { data, error } = await client.rpc('movie_cloze_answer', {
+              p_movie_id: lesson.id,
+              p_segment_index: idx,
+              p_blank_index: field.blankIndex,
+              p_answer: askHint ? null : field.input.value.trim(),
+              p_hint: askHint
+            });
+            if (error) throw error;
+            if (seq !== generation) return;
+            if (data?.status === 'wrong') {
+              feedback.textContent = 'Chưa đúng. Nghe lại rồi thử tiếp nhé.';
+              return;
+            }
+            if (!data || !(['correct','hint_new','hint_known','already_done'].includes(data.status) || data.already_done)) {
+              throw Error('Không nhận được kết quả hợp lệ.');
+            }
+            answers.set(field.key, {
+              score_change: data.already_done ? Number(data.total_delta) || 0 : Number(data.delta) || 0,
+              status: data.status
+            });
+            field.input.value = data.word || (askHint ? '✓' : field.input.value);
+            field.input.disabled = true;
+            field.input.classList.add('done');
+            check.hidden = hint.hidden = true;
+            feedback.textContent = data.status === 'correct' ? 'Chính xác! +1 điểm' :
+              data.status === 'hint_known' ? 'Từ đã có trong kho: −1 điểm.' :
+              data.status === 'hint_new' ? 'Đã lưu từ gợi ý vào kho từ vựng.' :
+              'Đáp án này đã được ghi nhận.';
+            count();
+            document.dispatchEvent(new Event('ldd:today-refresh'));
+            document.dispatchEvent(new Event('ldd:vocab-senses-updated'));
+          } catch (err) {
+            if (seq === generation) feedback.textContent = 'Chưa lưu được: ' + (err.message || 'Lỗi kết nối');
+          } finally {
+            busy = false;
+            if (seq === generation && !answers.has(field.key)) check.disabled = hint.disabled = false;
+          }
+        };
+        check.addEventListener('click', () => void submit(false));
+        hint.addEventListener('click', () => void submit(true));
+        field.input.addEventListener('keydown', e => {
+          if (e.key === 'Enter') { e.preventDefault(); void submit(false); }
+        });
+        actionRow.append(check, hint);
+      }
+
+      item.append(heading, sentence, actionRow, translate, translation, feedback);
+      list.append(item);
+      items.push({ start: Number(cue.start), end: Number(cue.end), item });
+    });
+
+    if (!items.some(x => x.item.querySelector('input'))) {
+      throw Error('Không tìm thấy câu hỏi điền từ.');
+    }
+    panel.querySelector('.ldd-film-caption-source').textContent =
+      'Nghe và điền từ còn thiếu · bấm vào câu để xem dịch';
+    const state = panel.querySelector('.ldd-film-caption-state');
+    state.textContent = 'Nhấn thời gian để nghe lại. Gợi ý có thể ảnh hưởng điểm và lưu từ mới.';
+    panel.append(tally, list);
+
+    let activeIndex = -1;
+    timer = setInterval(() => {
+      if (seq !== generation) return;
+      const t = Number(adapter.getTime());
+      if (!Number.isFinite(t)) return;
+      let current = -1;
+      for (let i = 0; i < items.length; i++) {
+        if (t >= items[i].start && t <= items[i].end) current = i;
+      }
+      if (current === activeIndex) return;
+      if (activeIndex >= 0) items[activeIndex].item.classList.remove('is-current');
+      activeIndex = current;
+      if (current < 0) return;
+      const active = items[current].item;
+      active.classList.add('is-current');
+      if (Date.now() <= manualScrollUntil) return;
+      const itemRect = active.getBoundingClientRect();
+      const listRect = list.getBoundingClientRect();
+      if (itemRect.top < listRect.top + 8 || itemRect.bottom > listRect.bottom - 8) {
+        // Never scroll the document or move the video out of view.
+        list.scrollTop += itemRect.top - listRect.top - 12;
+      }
+    }, 350);
   }
 
   async function openStandalone(lesson, wrap) {
@@ -438,6 +649,17 @@
           cleanup = () => { captionSizeObserver?.disconnect(); adapter.destroy(); };
           const state = captionPanel.querySelector('.ldd-film-caption-state');
           try {
+            if (Array.isArray(lesson.segments) && lesson.segments.length) {
+              await renderCaptionExercise(lesson, captionPanel, adapter, seq);
+              if (seq === generation) {
+                description.textContent = 'Luyện nghe điền từ trong khung cuộn bên cạnh video. Nhấn vào mỗi câu để xem bản dịch tiếng Việt.';
+              }
+              (wrap.closest('#ldd-ent-movies-panel') || stage).scrollIntoView({
+                behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+                block: 'start'
+              });
+              return;
+            }
             if (!client) throw Error('Bạn cần đăng nhập để xem phụ đề.');
             const result = await client.functions.invoke('movie-caption-reader', {
               body: { videoId: parsed.videoId }
