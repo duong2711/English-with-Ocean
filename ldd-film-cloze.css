@@ -536,6 +536,11 @@
   padding:clamp(13px,1.8vw,20px);
   background:var(--surface,#fff);
   color:var(--text,#223954);
+  display:flex;flex-direction:column;
+  /* A bounded independent transcript viewport keeps the video on screen. */
+  height:clamp(250px,var(--ldd-film-video-height,400px),530px);
+  max-height:70dvh;
+  overflow:hidden;
 }
 #tab-giai-tri .ldd-film-caption-title {
   font-size:16px;line-height:1.4;font-weight:750;margin:0 0 4px;
@@ -547,7 +552,20 @@
 }
 #tab-giai-tri .ldd-film-caption-list {
   list-style:none;display:flex;flex-direction:column;gap:4px;
-  padding:0;margin:0;min-width:0;max-height:none;overflow:visible;
+  padding:0 4px 0 0;margin:0;min-width:0;
+  flex:1 1 auto;min-height:0;
+  overflow-y:auto;overflow-x:hidden;
+  overscroll-behavior-y:contain;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:thin;
+  scrollbar-color:var(--border,#b6cbd8) transparent;
+  scrollbar-gutter:stable;
+  touch-action:pan-y;
+}
+#tab-giai-tri .ldd-film-caption-list:focus-visible {
+  outline:2px solid #0c8a78;
+  outline-offset:-2px;
+  border-radius:8px;
 }
 #tab-giai-tri .ldd-film-caption-item {
   list-style:none;margin:0;padding:0;min-width:0;
@@ -605,5 +623,9 @@
   #tab-giai-tri.ldd-film-is-watching .ldd-film-stage--with-transcript > .ldd-film-screen {
     width:100%;max-width:100%;
   }
-  #tab-giai-tri .ldd-film-caption-panel {border-radius:14px;padding:13px;}
+  #tab-giai-tri .ldd-film-caption-panel {
+    border-radius:14px;padding:13px;
+    height:clamp(210px,40dvh,350px);
+    max-height:48dvh;
+  }
 }
