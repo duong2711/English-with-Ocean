@@ -85,7 +85,7 @@ test('scene titles are not quiz questions and existing segment indices stay stab
     segment(64.74, 70.22, 'Look at the {blackboard}.')
   ];
   const exerciseIndices = source.map((cue, i) =>
-    /\\{[^{}]+\\}/.test(cue.text) ? i : -1).filter(i => i >= 0);
+    /\{[^{}]+\}/.test(cue.text) ? i : -1).filter(i => i >= 0);
   assert.deepEqual(exerciseIndices, [0, 2]);
   assert.equal(timing.cueAtTime(source, 58.02, i => !exerciseIndices.includes(i)), -1);
   assert.equal(timing.cueAtTime(source, 70.24, i => !exerciseIndices.includes(i)), 2);
