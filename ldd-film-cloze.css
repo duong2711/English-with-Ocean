@@ -629,3 +629,94 @@
     max-height:48dvh;
   }
 }
+
+
+/* Transcript-wide listening exercise: all actions stay inside each scrollable row. */
+#tab-giai-tri .ldd-film-caption-progress {
+  margin:1px 0 10px;
+  font-size:12px;line-height:1.55;font-weight:700;
+  color:var(--text,#244466);font-variant-numeric:tabular-nums;
+}
+#tab-giai-tri .ldd-film-caption-practice-list {
+  gap:9px;
+  scroll-padding-block:10px;
+}
+#tab-giai-tri .ldd-film-caption-exercise {
+  padding:11px 11px 10px;
+  border:1px solid var(--border,#e0e8ef);
+  border-radius:12px;background:var(--surface,#fff);
+  min-width:0;
+}
+#tab-giai-tri .ldd-film-caption-exercise.is-current {
+  border-color:#4c9d8a;
+  background:var(--surface-2,#f1f9f6);
+  box-shadow:0 0 0 1px rgba(12,138,120,.1);
+}
+#tab-giai-tri .ldd-film-caption-line-heading {
+  display:flex;align-items:center;justify-content:space-between;
+  gap:8px;min-width:0;margin-bottom:8px;
+}
+#tab-giai-tri .ldd-film-caption-number {
+  font-size:11.5px;font-weight:750;color:var(--text-muted,#6b7c8d);
+}
+#tab-giai-tri .ldd-film-caption-seek {
+  font:inherit;font-size:12px;font-variant-numeric:tabular-nums;
+  font-weight:750;padding:5px 9px;min-height:30px;
+  border:1px solid #b6d6cd;border-radius:9px;
+  background:#e9f7f2;color:#076955;cursor:pointer;
+}
+#tab-giai-tri .ldd-film-caption-sentence {
+  font-size:clamp(14px,1.4vw,16px);line-height:2.15;
+  white-space:pre-wrap;overflow-wrap:anywhere;
+  cursor:pointer;min-width:0;
+}
+#tab-giai-tri .ldd-film-caption-input {
+  display:inline-block;vertical-align:middle;
+  width:clamp(96px,12vw,134px);max-width:100%;
+  min-height:40px;padding:7px 9px;
+  margin:2px 4px;
+  font-size:16px;line-height:1.45;
+}
+#tab-giai-tri .ldd-film-caption-input.done {
+  border-color:#5ba482;background:#e8f5ee;color:#21553c;
+}
+#tab-giai-tri .ldd-film-caption-actions {
+  display:flex;flex-wrap:wrap;align-items:center;gap:7px;
+  margin:8px 0 0;
+}
+#tab-giai-tri .ldd-film-caption-actions .ldd-film-check,
+#tab-giai-tri .ldd-film-caption-actions .ldd-film-hint {
+  padding:7px 12px;min-height:36px;font-size:12px;
+  border-radius:10px;
+}
+#tab-giai-tri .ldd-film-caption-translate-toggle {
+  font:inherit;font-size:12px;font-weight:700;
+  margin:9px 0 0;padding:5px 1px;min-height:32px;
+  border:0;background:transparent;color:#0b7465;
+  cursor:pointer;text-align:left;
+}
+#tab-giai-tri .ldd-film-caption-translate-toggle:focus-visible,
+#tab-giai-tri .ldd-film-caption-seek:focus-visible {
+  outline:2px solid #0c8a78;outline-offset:2px;
+}
+#tab-giai-tri .ldd-film-caption-translation {
+  display:block;
+  margin:6px 0 0;padding:10px 12px;
+  border-radius:9px;background:var(--surface-2,#eef5f5);
+  border-left:3px solid #2b8c78;
+  font-size:13px;line-height:1.65;
+  white-space:pre-wrap;overflow-wrap:anywhere;
+}
+#tab-giai-tri .ldd-film-caption-translation[hidden],
+#tab-giai-tri .ldd-film-caption-actions button[hidden] {display:none!important;}
+#tab-giai-tri .ldd-film-caption-feedback {
+  margin:6px 0 0;font-size:11.5px;line-height:1.5;
+  color:var(--text-muted,#60798b);
+}
+#tab-giai-tri .ldd-film-caption-feedback:empty {display:none}
+@media(max-width:739px){
+  #tab-giai-tri .ldd-film-caption-exercise {padding:10px}
+  #tab-giai-tri .ldd-film-caption-input {width:110px;min-height:44px}
+  #tab-giai-tri .ldd-film-caption-actions .ldd-film-check,
+  #tab-giai-tri .ldd-film-caption-actions .ldd-film-hint {min-height:42px}
+}
