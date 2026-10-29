@@ -1,0 +1,24 @@
+name: Check transcript API browser access
+on:
+  push:
+    paths: ['.github/workflows/check-film-cors.yml']
+permissions:
+  contents: read
+jobs:
+  cors:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - shell: bash
+        run: |
+          python - <<'PY'
+          import urllib.request
+          url='https://api.freetranscriptapi.com/v1/transcript?video_url=HeDpbMnrlRc&lang=en'
+          for method in ['OPTIONS','GET']:
+            req=urllib.request.Request(url,method=method,headers={'Origin':'https://lddenglish.page','Access-Control-Request-Method':'GET'})
+            try:
+              with urllib.request.urlopen(req,timeout=18) as r:
+                print('METHOD',method,'HTTP',r.status,'ACAO',r.headers.get('Access-Control-Allow-Origin'),'ACAM',r.headers.get('Access-Control-Allow-Methods'),'CONTENT_TYPE',r.headers.get('Content-Type'),flush=True)
+            except Exception as e:
+              print('METHOD',method,'ERROR',str(e)[:250],flush=True)
+          PY
