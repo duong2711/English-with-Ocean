@@ -84,7 +84,7 @@ test('caption lesson renders a blank, always-visible Vietnamese, check and hint 
   const func = js.slice(js.indexOf('async function renderCaptionExercise('), js.indexOf('async function openStandalone('));
   assert.match(func, /const parts = String\(cue\.text \|\| ''\)\.split\(\/\\\{\(\[\^\{\}\]\+\)\\\}\/g\)/);
   assert.match(func, /const input = \$el\('input', 'ldd-film-answer ldd-film-caption-input'\)/);
-  assert.match(func, /const translation = \$el\('p', 'ldd-film-caption-translation', cue\.translation_vi/);
+  assert.match(func, /const translation = \$el\('p', 'ldd-film-caption-translation',\s*cue\.translation_vi/);
   assert.match(func, /item\.append\(heading, sentence, translation, actionRow, feedback\);/);
   assert.doesNotMatch(func, /translation\.hidden = true;/);
   assert.doesNotMatch(func, /toggleTranslation/);
