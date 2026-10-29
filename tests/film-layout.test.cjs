@@ -35,3 +35,12 @@ test('video-only lessons avoid the empty exercise column', () => {
   assert.match(js, /stage\.append\(screen, heading, controls, question\)/);
   assert.match(js, /watch\.append\(primary, suggestions\)/);
 });
+
+test('the All videos button replaces the Entertainment back button only in watch mode', () => {
+  assert.match(js, /entertainmentBack = panelHeader\?\.querySelector\('\[data-ent-back\]'\)/);
+  assert.match(js, /entertainmentBack\.before\(browse\)/);
+  assert.match(js, /browse\.addEventListener\('click', \(\) => \{/);
+  assert.match(js, /browse\.hidden = true;/);
+  assert.match(css, /#tab-giai-tri\.ldd-film-is-watching #ldd-ent-movies-panel > \.ldd-ent-panel-heading > \[data-ent-back\] \{\s*display:none!important;/);
+  assert.match(css, /#tab-giai-tri \.ldd-film-browse\[hidden\] \{display:none!important\}/);
+});
