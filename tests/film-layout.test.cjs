@@ -62,6 +62,20 @@ test('watch-only sourced captions appear beside the film, with time-seek and saf
   assert.match(js, /adapter\.seek\(start\); adapter\.play\(\)/);
   assert.match(js, /state\.textContent = 'Chưa tải được phụ đề:/);
   assert.match(css, /\.ldd-film-stage--video-only\.ldd-film-stage--with-transcript\s*\{[^}]*grid-template-columns:minmax\(0,1\.22fr\) minmax\(0,1fr\)/s);
-  assert.match(css, /\.ldd-film-caption-list\s*\{[^}]*max-height:none;overflow:visible/s);
+  assert.match(css, /\.ldd-film-caption-list\s*\{[^}]*overflow-y:auto;overflow-x:hidden;[^}]*overscroll-behavior-y:contain;/s);
   assert.match(css, /@media\(max-width:739px\)\s*\{[\s\S]*\.ldd-film-stage--with-transcript\s*\{/);
+});
+
+test('captions scroll within their own area without sending the video off screen', () => {
+  assert.match(css, /\.ldd-film-caption-panel\s*\{[^}]*display:flex;flex-direction:column;[^}]*height:clamp\(250px,var\(--ldd-film-video-height,400px\),530px\);[^}]*overflow:hidden;/s);
+  assert.match(css, /\.ldd-film-caption-list\s*\{[^}]*flex:1 1 auto;min-height:0;[^}]*overflow-y:auto;overflow-x:hidden;[^}]*overscroll-behavior-y:contain;/s);
+  assert.match(css, /@media\(max-width:739px\)\s*\{[\s\S]*?height:clamp\(210px,40dvh,350px\);/);
+  assert.match(js, /transcriptList\.tabIndex = 0;/);
+  assert.match(js, /transcriptList\.addEventListener\('wheel', markManualScroll/);
+  assert.match(js, /transcriptList\.addEventListener\('touchstart', markManualScroll/);
+  assert.match(js, /captionSizeObserver\?\.disconnect\(\)/);
+  assert.match(js, /transcriptList\.scrollTop \+= lineRect\.top - listRect\.top/);
+  const standalone = js.slice(js.indexOf('async function openStandalone('), js.indexOf('async function openLesson('));
+  assert.doesNotMatch(standalone, /current\.scrollIntoView\(/);
+  assert.doesNotMatch(standalone, /transcriptList\.scrollIntoView\(/);
 });
