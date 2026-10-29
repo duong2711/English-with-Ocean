@@ -397,6 +397,7 @@
     let seekPendingUntil = 0;
     let updateRowStates = () => {};
     let playCue = () => {};
+    let showCue = () => {};
     const tally = $el('p', 'ldd-film-caption-progress');
     tally.setAttribute('aria-live', 'polite');
     const count = () => {
@@ -546,8 +547,10 @@
               heardGate = false;
               updateRowStates();
               if (gateIndex >= 0) {
-                // Resume at the START of the next timed dialogue, not through
-                // intervening music or an unrelated later video scene.
+                // A correct answer advances BOTH the playback and the visible
+                // exercise immediately. Never wait for the player timer or a
+                // manual transcript scroll to reveal the next question.
+                showCue(gateIndex);
                 playCue(gateIndex);
               } else {
                 playbackIndex = -1;
@@ -601,6 +604,22 @@
         });
       });
     };
+    // Scroll only inside the transcript container, even if the learner had
+    // manually scrolled earlier. Finishing a question is an explicit request
+    // to advance; it takes priority over the usual 7-second scroll hold.
+    showCue = idx => {
+      if (seq !== generation || idx < 0 || idx >= items.length) return;
+      manualScrollUntil = 0;
+      const row = items[idx].item;
+      const rowRect = row.getBoundingClientRect();
+      const listRect = list.getBoundingClientRect();
+      list.scrollTop += rowRect.top - listRect.top - 8;
+      if (activeIndex >= 0 && items[activeIndex]) {
+        items[activeIndex].item.classList.remove('is-current');
+      }
+      activeIndex = idx;
+      row.classList.add('is-current');
+    };
     playCue = idx => {
       if (seq !== generation || idx < 0 || idx >= items.length) return;
       // Finished lines can be replayed, but later lines stay inaccessible.
@@ -632,6 +651,7 @@
       // An initial seek does not autoplay, which is blocked on some devices.
       seekPendingUntil = Date.now() + 2800;
       try { adapter.pause(); adapter.seek(row.start); } catch (_) {}
+      showCue(gateIndex);
       state.textContent = 'Câu ' + (gateIndex + 1) +
         ': bấm Nghe lại để nghe, điền từ rồi chọn Kiểm tra hoặc Gợi ý để sang câu sau.';
     };
