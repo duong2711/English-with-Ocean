@@ -42,7 +42,7 @@
         ensureStylesheet('ldd-vocab-shooter-style', 'ldd-vocab-shooter.css?v=20261025-no-overlap1');
         ensureStylesheet('ldd-quick-lookup-style', 'ldd-quick-lookup.css?v=20261025-valid2');
         ensureStylesheet('ldd-entertainment-style', 'ldd-entertainment.css?v=20261027-translation1');
-        ensureStylesheet('ldd-film-cloze-style', 'ldd-film-cloze.css?v=20261029-movie-back-button1');
+        ensureStylesheet('ldd-film-cloze-style', 'ldd-film-cloze.css?v=20261030-sourced-captions1');
 
         // Load first. Dynamic scripts are async by default, so ensureScript sets async=false
         // to preserve insertion order and let all helper modules benefit from the guard.
@@ -60,7 +60,7 @@
         ensureScript('ldd-entertainment-data-script', 'ldd-entertainment-data.js?v=20261027-wimpy1');
         ensureScript('ldd-entertainment-script', 'ldd-entertainment.js?v=20261029-filmcloze1');
         ensureScript('ldd-film-timing-script', 'ldd-film-timing.js?v=20261029-transcript-import1');
-        ensureScript('ldd-film-cloze-script', 'ldd-film-cloze.js?v=20261029-library-first1');
+        ensureScript('ldd-film-cloze-script', 'ldd-film-cloze.js?v=20261030-sourced-captions1');
     }
 
     function ensureStylesheet(id, href) {
