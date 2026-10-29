@@ -385,7 +385,8 @@
       media.src = parsed.url;
     }
     screen.append(media);
-    const description = $el('p', 'ldd-film-source-note', 'Xem video · Bài luyện nghe sẽ xuất hiện sau khi có script.');
+    const description = $el('p', 'ldd-film-source-note',
+      'Video vẫn xem được. Bài luyện nghe sẽ hiển thị khi script được kiểm tra và đồng bộ chính xác.');
     stage.append(screen, title, description);
     wrap.append(stage);
     cleanup = () => {
@@ -727,6 +728,14 @@
     const sample = $el('p', 'ldd-film-editor-help',
       'Dán link YouTube rồi bấm Tạo script + dịch tự động. Hoặc tải SRT/VTT thủ công. Kiểm tra nội dung trước khi lưu để học viên không bị chấm sai.');
     const preview = $el('p', 'ldd-film-editor-help');
+    const verifiedRow = $el('label', 'ldd-film-editor-help');
+    verifiedRow.style.display = 'none';
+    const verifiedCheckbox = $el('input');
+    verifiedCheckbox.type = 'checkbox';
+    verifiedRow.append(verifiedCheckbox, document.createTextNode(
+      ' Tôi đã nghe và đối chiếu trực tiếp TỪNG câu với âm thanh của video (không dựa vào mốc AI ước lượng).'
+    ));
+    let pendingAudioReview = false;
     const save = button('Lưu video / script', 'ldd-film-save');
     save.type = 'submit';
     const timingConfirmRow = $el('label', 'ldd-film-editor-help');
@@ -771,6 +780,9 @@
       captions.value = '';
       translations.value = '';
       timingConfirm.checked = false;
+      verifiedCheckbox.checked = false;
+      verifiedRow.style.display = 'none';
+      pendingAudioReview = false;
       title.value = selected?.title || '';
       link.value = selected?.video_url || '';
       title.readOnly = Boolean(selected);
@@ -783,17 +795,25 @@
       notice.textContent = 'Đang tải mốc thời gian gốc…';
       try {
         const { data, error } = await client.from('movie_lessons')
-          .select('segments').eq('id', Number(selectedId)).single();
+          .select('segments,draft_segments').eq('id', Number(selectedId)).single();
         if (error) throw error;
         if (existing.value !== selectedId) return;
-        const cues = Array.isArray(data?.segments) ? data.segments : [];
+        const publishedCues = Array.isArray(data?.segments) ? data.segments : [];
+        const savedCues = Array.isArray(data?.draft_segments) ? data.draft_segments : [];
+        pendingAudioReview = !publishedCues.length && savedCues.length > 0;
+        verifiedRow.style.display = pendingAudioReview ? 'block' : 'none';
+        verifiedCheckbox.checked = false;
+        const cues = publishedCues.length ? publishedCues : savedCues;
         captions.value = cues.map((s, i) =>
           (i + 1) + '\n' + toSrtTime(Number(s.start)) + ' --> ' +
           toSrtTime(Number(s.end)) + '\n' + String(s.text || '')
         ).join('\n\n');
         translations.value = cues.map(s => String(s.translation_vi || '')).join('\n');
         noticePreview();
-        notice.textContent = 'Đã tải ' + cues.length + ' câu; có thể sửa thời gian rồi lưu.';
+        notice.textContent = pendingAudioReview
+          ? 'BẢN NHÁP CHƯA XÁC MINH: Đã giữ nguyên ' + cues.length +
+            ' câu. Không đăng lại bài luyện nghe trước khi đối chiếu trực tiếp từng câu với video.'
+          : 'Đã tải ' + cues.length + ' câu; có thể sửa thời gian rồi lưu.';
       } catch (error) {
         notice.textContent = 'Không tải được script gốc: ' + (error.message || 'Lỗi mạng');
       } finally {
@@ -904,6 +924,10 @@
           (checked?.errors || ['Không tải được bộ kiểm tra.']).join(' ');
         return;
       }
+      if (pendingAudioReview && !verifiedCheckbox.checked) {
+        notice.textContent = 'Đã khóa đăng lại: script cũ bị lệch thời gian. Cần đối chiếu trực tiếp từng câu với video và xác nhận trước khi mở lại bài luyện.';
+        return;
+      }
       if (checked.warnings.length && !timingConfirm.checked) {
         notice.textContent = 'Có khoảng trống thời gian bất thường: ' +
           checked.warnings.join(' ') + ' Kiểm tra video và xác nhận trước khi lưu.';
@@ -939,7 +963,7 @@
       generate,
       $el('label', '', 'Script tiếng Anh (SRT/VTT)'), upload, captions,
       $el('label', '', 'Bản dịch tiếng Việt (mỗi câu một dòng)'), translationUpload, translations,
-      sample, description, preview, timingConfirmRow, save, notice
+      sample, description, preview, timingConfirmRow, verifiedRow, save, notice
     );
     wrap.append(toggle, form);
   }
