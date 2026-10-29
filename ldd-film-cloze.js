@@ -67,7 +67,7 @@
     const picked = matches[Math.floor(matches.length / 2)];
     return line.slice(0, picked.index) + '{' + picked[0] + '}' + line.slice(picked.index + picked[0].length);
   }
-  function parseSubtitles(source) {
+  function parseSubtitles(source, keepCues = false) {
     const blocks = safeText(source).replace(/^\uFEFF/, '').replace(/\r/g, '').split(/\n\s*\n/);
     const result = [];
     for (const block of blocks) {
@@ -80,7 +80,7 @@
       if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) continue;
       const text = lines.slice(i + 1).join(' ').replace(/<[^>]*>/g, '').replace(/\[[^\]]{1,40}\]/g, '').trim();
       if (!text) continue;
-      const sentences = (text.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || []).map(s => s.trim()).filter(Boolean);
+      const sentences = keepCues ? [text] : (text.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || []).map(s => s.trim()).filter(Boolean);
       const totalSize = sentences.reduce((n, s) => n + s.length, 0) || 1;
       let elapsed = 0;
       for (const sentence of sentences) {
@@ -154,7 +154,7 @@
           }
         });
       });
-      return { getTime: () => player.getCurrentTime(), pause: () => player.pauseVideo(),
+      return { getTime: () => player.getCurrentTime(), getDuration: () => player.getDuration(), pause: () => player.pauseVideo(),
         play: () => player.playVideo(), seek: t => player.seekTo(t, true), destroy: () => player.destroy() };
     }
     if (parsed.provider === 'mp4') {
@@ -164,7 +164,7 @@
       video.preload = 'metadata';
       video.src = parsed.url;
       container.append(video);
-      return { getTime: () => video.currentTime, pause: () => video.pause(),
+      return { getTime: () => video.currentTime, getDuration: () => video.duration, pause: () => video.pause(),
         play: () => video.play().catch(() => {}), seek: t => { video.currentTime = t; },
         destroy: () => { video.pause(); video.removeAttribute('src'); video.load(); video.remove(); } };
     }
@@ -200,7 +200,7 @@
     });
     if (typeof instance.getCurrentPosition !== 'function' || typeof instance.pause !== 'function')
       throw Error('Facebook không cung cấp điều khiển tạm dừng cho video này.');
-    return { getTime: () => instance.getCurrentPosition(), pause: () => instance.pause(),
+    return { getTime: () => instance.getCurrentPosition(), getDuration: () => Number(instance.getDuration?.()) || NaN, pause: () => instance.pause(),
       play: () => instance.play(), seek: t => instance.seek(t), destroy: () => { try { instance.pause(); } catch (_) {} widget.remove(); } };
   }
 
@@ -496,9 +496,11 @@
       const questionTop = $el('div', 'ldd-film-question-top');
       questionTop.append(
         $el('span', 'ldd-film-question-count', 'Câu ' + (idx + 1) + ' / ' + segments.length),
-        $el('span', 'ldd-film-cue-time', 'Tại ' +
-          Math.floor(Number(segments[idx].start) / 60) + ':' +
-          String(Math.floor(Number(segments[idx].start) % 60)).padStart(2, '0'))
+        $el('span', 'ldd-film-cue-time', 'Đoạn ' +
+          [segments[idx].start, segments[idx].end].map(seconds =>
+            Math.floor(Number(seconds) / 60) + ':' +
+            String(Math.floor(Number(seconds) % 60)).padStart(2, '0')
+          ).join('–'))
       );
       questionBody.replaceChildren(questionTop);
       const sentence = $el('div', 'ldd-film-sentence');
@@ -624,15 +626,25 @@
       active = -1;
       manualHold = false;
       wrap.classList.remove('ldd-film-paused');
-      let lastTime = 0;
+      let durationWarningShown = false;
       timer = setInterval(() => {
         if (seq !== generation || manualHold || !adapter) return;
         const t = Number(adapter.getTime());
         if (!Number.isFinite(t)) return;
-        // A user may seek backwards or forwards: stop at the first unseen cue reached.
-        const idx = segments.findIndex((s, i) => !complete(i) && t >= Number(s.end) - 0.08 && t >= Number(s.start) - 0.2);
+        const duration = Number(adapter.getDuration?.());
+        if (!durationWarningShown && Number.isFinite(duration) && duration > 0 &&
+            Number(segments[segments.length - 1].end) > duration + 1.5) {
+          durationWarningShown = true;
+          feedback.textContent = 'Mốc thời gian script dài hơn video. Giáo viên cần đồng bộ lại script.';
+        }
+        // Only pause at the end of the cue actually being played, not at a
+        // stale unfinished cue after the learner jumps forwards in the video.
+        const idx = segments.findIndex((s, i) => {
+          const end = Number(s.end);
+          return !complete(i) && Number.isFinite(end) &&
+            t >= end - 0.12 && t <= end + 0.8;
+        });
         if (idx !== -1) questionAt(idx);
-        lastTime = t;
       }, 120);
       const replay = button('↻ Nghe lại', 'ldd-film-replay');
       replay.addEventListener('click', () => {
@@ -673,8 +685,8 @@
     const fresh = $el('option', '', 'Thêm video mới (script có thể nhập sau)');
     fresh.value = '';
     existing.append(fresh);
-    const pending = (lessons || []).filter(m => !Array.isArray(m.segments) || !m.segments.length);
-    pending.forEach(m => {
+    const editable = lessons || [];
+    editable.forEach(m => {
       const option = $el('option', '', 'Nhập script cho: ' + m.title);
       option.value = String(m.id);
       existing.append(option);
@@ -715,34 +727,51 @@
     };
     const notice = $el('p', 'ldd-film-feedback');
     const noticePreview = () => {
-      const s = parseSubtitles(captions.value);
+      const s = parseSubtitles(captions.value, Boolean(existing.value));
       const t = translations.value.trim().split(/\n/).map(x => x.trim()).filter(Boolean);
       preview.textContent = s.length + ' câu tiếng Anh, ' + (translations.value.trim() ? t.length : 0) + ' dòng dịch.';
     };
-    existing.addEventListener('change', () => {
-      const selected = pending.find(m => String(m.id) === existing.value);
-      if (selected) {
-        title.value = selected.title;
-        link.value = selected.video_url;
-        title.readOnly = true;
-        link.readOnly = true;
-        save.textContent = 'Gắn script vào video';
-      } else {
-        title.value = '';
-        link.value = '';
-        title.readOnly = false;
-        link.readOnly = false;
-        save.textContent = 'Lưu video / script';
-      }
-      notice.textContent = '';
+    existing.addEventListener('change', async () => {
+      const selectedId = existing.value;
+      const selected = editable.find(m => String(m.id) === selectedId);
       generated = null;
       generatedCaption = '';
       generatedTranslation = '';
+      captions.value = '';
+      translations.value = '';
+      title.value = selected?.title || '';
+      link.value = selected?.video_url || '';
+      title.readOnly = Boolean(selected);
+      link.readOnly = Boolean(selected);
+      save.textContent = selected ? 'Cập nhật script và thời gian' : 'Lưu video / script';
+      notice.textContent = '';
+      noticePreview();
+      if (!selected) return;
+      save.disabled = true;
+      notice.textContent = 'Đang tải mốc thời gian gốc…';
+      try {
+        const { data, error } = await client.from('movie_lessons')
+          .select('segments').eq('id', Number(selectedId)).single();
+        if (error) throw error;
+        if (existing.value !== selectedId) return;
+        const cues = Array.isArray(data?.segments) ? data.segments : [];
+        captions.value = cues.map((s, i) =>
+          (i + 1) + '\n' + toSrtTime(Number(s.start)) + ' --> ' +
+          toSrtTime(Number(s.end)) + '\n' + String(s.text || '')
+        ).join('\n\n');
+        translations.value = cues.map(s => String(s.translation_vi || '')).join('\n');
+        noticePreview();
+        notice.textContent = 'Đã tải ' + cues.length + ' câu; có thể sửa thời gian rồi lưu.';
+      } catch (error) {
+        notice.textContent = 'Không tải được script gốc: ' + (error.message || 'Lỗi mạng');
+      } finally {
+        if (existing.value === selectedId) save.disabled = false;
+      }
     });
     toggle.addEventListener('click', () => {
       form.hidden = !form.hidden;
       toggle.setAttribute('aria-expanded', String(!form.hidden));
-      if (!form.hidden) (pending.length ? existing : title).focus();
+      if (!form.hidden) (editable.length ? existing : title).focus();
     });
     generate.addEventListener('click', async () => {
       const info = providerOf(link.value.trim());
@@ -809,7 +838,7 @@
       if (!title.value.trim()) { notice.textContent = 'Vui lòng nhập tên video.'; return; }
       const useGenerated = generated && captions.value === generatedCaption &&
         translations.value === generatedTranslation;
-      const segments = useGenerated ? generated : captions.value.trim() ? parseSubtitles(captions.value) : [];
+      const segments = useGenerated ? generated : captions.value.trim() ? parseSubtitles(captions.value, Boolean(existing.value)) : [];
       if (captions.value.trim() && !segments.length) {
         notice.textContent = 'Script không có mốc thời gian SRT/VTT hợp lệ.'; return;
       }
