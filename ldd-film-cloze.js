@@ -726,7 +726,18 @@
     translationUpload.type = 'file';
     translationUpload.accept = '.txt,.srt,.vtt,text/plain';
     const sample = $el('p', 'ldd-film-editor-help',
-      'Dán link YouTube rồi bấm Tạo script + dịch tự động. Hoặc tải SRT/VTT thủ công. Kiểm tra nội dung trước khi lưu để học viên không bị chấm sai.');
+      'Có thể dùng transcript với timestamp từ YouTubeToTranscript. Những mốc chỉ có thời điểm bắt đầu vẫn cần đối chiếu lại với âm thanh.');
+    const transcriptSite = $el('a', 'ldd-film-editor-help', 'Mở YouTubeToTranscript để sao chép transcript');
+    transcriptSite.href = 'https://youtubetotranscript.com/';
+    transcriptSite.target = '_blank';
+    transcriptSite.rel = 'noopener noreferrer';
+    const copiedTranscript = $el('textarea');
+    copiedTranscript.rows = 5;
+    copiedTranscript.placeholder = '[00:01] At four, we say, Mommy, I love you.\n[00:06] At fourteen, we say...';
+    const copiedDuration = $el('input');
+    copiedDuration.type = 'text';
+    copiedDuration.placeholder = 'Thời lượng video (ví dụ 02:24)';
+    const importTimestamp = button('Đọc timestamp và căn lại script', 'ldd-film-import');
     const preview = $el('p', 'ldd-film-editor-help');
     const verifiedRow = $el('label', 'ldd-film-editor-help');
     verifiedRow.style.display = 'block';
@@ -785,6 +796,13 @@
       pendingAudioReview = false;
       title.value = selected?.title || '';
       link.value = selected?.video_url || '';
+      copiedDuration.value = '';
+      const rememberedDuration = knownDurations.get(providerOf(link.value)?.url);
+      if (rememberedDuration) {
+        const mm = Math.floor(rememberedDuration / 60);
+        const ss = Math.floor(rememberedDuration % 60);
+        copiedDuration.value = mm + ':' + String(ss).padStart(2, '0');
+      }
       title.readOnly = Boolean(selected);
       link.readOnly = Boolean(selected);
       save.textContent = selected ? 'Cập nhật script và thời gian' : 'Lưu video / script';
@@ -824,6 +842,73 @@
       form.hidden = !form.hidden;
       toggle.setAttribute('aria-expanded', String(!form.hidden));
       if (!form.hidden) (editable.length ? existing : title).focus();
+    });
+    importTimestamp.addEventListener('click', () => {
+      const parsed = filmTiming?.parseTimestampedTranscript(
+        copiedTranscript.value, copiedDuration.value
+      );
+      if (!parsed || parsed.errors.length) {
+        notice.textContent = 'Không thể nhập timestamp: ' +
+          (parsed?.errors || ['Bộ đọc transcript chưa tải.']).join(' ');
+        return;
+      }
+      const existingCues = parseSubtitles(captions.value, true);
+      const sourceCues = parsed.segments;
+      const normalize = line => String(line || '').toLowerCase()
+        .replace(/\\{([^{}]+)\\}/g, '$1')
+        .replace(/[^a-z0-9]+/g, ' ').trim();
+      let nextCues;
+      if (existing.value && existingCues.length) {
+        if (sourceCues.length !== existingCues.length) {
+          notice.textContent = 'Transcript gốc có ' + sourceCues.length +
+            ' đoạn, bản nháp có ' + existingCues.length +
+            ' câu. Không thể gán mốc theo số thứ tự vì sẽ lệch lời thoại. ' +
+            'Cần đối chiếu và tách/gộp các đoạn theo từng câu trước khi nhập.';
+          return;
+        }
+        const mismatched = sourceCues.map((line, i) => {
+          const a = normalize(line.text).split(' ').filter(Boolean);
+          const b = new Set(normalize(existingCues[i].text).split(' ').filter(Boolean));
+          const overlap = a.filter(word => b.has(word)).length / Math.max(1, a.length);
+          return overlap < 0.65 ? i + 1 : null;
+        }).filter(Boolean);
+        if (mismatched.length) {
+          notice.textContent = 'Không áp mốc: lời thoại không khớp tại câu ' +
+            mismatched.slice(0, 12).join(', ') +
+            '. Cần đối chiếu lại transcript và thứ tự câu, không tự căn bằng cách đoán.';
+          return;
+        }
+        nextCues = existingCues.map((cue, i) => ({
+          ...cue, start: sourceCues[i].start, end: sourceCues[i].end
+        }));
+      } else {
+        nextCues = sourceCues.map(cue => ({
+          ...cue, text: markBlank(cue.text)
+        }));
+        if (translations.value.trim()) {
+          notice.textContent = 'Không thay script mới khi đang có bản dịch chưa ghép câu. Hãy đối chiếu trước.';
+          return;
+        }
+      }
+      const quality = filmTiming?.check(nextCues, {
+        duration: filmTiming.parseClock(copiedDuration.value)
+      });
+      if (!quality?.ok) {
+        notice.textContent = 'Transcript chưa thể áp dụng: ' + (quality?.errors || []).join(' ');
+        return;
+      }
+      captions.value = nextCues.map((cue, i) =>
+        (i + 1) + '\n' + toSrtTime(cue.start) + ' --> ' +
+        toSrtTime(cue.end) + '\n' + cue.text
+      ).join('\n\n');
+      generated = null;
+      generatedCaption = '';
+      generatedTranslation = '';
+      verifiedCheckbox.checked = false;
+      noticePreview();
+      notice.textContent = 'Đã ghép ' + nextCues.length +
+        ' đoạn theo timestamp sao chép. Đây chưa phải xác nhận âm thanh: hãy nghe từng câu trước khi lưu. ' +
+        parsed.warnings.join(' ');
     });
     generate.addEventListener('click', async () => {
       const info = providerOf(link.value.trim());
@@ -961,6 +1046,9 @@
       $el('label', '', 'Tên video'), title,
       $el('label', '', 'Đường dẫn video'), link,
       generate,
+      transcriptSite,
+      $el('label', '', 'Transcript đã bật Copy Timestamp ON'), copiedTranscript,
+      $el('label', '', 'Thời lượng của video'), copiedDuration, importTimestamp,
       $el('label', '', 'Script tiếng Anh (SRT/VTT)'), upload, captions,
       $el('label', '', 'Bản dịch tiếng Việt (mỗi câu một dòng)'), translationUpload, translations,
       sample, description, preview, timingConfirmRow, verifiedRow, save, notice
