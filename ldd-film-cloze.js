@@ -232,6 +232,8 @@
     if (entertainmentBack) entertainmentBack.before(browse);
     else if (panelHeader) panelHeader.prepend(browse);
     else primary.prepend(browse);
+    let editScriptButton = null;
+    let editorController = null;
     const playerWrap = $el('div', 'ldd-film-lesson');
     primary.append(playerWrap);
 
@@ -252,6 +254,7 @@
       close();
       playerWrap.replaceChildren();
       browse.hidden = true;
+      if (editScriptButton) editScriptButton.hidden = true;
       watch.hidden = true;
       library.hidden = false;
       library.scrollIntoView({ behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
@@ -275,7 +278,13 @@
       if (error) throw error;
       if (seq !== generation) return;
       const lessons = Array.isArray(data) ? data : [];
-      if (isTeacher) setupEditor(editor, async () => { await mount(body, legacyMovies); }, lessons);
+      if (isTeacher) {
+        editorController = setupEditor(editor, async () => { await mount(body, legacyMovies); }, lessons);
+        editScriptButton = button('✎ Sửa script', 'ldd-film-edit-current');
+        editScriptButton.hidden = true;
+        editScriptButton.setAttribute('aria-label', 'Sửa script của video đang xem');
+        browse.after(editScriptButton);
+      }
       status.textContent = lessons.length
         ? 'Chọn video để xem và luyện nghe. Các video đề xuất nằm bên dưới bài học.'
         : 'Thư viện chưa có video. Giáo viên có thể dán link YouTube hoặc Facebook để thêm.';
@@ -318,6 +327,11 @@
         watch.hidden = false;
         watch.classList.remove('ldd-film-focus-mode');
         browse.hidden = false;
+        if (editScriptButton) {
+          const isSavedLesson = lessons.some(item => String(item.id) === String(lesson.id));
+          editScriptButton.hidden = !isSavedLesson;
+          editScriptButton.onclick = isSavedLesson ? () => editorController?.openFor(lesson.id) : null;
+        }
         document.getElementById('tab-giai-tri')?.classList.add('ldd-film-is-watching');
         playerWrap.classList.remove('ldd-film-paused');
         recList.replaceChildren();
@@ -1180,7 +1194,7 @@
 
   function setupEditor(wrap, refresh, lessons) {
     wrap.hidden = false;
-    const toggle = button('＋ Thêm video / Nhập script', 'ldd-film-editor-toggle');
+    const toggle = button('＋ Thêm video / Sửa script', 'ldd-film-editor-toggle');
     const form = $el('form', 'ldd-film-editor-form');
     form.hidden = true;
     const existing = $el('select');
@@ -1264,7 +1278,7 @@
     const notice = $el('p', 'ldd-film-feedback');
     const noticePreview = () => {
       const s = parseSubtitles(captions.value, true);
-      const t = translations.value.trim().split(/\n/).map(x => x.trim()).filter(Boolean);
+      const t = translations.value.trim() ? translations.value.replace(/\r/g, '').split(/\n/).map(x => x.trim()) : [];
       const valid = filmTiming?.check(s, { allowEmpty: true,
         duration: knownDurations.get(providerOf(link.value)?.url) });
       const dropped = (captions.value.match(/-->/g) || []).length - s.length;
@@ -1489,7 +1503,7 @@
         notice.textContent = 'Hãy nhập script để gắn vào video đã có.'; return;
       }
       const translated = !useGenerated && translations.value.trim()
-        ? translations.value.trim().replace(/\r/g, '').split(/\n/).map(x => x.trim()).filter(Boolean)
+        ? translations.value.replace(/\r/g, '').split(/\n/).map(x => x.trim())
         : [];
       if (translated.length && translated.length !== segments.length) {
         notice.textContent = 'Số dòng bản dịch phải khớp số câu: ' + segments.length + '.'; return;
@@ -1551,6 +1565,23 @@
       sample, description, preview, timingConfirmRow, verifiedRow, save, notice
     );
     wrap.append(toggle, form);
+    return {
+      openFor(lessonId) {
+        const selectedId = String(lessonId);
+        if (!editable.some(item => String(item.id) === selectedId)) return false;
+        form.hidden = false;
+        toggle.setAttribute('aria-expanded', 'true');
+        existing.value = selectedId;
+        // Fetch the stored subtitles and translations before enabling Save.
+        existing.dispatchEvent(new Event('change'));
+        wrap.scrollIntoView({
+          behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+          block: 'start'
+        });
+        existing.focus({ preventScroll: true });
+        return true;
+      }
+    };
   }
 
   window.LDDFilmCloze = { mount, close, parseSubtitles, providerOf };
