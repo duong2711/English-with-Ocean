@@ -391,6 +391,7 @@
     let gateIndex = raw.findIndex((_, idx) => !isComplete(idx));
     let playbackIndex = -1;
     let waitingForAnswer = false;
+    let heardGate = false;
     let updateRowStates = () => {};
     let playCue = () => {};
     const tally = $el('p', 'ldd-film-caption-progress');
@@ -492,6 +493,10 @@
         let busy = false;
         const submit = async askHint => {
           if (busy || answers.has(field.key) || idx !== gateIndex) return;
+          if (!heardGate) {
+            feedback.textContent = 'Hãy nghe hết đoạn này trước khi kiểm tra hoặc dùng Gợi ý.';
+            return;
+          }
           if (!askHint && !field.input.value.trim()) {
             feedback.textContent = 'Hãy điền từ trước khi kiểm tra.';
             field.input.focus();
@@ -535,6 +540,7 @@
             if (isComplete(idx) && idx === gateIndex) {
               gateIndex = raw.findIndex((_, i) => !isComplete(i));
               waitingForAnswer = false;
+              heardGate = false;
               updateRowStates();
               if (gateIndex >= 0) {
                 // Resume at the START of the next timed dialogue, not through
@@ -588,7 +594,7 @@
           if (answers.has(key)) return;
           const enabled = idx === gateIndex;
           input.disabled = !enabled;
-          check.disabled = hint.disabled = !enabled;
+          check.disabled = hint.disabled = !enabled || !heardGate;
         });
       });
     };
@@ -633,12 +639,17 @@
       if (boundedIndex >= 0) {
         const cue = items[boundedIndex];
         const outside = t < cue.start - 0.45 || t > cue.end + 0.25;
-        const finished = playbackIndex >= 0 && t >= cue.end - 0.045;
+        // Manual YouTube play also completes the cue, but must not leap ahead.
+        const finished = t >= cue.end - 0.045 && (playbackIndex >= 0 || !waitingForAnswer);
         if (outside || finished) {
           try {
             adapter.pause();
             if (outside) adapter.seek(cue.start);
           } catch (_) {}
+          if (finished && !outside && boundedIndex === gateIndex) {
+            heardGate = true;
+            updateRowStates();
+          }
           playbackIndex = -1;
           waitingForAnswer = gateIndex >= 0 && !isComplete(gateIndex);
           state.textContent = waitingForAnswer
