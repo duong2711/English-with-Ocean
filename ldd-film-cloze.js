@@ -571,9 +571,6 @@
     if (!items.some(x => x.item.querySelector('input'))) {
       throw Error('Không tìm thấy câu hỏi điền từ.');
     }
-    panel.querySelector('.ldd-film-caption-title').textContent = 'Luyện nghe · Điền từ';
-    panel.querySelector('.ldd-film-caption-source').textContent =
-      'Nghe và điền từ còn thiếu · bản dịch tiếng Việt nằm ngay dưới mỗi câu';
     const state = panel.querySelector('.ldd-film-caption-state');
     state.setAttribute('aria-live', 'polite');
     panel.append(tally, list);
@@ -735,16 +732,21 @@
     screen.append(media);
     const description = $el('p', 'ldd-film-source-note',
       'Video vẫn xem được. Bài luyện nghe sẽ hiển thị khi script được kiểm tra và đồng bộ chính xác.');
-    stage.append(screen, title, description);
+    stage.append(screen);
+    // Keep titles and explanatory copy for ordinary standalone videos only.
+    // The exercise video shows just the player and the interactive transcript.
+    if (!hasSourceCaptions) stage.append(title, description);
+    const showPlaybackError = message => {
+      description.textContent = message;
+      if (hasSourceCaptions && !description.isConnected) stage.append(description);
+    };
     if (hasSourceCaptions) {
       stage.classList.add('ldd-film-stage--with-transcript');
       captionPanel = $el('section', 'ldd-film-caption-panel');
       captionPanel.setAttribute('aria-label', 'Phụ đề tiếng Anh theo thời gian');
-      captionPanel.append(
-        $el('h4', 'ldd-film-caption-title', 'Phụ đề tiếng Anh'),
-        $el('p', 'ldd-film-caption-source', 'Phụ đề nguồn có timestamp · chưa dùng để chấm bài'),
-        $el('p', 'ldd-film-caption-state', 'Đang tải phụ đề…')
-      );
+      // Accessible live status is visually hidden unless a real error occurs.
+      // The learner sees the exercises immediately, without instructional headers.
+      captionPanel.append($el('p', 'ldd-film-caption-state', 'Đang tải phụ đề…'));
       stage.append(captionPanel);
     }
     wrap.append(stage);
@@ -760,7 +762,7 @@
       media.removeAttribute('src');
       screen.replaceChildren();
       try {
-        const adapter = await makePlayer(screen, lesson, message => { description.textContent = message; });
+        const adapter = await makePlayer(screen, lesson, showPlaybackError);
         if (seq !== generation) { adapter.destroy(); return; }
         cleanup = adapter.destroy;
         if (captionPanel) {
@@ -779,9 +781,6 @@
           try {
             if (Array.isArray(lesson.segments) && lesson.segments.length) {
               await renderCaptionExercise(lesson, captionPanel, adapter, seq);
-              if (seq === generation) {
-                description.textContent = 'Luyện nghe điền từ trong khung cuộn cạnh video, với bản dịch tiếng Việt hiện sẵn dưới từng câu.';
-              }
               (wrap.closest('#ldd-ent-movies-panel') || stage).scrollIntoView({
                 behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
                 block: 'start'
@@ -861,16 +860,17 @@
                 }
               }
             }, 350);
-            description.textContent = 'Xem phim cùng phụ đề tiếng Anh. Bài điền từ và bản dịch sẽ được bổ sung sau khi kiểm tra nội dung.';
+
           } catch (captionError) {
             if (seq !== generation) return;
+            state.classList.add('is-error');
             state.textContent = 'Chưa tải được phụ đề: ' + (captionError.message || 'Lỗi nguồn phụ đề') +
               '. Bạn vẫn có thể xem video.';
           }
         }
       } catch (error) {
         if (seq !== generation) return;
-        description.textContent = 'Không tải được video: ' + (error.message || 'Lỗi trình phát');
+        showPlaybackError('Không tải được video: ' + (error.message || 'Lỗi trình phát'));
       }
     }
     const watchTop = wrap.closest('#ldd-ent-movies-panel') || stage;
