@@ -673,7 +673,7 @@
         // Manual YouTube play also completes the cue, but must not leap ahead.
         const resumingPastGate = playbackIndex < 0 && waitingForAnswer &&
           t >= cue.end - 0.045 && adapter.isPlaying?.();
-        const finished = t >= cue.end - 0.045 && (playbackIndex >= 0 || !waitingForAnswer);
+        const finished = !outside && t >= cue.end - 0.045 && (playbackIndex >= 0 || !waitingForAnswer);
         if ((outside && Date.now() >= seekPendingUntil) || finished || resumingPastGate) {
           try {
             adapter.pause();
