@@ -174,7 +174,8 @@ test('film lesson omits redundant headings, explanation text and running status'
   assert.match(watch, /const state = \$el\('p', 'ldd-film-caption-state', 'Đang chuẩn bị bài luyện nghe…'\)/);
   assert.doesNotMatch(watch, /ldd-film-caption-title|ldd-film-caption-source/);
   assert.match(css, /\.ldd-film-caption-state:not\(\.is-error\)\s*\{[^}]*clip-path:inset\(50%\)/s);
-  assert.match(css, /grid-template-areas:"screen captions" "error captions";/);
+  assert.match(css, /grid-template-areas:"screen captions";/);
+  assert.doesNotMatch(css, /grid-template-areas:"screen captions" "error captions";/);
   // Errors are still displayed rather than being hidden with routine player hints.
   assert.match(watch, /const showPlaybackError = message => \{/);
   assert.match(watch, /state\.classList\.add\('is-error'\)/);
@@ -244,4 +245,26 @@ test('one visual template spans Youtube, Facebook and MP4, with no fabricated ex
   assert.match(watch, /fallbackVideo\(\);\s*emptyNote\(\);/);
   assert.match(watch, /const observer = typeof ResizeObserver === 'function'/);
   assert.match(watch, /captionPanel\.style\.setProperty\('--ldd-film-video-height'/);
+});
+
+test('film recommendations follow the video without a phantom grid track or fixed-height wrapper', () => {
+  const tightened = css.slice(css.indexOf('/* Cinema layout correction'));
+  assert.match(tightened, /\.ldd-film-watch-layout\.ldd-film-focus-mode\s*\{[^}]*display:flex;[^}]*flex-direction:column;[^}]*gap:0;[^}]*height:auto;[^}]*min-height:0;/s);
+  assert.match(tightened, /\.ldd-film-watch-primary\s*\{[^}]*height:auto;[^}]*min-height:0;[^}]*flex:0 0 auto;/s);
+  assert.match(tightened, /\.ldd-film-watch-primary \.ldd-film-lesson\s*\{[^}]*height:auto;[^}]*min-height:0;[^}]*margin:0;/s);
+  assert.match(tightened, /\.ldd-film-recommendations\s*\{[^}]*flex:0 0 auto;[^}]*margin:14px 0 0;/s);
+  assert.match(tightened, /grid-template-areas:"screen captions";/);
+  assert.match(tightened, /grid-template-rows:max-content;/);
+  assert.match(tightened, /grid-auto-rows:0;/);
+  assert.doesNotMatch(tightened, /"error captions"/);
+});
+
+test('all YouTube film embeds hide native timeline, fullscreen and keyboard seek', () => {
+  const player = js.slice(js.indexOf('async function makePlayer('), js.indexOf('async function mount('));
+  assert.match(player, /playerVars:\s*\{[^}]*playsinline:1, controls:0, fs:0, disablekb:1,[^}]*iv_load_policy:3, rel:0, cc_load_policy:0/s);
+  assert.match(js, /youtube-nocookie\.com\/embed\/[^\n]+\?rel=0&cc_load_policy=0&controls=0&fs=0&disablekb=1&iv_load_policy=3&playsinline=1/);
+  const exercise = js.slice(js.indexOf('async function renderCaptionExercise('), js.indexOf('async function openStandalone('));
+  assert.match(exercise, /adapter\.pause\(\);\s*adapter\.seek\(items\[idx\]\.start\);\s*adapter\.play\(\);/);
+  assert.match(exercise, /const finished = !outside && t >= cue\.end - 0\.045/);
+  assert.match(exercise, /seek\.addEventListener\('click', \(\) => playCue\(idx\)\)/);
 });
