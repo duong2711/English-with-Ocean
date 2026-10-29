@@ -55,3 +55,25 @@ test('a subtitle cue containing two sentences is not split by guessed durations'
   assert.equal(cues[0].end, 5);
   assert.match(cues[0].text, /She is \{kind\}/);
 });
+
+
+test('imports timestamps copied from YouTubeToTranscript without inventing word-level timings', () => {
+  const text = '[00:01] At four, we say, Mommy, I love you.\n' +
+    '[00:06] At fourteen, we say, I have trouble.\n' +
+    '[00:13] At eighteen, we say, I want to leave this house.';
+  const result = timing.parseTimestampedTranscript(text, '02:24');
+  assert.deepEqual(result.errors, []);
+  assert.equal(result.segments.length, 3);
+  assert.equal(result.segments[0].start, 1);
+  assert.equal(result.segments[0].end, 6);
+  assert.equal(result.segments[1].end, 13);
+  assert.equal(result.segments[2].end, 144);
+  assert.ok(result.warnings.length);
+});
+
+test('rejects copied timestamps when duration is unknown, timestamp order is wrong, or text is missing', () => {
+  const text = '00:01 Hello.\n00:04 Goodbye.';
+  assert.ok(timing.parseTimestampedTranscript(text, '').errors.length);
+  assert.ok(timing.parseTimestampedTranscript('00:02 Hi.\n00:01 Bye.', '00:12').errors.length);
+  assert.ok(timing.parseTimestampedTranscript('00:01\n00:04 Goodbye.', '00:12').errors.length);
+});
