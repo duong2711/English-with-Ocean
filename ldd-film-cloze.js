@@ -373,6 +373,8 @@
     const title = $el('h3', 'ldd-film-title', lesson.title);
     const stage = $el('div', 'ldd-film-stage ldd-film-stage--video-only');
     const screen = $el('div', 'ldd-film-screen');
+    const hasSourceCaptions = parsed.provider === 'youtube' && parsed.videoId === 'HeDpbMnrlRc';
+    let captionPanel = null;
     let media;
     if (parsed.provider === 'youtube' || parsed.provider === 'facebook') {
       media = $el('iframe', 'ldd-film-video');
@@ -395,6 +397,17 @@
     const description = $el('p', 'ldd-film-source-note',
       'Video vẫn xem được. Bài luyện nghe sẽ hiển thị khi script được kiểm tra và đồng bộ chính xác.');
     stage.append(screen, title, description);
+    if (hasSourceCaptions) {
+      stage.classList.add('ldd-film-stage--with-transcript');
+      captionPanel = $el('section', 'ldd-film-caption-panel');
+      captionPanel.setAttribute('aria-label', 'Phụ đề tiếng Anh theo thời gian');
+      captionPanel.append(
+        $el('h4', 'ldd-film-caption-title', 'Phụ đề tiếng Anh'),
+        $el('p', 'ldd-film-caption-source', 'Phụ đề nguồn có timestamp · chưa dùng để chấm bài'),
+        $el('p', 'ldd-film-caption-state', 'Đang tải phụ đề…')
+      );
+      stage.append(captionPanel);
+    }
     wrap.append(stage);
     cleanup = () => {
       if (media.tagName === 'VIDEO') {
@@ -411,6 +424,70 @@
         const adapter = await makePlayer(screen, lesson, message => { description.textContent = message; });
         if (seq !== generation) { adapter.destroy(); return; }
         cleanup = adapter.destroy;
+        if (captionPanel) {
+          const state = captionPanel.querySelector('.ldd-film-caption-state');
+          try {
+            if (!client) throw Error('Bạn cần đăng nhập để xem phụ đề.');
+            const result = await client.functions.invoke('movie-caption-reader', {
+              body: { videoId: parsed.videoId }
+            });
+            if (seq !== generation) return;
+            if (result.error || result.data?.error) {
+              throw Error(result.data?.error || result.error?.message || 'Không tải được phụ đề nguồn.');
+            }
+            const cues = Array.isArray(result.data?.segments) ? result.data.segments : [];
+            if (!cues.length) throw Error('Video chưa có phụ đề nguồn có thể xem.');
+            const transcriptList = $el('ol', 'ldd-film-caption-list');
+            const buttons = [];
+            const stamp = n => Math.floor(Number(n) / 60) + ':' +
+              String(Math.floor(Number(n) % 60)).padStart(2, '0');
+            cues.forEach(cue => {
+              const start = Number(cue.start);
+              const end = Number(cue.end);
+              if (!Number.isFinite(start) || !Number.isFinite(end) ||
+                  end <= start || !String(cue.text || '').trim()) return;
+              const item = $el('li', 'ldd-film-caption-item');
+              const jump = button('', 'ldd-film-caption-jump');
+              jump.append($el('time', 'ldd-film-caption-clock', stamp(start)),
+                $el('span', 'ldd-film-caption-text', String(cue.text)));
+              jump.addEventListener('click', () => {
+                try { adapter.seek(start); adapter.play(); }
+                catch (_) { state.textContent = 'Không thể chuyển video tới đoạn này.'; }
+              });
+              item.append(jump);
+              transcriptList.append(item);
+              buttons.push({ start, end, jump });
+            });
+            if (!buttons.length) throw Error('Phụ đề không có timestamp hợp lệ.');
+            state.textContent = 'Chạm vào câu thoại để phát video từ đúng vị trí.';
+            captionPanel.append(transcriptList);
+            let activeIndex = -1;
+            timer = setInterval(() => {
+              if (seq !== generation) return;
+              const time = Number(adapter.getTime());
+              if (!Number.isFinite(time)) return;
+              let latest = -1;
+              for (let i = 0; i < buttons.length; i++) {
+                if (time >= buttons[i].start && time <= buttons[i].end) latest = i;
+              }
+              if (latest === activeIndex) return;
+              if (activeIndex >= 0) {
+                buttons[activeIndex].jump.classList.remove('is-current');
+                buttons[activeIndex].jump.removeAttribute('aria-current');
+              }
+              activeIndex = latest;
+              if (latest >= 0) {
+                buttons[latest].jump.classList.add('is-current');
+                buttons[latest].jump.setAttribute('aria-current', 'true');
+              }
+            }, 350);
+            description.textContent = 'Xem phim cùng phụ đề tiếng Anh. Bài điền từ và bản dịch sẽ được bổ sung sau khi kiểm tra nội dung.';
+          } catch (captionError) {
+            if (seq !== generation) return;
+            state.textContent = 'Chưa tải được phụ đề: ' + (captionError.message || 'Lỗi nguồn phụ đề') +
+              '. Bạn vẫn có thể xem video.';
+          }
+        }
       } catch (error) {
         if (seq !== generation) return;
         description.textContent = 'Không tải được video: ' + (error.message || 'Lỗi trình phát');
