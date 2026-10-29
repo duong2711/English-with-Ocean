@@ -382,6 +382,17 @@
     const answers = new Map((saved || []).map(item =>
       [keyOf(item.segment_index, item.blank_index), item]));
     const drafts = new Map();
+    // Only the earliest unfinished sentence is unlocked. Previously answered
+    // sentences remain replayable, but later subtitles cannot skip the exercise.
+    const isComplete = idx => {
+      const blanks = blanksIn(raw[idx]?.text);
+      return blanks.length > 0 && blanks.every((_, j) => answers.has(keyOf(idx, j)));
+    };
+    let gateIndex = raw.findIndex((_, idx) => !isComplete(idx));
+    let playbackIndex = -1;
+    let waitingForAnswer = false;
+    let updateRowStates = () => {};
+    let playCue = () => {};
     const tally = $el('p', 'ldd-film-caption-progress');
     tally.setAttribute('aria-live', 'polite');
     const count = () => {
@@ -405,13 +416,10 @@
     raw.forEach((cue, idx) => {
       const item = $el('li', 'ldd-film-caption-item ldd-film-caption-exercise');
       const heading = $el('div', 'ldd-film-caption-line-heading');
-      const seek = button(padTime(Number(cue.start)), 'ldd-film-caption-seek');
-      seek.title = 'Phát lại câu thoại tại ' + padTime(Number(cue.start));
+      const seek = button('▶ Nghe lại · ' + padTime(Number(cue.start)), 'ldd-film-caption-seek');
+      seek.title = 'Chỉ phát lại đoạn câu ' + (idx + 1) + ' rồi tự dừng';
       seek.setAttribute('aria-label', 'Nghe lại câu ' + (idx + 1));
-      seek.addEventListener('click', () => {
-        try { adapter.seek(Number(cue.start)); adapter.play(); }
-        catch (_) { feedback.textContent = 'Không tua lại được đoạn này.'; }
-      });
+      seek.addEventListener('click', () => playCue(idx));
       const number = $el('span', 'ldd-film-caption-number', 'Câu ' + (idx + 1));
       heading.append(number, seek);
 
@@ -420,6 +428,7 @@
       let blanks = 0;
       const inputs = [];
       const actionRow = $el('div', 'ldd-film-caption-actions');
+      const fields = [];
       const feedback = $el('p', 'ldd-film-caption-feedback');
       feedback.setAttribute('role', 'status');
       feedback.setAttribute('aria-live', 'polite');
@@ -445,6 +454,8 @@
           input.value = '✓';
           input.disabled = true;
           input.classList.add('done');
+        } else if (idx !== gateIndex) {
+          input.disabled = true;
         }
         sentence.append(input);
         inputs.push({ input, blankIndex, key });
@@ -474,10 +485,13 @@
           check.hidden = true;
           hint.hidden = true;
           feedback.textContent = 'Đã hoàn thành';
+        } else if (idx !== gateIndex) {
+          check.disabled = hint.disabled = true;
         }
+        fields.push({ ...field, check, hint });
         let busy = false;
         const submit = async askHint => {
-          if (busy || answers.has(field.key)) return;
+          if (busy || answers.has(field.key) || idx !== gateIndex) return;
           if (!askHint && !field.input.value.trim()) {
             feedback.textContent = 'Hãy điền từ trước khi kiểm tra.';
             field.input.focus();
@@ -518,6 +532,21 @@
             count();
             document.dispatchEvent(new Event('ldd:today-refresh'));
             document.dispatchEvent(new Event('ldd:vocab-senses-updated'));
+            if (isComplete(idx) && idx === gateIndex) {
+              gateIndex = raw.findIndex((_, i) => !isComplete(i));
+              waitingForAnswer = false;
+              updateRowStates();
+              if (gateIndex >= 0) {
+                // Resume at the START of the next timed dialogue, not through
+                // intervening music or an unrelated later video scene.
+                playCue(gateIndex);
+              } else {
+                playbackIndex = -1;
+                try { adapter.pause(); } catch (_) {}
+                panel.querySelector('.ldd-film-caption-state').textContent =
+                  'Đã hoàn thành tất cả câu! Bạn có thể nghe lại từng câu.';
+              }
+            }
           } catch (err) {
             if (seq === generation) feedback.textContent = 'Chưa lưu được: ' + (err.message || 'Lỗi kết nối');
           } finally {
@@ -535,7 +564,7 @@
 
       item.append(heading, sentence, actionRow, translate, translation, feedback);
       list.append(item);
-      items.push({ start: Number(cue.start), end: Number(cue.end), item });
+      items.push({ start: Number(cue.start), end: Number(cue.end), item, seek, fields });
     });
 
     if (!items.some(x => x.item.querySelector('input'))) {
@@ -545,18 +574,81 @@
     panel.querySelector('.ldd-film-caption-source').textContent =
       'Nghe và điền từ còn thiếu · bấm vào câu để xem dịch';
     const state = panel.querySelector('.ldd-film-caption-state');
-    state.textContent = 'Nhấn thời gian để nghe lại. Gợi ý có thể ảnh hưởng điểm và lưu từ mới.';
+    state.setAttribute('aria-live', 'polite');
     panel.append(tally, list);
+
+    // Keep all controls locked ahead of the earliest unanswered cue.
+    updateRowStates = () => {
+      items.forEach((row, idx) => {
+        const locked = gateIndex >= 0 && idx > gateIndex;
+        row.item.classList.toggle('is-locked', locked);
+        row.item.classList.toggle('is-next', idx === gateIndex);
+        row.seek.disabled = locked;
+        row.fields.forEach(({ input, key, check, hint }) => {
+          if (answers.has(key)) return;
+          const enabled = idx === gateIndex;
+          input.disabled = !enabled;
+          check.disabled = hint.disabled = !enabled;
+        });
+      });
+    };
+    playCue = idx => {
+      if (seq !== generation || idx < 0 || idx >= items.length) return;
+      // Finished lines can be replayed, but later lines stay inaccessible.
+      if (gateIndex >= 0 && idx > gateIndex) return;
+      playbackIndex = idx;
+      waitingForAnswer = false;
+      try {
+        adapter.pause();
+        adapter.seek(items[idx].start);
+        adapter.play();
+        state.textContent = 'Đang nghe câu ' + (idx + 1) + '. Hết câu video sẽ tự dừng để bạn điền từ.';
+      } catch (_) {
+        playbackIndex = -1;
+        state.textContent = 'Không phát lại được câu này. Hãy thử nút Nghe lại.';
+      }
+    };
+    updateRowStates();
+
+    const focusGate = () => {
+      if (gateIndex < 0) return;
+      const row = items[gateIndex];
+      // An initial seek does not autoplay, which is blocked on some devices.
+      try { adapter.pause(); adapter.seek(row.start); } catch (_) {}
+      state.textContent = 'Câu ' + (gateIndex + 1) +
+        ': bấm Nghe lại để nghe, điền từ rồi chọn Kiểm tra hoặc Gợi ý để sang câu sau.';
+    };
+    focusGate();
 
     let activeIndex = -1;
     timer = setInterval(() => {
       if (seq !== generation) return;
       const t = Number(adapter.getTime());
       if (!Number.isFinite(t)) return;
-      let current = -1;
-      for (let i = 0; i < items.length; i++) {
-        if (t >= items[i].start && t <= items[i].end) current = i;
+
+      // Both replay and normal playback are bounded by the selected sentence.
+      // In particular, dragging YouTube's native scrubber must not bypass
+      // an incomplete sentence or advance through future dialogue.
+      const boundedIndex = playbackIndex >= 0 ? playbackIndex : gateIndex;
+      if (boundedIndex >= 0) {
+        const cue = items[boundedIndex];
+        const outside = t < cue.start - 0.45 || t > cue.end + 0.25;
+        const finished = playbackIndex >= 0 && t >= cue.end - 0.045;
+        if (outside || finished) {
+          try {
+            adapter.pause();
+            if (outside) adapter.seek(cue.start);
+          } catch (_) {}
+          playbackIndex = -1;
+          waitingForAnswer = gateIndex >= 0 && !isComplete(gateIndex);
+          state.textContent = waitingForAnswer
+            ? 'Đã dừng. Điền câu ' + (gateIndex + 1) +
+              ' rồi bấm Kiểm tra; có thể bấm Nghe lại nhiều lần.'
+            : gateIndex < 0 ? 'Đã hoàn thành! Có thể nghe lại từng câu.' :
+              'Đã phát xong đoạn nghe lại. Tiếp tục câu ' + (gateIndex + 1) + '.';
+        }
       }
+      let current = playbackIndex >= 0 ? playbackIndex : gateIndex;
       if (current === activeIndex) return;
       if (activeIndex >= 0) items[activeIndex].item.classList.remove('is-current');
       activeIndex = current;
@@ -570,7 +662,7 @@
         // Never scroll the document or move the video out of view.
         list.scrollTop += itemRect.top - listRect.top - 12;
       }
-    }, 350);
+    }, 100);
   }
 
   async function openStandalone(lesson, wrap) {
