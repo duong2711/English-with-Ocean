@@ -12,6 +12,8 @@
   let generation = 0;
   let cleanup = null;
   let timer = null;
+  const knownDurations = new Map();
+  const filmTiming = window.LDDFilmTiming;
   const $el = (tag, className, text) => {
     const el = document.createElement(tag);
     if (className) el.className = className;
@@ -450,7 +452,13 @@
     wrap.append(stage);
     const answers = new Map();
     const drafts = new Map();
-    const segments = (lesson.segments || []).filter(s => Number.isFinite(+s.end) && blanksIn(s.text).length);
+    const incoming = Array.isArray(lesson.segments) ? lesson.segments : [];
+    const check = filmTiming?.check(incoming, { allowEmpty: true });
+    if (!check || !check.ok) {
+      questionBody.textContent = 'Script chưa đạt kiểm tra thời gian. Giáo viên cần sửa trước khi học viên làm bài.';
+      return;
+    }
+    const segments = incoming.filter(s => blanksIn(s.text).length);
     if (!segments.length) { questionBody.textContent = 'Bài phim chưa có câu hỏi.'; return; }
     try {
       const { data, error } = await client.from('movie_cloze_progress')
@@ -632,18 +640,23 @@
         const t = Number(adapter.getTime());
         if (!Number.isFinite(t)) return;
         const duration = Number(adapter.getDuration?.());
-        if (!durationWarningShown && Number.isFinite(duration) && duration > 0 &&
-            Number(segments[segments.length - 1].end) > duration + 1.5) {
-          durationWarningShown = true;
-          feedback.textContent = 'Mốc thời gian script dài hơn video. Giáo viên cần đồng bộ lại script.';
+        if (Number.isFinite(duration) && duration > 0) {
+          knownDurations.set(providerOf(lesson.video_url)?.url, duration);
+          if (!durationWarningShown) {
+            const checked = filmTiming?.check(segments, { duration });
+            if (!checked || !checked.ok) {
+              durationWarningShown = true;
+              manualHold = true;
+              adapter.pause();
+              questionBody.textContent = 'Script không khớp thời lượng video. Đã dừng phần luyện tập để tránh chấm sai.';
+              feedback.textContent = (checked?.errors || ['Không thể kiểm tra thời gian.']).join(' ');
+              return;
+            }
+          }
         }
         // Only pause at the end of the cue actually being played, not at a
         // stale unfinished cue after the learner jumps forwards in the video.
-        const idx = segments.findIndex((s, i) => {
-          const end = Number(s.end);
-          return !complete(i) && Number.isFinite(end) &&
-            t >= end - 0.12 && t <= end + 0.8;
-        });
+        const idx = filmTiming?.cueAtTime(segments, t, complete) ?? -1;
         if (idx !== -1) questionAt(idx);
       }, 120);
       const replay = button('↻ Nghe lại', 'ldd-film-replay');
@@ -716,6 +729,13 @@
     const preview = $el('p', 'ldd-film-editor-help');
     const save = button('Lưu video / script', 'ldd-film-save');
     save.type = 'submit';
+    const timingConfirmRow = $el('label', 'ldd-film-editor-help');
+    timingConfirmRow.style.display = 'none';
+    const timingConfirm = $el('input');
+    timingConfirm.type = 'checkbox';
+    timingConfirmRow.append(timingConfirm, document.createTextNode(
+      ' Đã đối chiếu khoảng trống thời gian bất thường với video.'
+    ));
     const generate = button('✨ Tạo script + dịch tự động từ YouTube', 'ldd-film-generate');
     let generated = null;
     let generatedCaption = '';
@@ -727,9 +747,20 @@
     };
     const notice = $el('p', 'ldd-film-feedback');
     const noticePreview = () => {
-      const s = parseSubtitles(captions.value, Boolean(existing.value));
+      const s = parseSubtitles(captions.value, true);
       const t = translations.value.trim().split(/\n/).map(x => x.trim()).filter(Boolean);
-      preview.textContent = s.length + ' câu tiếng Anh, ' + (translations.value.trim() ? t.length : 0) + ' dòng dịch.';
+      const valid = filmTiming?.check(s, { allowEmpty: true,
+        duration: knownDurations.get(providerOf(link.value)?.url) });
+      const dropped = (captions.value.match(/-->/g) || []).length - s.length;
+      const notes = valid ? [...valid.errors, ...valid.warnings] :
+        ['Không thể chạy bộ kiểm tra thời gian.'];
+      if (dropped > 0) notes.unshift(dropped + ' đoạn phụ đề có lỗi định dạng.');
+      preview.textContent = s.length + ' câu tiếng Anh, ' +
+        (translations.value.trim() ? t.length : 0) + ' dòng dịch.' +
+        (notes.length ? '\n⚠ ' + notes.join('\n⚠ ') : ' · Thời gian hợp lệ về cấu trúc.');
+      preview.style.whiteSpace = 'pre-wrap';
+      timingConfirmRow.style.display = valid?.warnings.length ? 'block' : 'none';
+      timingConfirm.checked = false;
     };
     existing.addEventListener('change', async () => {
       const selectedId = existing.value;
@@ -739,6 +770,7 @@
       generatedTranslation = '';
       captions.value = '';
       translations.value = '';
+      timingConfirm.checked = false;
       title.value = selected?.title || '';
       link.value = selected?.video_url || '';
       title.readOnly = Boolean(selected);
@@ -800,7 +832,11 @@
             end: Math.round(end * 100) / 100,
             text: marked, ...(translation_vi ? { translation_vi } : {})
           } : null;
-        }).filter(Boolean).sort((a,b) => a.start-b.start);
+        }).filter(Boolean);
+        if (segments.length !== raw.length) throw Error('AI trả về câu không hợp lệ, không lưu script.');
+        if (!filmTiming?.check(segments, { duration: knownDurations.get(info.url) }).ok) {
+          throw Error('Mốc thời gian AI không hợp lệ. Kiểm tra và tạo lại script.');
+        }
         if (segments.length < 3) throw Error('Không nhận diện đủ câu nói. Video có thể hạn chế truy cập âm thanh.');
         generated = segments;
         captions.value = segments.map((segment, i) =>
@@ -838,7 +874,12 @@
       if (!title.value.trim()) { notice.textContent = 'Vui lòng nhập tên video.'; return; }
       const useGenerated = generated && captions.value === generatedCaption &&
         translations.value === generatedTranslation;
-      const segments = useGenerated ? generated : captions.value.trim() ? parseSubtitles(captions.value, Boolean(existing.value)) : [];
+      const segments = useGenerated ? generated : captions.value.trim() ? parseSubtitles(captions.value, true) : [];
+      if (!useGenerated && captions.value.trim() &&
+          (captions.value.match(/-->/g) || []).length !== segments.length) {
+        notice.textContent = 'Có đoạn phụ đề bị mất hoặc lỗi định dạng. Không lưu cho đến khi sửa.';
+        return;
+      }
       if (captions.value.trim() && !segments.length) {
         notice.textContent = 'Script không có mốc thời gian SRT/VTT hợp lệ.'; return;
       }
@@ -854,6 +895,21 @@
       const withTranslations = segments.map((segment, i) => ({
         ...segment, ...(translated.length ? { translation_vi: translated[i] } : {})
       }));
+      const checked = filmTiming?.check(withTranslations, {
+        allowEmpty: !captions.value.trim() && !existing.value,
+        duration: knownDurations.get(info.url)
+      });
+      if (!checked || !checked.ok) {
+        notice.textContent = 'Không lưu script: ' +
+          (checked?.errors || ['Không tải được bộ kiểm tra.']).join(' ');
+        return;
+      }
+      if (checked.warnings.length && !timingConfirm.checked) {
+        notice.textContent = 'Có khoảng trống thời gian bất thường: ' +
+          checked.warnings.join(' ') + ' Kiểm tra video và xác nhận trước khi lưu.';
+        timingConfirmRow.style.display = 'block';
+        return;
+      }
       save.disabled = true;
       notice.textContent = 'Đang lưu dữ liệu…';
       try {
@@ -883,7 +939,7 @@
       generate,
       $el('label', '', 'Script tiếng Anh (SRT/VTT)'), upload, captions,
       $el('label', '', 'Bản dịch tiếng Việt (mỗi câu một dòng)'), translationUpload, translations,
-      sample, description, preview, save, notice
+      sample, description, preview, timingConfirmRow, save, notice
     );
     wrap.append(toggle, form);
   }
