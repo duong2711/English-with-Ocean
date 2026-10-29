@@ -219,13 +219,17 @@
     const watch = $el('div', 'ldd-film-watch-layout');
     watch.hidden = true;
     const primary = $el('div', 'ldd-film-watch-primary');
-    const browse = button('← Tất cả video', 'ldd-film-browse');
+    const browse = button('← Tất cả video', 'grammar-back-btn ldd-film-browse');
     browse.hidden = true;
     const panel = body.closest('#ldd-ent-movies-panel');
     const panelHeader = panel?.querySelector('.ldd-ent-panel-heading');
+    // Reuse the exact back-to-entertainment slot for this in-video action.
+    // On the movie library itself the original “Giải trí” button remains.
     panelHeader?.querySelector('.ldd-film-browse')?.remove();
-    if (panelHeader) panelHeader.append(browse);
-    else primary.append(browse);
+    const entertainmentBack = panelHeader?.querySelector('[data-ent-back]');
+    if (entertainmentBack) entertainmentBack.before(browse);
+    else if (panelHeader) panelHeader.prepend(browse);
+    else primary.prepend(browse);
     const playerWrap = $el('div', 'ldd-film-lesson');
     primary.append(playerWrap);
 
