@@ -1,0 +1,20 @@
+name: Check accessible film audio for speech-to-text
+on:
+  push:
+    paths: ['.github/workflows/film-audio-probe.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check-audio:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check whether source audio is available without login
+        shell: bash
+        run: |
+          set +e
+          python -m pip -q install 'yt-dlp>=2026.1'
+          yt-dlp --version
+          yt-dlp --no-playlist --skip-download --no-warnings --print '%(title)s' --print 'DURATION_SECONDS=%(duration)s' --print 'LIVE_STATUS=%(live_status)s' --print 'FORMAT_COUNT=%(formats.:.id)s' 'https://www.youtube.com/watch?v=4OffzK1SU5s' 2>&1 | tail -18
+          echo "YT_DLP_EXIT=${PIPESTATUS[0]}"
