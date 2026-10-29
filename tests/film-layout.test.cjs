@@ -79,3 +79,28 @@ test('captions scroll within their own area without sending the video off screen
   assert.doesNotMatch(standalone, /current\.scrollIntoView\(/);
   assert.doesNotMatch(standalone, /transcriptList\.scrollIntoView\(/);
 });
+
+test('caption lesson renders a blank, toggled Vietnamese, check and hint on every line', () => {
+  const func = js.slice(js.indexOf('async function renderCaptionExercise('), js.indexOf('async function openStandalone('));
+  assert.match(func, /const parts = String\(cue\.text \|\| ''\)\.split\(\/\\\{\(\[\^\{\}\]\+\)\\\}\/g\)/);
+  assert.match(func, /const input = \$el\('input', 'ldd-film-answer ldd-film-caption-input'\)/);
+  assert.match(func, /const translation = \$el\('p', 'ldd-film-caption-translation', cue\.translation_vi/);
+  assert.match(func, /translation\.hidden = true;/);
+  assert.match(func, /translate\.addEventListener\('click', toggleTranslation\)/);
+  assert.match(func, /button\('Kiểm tra', 'ldd-film-check ldd-film-caption-check'\)/);
+  assert.match(func, /button\('Gợi ý', 'ldd-film-hint ldd-film-caption-hint'\)/);
+  assert.match(func, /client\.rpc\('movie_cloze_answer'/);
+  assert.match(func, /client\.from\('movie_cloze_progress'\)/);
+  assert.match(func, /p_segment_index: idx/);
+  assert.match(func, /list\.scrollTop \+= itemRect\.top - listRect\.top/);
+  assert.doesNotMatch(func, /scrollIntoView\(/);
+});
+
+test('caption-practice controls remain usable on tablets and phones inside bounded scroll', () => {
+  assert.match(css, /\.ldd-film-caption-practice-list\s*\{[^}]*gap:9px;/s);
+  assert.match(css, /\.ldd-film-caption-exercise\s*\{[^}]*border-radius:12px;/s);
+  assert.match(css, /\.ldd-film-caption-translation\[hidden\]/);
+  assert.match(css, /\.ldd-film-caption-input\s*\{[^}]*min-height:40px;/s);
+  assert.match(css, /@media\(max-width:739px\)\{[\s\S]*?\.ldd-film-caption-input\s*\{width:110px;min-height:44px\}/);
+  assert.match(js, /videoId === 'HeDpbMnrlRc'\) \{[\s\S]*?void openStandalone\(lesson, playerWrap\)/);
+});
