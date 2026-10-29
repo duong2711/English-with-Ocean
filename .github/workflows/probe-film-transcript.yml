@@ -11,12 +11,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 4
     steps:
-      - name: Check no-key providers on current movie
+      - name: Check caption and metadata for submitted film
         shell: bash
         run: |
           python - <<'PY'
           import json, urllib.request, urllib.error, time
-          vid='dNtLZDsW22A'
+          vid='HeDpbMnrlRc'
           urls=[
             ('FreeTranscriptAPI','https://api.freetranscriptapi.com/v1/transcript?video_url='+vid+'&lang=en'),
             ('YouTubeGPT','https://youtubegpt.ai/api/transcript?v='+vid+'&format=json'),
