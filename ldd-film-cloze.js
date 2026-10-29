@@ -355,11 +355,11 @@
         if (providerOf(lesson.video_url)?.videoId === 'HeDpbMnrlRc') {
           // Film has a transcript-wide exercise: every caption has its own
           // input, translation reveal and server-side grading.
-          void openStandalone(lesson, playerWrap);
+          void openStandalone(lesson, playerWrap, isTeacher);
         } else if (Array.isArray(lesson.segments) && lesson.segments.length) {
           void openLesson(lesson, playerWrap);
         } else {
-          void openStandalone(lesson, playerWrap);
+          void openStandalone(lesson, playerWrap, isTeacher);
         }
       };
       catalog.forEach(item => {
@@ -382,7 +382,7 @@
   }
 
 
-  async function renderCaptionExercise(lesson, panel, adapter, seq) {
+  async function renderCaptionExercise(lesson, panel, adapter, seq, teacherPreview = false) {
     const raw = Array.isArray(lesson.segments) ? lesson.segments : [];
     const checkTiming = filmTiming?.check(raw);
     if (!raw.length || !checkTiming?.ok) {
@@ -592,7 +592,7 @@
     // Keep all controls locked ahead of the earliest unanswered cue.
     updateRowStates = () => {
       items.forEach((row, idx) => {
-        const locked = gateIndex >= 0 && idx > gateIndex;
+        const locked = !teacherPreview && gateIndex >= 0 && idx > gateIndex;
         row.item.classList.toggle('is-locked', locked);
         row.item.classList.toggle('is-next', idx === gateIndex);
         row.seek.disabled = locked;
@@ -622,8 +622,9 @@
     };
     playCue = idx => {
       if (seq !== generation || idx < 0 || idx >= items.length) return;
-      // Finished lines can be replayed, but later lines stay inaccessible.
-      if (gateIndex >= 0 && idx > gateIndex) return;
+      // Only teachers can preview future segments without unlocking their answers.
+      // Students must still complete each line in order.
+      if (!teacherPreview && gateIndex >= 0 && idx > gateIndex) return;
       playbackIndex = idx;
       waitingForAnswer = false;
       // YouTube seeks can be asynchronous, especially after long music gaps.
@@ -711,7 +712,7 @@
     }, 100);
   }
 
-  async function openStandalone(lesson, wrap) {
+  async function openStandalone(lesson, wrap, teacherPreview = false) {
     stopPlayer();
     const seq = ++generation;
     wrap.replaceChildren();
@@ -794,7 +795,7 @@
           const state = captionPanel.querySelector('.ldd-film-caption-state');
           try {
             if (Array.isArray(lesson.segments) && lesson.segments.length) {
-              await renderCaptionExercise(lesson, captionPanel, adapter, seq);
+              await renderCaptionExercise(lesson, captionPanel, adapter, seq, teacherPreview);
               (wrap.closest('#ldd-ent-movies-panel') || stage).scrollIntoView({
                 behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
                 block: 'start'
