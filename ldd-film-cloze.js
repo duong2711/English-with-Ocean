@@ -455,8 +455,11 @@
     const drafts = new Map();
     const incoming = Array.isArray(lesson.segments) ? lesson.segments : [];
     const check = filmTiming?.check(incoming, { allowEmpty: true });
-    const segments = check?.ok ? incoming.filter(s => blanksIn(s.text).length) : [];
-    if (!segments.length) {
+    // Preserve source indices: progress and grading are keyed by segment_index.
+    // Non-spoken scene headings carry no blanks and must never be graded.
+    const segments = check?.ok ? incoming : [];
+    const exerciseIndices = segments.map((segment, i) => blanksIn(segment.text).length ? i : -1).filter(i => i >= 0);
+    if (!exerciseIndices.length) {
       questionHeader.textContent = 'Xem video';
       questionBody.textContent = check?.ok
         ? 'Bài luyện nghe đang được chuẩn bị. Bạn vẫn có thể xem video.'
@@ -491,10 +494,14 @@
     }
     function tally() {
       const total = segments.reduce((n, s) => n + blanksIn(s.text).length, 0);
-      progress.textContent = answers.size + '/' + total + ' từ hoàn thành · ' +
-        [...answers.values()].reduce((n, a) => n + (Number(a.score_change) || 0), 0) + ' điểm';
+      const applicable = exerciseIndices.flatMap(i =>
+        blanksIn(segments[i].text).map((_, j) => keyOf(i, j))
+      );
+      const currentAnswers = applicable.map(key => answers.get(key)).filter(Boolean);
+      progress.textContent = currentAnswers.length + '/' + total + ' từ hoàn thành · ' +
+        currentAnswers.reduce((n, a) => n + (Number(a.score_change) || 0), 0) + ' điểm';
       meter.max = total || 1;
-      meter.value = answers.size;
+      meter.value = currentAnswers.length;
       progress.append(meter);
     }
     tally();
@@ -510,7 +517,8 @@
     cleanup = releaseLayout;
     fitPlayer();
     function questionAt(idx) {
-      if (idx < 0 || idx >= segments.length || idx === active) return;
+      if (idx < 0 || idx >= segments.length || idx === active ||
+          !blanksIn(segments[idx].text).length) return;
       active = idx;
       displayedIndex = idx;
       manualHold = true;
@@ -519,7 +527,7 @@
       wrap.classList.add('ldd-film-paused');
       const questionTop = $el('div', 'ldd-film-question-top');
       questionTop.append(
-        $el('span', 'ldd-film-question-count', 'Câu ' + (idx + 1) + ' / ' + segments.length),
+        $el('span', 'ldd-film-question-count', 'Câu ' + (exerciseIndices.indexOf(idx) + 1) + ' / ' + exerciseIndices.length),
         $el('span', 'ldd-film-cue-time', 'Đoạn ' +
           [segments[idx].start, segments[idx].end].map(seconds =>
             Math.floor(Number(seconds) / 60) + ':' +
@@ -645,8 +653,8 @@
       adapter = await makePlayer(screen, lesson, message => { feedback.textContent = message; });
       if (seq !== generation) { adapter.destroy(); return; }
       cleanup = () => { releaseLayout(); adapter.destroy(); };
-      const firstPending = segments.findIndex((_, i) => !complete(i));
-      questionAt(firstPending >= 0 ? firstPending : 0);
+      const firstPending = exerciseIndices.find(i => !complete(i));
+      questionAt(firstPending ?? exerciseIndices[0]);
       active = -1;
       manualHold = false;
       wrap.classList.remove('ldd-film-paused');
@@ -677,7 +685,8 @@
       }, 120);
       const replay = button('↻ Nghe lại', 'ldd-film-replay');
       replay.addEventListener('click', () => {
-        const index = displayedIndex >= 0 ? displayedIndex : segments.findIndex((_, i) => !complete(i));
+        const index = displayedIndex >= 0 ? displayedIndex :
+          (exerciseIndices.find(i => !complete(i)) ?? -1);
         if (index < 0) return;
         manualHold = false;
         active = -1;
