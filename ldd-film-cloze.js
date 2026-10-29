@@ -410,6 +410,7 @@
     list.tabIndex = 0;
     list.setAttribute('aria-label', 'Bài luyện nghe: cuộn danh sách câu hỏi mà không cuộn video');
     let manualScrollUntil = 0;
+    let activeIndex = -1;
     const holdScroll = () => { manualScrollUntil = Date.now() + 7000; };
     list.addEventListener('wheel', holdScroll, { passive: true });
     list.addEventListener('touchstart', holdScroll, { passive: true });
@@ -657,7 +658,6 @@
     };
     focusGate();
 
-    let activeIndex = -1;
     timer = setInterval(() => {
       if (seq !== generation) return;
       const t = Number(adapter.getTime());
