@@ -1,14 +1,18 @@
-name: Film script timing checks
+name: Film script and responsive layout checks
 on:
   push:
     paths:
       - 'ldd-film-cloze.js'
+      - 'ldd-film-cloze.css'
+      - 'tests/film-layout.test.cjs'
       - 'ldd-film-timing.js'
       - 'tests/film-timing.test.cjs'
       - '.github/workflows/film-timing-qa.yml'
   pull_request:
     paths:
       - 'ldd-film-cloze.js'
+      - 'ldd-film-cloze.css'
+      - 'tests/film-layout.test.cjs'
       - 'ldd-film-timing.js'
       - 'tests/film-timing.test.cjs'
       - '.github/workflows/film-timing-qa.yml'
@@ -23,5 +27,5 @@ jobs:
         run: |
           node --check ldd-film-timing.js
           node --check ldd-film-cloze.js
-      - name: Run timing regression tests
-        run: node --test tests/film-timing.test.cjs
+      - name: Run film timing and responsive layout regression tests
+        run: node --test tests/film-timing.test.cjs tests/film-layout.test.cjs
