@@ -743,7 +743,15 @@
     const sample = $el('p', 'ldd-film-editor-help',
       'Có thể dùng transcript với timestamp từ YouTubeToTranscript. Những mốc chỉ có thời điểm bắt đầu vẫn cần đối chiếu lại với âm thanh.');
     const transcriptSite = $el('a', 'ldd-film-editor-help', 'Mở YouTubeToTranscript để sao chép transcript');
-    transcriptSite.href = 'https://youtubetotranscript.com/';
+    const updateTranscriptSiteLink = () => {
+      const info = providerOf(link.value.trim());
+      transcriptSite.href = info?.provider === 'youtube'
+        ? 'https://youtubetotranscript.com/transcript?current_language_code=en&v=' +
+          encodeURIComponent(info.videoId)
+        : 'https://youtubetotranscript.com/';
+    };
+    updateTranscriptSiteLink();
+    link.addEventListener('input', updateTranscriptSiteLink);
     transcriptSite.target = '_blank';
     transcriptSite.rel = 'noopener noreferrer';
     const copiedTranscript = $el('textarea');
@@ -811,6 +819,7 @@
       pendingAudioReview = false;
       title.value = selected?.title || '';
       link.value = selected?.video_url || '';
+      updateTranscriptSiteLink();
       copiedDuration.value = '';
       const rememberedDuration = knownDurations.get(providerOf(link.value)?.url);
       if (rememberedDuration) {
