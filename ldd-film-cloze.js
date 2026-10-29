@@ -395,11 +395,16 @@
     const drafts = new Map();
     // Only the earliest unfinished sentence is unlocked. Previously answered
     // sentences remain replayable, but later subtitles cannot skip the exercise.
+    const gradedIndices = raw.map((cue, idx) => blanksIn(cue?.text).length ? idx : -1)
+      .filter(idx => idx >= 0);
+    const gradedBlanks = gradedIndices.reduce((total, idx) => total + blanksIn(raw[idx].text).length, 0);
     const isComplete = idx => {
       const blanks = blanksIn(raw[idx]?.text);
       return blanks.length > 0 && blanks.every((_, j) => answers.has(keyOf(idx, j)));
     };
-    let gateIndex = raw.findIndex((_, idx) => !isComplete(idx));
+    // Some scripts mix spoken captions with scene headings or narration.
+    // Display non-graded lines, but never block the lesson on an empty cue.
+    let gateIndex = gradedIndices.find(idx => !isComplete(idx)) ?? -1;
     let playbackIndex = -1;
     let waitingForAnswer = false;
     let heardGate = false;
@@ -410,8 +415,11 @@
     const tally = $el('p', 'ldd-film-caption-progress');
     tally.setAttribute('aria-live', 'polite');
     const count = () => {
-      const earned = [...answers.values()].reduce((sum, row) => sum + Number(row.score_change || 0), 0);
-      tally.textContent = answers.size + ' / ' + raw.length + ' câu đã làm · ' + earned + ' điểm';
+      const currentKeys = gradedIndices.flatMap(idx =>
+        blanksIn(raw[idx].text).map((_, j) => keyOf(idx, j)));
+      const completed = currentKeys.map(key => answers.get(key)).filter(Boolean);
+      const earned = completed.reduce((sum, row) => sum + Number(row.score_change || 0), 0);
+      tally.textContent = completed.length + ' / ' + gradedBlanks + ' từ đã làm · ' + earned + ' điểm';
     };
     count();
 
@@ -540,7 +548,7 @@
             document.dispatchEvent(new Event('ldd:today-refresh'));
             document.dispatchEvent(new Event('ldd:vocab-senses-updated'));
             if (isComplete(idx) && idx === gateIndex) {
-              gateIndex = raw.findIndex((_, i) => !isComplete(i));
+              gateIndex = gradedIndices.find(i => !isComplete(i)) ?? -1;
               waitingForAnswer = false;
               heardGate = false;
               updateRowStates();
@@ -577,9 +585,8 @@
       items.push({ start: Number(cue.start), end: Number(cue.end), item, seek, fields });
     });
 
-    if (!items.some(x => x.item.querySelector('input'))) {
-      throw Error('Không tìm thấy câu hỏi điền từ.');
-    }
+    // A script with no cloze targets is still a valid read-only transcript.
+    // Listeners can replay each caption, but no answer/score is recorded.
     const state = panel.querySelector('.ldd-film-caption-state');
     state.setAttribute('aria-live', 'polite');
     panel.append(tally, list);
