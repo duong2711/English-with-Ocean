@@ -153,3 +153,21 @@ test('correct answer jumps the transcript to the next cue immediately', () => {
   const show = exercise.slice(exercise.indexOf('showCue = idx => {'), exercise.indexOf('playCue = idx => {'));
   assert.doesNotMatch(show, /scrollIntoView\(|window\.scrollTo\(|document\.scrollTop/);
 });
+
+
+test('film lesson omits redundant headings, explanation text and running status', () => {
+  const exercise = js.slice(js.indexOf('async function renderCaptionExercise('), js.indexOf('async function openStandalone('));
+  const watch = js.slice(js.indexOf('async function openStandalone('), js.indexOf('async function openLesson('));
+  assert.doesNotMatch(exercise, /ldd-film-caption-title|ldd-film-caption-source/);
+  assert.match(watch, /if \(!hasSourceCaptions\) stage\.append\(title, description\);/);
+  assert.doesNotMatch(watch, /stage\.append\(screen, title, description\)/);
+  assert.match(watch, /captionPanel\.append\(\$el\('p', 'ldd-film-caption-state', 'Đang tải phụ đề…'\)\)/);
+  assert.doesNotMatch(watch, /ldd-film-caption-title|ldd-film-caption-source/);
+  assert.match(css, /\.ldd-film-caption-state:not\(\.is-error\)\s*\{[^}]*clip-path:inset\(50%\)/s);
+  assert.match(css, /grid-template-areas:"screen captions" "error captions";/);
+  // Errors are still displayed rather than being hidden with routine player hints.
+  assert.match(watch, /const showPlaybackError = message => \{/);
+  assert.match(watch, /state\.classList\.add\('is-error'\)/);
+  assert.match(css, /\.ldd-film-caption-state\.is-error\s*\{/);
+  assert.match(exercise, /item\.append\(heading, sentence, translation, actionRow, feedback\)/);
+});
