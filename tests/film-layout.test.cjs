@@ -145,7 +145,7 @@ test('guided listening visually locks future captions and leaves replay availabl
   assert.match(css, /\.ldd-film-caption-exercise\.is-next \{/);
   assert.match(css, /\.ldd-film-caption-exercise\.is-locked \{/);
   assert.match(css, /\.ldd-film-caption-seek\[disabled\] \{/);
-  assert.match(js, /isPlaying: \(\) => player\.getPlayerState\(\) === window\.YT\.PlayerState\.PLAYING/);
+  assert.match(js, /isPlaying: \(\) => !!player && player\.getPlayerState\(\) === window\.YT\.PlayerState\.PLAYING/);
 });
 
 test('correct answer jumps the transcript to the next cue immediately', () => {
@@ -261,10 +261,24 @@ test('film recommendations follow the video without a phantom grid track or fixe
 
 test('all YouTube film embeds hide native timeline, fullscreen and keyboard seek', () => {
   const player = js.slice(js.indexOf('async function makePlayer('), js.indexOf('async function mount('));
-  assert.match(player, /playerVars:\s*\{[^}]*playsinline:1, controls:0, fs:0, disablekb:1,[^}]*iv_load_policy:3, rel:0, cc_load_policy:0/s);
+  assert.match(player, /playerVars:\s*\{[^}]*playsinline:1, autoplay:1, controls:0, fs:0, disablekb:1,[^}]*iv_load_policy:3, rel:0, cc_load_policy:0/s);
   assert.match(js, /youtube-nocookie\.com\/embed\/[^\n]+\?rel=0&cc_load_policy=0&controls=0&fs=0&disablekb=1&iv_load_policy=3&playsinline=1/);
   const exercise = js.slice(js.indexOf('async function renderCaptionExercise('), js.indexOf('async function openStandalone('));
   assert.match(exercise, /adapter\.pause\(\);\s*adapter\.seek\(items\[idx\]\.start\);\s*adapter\.play\(\);/);
   assert.match(exercise, /const finished = !outside && t >= cue\.end - 0\.045/);
   assert.match(exercise, /seek\.addEventListener\('click', \(\) => playCue\(idx\)\)/);
+});
+
+test('YouTube film starts with an accessible clean poster and mounts iframe only after user play', () => {
+  const player = js.slice(js.indexOf('async function makePlayer('), js.indexOf('async function mount('));
+  assert.match(player, /button\('', 'ldd-film-youtube-poster'\)/);
+  assert.match(player, /poster\.setAttribute\('aria-label', 'Phát video '/);
+  assert.match(player, /poster\.append\(thumbnail, playIcon\);\s*container\.append\(poster\);/);
+  assert.match(player, /poster\.addEventListener\('click', \(\) => \{\s*wantsPlay = true;\s*start\(\);/);
+  assert.match(player, /await loadYT\(\);[\s\S]*?container\.replaceChildren\(host\);[\s\S]*?new window\.YT\.Player\(host/);
+  assert.ok(player.indexOf("container.append(poster)") < player.indexOf("new window.YT.Player(host"));
+  assert.match(player, /seek: t => \{[\s\S]*?pendingSeek = Number\(t\);/);
+  assert.match(player, /destroyed = true;[\s\S]*?player\?\.destroy\(\);/);
+  assert.match(css, /\.ldd-film-youtube-poster-play\s*\{/);
+  assert.doesNotMatch(css, /\.ldd-film-screen\s*>\s*iframe[^\{]*\{[^}]*transform:\s*scale\(/s);
 });
