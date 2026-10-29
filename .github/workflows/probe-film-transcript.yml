@@ -16,7 +16,7 @@ jobs:
         run: |
           python - <<'PY'
           import json, urllib.request, urllib.error, time
-          vid='HeDpbMnrlRc'
+          vid='4OffzK1SU5s'
           urls=[
             ('FreeTranscriptAPI','https://api.freetranscriptapi.com/v1/transcript?video_url='+vid+'&lang=en'),
             ('YouTubeGPT','https://youtubegpt.ai/api/transcript?v='+vid+'&format=json'),
