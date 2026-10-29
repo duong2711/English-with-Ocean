@@ -350,9 +350,12 @@
         grid.append(card);
       });
 
-      // Start in watch mode, just as YouTube does. Switching recommendations
-      // replaces the same player rather than starting multiple videos.
-      if (catalog.length) select(catalog[0]);
+      // Enter Phim ảnh at the complete video library.
+      // Open the player only after a learner explicitly selects a video.
+      // Recommendation clicks also call select(), but never on initial mount.
+      library.hidden = false;
+      watch.hidden = true;
+      browse.hidden = true;
     } catch (e) {
       status.textContent = 'Không tải được danh sách phim: ' + (e.message || 'Lỗi kết nối');
     }
