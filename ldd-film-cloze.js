@@ -410,7 +410,7 @@
       seek.setAttribute('aria-label', 'Nghe lại câu ' + (idx + 1));
       seek.addEventListener('click', () => {
         try { adapter.seek(Number(cue.start)); adapter.play(); }
-        catch (_) { status.textContent = 'Không tua lại được đoạn này.'; }
+        catch (_) { feedback.textContent = 'Không tua lại được đoạn này.'; }
       });
       const number = $el('span', 'ldd-film-caption-number', 'Câu ' + (idx + 1));
       heading.append(number, seek);
@@ -541,6 +541,7 @@
     if (!items.some(x => x.item.querySelector('input'))) {
       throw Error('Không tìm thấy câu hỏi điền từ.');
     }
+    panel.querySelector('.ldd-film-caption-title').textContent = 'Luyện nghe · Điền từ';
     panel.querySelector('.ldd-film-caption-source').textContent =
       'Nghe và điền từ còn thiếu · bấm vào câu để xem dịch';
     const state = panel.querySelector('.ldd-film-caption-state');
