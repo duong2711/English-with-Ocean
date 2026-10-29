@@ -611,16 +611,13 @@
   #tab-giai-tri.ldd-film-is-watching .ldd-film-watch-primary .ldd-film-stage--video-only.ldd-film-stage--with-transcript {
     display:grid;max-width:none;width:100%;
     grid-template-columns:minmax(0,1.22fr) minmax(0,1fr);
-    grid-template-areas:"screen captions" "error captions";
-    grid-template-rows:auto min-content;
+    grid-template-areas:"screen captions";
+    grid-template-rows:max-content;
     column-gap:clamp(16px,2.4vw,30px);row-gap:0;
     align-items:start;align-content:start;
   }
   #tab-giai-tri.ldd-film-is-watching .ldd-film-stage--with-transcript > .ldd-film-screen {
     grid-area:screen;width:100%;max-width:720px;min-width:0;
-  }
-  #tab-giai-tri.ldd-film-is-watching .ldd-film-stage--with-transcript > .ldd-film-source-note {
-    grid-area:error;min-width:0;
   }
   #tab-giai-tri.ldd-film-is-watching .ldd-film-stage--with-transcript > .ldd-film-caption-panel {
     grid-area:captions;min-width:0;align-self:start;
@@ -789,4 +786,82 @@
 #tab-giai-tri .ldd-film-caption-state {
   font-weight:600;
   color:var(--text,#344b60);
+}
+
+/* Cinema layout correction — no ghost grid rows or oversized empty space
+   between the finished video/exercise and the recommendations below. */
+#tab-giai-tri.ldd-film-is-watching .ldd-film-watch-layout,
+#tab-giai-tri.ldd-film-is-watching .ldd-film-watch-layout.ldd-film-focus-mode {
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  justify-content:flex-start;
+  gap:0;
+  grid-template-columns:none;
+  grid-template-rows:none;
+  height:auto;
+  min-height:0;
+  padding-bottom:0;
+  align-content:flex-start;
+}
+#tab-giai-tri.ldd-film-is-watching .ldd-film-watch-primary {
+  width:100%;
+  min-width:0;
+  height:auto;
+  min-height:0;
+  flex:0 0 auto;
+  margin:0;
+  padding:0;
+}
+#tab-giai-tri.ldd-film-is-watching .ldd-film-watch-primary .ldd-film-lesson {
+  width:100%;
+  min-width:0;
+  height:auto;
+  min-height:0;
+  margin:0;
+  padding:0;
+}
+#tab-giai-tri.ldd-film-is-watching .ldd-film-watch-primary .ldd-film-stage {
+  height:auto;
+  min-height:0;
+  margin:0;
+  padding:0;
+}
+#tab-giai-tri.ldd-film-is-watching .ldd-film-recommendations {
+  flex:0 0 auto;
+  align-self:stretch;
+  position:static;
+  height:auto;
+  min-height:0;
+  max-height:none;
+  margin:14px 0 0;
+  padding:14px 0 12px;
+  border-top:1px solid var(--border,#dfe7ed);
+}
+@media(min-width:740px) {
+  #tab-giai-tri.ldd-film-is-watching .ldd-film-watch-primary
+  .ldd-film-stage--video-only.ldd-film-stage--with-transcript {
+    display:grid;
+    grid-template-columns:minmax(0,1.22fr) minmax(0,1fr);
+    grid-template-areas:"screen captions";
+    grid-template-rows:max-content;
+    grid-auto-rows:0;
+    row-gap:0;
+    align-items:start;
+    align-content:start;
+    height:auto;
+    min-height:0;
+  }
+}
+@media(max-width:739px) {
+  #tab-giai-tri.ldd-film-is-watching .ldd-film-watch-primary
+  .ldd-film-stage--video-only.ldd-film-stage--with-transcript {
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  #tab-giai-tri.ldd-film-is-watching .ldd-film-recommendations {
+    margin-top:16px;
+    padding-top:14px;
+  }
 }
