@@ -54,3 +54,14 @@ test('opening Phim ảnh first shows all videos and never automatically selects 
   assert.doesNotMatch(mount, /select\(catalog\[0\]\)/);
   assert.match(mount, /browse\.addEventListener\('click', \(\) => \{[\s\S]*?library\.hidden = false;/);
 });
+
+test('watch-only sourced captions appear beside the film, with time-seek and safe fallback', () => {
+  assert.match(js, /hasSourceCaptions = parsed\.provider === 'youtube' && parsed\.videoId === 'HeDpbMnrlRc'/);
+  assert.match(js, /client\.functions\.invoke\('movie-caption-reader'/);
+  assert.match(js, /captionPanel\.append\(transcriptList\)/);
+  assert.match(js, /adapter\.seek\(start\); adapter\.play\(\)/);
+  assert.match(js, /state\.textContent = 'Chưa tải được phụ đề:/);
+  assert.match(css, /\.ldd-film-stage--video-only\.ldd-film-stage--with-transcript\s*\{[^}]*grid-template-columns:minmax\(0,1\.22fr\) minmax\(0,1fr\)/s);
+  assert.match(css, /\.ldd-film-caption-list\s*\{[^}]*max-height:none;overflow:visible/s);
+  assert.match(css, /@media\(max-width:739px\)\s*\{[\s\S]*\.ldd-film-stage--with-transcript\s*\{/);
+});
