@@ -104,3 +104,33 @@ test('caption-practice controls remain usable on tablets and phones inside bound
   assert.match(css, /@media\(max-width:739px\)\{[\s\S]*?\.ldd-film-caption-input\s*\{width:110px;min-height:44px\}/);
   assert.match(js, /videoId === 'HeDpbMnrlRc'\) \{[\s\S]*?void openStandalone\(lesson, playerWrap\)/);
 });
+
+test('film pauses after each audible cue and advances only after graded completion', () => {
+  const exercise = js.slice(js.indexOf('async function renderCaptionExercise('), js.indexOf('async function openStandalone('));
+  assert.match(exercise, /const isComplete = idx => \{/);
+  assert.match(exercise, /let gateIndex = raw\.findIndex\(\(_, idx\) => !isComplete\(idx\)\)/);
+  assert.match(exercise, /button\('▶ Nghe lại · ' \+ padTime/);
+  assert.match(exercise, /seek\.addEventListener\('click', \(\) => playCue\(idx\)\)/);
+  assert.match(exercise, /row\.seek\.disabled = locked;/);
+  assert.match(exercise, /input\.disabled = !enabled;/);
+  assert.match(exercise, /check\.disabled = hint\.disabled = !enabled \|\| !heardGate;/);
+  assert.match(exercise, /if \(!heardGate\) \{/);
+  assert.match(exercise, /if \(data\?\.status === 'wrong'\) \{/);
+  assert.match(exercise, /if \(isComplete\(idx\) && idx === gateIndex\) \{/);
+  assert.match(exercise, /gateIndex = raw\.findIndex\(\(_, i\) => !isComplete\(i\)\)/);
+  assert.match(exercise, /playCue\(gateIndex\)/);
+  assert.match(exercise, /const finished = t >= cue\.end - 0\.045/);
+  assert.match(exercise, /adapter\.pause\(\);/);
+  assert.match(exercise, /heardGate = true;\s*updateRowStates\(\);/);
+  assert.match(exercise, /seekPendingUntil = Date\.now\(\) \+ 2800/);
+  assert.match(exercise, /const resumingPastGate/);
+  assert.match(exercise, /\}, 100\);/);
+  assert.doesNotMatch(exercise, /list\.scrollIntoView/);
+});
+
+test('guided listening visually locks future captions and leaves replay available', () => {
+  assert.match(css, /\.ldd-film-caption-exercise\.is-next \{/);
+  assert.match(css, /\.ldd-film-caption-exercise\.is-locked \{/);
+  assert.match(css, /\.ldd-film-caption-seek\[disabled\] \{/);
+  assert.match(js, /isPlaying: \(\) => player\.getPlayerState\(\) === window\.YT\.PlayerState\.PLAYING/);
+});
