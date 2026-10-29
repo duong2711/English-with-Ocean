@@ -134,3 +134,19 @@ test('guided listening visually locks future captions and leaves replay availabl
   assert.match(css, /\.ldd-film-caption-seek\[disabled\] \{/);
   assert.match(js, /isPlaying: \(\) => player\.getPlayerState\(\) === window\.YT\.PlayerState\.PLAYING/);
 });
+
+test('correct answer jumps the transcript to the next cue immediately', () => {
+  const exercise = js.slice(js.indexOf('async function renderCaptionExercise('), js.indexOf('async function openStandalone('));
+  assert.match(exercise, /if \(isComplete\(idx\) && idx === gateIndex\) \{[\s\S]*?gateIndex = raw\.findIndex\([\s\S]*?showCue\(gateIndex\);\s*playCue\(gateIndex\);/);
+  assert.match(exercise, /showCue = idx => \{[\s\S]*?manualScrollUntil = 0;[\s\S]*?list\.scrollTop \+= rowRect\.top - listRect\.top - 8;/);
+  assert.match(exercise, /row\.classList\.add\('is-current'\)/);
+  assert.match(exercise, /playCue = idx => \{[\s\S]*?adapter\.seek\(items\[idx\]\.start\);\s*adapter\.play\(\);/);
+  assert.ok(
+    exercise.indexOf('let activeIndex = -1;') < exercise.indexOf('showCue = idx => {'),
+    'the initial cue can be focused without temporal-dead-zone errors'
+  );
+  assert.match(exercise, /focusGate = \(\) => \{[\s\S]*?showCue\(gateIndex\);/);
+  // Advancing after a correct answer must not scroll the document or the video away.
+  const show = exercise.slice(exercise.indexOf('showCue = idx => {'), exercise.indexOf('playCue = idx => {'));
+  assert.doesNotMatch(show, /scrollIntoView\(|window\.scrollTo\(|document\.scrollTop/);
+});
