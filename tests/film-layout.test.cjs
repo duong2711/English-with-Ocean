@@ -150,7 +150,7 @@ test('guided listening visually locks future captions and leaves replay availabl
 
 test('correct answer jumps the transcript to the next cue immediately', () => {
   const exercise = js.slice(js.indexOf('async function renderCaptionExercise('), js.indexOf('async function openStandalone('));
-  assert.match(exercise, /if \(isComplete\(idx\) && idx === gateIndex\) \{[\s\S]*?gateIndex = raw\.findIndex\([\s\S]*?showCue\(gateIndex\);\s*playCue\(gateIndex\);/);
+  assert.match(exercise, /if \(isComplete\(idx\) && idx === gateIndex\) \{[\s\S]*?gateIndex = gradedIndices\.find\([\s\S]*?showCue\(gateIndex\);\s*playCue\(gateIndex\);/);
   assert.match(exercise, /showCue = idx => \{[\s\S]*?manualScrollUntil = 0;[\s\S]*?list\.scrollTop \+= rowRect\.top - listRect\.top - 8;/);
   assert.match(exercise, /row\.classList\.add\('is-current'\)/);
   assert.match(exercise, /playCue = idx => \{[\s\S]*?adapter\.seek\(items\[idx\]\.start\);\s*adapter\.play\(\);/);
@@ -240,7 +240,7 @@ test('one visual template spans Youtube, Facebook and MP4, with no fabricated ex
   assert.match(watch, /if \(hasScript \|\| parsed\.provider === 'youtube'\)/);
   assert.match(watch, /await makePlayer\(screen, lesson, showPlaybackError\)/);
   assert.match(watch, /parsed\.provider === 'mp4'/);
-  assert.match(watch, /parsed\.provider === 'facebook'/);
+  assert.match(watch, /https:\/\/www\.facebook\.com\/plugins\/video\.php/);
   assert.match(watch, /fallbackVideo\(\);\s*emptyNote\(\);/);
   assert.match(watch, /const observer = typeof ResizeObserver === 'function'/);
   assert.match(watch, /captionPanel\.style\.setProperty\('--ldd-film-video-height'/);
