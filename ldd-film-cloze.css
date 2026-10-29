@@ -538,7 +538,8 @@
   color:var(--text,#223954);
   display:flex;flex-direction:column;
   /* A bounded independent transcript viewport keeps the video on screen. */
-  height:clamp(250px,var(--ldd-film-video-height,400px),530px);
+  /* Match the actual 16:9 player height; no unused blue/empty band below it. */
+  height:var(--ldd-film-video-height,360px);
   max-height:70dvh;
   overflow:hidden;
 }
