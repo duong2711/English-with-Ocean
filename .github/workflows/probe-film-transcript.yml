@@ -17,6 +17,14 @@ jobs:
           python - <<'PY'
           import json, urllib.request, urllib.error, time
           vid='4OffzK1SU5s'
+          try:
+              import urllib.parse
+              embed_url='https://www.youtube.com/oembed?'+urllib.parse.urlencode({'url':'https://www.youtube.com/watch?v='+vid,'format':'json'})
+              with urllib.request.urlopen(urllib.request.Request(embed_url,headers={'User-Agent':'Mozilla/5.0'}),timeout=20) as meta:
+                  info=json.load(meta)
+                  print('VIDEO META',json.dumps({'title':info.get('title'),'author_name':info.get('author_name'),'thumbnail_url':info.get('thumbnail_url')},ensure_ascii=False),flush=True)
+          except Exception as e:
+              print('VIDEO META ERROR',str(e)[:350],flush=True)
           urls=[
             ('FreeTranscriptAPI','https://api.freetranscriptapi.com/v1/transcript?video_url='+vid+'&lang=en'),
             ('YouTubeGPT','https://youtubegpt.ai/api/transcript?v='+vid+'&format=json'),
