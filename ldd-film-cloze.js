@@ -392,6 +392,7 @@
     let playbackIndex = -1;
     let waitingForAnswer = false;
     let heardGate = false;
+    let seekPendingUntil = 0;
     let updateRowStates = () => {};
     let playCue = () => {};
     const tally = $el('p', 'ldd-film-caption-progress');
@@ -604,6 +605,9 @@
       if (gateIndex >= 0 && idx > gateIndex) return;
       playbackIndex = idx;
       waitingForAnswer = false;
+      // YouTube seeks can be asynchronous, especially after long music gaps.
+      // Don't mistake the previous timecode for an attempt to skip this cue.
+      seekPendingUntil = Date.now() + 2800;
       try {
         adapter.pause();
         adapter.seek(items[idx].start);
@@ -620,6 +624,7 @@
       if (gateIndex < 0) return;
       const row = items[gateIndex];
       // An initial seek does not autoplay, which is blocked on some devices.
+      seekPendingUntil = Date.now() + 2800;
       try { adapter.pause(); adapter.seek(row.start); } catch (_) {}
       state.textContent = 'Câu ' + (gateIndex + 1) +
         ': bấm Nghe lại để nghe, điền từ rồi chọn Kiểm tra hoặc Gợi ý để sang câu sau.';
@@ -641,7 +646,7 @@
         const outside = t < cue.start - 0.45 || t > cue.end + 0.25;
         // Manual YouTube play also completes the cue, but must not leap ahead.
         const finished = t >= cue.end - 0.045 && (playbackIndex >= 0 || !waitingForAnswer);
-        if (outside || finished) {
+        if ((outside && Date.now() >= seekPendingUntil) || finished) {
           try {
             adapter.pause();
             if (outside) adapter.seek(cue.start);
@@ -652,9 +657,12 @@
           }
           playbackIndex = -1;
           waitingForAnswer = gateIndex >= 0 && !isComplete(gateIndex);
-          state.textContent = waitingForAnswer
-            ? 'Đã dừng. Điền câu ' + (gateIndex + 1) +
-              ' rồi bấm Kiểm tra; có thể bấm Nghe lại nhiều lần.'
+          state.textContent = waitingForAnswer && !heardGate
+            ? 'Bấm Nghe lại để nghe hết câu ' + (gateIndex + 1) +
+              ' trước khi kiểm tra.'
+            : waitingForAnswer
+              ? 'Đã dừng. Điền câu ' + (gateIndex + 1) +
+                ' rồi bấm Kiểm tra; có thể bấm Nghe lại nhiều lần.'
             : gateIndex < 0 ? 'Đã hoàn thành! Có thể nghe lại từng câu.' :
               'Đã phát xong đoạn nghe lại. Tiếp tục câu ' + (gateIndex + 1) + '.';
         }
