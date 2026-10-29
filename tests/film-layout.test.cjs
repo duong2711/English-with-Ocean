@@ -44,3 +44,13 @@ test('the All videos button replaces the Entertainment back button only in watch
   assert.match(css, /#tab-giai-tri\.ldd-film-is-watching #ldd-ent-movies-panel > \.ldd-ent-panel-heading > \[data-ent-back\] \{\s*display:none!important;/);
   assert.match(css, /#tab-giai-tri \.ldd-film-browse\[hidden\] \{display:none!important\}/);
 });
+
+test('opening Phim ảnh first shows all videos and never automatically selects the first', () => {
+  const mount = js.slice(js.indexOf('async function mount('), js.indexOf('async function openStandalone('));
+  assert.match(mount, /const watch = \$el\('div', 'ldd-film-watch-layout'\);\s*watch\.hidden = true;/);
+  assert.match(mount, /const library = \$el\('section', 'ldd-film-library'\)/);
+  assert.match(mount, /card\.addEventListener\('click', \(\) => select\(item\)\)/);
+  assert.match(mount, /library\.hidden = false;\s*watch\.hidden = true;\s*browse\.hidden = true;/);
+  assert.doesNotMatch(mount, /select\(catalog\[0\]\)/);
+  assert.match(mount, /browse\.addEventListener\('click', \(\) => \{[\s\S]*?library\.hidden = false;/);
+});
