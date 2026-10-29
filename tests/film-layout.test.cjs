@@ -122,7 +122,7 @@ test('film pauses after each audible cue and advances only after graded completi
   assert.match(exercise, /if \(isComplete\(idx\) && idx === gateIndex\) \{/);
   assert.match(exercise, /gateIndex = raw\.findIndex\(\(_, i\) => !isComplete\(i\)\)/);
   assert.match(exercise, /playCue\(gateIndex\)/);
-  assert.match(exercise, /const finished = t >= cue\.end - 0\.045/);
+  assert.match(exercise, /const finished = !outside && t >= cue\.end - 0\.045/);
   assert.match(exercise, /adapter\.pause\(\);/);
   assert.match(exercise, /heardGate = true;\s*updateRowStates\(\);/);
   assert.match(exercise, /seekPendingUntil = Date\.now\(\) \+ 2800/);
