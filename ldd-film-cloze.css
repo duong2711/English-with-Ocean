@@ -720,3 +720,30 @@
   #tab-giai-tri .ldd-film-caption-actions .ldd-film-check,
   #tab-giai-tri .ldd-film-caption-actions .ldd-film-hint {min-height:42px}
 }
+
+
+/* Guided film listening: only the active, fully heard line can be checked. */
+#tab-giai-tri .ldd-film-caption-exercise.is-next {
+  border-color:#43a18b;
+  box-shadow:0 0 0 1px rgba(17,125,101,.13);
+}
+#tab-giai-tri .ldd-film-caption-exercise.is-locked {
+  border-style:dashed;
+  background:var(--surface-2,#f7f9fa);
+}
+#tab-giai-tri .ldd-film-caption-exercise.is-locked .ldd-film-caption-number {
+  color:var(--text-muted,#6b7c8d);
+}
+#tab-giai-tri .ldd-film-caption-seek[disabled] {
+  background:var(--surface-2,#eef1f4);
+  border-color:var(--border,#dfe6ea);
+  color:var(--text-muted,#8a9ba6);
+  cursor:not-allowed;
+}
+#tab-giai-tri .ldd-film-caption-seek:not([disabled]):hover {
+  background:#d8f0e7;
+}
+#tab-giai-tri .ldd-film-caption-state {
+  font-weight:600;
+  color:var(--text,#344b60);
+}
