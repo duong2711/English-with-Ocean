@@ -77,3 +77,16 @@ test('rejects copied timestamps when duration is unknown, timestamp order is wro
   assert.ok(timing.parseTimestampedTranscript('00:02 Hi.\n00:01 Bye.', '00:12').errors.length);
   assert.ok(timing.parseTimestampedTranscript('00:01\n00:04 Goodbye.', '00:12').errors.length);
 });
+
+test('scene titles are not quiz questions and existing segment indices stay stable', () => {
+  const source = [
+    segment(0.26, 5.08),
+    { start: 55, end: 58, text: 'In the classroom.' },
+    segment(64.74, 70.22, 'Look at the {blackboard}.')
+  ];
+  const exerciseIndices = source.map((cue, i) =>
+    /\\{[^{}]+\\}/.test(cue.text) ? i : -1).filter(i => i >= 0);
+  assert.deepEqual(exerciseIndices, [0, 2]);
+  assert.equal(timing.cueAtTime(source, 58.02, i => !exerciseIndices.includes(i)), -1);
+  assert.equal(timing.cueAtTime(source, 70.24, i => !exerciseIndices.includes(i)), 2);
+});
