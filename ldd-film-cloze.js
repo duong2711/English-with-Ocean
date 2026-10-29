@@ -425,6 +425,17 @@
         if (seq !== generation) { adapter.destroy(); return; }
         cleanup = adapter.destroy;
         if (captionPanel) {
+          // Keep the transcript box close to the player height when resizing the
+          // browser or rotating a tablet; scrolling stays inside the caption list.
+          const sizeCaptionPanel = () => {
+            const height = screen.getBoundingClientRect().height;
+            if (height > 0) captionPanel.style.setProperty('--ldd-film-video-height', Math.round(height) + 'px');
+          };
+          const captionSizeObserver = typeof ResizeObserver === 'function'
+            ? new ResizeObserver(sizeCaptionPanel) : null;
+          captionSizeObserver?.observe(screen);
+          sizeCaptionPanel();
+          cleanup = () => { captionSizeObserver?.disconnect(); adapter.destroy(); };
           const state = captionPanel.querySelector('.ldd-film-caption-state');
           try {
             if (!client) throw Error('Bạn cần đăng nhập để xem phụ đề.');
@@ -438,6 +449,14 @@
             const cues = Array.isArray(result.data?.segments) ? result.data.segments : [];
             if (!cues.length) throw Error('Video chưa có phụ đề nguồn có thể xem.');
             const transcriptList = $el('ol', 'ldd-film-caption-list');
+            transcriptList.tabIndex = 0;
+            transcriptList.setAttribute('aria-label', 'Danh sách phụ đề tiếng Anh, cuộn độc lập với trang');
+            // Do not override the learner's scroll position while they read.
+            let manualScrollUntil = 0;
+            const markManualScroll = () => { manualScrollUntil = Date.now() + 7000; };
+            transcriptList.addEventListener('wheel', markManualScroll, { passive: true });
+            transcriptList.addEventListener('touchstart', markManualScroll, { passive: true });
+            transcriptList.addEventListener('keydown', markManualScroll);
             const buttons = [];
             const stamp = n => Math.floor(Number(n) / 60) + ':' +
               String(Math.floor(Number(n) % 60)).padStart(2, '0');
@@ -477,8 +496,19 @@
               }
               activeIndex = latest;
               if (latest >= 0) {
-                buttons[latest].jump.classList.add('is-current');
-                buttons[latest].jump.setAttribute('aria-current', 'true');
+                const current = buttons[latest].jump;
+                current.classList.add('is-current');
+                current.setAttribute('aria-current', 'true');
+                if (Date.now() > manualScrollUntil) {
+                  // Adjust ONLY this nested scroll area: scrollIntoView() could
+                  // move the whole page and push the video offscreen.
+                  const lineRect = current.getBoundingClientRect();
+                  const listRect = transcriptList.getBoundingClientRect();
+                  if (lineRect.top < listRect.top + 10 || lineRect.bottom > listRect.bottom - 10) {
+                    transcriptList.scrollTop += lineRect.top - listRect.top -
+                      Math.min(45, transcriptList.clientHeight * 0.18);
+                  }
+                }
               }
             }, 350);
             description.textContent = 'Xem phim cùng phụ đề tiếng Anh. Bài điền từ và bản dịch sẽ được bổ sung sau khi kiểm tra nội dung.';
