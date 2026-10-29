@@ -67,7 +67,7 @@ test('watch-only sourced captions appear beside the film, with time-seek and saf
 });
 
 test('captions scroll within their own area without sending the video off screen', () => {
-  assert.match(css, /\.ldd-film-caption-panel\s*\{[^}]*display:flex;flex-direction:column;[^}]*height:clamp\(250px,var\(--ldd-film-video-height,400px\),530px\);[^}]*overflow:hidden;/s);
+  assert.match(css, /\.ldd-film-caption-panel\s*\{[^}]*display:flex;flex-direction:column;[^}]*height:var\(--ldd-film-video-height,360px\);[^}]*overflow:hidden;/s);
   assert.match(css, /\.ldd-film-caption-list\s*\{[^}]*flex:1 1 auto;min-height:0;[^}]*overflow-y:auto;overflow-x:hidden;[^}]*overscroll-behavior-y:contain;/s);
   assert.match(css, /@media\(max-width:739px\)\s*\{[\s\S]*?height:clamp\(210px,40dvh,350px\);/);
   assert.match(js, /transcriptList\.tabIndex = 0;/);
