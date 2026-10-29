@@ -248,7 +248,18 @@
   font-size:15px!important;font-weight:750;letter-spacing:-.02em;margin:0!important;
 }
 #tab-giai-tri .ldd-film-browse[hidden] {display:none!important}
-#tab-giai-tri.ldd-film-is-watching .ldd-film-browse {margin:0 0 0 auto;border-radius:999px;padding:8px 14px;background:var(--surface,#fff)}
+/* While watching a film, replace—not duplicate—the Entertainment back button. */
+#tab-giai-tri.ldd-film-is-watching #ldd-ent-movies-panel > .ldd-ent-panel-heading > [data-ent-back] {
+  display:none!important;
+}
+#tab-giai-tri.ldd-film-is-watching #ldd-ent-movies-panel > .ldd-ent-panel-heading > .ldd-film-browse {
+  margin:0;
+  border-radius:999px;
+  padding:8px 14px;
+  background:var(--surface,#fff);
+  white-space:nowrap;
+  flex:none;
+}
 #tab-giai-tri.ldd-film-is-watching .ldd-film-watch-layout {
   max-width:1100px;grid-template-columns:minmax(0,1fr) 290px;gap:24px;
 }
