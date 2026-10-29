@@ -171,3 +171,20 @@ test('film lesson omits redundant headings, explanation text and running status'
   assert.match(css, /\.ldd-film-caption-state\.is-error\s*\{/);
   assert.match(exercise, /item\.append\(heading, sentence, translation, actionRow, feedback\)/);
 });
+
+test('film transcript height follows the visible video without an unused band', () => {
+  assert.match(css, /height:var\(--ldd-film-video-height,360px\)/);
+  assert.match(js, /captionPanel\.style\.setProperty\('--ldd-film-video-height'/);
+  assert.doesNotMatch(css, /height:clamp\(250px,var\(--ldd-film-video-height,400px\),530px\)/);
+});
+
+test('signed-in teacher can open the existing script editor from the current video', () => {
+  assert.match(js, /if \(isTeacher\) \{[\s\S]*?editorController = setupEditor\(/);
+  assert.match(js, /editScriptButton = button\('✎ Sửa script'/);
+  assert.match(js, /editScriptButton\.hidden = !isSavedLesson/);
+  assert.match(js, /editorController\?\.openFor\(lesson\.id\)/);
+  assert.match(js, /existing\.dispatchEvent\(new Event\('change'\)\)/);
+  assert.match(js, /client\.from\('movie_lessons'\)[\s\S]*?\.select\('segments,draft_segments'\)/);
+  assert.match(js, /String\(auth\?\.user\?\.email \|\| ''\)\.toLowerCase\(\) !== TEACHER/);
+  assert.match(css, /\.ldd-film-edit-current\[hidden\] \{display:none!important\}/);
+});
