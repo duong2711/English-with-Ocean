@@ -352,15 +352,10 @@
             recList.append(card);
           });
         }
-        if (providerOf(lesson.video_url)?.videoId === 'HeDpbMnrlRc') {
-          // Film has a transcript-wide exercise: every caption has its own
-          // input, translation reveal and server-side grading.
-          void openStandalone(lesson, playerWrap, isTeacher);
-        } else if (Array.isArray(lesson.segments) && lesson.segments.length) {
-          void openLesson(lesson, playerWrap);
-        } else {
-          void openStandalone(lesson, playerWrap, isTeacher);
-        }
+        // One shared watch template for all video providers and every lesson.
+        // Saved scripts use the scrollable, sentence-level practice layout.
+        // Missing scripts get an honest empty state rather than a fake quiz.
+        void openStandalone(lesson, playerWrap, isTeacher);
       };
       catalog.forEach(item => {
         const card = button('', 'ldd-ent-media-card');
@@ -712,6 +707,8 @@
     }, 100);
   }
 
+  // Shared watch layout for all saved and legacy film entries. A saved script
+  // renders the same independent listening panel on desktop and mobile.
   async function openStandalone(lesson, wrap, teacherPreview = false) {
     stopPlayer();
     const seq = ++generation;
@@ -721,175 +718,177 @@
       wrap.append($el('p', 'ldd-film-feedback', 'Link video không hợp lệ.'));
       return;
     }
-    const title = $el('h3', 'ldd-film-title', lesson.title);
-    const stage = $el('div', 'ldd-film-stage ldd-film-stage--video-only');
-    const screen = $el('div', 'ldd-film-screen');
-    const hasSourceCaptions = parsed.provider === 'youtube' && parsed.videoId === 'HeDpbMnrlRc';
-    let captionPanel = null;
-    let media;
-    if (parsed.provider === 'youtube' || parsed.provider === 'facebook') {
-      media = $el('iframe', 'ldd-film-video');
-      media.title = lesson.title;
-      media.loading = 'eager';
-      media.allowFullscreen = true;
-      media.referrerPolicy = 'strict-origin-when-cross-origin';
-      media.allow = 'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; web-share';
-      media.src = parsed.provider === 'youtube'
-        ? 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(parsed.videoId) + '?rel=0&cc_load_policy=0'
-        : 'https://www.facebook.com/plugins/video.php?href=' + encodeURIComponent(parsed.url) + '&show_text=false';
-    } else {
-      media = $el('video', 'ldd-film-video');
-      media.controls = true;
-      media.playsInline = true;
-      media.preload = 'metadata';
-      media.src = parsed.url;
-    }
-    screen.append(media);
-    const description = $el('p', 'ldd-film-source-note',
-      'Video vẫn xem được. Bài luyện nghe sẽ hiển thị khi script được kiểm tra và đồng bộ chính xác.');
-    stage.append(screen);
-    // Keep titles and explanatory copy for ordinary standalone videos only.
-    // The exercise video shows just the player and the interactive transcript.
-    if (!hasSourceCaptions) stage.append(title, description);
-    const showPlaybackError = message => {
-      description.textContent = message;
-      if (hasSourceCaptions && !description.isConnected) stage.append(description);
-    };
-    if (hasSourceCaptions) {
-      stage.classList.add('ldd-film-stage--with-transcript');
-      captionPanel = $el('section', 'ldd-film-caption-panel');
-      captionPanel.setAttribute('aria-label', 'Phụ đề tiếng Anh theo thời gian');
-      // Accessible live status is visually hidden unless a real error occurs.
-      // The learner sees the exercises immediately, without instructional headers.
-      captionPanel.append($el('p', 'ldd-film-caption-state', 'Đang tải phụ đề…'));
-      stage.append(captionPanel);
-    }
-    wrap.append(stage);
-    cleanup = () => {
-      if (media.tagName === 'VIDEO') {
-        media.pause();
-        media.removeAttribute('src');
-        media.load();
-      } else media.removeAttribute('src');
-    };
-    if (parsed.provider === 'youtube') {
-      // Use the same caption defaults for videos with and without exercises.
-      media.removeAttribute('src');
-      screen.replaceChildren();
-      try {
-        const adapter = await makePlayer(screen, lesson, showPlaybackError);
-        if (seq !== generation) { adapter.destroy(); return; }
-        cleanup = adapter.destroy;
-        if (captionPanel) {
-          // Keep the transcript box close to the player height when resizing the
-          // browser or rotating a tablet; scrolling stays inside the caption list.
-          const sizeCaptionPanel = () => {
-            const height = screen.getBoundingClientRect().height;
-            if (height > 0) captionPanel.style.setProperty('--ldd-film-video-height', Math.round(height) + 'px');
-          };
-          const captionSizeObserver = typeof ResizeObserver === 'function'
-            ? new ResizeObserver(sizeCaptionPanel) : null;
-          captionSizeObserver?.observe(screen);
-          sizeCaptionPanel();
-          cleanup = () => { captionSizeObserver?.disconnect(); adapter.destroy(); };
-          const state = captionPanel.querySelector('.ldd-film-caption-state');
-          try {
-            if (Array.isArray(lesson.segments) && lesson.segments.length) {
-              await renderCaptionExercise(lesson, captionPanel, adapter, seq, teacherPreview);
-              (wrap.closest('#ldd-ent-movies-panel') || stage).scrollIntoView({
-                behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
-                block: 'start'
-              });
-              return;
-            }
-            if (!client) throw Error('Bạn cần đăng nhập để xem phụ đề.');
-            const result = await client.functions.invoke('movie-caption-reader', {
-              body: { videoId: parsed.videoId }
-            });
-            if (seq !== generation) return;
-            if (result.error || result.data?.error) {
-              throw Error(result.data?.error || result.error?.message || 'Không tải được phụ đề nguồn.');
-            }
-            const cues = Array.isArray(result.data?.segments) ? result.data.segments : [];
-            if (!cues.length) throw Error('Video chưa có phụ đề nguồn có thể xem.');
-            const transcriptList = $el('ol', 'ldd-film-caption-list');
-            transcriptList.tabIndex = 0;
-            transcriptList.setAttribute('aria-label', 'Danh sách phụ đề tiếng Anh, cuộn độc lập với trang');
-            // Do not override the learner's scroll position while they read.
-            let manualScrollUntil = 0;
-            const markManualScroll = () => { manualScrollUntil = Date.now() + 7000; };
-            transcriptList.addEventListener('wheel', markManualScroll, { passive: true });
-            transcriptList.addEventListener('touchstart', markManualScroll, { passive: true });
-            transcriptList.addEventListener('keydown', markManualScroll);
-            const buttons = [];
-            const stamp = n => Math.floor(Number(n) / 60) + ':' +
-              String(Math.floor(Number(n) % 60)).padStart(2, '0');
-            cues.forEach(cue => {
-              const start = Number(cue.start);
-              const end = Number(cue.end);
-              if (!Number.isFinite(start) || !Number.isFinite(end) ||
-                  end <= start || !String(cue.text || '').trim()) return;
-              const item = $el('li', 'ldd-film-caption-item');
-              const jump = button('', 'ldd-film-caption-jump');
-              jump.append($el('time', 'ldd-film-caption-clock', stamp(start)),
-                $el('span', 'ldd-film-caption-text', String(cue.text)));
-              jump.addEventListener('click', () => {
-                try { adapter.seek(start); adapter.play(); }
-                catch (_) { state.textContent = 'Không thể chuyển video tới đoạn này.'; }
-              });
-              item.append(jump);
-              transcriptList.append(item);
-              buttons.push({ start, end, jump });
-            });
-            if (!buttons.length) throw Error('Phụ đề không có timestamp hợp lệ.');
-            state.textContent = 'Chạm vào câu thoại để phát video từ đúng vị trí.';
-            captionPanel.append(transcriptList);
-            let activeIndex = -1;
-            timer = setInterval(() => {
-              if (seq !== generation) return;
-              const time = Number(adapter.getTime());
-              if (!Number.isFinite(time)) return;
-              let latest = -1;
-              for (let i = 0; i < buttons.length; i++) {
-                if (time >= buttons[i].start && time <= buttons[i].end) latest = i;
-              }
-              if (latest === activeIndex) return;
-              if (activeIndex >= 0) {
-                buttons[activeIndex].jump.classList.remove('is-current');
-                buttons[activeIndex].jump.removeAttribute('aria-current');
-              }
-              activeIndex = latest;
-              if (latest >= 0) {
-                const current = buttons[latest].jump;
-                current.classList.add('is-current');
-                current.setAttribute('aria-current', 'true');
-                if (Date.now() > manualScrollUntil) {
-                  // Adjust ONLY this nested scroll area: scrollIntoView() could
-                  // move the whole page and push the video offscreen.
-                  const lineRect = current.getBoundingClientRect();
-                  const listRect = transcriptList.getBoundingClientRect();
-                  if (lineRect.top < listRect.top + 10 || lineRect.bottom > listRect.bottom - 10) {
-                    transcriptList.scrollTop += lineRect.top - listRect.top -
-                      Math.min(45, transcriptList.clientHeight * 0.18);
-                  }
-                }
-              }
-            }, 350);
 
-          } catch (captionError) {
-            if (seq !== generation) return;
-            state.classList.add('is-error');
-            state.textContent = 'Chưa tải được phụ đề: ' + (captionError.message || 'Lỗi nguồn phụ đề') +
-              '. Bạn vẫn có thể xem video.';
+    const hasScript = Array.isArray(lesson.segments) && lesson.segments.length > 0;
+    const stage = $el('div', 'ldd-film-stage ldd-film-stage--video-only ldd-film-stage--with-transcript');
+    stage.setAttribute('aria-label', 'Video và bài luyện nghe: ' + (lesson.title || 'Phim ảnh'));
+    const screen = $el('div', 'ldd-film-screen');
+    const captionPanel = $el('section', 'ldd-film-caption-panel');
+    captionPanel.setAttribute('aria-label', 'Bài luyện nghe hoặc phụ đề của video');
+    const state = $el('p', 'ldd-film-caption-state', 'Đang chuẩn bị bài luyện nghe…');
+    captionPanel.append(state);
+    stage.append(screen, captionPanel);
+    wrap.append(stage);
+
+    const emptyNote = message => {
+      // An empty video has no answerable blanks. Never attempt server grading.
+      if (seq !== generation) return;
+      captionPanel.querySelector('.ldd-film-caption-empty')?.remove();
+      const empty = $el('div', 'ldd-film-caption-empty');
+      empty.append(
+        $el('strong', 'ldd-film-caption-empty-title', 'Chưa có bài luyện nghe'),
+        $el('p', 'ldd-film-caption-empty-desc', message ||
+          'Giáo viên đang chuẩn bị script và bản dịch cho video này. Bạn vẫn có thể xem video.')
+      );
+      captionPanel.append(empty);
+      state.textContent = 'Video chưa có bài luyện nghe.';
+    };
+
+    const showPlaybackError = message => {
+      if (seq !== generation) return;
+      state.classList.add('is-error');
+      state.textContent = message;
+    };
+
+    const sizeCaptionPanel = () => {
+      const height = screen.getBoundingClientRect().height;
+      if (height > 0) captionPanel.style.setProperty('--ldd-film-video-height', Math.round(height) + 'px');
+    };
+    const observer = typeof ResizeObserver === 'function'
+      ? new ResizeObserver(sizeCaptionPanel) : null;
+    observer?.observe(screen);
+    sizeCaptionPanel();
+
+    let playerCleanup = () => {};
+    const usePlayer = adapter => {
+      playerCleanup = adapter.destroy;
+      cleanup = () => { observer?.disconnect(); playerCleanup(); };
+    };
+    const fallbackVideo = () => {
+      screen.replaceChildren();
+      if (parsed.provider === 'mp4') {
+        const video = $el('video', 'ldd-film-video');
+        video.controls = true;
+        video.playsInline = true;
+        video.preload = 'metadata';
+        video.src = parsed.url;
+        screen.append(video);
+        playerCleanup = () => { video.pause(); video.removeAttribute('src'); video.load(); };
+      } else {
+        const iframe = $el('iframe', 'ldd-film-video');
+        iframe.title = lesson.title || 'Video';
+        iframe.loading = 'eager';
+        iframe.allowFullscreen = true;
+        iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+        iframe.allow = 'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; web-share';
+        iframe.src = parsed.provider === 'youtube'
+          ? 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(parsed.videoId) + '?rel=0&cc_load_policy=0'
+          : 'https://www.facebook.com/plugins/video.php?href=' + encodeURIComponent(parsed.url) + '&show_text=false';
+        screen.append(iframe);
+        playerCleanup = () => { iframe.removeAttribute('src'); };
+      }
+      cleanup = () => { observer?.disconnect(); playerCleanup(); };
+    };
+
+    try {
+      if (hasScript || parsed.provider === 'youtube') {
+        const adapter = await makePlayer(screen, lesson, showPlaybackError);
+        if (seq !== generation) { adapter.destroy(); observer?.disconnect(); return; }
+        usePlayer(adapter);
+        if (hasScript) {
+          await renderCaptionExercise(lesson, captionPanel, adapter, seq, teacherPreview);
+        } else {
+          // Source captions may be useful for video-only YouTube entries, but
+          // must never be treated as graded exercises without a verified script.
+          if (!client) {
+            emptyNote();
+          } else {
+            try {
+              const result = await client.functions.invoke('movie-caption-reader', {
+                body: { videoId: parsed.videoId }
+              });
+              if (seq !== generation) return;
+              if (result.error || result.data?.error) throw Error(
+                result.data?.error || result.error?.message || 'Nguồn phụ đề chưa sẵn sàng.');
+              const cues = Array.isArray(result.data?.segments) ? result.data.segments : [];
+              const transcriptList = $el('ol', 'ldd-film-caption-list');
+              transcriptList.tabIndex = 0;
+              transcriptList.setAttribute('aria-label', 'Phụ đề tiếng Anh, cuộn độc lập với video');
+              const rows = [];
+              const stamp = n => Math.floor(n / 60) + ':' +
+                String(Math.floor(n % 60)).padStart(2, '0');
+              cues.forEach(cue => {
+                const first = Number(cue.start);
+                const last = Number(cue.end);
+                if (!Number.isFinite(first) || !Number.isFinite(last) || last <= first ||
+                    !String(cue.text || '').trim()) return;
+                const item = $el('li', 'ldd-film-caption-item');
+                const jump = button('', 'ldd-film-caption-jump');
+                jump.append($el('time', 'ldd-film-caption-clock', stamp(first)),
+                  $el('span', 'ldd-film-caption-text', String(cue.text)));
+                jump.addEventListener('click', () => {
+                  try { adapter.seek(first); adapter.play(); }
+                  catch (_) { showPlaybackError('Không thể phát đoạn này.'); }
+                });
+                item.append(jump);
+                transcriptList.append(item);
+                rows.push({ start:first, end:last, jump });
+              });
+              if (!rows.length) throw Error('Chưa có phụ đề phù hợp.');
+              captionPanel.append(transcriptList);
+              state.textContent = 'Chạm vào một câu phụ đề để phát từ thời điểm đó.';
+              let manualHoldUntil = 0;
+              const hold = () => { manualHoldUntil = Date.now() + 7000; };
+              transcriptList.addEventListener('wheel', hold, { passive:true });
+              transcriptList.addEventListener('touchstart', hold, { passive:true });
+              transcriptList.addEventListener('keydown', hold);
+              let active = -1;
+              timer = setInterval(() => {
+                if (seq !== generation) return;
+                const now = Number(adapter.getTime());
+                if (!Number.isFinite(now)) return;
+                const idx = rows.findIndex(row => now >= row.start && now <= row.end);
+                if (idx === active) return;
+                if (active >= 0) rows[active].jump.classList.remove('is-current');
+                active = idx;
+                if (idx < 0) return;
+                rows[idx].jump.classList.add('is-current');
+                if (Date.now() < manualHoldUntil) return;
+                const rect = rows[idx].jump.getBoundingClientRect();
+                const view = transcriptList.getBoundingClientRect();
+                if (rect.top < view.top + 10 || rect.bottom > view.bottom - 10) {
+                  transcriptList.scrollTop += rect.top - view.top - 10;
+                }
+              }, 350);
+            } catch (_) {
+              emptyNote('Giáo viên chưa thêm script và bản dịch cho video này. Bạn vẫn có thể xem video.');
+            }
           }
         }
-      } catch (error) {
-        if (seq !== generation) return;
-        showPlaybackError('Không tải được video: ' + (error.message || 'Lỗi trình phát'));
+      } else {
+        // Facebook/MP4 without a script should still be watchable and use the
+        // same responsive two-column layout, without a nonfunctional quiz.
+        fallbackVideo();
+        emptyNote();
       }
+    } catch (error) {
+      if (seq !== generation) return;
+      // The native/provider iframe fallback keeps playback available even
+      // when an external player blocks the controls required for a quiz.
+      fallbackVideo();
+      showPlaybackError(hasScript
+        ? 'Không thể đồng bộ bài luyện nghe với video: ' + (error.message || 'Lỗi trình phát') +
+          '. Bạn vẫn có thể xem video.'
+        : 'Không thể điều khiển video. Bạn vẫn có thể xem video.');
+      if (!hasScript) emptyNote();
     }
-    const watchTop = wrap.closest('#ldd-ent-movies-panel') || stage;
-    watchTop.scrollIntoView({ behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+
+    if (seq === generation) {
+      (wrap.closest('#ldd-ent-movies-panel') || stage).scrollIntoView({
+        behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+        block: 'start'
+      });
+    }
   }
 
   async function openLesson(lesson, wrap, parentSeq) {
