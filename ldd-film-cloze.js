@@ -148,7 +148,12 @@
         const p = new window.YT.Player(host, {
           videoId: parsed.videoId,
           width: '100%', height: '100%',
-          playerVars: { playsinline: 1, rel: 0, cc_load_policy: 0, origin: location.origin },
+          // Remove YouTube transport/timeline UI; the LDD sentence replay
+          // buttons remain the navigation controls for guided practice.
+          playerVars: {
+            playsinline:1, controls:0, fs:0, disablekb:1,
+            iv_load_policy:3, rel:0, cc_load_policy:0, origin:location.origin
+          },
           events: {
             onReady: e => { disableInitialCaptions(e.target); resolve(p); },
             onApiChange: e => disableInitialCaptions(e.target),
@@ -790,7 +795,7 @@
         iframe.referrerPolicy = 'strict-origin-when-cross-origin';
         iframe.allow = 'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; web-share';
         iframe.src = parsed.provider === 'youtube'
-          ? 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(parsed.videoId) + '?rel=0&cc_load_policy=0'
+          ? 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(parsed.videoId) + '?rel=0&cc_load_policy=0&controls=0&fs=0&disablekb=1&iv_load_policy=3&playsinline=1'
           : 'https://www.facebook.com/plugins/video.php?href=' + encodeURIComponent(parsed.url) + '&show_text=false';
         screen.append(iframe);
         playerCleanup = () => { iframe.removeAttribute('src'); };
