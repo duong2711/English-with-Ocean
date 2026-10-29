@@ -214,8 +214,8 @@
     const editor = $el('section', 'ldd-film-editor');
     editor.hidden = true;
 
-    // YouTube-style watch page: player and questions on the left, real library
-    // recommendations on the right. In narrow viewports CSS stacks the sidebar last.
+    // Tablet/desktop: video left, exercise and translation right, suggestions below.
+    // On phones all sections stack vertically in their natural reading order.
     const watch = $el('div', 'ldd-film-watch-layout');
     watch.hidden = true;
     const primary = $el('div', 'ldd-film-watch-primary');
@@ -271,7 +271,7 @@
       const lessons = Array.isArray(data) ? data : [];
       if (isTeacher) setupEditor(editor, async () => { await mount(body, legacyMovies); }, lessons);
       status.textContent = lessons.length
-        ? 'Chọn video để xem và luyện nghe. Các video khác được đề xuất bên cạnh trình phát.'
+        ? 'Chọn video để xem và luyện nghe. Các video đề xuất nằm bên dưới bài học.'
         : 'Thư viện chưa có video. Giáo viên có thể dán link YouTube hoặc Facebook để thêm.';
 
       const catalog = [];
@@ -364,7 +364,7 @@
       return;
     }
     const title = $el('h3', 'ldd-film-title', lesson.title);
-    const stage = $el('div', 'ldd-film-stage');
+    const stage = $el('div', 'ldd-film-stage ldd-film-stage--video-only');
     const screen = $el('div', 'ldd-film-screen');
     let media;
     if (parsed.provider === 'youtube' || parsed.provider === 'facebook') {
