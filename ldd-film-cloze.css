@@ -642,6 +642,46 @@
 }
 
 
+/* All film providers share the same watch-stage presentation.
+   For a clip without a verified script, show a helpful empty state rather
+   than an empty question sheet or a player stretched across the page. */
+#tab-giai-tri .ldd-film-caption-panel.is-empty {
+  justify-content:center;
+  gap:6px;
+}
+#tab-giai-tri .ldd-film-caption-empty {
+  min-width:0;
+  width:100%;
+  padding:clamp(12px,2vw,22px);
+  box-sizing:border-box;
+  border:1px dashed var(--border,#dce6e5);
+  border-radius:12px;
+  background:var(--surface-2,#f5f8f8);
+  text-align:center;
+}
+#tab-giai-tri .ldd-film-caption-empty-title {
+  display:block;
+  font-size:clamp(13px,1.4vw,16px);
+  color:var(--text,#25415b);
+  line-height:1.45;
+  margin-bottom:7px;
+}
+#tab-giai-tri .ldd-film-caption-empty-desc {
+  margin:0;
+  font-size:13px;
+  line-height:1.65;
+  color:var(--text-muted,#61758a);
+  overflow-wrap:anywhere;
+}
+@media (max-width:739px) {
+  #tab-giai-tri .ldd-film-caption-panel.is-empty {
+    height:auto;
+    min-height:132px;
+    max-height:none;
+  }
+  #tab-giai-tri .ldd-film-caption-empty {padding:14px;}
+}
+
 /* Transcript-wide listening exercise: all actions stay inside each scrollable row. */
 #tab-giai-tri .ldd-film-caption-progress {
   margin:1px 0 10px;
