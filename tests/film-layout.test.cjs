@@ -105,7 +105,7 @@ test('caption-practice controls remain usable on tablets and phones inside bound
   assert.doesNotMatch(css, /\.ldd-film-caption-translation\[hidden\]/);
   assert.match(css, /\.ldd-film-caption-input\s*\{[^}]*min-height:40px;/s);
   assert.match(css, /@media\(max-width:739px\)\{[\s\S]*?\.ldd-film-caption-input\s*\{width:110px;min-height:44px\}/);
-  assert.match(js, /videoId === 'HeDpbMnrlRc'\) \{[\s\S]*?void openStandalone\(lesson, playerWrap\)/);
+  assert.match(js, /videoId === 'HeDpbMnrlRc'\) \{[\s\S]*?void openStandalone\(lesson, playerWrap, isTeacher\)/);
 });
 
 test('film pauses after each audible cue and advances only after graded completion', () => {
@@ -197,4 +197,21 @@ test('teacher editor prioritizes an unpublished merged draft and saves drafts se
   assert.match(js, /saveDraft, save, notice/);
   assert.match(js, /String\(auth\?\.user\?\.email \|\| ''\)\.toLowerCase\(\) !== TEACHER/);
   assert.match(js, /Bài và điểm học viên hiện tại không thay đổi/);
+});
+
+test('teacher can replay any subtitle while students remain gated in order', () => {
+  const mount = js.slice(js.indexOf('async function mount('), js.indexOf('async function renderCaptionExercise('));
+  const exercise = js.slice(js.indexOf('async function renderCaptionExercise('), js.indexOf('async function openStandalone('));
+  const standalone = js.slice(js.indexOf('async function openStandalone('), js.indexOf('async function openLesson('));
+  assert.match(mount, /const isTeacher = String\(user\?\.email \|\| ''\)\.toLowerCase\(\) === TEACHER/);
+  assert.match(mount, /void openStandalone\(lesson, playerWrap, isTeacher\)/);
+  assert.match(standalone, /async function openStandalone\(lesson, wrap, teacherPreview = false\)/);
+  assert.match(standalone, /renderCaptionExercise\(lesson, captionPanel, adapter, seq, teacherPreview\)/);
+  assert.match(exercise, /const locked = !teacherPreview && gateIndex >= 0 && idx > gateIndex;/);
+  assert.match(exercise, /row\.seek\.disabled = locked;/);
+  assert.match(exercise, /if \(!teacherPreview && gateIndex >= 0 && idx > gateIndex\) return;/);
+  assert.match(exercise, /const enabled = idx === gateIndex;/);
+  assert.match(exercise, /if \(busy \|\| answers\.has\(field\.key\) \|\| idx !== gateIndex\) return;/);
+  assert.match(exercise, /if \(finished && !outside && boundedIndex === gateIndex\) \{/);
+  assert.match(exercise, /adapter\.pause\(\);\s*adapter\.seek\(items\[idx\]\.start\);\s*adapter\.play\(\);/);
 });
