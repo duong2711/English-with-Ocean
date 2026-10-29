@@ -1259,6 +1259,8 @@
     let pendingAudioReview = false;
     const save = button('Lưu video / script', 'ldd-film-save');
     save.type = 'submit';
+    const saveDraft = button('Lưu bản nháp', 'ldd-film-save');
+    saveDraft.hidden = true;
     const timingConfirmRow = $el('label', 'ldd-film-editor-help');
     timingConfirmRow.style.display = 'none';
     const timingConfirm = $el('input');
@@ -1316,7 +1318,8 @@
       }
       title.readOnly = Boolean(selected);
       link.readOnly = Boolean(selected);
-      save.textContent = selected ? 'Cập nhật script và thời gian' : 'Lưu video / script';
+      save.textContent = selected ? 'Xuất bản script đã kiểm chứng' : 'Lưu video / script';
+      saveDraft.hidden = !selected;
       notice.textContent = '';
       noticePreview();
       if (!selected) return;
@@ -1329,10 +1332,11 @@
         if (existing.value !== selectedId) return;
         const publishedCues = Array.isArray(data?.segments) ? data.segments : [];
         const savedCues = Array.isArray(data?.draft_segments) ? data.draft_segments : [];
-        pendingAudioReview = !publishedCues.length && savedCues.length > 0;
+        pendingAudioReview = savedCues.length > 0;
         verifiedRow.style.display = 'block';
         verifiedCheckbox.checked = false;
-        const cues = publishedCues.length ? publishedCues : savedCues;
+        // Editing always starts from the latest draft; students continue to use published segments.
+        const cues = savedCues.length ? savedCues : publishedCues;
         captions.value = cues.map((s, i) =>
           (i + 1) + '\n' + toSrtTime(Number(s.start)) + ' --> ' +
           toSrtTime(Number(s.end)) + '\n' + String(s.text || '')
@@ -1340,8 +1344,8 @@
         translations.value = cues.map(s => String(s.translation_vi || '')).join('\n');
         noticePreview();
         notice.textContent = pendingAudioReview
-          ? 'BẢN NHÁP CHƯA XÁC MINH: Đã giữ nguyên ' + cues.length +
-            ' câu. Không đăng lại bài luyện nghe trước khi đối chiếu trực tiếp từng câu với video.'
+          ? 'BẢN NHÁP CHƯA XÁC MINH: Đã tải ' + cues.length +
+            ' câu từ bản gộp. Mốc kết thúc chỉ là dự kiến; cần đối chiếu từng câu với âm thanh trước khi xuất bản. Bài và điểm học viên hiện tại không thay đổi.'
           : 'Đã tải ' + cues.length + ' câu; có thể sửa thời gian rồi lưu.';
       } catch (error) {
         notice.textContent = 'Không tải được script gốc: ' + (error.message || 'Lỗi mạng');
@@ -1483,6 +1487,54 @@
       const file = translationUpload.files?.[0];
       if (file) { translations.value = await file.text(); noticePreview(); }
     });
+    saveDraft.addEventListener('click', async () => {
+      const selectedId = Number(existing.value);
+      const info = providerOf(link.value.trim());
+      if (!selectedId || !info) {
+        notice.textContent = 'Chọn video đã lưu để chỉnh sửa bản nháp.';
+        return;
+      }
+      const segments = parseSubtitles(captions.value, true);
+      if (!segments.length || (captions.value.match(/-->/g) || []).length !== segments.length) {
+        notice.textContent = 'Bản nháp có câu thiếu timestamp hoặc sai định dạng SRT/VTT.';
+        return;
+      }
+      const translated = translations.value.trim()
+        ? translations.value.replace(/\\r/g, '').split(/\\n/).map(x => x.trim())
+        : [];
+      if (translated.length && translated.length !== segments.length) {
+        notice.textContent = 'Số dòng dịch phải bằng số câu trong script: ' + segments.length + '.';
+        return;
+      }
+      const nextDraft = segments.map((segment, i) => ({
+        ...segment, ...(translated.length ? { translation_vi: translated[i] } : {})
+      }));
+      const checked = filmTiming?.check(nextDraft, { duration: knownDurations.get(info.url) });
+      if (!checked?.ok) {
+        notice.textContent = 'Chưa lưu bản nháp: ' + (checked?.errors || ['Lỗi kiểm tra mốc.']).join(' ');
+        return;
+      }
+      saveDraft.disabled = true;
+      notice.textContent = 'Đang lưu bản nháp…';
+      try {
+        const { data: auth, error: userError } = await client.auth.getUser();
+        if (userError || String(auth?.user?.email || '').toLowerCase() !== TEACHER)
+          throw Error('Chỉ giáo viên được chỉnh sửa bản nháp.');
+        const { data, error } = await client.from('movie_lessons')
+          .update({ draft_segments: nextDraft })
+          .eq('id', selectedId).eq('video_url', info.url).select('id').single();
+        if (error || !data) throw error || Error('Không tìm thấy bài học để cập nhật.');
+        pendingAudioReview = true;
+        verifiedCheckbox.checked = false;
+        notice.textContent = 'Đã lưu ' + nextDraft.length +
+          ' câu vào bản nháp. Học viên vẫn dùng script đã xuất bản; cần nghe kiểm tra từng câu trước khi phát hành.' +
+          (checked.warnings.length ? ' Lưu ý: ' + checked.warnings.join(' ') : '');
+      } catch (error) {
+        notice.textContent = 'Không lưu được bản nháp: ' + (error.message || 'Lỗi kết nối');
+      } finally {
+        saveDraft.disabled = false;
+      }
+    });
     form.addEventListener('submit', async e => {
       e.preventDefault();
       const info = providerOf(link.value.trim());
@@ -1562,7 +1614,7 @@
       $el('label', '', 'Thời lượng của video'), copiedDuration, importTimestamp,
       $el('label', '', 'Script tiếng Anh (SRT/VTT)'), upload, captions,
       $el('label', '', 'Bản dịch tiếng Việt (mỗi câu một dòng)'), translationUpload, translations,
-      sample, description, preview, timingConfirmRow, verifiedRow, save, notice
+      sample, description, preview, timingConfirmRow, verifiedRow, saveDraft, save, notice
     );
     wrap.append(toggle, form);
     return {
