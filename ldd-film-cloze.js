@@ -130,41 +130,108 @@
     const parsed = providerOf(lesson.video_url);
     if (!parsed) throw Error('Liên kết video không hợp lệ');
     if (parsed.provider === 'youtube') {
-      await loadYT();
-      const host = $el('div', 'ldd-film-video');
-      container.append(host);
+      // YouTube still owns its embedded-player branding. Never mount the
+      // iframe until an explicit play action: our idle state is a plain,
+      // accessible preview, not YouTube's title/channel/end-screen UI.
+      const poster = button('', 'ldd-film-youtube-poster');
+      poster.setAttribute('aria-label', 'Phát video ' + (lesson.title || 'bài luyện nghe'));
+      const thumbnail = $el('img', 'ldd-film-youtube-poster-image');
+      thumbnail.src = parsed.thumbnail;
+      thumbnail.alt = '';
+      thumbnail.loading = 'eager';
+      thumbnail.decoding = 'async';
+      const playIcon = $el('span', 'ldd-film-youtube-poster-play', '▶');
+      playIcon.setAttribute('aria-hidden', 'true');
+      poster.append(thumbnail, playIcon);
+      container.append(poster);
+
+      let player = null;
+      let loadingPlayer = null;
+      let startPromise = null;
+      let destroyed = false;
+      let wantsPlay = false;
+      let pendingSeek = NaN;
       let captionsInitialized = false;
-      const disableInitialCaptions = player => {
+      const disableInitialCaptions = p => {
         if (captionsInitialized) return;
         try {
-          if (!player.getOptions?.().includes('captions')) return;
-          // Best effort: track selection is not a guaranteed public API option.
-          // Do this only on initial module load, allowing later manual CC changes.
-          player.setOption('captions', 'track', {});
+          if (!p.getOptions?.().includes('captions')) return;
+          p.setOption('captions', 'track', {});
           captionsInitialized = true;
         } catch (_) { /* Caption preferences must never prevent playback. */ }
       };
-      const player = await new Promise((resolve, reject) => {
-        const p = new window.YT.Player(host, {
-          videoId: parsed.videoId,
-          width: '100%', height: '100%',
-          // Remove YouTube transport/timeline UI; the LDD sentence replay
-          // buttons remain the navigation controls for guided practice.
-          playerVars: {
-            playsinline:1, controls:0, fs:0, disablekb:1,
-            iv_load_policy:3, rel:0, cc_load_policy:0, origin:location.origin
-          },
-          events: {
-            onReady: e => { disableInitialCaptions(e.target); resolve(p); },
-            onApiChange: e => disableInitialCaptions(e.target),
-            onError: e => { onError('YouTube không cho phép phát video này (' + e.data + ').'); reject(Error('Video unavailable')); }
-          }
-        });
+      const start = () => {
+        if (destroyed || player || startPromise) return;
+        startPromise = (async () => {
+          await loadYT();
+          if (destroyed) return;
+          const host = $el('div', 'ldd-film-video');
+          container.replaceChildren(host);
+          const readyPlayer = await new Promise((resolve, reject) => {
+            loadingPlayer = new window.YT.Player(host, {
+              videoId: parsed.videoId,
+              width: '100%', height: '100%',
+              // Only the video is visible after play; the guided replay and
+              // transcript controls belong to LDD, not YouTube's timeline.
+              playerVars: {
+                playsinline:1, autoplay:1, controls:0, fs:0, disablekb:1,
+                iv_load_policy:3, rel:0, cc_load_policy:0, origin:location.origin
+              },
+              events: {
+                onReady: e => {
+                  if (destroyed) {
+                    try { e.target.destroy(); } catch (_) {}
+                    resolve(null);
+                    return;
+                  }
+                  disableInitialCaptions(e.target);
+                  resolve(e.target);
+                },
+                onApiChange: e => disableInitialCaptions(e.target),
+                onError: e => reject(Error('YouTube không cho phép phát video này (' + e.data + ').'))
+              }
+            });
+          });
+          if (!readyPlayer || destroyed) return;
+          player = readyPlayer;
+          if (Number.isFinite(pendingSeek)) player.seekTo(pendingSeek, true);
+          if (wantsPlay) player.playVideo();
+          else player.pauseVideo();
+        })().catch(error => {
+          if (destroyed) return;
+          try { loadingPlayer?.destroy(); } catch (_) {}
+          loadingPlayer = null;
+          container.replaceChildren(poster);
+          onError(error?.message || 'Không tải được YouTube Player.');
+        }).finally(() => { startPromise = null; });
+      };
+      poster.addEventListener('click', () => {
+        wantsPlay = true;
+        start();
       });
-      return { getTime: () => player.getCurrentTime(), getDuration: () => player.getDuration(),
-        isPlaying: () => player.getPlayerState() === window.YT.PlayerState.PLAYING,
-        pause: () => player.pauseVideo(), play: () => player.playVideo(),
-        seek: t => player.seekTo(t, true), destroy: () => player.destroy() };
+      return {
+        getTime: () => player ? player.getCurrentTime() : NaN,
+        getDuration: () => player ? player.getDuration() : NaN,
+        isPlaying: () => !!player && player.getPlayerState() === window.YT.PlayerState.PLAYING,
+        pause: () => { wantsPlay = false; player?.pauseVideo(); },
+        play: () => { wantsPlay = true; if (player) player.playVideo(); else start(); },
+        seek: t => {
+          if (!Number.isFinite(Number(t))) return;
+          pendingSeek = Number(t);
+          player?.seekTo(pendingSeek, true);
+        },
+        destroy: () => {
+          destroyed = true;
+          wantsPlay = false;
+          try { player?.destroy(); } catch (_) {}
+          if (loadingPlayer && loadingPlayer !== player) {
+            try { loadingPlayer.destroy(); } catch (_) {}
+          }
+          player = null;
+          loadingPlayer = null;
+          poster.remove();
+        }
+      };
     }
     if (parsed.provider === 'mp4') {
       const video = $el('video', 'ldd-film-video');
