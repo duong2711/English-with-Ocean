@@ -156,8 +156,10 @@
           }
         });
       });
-      return { getTime: () => player.getCurrentTime(), getDuration: () => player.getDuration(), pause: () => player.pauseVideo(),
-        play: () => player.playVideo(), seek: t => player.seekTo(t, true), destroy: () => player.destroy() };
+      return { getTime: () => player.getCurrentTime(), getDuration: () => player.getDuration(),
+        isPlaying: () => player.getPlayerState() === window.YT.PlayerState.PLAYING,
+        pause: () => player.pauseVideo(), play: () => player.playVideo(),
+        seek: t => player.seekTo(t, true), destroy: () => player.destroy() };
     }
     if (parsed.provider === 'mp4') {
       const video = $el('video', 'ldd-film-video');
@@ -645,8 +647,10 @@
         const cue = items[boundedIndex];
         const outside = t < cue.start - 0.45 || t > cue.end + 0.25;
         // Manual YouTube play also completes the cue, but must not leap ahead.
+        const resumingPastGate = playbackIndex < 0 && waitingForAnswer &&
+          t >= cue.end - 0.045 && adapter.isPlaying?.();
         const finished = t >= cue.end - 0.045 && (playbackIndex >= 0 || !waitingForAnswer);
-        if ((outside && Date.now() >= seekPendingUntil) || finished) {
+        if ((outside && Date.now() >= seekPendingUntil) || finished || resumingPastGate) {
           try {
             adapter.pause();
             if (outside) adapter.seek(cue.start);
