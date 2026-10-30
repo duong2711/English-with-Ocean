@@ -917,3 +917,17 @@
   #tab-giai-tri .ldd-film-editor-form .ldd-film-title-row{grid-template-columns:minmax(0,1fr)}
   #tab-giai-tri .ldd-film-editor-form .ldd-film-rename-save{width:100%;justify-self:stretch}
 }
+
+
+/* Only shown when YouTube or the browser blocks automatic playback. */
+#tab-giai-tri .ldd-film-screen .ldd-film-autoplay-fallback{
+  position:absolute;z-index:8;left:50%;top:50%;transform:translate(-50%,-50%);
+  min-width:170px;max-width:calc(100% - 24px);min-height:48px;
+  padding:12px 20px;border:1px solid rgba(255,255,255,.6);
+  border-radius:999px;background:rgba(10,33,60,.94);color:#fff;
+  box-shadow:0 8px 30px rgba(0,0,0,.4);
+  font:inherit;font-size:14px;font-weight:750;text-align:center;cursor:pointer;
+}
+#tab-giai-tri .ldd-film-screen .ldd-film-autoplay-fallback:focus-visible{
+  outline:3px solid #9ad2ff;outline-offset:3px;
+}
