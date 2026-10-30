@@ -908,9 +908,14 @@
         const video = $el('video', 'ldd-film-video');
         video.controls = true;
         video.playsInline = true;
-        video.preload = 'metadata';
+        video.preload = 'auto';
+        video.autoplay = true;
         video.src = parsed.url;
         screen.append(video);
+        video.play().catch(() => {
+          // The native play control remains available if the browser blocks it.
+          showPlaybackError('Trình duyệt yêu cầu chạm Phát để bắt đầu video.');
+        });
         playerCleanup = () => { video.pause(); video.removeAttribute('src'); video.load(); };
       } else {
         const iframe = $el('iframe', 'ldd-film-video');
