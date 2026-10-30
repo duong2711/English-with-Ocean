@@ -261,6 +261,13 @@
 #tab-giai-tri .ldd-film-edit-current[hidden] {display:none!important}
 #tab-giai-tri .ldd-film-edit-current:hover,#tab-giai-tri .ldd-film-edit-current:focus-visible {background:var(--surface-2,#e9f4ef);outline-offset:2px}
 @media(max-width:600px){#tab-giai-tri .ldd-film-edit-current{margin-left:0}}
+/* Teacher-only title edit shortcut; it never affects the learner view. */
+#tab-giai-tri .ldd-film-rename-current{font:inherit;font-size:12.5px;font-weight:700;min-height:36px;padding:7px 13px;border:1px solid var(--border,#dce6ea);border-radius:999px;background:var(--surface,#fff);color:var(--text,#2c5667);cursor:pointer}
+#tab-giai-tri .ldd-film-rename-current[hidden],#tab-giai-tri .ldd-film-rename-save[hidden]{display:none!important}
+#tab-giai-tri .ldd-film-rename-current:hover,#tab-giai-tri .ldd-film-rename-current:focus-visible{background:var(--surface-2,#e9f4ef);outline-offset:2px}
+#tab-giai-tri .ldd-film-rename-save{justify-self:start;max-width:100%}
+#tab-giai-tri .ldd-film-rename-save:disabled{opacity:.6;cursor:wait}
+
 
 /* While watching a film, replace—not duplicate—the Entertainment back button. */
 #tab-giai-tri.ldd-film-is-watching #ldd-ent-movies-panel > .ldd-ent-panel-heading > [data-ent-back] {
