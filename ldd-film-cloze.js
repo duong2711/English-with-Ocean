@@ -130,9 +130,8 @@
     const parsed = providerOf(lesson.video_url);
     if (!parsed) throw Error('Liên kết video không hợp lệ');
     if (parsed.provider === 'youtube') {
-      // YouTube still owns its embedded-player branding. Never mount the
-      // iframe until an explicit play action: our idle state is a plain,
-      // accessible preview, not YouTube's title/channel/end-screen UI.
+      // Keep the clean preview during load. Choosing a film triggers play()
+      // automatically; only show a play button if the browser blocks autoplay.
       const poster = button('', 'ldd-film-youtube-poster');
       poster.setAttribute('aria-label', 'Phát video ' + (lesson.title || 'bài luyện nghe'));
       const thumbnail = $el('img', 'ldd-film-youtube-poster-image');
@@ -152,6 +151,21 @@
       let wantsPlay = false;
       let pendingSeek = NaN;
       let captionsInitialized = false;
+      let blockedPlayButton = null;
+      const clearPlayFallback = () => {
+        blockedPlayButton?.remove();
+        blockedPlayButton = null;
+      };
+      const showPlayFallback = () => {
+        if (destroyed || !wantsPlay || !player || blockedPlayButton) return;
+        blockedPlayButton = button('▶ Nhấn để phát video', 'ldd-film-autoplay-fallback');
+        blockedPlayButton.setAttribute('aria-label', 'Trình duyệt chặn tự phát: nhấn để bắt đầu video');
+        blockedPlayButton.addEventListener('click', () => {
+          clearPlayFallback();
+          if (!destroyed) player?.playVideo();
+        });
+        container.append(blockedPlayButton);
+      };
       const disableInitialCaptions = p => {
         if (captionsInitialized) return;
         try {
@@ -188,6 +202,10 @@
                   resolve(e.target);
                 },
                 onApiChange: e => disableInitialCaptions(e.target),
+                onAutoplayBlocked: () => showPlayFallback(),
+                onStateChange: e => {
+                  if (e.data === window.YT.PlayerState.PLAYING) clearPlayFallback();
+                },
                 onError: e => reject(Error('YouTube không cho phép phát video này (' + e.data + ').'))
               }
             });
@@ -195,8 +213,17 @@
           if (!readyPlayer || destroyed) return;
           player = readyPlayer;
           if (Number.isFinite(pendingSeek)) player.seekTo(pendingSeek, true);
-          if (wantsPlay) player.playVideo();
-          else player.pauseVideo();
+          if (wantsPlay) {
+            player.playVideo();
+            // Some browsers do not dispatch onAutoplayBlocked. Leave a
+            // one-tap fallback only if playback has not actually started.
+            setTimeout(() => {
+              if (destroyed || !wantsPlay || !player) return;
+              const state = player.getPlayerState();
+              if (state !== window.YT.PlayerState.PLAYING &&
+                  state !== window.YT.PlayerState.BUFFERING) showPlayFallback();
+            }, 2500);
+          } else player.pauseVideo();
         })().catch(error => {
           if (destroyed) return;
           try { loadingPlayer?.destroy(); } catch (_) {}
@@ -213,7 +240,7 @@
         getTime: () => player ? player.getCurrentTime() : NaN,
         getDuration: () => player ? player.getDuration() : NaN,
         isPlaying: () => !!player && player.getPlayerState() === window.YT.PlayerState.PLAYING,
-        pause: () => { wantsPlay = false; player?.pauseVideo(); },
+        pause: () => { wantsPlay = false; clearPlayFallback(); player?.pauseVideo(); },
         play: () => { wantsPlay = true; if (player) player.playVideo(); else start(); },
         seek: t => {
           if (!Number.isFinite(Number(t))) return;
@@ -223,6 +250,7 @@
         destroy: () => {
           destroyed = true;
           wantsPlay = false;
+          clearPlayFallback();
           try { player?.destroy(); } catch (_) {}
           if (loadingPlayer && loadingPlayer !== player) {
             try { loadingPlayer.destroy(); } catch (_) {}
@@ -240,8 +268,10 @@
       video.preload = 'metadata';
       video.src = parsed.url;
       container.append(video);
-      return { getTime: () => video.currentTime, getDuration: () => video.duration, pause: () => video.pause(),
-        play: () => video.play().catch(() => {}), seek: t => { video.currentTime = t; },
+      return { getTime: () => video.currentTime, getDuration: () => video.duration,
+        isPlaying: () => !video.paused, pause: () => video.pause(),
+        play: () => video.play().catch(() => onError('Trình duyệt yêu cầu nhấn phát để bắt đầu video.')),
+        seek: t => { video.currentTime = t; },
         destroy: () => { video.pause(); video.removeAttribute('src'); video.load(); video.remove(); } };
     }
     // FB SDK provides controls for supported public embedded videos only.
@@ -492,6 +522,7 @@
     let waitingForAnswer = false;
     let heardGate = false;
     let seekPendingUntil = 0;
+    let resumeAt = 0;
     let updateRowStates = () => {};
     let playCue = () => {};
     let showCue = () => {};
@@ -635,17 +666,21 @@
               waitingForAnswer = false;
               heardGate = false;
               updateRowStates();
+              playbackIndex = -1;
+              // Continue from the end of the answered line, including any
+              // intervening dialogue or music: never jump to the next cue.
+              try {
+                if (Math.abs(Number(adapter.getTime()) - resumeAt) > 0.35)
+                  adapter.seek(resumeAt);
+                adapter.play();
+              } catch (_) {
+                state.textContent = 'Nhấn phát để tiếp tục video.';
+              }
               if (gateIndex >= 0) {
-                // A correct answer advances BOTH the playback and the visible
-                // exercise immediately. Never wait for the player timer or a
-                // manual transcript scroll to reveal the next question.
                 showCue(gateIndex);
-                playCue(gateIndex);
+                state.textContent = 'Đang phát tiếp đến câu có ô trống tiếp theo.';
               } else {
-                playbackIndex = -1;
-                try { adapter.pause(); } catch (_) {}
-                panel.querySelector('.ldd-film-caption-state').textContent =
-                  'Đã hoàn thành tất cả câu! Bạn có thể nghe lại từng câu.';
+                state.textContent = 'Đã hoàn thành bài luyện nghe. Video tiếp tục đến hết.';
               }
             }
           } catch (err) {
@@ -727,74 +762,86 @@
     };
     updateRowStates();
 
-    const focusGate = () => {
-      if (gateIndex < 0) {
-        try { adapter.pause(); } catch (_) {}
-        state.textContent = 'Bạn đã hoàn thành toàn bộ bài. Có thể nhấn Nghe lại ở bất kỳ câu nào.';
-        return;
-      }
-      const row = items[gateIndex];
-      // An initial seek does not autoplay, which is blocked on some devices.
-      seekPendingUntil = Date.now() + 2800;
-      try { adapter.pause(); adapter.seek(row.start); } catch (_) {}
-      showCue(gateIndex);
-      state.textContent = 'Câu ' + (gateIndex + 1) +
-        ': bấm Nghe lại để nghe, điền từ rồi chọn Kiểm tra hoặc Gợi ý để sang câu sau.';
-    };
-    focusGate();
+    // On opening a lesson, play from the very beginning. Non-graded dialogue
+    // and music are part of the video and should not be skipped.
+    if (gateIndex >= 0) showCue(gateIndex);
+    state.textContent = gateIndex >= 0
+      ? 'Video đang phát. Hết câu có ô trống, video sẽ dừng để bạn điền.'
+      : 'Video đang phát. Bạn đã hoàn thành các ô trống, vẫn có thể nghe lại.';
 
     timer = setInterval(() => {
       if (seq !== generation) return;
       const t = Number(adapter.getTime());
       if (!Number.isFinite(t)) return;
 
-      // Both replay and normal playback are bounded by the selected sentence.
-      // In particular, dragging YouTube's native scrubber must not bypass
-      // an incomplete sentence or advance through future dialogue.
-      const boundedIndex = playbackIndex >= 0 ? playbackIndex : gateIndex;
-      if (boundedIndex >= 0) {
-        const cue = items[boundedIndex];
+      if (playbackIndex >= 0) {
+        // The teacher/student explicitly chose a single line to replay.
+        const index = playbackIndex;
+        const cue = items[index];
         const outside = t < cue.start - 0.45 || t > cue.end + 0.25;
-        // Manual YouTube play also completes the cue, but must not leap ahead.
-        const resumingPastGate = playbackIndex < 0 && waitingForAnswer &&
-          t >= cue.end - 0.045 && adapter.isPlaying?.();
-        const finished = !outside && t >= cue.end - 0.045 && (playbackIndex >= 0 || !waitingForAnswer);
-        if ((outside && Date.now() >= seekPendingUntil) || finished || resumingPastGate) {
+        const finished = t >= cue.end - 0.055;
+        if ((outside && Date.now() >= seekPendingUntil) || finished) {
           try {
             adapter.pause();
             if (outside) adapter.seek(cue.start);
           } catch (_) {}
-          if (finished && !outside && boundedIndex === gateIndex) {
-            heardGate = true;
-            updateRowStates();
-          }
           playbackIndex = -1;
-          waitingForAnswer = gateIndex >= 0 && !isComplete(gateIndex);
-          state.textContent = waitingForAnswer && !heardGate
-            ? 'Bấm Nghe lại để nghe hết câu ' + (gateIndex + 1) +
-              ' trước khi kiểm tra.'
-            : waitingForAnswer
-              ? 'Đã dừng. Điền câu ' + (gateIndex + 1) +
-                ' rồi bấm Kiểm tra; có thể bấm Nghe lại nhiều lần.'
-            : gateIndex < 0 ? 'Đã hoàn thành! Có thể nghe lại từng câu.' :
-              'Đã phát xong đoạn nghe lại. Tiếp tục câu ' + (gateIndex + 1) + '.';
+          if (index === gateIndex && finished && !outside) {
+            heardGate = true;
+            waitingForAnswer = true;
+            resumeAt = cue.end;
+            updateRowStates();
+            showCue(gateIndex);
+            state.textContent = 'Đã dừng. Điền từ rồi bấm Kiểm tra hoặc Gợi ý.';
+          } else {
+            state.textContent = waitingForAnswer
+              ? 'Nghe lại câu có ô trống hoặc điền đáp án để tiếp tục.'
+              : 'Đã nghe lại đoạn này. Nhấn phát để tiếp tục video.';
+          }
+        }
+      } else if (gateIndex >= 0) {
+        // Normal playback: allow everything from the video beginning through
+        // the current graded sentence, including every non-graded cue and gap.
+        const cue = items[gateIndex];
+        if (waitingForAnswer) {
+          // Learners must not bypass a question by restarting the player.
+          if (adapter.isPlaying?.()) {
+            try { adapter.pause(); } catch (_) {}
+          }
+        } else if (t >= cue.end - 0.055) {
+          try {
+            adapter.pause();
+            if (t > cue.end + 0.25) adapter.seek(cue.end);
+          } catch (_) {}
+          heardGate = true;
+          waitingForAnswer = true;
+          resumeAt = cue.end;
+          updateRowStates();
+          showCue(gateIndex);
+          state.textContent = 'Đã dừng. Điền từ rồi bấm Kiểm tra hoặc Gợi ý.';
+        } else if (t >= cue.start && activeIndex !== gateIndex) {
+          showCue(gateIndex);
         }
       }
-      let current = playbackIndex >= 0 ? playbackIndex : gateIndex;
+
+      // Highlight the current exercise without moving the document or video.
+      const current = playbackIndex >= 0 ? playbackIndex : gateIndex;
       if (current === activeIndex) return;
       if (activeIndex >= 0) items[activeIndex].item.classList.remove('is-current');
       activeIndex = current;
       if (current < 0) return;
-      const active = items[current].item;
-      active.classList.add('is-current');
+      const row = items[current].item;
+      row.classList.add('is-current');
       if (Date.now() <= manualScrollUntil) return;
-      const itemRect = active.getBoundingClientRect();
-      const listRect = list.getBoundingClientRect();
-      if (itemRect.top < listRect.top + 8 || itemRect.bottom > listRect.bottom - 8) {
-        // Never scroll the document or move the video out of view.
-        list.scrollTop += itemRect.top - listRect.top - 12;
-      }
+      const rect = row.getBoundingClientRect();
+      const view = list.getBoundingClientRect();
+      if (rect.top < view.top + 8 || rect.bottom > view.bottom - 8)
+        list.scrollTop += rect.top - view.top - 12;
     }, 100);
+    // The gate and timer are ready before the first playback frame.
+    // This also starts the YouTube iframe directly from the selected card.
+    try { adapter.seek(0); adapter.play(); }
+    catch (_) { state.textContent = 'Nhấn phát để bắt đầu video.'; }
   }
 
   // Shared watch layout for all saved and legacy film entries. A saved script
@@ -889,6 +936,8 @@
         if (hasScript) {
           await renderCaptionExercise(lesson, captionPanel, adapter, seq, teacherPreview);
         } else {
+          // A video without a graded script also starts on selection.
+          adapter.play();
           // Source captions may be useful for video-only YouTube entries, but
           // must never be treated as graded exercises without a verified script.
           if (!client) {
