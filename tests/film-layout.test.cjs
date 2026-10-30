@@ -282,3 +282,27 @@ test('YouTube film starts with an accessible clean poster and mounts iframe only
   assert.match(css, /\.ldd-film-youtube-poster-play\s*\{/);
   assert.doesNotMatch(css, /\.ldd-film-screen\s*>\s*iframe[^\{]*\{[^}]*transform:\s*scale\(/s);
 });
+
+
+test('teacher can rename a film directly beside the title without editing subtitles', () => {
+  const editor = js.slice(js.indexOf('function setupEditor('));
+  assert.match(editor, /titleRow\.append\(title, renameSave\)/);
+  assert.match(editor, /titleLabel, titleRow, titleNotice, scriptDetails/);
+  assert.match(editor, /scriptDetails\.open = !selected;/);
+  assert.match(editor, /renameSave\.type = 'button'/);
+  assert.match(editor, /event\.key === 'Enter'[\s\S]*?renameSave\.click\(\)/);
+  assert.match(editor, /\.update\(\{ title: nextTitle \}\)/);
+  assert.match(editor, /panel\.querySelectorAll\('\[data-film-id=/);
+  assert.doesNotMatch(
+    editor.slice(editor.indexOf("renameSave.addEventListener('click'"),
+      editor.indexOf("form.addEventListener('submit'")),
+    /await refresh\(\);|update\(\{[^}]*segments:/
+  );
+  assert.match(css, /\.ldd-film-editor-form \.ldd-film-title-row/);
+  assert.match(css, /\.ldd-film-title-status/);
+  const bootstrap = fs.readFileSync(path.resolve(__dirname, '../ldd-ui-upgrade.js'), 'utf8');
+  const page = fs.readFileSync(path.resolve(__dirname, '../index.html'), 'utf8');
+  assert.match(bootstrap, /ldd-film-cloze\.js\?v=20261030-rename-inline4/);
+  assert.match(bootstrap, /ldd-film-cloze\.css\?v=20261030-rename-inline4/);
+  assert.match(page, /ldd-ui-upgrade\.js\?v=20261030-rename-inline4/);
+});
