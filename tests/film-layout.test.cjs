@@ -103,7 +103,7 @@ test('caption lesson renders a blank, always-visible Vietnamese, check and hint 
   assert.match(func, /client\.rpc\('movie_cloze_answer'/);
   assert.match(func, /client\.from\('movie_cloze_progress'\)/);
   assert.match(func, /p_segment_index: idx/);
-  assert.match(func, /list\.scrollTop \+= itemRect\.top - listRect\.top/);
+  assert.match(func, /list\.scrollTop \+= rowRect\.top - listRect\.top/);
   assert.doesNotMatch(func, /scrollIntoView\(/);
 });
 
@@ -217,7 +217,7 @@ test('teacher can replay any subtitle while students remain gated in order', () 
   assert.match(exercise, /if \(!teacherPreview && gateIndex >= 0 && idx > gateIndex\) return;/);
   assert.match(exercise, /const enabled = idx === gateIndex;/);
   assert.match(exercise, /if \(busy \|\| answers\.has\(field\.key\) \|\| idx !== gateIndex\) return;/);
-  assert.match(exercise, /if \(finished && !outside && boundedIndex === gateIndex\) \{/);
+  assert.match(exercise, /if \(index === gateIndex && finished && !outside\) \{/);
   assert.match(exercise, /adapter\.pause\(\);\s*adapter\.seek\(items\[idx\]\.start\);\s*adapter\.play\(\);/);
 });
 
