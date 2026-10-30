@@ -305,6 +305,7 @@
     else if (panelHeader) panelHeader.prepend(browse);
     else primary.prepend(browse);
     let editScriptButton = null;
+    let renameVideoButton = null;
     let editorController = null;
     const playerWrap = $el('div', 'ldd-film-lesson');
     primary.append(playerWrap);
@@ -327,6 +328,7 @@
       playerWrap.replaceChildren();
       browse.hidden = true;
       if (editScriptButton) editScriptButton.hidden = true;
+      if (renameVideoButton) renameVideoButton.hidden = true;
       watch.hidden = true;
       library.hidden = false;
       library.scrollIntoView({ behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
@@ -356,6 +358,10 @@
         editScriptButton.hidden = true;
         editScriptButton.setAttribute('aria-label', 'Sửa script của video đang xem');
         browse.after(editScriptButton);
+        renameVideoButton = button('✎ Đổi tên', 'ldd-film-rename-current');
+        renameVideoButton.hidden = true;
+        renameVideoButton.setAttribute('aria-label', 'Đổi tên video đang xem');
+        editScriptButton.after(renameVideoButton);
       }
       status.textContent = lessons.length
         ? 'Chọn video để xem và luyện nghe. Các video đề xuất nằm bên dưới bài học.'
@@ -403,6 +409,9 @@
           const isSavedLesson = lessons.some(item => String(item.id) === String(lesson.id));
           editScriptButton.hidden = !isSavedLesson;
           editScriptButton.onclick = isSavedLesson ? () => editorController?.openFor(lesson.id) : null;
+          renameVideoButton.hidden = !isSavedLesson;
+          renameVideoButton.onclick = isSavedLesson
+            ? () => editorController?.openFor(lesson.id, true) : null;
         }
         document.getElementById('tab-giai-tri')?.classList.add('ldd-film-is-watching');
         playerWrap.classList.remove('ldd-film-paused');
@@ -1274,7 +1283,7 @@
 
   function setupEditor(wrap, refresh, lessons) {
     wrap.hidden = false;
-    const toggle = button('＋ Thêm video / Sửa script', 'ldd-film-editor-toggle');
+    const toggle = button('＋ Quản lý video / Đổi tên / Sửa script', 'ldd-film-editor-toggle');
     const form = $el('form', 'ldd-film-editor-form');
     form.hidden = true;
     const existing = $el('select');
@@ -1341,6 +1350,9 @@
     save.type = 'submit';
     const saveDraft = button('Lưu bản nháp', 'ldd-film-save');
     saveDraft.hidden = true;
+    const renameSave = button('Lưu tên video', 'ldd-film-save ldd-film-rename-save');
+    renameSave.type = 'button';
+    renameSave.hidden = true;
     const timingConfirmRow = $el('label', 'ldd-film-editor-help');
     timingConfirmRow.style.display = 'none';
     const timingConfirm = $el('input');
@@ -1396,7 +1408,8 @@
         const ss = Math.floor(rememberedDuration % 60);
         copiedDuration.value = mm + ':' + String(ss).padStart(2, '0');
       }
-      title.readOnly = Boolean(selected);
+      title.readOnly = false;
+      renameSave.hidden = !selected;
       link.readOnly = Boolean(selected);
       save.textContent = selected ? 'Xuất bản script đã kiểm chứng' : 'Lưu video / script';
       saveDraft.hidden = !selected;
@@ -1615,6 +1628,47 @@
         saveDraft.disabled = false;
       }
     });
+    // Renaming is intentionally separate from script publishing: it must not
+    // rewrite captions, clear draft work, or affect any student's answers.
+    renameSave.addEventListener('click', async () => {
+      const selected = editable.find(item => String(item.id) === existing.value);
+      if (!selected) {
+        notice.textContent = 'Hãy chọn một video đã đăng.';
+        return;
+      }
+      const nextTitle = title.value.replace(/\s+/g, ' ').trim();
+      if (!nextTitle || nextTitle.length > 160) {
+        notice.textContent = 'Tên video phải có từ 1 đến 160 ký tự.';
+        title.focus();
+        return;
+      }
+      if (nextTitle === selected.title) {
+        notice.textContent = 'Tên video không thay đổi.';
+        return;
+      }
+      renameSave.disabled = true;
+      notice.textContent = 'Đang lưu tên video…';
+      try {
+        const { data: auth, error: authError } = await client.auth.getUser();
+        if (authError || String(auth?.user?.email || '').toLowerCase() !== TEACHER)
+          throw Error('Chỉ giáo viên được đổi tên video.');
+        const { data, error } = await client.from('movie_lessons')
+          .update({ title: nextTitle })
+          .eq('id', Number(selected.id))
+          .eq('video_url', selected.video_url)
+          .select('id,title').single();
+        if (error || !data) throw error || Error('Không tìm thấy video để đổi tên.');
+        title.value = data.title;
+        selected.title = data.title;
+        existing.selectedOptions[0].textContent = 'Nhập script cho: ' + data.title;
+        notice.textContent = 'Đã đổi tên video. Script và tiến độ học viên được giữ nguyên.';
+        await refresh();
+      } catch (error) {
+        notice.textContent = 'Không đổi được tên: ' + (error.message || 'Lỗi kết nối');
+      } finally {
+        renameSave.disabled = false;
+      }
+    });
     form.addEventListener('submit', async e => {
       e.preventDefault();
       const info = providerOf(link.value.trim());
@@ -1669,7 +1723,7 @@
         if (userError || String(auth?.user?.email || '').toLowerCase() !== TEACHER)
           throw Error('Chỉ giáo viên được thêm video và script.');
         const { error } = existing.value
-          ? await client.from('movie_lessons').update({ segments: withTranslations })
+          ? await client.from('movie_lessons').update({ title: title.value.trim(), segments: withTranslations })
               .eq('id', Number(existing.value)).eq('video_url', info.url)
           : await client.from('movie_lessons').insert({
               title: title.value.trim(), video_url: info.url, provider: info.provider,
@@ -1683,10 +1737,10 @@
       } finally { save.disabled = false; }
     });
     const description = $el('p', 'ldd-film-editor-help',
-      'Nếu chọn video có sẵn, chỉ cập nhật script, giữ nguyên video YouTube và thumbnail. Không cần tải lại video.');
+      'Với video đã đăng, bạn có thể đổi tên riêng bằng nút “Lưu tên video”; không cần kiểm tra lại script. Link, thumbnail và bài làm học viên được giữ nguyên.');
     form.append(
       $el('label', '', 'Chọn thao tác'), existing,
-      $el('label', '', 'Tên video'), title,
+      $el('label', '', 'Tên video'), title, renameSave,
       $el('label', '', 'Đường dẫn video'), link,
       generate,
       transcriptSite,
@@ -1698,7 +1752,7 @@
     );
     wrap.append(toggle, form);
     return {
-      openFor(lessonId) {
+      openFor(lessonId, focusTitle = false) {
         const selectedId = String(lessonId);
         if (!editable.some(item => String(item.id) === selectedId)) return false;
         form.hidden = false;
@@ -1710,7 +1764,9 @@
           behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
           block: 'start'
         });
-        existing.focus({ preventScroll: true });
+        const focusTarget = focusTitle ? title : existing;
+        focusTarget.focus({ preventScroll: true });
+        if (focusTitle) title.select();
         return true;
       }
     };
