@@ -118,26 +118,21 @@ test('caption-practice controls remain usable on tablets and phones inside bound
   assert.doesNotMatch(js.slice(js.indexOf('const select = lesson => {'), js.indexOf('catalog.forEach(item => {')), /openLesson\(/);
 });
 
-test('film pauses after each audible cue and advances only after graded completion', () => {
+test('film autoplays from zero and pauses only after the first unanswered cloze line', () => {
   const exercise = js.slice(js.indexOf('async function renderCaptionExercise('), js.indexOf('async function openStandalone('));
-  assert.match(exercise, /const isComplete = idx => \{/);
   assert.match(exercise, /let gateIndex = gradedIndices\.find\(idx => !isComplete\(idx\)\) \?\? -1;/);
-  assert.match(exercise, /button\('▶ Nghe lại · ' \+ padTime/);
-  assert.match(exercise, /seek\.addEventListener\('click', \(\) => playCue\(idx\)\)/);
-  assert.match(exercise, /row\.seek\.disabled = locked;/);
-  assert.match(exercise, /input\.disabled = !enabled;/);
+  assert.match(exercise, /if \(gateIndex >= 0\) showCue\(gateIndex\);/);
+  assert.doesNotMatch(exercise, /focusGate\(\);/);
+  assert.match(exercise, /timer = setInterval\(\(\) => \{/);
+  assert.match(exercise, /else if \(t >= cue\.end - 0\.055\) \{/);
+  assert.match(exercise, /heardGate = true;\s*waitingForAnswer = true;\s*resumeAt = cue\.end;/);
+  assert.match(exercise, /try \{ adapter\.seek\(0\); adapter\.play\(\); \}/);
+  assert.ok(exercise.indexOf('timer = setInterval(') < exercise.lastIndexOf('adapter.seek(0); adapter.play();'),
+    'playback begins only after pause gating has been installed');
   assert.match(exercise, /check\.disabled = hint\.disabled = !enabled \|\| !heardGate;/);
   assert.match(exercise, /if \(!heardGate\) \{/);
   assert.match(exercise, /if \(data\?\.status === 'wrong'\) \{/);
   assert.match(exercise, /if \(isComplete\(idx\) && idx === gateIndex\) \{/);
-  assert.match(exercise, /gateIndex = gradedIndices\.find\(i => !isComplete\(i\)\) \?\? -1;/);
-  assert.match(exercise, /playCue\(gateIndex\)/);
-  assert.match(exercise, /const finished = !outside && t >= cue\.end - 0\.045/);
-  assert.match(exercise, /adapter\.pause\(\);/);
-  assert.match(exercise, /heardGate = true;\s*updateRowStates\(\);/);
-  assert.match(exercise, /seekPendingUntil = Date\.now\(\) \+ 2800/);
-  assert.match(exercise, /const resumingPastGate/);
-  assert.match(exercise, /\}, 100\);/);
   assert.doesNotMatch(exercise, /list\.scrollIntoView/);
 });
 
@@ -148,22 +143,21 @@ test('guided listening visually locks future captions and leaves replay availabl
   assert.match(js, /isPlaying: \(\) => !!player && player\.getPlayerState\(\) === window\.YT\.PlayerState\.PLAYING/);
 });
 
-test('correct answer jumps the transcript to the next cue immediately', () => {
+test('correct answer resumes video naturally without skipping intervening music or dialogue', () => {
   const exercise = js.slice(js.indexOf('async function renderCaptionExercise('), js.indexOf('async function openStandalone('));
-  assert.match(exercise, /if \(isComplete\(idx\) && idx === gateIndex\) \{[\s\S]*?gateIndex = gradedIndices\.find\([\s\S]*?showCue\(gateIndex\);\s*playCue\(gateIndex\);/);
+  assert.match(exercise, /gateIndex = gradedIndices\.find\(i => !isComplete\(i\)\) \?\? -1;/);
+  assert.match(exercise, /if \(Math\.abs\(Number\(adapter\.getTime\(\)\) - resumeAt\) > 0\.35\)\s*adapter\.seek\(resumeAt\);\s*adapter\.play\(\);/);
+  const completion = exercise.slice(exercise.indexOf('if (isComplete(idx) && idx === gateIndex) {'),
+    exercise.indexOf('} catch (err)', exercise.indexOf('if (isComplete(idx) && idx === gateIndex) {')));
+  assert.doesNotMatch(completion, /playCue\(gateIndex\)|adapter\.seek\(items\[gateIndex\]\.start\)/);
   assert.match(exercise, /showCue = idx => \{[\s\S]*?manualScrollUntil = 0;[\s\S]*?list\.scrollTop \+= rowRect\.top - listRect\.top - 8;/);
   assert.match(exercise, /row\.classList\.add\('is-current'\)/);
+  assert.match(exercise, /seek\.addEventListener\('click', \(\) => playCue\(idx\)\)/);
   assert.match(exercise, /playCue = idx => \{[\s\S]*?adapter\.seek\(items\[idx\]\.start\);\s*adapter\.play\(\);/);
-  assert.ok(
-    exercise.indexOf('let activeIndex = -1;') < exercise.indexOf('showCue = idx => {'),
-    'the initial cue can be focused without temporal-dead-zone errors'
-  );
-  assert.match(exercise, /focusGate = \(\) => \{[\s\S]*?showCue\(gateIndex\);/);
-  // Advancing after a correct answer must not scroll the document or the video away.
+  // Only the inner transcript scrolls, never the window or video.
   const show = exercise.slice(exercise.indexOf('showCue = idx => {'), exercise.indexOf('playCue = idx => {'));
   assert.doesNotMatch(show, /scrollIntoView\(|window\.scrollTo\(|document\.scrollTop/);
 });
-
 
 test('film lesson omits redundant headings, explanation text and running status', () => {
   const exercise = js.slice(js.indexOf('async function renderCaptionExercise('), js.indexOf('async function openStandalone('));
@@ -259,30 +253,24 @@ test('film recommendations follow the video without a phantom grid track or fixe
   assert.doesNotMatch(tightened, /"error captions"/);
 });
 
-test('all YouTube film embeds hide native timeline, fullscreen and keyboard seek', () => {
+test('YouTube hides native navigation and attempts autoplay, with a one-tap fallback', () => {
   const player = js.slice(js.indexOf('async function makePlayer('), js.indexOf('async function mount('));
+  const exercise = js.slice(js.indexOf('async function renderCaptionExercise('), js.indexOf('async function openStandalone('));
+  const watch = js.slice(js.indexOf('async function openStandalone('), js.indexOf('async function openLesson('));
   assert.match(player, /playerVars:\s*\{[^}]*playsinline:1, autoplay:1, controls:0, fs:0, disablekb:1,[^}]*iv_load_policy:3, rel:0, cc_load_policy:0/s);
   assert.match(js, /youtube-nocookie\.com\/embed\/[^\n]+\?rel=0&cc_load_policy=0&controls=0&fs=0&disablekb=1&iv_load_policy=3&playsinline=1/);
-  const exercise = js.slice(js.indexOf('async function renderCaptionExercise('), js.indexOf('async function openStandalone('));
-  assert.match(exercise, /adapter\.pause\(\);\s*adapter\.seek\(items\[idx\]\.start\);\s*adapter\.play\(\);/);
-  assert.match(exercise, /const finished = !outside && t >= cue\.end - 0\.045/);
-  assert.match(exercise, /seek\.addEventListener\('click', \(\) => playCue\(idx\)\)/);
-});
-
-test('YouTube film starts with an accessible clean poster and mounts iframe only after user play', () => {
-  const player = js.slice(js.indexOf('async function makePlayer('), js.indexOf('async function mount('));
   assert.match(player, /button\('', 'ldd-film-youtube-poster'\)/);
-  assert.match(player, /poster\.setAttribute\('aria-label', 'Phát video '/);
   assert.match(player, /poster\.append\(thumbnail, playIcon\);\s*container\.append\(poster\);/);
-  assert.match(player, /poster\.addEventListener\('click', \(\) => \{\s*wantsPlay = true;\s*start\(\);/);
-  assert.match(player, /await loadYT\(\);[\s\S]*?container\.replaceChildren\(host\);[\s\S]*?new window\.YT\.Player\(host/);
-  assert.ok(player.indexOf("container.append(poster)") < player.indexOf("new window.YT.Player(host"));
-  assert.match(player, /seek: t => \{[\s\S]*?pendingSeek = Number\(t\);/);
-  assert.match(player, /destroyed = true;[\s\S]*?player\?\.destroy\(\);/);
-  assert.match(css, /\.ldd-film-youtube-poster-play\s*\{/);
+  assert.match(player, /onAutoplayBlocked: \(\) => showPlayFallback\(\)/);
+  assert.match(player, /blockedPlayButton = button\('▶ Nhấn để phát video', 'ldd-film-autoplay-fallback'\)/);
+  assert.match(player, /if \(wantsPlay\) \{\s*player\.playVideo\(\);/);
+  assert.match(player, /play: \(\) => \{ wantsPlay = true; if \(player\) player\.playVideo\(\); else start\(\); \}/);
+  assert.match(exercise, /if \(playbackIndex >= 0\) \{[\s\S]*?const finished = !outside && t >= cue\.end - 0\.055;/);
+  assert.match(exercise, /else if \(gateIndex >= 0\) \{/);
+  assert.match(watch, /if \(hasScript\) \{\s*await renderCaptionExercise\(lesson, captionPanel, adapter, seq, teacherPreview\);\s*\} else \{\s*\/\/ A video without a graded script also starts on selection\.\s*adapter\.play\(\);/);
+  assert.match(css, /\.ldd-film-autoplay-fallback\s*\{/);
   assert.doesNotMatch(css, /\.ldd-film-screen\s*>\s*iframe[^\{]*\{[^}]*transform:\s*scale\(/s);
 });
-
 
 test('teacher can rename a film directly beside the title without editing subtitles', () => {
   const editor = js.slice(js.indexOf('function setupEditor('));
@@ -302,7 +290,7 @@ test('teacher can rename a film directly beside the title without editing subtit
   assert.match(css, /\.ldd-film-title-status/);
   const bootstrap = fs.readFileSync(path.resolve(__dirname, '../ldd-ui-upgrade.js'), 'utf8');
   const page = fs.readFileSync(path.resolve(__dirname, '../index.html'), 'utf8');
-  assert.match(bootstrap, /ldd-film-cloze\.js\?v=20261030-rename-inline4/);
-  assert.match(bootstrap, /ldd-film-cloze\.css\?v=20261030-rename-inline4/);
-  assert.match(page, /ldd-ui-upgrade\.js\?v=20261030-rename-inline4/);
+  assert.match(bootstrap, /ldd-film-cloze\.js\?v=20261030-continuous-film5/);
+  assert.match(bootstrap, /ldd-film-cloze\.css\?v=20261030-continuous-film5/);
+  assert.match(page, /ldd-ui-upgrade\.js\?v=20261030-continuous-film5/);
 });
