@@ -779,7 +779,7 @@
         const index = playbackIndex;
         const cue = items[index];
         const outside = t < cue.start - 0.45 || t > cue.end + 0.25;
-        const finished = t >= cue.end - 0.055;
+        const finished = !outside && t >= cue.end - 0.055;
         if ((outside && Date.now() >= seekPendingUntil) || finished) {
           try {
             adapter.pause();
