@@ -37,6 +37,12 @@ a{color:#286ad1}.reading{margin-top:13px;padding:14px;border:1px solid #dce6ef;b
 <audio id="preview" controls></audio>
 <p class="muted small">Hoặc chọn file MP3, WAV, WebM, OGG, MP4:</p>
 <input id="file" type="file" accept="audio/mpeg,audio/wav,audio/x-wav,audio/mp4,audio/webm,audio/ogg,.mp3,.wav,.mp4,.webm,.ogg">
+<label for="mode" style="display:block;font-weight:700;margin-top:13px">Chế độ phân tích</label>
+<select id="mode" style="width:100%;padding:10px;border:1px solid #b9cadb;border-radius:10px;margin:5px 0 10px;font:inherit">
+<option value="fast" selected>Nhanh — phân tích âm vị, bỏ các bước đối chiếu nặng</option>
+<option value="full">Chuyên sâu — OpenPronounce đầy đủ (chậm hơn)</option>
+</select>
+<p class="small muted" style="margin:0 0 9px">Chế độ nhanh chỉ hiển thị mức khớp âm vị tham khảo, không phải điểm phát âm đã chuẩn hóa.</p>
 <div class="actions"><button id="analyze" disabled>Chấm thử phát âm</button><button class="secondary" id="reset" type="button">Xóa bản ghi</button></div>
 <div id="status" class="status" role="status" aria-live="polite">Nhấn Bắt đầu ghi âm để dùng micro Acer.</div>
 </section>
@@ -53,7 +59,7 @@ a{color:#286ad1}.reading{margin-top:13px;padding:14px;border:1px solid #dce6ef;b
 const target=document.getElementById('target'), count=document.getElementById('count');
 const start=document.getElementById('start'), stop=document.getElementById('stop'), timer=document.getElementById('timer');
 const preview=document.getElementById('preview'), file=document.getElementById('file');
-const analyze=document.getElementById('analyze'), reset=document.getElementById('reset');
+const analyze=document.getElementById('analyze'), reset=document.getElementById('reset'), mode=document.getElementById('mode');
 const status=document.getElementById('status'), result=document.getElementById('result');
 let media=null, stream=null, chunks=[], audioBlob=null, localUrl='', started=0, ticking=null, busy=false;
 function tally(){const n=(target.value.match(/[a-z]+(?:'[a-z]+)?/gi)||[]).length;count.textContent=n+' từ / 20–360 từ'; return n;}
@@ -85,13 +91,14 @@ target.oninput=update;
 function draw(data){
  result.replaceChildren();
  const ph=data.phoneme_assessment||{};
- if(ph.status==='scored'){
-  const h=document.createElement('div');h.className='result-number';h.textContent=ph.score+' / 100';result.append(h);
-  const subtitle=document.createElement('p');subtitle.className='muted small';subtitle.textContent='Điểm thử nghiệm OpenPronounce · đã phân tích '+ph.covered_words+'/'+ph.total_words+' từ';result.append(subtitle);
+ if(ph.status==='scored'||ph.status==='phoneme_checked'){
+  const fast=ph.status==='phoneme_checked';
+  const h=document.createElement('div');h.className='result-number';h.textContent=fast?(ph.phoneme_match_pct+'%'):(ph.score+' / 100');result.append(h);
+  const subtitle=document.createElement('p');subtitle.className='muted small';subtitle.textContent=(fast?'Mức khớp âm vị tham khảo (KHÔNG phải điểm phát âm)':'Điểm thử nghiệm OpenPronounce')+' · đã phân tích '+ph.covered_words+'/'+ph.total_words+' từ';result.append(subtitle);
   const wordList=(target.value.match(/[a-z]+(?:'[a-z]+)?/gi)||[]);
   const wrong=new Map((ph.errors||[]).map(e=>[e.position,e]));
   const reading=document.createElement('div');reading.className='reading';
-  wordList.forEach((w,i)=>{const el=document.createElement('span');el.textContent=w;if(wrong.has(i)){el.className='wrong';const e=wrong.get(i);el.title='IPA mong đợi: '+(e.expected||[]).join(' ')+' / máy nghe: '+(e.actual||[]).join(' ');}reading.append(el);});
+  wordList.forEach((w,i)=>{const el=document.createElement('span');el.textContent=w;if(wrong.has(i)){el.className='wrong';const e=wrong.get(i);el.title='IPA mong đợi: '+(Array.isArray(e.expected)?e.expected.join(' '):String(e.expected||''))+' / máy nghe: '+(Array.isArray(e.actual)?e.actual.join(' '):String(e.actual||''));}reading.append(el);});
   result.append(reading);
   const note=document.createElement('p');note.className='small muted';note.textContent='Nền đỏ: từ AI nghi ngờ phát âm chưa đúng. Có thể di chuột để xem âm IPA.';result.append(note);
  }else{
@@ -100,12 +107,16 @@ function draw(data){
  const title=document.createElement('h2');title.style.marginTop='23px';title.textContent='Lời Whisper nghe được';result.append(title);
  const transcript=document.createElement('p');transcript.textContent=data.transcript||'(Chưa nghe được)';result.append(transcript);
  const descriptor=document.createElement('p');descriptor.className='small muted';descriptor.textContent='Độ khớp văn bản: '+data.asr_text_match_estimate+'/100. Đây KHÔNG phải điểm phát âm.';result.append(descriptor);
+ const timing=document.createElement('p');timing.className='small muted';
+ const t=data.timings||{};
+ timing.textContent='Thời gian xử lý: Whisper '+(t.whisper_seconds??'?')+' giây · Phân tích âm '+(t.phoneme_seconds??'?')+' giây · Tổng '+(data.elapsed_seconds??'?')+' giây ('+(data.whisper_device||'unknown')+').';
+ result.append(timing);
 }
 analyze.onclick=async()=>{
  const n=tally();if(n<20||n>360||!audioBlob)return;
  if(audioBlob.size>12*1024*1024){setStatus('File quá 12 MB. Hãy ghi ngắn hơn.','error');return;}
- busy=true;update();setStatus('Đang chạy Whisper rồi OpenPronounce trên Acer. Không đóng cửa sổ CMD…');
- const body=new FormData();body.append('expected_text',target.value);
+ busy=true;update();setStatus('Đang chạy Whisper và chế độ '+(mode.value==='fast'?'âm vị nhanh':'chuyên sâu')+' trên Acer. Không đóng cửa sổ CMD…');
+ const body=new FormData();body.append('expected_text',target.value);body.append('mode',mode.value);
  const mime=audioBlob.type||'audio/webm';
  const suffix=mime.includes('mp4')?'mp4':mime.includes('ogg')?'ogg':mime.includes('mpeg')?'mp3':mime.includes('wav')?'wav':'webm';
  body.append('audio',audioBlob,'reading.'+suffix);
