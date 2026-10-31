@@ -93,6 +93,20 @@ remove_autostart.bat
 
 Cơ chế này chỉ dùng Startup folder của user, không cần chạy server dưới quyền Administrator.
 
+## Acer Nitro 5 / RTX 3050 — thử nghiệm trên laptop
+
+Đây là cấu hình **riêng cho laptop Acer Nitro** của giáo viên. File `setup_acer_nitro.bat` **không đổi secret Supabase đã có** và không thay thế cấu hình desktop GTX 1050 Ti trong repo. Chỉ áp dụng lên máy cài đặt khi chạy file trên chính máy đó.
+
+1. Tải/clone phiên bản repo mới nhất vào Acer Nitro. Cần Windows, Python, **FFmpeg** và **eSpeak NG** trong `PATH`.
+2. Mở `local_pronunciation`, bấm `setup_acer_nitro.bat`. File tự gọi cài ban đầu nếu thiếu, cài PyTorch/OpenPronounce, chọn profile Acer, sau đó chạy một bài mô phỏng giọng đọc máy hoàn toàn tại laptop.
+3. Lần đầu tải khoảng **2,4 GB checkpoint** cho OpenPronounce, cộng thêm Whisper và các thư viện nên cần không gian ổ đĩa, thời gian tải và RAM trống.
+4. Nếu test thành công, bạn có thể chạy `start.bat` để phục vụ phòng thử nghiệm (cần khóa `SUPABASE_SERVICE_ROLE_KEY` trong `.env` riêng trên laptop). Không nhập khóa đó vào chat hoặc GitHub.
+5. Trên web, chỉ giáo viên mở `https://lddenglish.page/ldd-speaking-pilot.html`, ghi âm và xem kết quả beta. Bài đọc thật của học viên vẫn cần kiểm chứng riêng.
+
+Profile Acer chọn Whisper **tự thử RTX 3050**, tự chuyển về CPU `int8` khi CUDA/cuDNN không tương thích. OpenPronounce mặc định chạy trên CPU để tránh tranh 4 GB VRAM. Laptop có thể nóng và xử lý chậm với bài dài; chạy theo hàng chờ một bài/lần. Máy sẽ tạm nghỉ khi chạy pin hoặc quá tải.
+
+**Giới hạn:** Bộ test tự sinh giọng đọc máy bằng eSpeak NG. Nó kiểm tra mô hình có chạy trên Acer không, **không chứng minh độ chính xác trên giọng học viên**. Chưa thể chạy phần kiểm tra này từ GitHub hoặc ChatGPT khi không có kết nối điều khiển Windows của Acer.
+
 ## Máy chấm i3-10100 / GTX 1050 Ti / RAM 8 GB
 
 Ưu tiên profile **CPU + int8** để tránh GPU GTX 1050 Ti 4 GB bị thiếu VRAM. Chạy một bài tại một thời điểm theo queue sẵn có. OpenPronounce cần 2 model Wav2Vec2 lớn; nếu RAM còn trống dưới 3,5 GB, phần chấm âm sẽ báo chưa đủ RAM, không trả điểm giả. Nâng RAM lên 16 GB sẽ hữu ích nếu muốn chạy ổn định hơn.
