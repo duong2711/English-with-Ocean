@@ -5,6 +5,11 @@ from pathlib import Path
 from urllib.request import urlopen
 from dotenv import load_dotenv
 from supabase import create_client
+from windows_audio_tools import setup_environment
+
+# WinGet may have installed audio tools after this terminal started.
+# Propagate their paths (and the eSpeak DLL path) to the uvicorn subprocess.
+setup_environment()
 
 BASE=Path(__file__).resolve().parent
 STOP_FILE=BASE/'stop.flag'
