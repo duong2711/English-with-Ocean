@@ -118,7 +118,7 @@ def _fluency(words: list[dict[str,Any]]) -> tuple[int, dict[str,Any]]:
     return round(max(0,min(100,speed-penalty))), {'wpm':round(wpm,1),'long_pauses':len(long),'pause_seconds':round(sum(long),2)}
 
 
-def score_audio(path: str, target: str) -> dict[str,Any]:
+def score_audio(path: str, target: str, include_timing: bool = False) -> dict[str,Any]:
     global _model_last_used
     model=_model_get()
     segments,_=model.transcribe(path, language='en', beam_size=3, word_timestamps=True,
@@ -146,7 +146,10 @@ def score_audio(path: str, target: str) -> dict[str,Any]:
     feedback=f'🤖 Máy chấm local (beta): {overall}/100 · Khớp câu {accuracy} · Đủ nội dung {complete} · Trôi chảy {fluency} · Độ rõ {confidence}.'
     if notes: feedback+=' '+' · '.join(notes)+'.'
     feedback+=' Điểm beta này chưa phải chấm phoneme chuyên sâu.'
-    return {'score':overall,'accuracy':accuracy,'completeness':complete,'fluency':fluency,
-            'confidence':confidence,'transcript':transcript,'target_text':target,
-            'pass':overall>=AUTO_PASS_SCORE,'threshold':AUTO_PASS_SCORE,'feedback':feedback[:1500],
-            'details':{'model':WHISPER_MODEL,'device':_model_device,'alignment':al,'fluency':fmeta}}
+    result = {'score':overall,'accuracy':accuracy,'completeness':complete,'fluency':fluency,
+              'confidence':confidence,'transcript':transcript,'target_text':target,
+              'pass':overall>=AUTO_PASS_SCORE,'threshold':AUTO_PASS_SCORE,'feedback':feedback[:1500],
+              'details':{'model':WHISPER_MODEL,'device':_model_device,'alignment':al,'fluency':fmeta}}
+    if include_timing:
+        result['_word_timestamps'] = timed  # pilot-only; never persisted as official comments
+    return result
