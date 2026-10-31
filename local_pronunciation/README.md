@@ -93,6 +93,21 @@ remove_autostart.bat
 
 Cơ chế này chỉ dùng Startup folder của user, không cần chạy server dưới quyền Administrator.
 
+## Test bằng chính giọng nói của bạn trên Acer (không cần khóa Supabase)
+
+Sau khi chạy `setup_acer_nitro.bat` và tải mô hình xong:
+
+1. Mở thư mục `local_pronunciation`, nhấp đôi **`test_live_acer_nitro.bat`**.
+2. Trình duyệt tự mở `http://127.0.0.1:8766/`. Nếu chưa mở, nhập thủ công địa chỉ đó **trên Acer**.
+3. Bấm **Bắt đầu ghi âm** → cho phép microphone → đọc đoạn tiếng Anh mẫu → **Dừng ghi âm**.
+4. Có thể nghe lại bản thu hoặc chọn file audio rồi bấm **Chấm thử phát âm**.
+5. Xem điểm beta OpenPronounce, từ nghi phát âm sai và lời Whisper nghe được.
+6. Đóng cửa sổ CMD (Ctrl+C) để dừng máy chủ thử nghiệm.
+
+Trang này chỉ chạy trên **127.0.0.1**, không tạo public tunnel, không cần `SUPABASE_SERVICE_ROLE_KEY`, không ghi điểm vào database và tự xóa file ghi âm khỏi thư mục tạm. OpenPronounce có thể tải mô hình công khai từ Hugging Face và mặc định dùng gTTS để tạo âm thanh tham chiếu (câu văn bản mẫu có thể được gửi tới dịch vụ tạo giọng); **không gửi bản ghi giọng nói** lên Supabase/Azure. Có thể thay gTTS bằng Piper ngoại tuyến sau khi cài tùy chọn `tts-piper`.
+
+Nếu model còn đang tải ở cửa sổ `setup_acer_nitro.bat` cũ, hãy để bài kiểm tra đó kết thúc trước khi mở trang thu micro. Nếu báo RAM trống dưới 3,5 GB, hãy đóng ứng dụng nặng trên laptop rồi thử lại. Kết quả chỉ là tham khảo, chưa đánh giá độ chính xác trên giọng học viên.
+
 ## Nếu gặp lỗi thiếu FFmpeg / eSpeak NG trên Windows
 
 Bản cài Acer mới tự tìm ứng dụng trong WinGet và các thư mục phổ biến. Nếu chưa cài, `setup_acer_nitro.bat` sẽ gọi WinGet để cài chính thức và tìm lại đường dẫn ngay trong phiên chạy đó (không cần tự sửa PATH). Sau khi cập nhật mã nguồn mới, chạy lại **cùng một file** `setup_acer_nitro.bat`.
