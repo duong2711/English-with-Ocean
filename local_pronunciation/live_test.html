@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="vi"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LDD English · Chấm phát âm trên Acer</title>
+<style>
+:root{color-scheme:light;font:15px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif;color:#142f4f;background:#f4f7fd}
+*{box-sizing:border-box}body{margin:0}main{max-width:1000px;margin:auto;padding:24px 14px 60px}
+h1{font-size:clamp(24px,4vw,34px);letter-spacing:-.03em;margin:6px 0 9px}h2{font-size:19px;margin:0 0 12px}
+p{margin:8px 0 14px}.muted{color:#61748e}.wrap{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(280px,.8fr);gap:16px}
+.card{background:white;border-radius:18px;border:1px solid #dbe4f0;padding:20px;margin-bottom:16px}
+textarea{width:100%;height:225px;resize:vertical;font:inherit;color:inherit;line-height:1.65;padding:12px;border:1px solid #b9cadb;border-radius:12px}
+button{border:0;background:#276ee0;color:white;border-radius:10px;padding:11px 15px;font:700 14px system-ui;cursor:pointer}
+button.secondary{background:#eaf2fe;color:#2359a1}button.stop{background:#c9392f}button:disabled{opacity:.4;cursor:not-allowed}
+.actions{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin:13px 0}
+audio{width:100%;display:none}input[type=file]{max-width:100%}
+.status{background:#edf3fc;border-radius:10px;padding:10px 12px;color:#244b80;margin-top:14px;min-height:40px}
+.error{background:#ffe8e2;color:#8e2115}.success{background:#e2f9eb;color:#186737}
+a{color:#286ad1}.reading{margin-top:13px;padding:14px;border:1px solid #dce6ef;border-radius:12px;font-size:17px;line-height:2.4}
+.reading span{padding:3px 4px;white-space:nowrap;margin-right:3px;border-radius:4px}.reading .wrong{background:#ffdddd;color:#a92320;border-bottom:2px solid #d33d3d}
+.result-number{font-size:38px;font-weight:800;line-height:1.1;margin:8px 0}
+.notes{margin-top:12px;font-size:13px;color:#5d6b7e}.small{font-size:13px}
+@media(max-width:750px){.wrap{grid-template-columns:1fr}.card{padding:15px}textarea{height:195px}}
+</style></head><body><main>
+<div style="font-weight:800;color:#2860af">LDD ENGLISH · ACER NITRO LAB</div>
+<h1>Kiểm tra phát âm bằng giọng nói thật</h1>
+<p class="muted">Chạy riêng trên <b>laptop này</b>. Không cần Supabase, Azure hay tài khoản. File ghi âm được xóa sau khi phân tích và không đăng lên website.</p>
+<div class="wrap">
+<section class="card"><h2>1. Đọc đoạn tiếng Anh bên dưới</h2>
+<textarea id="target" spellcheck="false">Every morning, I practise English for a few minutes before going to school. I listen to short conversations and try to repeat the sentences clearly. When I make a mistake, I stop and read the sentence again. Learning a language takes patience, but a little practice every day makes me more confident. I enjoy learning new words because they help me explain my ideas to other people.</textarea>
+<div class="small muted" id="count"></div>
+<h2 style="margin-top:25px">2. Ghi âm bằng micro</h2>
+<div class="actions">
+<button id="start">🎙 Bắt đầu ghi âm</button>
+<button id="stop" class="stop" disabled>■ Dừng ghi âm</button>
+<strong id="timer">00:00</strong>
+</div>
+<audio id="preview" controls></audio>
+<p class="muted small">Hoặc chọn file MP3, WAV, WebM, OGG, MP4:</p>
+<input id="file" type="file" accept="audio/mpeg,audio/wav,audio/x-wav,audio/mp4,audio/webm,audio/ogg,.mp3,.wav,.mp4,.webm,.ogg">
+<div class="actions"><button id="analyze" disabled>Chấm thử phát âm</button><button class="secondary" id="reset" type="button">Xóa bản ghi</button></div>
+<div id="status" class="status" role="status" aria-live="polite">Nhấn Bắt đầu ghi âm để dùng micro Acer.</div>
+</section>
+<section class="card">
+<h2>3. Kết quả phân tích</h2>
+<div id="result"><p class="muted">Sau khi đọc, bấm <b>Dừng ghi âm</b> rồi <b>Chấm thử phát âm</b>.</p></div>
+<p class="notes">Kết quả chỉ là bản thử nghiệm. Điểm OpenPronounce có thể sai với giọng Việt Nam, tiếng ồn hoặc trẻ em. Không dùng làm điểm chính thức.</p>
+</section>
+</div>
+</main>
+<script>
+(function(){
+'use strict';
+const target=document.getElementById('target'), count=document.getElementById('count');
+const start=document.getElementById('start'), stop=document.getElementById('stop'), timer=document.getElementById('timer');
+const preview=document.getElementById('preview'), file=document.getElementById('file');
+const analyze=document.getElementById('analyze'), reset=document.getElementById('reset');
+const status=document.getElementById('status'), result=document.getElementById('result');
+let media=null, stream=null, chunks=[], audioBlob=null, localUrl='', started=0, ticking=null, busy=false;
+function tally(){const n=(target.value.match(/[a-z]+(?:'[a-z]+)?/gi)||[]).length;count.textContent=n+' từ / 20–360 từ'; return n;}
+function setStatus(msg,type){status.textContent=msg;status.className='status '+(type||'');}
+function update(){const n=tally();analyze.disabled=busy||!audioBlob||n<20||n>360;start.disabled=busy||!!media;}
+function setAudio(blob){audioBlob=blob;if(localUrl)URL.revokeObjectURL(localUrl);localUrl=blob?URL.createObjectURL(blob):'';preview.src=localUrl;preview.style.display=blob?'block':'none';setStatus(blob?'Đã có bản ghi ('+(blob.size/1024/1024).toFixed(2)+' MB). Có thể nghe lại trước khi chấm.':'Chưa có bản ghi.');update();}
+function finish(){if(ticking){clearInterval(ticking);ticking=null;}if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}media=null;stop.disabled=true;update();}
+start.onclick=async function(){
+ if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||!window.MediaRecorder){setStatus('Trình duyệt chưa hỗ trợ ghi âm micro. Hãy chọn file bên dưới.','error');return;}
+ try{
+  stream=await navigator.mediaDevices.getUserMedia({audio:true});
+  const formats=['audio/webm;codecs=opus','audio/mp4','audio/webm','audio/ogg'];
+  const mime=formats.find(t=>MediaRecorder.isTypeSupported(t));
+  media=new MediaRecorder(stream,mime?{mimeType:mime}:undefined);chunks=[];
+  media.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};
+  media.onstop=()=>{const blob=new Blob(chunks,{type:media.mimeType||mime||'audio/webm'});finish();setAudio(blob);};
+  media.onerror=()=>{setStatus('Không ghi được âm thanh. Thử chọn thiết bị micro khác.','error');finish()};
+  media.start(500);started=Date.now();start.disabled=true;stop.disabled=false;
+  setStatus('Đang ghi âm. Hãy đọc rõ đoạn văn ở trên…');
+  ticking=setInterval(()=>{const s=Math.floor((Date.now()-started)/1000);
+    timer.textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+    if(s>=180&&media&&media.state==='recording')media.stop();},250);
+ }catch(err){setStatus('Chưa mở được micro: '+(err.message||String(err)),'error');finish();}
+};
+stop.onclick=()=>{if(media&&media.state==='recording')media.stop()};
+file.onchange=()=>{if(file.files&&file.files[0]){if(media&&media.state==='recording')media.stop();setAudio(file.files[0]);}};
+reset.onclick=()=>{if(media&&media.state==='recording')media.stop();file.value='';setAudio(null);timer.textContent='00:00';};
+target.oninput=update;
+function draw(data){
+ result.replaceChildren();
+ const ph=data.phoneme_assessment||{};
+ if(ph.status==='scored'){
+  const h=document.createElement('div');h.className='result-number';h.textContent=ph.score+' / 100';result.append(h);
+  const subtitle=document.createElement('p');subtitle.className='muted small';subtitle.textContent='Điểm thử nghiệm OpenPronounce · đã phân tích '+ph.covered_words+'/'+ph.total_words+' từ';result.append(subtitle);
+  const wordList=(target.value.match(/[a-z]+(?:'[a-z]+)?/gi)||[]);
+  const wrong=new Map((ph.errors||[]).map(e=>[e.position,e]));
+  const reading=document.createElement('div');reading.className='reading';
+  wordList.forEach((w,i)=>{const el=document.createElement('span');el.textContent=w;if(wrong.has(i)){el.className='wrong';const e=wrong.get(i);el.title='IPA mong đợi: '+(e.expected||[]).join(' ')+' / máy nghe: '+(e.actual||[]).join(' ');}reading.append(el);});
+  result.append(reading);
+  const note=document.createElement('p');note.className='small muted';note.textContent='Nền đỏ: từ AI nghi ngờ phát âm chưa đúng. Có thể di chuột để xem âm IPA.';result.append(note);
+ }else{
+  const p=document.createElement('p');p.className='status error';p.textContent=ph.message||'Chưa chấm được phát âm từng âm. Vui lòng thử lại.';result.append(p);
+ }
+ const title=document.createElement('h2');title.style.marginTop='23px';title.textContent='Lời Whisper nghe được';result.append(title);
+ const transcript=document.createElement('p');transcript.textContent=data.transcript||'(Chưa nghe được)';result.append(transcript);
+ const descriptor=document.createElement('p');descriptor.className='small muted';descriptor.textContent='Độ khớp văn bản: '+data.asr_text_match_estimate+'/100. Đây KHÔNG phải điểm phát âm.';result.append(descriptor);
+}
+analyze.onclick=async()=>{
+ const n=tally();if(n<20||n>360||!audioBlob)return;
+ if(audioBlob.size>12*1024*1024){setStatus('File quá 12 MB. Hãy ghi ngắn hơn.','error');return;}
+ busy=true;update();setStatus('Đang chạy Whisper rồi OpenPronounce trên Acer. Không đóng cửa sổ CMD…');
+ const body=new FormData();body.append('expected_text',target.value);
+ const mime=audioBlob.type||'audio/webm';
+ const suffix=mime.includes('mp4')?'mp4':mime.includes('ogg')?'ogg':mime.includes('mpeg')?'mp3':mime.includes('wav')?'wav':'webm';
+ body.append('audio',audioBlob,'reading.'+suffix);
+ try{
+  const res=await fetch('/api/assess',{method:'POST',body});
+  const data=await res.json().catch(()=>({}));
+  if(!res.ok)throw Error(typeof data.detail==='string'?data.detail:data.error||'Không chấm được');
+  draw(data);
+  setStatus('Đã phân tích. File ghi âm không được lưu.','success');
+ }catch(err){setStatus('Chấm thử chưa thành công: '+(err.message||String(err)),'error');}
+ finally{busy=false;update();}
+};
+update();
+})();
+</script></body></html>
