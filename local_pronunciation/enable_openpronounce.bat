@@ -25,6 +25,10 @@ if errorlevel 1 (
   pause
   exit /b 1
 )
+echo Dang chuan bi PyTorch ban CPU de tranh tai cac thu vien CUDA qua lon.
+".venv\Scripts\python.exe" -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+if errorlevel 1 goto :fail
+echo.
 echo Dang cai OpenPronounce 0.3.0. Can bo nho va model lon.
 ".venv\Scripts\python.exe" -m pip install "openpronounce==0.3.0"
 if errorlevel 1 goto :fail
