@@ -156,3 +156,33 @@ Audio không được upload lên Supabase Storage. Các request Supabase cần 
 - `stop.flag`
 
 Không commit service-role key dưới bất kỳ hình thức nào.
+
+## Bản thử nghiệm OpenPronounce — đọc đoạn dài (giáo viên)
+
+- Đường dẫn khi website triển khai: `https://lddenglish.page/ldd-speaking-pilot.html`.
+- Chỉ email giáo viên trong `PILOT_TEACHER_EMAILS` được gửi bản ghi; máy chấm xác minh email qua Supabase Auth.
+- Dán văn bản 20–360 từ, ghi âm hoặc chọn file rồi bấm **Chấm thử**.
+- Phân tích từng đoạn nhỏ căn cứ vào từ khóa đã nhận diện. Phần nào không khớp đủ an toàn sẽ **không** bị kết luận là phát âm sai.
+- Điểm OpenPronounce là thử nghiệm; điểm nhận diện nội dung Whisper **không** được coi là điểm phát âm. Không ghi điểm, audio hay nhận xét vào `speaking_comments`/Supabase Storage.
+- Khi chưa cài hoặc chưa bật OpenPronounce, giao diện báo chưa có chấm âm; không tự tạo điểm.
+- Chưa hỗ trợ chấm chuẩn âm cho bài **nói tự do** (IELTS Speaking) vì không có câu chuẩn. Giai đoạn này chỉ phục vụ **đọc theo văn bản có sẵn**.
+
+### Cài thêm OpenPronounce trên laptop
+
+1. Cài máy chấm hiện có với `install_windows.bat` và cấu hình `.env`.
+2. Đảm bảo Windows có `ffmpeg` và `espeak-ng` trong `PATH`. Chúng là phụ thuộc của OpenPronounce.
+3. Chạy `enable_openpronounce.bat` để cài `openpronounce==0.3.0`, kiểm tra phụ thuộc và tự ghi `OPENPRONOUNCE_ENABLED=1` vào `.env`.
+4. Dừng bằng `stop.bat`, sau đó bật bằng `start.bat`. Chương trình tự đưa URL Cloudflare Tunnel vào `ldd_runtime_config` cho website.
+5. Mở URL phòng thử nghiệm, đăng nhập bằng tài khoản giảng viên. Có thể kiểm tra trạng thái laptop tại `/health` qua đường dẫn tunnel.
+
+**Chi phí/giới hạn:** Không có phí API OpenPronounce, nhưng máy giáo viên phải bật, có CPU/RAM đủ lớn và cần tải khoảng 2,4 GB trọng số mô hình Wav2Vec2 vào bộ nhớ đĩa ở lần đầu. Giai đoạn đầu không ép cài các model nặng cho toàn bộ học viên. Kết quả từng âm có thể báo nhầm với trẻ nhỏ, giọng địa phương hoặc tiếng ồn. Cần kiểm chứng trên mẫu giọng học viên thật trước khi mở rộng.
+
+### Cấu hình tùy chọn
+
+```env
+OPENPRONOUNCE_ENABLED=0
+PILOT_TEACHER_EMAILS=lddbaiu@gmail.com
+MAX_PILOT_AUDIO_BYTES=12582912
+```
+
+Vì mô hình lớn và yêu cầu CPU/RAM, OpenPronounce chỉ được chạy trong job **pilot_reading**. Mọi bài Speaking bình thường vẫn giữ cơ chế chấm hiện tại / giáo viên chấm. Không cần FreeLLMAPI cho giai đoạn thử nghiệm này; FreeLLMAPI có thể bổ sung sau để tạo nhận xét nhưng không thay thế đánh giá âm vị.
