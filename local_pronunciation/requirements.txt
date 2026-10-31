@@ -1,6 +1,8 @@
 fastapi==0.141.1
 uvicorn[standard]==0.53.0
 faster-whisper==1.2.1
+# PyAV 19 removed metadata_errors; faster-whisper 1.2.1 still passes it.
+av==18.1.0
 supabase==2.31.0
 python-multipart==0.0.32
 python-dotenv==1.2.3
