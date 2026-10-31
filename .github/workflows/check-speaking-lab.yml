@@ -17,7 +17,7 @@ jobs:
       - name: Compile Python files
         run: python -m compileall -q local_pronunciation
       - name: Test alignment safety without downloading models
-        run: python -m unittest discover -s local_pronunciation -p 'test_pilot_openpronounce.py' -v
+        run: python -m unittest discover -s local_pronunciation -p 'test_*.py' -v
       - name: Check isolated pilot page and server route
         run: |
           python - <<'PY'
