@@ -1,6 +1,6 @@
 # LDD Local Pronunciation Scorer
 
-Máy chấm phát âm chạy nền trên laptop Acer Nitro 5 Tiger của giáo viên.
+Máy chấm phát âm chạy nền trên máy tính Windows của giáo viên (máy mục tiêu thử nghiệm: i3-10100, GTX 1050 Ti, RAM 8 GB).
 
 ## Mục tiêu
 
@@ -93,19 +93,21 @@ remove_autostart.bat
 
 Cơ chế này chỉ dùng Startup folder của user, không cần chạy server dưới quyền Administrator.
 
-## GPU RTX 3050
+## Máy chấm i3-10100 / GTX 1050 Ti / RAM 8 GB
 
-Cấu hình mặc định:
+Ưu tiên profile **CPU + int8** để tránh GPU GTX 1050 Ti 4 GB bị thiếu VRAM. Chạy một bài tại một thời điểm theo queue sẵn có. OpenPronounce cần 2 model Wav2Vec2 lớn; nếu RAM còn trống dưới 3,5 GB, phần chấm âm sẽ báo chưa đủ RAM, không trả điểm giả. Nâng RAM lên 16 GB sẽ hữu ích nếu muốn chạy ổn định hơn.
 
 ```env
 WHISPER_MODEL=small.en
-WHISPER_DEVICE=auto
-WHISPER_COMPUTE_TYPE=int8_float16
+WHISPER_DEVICE=cpu
+WHISPER_COMPUTE_TYPE=int8
+OPENPRONOUNCE_ENABLED=0
+OPENPRONOUNCE_DEVICE=cpu
+OMP_NUM_THREADS=2
+MKL_NUM_THREADS=2
 ```
 
-Server thử RTX 3050 trước. Nếu môi trường CUDA/cuDNN chưa sẵn sàng, nó tự fallback về CPU `int8` để hệ thống vẫn chạy.
-
-Nếu log có dòng `CUDA chưa dùng được ... fallback CPU int8`, phần web vẫn hoạt động; chỉ tốc độ chấm chậm hơn. Có thể cấu hình CUDA 12 + cuDNN 9 sau để bật GPU đầy đủ.
+Chạy `enable_openpronounce.bat` để tự chọn profile này khi bật bản thử nghiệm. GPU có thể thử lại sau khi kiểm chứng CUDA/VRAM và tốc độ trên máy thật.
 
 ## Cách chấm và bảo mật
 
