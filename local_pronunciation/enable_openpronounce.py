@@ -11,10 +11,9 @@ if not path.exists():
     raise SystemExit('Thiếu .env: chạy install_windows.bat trước.')
 if not importlib.util.find_spec('openpronounce'):
     raise SystemExit('Chưa cài openpronounce: chạy enable_openpronounce.bat.')
-if not shutil.which('ffmpeg'):
-    raise SystemExit('Thiếu ffmpeg trong PATH. Cài ffmpeg trước khi bật.')
-if not shutil.which('espeak-ng'):
-    raise SystemExit('Thiếu espeak-ng trong PATH. Cài espeak-ng trước khi bật.')
+from windows_audio_tools import ensure_audio_tools
+if not ensure_audio_tools():
+    raise SystemExit('Thiếu FFmpeg / eSpeak NG. Chạy lại enable_openpronounce.bat.')
 
 # Prefer dependable CPU execution on an i3-10100 + GTX 1050 Ti / 8 GB RAM:
 # GPU lacks room to host both large Wav2Vec2 models reliably.
