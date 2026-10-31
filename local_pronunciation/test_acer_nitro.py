@@ -12,6 +12,7 @@ import subprocess
 import tempfile
 import time
 from pathlib import Path
+from windows_audio_tools import setup_environment
 
 PASSAGE = (
     "Every morning, I practise English for a few minutes before going to school. "
@@ -23,6 +24,7 @@ PASSAGE = (
 
 
 def check_dependencies() -> bool:
+    setup_environment()
     ok = True
     for exe in ("ffmpeg", "espeak-ng"):
         present = bool(shutil.which(exe))
