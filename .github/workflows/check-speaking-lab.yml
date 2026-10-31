@@ -1,0 +1,33 @@
+name: Check speaking lab beta
+on:
+  push:
+    paths:
+      - 'local_pronunciation/**'
+      - 'ldd-speaking-pilot.html'
+      - '.github/workflows/check-speaking-lab.yml'
+  workflow_dispatch:
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Compile Python files
+        run: python -m compileall -q local_pronunciation
+      - name: Test alignment safety without downloading models
+        run: python -m unittest discover -s local_pronunciation -p 'test_pilot_openpronounce.py' -v
+      - name: Check isolated pilot page and server route
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          html = Path('ldd-speaking-pilot.html').read_text(encoding='utf-8')
+          app = Path('local_pronunciation/app.py').read_text(encoding='utf-8')
+          assert "/v1/pilot/read-aloud" in html and "/v1/pilot/read-aloud" in app
+          assert "PILOT_TEACHER_EMAILS" in app
+          assert "persist_result, j, result" in app
+          assert "if pilot:" in app
+          assert "OPENPRONOUNCE_ENABLED" in app
+          print("Pilot routes, teacher guard and official-score isolation verified.")
+          PY
