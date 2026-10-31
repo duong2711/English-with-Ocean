@@ -56,7 +56,7 @@ def plan_chunks(expected_text: str, timed: list[dict[str, Any]]) -> list[dict[st
 
 
 def assess_reading(audio_path: str, expected_text: str, timed: list[dict[str, Any]],
-                   enabled: bool = False) -> dict[str, Any]:
+                   enabled: bool = False, fast: bool = False) -> dict[str, Any]:
     if not enabled:
         return {"status": "disabled", "message": "OpenPronounce chưa được bật trên máy chấm."}
     # Wav2Vec2 word + phoneme models are memory-heavy. On an 8 GB Windows
@@ -76,7 +76,11 @@ def assess_reading(audio_path: str, expected_text: str, timed: list[dict[str, An
         # If torch is missing, the import below reports the missing model.
         pass
     try:
-        from openpronounce import load_audio, compare_audio_with_text
+        from openpronounce import load_audio
+        if fast:
+            from openpronounce.phones import recognize_phones, compare_phones
+        else:
+            from openpronounce import compare_audio_with_text
     except ImportError:
         return {"status": "not_installed", "message": "Máy chấm chưa cài OpenPronounce."}
 
@@ -104,12 +108,25 @@ def assess_reading(audio_path: str, expected_text: str, timed: list[dict[str, An
                 continue
             try:
                 reference = " ".join(chunk["expected_words"])
-                raw = compare_audio_with_text(load_audio(wav), reference, lang="en")
-                score = float(raw.get("score", 0))
-                if not 0 <= score <= 100:
-                    raise ValueError("Invalid OpenPronounce score")
+                if fast:
+                    # Fast beta: only the audio phone recognizer + expected IPA alignment.
+                    # No reference TTS, second Wav2Vec2 transcription, acoustic DTW, or pyin.
+                    # The phone match percentage is NOT a calibrated pronunciation score.
+                    recognition = recognize_phones(load_audio(wav), lang="en")
+                    comparison = compare_phones(recognition, reference, lang="en")
+                    error_rate = float(comparison["phone_error_rate"])
+                    if not 0 <= error_rate <= 5:
+                        raise ValueError("Invalid phoneme error rate")
+                    score = round(100 * max(0.0, 1.0 - error_rate), 1)
+                    raw_errors = comparison.get("errors") or []
+                else:
+                    raw = compare_audio_with_text(load_audio(wav), reference, lang="en")
+                    score = float(raw.get("score", 0))
+                    if not 0 <= score <= 100:
+                        raise ValueError("Invalid OpenPronounce score")
+                    raw_errors = (raw.get("differences") or {}).get("errors") or []
                 errors = []
-                for item in (raw.get("differences") or {}).get("errors") or []:
+                for item in raw_errors:
                     position = item.get("position")
                     if not isinstance(position, int) or not 0 <= position < len(chunk["expected_words"]):
                         continue
@@ -140,18 +157,23 @@ def assess_reading(audio_path: str, expected_text: str, timed: list[dict[str, An
     covered = sum(x["word_count"] for x in results)
     if not covered:
         return {"status": "error", "message": "OpenPronounce chưa phân tích được bản thu này.",
-                "covered_words": 0, "total_words": total}
+                "covered_words": 0, "total_words": total,
+                "mode": "phoneme_only" if fast else "full"}
 
     weighted = sum(x["score"] * x["word_count"] for x in results) / covered
     errors = [e for x in results for e in x["errors"]]
     return {
-        "status": "scored",
+        "status": "phoneme_checked" if fast else "scored",
+        "mode": "phoneme_only" if fast else "full",
         "beta": True,
-        "score": round(weighted, 1),
+        # Fast mode has a raw phone-match ratio, NOT a validated overall score.
+        "phoneme_match_pct": round(weighted, 1) if fast else None,
+        "score": None if fast else round(weighted, 1),
         "covered_words": covered,
         "total_words": total,
         "errors": errors[:90],
         "chunks": len(results),
         "issues": issues[:3],
-        "message": "Điểm thử nghiệm trên phần đọc đủ căn cứ; không thay thế chấm của giáo viên.",
+        "message": ("Tỉ lệ khớp âm vị chỉ mang tính tham khảo, không phải điểm phát âm."
+                    if fast else "Điểm thử nghiệm trên phần đọc đủ căn cứ; không thay thế chấm của giáo viên."),
     }
