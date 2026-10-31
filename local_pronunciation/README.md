@@ -93,6 +93,19 @@ remove_autostart.bat
 
 Cơ chế này chỉ dùng Startup folder của user, không cần chạy server dưới quyền Administrator.
 
+## Nếu gặp lỗi thiếu FFmpeg / eSpeak NG trên Windows
+
+Bản cài Acer mới tự tìm ứng dụng trong WinGet và các thư mục phổ biến. Nếu chưa cài, `setup_acer_nitro.bat` sẽ gọi WinGet để cài chính thức và tìm lại đường dẫn ngay trong phiên chạy đó (không cần tự sửa PATH). Sau khi cập nhật mã nguồn mới, chạy lại **cùng một file** `setup_acer_nitro.bat`.
+
+Nếu Windows thiếu WinGet hoặc trình cài yêu cầu quyền quản trị, dùng terminal trên máy của bạn (không nhập key Supabase) để chạy:
+
+```powershell
+winget install -e --id Gyan.FFmpeg --accept-package-agreements --accept-source-agreements
+winget install -e --id eSpeak-NG.eSpeak-NG --accept-package-agreements --accept-source-agreements
+```
+
+Sau đó mở terminal mới hoặc chạy lại bản cài. Nếu trong log `espeak DLL: CHUA TIM THAY`, kiểm tra `C:\Program Files\eSpeak NG\libespeak-ng.dll`; phonemizer cần DLL ngoài file chạy eSpeak. Máy Acer dùng bản chạy offline không yêu cầu khóa Supabase: chỉ khi bạn muốn đưa bản chấm lên LDD English qua `start.bat` mới điền khóa vào `.env` **trên máy tính**, tuyệt đối không gửi khóa vào chat hoặc GitHub.
+
 ## Acer Nitro 5 / RTX 3050 — thử nghiệm trên laptop
 
 Đây là cấu hình **riêng cho laptop Acer Nitro** của giáo viên. File `setup_acer_nitro.bat` **không đổi secret Supabase đã có** và không thay thế cấu hình desktop GTX 1050 Ti trong repo. Chỉ áp dụng lên máy cài đặt khi chạy file trên chính máy đó.
