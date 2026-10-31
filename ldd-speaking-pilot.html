@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Thử nghiệm chấm đoạn nói dài · LDD English</title>
+  <meta name="robots" content="noindex,nofollow">
+  <style>
+    :root{color-scheme:light;--ink:#183054;--muted:#62748b;--line:#dce5f0;--accent:#2772e5;--bg:#f4f7fb;--radius:18px}
+    *{box-sizing:border-box}body{margin:0;font:15px/1.55 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink);background:var(--bg)}
+    .shell{max-width:1080px;margin:auto;padding:28px 18px 65px}header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:24px}
+    a{color:#2468ca;text-decoration:none;font-weight:600}h1{font-size:clamp(24px,4vw,36px);letter-spacing:-.03em;line-height:1.15;margin:7px 0 8px}
+    h2{font-size:19px;margin:0 0 12px}.muted{color:var(--muted)}.small{font-size:13px}.eyebrow{font-size:12px;letter-spacing:.12em;font-weight:750;color:#2869c7;text-transform:uppercase}
+    .hero{margin:0 0 24px}.layout{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(280px,.8fr);gap:18px}
+    .card{background:white;border:1px solid var(--line);border-radius:var(--radius);padding:22px;box-shadow:0 8px 26px rgba(35,74,128,.035)}
+    label{display:block;font-weight:700;margin:10px 0 8px}textarea{width:100%;min-height:230px;border:1px solid #cbd8e8;border-radius:12px;padding:14px;font:16px/1.7 inherit;resize:vertical;background:white;color:var(--ink)}
+    textarea:focus{outline:3px solid #a5ceff;border-color:#2173dc}
+    input[type=file]{display:block;max-width:100%;font:inherit}.controls{display:flex;flex-wrap:wrap;gap:9px;margin-top:15px}
+    button{border:0;border-radius:11px;background:var(--accent);color:white;padding:11px 16px;font:700 14px system-ui;cursor:pointer}
+    button.secondary{background:#ebf2fb;color:#194a8e}button.stop{background:#c0392b}button:disabled{opacity:.46;cursor:not-allowed}
+    .status{border-radius:12px;background:#eef4fc;color:#214c7a;padding:11px 13px;font-size:14px;margin:12px 0;min-height:42px}
+    .warn{background:#fff3e2;color:#824709}.good{background:#e7f8ec;color:#21663a}.bad{background:#fff0ed;color:#a32b24}
+    .timer{font-weight:800;font-variant-numeric:tabular-nums;font-size:18px}.pill{display:inline-block;border-radius:99px;border:1px solid #d4e2f5;padding:4px 10px;font-size:12px;color:#235eae}
+    audio{width:100%;margin-top:12px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+    .metric{background:#f2f6fc;border-radius:13px;padding:13px}.metric strong{display:block;font-size:27px}.metric span{font-size:13px;color:var(--muted)}
+    .words{line-height:2.4;font-size:17px;border:1px solid var(--line);border-radius:12px;padding:12px}
+    .words span{padding:3px 5px;margin:0 2px 3px 0;border-radius:6px}.words .suspect{background:#ffe0dc;color:#a12e29;border-bottom:2px solid #d55245}
+    .words .unscored{background:#f4f5f7;color:#79869a}.errors{display:grid;gap:8px;margin-top:12px}
+    .error-item{border:1px solid #f1d7d3;border-radius:10px;padding:9px 11px}.error-item b{color:#ab3428}
+    .hide{display:none!important}.divider{border:0;border-top:1px solid var(--line);margin:18px 0}
+    @media(max-width:780px){.layout{grid-template-columns:1fr}.card{padding:16px}.shell{padding:17px 12px 35px}textarea{min-height:180px}}
+  </style>
+</head>
+<body>
+  <div class="shell" id="app" hidden>
+    <header><strong>LDD English <span class="pill">Speaking Lab Beta</span></strong><a href="./">← Về trang chủ</a></header>
+    <section class="hero">
+      <span class="eyebrow">Bản thử nghiệm riêng · không ghi điểm chính thức</span>
+      <h1>Chấm phát âm đoạn văn dài</h1>
+      <p class="muted">Dành cho giáo viên thử nghiệm đoạn đọc 1–3 phút. OpenPronounce phân tích từng âm khi máy chấm trên laptop đã được bật; không sử dụng Azure.</p>
+    </section>
+    <div id="access-status" class="status">Đang xác thực tài khoản giáo viên…</div>
+    <div id="lab" class="layout hide">
+      <section class="card">
+        <h2>1. Đoạn văn học viên cần đọc</h2>
+        <label for="passage">Văn bản tiếng Anh chuẩn (20–360 từ)</label>
+        <textarea id="passage" spellcheck="false">Learning English takes time and regular practice. Every day, I try to listen carefully, speak clearly, and use new words in meaningful sentences. Sometimes I make mistakes, but I know that mistakes are a natural part of learning. When I practise a little every day, I become more confident and improve my communication skills.</textarea>
+        <div id="word-count" class="muted small">0 từ</div>
+        <hr class="divider">
+        <h2>2. Ghi âm hoặc chọn file</h2>
+        <div class="muted small">Cho phép micro khi trình duyệt hỏi. File chỉ gửi tới máy chấm của giáo viên khi bạn bấm Chấm thử.</div>
+        <div class="controls">
+          <button id="record" type="button">🎙 Bắt đầu ghi</button>
+          <button id="stop" type="button" class="stop" disabled>■ Dừng ghi</button>
+          <span id="timer" class="timer" aria-live="polite">00:00</span>
+        </div>
+        <audio id="player" controls class="hide"></audio>
+        <label for="file">Hoặc chọn file âm thanh đã ghi</label>
+        <input id="file" type="file" accept="audio/webm,audio/mp4,audio/ogg,audio/mpeg,audio/wav,audio/x-wav">
+        <div class="controls"><button id="submit" type="button" disabled>Chấm thử đoạn nói</button></div>
+        <div id="upload-status" class="status" aria-live="polite">Chưa có bản ghi âm.</div>
+      </section>
+      <aside class="card">
+        <h2>Máy chấm và quyền riêng tư</h2>
+        <div id="server-status" class="status warn">Đang kiểm tra kết nối tới máy chấm…</div>
+        <p class="muted">Đầu ghi âm đi qua Cloudflare Tunnel về laptop giáo viên. Không lưu file trên Supabase và không thay đổi điểm học viên.</p>
+        <p class="small muted">OpenPronounce yêu cầu mô hình chạy trên máy riêng và có thể xử lý chậm. Nếu máy chấm chưa hoạt động, website sẽ không tạo điểm giả.</p>
+        <hr class="divider">
+        <h2>Kết quả chấm thử</h2>
+        <div id="results"><p class="muted">Ghi âm và bấm Chấm thử để xem kết quả.</p></div>
+      </aside>
+    </div>
+  </div>
+<script>
+(function(){
+  'use strict';
+  const root=document.getElementById('app'), lab=document.getElementById('lab'), passage=document.getElementById('passage');
+  const access=document.getElementById('access-status'), serverStatus=document.getElementById('server-status'), uploadStatus=document.getElementById('upload-status');
+  const recordBtn=document.getElementById('record'), stopBtn=document.getElementById('stop'), submitBtn=document.getElementById('submit');
+  const player=document.getElementById('player'), file=document.getElementById('file'), results=document.getElementById('results');
+  const endpoint='https://ywqbaksmmtvwbojcgsdd.supabase.co', key='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl3cWJha3NtbXR2d2JvamNnc2RkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxNjc3NTAsImV4cCI6MjA5Nzc0Mzc1MH0.vhgt7cB6w2elm-MXY57U_wJtYkJQHDFAEsJwAArOjhQ';
+  let service='', token='', audioBlob=null, recorder=null, stream=null, chunks=[], started=0, interval=null, audioUrl='';
+  function state(el,msg,kind){el.textContent=msg;el.className='status '+(kind||'')}
+  function count(){const n=(passage.value.match(/[A-Za-z]+(?:'[A-Za-z]+)?/g)||[]).length;document.getElementById('word-count').textContent=n+' từ';return n}
+  function refresh(){submitBtn.disabled=!audioBlob||!service||count()<20||count()>360}
+  function authToken(){try{const data=JSON.parse(localStorage.getItem('sb-ywqbaksmmtvwbojcgsdd-auth-token')||'null');return data&&(data.access_token||(data.currentSession&&data.currentSession.access_token)||(Array.isArray(data)&&data[0]&&data[0].access_token))||''}catch(_){return ''}}
+  function drawResult(data){
+    results.replaceChildren();
+    const ph=data.phoneme_assessment||{};
+    const h=document.createElement('h2');h.textContent='Phân tích OpenPronounce';results.appendChild(h);
+    if(ph.status!=='scored'){
+      const p=document.createElement('p');p.className='status warn';p.textContent=ph.message||'Chưa có kết quả chấm âm chuyên sâu.';results.appendChild(p);
+    }else{
+      const g=document.createElement('div');g.className='grid';
+      [['Điểm thử nghiệm',String(ph.score)+' / 100'],['Phần đã phân tích',String(ph.covered_words)+' / '+String(ph.total_words)+' từ']].forEach(([label,v])=>{
+        const item=document.createElement('div');item.className='metric';const strong=document.createElement('strong');strong.textContent=v;const cap=document.createElement('span');cap.textContent=label;item.append(strong,cap);g.appendChild(item)});
+      results.appendChild(g);
+      const info=document.createElement('p');info.className='small muted';info.textContent='Điểm beta chỉ áp dụng cho phần âm thanh căn chỉnh đủ tin cậy; không tương đương ELSA/Azure.';results.appendChild(info);
+      const errors=Array.isArray(ph.errors)?ph.errors:[];
+      const wrong=new Map(errors.map(x=>[x.position,x]));
+      const base=(passage.value.match(/[A-Za-z]+(?:'[A-Za-z]+)?/g)||[]);
+      const holder=document.createElement('div');holder.className='words';holder.setAttribute('aria-label','Từ có cảnh báo phát âm được đánh dấu');
+      base.forEach((word,i)=>{const span=document.createElement('span');span.textContent=word;const err=wrong.get(i);if(err){span.className='suspect';span.title='Máy nghi ngờ phát âm chưa đúng';}holder.appendChild(span);});
+      results.appendChild(holder);
+      if(errors.length){const list=document.createElement('div');list.className='errors';
+        errors.slice(0,20).forEach(e=>{const el=document.createElement('div');el.className='error-item';const name=document.createElement('b');name.textContent=e.word;el.appendChild(name);
+          const desc=document.createElement('div');desc.className='small muted';desc.textContent='IPA mong đợi: '+(Array.isArray(e.expected)?e.expected.join(' '):String(e.expected||''))+' · Máy nghe: '+(Array.isArray(e.actual)?e.actual.join(' '):String(e.actual||''));el.appendChild(desc);list.appendChild(el)});
+        results.appendChild(list);
+      }
+    }
+    const transcription=document.createElement('h2');transcription.style.marginTop='18px';transcription.textContent='Lời máy nghe được';results.appendChild(transcription);
+    const txt=document.createElement('p');txt.textContent=data.transcript||'(không có văn bản nhận diện)';results.appendChild(txt);
+  }
+  async function discover(){
+    state(serverStatus,'Đang tìm máy chấm…');
+    try{
+      const r=await fetch(endpoint+'/rest/v1/ldd_runtime_config?select=value&key=eq.pronunciation_server_url&limit=1',{headers:{apikey:key,Authorization:'Bearer '+token},cache:'no-store'});
+      if(!r.ok)throw Error('Không đọc được trạng thái máy chấm.');
+      const rows=await r.json();const url=rows[0]&&String(rows[0].value||'').replace(/\/$/,'');
+      if(!url||!/^https:\/\/[A-Za-z0-9.-]+$/.test(url)){service='';state(serverStatus,'Máy chấm laptop chưa chạy. Chưa thể chấm phát âm.','warn');refresh();return;}
+      const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),4500);
+      let check;try{check=await fetch(url+'/health',{signal:controller.signal,cache:'no-store'});}finally{clearTimeout(timeout)}
+      if(!check.ok)throw Error('Máy chấm không phản hồi.');
+      const status=await check.json();if(!status.configured)throw Error('Máy chấm chưa cấu hình.');
+      service=url;
+      state(serverStatus,status.pilot_enabled&&status.pilot_model_installed?'Máy chấm OpenPronounce đã sẵn sàng.':'Máy chấm có kết nối, nhưng OpenPronounce chưa được bật/cài.',''+(status.pilot_enabled&&status.pilot_model_installed?'good':'warn'));
+    }catch(e){service='';state(serverStatus,e.message||'Máy chấm offline.','warn')}
+    refresh();
+  }
+  function resetAudio(blob){audioBlob=blob;if(audioUrl)URL.revokeObjectURL(audioUrl);audioUrl=blob?URL.createObjectURL(blob):'';player.classList.toggle('hide',!blob);player.src=audioUrl;state(uploadStatus,blob?'Đã có bản ghi '+(blob.size/1048576).toFixed(2)+' MB.':'Chưa có bản ghi âm.');refresh()}
+  function cleanup(){clearInterval(interval);if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}recordBtn.disabled=false;stopBtn.disabled=true}
+  recordBtn.onclick=async()=>{
+    if(!navigator.mediaDevices||!window.MediaRecorder){state(uploadStatus,'Trình duyệt không hỗ trợ ghi âm. Hãy chọn file.','bad');return;}
+    try{
+      stream=await navigator.mediaDevices.getUserMedia({audio:true});
+      let mime='';
+      for(const opt of ['audio/webm;codecs=opus','audio/mp4','audio/webm','audio/ogg'])if(MediaRecorder.isTypeSupported(opt)){mime=opt;break;}
+      recorder=new MediaRecorder(stream,mime?{mimeType:mime}:undefined);chunks=[];
+      recorder.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};
+      recorder.onstop=()=>{resetAudio(new Blob(chunks,{type:recorder.mimeType||mime||'audio/webm'}));cleanup()};
+      recorder.onerror=()=>{state(uploadStatus,'Ghi âm gặp lỗi. Hãy thử lại.','bad');cleanup()};
+      recorder.start(1000);started=Date.now();recordBtn.disabled=true;stopBtn.disabled=false;
+      state(uploadStatus,'Đang ghi âm…');interval=setInterval(()=>{
+        const seconds=Math.floor((Date.now()-started)/1000);
+        document.getElementById('timer').textContent=String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0');
+        if(seconds>=180&&recorder&&recorder.state!=='inactive')recorder.stop();
+      },250);
+    }catch(err){cleanup();state(uploadStatus,'Không mở được micro: '+(err.message||err),'bad')}
+  };
+  stopBtn.onclick=()=>{if(recorder&&recorder.state!=='inactive')recorder.stop()};
+  file.onchange=()=>{if(file.files&&file.files[0]){if(recorder&&recorder.state!=='inactive')recorder.stop();resetAudio(file.files[0])}};
+  passage.oninput=refresh;
+  const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+  submitBtn.onclick=async()=>{
+    const n=count();if(n<20||n>360||!audioBlob)return;
+    if(audioBlob.size>12*1024*1024){state(uploadStatus,'File lớn hơn 12 MB. Hãy ghi âm ngắn hoặc giảm dung lượng.','bad');return;}
+    if(!service){await discover();if(!service)return;}
+    submitBtn.disabled=true;state(uploadStatus,'Đang gửi bản thu qua kết nối riêng tới máy giáo viên…');
+    try{
+      const f=new FormData();const mime=audioBlob.type||'audio/webm';const ext=mime.includes('mp4')?'mp4':mime.includes('ogg')?'ogg':mime.includes('wav')?'wav':mime.includes('mpeg')?'mp3':'webm';
+      f.append('audio',audioBlob,'speaking.'+ext);f.append('expected_text',passage.value);
+      const r=await fetch(service+'/v1/pilot/read-aloud',{method:'POST',headers:{Authorization:'Bearer '+token},body:f});
+      const init=await r.json().catch(()=>({}));
+      if(!r.ok)throw Error(typeof init.detail==='string'?init.detail:'Máy chấm từ chối yêu cầu.');
+      const jobId=init.job_id;
+      for(let i=0;i<240;i++){await sleep(2000);
+        const jr=await fetch(service+'/v1/jobs/'+encodeURIComponent(jobId),{headers:{Authorization:'Bearer '+token}});
+        if(!jr.ok)throw Error('Mất kết nối khi chờ kết quả.');
+        const job=await jr.json();
+        if(job.status==='done'){drawResult(job.result||{});state(uploadStatus,'Đã chấm thử. Không lưu điểm chính thức.','good');return;}
+        if(job.status==='error')throw Error(job.error||'Phân tích thất bại.');
+        state(uploadStatus,job.status==='paused'?'Laptop đang bận, bài nằm trong hàng chờ.':job.status==='processing'?'Đang xử lý ghi âm và phân tích các âm…':'Đang xếp hàng chấm…');
+      }
+      throw Error('Máy chấm xử lý quá lâu. Bài vẫn có thể ở hàng chờ trên laptop.');
+    }catch(err){state(uploadStatus,'Chưa chấm được: '+(err.message||err),'bad')}
+    finally{refresh()}
+  };
+  async function init(){
+    root.hidden=false;count();token=authToken();
+    if(!token){state(access,'Vui lòng đăng nhập bằng tài khoản giáo viên trên LDD English trước.','warn');return;}
+    try{
+      const r=await fetch(endpoint+'/auth/v1/user',{headers:{apikey:key,Authorization:'Bearer '+token}});
+      const u=r.ok?await r.json():null;
+      if(!u||!['lddbaiu@gmail.com'].includes(String(u.email||'').toLowerCase())){state(access,'Tính năng này chỉ dành cho tài khoản giảng viên.','bad');return;}
+      access.className='hide';lab.classList.remove('hide');await discover();
+    }catch(e){state(access,'Chưa xác thực được tài khoản. Hãy đăng nhập lại.','bad')}
+  }
+  init();
+})();
+</script>
+</body>
+</html>
