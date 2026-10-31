@@ -13,7 +13,7 @@
     h2{font-size:19px;margin:0 0 12px}.muted{color:var(--muted)}.small{font-size:13px}.eyebrow{font-size:12px;letter-spacing:.12em;font-weight:750;color:#2869c7;text-transform:uppercase}
     .hero{margin:0 0 24px}.layout{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(280px,.8fr);gap:18px}
     .card{background:white;border:1px solid var(--line);border-radius:var(--radius);padding:22px;box-shadow:0 8px 26px rgba(35,74,128,.035)}
-    label{display:block;font-weight:700;margin:10px 0 8px}textarea{width:100%;min-height:230px;border:1px solid #cbd8e8;border-radius:12px;padding:14px;font:16px/1.7 inherit;resize:vertical;background:white;color:var(--ink)}
+    label{display:block;font-weight:700;margin:10px 0 8px}textarea{width:100%;min-height:230px;border:1px solid #cbd8e8;border-radius:12px;padding:14px;font:inherit;font-size:16px;line-height:1.7;resize:vertical;background:white;color:var(--ink)}
     textarea:focus{outline:3px solid #a5ceff;border-color:#2173dc}
     input[type=file]{display:block;max-width:100%;font:inherit}.controls{display:flex;flex-wrap:wrap;gap:9px;margin-top:15px}
     button{border:0;border-radius:11px;background:var(--accent);color:white;padding:11px 16px;font:700 14px system-ui;cursor:pointer}
@@ -123,7 +123,7 @@
       if(!check.ok)throw Error('Máy chấm không phản hồi.');
       const status=await check.json();if(!status.configured)throw Error('Máy chấm chưa cấu hình.');
       service=url;
-      state(serverStatus,status.pilot_enabled&&status.pilot_model_installed?'Máy chấm OpenPronounce đã sẵn sàng.':'Máy chấm có kết nối, nhưng OpenPronounce chưa được bật/cài.',''+(status.pilot_enabled&&status.pilot_model_installed?'good':'warn'));
+      state(serverStatus,status.pilot_enabled&&status.pilot_model_installed?'OpenPronounce đã bật; lần chấm đầu có thể cần tải mô hình.':'Máy chấm có kết nối, nhưng OpenPronounce chưa được bật/cài.',''+(status.pilot_enabled&&status.pilot_model_installed?'good':'warn'));
     }catch(e){service='';state(serverStatus,e.message||'Máy chấm offline.','warn')}
     refresh();
   }
