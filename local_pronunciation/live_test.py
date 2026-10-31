@@ -24,8 +24,8 @@ from windows_audio_tools import setup_environment
 # Ensure FFmpeg, eSpeak NG and phonemizer's DLL can be found on Windows.
 setup_environment()
 
+import scoring
 from openpronounce_adapter import assess_reading
-from scoring import score_audio, unload_if_idle
 
 BASE = Path(__file__).resolve().parent
 HTML = BASE / "live_test.html"
@@ -73,22 +73,58 @@ async def health():
     }
 
 
-def analyze_audio(path: str, target: str):
-    start = time.monotonic()
-    result = score_audio(path, target, include_timing=True)
-    timed = result.pop("_word_timestamps", [])
-    whisper_device = (result.get("details") or {}).get("device", "")
-    unload_if_idle(force=True)
-    gc.collect()
+def analyze_audio(path: str, target: str, fast: bool = True):
+    """Keep model costs measurable and distinguish ASR from phoneme results."""
+    started = time.perf_counter()
+    stage = "WHISPER"
+    try:
+        print("[LDD TEST] WHISPER: bat dau nhan dien...")
+        start_asr = time.perf_counter()
+        try:
+            result = scoring.score_audio(path, target, include_timing=True)
+        except (RuntimeError, OSError) as first_error:
+            # CTranslate2 may initialize on CUDA successfully but fail during inference
+            # when cuBLAS/cuDNN runtime DLLs are missing on Windows RTX 3050.
+            reason = str(first_error).lower()
+            is_cuda_runtime_failure = any(part in reason for part in (
+                "cublas", "cudnn", "cudart", "cuda", "cufft", "cublas64_12.dll",
+            ))
+            if not is_cuda_runtime_failure or scoring.WHISPER_DEVICE == "cpu":
+                raise
+            print("[LDD TEST] CUDA runtime chua du; fallback CPU int8:", str(first_error)[:180])
+            scoring.unload_if_idle(force=True)
+            scoring.WHISPER_DEVICE = "cpu"
+            scoring.WHISPER_COMPUTE_TYPE = "int8"
+            result = scoring.score_audio(path, target, include_timing=True)
+        asr_seconds = round(time.perf_counter() - start_asr, 2)
+        timed = result.pop("_word_timestamps", [])
+        whisper_device = (result.get("details") or {}).get("device", "")
+        print(f"[LDD TEST] WHISPER OK: {asr_seconds}s; device={whisper_device}; words={len(timed)}")
+    except Exception as error:
+        raise RuntimeError(f"WHISPER: {type(error).__name__}: {str(error)[:280]}") from error
+    finally:
+        # Free memory before loading the large phone recognizer (16GB RAM laptop).
+        scoring.unload_if_idle(force=True)
+        gc.collect()
 
-    outcome = assess_reading(path, target, timed, enabled=True)
+    stage = "PHONE_ONLY" if fast else "OPENPRONOUNCE_FULL"
+    try:
+        print(f"[LDD TEST] {stage}: bat dau...")
+        start_phone = time.perf_counter()
+        outcome = assess_reading(path, target, timed, enabled=True, fast=fast)
+        phone_seconds = round(time.perf_counter() - start_phone, 2)
+        print(f"[LDD TEST] {stage}: {outcome.get('status')} sau {phone_seconds}s")
+    except Exception as error:
+        raise RuntimeError(f"{stage}: {type(error).__name__}: {str(error)[:280]}") from error
+
     result["phoneme_assessment"] = outcome
     result["asr_text_match_estimate"] = result.pop("score", None)
     result.pop("pass", None)
     result.pop("threshold", None)
     result["assessment_type"] = "private_acer_trial_no_database"
     result["whisper_device"] = whisper_device
-    result["elapsed_seconds"] = round(time.monotonic() - start, 1)
+    result["elapsed_seconds"] = round(time.perf_counter() - started, 2)
+    result["timings"] = {"whisper_seconds": asr_seconds, "phoneme_seconds": phone_seconds}
     result["feedback"] = "Chỉ là chấm thử; không có điểm chính thức."
     return result
 
@@ -97,7 +133,10 @@ def analyze_audio(path: str, target: str):
 async def assess(
     audio: UploadFile = File(...),
     expected_text: str = Form(...),
+    mode: str = Form("fast"),
 ):
+    if mode not in {"fast", "full"}:
+        raise HTTPException(422, "Chế độ chấm không hợp lệ.")
     if lock.locked():
         raise HTTPException(429, "Máy đang chấm một bản ghi khác. Hãy thử lại.")
     text = re.sub(r"\s+", " ", expected_text or "").strip()
@@ -125,12 +164,14 @@ async def assess(
             path = Path(folder) / ("recording" + suffix)
             path.write_bytes(data)
             try:
-                result = await asyncio.to_thread(analyze_audio, str(path), text)
+                result = await asyncio.to_thread(analyze_audio, str(path), text, mode == "fast")
             except Exception as exc:
+                import traceback
+                traceback.print_exc()
                 print("[LDD Acer speaking test] Analysis failed:", repr(exc))
-                raise HTTPException(
-                    500, "Máy chấm gặp lỗi khi phân tích. Xem cửa sổ CMD và thử lại."
-                ) from exc
+                # Error text is local-loopback only; never expose secrets or file paths.
+                safe_error = str(exc).replace(str(BASE), "[app]").replace(str(Path.home()), "[home]")
+                raise HTTPException(500, safe_error[:350]) from exc
             finally:
                 # TemporaryDirectory removes the recording automatically,
                 # even when an inference exception occurs.
