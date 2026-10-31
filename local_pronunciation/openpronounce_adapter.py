@@ -59,6 +59,22 @@ def assess_reading(audio_path: str, expected_text: str, timed: list[dict[str, An
                    enabled: bool = False) -> dict[str, Any]:
     if not enabled:
         return {"status": "disabled", "message": "OpenPronounce chưa được bật trên máy chấm."}
+    # Wav2Vec2 word + phoneme models are memory-heavy. On an 8 GB Windows
+    # workstation defer rather than push the OS into swapping or OOM.
+    try:
+        import psutil
+        free_bytes = psutil.virtual_memory().available
+        if free_bytes < 3_500_000_000:
+            return {
+                "status": "insufficient_ram",
+                "message": "RAM trống dưới 3.5 GB. Đóng ứng dụng khác hoặc nâng RAM 16 GB rồi thử lại.",
+                "available_ram_gb": round(free_bytes / 1e9, 1),
+            }
+        import torch
+        torch.set_num_threads(2)
+    except ImportError:
+        # If torch is missing, the import below reports the missing model.
+        pass
     try:
         from openpronounce import load_audio, compare_audio_with_text
     except ImportError:
