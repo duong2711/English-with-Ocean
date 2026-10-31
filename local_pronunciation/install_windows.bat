@@ -55,13 +55,17 @@ if not exist ".env" (
 
 echo.
 echo =============================================================
-echo CON 1 VIEC BAT BUOC:
-echo Mo file .env va thay PASTE_SERVICE_ROLE_KEY_HERE bang service_role key cua Supabase.
-echo TUYET DOI KHONG dua service_role key len GitHub hoac JS cua web.
+echo KIEM TRA OFFLINE KHONG CAN SUPABASE SERVICE ROLE KEY.
+echo Chi khi muon ket noi website, moi can nhap key trong .env
+echo va chay start.bat. Khong chia se key vao chat/GitHub.
 echo =============================================================
 echo.
+if defined LDD_OFFLINE_TEST (
+  echo [LDD] Dang chay che do thu nghiem offline: bo qua nhap key.
+  exit /b 0
+)
 start "" notepad "%~dp0.env"
-echo Sau khi dien key, double-click start.bat de test lan dau.
+echo Neu muon ket noi website, dien key vao .env roi chay start.bat.
 pause
 exit /b 0
 
