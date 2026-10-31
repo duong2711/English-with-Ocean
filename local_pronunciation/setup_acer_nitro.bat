@@ -6,6 +6,7 @@ echo =================================================
 echo  LDD ENGLISH - ACER NITRO RTX 3050 - THU NGHIEM
 echo =================================================
 echo.
+set "LDD_OFFLINE_TEST=1"
 if not exist ".venv\Scripts\python.exe" (
     echo Can cai may cham co ban lan dau.
     call install_windows.bat
