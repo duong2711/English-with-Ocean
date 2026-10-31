@@ -93,6 +93,18 @@ remove_autostart.bat
 
 Cơ chế này chỉ dùng Startup folder của user, không cần chạy server dưới quyền Administrator.
 
+## Sửa lỗi Whisper: `metadata_errors`
+
+Nếu gặp `TypeError: open() got an unexpected keyword argument 'metadata_errors'` trong phiên bản faster-whisper 1.2.1, thì đây là xung đột với PyAV 19. **Không phải lỗi GPU/micro**. Trong thư mục `local_pronunciation` cũ có `.venv`, chạy **`fix_whisper_pyav.bat`** rồi đóng chương trình test micro cũ, bật lại bằng `test_live_acer_nitro.bat`.
+
+Thao tác tương đương trong CMD mở tại `local_pronunciation`:
+
+```bat
+.venv\Scripts\python.exe -m pip install --force-reinstall "av==18.1.0"
+```
+
+Thư viện này đã được pin trong `requirements.txt` và `enable_openpronounce.bat` để tránh lỗi lặp lại khi cài mới. Không cần Supabase key và không cần tải lại mô hình.
+
 ## Test bằng chính giọng nói của bạn trên Acer (không cần khóa Supabase)
 
 Sau khi chạy `setup_acer_nitro.bat` và tải mô hình xong:
