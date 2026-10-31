@@ -21,6 +21,10 @@ echo.
 echo Dang cai OpenPronounce 0.3.0. Can bo nho va model lon.
 ".venv\Scripts\python.exe" -m pip install "openpronounce==0.3.0"
 if errorlevel 1 goto :fail
+echo.
+echo [LDD] Co dinh PyAV 18.1.0 de tranh loi metadata_errors.
+".venv\Scripts\python.exe" -m pip install "av==18.1.0"
+if errorlevel 1 goto :fail
 ".venv\Scripts\python.exe" enable_openpronounce.py
 if errorlevel 1 goto :fail
 echo.
