@@ -1,5 +1,7 @@
 from __future__ import annotations
 import asyncio, json, os, re, time, uuid
+import httpx
+from importlib.util import find_spec
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
@@ -8,9 +10,11 @@ from fastapi import FastAPI, File, Form, Header, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from config import (ALLOWED_ORIGINS, AUTO_PASS_SCORE, MAX_AUDIO_BYTES, QUEUE_DIR,
                     SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, SUPPORTED_TYPES, WHISPER_MODEL,
-                    WHISPER_DEVICE, JOB_RETENTION_SECONDS)
+                    WHISPER_DEVICE, JOB_RETENTION_SECONDS, OPENPRONOUNCE_ENABLED, PILOT_TEACHER_EMAILS,
+                    MAX_PILOT_AUDIO_BYTES)
 from backend import persist_result, resolve_target, validate_user
 from scoring import machine_available, model_status, score_audio, unload_if_idle
+from openpronounce_adapter import assess_reading
 
 jobs: dict[str,dict[str,Any]]={}
 q: asyncio.Queue[str]=asyncio.Queue()
@@ -70,8 +74,24 @@ async def _worker():
                 if ok: break
                 j.update(status='paused',reason=reason,updated_at=time.time()); _save(j); await asyncio.sleep(10)
             j.update(status='processing',updated_at=time.time()); j.pop('reason',None); _save(j)
-            result=await asyncio.to_thread(score_audio,j['audio_path'],j['target_text'])
-            await asyncio.to_thread(persist_result,j,result)
+            pilot = j.get('item_type') == 'pilot_reading'
+            result = await asyncio.to_thread(score_audio, j['audio_path'], j['target_text'], pilot)
+            if pilot:
+                timed = result.pop('_word_timestamps', [])
+                # Release Whisper before loading the separate ~2.4GB Wav2Vec2 models.
+                unload_if_idle(force=True)
+                result['phoneme_assessment'] = await asyncio.to_thread(
+                    assess_reading, j['audio_path'], j['target_text'], timed, OPENPRONOUNCE_ENABLED
+                )
+                # Text match is not pronunciation accuracy. The pilot must not
+                # expose it as a final grade when OpenPronounce is unavailable.
+                result['asr_text_match_estimate'] = result.pop('score', None)
+                result.pop('pass', None)
+                result.pop('threshold', None)
+                result['assessment_type'] = 'teacher_pilot_only'
+                result['feedback'] = 'Kết quả thử nghiệm; chưa ghi điểm chính thức.'
+            else:
+                await asyncio.to_thread(persist_result, j, result)
             j.update(status='done',result=result,updated_at=time.time()); _save(j)
             Path(j['audio_path']).unlink(missing_ok=True)
         except Exception as exc:
@@ -112,7 +132,8 @@ async def health():
     return {'ok':True,'configured':bool(SUPABASE_ANON_KEY and SUPABASE_SERVICE_ROLE_KEY),
             'accepting':ok,'reason':reason,'queued':q.qsize(),'model':WHISPER_MODEL,
             'model_loaded':loaded,'device':device or ('cuda preferred' if WHISPER_DEVICE=='auto' else WHISPER_DEVICE),
-            'pass_score':AUTO_PASS_SCORE}
+            'pass_score':AUTO_PASS_SCORE, 'pilot_enabled':OPENPRONOUNCE_ENABLED,
+            'pilot_model_installed':bool(find_spec('openpronounce'))}
 
 
 @app.post('/v1/jobs')
@@ -151,3 +172,61 @@ async def get_job(job_id:str,authorization:str|None=Header(default=None)):
     if not j: raise HTTPException(404,'Không tìm thấy job.')
     if str(j.get('user_id'))!=uid: raise HTTPException(403,'Bạn không có quyền xem job này.')
     return _public(j)
+
+
+@app.post('/v1/pilot/read-aloud')
+async def teacher_read_aloud_pilot(
+    audio: UploadFile = File(...),
+    expected_text: str = Form(...),
+    authorization: str | None = Header(default=None),
+):
+    """Teacher-only, no database writes. Audio is deleted after processing."""
+    token = _token(authorization)
+    uid = await validate_user(token)
+    # Email comes from Supabase Auth, never from an editable browser field/JWT metadata.
+    try:
+        async with httpx.AsyncClient(timeout=8) as client:
+            response = await client.get(
+                os.getenv('SUPABASE_URL', 'https://ywqbaksmmtvwbojcgsdd.supabase.co').rstrip('/') + '/auth/v1/user',
+                headers={'apikey': SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + token},
+            )
+    except Exception as exc:
+        raise HTTPException(503, 'Không xác thực được quyền giáo viên.') from exc
+    if response.status_code != 200:
+        raise HTTPException(401, 'Phiên đăng nhập không hợp lệ.')
+    account = response.json()
+    if account.get('id') != uid or str(account.get('email') or '').strip().lower() not in PILOT_TEACHER_EMAILS:
+        raise HTTPException(403, 'Chỉ giảng viên được thử nghiệm máy chấm này.')
+
+    expected_text = re.sub(r'\s+', ' ', expected_text or '').strip()
+    if not 20 <= len(expected_text.split()) <= 360 or len(expected_text) > 2500:
+        raise HTTPException(422, 'Hãy nhập đoạn đọc từ 20 đến 360 từ tiếng Anh.')
+    if not re.fullmatch(r"[A-Za-z0-9\s,.;:!?()'\-\"–—]+", expected_text):
+        raise HTTPException(422, 'Đoạn đọc chỉ hỗ trợ chữ tiếng Anh và dấu câu thông thường.')
+    mime = str(audio.content_type or '').lower()
+    if not any(k in mime for k in ('audio/webm', 'audio/mp4', 'audio/ogg', 'audio/mpeg', 'audio/wav', 'audio/x-wav')):
+        raise HTTPException(415, 'Định dạng âm thanh không được hỗ trợ.')
+    if _active_for_user(uid) >= MAX_ACTIVE_PER_USER or q.qsize() >= MAX_GLOBAL_QUEUE:
+        raise HTTPException(429, 'Máy chấm đang bận. Hãy thử sau.')
+
+    raw = await audio.read(MAX_PILOT_AUDIO_BYTES + 1)
+    if len(raw) > MAX_PILOT_AUDIO_BYTES:
+        raise HTTPException(413, 'Bản thu vượt giới hạn 12 MB.')
+    if len(raw) < 1024:
+        raise HTTPException(422, 'Bản thu quá ngắn.')
+    ext = '.mp4' if 'mp4' in mime else '.ogg' if 'ogg' in mime else '.mp3' if 'mpeg' in mime else '.wav' if 'wav' in mime else '.webm'
+    jid = uuid.uuid4().hex
+    path = QUEUE_DIR / (jid + ext)
+    path.write_bytes(raw)
+    now = time.time()
+    j = {
+        'id': jid, 'user_id': uid, 'item_type': 'pilot_reading',
+        'item_key': jid, 'item_label': 'Thử nghiệm đọc đoạn dài',
+        'target_text': expected_text,
+        'audio_path': str(path), 'status': 'queued',
+        'created_at': now, 'updated_at': now,
+    }
+    jobs[jid] = j
+    _save(j)
+    await q.put(jid)
+    return {'job_id': jid, 'status': 'queued', 'position': max(1, q.qsize())}
