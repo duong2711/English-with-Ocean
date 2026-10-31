@@ -27,3 +27,9 @@ ALLOWED_ORIGINS = [x.strip() for x in os.getenv('ALLOWED_ORIGINS', ','.join(DEFA
 QUEUE_DIR = BASE_DIR / 'queue'
 QUEUE_DIR.mkdir(parents=True, exist_ok=True)
 SUPPORTED_TYPES = {'ls1_qa', 'ls1_opener', 'ls2_shadow'}
+
+# OpenPronounce is opt-in: experimental teacher-only read-aloud lab.
+OPENPRONOUNCE_ENABLED = os.getenv('OPENPRONOUNCE_ENABLED', '0').lower() in {'1', 'true', 'yes'}
+PILOT_TEACHER_EMAILS = {x.strip().lower() for x in os.getenv('PILOT_TEACHER_EMAILS', 'lddbaiu@gmail.com').split(',') if x.strip()}
+MAX_PILOT_AUDIO_BYTES = max(1024 * 1024, min(16 * 1024 * 1024, int(os.getenv('MAX_PILOT_AUDIO_BYTES', str(12 * 1024 * 1024)))))
+
