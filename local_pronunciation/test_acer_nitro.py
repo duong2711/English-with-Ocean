@@ -73,6 +73,7 @@ def run_full() -> int:
         finally:
             unload_if_idle(force=True)
         print(f"WHISPER: {(time.perf_counter()-start):.1f}s; {len(timed)} tu da can thoi gian.")
+        print("THIET BI WHISPER:", (whisper.get("details") or {}).get("device", "unknown"))
         if not timed:
             print("Whisper khong nhan duoc tu; khong the thu phan chinh sua tung am.")
             return 5
