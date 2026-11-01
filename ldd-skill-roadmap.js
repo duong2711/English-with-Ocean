@@ -1498,7 +1498,7 @@
         return '<p class="ldd-listening-instruction">' + escapeListening(item.taskPrompt || 'Nghe toàn bộ bài rồi trả lời các câu hỏi.') + '</p>' +
             '<div class="ldd-listening-mcq-set">' + item.questions.map((question,qIndex) =>
                 '<section class="ldd-listening-mcq-question"><h5>Câu ' + (qIndex + 1) + '. ' + escapeListening(question.text) + '</h5><div class="ldd-reading-answers">' +
-                    question.options.map((option,aIndex) => '<button type="button" data-listening-q="' + qIndex + '" data-listening-a="' + aIndex + '" aria-pressed="false">' + escapeListening(option) + '</button>').join('') +
+                    question.options.map((option,aIndex) => '<button type="button" data-listening-q="' + qIndex + '" data-listening-a="' + aIndex + '" aria-pressed="false">' + String.fromCharCode(65 + aIndex) + '. ' + escapeListening(option) + '</button>').join('') +
                 '</div></section>'
             ).join('') + '</div>';
     }
@@ -1511,7 +1511,7 @@
         questions.forEach((question,qIndex) => {
             if (qIndex === item.timelineIndex) sections += primary;
             sections += '<section class="ldd-listening-mcq-question"><h5>Câu ' + (qIndex + 1) + '. ' + escapeListening(question.text) + '</h5><div class="ldd-reading-answers">' +
-                question.options.map((option,aIndex) => '<button type="button" data-listening-q="' + qIndex + '" data-listening-a="' + aIndex + '" aria-pressed="false">' + escapeListening(option) + '</button>').join('') +
+                question.options.map((option,aIndex) => '<button type="button" data-listening-q="' + qIndex + '" data-listening-a="' + aIndex + '" aria-pressed="false">' + String.fromCharCode(65 + aIndex) + '. ' + escapeListening(option) + '</button>').join('') +
                 '</div></section>';
         });
         if (item.timelineIndex === questions.length) sections += primary;
