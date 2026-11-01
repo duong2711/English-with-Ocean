@@ -4040,9 +4040,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const VISIBILITY_REFRESH_MIN_GAP_MS = 20 * 1000;
     let lastGradingBadgeRefreshAt = 0;
     document.addEventListener('visibilitychange', () => {
-        if (document.hidden && typeof window.thcsResetTranslateIfMidProgress === 'function') {
-            window.thcsResetTranslateIfMidProgress();
-        }
+        // Thông báo hệ thống / Zalo có thể thay đổi visibility: không reset Dịch câu.
         // [MỚI] Vừa quay lại tab trình duyệt này (ví dụ vừa chuyển qua ứng dụng khác rồi quay
         // lại) -> kiểm tra ngay số ghi âm phiên âm đang chờ chấm, thay vì phải đợi tới lượt
         // quét định kỳ tiếp theo (tối đa 90 giây) mới thấy số mới nhất.
@@ -4065,11 +4063,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // không bị reset. Bắt thêm sự kiện "blur" của window (cửa sổ mất focus) để bao quát đúng
     // trường hợp này; window blur xảy ra bất kể cửa sổ có còn hiển thị hay không, miễn là
     // không còn là cửa sổ đang được thao tác.
-    window.addEventListener('blur', () => {
-        if (typeof window.thcsResetTranslateIfMidProgress === 'function') {
-            window.thcsResetTranslateIfMidProgress('window-blur');
-        }
-    });
+    // Không reset Dịch câu khi cửa sổ mất focus vì thông báo, cấp quyền micro hoặc cuộc gọi.
 
     // --- LOGIC HOÀN THÀNH KÝ TỰ ---
     
