@@ -15526,7 +15526,247 @@ function toggleCompletion(symbolElement) {
 
         let trWords = [];
         let trIndex = 0;
-        let thcsTranslateBusy = false; // chặn bấm "Kiểm tra" nhiều lần trong lúc đang chuyển câu
+        let thcsTranslateBusy = false; // Chỉ mở khóa sau khi hoàn thành bước đọc câu
+        let thcsSpeechWaiting = false;
+        let thcsSpeechListening = false;
+        let thcsSpeechToken = 0;
+        let thcsSpeechRecorder = null;
+        let thcsSpeechStream = null;
+        let thcsSpeechTimer = null;
+
+        function thcsStopSentenceStep() {
+            thcsSpeechToken++;
+            thcsSpeechWaiting = false;
+            if (thcsSpeechListening && window.pronounceGate && window.pronounceGate.stop) {
+                window.pronounceGate.stop();
+            }
+            thcsSpeechListening = false;
+            if (thcsSpeechTimer) clearTimeout(thcsSpeechTimer);
+            thcsSpeechTimer = null;
+            if (thcsSpeechRecorder && thcsSpeechRecorder.state !== 'inactive') {
+                try { thcsSpeechRecorder.stop(); } catch (_) {}
+            }
+            thcsSpeechRecorder = null;
+            if (thcsSpeechStream) {
+                thcsSpeechStream.getTracks().forEach(track => track.stop());
+                thcsSpeechStream = null;
+            }
+            const panel = document.getElementById('thcs-translate-speaking');
+            if (panel) panel.remove();
+            thcsTrCheckBtn.disabled = false;
+        }
+
+        // Word-level edit distance: chấm toàn bộ câu, không thể vượt ngưỡng bằng cách chỉ đọc 1 từ.
+        function thcsSentenceReadScore(expected, transcript) {
+            const tokenize = text => String(text || '').toLowerCase().normalize('NFKD')
+                .replace(/[^a-z0-9\s]/g, ' ').trim().split(/\s+/).filter(Boolean);
+            const target = tokenize(expected);
+            const heard = tokenize(transcript);
+            if (!target.length || !heard.length) return 0;
+            let prev = Array.from({ length: heard.length + 1 }, (_, i) => i);
+            for (let i = 1; i <= target.length; i++) {
+                const row = [i];
+                for (let j = 1; j <= heard.length; j++) {
+                    row[j] = Math.min(
+                        prev[j] + 1,
+                        row[j - 1] + 1,
+                        prev[j - 1] + (target[i - 1] === heard[j - 1] ? 0 : 1)
+                    );
+                }
+                prev = row;
+            }
+            return Math.max(0, Math.round((1 - prev[heard.length] / Math.max(target.length, heard.length)) * 100));
+        }
+
+        function thcsStartSentenceSpeaking(fullAnswer) {
+            thcsSpeechWaiting = true;
+            const token = ++thcsSpeechToken;
+            thcsTrCheckBtn.disabled = true;
+            const input = document.getElementById('thcs-translate-blank-input');
+            if (input) input.style.display = 'none';
+            thcsTrSentence.innerHTML = (window.vocabTap && window.vocabTap.wrap)
+                ? window.vocabTap.wrap(fullAnswer) : thcsEscHtml(fullAnswer);
+            thcsTrFeedback.className = 'thcs-translate-feedback is-correct';
+            thcsTrFeedback.textContent = '✅ Điền đúng! Hãy nghe câu mẫu, sau đó đọc lại cả câu để qua bài.';
+
+            const panel = document.createElement('div');
+            panel.id = 'thcs-translate-speaking';
+            panel.className = 'thcs-translate-speaking';
+            panel.innerHTML = '<div class="thcs-translate-speaking-title">Bước 2/2 · Nghe và đọc cả câu</div>' +
+                '<div class="thcs-translate-speaking-actions">' +
+                '<button type="button" class="kid-btn" id="thcs-translate-replay">🔊 Nghe lại</button>' +
+                '<button type="button" class="kid-btn kid-btn-primary" id="thcs-translate-mic" disabled>🎤 Đọc cả câu</button></div>' +
+                '<p id="thcs-translate-speech-status" class="thcs-translate-speech-status" role="status" aria-live="polite"></p>';
+            thcsTrSentence.insertAdjacentElement('afterend', panel);
+            const replay = panel.querySelector('#thcs-translate-replay');
+            const mic = panel.querySelector('#thcs-translate-mic');
+            const status = panel.querySelector('#thcs-translate-speech-status');
+            let heardReady = false;
+
+            function setStatus(message, type) {
+                status.textContent = message;
+                status.className = 'thcs-translate-speech-status' + (type ? ' is-' + type : '');
+            }
+            function playSample() {
+                if (token !== thcsSpeechToken || thcsSpeechListening) return;
+                heardReady = false;
+                mic.disabled = true;
+                replay.disabled = true;
+                setStatus('🔊 Đang nghe câu tiếng Anh mẫu…');
+                let finished = false;
+                const finish = () => {
+                    if (finished || token !== thcsSpeechToken) return;
+                    finished = true;
+                    heardReady = true;
+                    mic.disabled = false;
+                    replay.disabled = false;
+                    setStatus('🎤 Đến lượt em: nhấn micro và đọc trọn câu. Cần đạt trên 60%.');
+                };
+                if (!('speechSynthesis' in window)) {
+                    replay.disabled = true;
+                    finish();
+                    setStatus('⚠️ Thiết bị không phát được giọng mẫu. Hãy dùng trình duyệt hỗ trợ âm thanh.', 'warning');
+                    return;
+                }
+                phoneticsSpeak(fullAnswer, 0.9, finish);
+                // Một vài thiết bị không gọi onend; tránh khóa micro vĩnh viễn.
+                setTimeout(finish, Math.max(4500, Math.min(17000, fullAnswer.split(/\s+/).length * 800 + 2600)));
+            }
+
+            function finishTranscript(transcript) {
+                if (token !== thcsSpeechToken || !thcsSpeechWaiting) return;
+                thcsSpeechListening = false;
+                mic.disabled = false;
+                mic.textContent = '🎤 Đọc lại cả câu';
+                replay.disabled = false;
+                const score = thcsSentenceReadScore(fullAnswer, transcript);
+                if (score > 60) {
+                    mic.disabled = true;
+                    replay.disabled = true;
+                    thcsPlayCorrectSound();
+                    setStatus('✅ Đọc đạt ' + score + '%! Chuyển sang câu tiếp theo…', 'pass');
+                    thcsSpeechTimer = setTimeout(() => {
+                        if (token !== thcsSpeechToken) return;
+                        thcsTranslateBusy = false;
+                        thcsAdvanceTranslate();
+                    }, 1000);
+                } else {
+                    setStatus('🔁 Đạt ' + score + '% (cần trên 60%). Hãy nghe lại và đọc đủ cả câu.', 'retry');
+                }
+            }
+
+            async function listenByCloudflare() {
+                // Phương án cho trình duyệt không có SpeechRecognition (đặc biệt trên iOS).
+                let stream;
+                try {
+                    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) {
+                        throw new Error('Trình duyệt chưa hỗ trợ thu âm. Hãy thử Chrome, Edge hoặc Safari mới.');
+                    }
+                    stream = await navigator.mediaDevices.getUserMedia({
+                        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+                    });
+                    if (token !== thcsSpeechToken) { stream.getTracks().forEach(t => t.stop()); return; }
+                    thcsSpeechStream = stream;
+                    const mime = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4']
+                        .find(type => MediaRecorder.isTypeSupported(type)) || '';
+                    const recorder = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
+                    thcsSpeechRecorder = recorder;
+                    const chunks = [];
+                    recorder.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+                    recorder.onstop = async () => {
+                        if (thcsSpeechTimer) clearTimeout(thcsSpeechTimer);
+                        thcsSpeechTimer = null;
+                        stream.getTracks().forEach(t => t.stop());
+                        if (thcsSpeechStream === stream) thcsSpeechStream = null;
+                        if (thcsSpeechRecorder === recorder) thcsSpeechRecorder = null;
+                        if (token !== thcsSpeechToken) return;
+                        try {
+                            setStatus('⏳ Đang chấm phần đọc cả câu…');
+                            const blob = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' });
+                            if (blob.size < 900) throw new Error('Không nghe được giọng nói. Hãy thử lại.');
+                            const audio = await new Promise((resolve, reject) => {
+                                const reader = new FileReader();
+                                reader.onload = () => resolve(String(reader.result).split(',')[1] || '');
+                                reader.onerror = reject;
+                                reader.readAsDataURL(blob);
+                            });
+                            const sessionResult = await sb.auth.getSession();
+                            const session = sessionResult.data && sessionResult.data.session;
+                            if (!session) throw new Error('Vui lòng đăng nhập lại để chấm phát âm.');
+                            const response = await fetch(SUPABASE_URL + '/functions/v1/cloudflare-pronounce-score', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': 'Bearer ' + session.access_token,
+                                    'apikey': SUPABASE_ANON_KEY
+                                },
+                                body: JSON.stringify({ word: fullAnswer, audio, mimeType: recorder.mimeType || blob.type })
+                            });
+                            const data = await response.json().catch(() => ({}));
+                            if (!response.ok || data.error) throw new Error(data.error || 'Không thể chấm giọng nói lúc này.');
+                            if (token !== thcsSpeechToken) return;
+                            if (!data.transcript) throw new Error('Chưa nhận ra giọng nói. Hãy đọc lại.');
+                            finishTranscript(data.transcript);
+                        } catch (error) {
+                            if (token !== thcsSpeechToken) return;
+                            thcsSpeechListening = false;
+                            mic.disabled = false;
+                            replay.disabled = false;
+                            mic.textContent = '🎤 Đọc lại cả câu';
+                            setStatus('⚠️ ' + (error.message || 'Chưa chấm được giọng nói. Hãy thử lại.'), 'warning');
+                        }
+                    };
+                    recorder.start();
+                    mic.disabled = false;
+                    mic.textContent = '⏹️ Dừng và chấm';
+                    setStatus('🔴 Đang thu âm — đọc hết cả câu, sau đó nhấn Dừng và chấm.');
+                    thcsSpeechTimer = setTimeout(() => {
+                        if (recorder.state !== 'inactive') recorder.stop();
+                    }, Math.min(18000, Math.max(7000, fullAnswer.split(/\s+/).length * 1100)));
+                } catch (error) {
+                    if (stream) stream.getTracks().forEach(t => t.stop());
+                    if (token !== thcsSpeechToken) return;
+                    thcsSpeechListening = false;
+                    mic.disabled = false;
+                    replay.disabled = false;
+                    setStatus('⚠️ ' + (error.message || 'Không thể dùng micro.'), 'warning');
+                }
+            }
+
+            replay.addEventListener('click', playSample);
+            mic.addEventListener('click', () => {
+                if (token !== thcsSpeechToken || !heardReady) return;
+                if (thcsSpeechRecorder && thcsSpeechRecorder.state === 'recording') {
+                    thcsSpeechRecorder.stop();
+                    mic.disabled = true;
+                    return;
+                }
+                if (thcsSpeechListening) return;
+                thcsSpeechListening = true;
+                mic.disabled = true;
+                replay.disabled = true;
+                setStatus('🎤 Đang lắng nghe — hãy đọc trọn câu tiếng Anh.');
+                if (window.pronounceGate && window.pronounceGate.supported) {
+                    window.pronounceGate.listen(fullAnswer, {
+                        onMatch: finishTranscript,
+                        onMismatch: finishTranscript,
+                        onError: error => {
+                            if (token !== thcsSpeechToken) return;
+                            thcsSpeechListening = false;
+                            mic.disabled = false;
+                            replay.disabled = false;
+                            setStatus(error === 'denied'
+                                ? '⚠️ Hãy cấp quyền micro trong cài đặt trình duyệt rồi đọc lại.'
+                                : '⚠️ Chưa nghe rõ giọng nói. Hãy đọc lại cả câu.', 'warning');
+                        }
+                    });
+                } else {
+                    listenByCloudflare();
+                }
+            });
+            // Chỉ bắt đầu phát sau khi điền đúng, không chuyển câu tự động.
+            setTimeout(() => { if (token === thcsSpeechToken) playSample(); }, 400);
+        }
 
         function thcsInitTranslate(unit) {
             trIndex = 0;
@@ -15541,7 +15781,10 @@ function toggleCompletion(symbolElement) {
         // làm lại từ câu đầu tiên (giống hệt như khi trả lời sai 1 câu), kèm thông báo cho
         // học viên biết vì sao tiến độ bị đặt lại.
         function thcsResetTranslateIfMidProgress() {
-            if (trIndex <= 0 || !trWords.length) return; // chưa bắt đầu hoặc đang ở câu đầu -> không cần reset
+            if ((trIndex <= 0 && !thcsSpeechWaiting) || !trWords.length) return;
+            // Hộp xin quyền micro có thể làm cửa sổ mất focus; không coi đó là rời bài.
+            if (thcsSpeechListening && !document.hidden) return;
+            thcsStopSentenceStep();
             trIndex = 0;
             thcsTranslateBusy = false;
             thcsRenderTranslate();
@@ -15607,6 +15850,8 @@ function toggleCompletion(symbolElement) {
         }
 
         function thcsRenderTranslate() {
+            thcsStopSentenceStep();
+            thcsTranslateBusy = false;
             const w = trWords[trIndex];
             thcsTrProg.textContent = `Câu ${trIndex + 1} / ${trWords.length}`;
             thcsTrVi.textContent = w.trVi || w.vi;
@@ -15665,14 +15910,7 @@ function toggleCompletion(symbolElement) {
 
             if (userAns === correctAns) {
                 thcsPlayCorrectSound();
-                thcsTrFeedback.className = 'thcs-translate-feedback is-correct';
-                thcsTrFeedback.innerHTML = (trIndex === trWords.length - 1)
-                    ? '✅ Chính xác! Bạn đã hoàn thành tất cả câu dịch của Unit này 🎉'
-                    : '✅ Chính xác! Đang chuyển sang câu tiếp theo...';
-                setTimeout(() => {
-                    thcsTranslateBusy = false;
-                    thcsAdvanceTranslate();
-                }, 900);
+                thcsStartSentenceSpeaking(trWords[trIndex].trAnswer || trWords[trIndex].ex || '');
             } else {
                 thcsPlayWrongSound();
                 blankInput.classList.add('is-wrong');
@@ -15713,7 +15951,8 @@ function toggleCompletion(symbolElement) {
 
         thcsTrCheckBtn.addEventListener('click', thcsCheckAnswer);
         thcsTrRestartBtn.addEventListener('click', () => {
-            if (thcsTranslateBusy) return;
+            if (thcsTranslateBusy && !thcsSpeechWaiting) return;
+            thcsStopSentenceStep();
             trIndex = 0;
             thcsRenderTranslate();
         });
