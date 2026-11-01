@@ -2000,40 +2000,37 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0704/002.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Listen to the recording and choose the correct answer (A, B, C or D) for each question.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “Yes. I like ____ dollhouses very much”.",
+        "text": "What is Trang's hobby?",
         "options": [
-          "building",
-          "taking",
-          "improving",
-          "trying"
+          "Collecting stamps",
+          "Building dollhouses",
+          "Playing the guitar",
+          "Riding horses"
         ],
-        "answer": 0,
-        "sourceWordIndex": 29
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “riding. That’s rather ____. Not many people”.",
+        "text": "How does Trang describe Ann's hobby of horse riding?",
         "options": [
-          "funny",
-          "unusual",
-          "beautiful",
-          "friendly"
+          "It is too expensive.",
+          "It is very easy.",
+          "It is rather unusual.",
+          "It is quite boring."
         ],
-        "answer": 1,
-        "sourceWordIndex": 71
+        "answer": 2
       },
       {
-        "text": "Chọn từ nghe được: “go to your ____ this Sunday. I”.",
+        "text": "What does Trang want to do this Sunday?",
         "options": [
-          "geography",
-          "earth",
-          "club",
-          "space"
+          "Go to Ann's horse riding club.",
+          "Buy a new dollhouse.",
+          "Visit a museum.",
+          "Learn to paint."
         ],
-        "answer": 2,
-        "sourceWordIndex": 108
+        "answer": 0
       }
     ],
     "source": {
@@ -2055,40 +2052,37 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0704/006.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Listen to the recording and choose the correct answer (A, B, C or D) for each question.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “you like reading ____? Yes, very much”.",
+        "text": "What kind of books does Ann especially enjoy reading?",
         "options": [
-          "children",
-          "projects",
-          "books",
-          "trees"
+          "Books about history",
+          "Books about science",
+          "Books about art",
+          "Books about sports"
         ],
-        "answer": 2,
-        "sourceWordIndex": 4
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “science. What about ____? Do you like”.",
+        "text": "What activity does Mi ask Ann about after talking about reading?",
         "options": [
-          "painting",
-          "travelling",
-          "walking",
-          "shopping"
+          "Singing",
+          "Playing chess",
+          "Painting",
+          "Cooking"
         ],
-        "answer": 0,
-        "sourceWordIndex": 14
+        "answer": 2
       },
       {
-        "text": "Chọn từ nghe được: “I don't. I'm not ____ in art”.",
+        "text": "Why doesn't Ann like painting?",
         "options": [
-          "interested",
-          "helped",
-          "lived",
-          "learnt"
+          "She has no free time.",
+          "She finds it too difficult.",
+          "She doesn't have the right tools.",
+          "She isn't interested in art."
         ],
-        "answer": 0,
-        "sourceWordIndex": 24
+        "answer": 3
       }
     ],
     "source": {
@@ -2110,40 +2104,37 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/007.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Listen to the recording and choose the correct answer (A, B, C or D) for each question.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “dollhouses. It's quite ____, isn't it? Not”.",
+        "text": "How does Lan describe Trang's hobby at the beginning of the interview?",
         "options": [
-          "boring",
-          "unusual",
-          "generous",
-          "busy"
+          "Quite unusual",
+          "Very expensive",
+          "Too difficult",
+          "Rather dangerous"
         ],
-        "answer": 1,
-        "sourceWordIndex": 15
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “friends or relatives ____ dollhouses too? Yes”.",
+        "text": "Which relative of Trang's also enjoys building dollhouses?",
         "options": [
-          "write",
-          "want",
-          "teach",
-          "build"
+          "Her aunt",
+          "Her sister",
+          "Her cousin Mi",
+          "Her mother"
         ],
-        "answer": 3,
-        "sourceWordIndex": 55
+        "answer": 2
       },
       {
-        "text": "Chọn từ nghe được: “dolls from cloth. ____, I decorate the”.",
+        "text": "What does Trang do after making the dolls from cloth?",
         "options": [
-          "Finally",
-          "Often",
-          "Quickly",
-          "Sometimes"
+          "Paints the furniture",
+          "Decorates the house",
+          "Buys more cardboard",
+          "Starts a new dollhouse"
         ],
-        "answer": 0,
-        "sourceWordIndex": 96
+        "answer": 1
       }
     ],
     "source": {
@@ -2165,40 +2156,37 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/008.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Listen to the recording and choose the correct answer (A, B, C or D) for each question.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “at Yen So ____. I also see”.",
+        "text": "Where did Mark go boating with his dad?",
         "options": [
-          "World",
-          "Mountain",
-          "Store",
-          "Park"
+          "West Lake",
+          "Hoan Kiem Lake",
+          "Yen So Park",
+          "The Red River"
         ],
-        "answer": 3,
-        "sourceWordIndex": 15
+        "answer": 2
       },
       {
-        "text": "Chọn từ nghe được: “the countryside. It’s ____, and there's a”.",
+        "text": "Where does Mi's family often go cycling?",
         "options": [
-          "smart",
-          "popular",
-          "jealous",
-          "quiet"
+          "At a sports centre",
+          "In the countryside",
+          "Around their school",
+          "At the beach"
         ],
-        "answer": 3,
-        "sourceWordIndex": 51
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “next time. Sure. ____ along a hat”.",
+        "text": "What does Mi tell Mark to bring when he joins her family?",
         "options": [
-          "Save",
-          "Test",
-          "Improve",
-          "Bring"
+          "A helmet and a camera",
+          "A raincoat and boots",
+          "A ball and trainers",
+          "A hat and suncream"
         ],
-        "answer": 3,
-        "sourceWordIndex": 86
+        "answer": 3
       }
     ],
     "source": {
@@ -2220,40 +2208,37 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/011.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Listen to the recording and choose the correct answer (A, B, C or D) for each question.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “My eyes are ____. You can use”.",
+        "text": "What health problem does the girl mention?",
         "options": [
-          "cheap",
-          "tired",
-          "difficult",
-          "active"
+          "She has a headache.",
+          "Her eyes feel tired.",
+          "She has a stomachache.",
+          "Her hands are dry."
         ],
-        "answer": 1,
-        "sourceWordIndex": 3
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “And you shouldn't ____ in dim light”.",
+        "text": "What does the boy suggest the girl use?",
         "options": [
-          "read",
-          "test",
-          "paint",
-          "cook"
+          "Eye drops",
+          "Hand cream",
+          "Vitamin tablets",
+          "A face mask"
         ],
-        "answer": 0,
-        "sourceWordIndex": 12
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “shouldn't read in dim ____. Thank you”.",
+        "text": "What does the boy advise the girl NOT to do?",
         "options": [
-          "light",
-          "schoolyard",
-          "energy",
-          "sport"
+          "Stay up late",
+          "Watch television after dinner",
+          "Read in dim light",
+          "Exercise outdoors"
         ],
-        "answer": 0,
-        "sourceWordIndex": 15
+        "answer": 2
       }
     ],
     "source": {
@@ -2275,40 +2260,37 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/012.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Listen to the recording and choose the correct answer (A, B, C or D) for each question.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “fruit and vegetables, ____ coloured ones like”.",
+        "text": "Which vegetables does the speaker give as examples of healthy choices?",
         "options": [
-          "secondly",
-          "carefully",
-          "especially",
-          "always"
+          "Potatoes and onions",
+          "Cabbages and beans",
+          "Carrots and tomatoes",
+          "Cucumbers and mushrooms"
         ],
-        "answer": 2,
-        "sourceWordIndex": 18
+        "answer": 2
       },
       {
-        "text": "Chọn từ nghe được: “soft drinks. Be ____ and exercise every”.",
+        "text": "What does the speaker recommend doing every day?",
         "options": [
-          "active",
-          "beautiful",
-          "convenient",
-          "clean"
+          "Being active and exercising",
+          "Drinking soft drinks",
+          "Eating lots of cheese",
+          "Staying indoors all day"
         ],
-        "answer": 0,
-        "sourceWordIndex": 53
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “tired. Keep your ____ tidy and clean”.",
+        "text": "How should you keep your room, according to the speaker?",
         "options": [
-          "beach",
-          "park",
-          "room",
-          "forest"
+          "Dark and quiet",
+          "Warm and closed",
+          "Full of furniture",
+          "Tidy and clean"
         ],
-        "answer": 2,
-        "sourceWordIndex": 91
+        "answer": 3
       }
     ],
     "source": {
@@ -2330,40 +2312,37 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/014.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Listen to the recording and choose the correct answer (A, B, C or D) for each question.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “Sunday morning? I ____ you a board”.",
+        "text": "What did Tom buy for Minh?",
         "options": [
-          "bought",
-          "loved",
-          "saw",
-          "gave"
+          "A book",
+          "A board game",
+          "A football",
+          "A schoolbag"
         ],
-        "answer": 0,
-        "sourceWordIndex": 21
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “our school and ____ vegetables in our”.",
+        "text": "What does Minh's club plant in the school garden?",
         "options": [
-          "talk",
-          "cycle",
-          "plant",
-          "sell"
+          "Fruit trees",
+          "Flowers",
+          "Vegetables",
+          "Rice"
         ],
-        "answer": 2,
-        "sourceWordIndex": 58
+        "answer": 2
       },
       {
-        "text": "Chọn từ nghe được: “summer, we taught ____ to 30 kids”.",
+        "text": "How many children did Tom's school teach English to last summer?",
         "options": [
-          "Tennis",
-          "Morning",
-          "Festival",
-          "English"
+          "20",
+          "25",
+          "30",
+          "35"
         ],
-        "answer": 3,
-        "sourceWordIndex": 101
+        "answer": 2
       }
     ],
     "source": {
@@ -2385,40 +2364,37 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/017.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Listen to the recording and choose the correct answer (A, B, C or D) for each question.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “to help your ____ last summer, Mark”.",
+        "text": "When did Mark and his friends help their community?",
         "options": [
-          "community",
-          "shop",
-          "street",
-          "office"
+          "Last winter",
+          "Last summer",
+          "Last spring",
+          "Last weekend"
         ],
-        "answer": 0,
-        "sourceWordIndex": 7
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “a lot of ____ along the nearby”.",
+        "text": "What did Mark and his friends pick up along nearby roads?",
         "options": [
-          "rubbish",
-          "space",
-          "wind",
-          "water"
+          "Old clothes",
+          "Fallen leaves",
+          "Plastic toys",
+          "Rubbish"
         ],
-        "answer": 0,
-        "sourceWordIndex": 24
+        "answer": 3
       },
       {
-        "text": "Chọn từ nghe được: “clothes for our ____ in the mountainous”.",
+        "text": "Who received the books and warm clothes collected by Lan's group?",
         "options": [
-          "feelings",
-          "flowers",
-          "friends",
-          "parents"
+          "Children at a local hospital",
+          "Students in the city centre",
+          "Friends in mountainous areas",
+          "The teachers at their school"
         ],
-        "answer": 2,
-        "sourceWordIndex": 41
+        "answer": 2
       }
     ],
     "source": {
@@ -2440,40 +2416,37 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/018.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Listen to the recording and choose the correct answer (A, B, C or D) for each question.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “tutor? We taught ____ and maths. Awesome”.",
+        "text": "Which subjects did Linda and her friends teach the children?",
         "options": [
-          "Light",
-          "Swimming",
-          "Science",
-          "English"
+          "English and maths",
+          "History and science",
+          "English and art",
+          "Maths and literature"
         ],
-        "answer": 3,
-        "sourceWordIndex": 25
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “it. Thanks! It ____ us feel useful”.",
+        "text": "How did Linda and her friends feel about helping others?",
         "options": [
-          "decided",
-          "made",
-          "knew",
-          "called"
+          "Bored",
+          "Nervous",
+          "Useful",
+          "Disappointed"
         ],
-        "answer": 1,
-        "sourceWordIndex": 66
+        "answer": 2
       },
       {
-        "text": "Chọn từ nghe được: “weeks and enjoyed ____ them grow. Glad”.",
+        "text": "What did Tom and his friends enjoy doing after watering the trees?",
         "options": [
-          "meeting",
-          "watching",
-          "staying",
-          "reading"
+          "Selling vegetables",
+          "Watching the trees grow",
+          "Drawing pictures of the park",
+          "Playing football"
         ],
-        "answer": 1,
-        "sourceWordIndex": 106
+        "answer": 1
       }
     ],
     "source": {
@@ -7928,9 +7901,9 @@
   }
 ];
   curriculum.exercises = curriculum.exercises.filter(item => item.track !== 'thcs').concat(bank);
-  curriculum.thcsBankVersion = '2026-10-01-unit-bank-v1';
+  curriculum.thcsBankVersion = '2026-11-01-g7-u1-u3-mcq-comprehension';
   curriculum.tracks.thcs.stages.forEach(stage => {
     stage.title = 'Nghe lớp ' + (stage.stage + 5) + ' · 12 Unit';
-    stage.description = 'Mỗi Unit có 3 bài: hội thoại mở đầu, giao tiếp và bài nghe theo Unit. Chọn từ/cụm từ đúng theo thứ tự MP3.';
+    stage.description = 'Mỗi Unit có 3 bài: hội thoại mở đầu, giao tiếp và bài nghe theo Unit. Nghe audio và chọn đáp án đúng cho từng câu hỏi.';
   });
 })();
