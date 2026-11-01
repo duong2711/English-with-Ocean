@@ -44,7 +44,8 @@
         view.classList.toggle('ldd-exam-no-lookup', disabled);
         document.body.classList.toggle('ldd-exam-no-lookup-active', disabled);
         var hint = view.querySelector('.ldd-exam-lookup-hint');
-        if (hint) hint.style.display = disabled ? 'none' : '';
+        var hintDisplay = disabled ? 'none' : '';
+        if (hint && hint.style.display !== hintDisplay) hint.style.display = hintDisplay;
         if (wasDisabled && !disabled) {
             var sections = document.getElementById('ctest-take-sections');
             var notes = document.getElementById('ctest-take-notes');
