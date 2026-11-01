@@ -15528,6 +15528,7 @@ function toggleCompletion(symbolElement) {
         let thcsActiveSentenceSpeech = null;
         let thcsSpeechStream = null;
         let thcsSpeechTimer = null;
+        let thcsSpeechVADCleanup = null;
 
         function thcsStopSentenceStep() {
             thcsSpeechToken++;
@@ -15539,6 +15540,7 @@ function toggleCompletion(symbolElement) {
             thcsSpeechListening = false;
             if (thcsSpeechTimer) clearTimeout(thcsSpeechTimer);
             thcsSpeechTimer = null;
+            if (thcsSpeechVADCleanup) thcsSpeechVADCleanup();
             if (typeof phoneticsStop === 'function') phoneticsStop();
             if (thcsSpeechRecorder && thcsSpeechRecorder.state !== 'inactive') {
                 try { thcsSpeechRecorder.stop(); } catch (_) {}
@@ -15573,6 +15575,23 @@ function toggleCompletion(symbolElement) {
                 prev = row;
             }
             return Math.max(0, Math.round((1 - prev[heard.length] / Math.max(target.length, heard.length)) * 100));
+        }
+
+
+        // Voice Activity Detection: silence after speech, not a fixed-length timer.
+        function thcsSentenceRecordingPolicy(wordCount) {
+            const n = Math.max(1, Number(wordCount) || 1);
+            return {
+                silenceMs: n >= 10 ? 1900 : (n >= 5 ? 1600 : 1400),
+                noSpeechMs: 7000,
+                maxMs: Math.min(35000, Math.max(9000, n * 1100 + 4500))
+            };
+        }
+        function thcsSentenceRecordingStopReason(state, now, policy) {
+            if (now - state.startedAt >= policy.maxMs) return 'max-duration';
+            if (!state.hasSpeech && now - state.startedAt >= policy.noSpeechMs) return 'no-speech';
+            if (state.hasSpeech && now - state.lastVoiceAt >= policy.silenceMs) return 'finished';
+            return null;
         }
 
         function thcsStartSentenceSpeaking(fullAnswer) {
@@ -15760,15 +15779,108 @@ function toggleCompletion(symbolElement) {
                         .find(type => MediaRecorder.isTypeSupported(type)) || '';
                     const recorder = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
                     thcsSpeechRecorder = recorder;
+                    const wordCount = Math.max(1, fullAnswer.trim().split(/\s+/).filter(Boolean).length);
+                    const policy = thcsSentenceRecordingPolicy(wordCount);
+                    const voiceState = { startedAt: Date.now(), hasSpeech: false, lastVoiceAt: 0 };
+                    let context = null, source = null, analyser = null, silentGain = null, vadInterval = null;
+                    let consecutiveVoicedFrames = 0, baseline = 0.004, stopping = false, stopReason = '';
                     const chunks = [];
+
+                    function cleanupVAD() {
+                        if (vadInterval) clearInterval(vadInterval);
+                        vadInterval = null;
+                        for (const node of [source, analyser, silentGain]) {
+                            if (node) { try { node.disconnect(); } catch (_) {} }
+                        }
+                        source = analyser = silentGain = null;
+                        if (context) { try { context.close(); } catch (_) {} context = null; }
+                        if (thcsSpeechVADCleanup === cleanupVAD) thcsSpeechVADCleanup = null;
+                    }
+                    thcsSpeechVADCleanup = cleanupVAD;
+
+                    function stopRecordingAutomatically(reason) {
+                        if (stopping || recorder.state === 'inactive') return;
+                        stopping = true;
+                        stopReason = reason;
+                        cleanupVAD();
+                        if (thcsSpeechTimer) clearTimeout(thcsSpeechTimer);
+                        thcsSpeechTimer = null;
+                        mic.disabled = true;
+                        mic.textContent = '⏳ Đang xử lý…';
+                        setStatus(reason === 'no-speech'
+                            ? '⚠️ Chưa nghe thấy giọng đọc. Đang kết thúc lượt ghi…'
+                            : '✅ Đã nhận khoảng lặng cuối câu, đang chấm bằng Whisper…');
+                        try { recorder.stop(); } catch (_) {}
+                    }
+
+                    function startAutomaticSilenceDetection() {
+                        const AC = window.AudioContext || window.webkitAudioContext;
+                        if (!AC) return; // Fall back to maximum-duration auto stop.
+                        try {
+                            context = new AC();
+                            analyser = context.createAnalyser();
+                            analyser.fftSize = 2048;
+                            source = context.createMediaStreamSource(stream);
+                            silentGain = context.createGain();
+                            silentGain.gain.value = 0; // Keep graph running without playing mic audio.
+                            source.connect(analyser);
+                            analyser.connect(silentGain);
+                            silentGain.connect(context.destination);
+                            if (context.state === 'suspended') context.resume().catch(() => {});
+                            const data = new Uint8Array(analyser.fftSize);
+                            vadInterval = setInterval(() => {
+                                if (token !== thcsSpeechToken || recorder.state !== 'recording') {
+                                    cleanupVAD();
+                                    return;
+                                }
+                                if (!context || context.state !== 'running') return;
+                                analyser.getByteTimeDomainData(data);
+                                let squares = 0;
+                                for (let i = 0; i < data.length; i++) {
+                                    const x = (data[i] - 128) / 128;
+                                    squares += x * x;
+                                }
+                                const rms = Math.sqrt(squares / data.length);
+                                const now = Date.now();
+                                const threshold = Math.max(0.013, baseline * 2.5);
+                                if (rms > threshold) {
+                                    consecutiveVoicedFrames++;
+                                    if (consecutiveVoicedFrames >= 2) {
+                                        voiceState.hasSpeech = true;
+                                        voiceState.lastVoiceAt = now;
+                                    }
+                                } else {
+                                    consecutiveVoicedFrames = 0;
+                                    if (!voiceState.hasSpeech && rms < 0.018) {
+                                        baseline = baseline * 0.95 + rms * 0.05;
+                                    }
+                                }
+                                const reason = thcsSentenceRecordingStopReason(voiceState, now, policy);
+                                if (reason) stopRecordingAutomatically(reason);
+                            }, 80);
+                        } catch (error) {
+                            cleanupVAD();
+                            console.warn('[Dịch câu] Phát hiện khoảng lặng không khả dụng:', error);
+                        }
+                    }
+
                     recorder.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
                     recorder.onstop = async () => {
+                        cleanupVAD();
                         if (thcsSpeechTimer) clearTimeout(thcsSpeechTimer);
                         thcsSpeechTimer = null;
                         stream.getTracks().forEach(t => t.stop());
                         if (thcsSpeechStream === stream) thcsSpeechStream = null;
                         if (thcsSpeechRecorder === recorder) thcsSpeechRecorder = null;
                         if (token !== thcsSpeechToken) return;
+                        if (stopReason === 'no-speech') {
+                            thcsSpeechListening = false;
+                            mic.disabled = false;
+                            replay.disabled = false;
+                            mic.textContent = '🎤 Đọc lại cả câu';
+                            setStatus('⚠️ Chưa nghe thấy giọng đọc. Hãy nói gần micro và thử lại.', 'warning');
+                            return;
+                        }
                         try {
                             setStatus('⏳ Đang chấm phần đọc cả câu…');
                             const blob = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' });
@@ -15816,12 +15928,13 @@ function toggleCompletion(symbolElement) {
                         }
                     };
                     recorder.start();
-                    mic.disabled = false;
-                    mic.textContent = '⏹️ Dừng và chấm';
-                    setStatus('🔴 Đang thu âm — đọc hết cả câu, sau đó nhấn Dừng và chấm.');
-                    thcsSpeechTimer = setTimeout(() => {
-                        if (recorder.state !== 'inactive') recorder.stop();
-                    }, Math.min(18000, Math.max(7000, fullAnswer.split(/\s+/).length * 1100)));
+                    startAutomaticSilenceDetection();
+                    mic.disabled = true;
+                    mic.textContent = '🔴 Đang nghe…';
+                    setStatus('🔴 Hãy đọc cả câu. Micro tự dừng sau khi em đọc xong và im lặng một chút.');
+                    thcsSpeechTimer = setTimeout(
+                        () => stopRecordingAutomatically('max-duration'), policy.maxMs
+                    );
                 } catch (error) {
                     if (stream) stream.getTracks().forEach(t => t.stop());
                     if (token !== thcsSpeechToken) return;
@@ -15835,11 +15948,7 @@ function toggleCompletion(symbolElement) {
             replay.addEventListener('click', playSample);
             mic.addEventListener('click', () => {
                 if (token !== thcsSpeechToken || !heardReady) return;
-                if (thcsSpeechRecorder && thcsSpeechRecorder.state === 'recording') {
-                    thcsSpeechRecorder.stop();
-                    mic.disabled = true;
-                    return;
-                }
+                // Không cần bấm dừng: VAD tự kết thúc ghi âm khi học viên đọc xong.
                 if (thcsSpeechListening) return;
                 thcsSpeechListening = true;
                 mic.disabled = true;
