@@ -4067,7 +4067,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // không còn là cửa sổ đang được thao tác.
     window.addEventListener('blur', () => {
         if (typeof window.thcsResetTranslateIfMidProgress === 'function') {
-            window.thcsResetTranslateIfMidProgress();
+            window.thcsResetTranslateIfMidProgress('window-blur');
         }
     });
 
@@ -15765,7 +15765,7 @@ function toggleCompletion(symbolElement) {
                 }
             });
             // Chỉ bắt đầu phát sau khi điền đúng, không chuyển câu tự động.
-            setTimeout(() => { if (token === thcsSpeechToken) playSample(); }, 400);
+            playSample();
         }
 
         function thcsInitTranslate(unit) {
@@ -15780,10 +15780,10 @@ function toggleCompletion(symbolElement) {
         // khác, hoặc chuyển sang tab chính khác của trang — coi như bỏ dở giữa chừng, phải
         // làm lại từ câu đầu tiên (giống hệt như khi trả lời sai 1 câu), kèm thông báo cho
         // học viên biết vì sao tiến độ bị đặt lại.
-        function thcsResetTranslateIfMidProgress() {
+        function thcsResetTranslateIfMidProgress(reason) {
             if ((trIndex <= 0 && !thcsSpeechWaiting) || !trWords.length) return;
             // Hộp xin quyền micro có thể làm cửa sổ mất focus; không coi đó là rời bài.
-            if (thcsSpeechListening && !document.hidden) return;
+            if (reason === 'window-blur' && thcsSpeechListening && !document.hidden) return;
             thcsStopSentenceStep();
             trIndex = 0;
             thcsTranslateBusy = false;
