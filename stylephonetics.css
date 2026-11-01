@@ -9831,3 +9831,28 @@ body.about-me-open { overflow: hidden; }
     background: #fffbeb;
     color: #78350f;
 }
+
+
+/* Dịch câu: nghe mẫu và đọc cả câu trước khi chuyển câu kế tiếp (02/11/2026). */
+.thcs-translate-speaking{
+    max-width:560px;margin:18px auto 0;padding:16px;
+    border-radius:14px;border:1px solid var(--border,#dce3ee);
+    background:var(--surface,#fff);text-align:center;
+}
+.thcs-translate-speaking-title{
+    font-size:14px;font-weight:750;margin:0 0 13px;
+    color:var(--text,#243047);
+}
+.thcs-translate-speaking-actions{
+    display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;
+}
+.thcs-translate-speaking-actions .kid-btn{min-width:126px;min-height:44px;cursor:pointer;}
+.thcs-translate-speaking-actions .kid-btn:disabled{cursor:not-allowed;opacity:.55;}
+.thcs-translate-speech-status{line-height:1.5;font-size:14px;margin:12px 0 0;color:var(--text,#334155);}
+.thcs-translate-speech-status.is-pass{color:#15803d;font-weight:700;}
+.thcs-translate-speech-status.is-retry{color:#b45309;font-weight:700;}
+.thcs-translate-speech-status.is-warning{color:#b45309;}
+@media(max-width:480px){
+    .thcs-translate-speaking{padding:14px 10px;}
+    .thcs-translate-speaking-actions .kid-btn{flex:1 1 136px;min-width:0;}
+}
