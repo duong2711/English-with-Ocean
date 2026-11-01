@@ -15578,6 +15578,40 @@ function toggleCompletion(symbolElement) {
         }
 
 
+
+        // Dịch câu: qua bài chỉ khi TẤT CẢ từ được nhận diện đúng và đúng thứ tự.
+        // Chuẩn hóa các cách viết tắt tương đương, không bỏ qua từ sai/thiếu/thừa.
+        function thcsSentenceGateWords(value) {
+            const normalized = String(value || '').toLowerCase().normalize('NFKC')
+                .replace(/[’‘]/g, "'")
+                .replace(/\bcan't\b/g, 'can not')
+                .replace(/\bcannot\b/g, 'can not')
+                .replace(/\bwon't\b/g, 'will not')
+                .replace(/n't\b/g, ' not')
+                .replace(/\bi'm\b/g, 'i am')
+                .replace(/\b(you|we|they)'re\b/g, '$1 are')
+                .replace(/\b(he|she|it|that|there|what|who)'s\b/g, '$1 is')
+                .replace(/\b(i|you|we|they)'ve\b/g, '$1 have')
+                .replace(/\b(i|you|he|she|we|they|it)'ll\b/g, '$1 will')
+                .replace(/[^a-z0-9]+/g, ' ').trim();
+            return normalized ? normalized.split(/\s+/) : [];
+        }
+
+        function thcsSentenceIsFullyCorrect(expected, transcript, score, details, source) {
+            const target = thcsSentenceGateWords(expected);
+            const heard = thcsSentenceGateWords(transcript);
+            if (!target.length || target.length !== heard.length) return false;
+            if (!target.every((word, i) => word === heard[i])) return false;
+            if (source === 'browser') return true; // Browser fallback must be exact too.
+            // Whisper: reject even one replacement, deletion, insertion or incomplete feedback.
+            return Number.isFinite(score) && score === 100 &&
+                !!details && Number(details.total) === target.length &&
+                Number(details.correct) === target.length &&
+                Number(details.heard) === target.length &&
+                ['missing', 'wrong', 'extra'].every(key =>
+                    Array.isArray(details[key]) && details[key].length === 0);
+        }
+
         // Voice Activity Detection: silence after speech, not a fixed-length timer.
         function thcsSentenceRecordingPolicy(wordCount) {
             const n = Math.max(1, Number(wordCount) || 1);
@@ -15636,7 +15670,7 @@ function toggleCompletion(symbolElement) {
                     heardReady = true;
                     mic.disabled = false;
                     replay.disabled = false;
-                    setStatus('🎤 Đến lượt em: nhấn micro và đọc trọn câu. Cần đạt trên 60%.');
+                    setStatus('🎤 Đến lượt em: nhấn micro và đọc đúng 100% các từ trong cả câu.');
                 };
                 if (!('speechSynthesis' in window)) {
                     replay.disabled = true;
@@ -15669,7 +15703,8 @@ function toggleCompletion(symbolElement) {
                     if (Array.isArray(details.wrong) && details.wrong.length) detailParts.push('chưa đúng: ' + details.wrong.slice(0, 5).join(', '));
                     if (Array.isArray(details.extra) && details.extra.length) detailParts.push('thừa: ' + details.extra.slice(0, 5).join(', '));
                 }
-                if (score > 60) {
+                const fullyCorrect = thcsSentenceIsFullyCorrect(fullAnswer, transcript, score, details, source);
+                if (fullyCorrect) {
                     mic.disabled = true;
                     replay.disabled = true;
                     thcsPlayCorrectSound();
@@ -15680,7 +15715,9 @@ function toggleCompletion(symbolElement) {
                         thcsAdvanceTranslate();
                     }, 1000);
                 } else {
-                    setStatus('🔁 ' + label + ': ' + score + '% (cần trên 60%). ' + (detailParts.length ? detailParts.join('; ') + '. ' : '') + 'Hãy nghe lại và đọc đủ cả câu.', 'retry');
+                    setStatus('🔁 ' + label + ': ' + score + '% — cần đúng 100% từng từ mới được qua. ' +
+                        (detailParts.length ? detailParts.join('; ') + '. ' : '') +
+                        'Hãy nghe lại và đọc đủ cả câu.', 'retry');
                 }
             }
 
