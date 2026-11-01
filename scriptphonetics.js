@@ -15531,18 +15531,21 @@ function toggleCompletion(symbolElement) {
         let thcsSpeechListening = false;
         let thcsSpeechToken = 0;
         let thcsSpeechRecorder = null;
+        let thcsActiveSentenceSpeech = null;
         let thcsSpeechStream = null;
         let thcsSpeechTimer = null;
 
         function thcsStopSentenceStep() {
             thcsSpeechToken++;
             thcsSpeechWaiting = false;
-            if (thcsSpeechListening && window.pronounceGate && window.pronounceGate.stop) {
-                window.pronounceGate.stop();
+            if (thcsActiveSentenceSpeech) {
+                try { thcsActiveSentenceSpeech.abort(); } catch (_) {}
+                thcsActiveSentenceSpeech = null;
             }
             thcsSpeechListening = false;
             if (thcsSpeechTimer) clearTimeout(thcsSpeechTimer);
             thcsSpeechTimer = null;
+            if (typeof phoneticsStop === 'function') phoneticsStop();
             if (thcsSpeechRecorder && thcsSpeechRecorder.state !== 'inactive') {
                 try { thcsSpeechRecorder.stop(); } catch (_) {}
             }
@@ -15633,30 +15636,116 @@ function toggleCompletion(symbolElement) {
                 setTimeout(finish, Math.max(4500, Math.min(17000, fullAnswer.split(/\s+/).length * 800 + 2600)));
             }
 
-            function finishTranscript(transcript) {
+            function finishTranscript(transcript, serverScore, wordFeedback, source) {
                 if (token !== thcsSpeechToken || !thcsSpeechWaiting) return;
                 thcsSpeechListening = false;
                 mic.disabled = false;
                 mic.textContent = '🎤 Đọc lại cả câu';
                 replay.disabled = false;
-                const score = thcsSentenceReadScore(fullAnswer, transcript);
+                // Server scores the entire utterance with Whisper word error rate;
+                // browser ASR is only an explicitly labelled outage fallback.
+                const numericScore = Number(serverScore);
+                const score = serverScore != null && Number.isFinite(numericScore)
+                    ? Math.min(100, Math.max(0, Math.round(numericScore)))
+                    : thcsSentenceReadScore(fullAnswer, transcript);
+                const label = source === 'browser' ? 'Nhận diện dự phòng' : 'Whisper';
+                const details = wordFeedback && typeof wordFeedback === 'object' ? wordFeedback : null;
+                const detailParts = [];
+                if (details) {
+                    if (Array.isArray(details.missing) && details.missing.length) detailParts.push('thiếu: ' + details.missing.slice(0, 5).join(', '));
+                    if (Array.isArray(details.wrong) && details.wrong.length) detailParts.push('chưa đúng: ' + details.wrong.slice(0, 5).join(', '));
+                    if (Array.isArray(details.extra) && details.extra.length) detailParts.push('thừa: ' + details.extra.slice(0, 5).join(', '));
+                }
                 if (score > 60) {
                     mic.disabled = true;
                     replay.disabled = true;
                     thcsPlayCorrectSound();
-                    setStatus('✅ Đọc đạt ' + score + '%! Chuyển sang câu tiếp theo…', 'pass');
+                    setStatus('✅ ' + label + ': ' + score + '% — đạt yêu cầu, chuyển câu tiếp theo…', 'pass');
                     thcsSpeechTimer = setTimeout(() => {
                         if (token !== thcsSpeechToken) return;
                         thcsTranslateBusy = false;
                         thcsAdvanceTranslate();
                     }, 1000);
                 } else {
-                    setStatus('🔁 Đạt ' + score + '% (cần trên 60%). Hãy nghe lại và đọc đủ cả câu.', 'retry');
+                    setStatus('🔁 ' + label + ': ' + score + '% (cần trên 60%). ' + (detailParts.length ? detailParts.join('; ') + '. ' : '') + 'Hãy nghe lại và đọc đủ cả câu.', 'retry');
                 }
             }
 
+
+            // Detect clear silence / very short clips before paying for a Whisper inference.
+            // If the browser cannot decode its own recording format, defer to Cloudflare VAD.
+            async function validateSentenceAudio(blob) {
+                if (blob.size < 1200) throw new Error('Không ghi nhận được giọng nói. Hãy đọc lại.');
+                const AudioCtor = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtor) return;
+                const context = new AudioCtor();
+                try {
+                    let audio;
+                    try { audio = await context.decodeAudioData((await blob.arrayBuffer()).slice(0)); }
+                    catch (_) { return; }
+                    if (!audio || audio.duration < Math.max(0.45, Math.min(2, fullAnswer.split(/\s+/).length * 0.12))) {
+                        throw new Error('Ghi âm quá ngắn so với cả câu. Hãy đọc trọn câu.');
+                    }
+                    const channel = audio.getChannelData(0);
+                    let peak = 0, loudFrames = 0, rmsPeak = 0;
+                    const size = Math.max(80, Math.round(audio.sampleRate * 0.02));
+                    for (let i = 0; i < channel.length; i += size) {
+                        let sum = 0, count = 0;
+                        for (let j = i; j < Math.min(i + size, channel.length); j += 2) {
+                            const v = Math.abs(channel[j]); peak = Math.max(peak, v);
+                            sum += v * v; count++;
+                        }
+                        const rms = Math.sqrt(sum / Math.max(1, count));
+                        rmsPeak = Math.max(rmsPeak, rms);
+                        if (rms > 0.007) loudFrames++;
+                    }
+                    if (peak < 0.02 || rmsPeak < 0.0045 || loudFrames * 0.02 < 0.16) {
+                        throw new Error('Chưa nghe rõ tiếng nói. Hãy đến gần micro và đọc lại.');
+                    }
+                } finally {
+                    try { await context.close(); } catch (_) {}
+                }
+            }
+
+            function listenBrowserFallback(reason) {
+                const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SR) throw new Error(reason || 'Whisper chưa khả dụng. Hãy thử lại sau.');
+                if (token !== thcsSpeechToken) return;
+                const recognition = new SR();
+                thcsActiveSentenceSpeech = recognition;
+                recognition.lang = 'en-US';
+                recognition.interimResults = false;
+                recognition.continuous = false;
+                recognition.maxAlternatives = 1;
+                let handled = false;
+                function endAttempt(message) {
+                    if (handled || token !== thcsSpeechToken) return;
+                    handled = true;
+                    if (thcsActiveSentenceSpeech === recognition) thcsActiveSentenceSpeech = null;
+                    thcsSpeechListening = false;
+                    mic.disabled = false; replay.disabled = false;
+                    mic.textContent = '🎤 Đọc lại cả câu';
+                    setStatus(message, 'warning');
+                }
+                recognition.onresult = event => {
+                    if (handled || token !== thcsSpeechToken) return;
+                    handled = true;
+                    if (thcsActiveSentenceSpeech === recognition) thcsActiveSentenceSpeech = null;
+                    const transcript = event.results[0][0].transcript || '';
+                    if (transcript.trim()) finishTranscript(transcript, undefined, undefined, 'browser');
+                    else endAttempt('⚠️ Chưa nghe được giọng nói. Hãy thử lại.');
+                };
+                recognition.onerror = event => endAttempt(event.error === 'not-allowed'
+                    ? '⚠️ Hãy cho phép micro rồi thử lại.'
+                    : '⚠️ Chế độ nhận diện dự phòng chưa nghe rõ. Hãy đọc lại.');
+                recognition.onend = () => endAttempt('⚠️ Chưa nhận ra câu vừa đọc. Hãy thử lại.');
+                setStatus('⚠️ Whisper tạm không khả dụng — đang dùng nhận diện trình duyệt dự phòng.');
+                try { recognition.start(); }
+                catch (_) { endAttempt('⚠️ Nhận diện dự phòng chưa khởi động được. Hãy nhấn micro thử lại.'); }
+            }
+
             async function listenByCloudflare() {
-                // Phương án cho trình duyệt không có SpeechRecognition (đặc biệt trên iOS).
+                // Always use Whisper first on all supported platforms.
                 let stream;
                 try {
                     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) {
@@ -15683,7 +15772,7 @@ function toggleCompletion(symbolElement) {
                         try {
                             setStatus('⏳ Đang chấm phần đọc cả câu…');
                             const blob = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' });
-                            if (blob.size < 900) throw new Error('Không nghe được giọng nói. Hãy thử lại.');
+                            await validateSentenceAudio(blob);
                             const audio = await new Promise((resolve, reject) => {
                                 const reader = new FileReader();
                                 reader.onload = () => resolve(String(reader.result).split(',')[1] || '');
@@ -15700,15 +15789,25 @@ function toggleCompletion(symbolElement) {
                                     'Authorization': 'Bearer ' + session.access_token,
                                     'apikey': SUPABASE_ANON_KEY
                                 },
-                                body: JSON.stringify({ word: fullAnswer, audio, mimeType: recorder.mimeType || blob.type })
+                                body: JSON.stringify({ mode: 'sentence', word: fullAnswer, audio, mimeType: recorder.mimeType || blob.type })
                             });
                             const data = await response.json().catch(() => ({}));
-                            if (!response.ok || data.error) throw new Error(data.error || 'Không thể chấm giọng nói lúc này.');
+                            if (!response.ok || data.error) {
+                                const err = new Error(data.error || 'Không thể chấm giọng nói lúc này.');
+                                err.isWhisperUnavailable = response.status === 429 || response.status >= 500;
+                                throw err;
+                            }
                             if (token !== thcsSpeechToken) return;
-                            if (!data.transcript) throw new Error('Chưa nhận ra giọng nói. Hãy đọc lại.');
-                            finishTranscript(data.transcript);
+                            if (!data.transcript || data.scoring !== 'asr-sentence-wer-v1' || !Number.isFinite(Number(data.score))) {
+                                throw new Error('Whisper chưa trả kết quả chấm cả câu hợp lệ. Hãy thử lại.');
+                            }
+                            finishTranscript(data.transcript, data.score, data.word_feedback, 'whisper');
                         } catch (error) {
                             if (token !== thcsSpeechToken) return;
+                            if (error.isWhisperUnavailable || error instanceof TypeError) {
+                                try { listenBrowserFallback('Whisper tạm không khả dụng.'); return; }
+                                catch (_) { /* No browser fallback: show backend error. */ }
+                            }
                             thcsSpeechListening = false;
                             mic.disabled = false;
                             replay.disabled = false;
@@ -15746,23 +15845,7 @@ function toggleCompletion(symbolElement) {
                 mic.disabled = true;
                 replay.disabled = true;
                 setStatus('🎤 Đang lắng nghe — hãy đọc trọn câu tiếng Anh.');
-                if (window.pronounceGate && window.pronounceGate.supported) {
-                    window.pronounceGate.listen(fullAnswer, {
-                        onMatch: finishTranscript,
-                        onMismatch: finishTranscript,
-                        onError: error => {
-                            if (token !== thcsSpeechToken) return;
-                            thcsSpeechListening = false;
-                            mic.disabled = false;
-                            replay.disabled = false;
-                            setStatus(error === 'denied'
-                                ? '⚠️ Hãy cấp quyền micro trong cài đặt trình duyệt rồi đọc lại.'
-                                : '⚠️ Chưa nghe rõ giọng nói. Hãy đọc lại cả câu.', 'warning');
-                        }
-                    });
-                } else {
-                    listenByCloudflare();
-                }
+                listenByCloudflare();
             });
             // Chỉ bắt đầu phát sau khi điền đúng, không chuyển câu tự động.
             playSample();
