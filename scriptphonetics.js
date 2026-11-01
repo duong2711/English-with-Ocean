@@ -15704,11 +15704,14 @@ function toggleCompletion(symbolElement) {
                     if (Array.isArray(details.extra) && details.extra.length) detailParts.push('thừa: ' + details.extra.slice(0, 5).join(', '));
                 }
                 const fullyCorrect = thcsSentenceIsFullyCorrect(fullAnswer, transcript, score, details, source);
+                // Với cách viết tắt hợp lệ, browser có thể nhận đúng mọi từ dù điểm
+                // so chuỗi thô thấp hơn; hiển thị 100% tương ứng với luật qua câu.
+                const displayedScore = fullyCorrect ? 100 : score;
                 if (fullyCorrect) {
                     mic.disabled = true;
                     replay.disabled = true;
                     thcsPlayCorrectSound();
-                    setStatus('✅ ' + label + ': ' + score + '% — đạt yêu cầu, chuyển câu tiếp theo…', 'pass');
+                    setStatus('✅ ' + label + ': ' + displayedScore + '% — đúng toàn bộ từ, chuyển câu tiếp theo…', 'pass');
                     thcsSpeechTimer = setTimeout(() => {
                         if (token !== thcsSpeechToken) return;
                         thcsTranslateBusy = false;
