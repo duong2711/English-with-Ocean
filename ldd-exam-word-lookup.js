@@ -23,12 +23,68 @@
     var lookupSerial = 0;
     var fallbackModal = null;
 
+    // Per-test opt-out: a teacher may mark a custom test as "no dictionary".
+    // Only an actually visible test is restricted; all other exams keep lookup.
+    var noLookupPending = false;
+    function noLookupExamIsActive() {
+        var view = document.getElementById('ctest-take-view');
+        if (!view || !view.isConnected || view.getClientRects().length === 0) return false;
+        var notes = document.getElementById('ctest-take-notes');
+        var title = document.getElementById('ctest-take-title');
+        return Boolean(
+            (notes && notes.querySelector('[data-ldd-disable-lookup="true"]')) ||
+            (title && title.textContent.indexOf('50 câu trắc nghiệm – không tra từ') !== -1)
+        );
+    }
+    function syncNoLookupExam() {
+        var view = document.getElementById('ctest-take-view');
+        if (!view) return;
+        var wasDisabled = view.classList.contains('ldd-exam-no-lookup');
+        var disabled = noLookupExamIsActive();
+        view.classList.toggle('ldd-exam-no-lookup', disabled);
+        document.body.classList.toggle('ldd-exam-no-lookup-active', disabled);
+        var hint = view.querySelector('.ldd-exam-lookup-hint');
+        if (hint) hint.style.display = disabled ? 'none' : '';
+        if (wasDisabled && !disabled) {
+            var sections = document.getElementById('ctest-take-sections');
+            var notes = document.getElementById('ctest-take-notes');
+            if (sections) queue(sections);
+            if (notes) queue(notes);
+        }
+    }
+    function scheduleNoLookupSync() {
+        if (noLookupPending) return;
+        noLookupPending = true;
+        window.requestAnimationFrame(function () {
+            noLookupPending = false;
+            syncNoLookupExam();
+        });
+    }
+    function initializeNoLookupGuard() {
+        var view = document.getElementById('ctest-take-view');
+        if (!view) return;
+        [view, document.getElementById('ctest-panel'), document.getElementById('tab-kiem-tra')].forEach(function (el) {
+            if (!el) return;
+            new MutationObserver(scheduleNoLookupSync).observe(el, {
+                attributes: true, attributeFilter: ['class', 'style'], childList: el === view,
+                subtree: el === view
+            });
+        });
+        // The marker/title is inserted as the teacher-assigned exam opens.
+        document.addEventListener('click', scheduleNoLookupSync, true);
+        document.addEventListener('keydown', scheduleNoLookupSync, true);
+        window.addEventListener('popstate', scheduleNoLookupSync);
+        syncNoLookupExam();
+    }
+
     function injectStyle() {
         if (document.getElementById('ldd-exam-lookup-style')) return;
         var style = document.createElement('style');
         style.id = 'ldd-exam-lookup-style';
         style.textContent =
             '#word-lookup-popup{z-index:10010 !important}' +
+            '#ctest-take-view.ldd-exam-no-lookup .tappable-word{pointer-events:none!important;cursor:inherit!important;text-decoration:none!important;background:transparent!important}' +
+            '#ctest-take-view.ldd-exam-no-lookup .ldd-exam-lookup-hint,body.ldd-exam-no-lookup-active .ldd-quick-lookup-trigger,body.ldd-exam-no-lookup-active #word-lookup-popup{display:none!important}' +
             '.ldd-exam-lookup-word{cursor:pointer;text-decoration:underline dotted;text-decoration-color:#6488c6;text-underline-offset:3px;border-radius:3px;touch-action:manipulation}' +
             '.ldd-exam-lookup-word:hover,.ldd-exam-lookup-word:focus{background:rgba(72,131,218,.14);outline:none}' +
             '.ldd-exam-lookup-modal{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;background:rgba(15,23,42,.6);padding:16px}' +
@@ -83,6 +139,7 @@
 
     function scan(root) {
         if (!root || !root.isConnected) return;
+        if (root.closest('#ctest-take-view') && noLookupExamIsActive()) return;
         // Những từ đã được module cũ bọc tappable-word cũng phải dùng tra từ hợp lệ.
         root.querySelectorAll('.tappable-word:not(.ldd-exam-lookup-word)').forEach(function (el) {
             if (el.closest('.word-lookup-popup, .ldd-exam-lookup-modal')) return;
@@ -117,6 +174,7 @@
 
     function initRoots() {
         injectStyle();
+        initializeNoLookupGuard();
         document.querySelectorAll(ROOTS).forEach(function (root) {
             if (roots.indexOf(root) !== -1) return;
             roots.push(root);
@@ -185,6 +243,7 @@
         var el = event.target && event.target.closest
             ? event.target.closest('.ldd-exam-lookup-word') : null;
         if (!el || !el.closest('.ldd-exam-lookup-root')) return;
+        if (el.closest('#ctest-take-view') && noLookupExamIsActive()) return;
         if (!isEnglishWord(el.dataset.word || el.textContent)) return;
         event.preventDefault();
         event.stopImmediatePropagation();
