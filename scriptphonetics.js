@@ -15678,7 +15678,8 @@ function toggleCompletion(symbolElement) {
                 if (blob.size < 1200) throw new Error('Không ghi nhận được giọng nói. Hãy đọc lại.');
                 const AudioCtor = window.AudioContext || window.webkitAudioContext;
                 if (!AudioCtor) return;
-                const context = new AudioCtor();
+                let context;
+                try { context = new AudioCtor(); } catch (_) { return; }
                 try {
                     let audio;
                     try { audio = await context.decodeAudioData((await blob.arrayBuffer()).slice(0)); }
@@ -15733,7 +15734,11 @@ function toggleCompletion(symbolElement) {
                     if (thcsActiveSentenceSpeech === recognition) thcsActiveSentenceSpeech = null;
                     const transcript = event.results[0][0].transcript || '';
                     if (transcript.trim()) finishTranscript(transcript, undefined, undefined, 'browser');
-                    else endAttempt('⚠️ Chưa nghe được giọng nói. Hãy thử lại.');
+                    else {
+                        thcsSpeechListening = false; mic.disabled = false; replay.disabled = false;
+                        mic.textContent = '🎤 Đọc lại cả câu';
+                        setStatus('⚠️ Chưa nghe được giọng nói. Hãy thử lại.', 'warning');
+                    }
                 };
                 recognition.onerror = event => endAttempt(event.error === 'not-allowed'
                     ? '⚠️ Hãy cho phép micro rồi thử lại.'
@@ -15749,7 +15754,8 @@ function toggleCompletion(symbolElement) {
                 let stream;
                 try {
                     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) {
-                        throw new Error('Trình duyệt chưa hỗ trợ thu âm. Hãy thử Chrome, Edge hoặc Safari mới.');
+                        listenBrowserFallback('Thiết bị chưa hỗ trợ ghi âm cho Whisper.');
+                        return;
                     }
                     stream = await navigator.mediaDevices.getUserMedia({
                         audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
