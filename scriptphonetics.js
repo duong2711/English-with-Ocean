@@ -15655,8 +15655,7 @@ function toggleCompletion(symbolElement) {
             const heard = thcsSentenceGateWords(transcript);
             if (!target.length || target.length !== heard.length) return false;
             if (!target.every((word, i) => word === heard[i])) return false;
-            if (source === 'browser') return true; // Browser fallback must be exact too.
-            // Whisper: reject even one replacement, deletion, insertion or incomplete feedback.
+            // Azure must report all expected words in order, with no weak/missing/extra words.
             return Number.isFinite(score) && score === 100 &&
                 !!details && Number(details.total) === target.length &&
                 Number(details.correct) === target.length &&
@@ -15711,17 +15710,18 @@ function toggleCompletion(symbolElement) {
         async function thcsScoreSentenceAudio(blob, word, session, wordRetry = false, decodedAudio = null, onStage = () => {}) {
             const headers = { 'Content-Type': 'application/json',
                 'Authorization': 'Bearer ' + session.access_token, 'apikey': SUPABASE_ANON_KEY };
-            let recognized;
-            const originalBytes = new Uint8Array(await blob.arrayBuffer());
-            let originalBinary = '';
-            for (let i = 0; i < originalBytes.length; i += 8192) originalBinary += String.fromCharCode(...originalBytes.subarray(i, i + 8192));
-            onStage(wordRetry ? '⏳ Whisper đang nhận diện từ…' : '⏳ Whisper đang nhận diện câu…');
-            const recognition = await fetch(SUPABASE_URL + '/functions/v1/cloudflare-pronounce-score', {
-                method: 'POST', headers, signal: AbortSignal.timeout(30000),
-                body: JSON.stringify({ mode: wordRetry ? 'word' : 'sentence', word, audio: btoa(originalBinary), mimeType: blob.type })
-            });
-            recognized = await recognition.json().catch(() => ({}));
+
+            // Only individual-word retries use Whisper. Full sentences go directly to Azure.
             if (wordRetry) {
+                const originalBytes = new Uint8Array(await blob.arrayBuffer());
+                let originalBinary = '';
+                for (let i = 0; i < originalBytes.length; i += 8192) originalBinary += String.fromCharCode(...originalBytes.subarray(i, i + 8192));
+                onStage('⏳ Whisper đang nhận diện từ…');
+                const recognition = await fetch(SUPABASE_URL + '/functions/v1/cloudflare-pronounce-score', {
+                    method: 'POST', headers, signal: AbortSignal.timeout(30000),
+                    body: JSON.stringify({ mode: 'word', word, audio: btoa(originalBinary), mimeType: blob.type })
+                });
+                const recognized = await recognition.json().catch(() => ({}));
                 if (!recognition.ok || recognized.scoring !== 'asr-word-match-v5' || !recognized.transcript || !Number.isFinite(Number(recognized.score)))
                     throw new Error(recognized.error || 'Whisper chưa nhận diện được từ. Hãy đọc lại.');
                 const expected = thcsSentenceGateWords(word).join(' ');
@@ -15729,14 +15729,10 @@ function toggleCompletion(symbolElement) {
                 recognized.accepted = !!expected && expected === heard && Number(recognized.score) === 100;
                 return { data: recognized, source: 'whisper' };
             }
-            if (!recognition.ok || recognized.scoring !== 'asr-sentence-wer-v1' || !recognized.transcript)
-                throw new Error('Whisper chưa nhận diện được cả câu. Hãy đọc lại.');
-            if (!thcsSentenceIsFullyCorrect(word, recognized.transcript, Number(recognized.score), recognized.word_feedback, 'whisper'))
-                return { data: recognized, source: 'whisper' };
             const azureUrl = SUPABASE_URL + '/functions/v1/azure-pronounce-sentence';
             // Azure is activated: the scoring response itself reports configuration/errors.
             // Reuse the audio decoded for local silence validation instead of decoding twice.
-            onStage('⏳ Nội dung đã đúng. Azure đang chấm phát âm…');
+            onStage('⏳ Azure đang chấm phát âm cả câu…');
             let upload;
             if (decodedAudio) upload = thcsEncodeSentenceWav(decodedAudio);
             else {
@@ -15767,7 +15763,6 @@ function toggleCompletion(symbolElement) {
             if (!data.transcript || data.scoring !== scoring || !Number.isFinite(Number(data.score)))
                 throw new Error('Dịch vụ chưa trả kết quả chấm hợp lệ. Hãy thử lại.');
             if (data.accepted !== true) data.score = Math.min(99, Number(data.score));
-            if (recognized) data.transcript = recognized.transcript;
             return { data, source: 'azure' };
         }
 
@@ -15872,8 +15867,7 @@ function toggleCompletion(symbolElement) {
                     showRepair();
                     return;
                 }
-                // Server scores the entire utterance with Whisper word error rate;
-                // browser ASR is only an explicitly labelled outage fallback.
+                // Azure evaluates the complete sentence; Whisper checks only single-word retries.
                 const numericScore = Number(serverScore);
                 const score = serverScore != null && Number.isFinite(numericScore)
                     ? Math.min(100, Math.max(0, Math.round(numericScore)))
@@ -15906,8 +15900,8 @@ function toggleCompletion(symbolElement) {
             }
 
 
-            // Detect clear silence / very short clips before paying for a Whisper inference.
-            // If the browser cannot decode its own recording format, defer to Cloudflare VAD.
+            // Check clear silence / short clips locally before calling Azure or Whisper.
+            // If local decoding is unavailable, let the server validate the submitted audio.
             async function validateSentenceAudio(blob) {
                 if (blob.size < 1200) throw new Error('Không ghi nhận được giọng nói. Hãy đọc lại.');
                 const AudioCtor = window.AudioContext || window.webkitAudioContext;
@@ -15943,54 +15937,12 @@ function toggleCompletion(symbolElement) {
                 }
             }
 
-            function listenBrowserFallback(reason) {
-                const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-                if (!SR) throw new Error(reason || 'Whisper chưa khả dụng. Hãy thử lại sau.');
-                if (token !== thcsSpeechToken) return;
-                const recognition = new SR();
-                thcsActiveSentenceSpeech = recognition;
-                recognition.lang = 'en-US';
-                recognition.interimResults = false;
-                recognition.continuous = false;
-                recognition.maxAlternatives = 1;
-                let handled = false;
-                function endAttempt(message) {
-                    if (handled || token !== thcsSpeechToken) return;
-                    handled = true;
-                    if (thcsActiveSentenceSpeech === recognition) thcsActiveSentenceSpeech = null;
-                    thcsSpeechListening = false;
-                    mic.disabled = false; replay.disabled = false;
-                    mic.textContent = retryLabel();
-                    setStatus(message, 'warning');
-                }
-                recognition.onresult = event => {
-                    if (handled || token !== thcsSpeechToken) return;
-                    handled = true;
-                    if (thcsActiveSentenceSpeech === recognition) thcsActiveSentenceSpeech = null;
-                    const transcript = event.results[0][0].transcript || '';
-                    if (transcript.trim()) finishTranscript(transcript, undefined, undefined, 'browser');
-                    else {
-                        thcsSpeechListening = false; mic.disabled = false; replay.disabled = false;
-                        mic.textContent = retryLabel();
-                        setStatus('⚠️ Chưa nghe được giọng nói. Hãy thử lại.', 'warning');
-                    }
-                };
-                recognition.onerror = event => endAttempt(event.error === 'not-allowed'
-                    ? '⚠️ Hãy cho phép micro rồi thử lại.'
-                    : '⚠️ Chế độ nhận diện dự phòng chưa nghe rõ. Hãy đọc lại.');
-                recognition.onend = () => endAttempt('⚠️ Chưa nhận ra câu vừa đọc. Hãy thử lại.');
-                setStatus('⚠️ Whisper tạm không khả dụng — đang dùng nhận diện trình duyệt dự phòng.');
-                try { recognition.start(); }
-                catch (_) { endAttempt('⚠️ Nhận diện dự phòng chưa khởi động được. Hãy nhấn micro thử lại.'); }
-            }
-
-            async function listenByCloudflare() {
-                // Always use Whisper first on all supported platforms.
+            async function listenPronunciationRecording() {
+                // Record once; Azure grades sentences, Whisper recognizes word retries.
                 let stream;
                 try {
                     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) {
-                        listenBrowserFallback('Thiết bị chưa hỗ trợ ghi âm cho Whisper.');
-                        return;
+                        throw new Error('Trình duyệt chưa hỗ trợ ghi âm để chấm phát âm. Hãy dùng Chrome, Edge hoặc Safari phiên bản mới.');
                     }
                     stream = await navigator.mediaDevices.getUserMedia({
                         audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
@@ -16150,7 +16102,7 @@ function toggleCompletion(symbolElement) {
                 mic.disabled = true;
                 replay.disabled = true;
                 setStatus(repairing ? '🎤 Hãy đọc từ: ' + targetText() : '🎤 Đang lắng nghe — hãy đọc trọn câu tiếng Anh.');
-                listenByCloudflare();
+                listenPronunciationRecording();
             });
             // Chỉ bắt đầu phát sau khi điền đúng, không chuyển câu tự động.
             playSample();

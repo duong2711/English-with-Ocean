@@ -52,15 +52,37 @@ const audio={duration:1,sampleRate:48000,numberOfChannels:2,getChannelData:()=>n
  assert.deepEqual(repairWords("I'm a teacher.",{word_feedback:{missing:['am'],wrong:[]}}),["I'm"]);
  quota=false;const before=calls;assert.equal((await handler(req())).status,429);assert.equal(calls,before,'Quota denial must prevent Azure call');
  assert.equal((await handler(req('I am a teacher.','bad'))).status,422);
- // Azure enabled: convert audio, send authenticated request, never retry through ASR on quota/error.
- const whisperResult={transcript:'I am a teacher.',scoring:'asr-sentence-wer-v1',score:100,word_feedback:{total:4,heard:4,correct:4,missing:[],wrong:[],extra:[]}};
- let urls=[];frontendFetch=async(url,options)=>{urls.push(url);if(url.endsWith('cloudflare-pronounce-score'))return Response.json(whisperResult);if(options.method==='POST'){const payload=JSON.parse(options.body);assert.equal(payload.mimeType,'audio/wav');assert.equal(Buffer.from(payload.audio,'base64').toString('ascii',0,4),'RIFF');return Response.json({code:'AZURE_LOCAL_MONTHLY_LIMIT'},{status:429});}return Response.json({enabled:true});};
- await assert.rejects(()=>score(new Blob(['test']),'I am a teacher.',{access_token:'test'}),/hạn mức/);assert.equal(urls.length,2);assert.ok(urls[0].endsWith('cloudflare-pronounce-score'));assert.ok(urls.slice(1).every(u=>u.endsWith('azure-pronounce-sentence')));
- urls=[];frontendFetch=async(url,options)=>{urls.push(url);assert.equal(options.method,'POST','No readiness round trip');return url.endsWith('cloudflare-pronounce-score')?Response.json(whisperResult):Response.json({code:'AZURE_NOT_CONFIGURED'},{status:503});};
+ // Every full-sentence attempt goes directly to Azure; do not call Whisper at all.
+ let urls=[];frontendFetch=async(url,options)=>{
+  urls.push(url);assert.ok(url.endsWith('azure-pronounce-sentence'),'Full sentences must bypass Cloudflare/Whisper');
+  assert.equal(options.method,'POST','No readiness round trip');
+  const payload=JSON.parse(options.body);
+  assert.equal(payload.mode,'sentence');
+  assert.equal(payload.mimeType,'audio/wav');
+  assert.equal(Buffer.from(payload.audio,'base64').toString('ascii',0,4),'RIFF');
+  return Response.json({code:'AZURE_LOCAL_MONTHLY_LIMIT'},{status:429});
+ };
+ await assert.rejects(()=>score(new Blob(['test']),'I am a teacher.',{access_token:'test'}),/hạn mức/);
+ assert.equal(urls.length,1);assert.ok(urls[0].endsWith('azure-pronounce-sentence'));
+ urls=[];frontendFetch=async(url,options)=>{
+  urls.push(url);assert.ok(url.endsWith('azure-pronounce-sentence'));
+  assert.equal(options.method,'POST');
+  return Response.json({code:'AZURE_NOT_CONFIGURED'},{status:503});
+ };
  const decodeBefore=decodeCalls;
- await assert.rejects(()=>score(new Blob(['test']),'I am a teacher.',{access_token:'test'},false,audio),/chưa sẵn sàng/);assert.equal(urls.length,2);assert.equal(decodeCalls,decodeBefore,'Reuse validated audio without another decode');
- urls=[];frontendFetch=async(url)=>{urls.push(url);return Response.json({...whisperResult,transcript:'I am teacher.',score:75,word_feedback:{total:4,heard:3,correct:3,missing:['a'],wrong:[],extra:[]}})};
- assert.equal((await score(new Blob(['test']),'I am a teacher.',{access_token:'test'})).source,'whisper');assert.equal(urls.length,1,'Wrong words must not consume Azure quota');
+ await assert.rejects(()=>score(new Blob(['test']),'I am a teacher.',{access_token:'test'},false,audio),/chưa sẵn sàng/);
+ assert.equal(urls.length,1);
+ assert.equal(decodeCalls,decodeBefore,'Reuse validated audio without another decode');
+ // A mispronounced/missing word is still evaluated by Azure, not rejected by Whisper first.
+ urls=[];frontendFetch=async(url,options)=>{
+  urls.push(url);assert.ok(url.endsWith('azure-pronounce-sentence'));
+  return Response.json({scoring:'azure-pronunciation-assessment-v1',transcript:'I am teacher.',score:75,accepted:false,
+   word_feedback:{total:4,heard:3,correct:3,missing:['a'],wrong:[],extra:[]},
+   word_scores:[{word:'I',score:95},{word:'teacher',score:50}]});
+ };
+ const sentenceResult=await score(new Blob(['test']),'I am a teacher.',{access_token:'test'});
+ assert.equal(sentenceResult.source,'azure');assert.equal(sentenceResult.data.accepted,false);
+ assert.equal(urls.length,1,'Full sentence must have only one cloud request');
  let retryTranscript='teacher', retryScore=100;
  urls=[];frontendFetch=async(url,options)=>{urls.push(url);assert.equal(options.method,'POST');assert.equal(JSON.parse(options.body).mode,'word');return Response.json({scoring:'asr-word-match-v5',transcript:retryTranscript,score:retryScore});};
  let retry=await score(new Blob(['test']),'teacher',{access_token:'test'},true);
@@ -68,5 +90,5 @@ const audio={duration:1,sampleRate:48000,numberOfChannels:2,getChannelData:()=>n
  retryTranscript='teaching';retryScore=70;assert.equal((await score(new Blob(['test']),'teacher',{access_token:'test'},true)).data.accepted,false);
  retryTranscript='a teacher';retryScore=100;assert.equal((await score(new Blob(['test']),'teacher',{access_token:'test'},true)).data.accepted,false,'Extra words must not pass via best-match scoring');
  frontendFetch=async()=>Response.json({error:'Service unavailable'},{status:503});await assert.rejects(()=>score(new Blob(['test']),'teacher',{access_token:'test'},true),/Service unavailable/);
- console.log('PASS: PCM conversion, duration cap, exact words, weak-word rejection, contractions, quota guard, no Azure error fallback, direct Azure request, decoded audio reuse');
+ console.log('PASS: Azure-direct sentences, PCM conversion, duration cap, exact words, weak-word rejection, contractions, quota guard, no Azure error fallback, direct Azure request, decoded audio reuse');
 })().catch(error=>{console.error(error);process.exitCode=1});
