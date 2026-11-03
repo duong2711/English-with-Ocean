@@ -73,14 +73,32 @@ function base64Utf8(s: string): string {
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: cors(req) });
   if (req.method !== 'GET' && req.method !== 'POST') return response(req, { error: 'Method not allowed' }, 405);
-  const usageRequest = req.method === 'GET' && new URL(req.url).searchParams.get('view') === 'usage';
-  if (req.method === 'GET' && !usageRequest) return response(req, { enabled: isReady(), provider: 'azure-pronunciation-assessment', max_audio_seconds: 25 });
+  const usageView = new URL(req.url).searchParams.get('view');
+  const usageRequest = req.method === 'GET' && usageView === 'usage';
+  const availabilityRequest = req.method === 'GET' && usageView === 'availability';
+  if (req.method === 'GET' && !usageRequest && !availabilityRequest) return response(req, { enabled: isReady(), provider: 'azure-pronunciation-assessment', max_audio_seconds: 25 });
   const auth = req.headers.get('Authorization') || '';
   if (!auth.toLowerCase().startsWith('bearer ') || !SB_URL || !SB_ANON || !SB_SERVICE)
     return response(req, { code: 'NOT_AUTHENTICATED' }, 401);
   const client = createClient(SB_URL, SB_ANON);
   const {data: {user}, error} = await client.auth.getUser(auth.substring(7));
   if (error || !user || user.is_anonymous) return response(req, { code:'NOT_AUTHENTICATED' },401);
+  // Shared free-tier quota availability for authenticated students.
+  // Detailed usage figures remain teacher-only.
+  if (availabilityRequest) {
+    const now = new Date();
+    const month = now.toISOString().slice(0,7);
+    const admin = createClient(SB_URL, SB_SERVICE);
+    const {data: usage, error: usageError} = await admin.from('azure_pronunciation_usage_monthly')
+      .select('reserved_seconds').eq('usage_month',month).maybeSingle();
+    if (usageError) return response(req, {code:'AZURE_QUOTA_STATUS_UNAVAILABLE'}, 503);
+    const used = Math.max(0,Number(usage?.reserved_seconds || 0));
+    return response(req, {
+      quota_exhausted: used >= 14398,
+      resets_at: new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth()+1,1)).toISOString(),
+      enabled: isReady(), month,
+    });
+  }
   if (usageRequest) {
     if (!user.email_confirmed_at || String(user.email || '').toLowerCase() !== 'lddbaiu@gmail.com')
       return response(req, { code:'FORBIDDEN' },403);
