@@ -20,7 +20,9 @@
     const SUPABASE_REF = 'ywqbaksmmtvwbojcgsdd';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl3cWJha3NtbXR2d2JvamNnc2RkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxNjc3NTAsImV4cCI6MjA5Nzc0Mzc1MH0.vhgt7cB6w2elm-MXY57U_wJtYkJQHDFAEsJwAArOjhQ';
     const RETRY_WINDOW_MS = 10000;
-    const RECORD_MS = 2700;
+    const RECORD_MIN_MS = 1050;
+    const RECORD_MAX_MS = 3800;
+    const RECORD_SILENCE_MS = 760;
     const PASS_SCORE = 60;
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 
@@ -36,6 +38,9 @@
     let activeGateRecorder = null;
     let activeGateStream = null;
     let activeGateSpeech = null;
+    let activeGateController = null;
+    let gateSequence = 0;
+    let cloudCooldownUntil = 0;
     let legacySpeechSession = null;
 
     function delay(ms) {
@@ -425,7 +430,7 @@
         });
     }
 
-    async function recordGateClip() {
+    async function recordGateClip(isCancelled) {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || !window.MediaRecorder) {
             throw Object.assign(new Error('unsupported'), { code: 'unsupported' });
         }
@@ -436,36 +441,114 @@
             });
         } catch (err) {
             const name = String(err && err.name || '');
-            const code = name === 'NotAllowedError' ? 'denied' : (name === 'NotFoundError' ? 'no-mic' : 'error');
+            const code = name === 'NotAllowedError' || name === 'SecurityError' ? 'denied'
+                : (name === 'NotFoundError' ? 'no-mic' : 'error');
             throw Object.assign(err || new Error(code), { code: code });
         }
+        if (isCancelled && isCancelled()) {
+            stream.getTracks().forEach(function (t) { try { t.stop(); } catch (_) {} });
+            throw Object.assign(new Error('cancelled'), { code: 'cancelled' });
+        }
+
         activeGateStream = stream;
-        const mimeType = chooseMimeType();
-        const chunks = [];
-        const recorder = mimeType ? new MediaRecorder(stream, { mimeType: mimeType }) : new MediaRecorder(stream);
-        activeGateRecorder = recorder;
-        return await new Promise(function (resolve, reject) {
-            let timer = null;
-            recorder.ondataavailable = function (e) { if (e.data && e.data.size) chunks.push(e.data); };
-            recorder.onerror = function () { clearTimeout(timer); reject(new Error('record-error')); };
-            recorder.onstop = function () {
-                clearTimeout(timer);
-                const type = recorder.mimeType || mimeType || (chunks[0] && chunks[0].type) || 'audio/webm';
-                const blob = new Blob(chunks, { type: type });
-                resolve({ blob: blob, mimeType: type });
-            };
-            recorder.start();
-            timer = setTimeout(function () {
-                try { if (recorder.state !== 'inactive') recorder.stop(); } catch (_) {}
-            }, RECORD_MS);
-        }).finally(function () {
-            if (stream) stream.getTracks().forEach(function (t) { try { t.stop(); } catch (_) {} });
+        let recorder = null;
+        let audioContext = null;
+        let analyser = null;
+        let interval = null;
+        let hardTimer = null;
+        try {
+            const mimeType = chooseMimeType();
+            recorder = mimeType ? new MediaRecorder(stream, { mimeType: mimeType }) : new MediaRecorder(stream);
+            activeGateRecorder = recorder;
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (AudioCtx) {
+                try {
+                    audioContext = new AudioCtx();
+                    const source = audioContext.createMediaStreamSource(stream);
+                    analyser = audioContext.createAnalyser();
+                    analyser.fftSize = 1024;
+                    source.connect(analyser);
+                    if (audioContext.state === 'suspended') await audioContext.resume();
+                } catch (_) {
+                    analyser = null; // The recorder still works without WebAudio/VAD.
+                }
+            }
+            const chunks = [];
+            const started = Date.now();
+            return await new Promise(function (resolve, reject) {
+                let settled = false;
+                let voiceFrames = 0;
+                let lastVoiceAt = 0;
+                function stopRecording() {
+                    try { if (recorder.state !== 'inactive') recorder.stop(); } catch (_) {}
+                }
+                recorder.ondataavailable = function (event) {
+                    if (event.data && event.data.size) chunks.push(event.data);
+                };
+                recorder.onerror = function () {
+                    if (settled) return;
+                    settled = true;
+                    stopRecording();
+                    reject(Object.assign(new Error('record-error'), { code: 'error' }));
+                };
+                recorder.onstop = function () {
+                    if (settled) return;
+                    settled = true;
+                    const type = recorder.mimeType || mimeType || (chunks[0] && chunks[0].type) || 'audio/webm';
+                    const blob = new Blob(chunks, { type: type });
+                    if (!blob.size) reject(Object.assign(new Error('no-speech'), { code: 'no-speech' }));
+                    else resolve({ blob: blob, mimeType: type });
+                };
+                try { recorder.start(); }
+                catch (err) { settled = true; reject(err); return; }
+                // Single-word flashcards: stop after the learner finishes speaking.
+                // Fall back to a bounded clip on browsers without WebAudio.
+                hardTimer = setTimeout(stopRecording, RECORD_MAX_MS);
+                if (analyser) {
+                    const samples = new Float32Array(analyser.fftSize);
+                    const bytes = new Uint8Array(analyser.fftSize);
+                    interval = setInterval(function () {
+                        if (recorder.state !== 'recording') return;
+                        const now = Date.now();
+                        try {
+                            let rms = 0, peak = 0;
+                            if (analyser.getFloatTimeDomainData) {
+                                analyser.getFloatTimeDomainData(samples);
+                                for (let i = 0; i < samples.length; i += 4) {
+                                    const value = Math.abs(samples[i]);
+                                    rms += value * value;
+                                    peak = Math.max(peak, value);
+                                }
+                            } else {
+                                analyser.getByteTimeDomainData(bytes);
+                                for (let i = 0; i < bytes.length; i += 4) {
+                                    const value = Math.abs((bytes[i] - 128) / 128);
+                                    rms += value * value;
+                                    peak = Math.max(peak, value);
+                                }
+                            }
+                            rms = Math.sqrt(rms / (samples.length / 4));
+                            if (rms > 0.008 || peak > 0.035) {
+                                voiceFrames++;
+                                lastVoiceAt = now;
+                            }
+                            if (voiceFrames >= 2 && now - started >= RECORD_MIN_MS &&
+                                now - lastVoiceAt >= RECORD_SILENCE_MS) stopRecording();
+                        } catch (_) { /* use the hard timeout */ }
+                    }, 75);
+                }
+            });
+        } finally {
+            if (interval) clearInterval(interval);
+            if (hardTimer) clearTimeout(hardTimer);
+            if (audioContext) { try { await audioContext.close(); } catch (_) {} }
+            stream.getTracks().forEach(function (t) { try { t.stop(); } catch (_) {} });
             if (activeGateStream === stream) activeGateStream = null;
             if (activeGateRecorder === recorder) activeGateRecorder = null;
-        });
+        }
     }
 
-    async function callCloudflareDirect(targetWord, clip) {
+    async function callCloudflareDirect(targetWord, clip, signal) {
         const token = getAccessToken();
         if (!token) throw Object.assign(new Error('Vui lòng đăng nhập lại.'), { status: 401, code: 'AUTH' });
         const audio = await blobToDataUrl(clip.blob);
@@ -481,7 +564,8 @@
                     'Authorization': 'Bearer ' + token,
                     'apikey': SUPABASE_ANON_KEY
                 },
-                body: JSON.stringify({ word: targetWord, audio: audio, mimeType: clip.mimeType })
+                body: JSON.stringify({ word: targetWord, audio: audio, mimeType: clip.mimeType, fast_word: true }),
+                signal: signal
             });
         } catch (err) {
             throw Object.assign(err || new Error('network'), { code: 'NETWORK', status: 0 });
@@ -498,6 +582,11 @@
     }
 
     function stopGate() {
+        gateSequence++;
+        if (activeGateController) {
+            try { activeGateController.abort(); } catch (_) {}
+            activeGateController = null;
+        }
         if (activeGateSpeech && activeGateSpeech.abort) activeGateSpeech.abort();
         activeGateSpeech = null;
         if (activeGateRecorder) {
@@ -511,7 +600,7 @@
     }
 
     async function finishGateFromSpeech(targetWord, callbacks, speechSession, errorCode) {
-        const transcript = await waitSpeechTranscript(speechSession, 1100);
+        const transcript = await waitSpeechTranscript(speechSession, 4100);
         if (!transcript) {
             callbacks.onError && callbacks.onError(errorCode || 'no-speech');
             return;
@@ -524,7 +613,8 @@
     async function gateListen(targetWord, callbacks) {
         callbacks = callbacks || {};
         stopGate();
-
+        const currentSequence = gateSequence;
+        const isCurrent = function () { return currentSequence === gateSequence; };
         const canCloud = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
         if (!canCloud && !SR) {
             callbacks.onError && callbacks.onError('unsupported');
@@ -532,55 +622,64 @@
             return;
         }
 
-        if (!canCloud) {
+        // When the cloud service is temporarily down, use browser ASR on the
+        // next attempt. Never open SpeechRecognition and MediaRecorder together:
+        // competing capture sessions can lose the learner's first syllable.
+        if (!canCloud || (SR && Date.now() < cloudCooldownUntil)) {
             const speechOnly = startSpeechSession();
             activeGateSpeech = speechOnly;
             try {
-                await finishGateFromSpeech(targetWord, callbacks, speechOnly, 'unsupported');
+                if (speechOnly) {
+                    const transcript = await waitSpeechTranscript(speechOnly, 4100);
+                    if (!isCurrent()) return;
+                    if (!transcript) callbacks.onError && callbacks.onError('no-speech');
+                    else if (browserIsMatch(transcript, targetWord)) callbacks.onMatch && callbacks.onMatch(transcript);
+                    else callbacks.onMismatch && callbacks.onMismatch(transcript);
+                } else if (isCurrent()) callbacks.onError && callbacks.onError('error');
             } finally {
+                if (speechOnly && speechOnly.abort) speechOnly.abort();
                 if (activeGateSpeech === speechOnly) activeGateSpeech = null;
-                callbacks.onEnd && callbacks.onEnd();
+                if (isCurrent()) callbacks.onEnd && callbacks.onEnd();
             }
             return;
         }
 
-        let speechSession = null;
         try {
-            const clipPromise = recordGateClip();
-            speechSession = startSpeechSession();
-            activeGateSpeech = speechSession;
-            const clip = await clipPromise;
-
+            try { if (window.speechSynthesis) window.speechSynthesis.cancel(); } catch (_) {}
+            const clip = await recordGateClip(function () { return !isCurrent(); });
+            if (!isCurrent()) return;
+            const controller = new AbortController();
+            activeGateController = controller;
+            const timeout = setTimeout(function () { controller.abort(); }, 11500);
+            let result;
             try {
-                const result = await callCloudflareDirect(targetWord, clip);
-                if (speechSession && speechSession.abort) speechSession.abort();
-                const score = Math.max(0, Math.min(100, Math.round(Number(result.score) || 0)));
-                const heard = String(result.transcript || '');
-                if (score >= PASS_SCORE) callbacks.onMatch && callbacks.onMatch(heard);
-                else callbacks.onMismatch && callbacks.onMismatch(heard);
-            } catch (cfErr) {
-                const status = Number(cfErr && cfErr.status || 0);
-                const code = String(cfErr && cfErr.code || '');
-                const fallbackEligible = status === 0 || status === 408 || status === 422 || status === 429 || status >= 500 ||
-                    ['NO_SPEECH', 'UNCERTAIN_SPEECH', 'CF_NEURONS_EXHAUSTED', 'CF_CAPACITY', 'CF_AI_ERROR', 'CF_FREE_BUDGET_GUARD', 'NETWORK'].includes(code);
-                if (fallbackEligible && SR) {
-                    await finishGateFromSpeech(targetWord, callbacks, speechSession, status === 422 ? 'no-speech' : 'network');
-                } else {
-                    callbacks.onError && callbacks.onError(status === 401 ? 'error' : 'network');
-                }
+                result = await callCloudflareDirect(targetWord, clip, controller.signal);
+            } finally {
+                clearTimeout(timeout);
+                if (activeGateController === controller) activeGateController = null;
             }
+            if (!isCurrent()) return;
+            cloudCooldownUntil = 0;
+            const score = Math.max(0, Math.min(100, Math.round(Number(result.score) || 0)));
+            const heard = String(result.transcript || '');
+            if (score >= PASS_SCORE) callbacks.onMatch && callbacks.onMatch(heard);
+            else callbacks.onMismatch && callbacks.onMismatch(heard);
         } catch (err) {
-            const code = String(err && err.code || 'error');
-            if (SR && ['denied', 'no-mic', 'unsupported'].indexOf(code) === -1) {
-                if (!speechSession) speechSession = startSpeechSession();
-                await finishGateFromSpeech(targetWord, callbacks, speechSession, code);
-            } else {
-                callbacks.onError && callbacks.onError(code);
+            if (!isCurrent()) return;
+            const status = Number(err && err.status || 0);
+            const code = String(err && err.code || '');
+            if (code === 'cancelled') return;
+            if (SR && (status === 408 || status === 429 || status >= 500 ||
+                       code === 'NETWORK' || (err && err.name === 'AbortError'))) {
+                cloudCooldownUntil = Date.now() + 20000;
             }
+            // Transient network faults should never disable pronunciation for an
+            // entire Unit. The student can retry or use the browser fallback.
+            const errorCode = ['denied', 'no-mic', 'unsupported'].includes(code) ? code
+                : (code === 'NO_SPEECH' || code === 'no-speech' ? 'no-speech' : 'error');
+            callbacks.onError && callbacks.onError(errorCode);
         } finally {
-            if (speechSession && speechSession.abort) speechSession.abort();
-            if (activeGateSpeech === speechSession) activeGateSpeech = null;
-            callbacks.onEnd && callbacks.onEnd();
+            if (isCurrent()) callbacks.onEnd && callbacks.onEnd();
         }
     }
 
