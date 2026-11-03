@@ -55,7 +55,7 @@ const send=async(word,heard,opts={})=>{
  r=await(await send('hobby',['hobby cooking'],{retry_word:true})).json();
  assert.equal(r.accepted,false);assert.equal(cfCalls,1);
  // Short one- or two-letter words must not accept unrelated near-spellings.
- r=await(await send('a',['i'],{retry_word:true})).json();
+ r=await(await send('a',['i','i'],{retry_word:true})).json();
  assert.equal(r.accepted,false);
  r=await(await send('at',['am'],{retry_word:true})).json();
  assert.equal(r.accepted,false);
