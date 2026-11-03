@@ -1128,7 +1128,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // 1. Tạo nút nổi
         bandwidthBtn = document.createElement('button');
         bandwidthBtn.id = 'bandwidth-manager-btn';
-        bandwidthBtn.textContent = '📊 Băng thông';
+        bandwidthBtn.textContent = '📊 Hạn mức';
         bandwidthBtn.className = 'kid-btn';
         // Đặt nút này ở góc dưới bên phải, dịch sang trái một chút để không đè lên nút Quyền đăng nhập
         bandwidthBtn.style.cssText = 'position:fixed; bottom:16px; right:160px; z-index:9998; display:none; box-shadow:0 2px 10px rgba(0,0,0,.25);';
@@ -1141,6 +1141,14 @@ document.addEventListener('DOMContentLoaded', () => {
         bandwidthModal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:9999; align-items:center; justify-content:center;';
         bandwidthModal.innerHTML = `
             <div style="background:#fff; color:#222; border-radius:14px; padding:22px; max-width:500px; width:92%; max-height:80vh; overflow-y:auto; font-family:inherit;">
+                <section style="padding:16px;border:1px solid #cbd5e1;border-radius:12px;margin-bottom:20px;background:#f8fafc;" aria-labelledby="azure-usage-heading">
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+                        <h3 id="azure-usage-heading" style="margin:0;">🎙️ Hạn mức Azure</h3>
+                        <button type="button" id="azure-usage-refresh" class="kid-btn">Làm mới</button>
+                    </div>
+                    <div id="azure-usage-content" role="status" aria-live="polite" style="margin-top:12px;"></div>
+                    <p style="font-size:12px;color:#64748b;margin:12px 0 0;">Hạn mức dùng chung toàn website. Bộ đếm có thời gian dự phòng và lượt gọi lỗi; không phải hóa đơn Azure.</p>
+                </section>
                 <h3 style="margin-top:0; color:var(--primary-dark);">📊 Băng thông học viên (Tuần)</h3>
                 <p style="font-size:13px; color:#555; margin-bottom:14px;">Hiển thị lượng Egress (tải audio) học viên đã dùng. Cập nhật theo thời gian thực (Giới hạn: 200MB/tuần).</p>
                 <div id="bandwidth-list" style="display:flex; flex-direction:column; gap:10px;"></div>
@@ -1149,13 +1157,58 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
         document.body.appendChild(bandwidthModal);
 
+        document.getElementById('azure-usage-refresh').addEventListener('click', loadAzureUsage);
         document.getElementById('bandwidth-close-btn').addEventListener('click', () => {
             bandwidthModal.style.display = 'none';
         });
     }
 
+    async function loadAzureUsage() {
+        if (!isTeacher || isImpersonating) return;
+        const box = document.getElementById('azure-usage-content');
+        const button = document.getElementById('azure-usage-refresh');
+        if (!box || !button || button.disabled) return;
+        button.disabled = true;
+        box.textContent = 'Đang tải hạn mức Azure…';
+        try {
+            const { data: { session } } = await sb.auth.getSession();
+            if (!session) throw new Error('Vui lòng đăng nhập lại.');
+            const result = await fetch(SUPABASE_URL + '/functions/v1/azure-pronounce-sentence?view=usage', {
+                headers: { Authorization:'Bearer ' + session.access_token, apikey:SUPABASE_ANON_KEY },
+                cache:'no-store', signal:AbortSignal.timeout(15000)
+            });
+            if (!result.ok) throw new Error(result.status === 403 ? 'Chỉ giáo viên được xem hạn mức.' : 'Chưa tải được hạn mức. Bấm Làm mới để thử lại.');
+            const data = await result.json();
+            if (!isTeacher || isImpersonating) { box.textContent = ''; return; }
+            const time = value => { const seconds = Math.max(0,Math.floor(Number(value)||0)); return Math.floor(seconds/60) + ' phút ' + seconds%60 + ' giây'; };
+            const used = Number(data.used_seconds), limit = Number(data.limit_seconds);
+            if (!Number.isFinite(used) || !Number.isFinite(limit) || limit <= 0) throw new Error('Dữ liệu hạn mức chưa hợp lệ.');
+            const percent = Math.min(100,Math.max(0,used/limit*100));
+            const title = document.createElement('strong');
+            title.style.cssText = 'display:block;font-size:22px;color:#0f766e;margin-bottom:10px;';
+            title.textContent = 'Còn ' + time(data.remaining_seconds);
+            const progress = document.createElement('progress');
+            progress.max = limit; progress.value = used;
+            progress.setAttribute('aria-label','Thời gian Azure đã sử dụng');
+            progress.style.cssText = 'width:100%;height:12px;accent-color:' + (percent>=90?'#dc2626':'#0f766e');
+            const detail = document.createElement('p');
+            detail.style.cssText = 'font-size:14px;line-height:1.7;margin:10px 0;white-space:pre-line;';
+            detail.textContent = 'Tháng ' + String(data.month).split('-').reverse().join('/') +
+                '\nĐã dùng: ' + time(used) + ' / ' + Math.floor(limit/60) + ' phút (' + percent.toFixed(2) + '%)' +
+                '\nSố lượt gọi: ' + Number(data.request_count || 0) +
+                '\nĐặt lại: ' + new Date(data.resets_at).toLocaleString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'}) + ' (giờ Việt Nam)' +
+                '\n' + (!data.enabled ? 'Azure chưa bật.' : Number(data.remaining_seconds)<=0 ? 'Đã hết hạn mức — tạm ngừng chấm.' : 'Azure đang bật.') +
+                '\nCập nhật lúc: ' + new Date(data.checked_at).toLocaleTimeString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'});
+            box.replaceChildren(title,progress,detail);
+        } catch (error) {
+            box.textContent = isTeacher ? (error.message || 'Chưa tải được hạn mức.') : '';
+        } finally { button.disabled = false; }
+    }
+
     async function openBandwidthModal() {
+        if (!isTeacher || isImpersonating) return;
         ensureBandwidthUI();
+        void loadAzureUsage();
         bandwidthModal.style.display = 'flex';
         const listEl = document.getElementById('bandwidth-list');
         listEl.innerHTML = '<p style="text-align:center; opacity:0.7;">⏳ Đang tải dữ liệu...</p>';

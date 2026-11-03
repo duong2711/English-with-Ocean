@@ -73,14 +73,29 @@ function base64Utf8(s: string): string {
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: cors(req) });
   if (req.method !== 'GET' && req.method !== 'POST') return response(req, { error: 'Method not allowed' }, 405);
-  if (req.method === 'GET') return response(req, { enabled: isReady(), provider: 'azure-pronunciation-assessment', max_audio_seconds: 25 });
-  if (!isReady()) return response(req, { code: 'AZURE_NOT_CONFIGURED', retryable: true }, 503);
+  const usageRequest = req.method === 'GET' && new URL(req.url).searchParams.get('view') === 'usage';
+  if (req.method === 'GET' && !usageRequest) return response(req, { enabled: isReady(), provider: 'azure-pronunciation-assessment', max_audio_seconds: 25 });
   const auth = req.headers.get('Authorization') || '';
   if (!auth.toLowerCase().startsWith('bearer ') || !SB_URL || !SB_ANON || !SB_SERVICE)
     return response(req, { code: 'NOT_AUTHENTICATED' }, 401);
   const client = createClient(SB_URL, SB_ANON);
   const {data: {user}, error} = await client.auth.getUser(auth.substring(7));
   if (error || !user || user.is_anonymous) return response(req, { code:'NOT_AUTHENTICATED' },401);
+  if (usageRequest) {
+    if (!user.email_confirmed_at || String(user.email || '').toLowerCase() !== 'lddbaiu@gmail.com')
+      return response(req, { code:'FORBIDDEN' },403);
+    const now = new Date();
+    const month = now.toISOString().slice(0,7);
+    const admin = createClient(SB_URL, SB_SERVICE);
+    const {data: usage, error: usageError} = await admin.from('azure_pronunciation_usage_monthly')
+      .select('reserved_seconds,request_count,updated_at').eq('usage_month',month).maybeSingle();
+    if (usageError) return response(req,{code:'USAGE_UNAVAILABLE'},503);
+    const used = Math.max(0,Number(usage?.reserved_seconds || 0));
+    return response(req, {month,limit_seconds:14400,used_seconds:used,remaining_seconds:Math.max(0,14400-used),
+      request_count:Number(usage?.request_count || 0), enabled:isReady(), checked_at:now.toISOString(),
+      resets_at:new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth()+1,1)).toISOString()});
+  }
+  if (!isReady()) return response(req, { code: 'AZURE_NOT_CONFIGURED', retryable: true }, 503);
   const data = await req.json().catch(()=>null);
   const word = String(data?.word||'').trim();
   const wordRetry = data?.mode === 'word';

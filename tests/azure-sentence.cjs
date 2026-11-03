@@ -6,10 +6,11 @@ const helpers = src.slice(src.indexOf('        function thcsEncodeSentenceWav(')
 const gate = src.slice(src.indexOf('        function thcsSentenceGateWords('),src.indexOf('        // Voice Activity Detection:'));
 const text = fs.readFileSync('supabase/functions/azure-pronounce-sentence/index.ts','utf8').replace(/^import.*\n/,'');
 let handler, quota = true, calls = 0, config;
+let user={id:'test'}, usageReads=0, usageRow={reserved_seconds:26,request_count:5};
 let flatRest = false;
 let transcript = 'I am a teacher.', wordScore = 95, errorType='None';
 const env={SUPABASE_URL:'https://example.test',SUPABASE_ANON_KEY:'test',SUPABASE_SERVICE_ROLE_KEY:'test',AZURE_SPEECH_KEY:'test',AZURE_SPEECH_REGION:'southeastasia',AZURE_SPEECH_TIER:'F0',AZURE_SPEECH_ENABLED:'1'};
-const createClient=()=>({auth:{getUser:async()=>({data:{user:{id:'test'}}})},rpc:async(_,args)=>{assert.ok(args.p_seconds<=26);return {data:quota}}});
+const createClient=()=>({auth:{getUser:async()=>({data:{user}})},from:()=>({select:()=>({eq:()=>({maybeSingle:async()=>{usageReads++;return {data:usageRow};}})})}),rpc:async(_,args)=>{assert.ok(args.p_seconds<=26);return {data:quota}}});
 const azureFetch=async(url, options)=>{
  calls++;config=JSON.parse(Buffer.from(options.headers['Pronunciation-Assessment'],'base64').toString());
  const assessment={AccuracyScore:95,PronScore:95};
@@ -26,6 +27,13 @@ class AudioContext {async decodeAudioData(){return audio;} async close(){}}
 const {encode,score,isCorrect,repairWords} = new Function('window','fetch','SUPABASE_URL','SUPABASE_ANON_KEY',helpers+gate+';return {repairWords:thcsSentenceRepairWords,encode:thcsEncodeSentenceWav,score:thcsScoreSentenceAudio,isCorrect:thcsSentenceIsFullyCorrect};')({AudioContext},(...args)=>frontendFetch(...args),'https://example.test','test');
 const audio={duration:1,sampleRate:48000,numberOfChannels:2,getChannelData:()=>new Float32Array(48000).fill(0.25)};
 (async()=>{
+ const usageReq=(authorized=true)=>new Request('https://example.test?view=usage',{headers:authorized?{Authorization:'Bearer test'}:{}});
+ assert.equal((await handler(usageReq(false))).status,401);
+ assert.equal((await handler(usageReq())).status,403);assert.equal(usageReads,0);
+ user={id:'teacher',email:'lddbaiu@gmail.com',email_confirmed_at:'2026-01-01'};
+ let meter=await(await handler(usageReq())).json();assert.equal(meter.used_seconds,26);assert.equal(meter.remaining_seconds,14374);assert.equal(meter.request_count,5);assert.equal(calls,0);
+ usageRow=null;meter=await(await handler(usageReq())).json();assert.equal(meter.remaining_seconds,14400);assert.equal(meter.request_count,0);
+ user={id:'test'};
  const wav=encode(audio), bytes=Buffer.from(await wav.arrayBuffer());
  assert.equal(bytes.toString('ascii',0,4),'RIFF');assert.equal(bytes.readUInt32LE(24),16000);assert.equal(bytes.readUInt16LE(22),1);assert.equal(bytes.length,32044);assert.equal(bytes.readInt16LE(44),8192);
  assert.throws(()=>encode({...audio,duration:26}),/25/);
