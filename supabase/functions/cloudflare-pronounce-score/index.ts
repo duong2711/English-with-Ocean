@@ -259,6 +259,8 @@ Deno.serve(async (req: Request) => {
     const word = String(body?.word || '').trim();
     const sentenceMode = body?.mode === 'sentence';
     const fastSentenceScreen = sentenceMode && body?.quick_check === true;
+    // Flashcards: fast single-word pass, still rescue when Whisper hears nothing.
+    const fastWord = !sentenceMode && body?.fast_word === true;
     // Only the Dịch câu single-word repair step requests an extra Whisper retry.
     const strictWordRetry = !sentenceMode && body?.retry_word === true;
     if (word.length > (sentenceMode ? 500 : 160)) return jsonResponse({ error: 'Nội dung cần chấm quá dài.' }, 400);
@@ -286,7 +288,7 @@ Deno.serve(async (req: Request) => {
     }
 
     let inferenceCount = 1;
-    const first = await callWhisper(audioBase64, false, sentenceMode, fastSentenceScreen);
+    const first = await callWhisper(audioBase64, false, sentenceMode, fastSentenceScreen || fastWord);
     const firstNorm = normalizeForMatch(first.text);
     // Fast sentence screening only transcribes audio; no detailed word-error alignment.
     const firstMatch = fastSentenceScreen ? { score: 0, candidate: first.text }
@@ -304,7 +306,7 @@ Deno.serve(async (req: Request) => {
     // Keep multiword/extra-word utterances strict: do not rescue them into a pass.
     const firstWordCount = String(first.text || '').trim().split(/\s+/).filter(Boolean).length;
     const shouldRescue = !fastSentenceScreen && (!firstNorm ||
-      (!sentenceMode && (firstMatch.score <= 25 ||
+      (!fastWord && !sentenceMode && (firstMatch.score <= 25 ||
         (strictWordRetry && firstWordCount === 1 &&
           !wordRetryMatch(word, first.text).accepted))));
     if (shouldRescue && currentCount + 1 < MAX_FREE_INFERENCES_PER_DAY) {
