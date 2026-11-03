@@ -22,3 +22,4 @@ jobs:
         with:
           node-version: '22'
       - run: node tests/azure-sentence.cjs
+      - run: node tests/word-retry-rescue.cjs

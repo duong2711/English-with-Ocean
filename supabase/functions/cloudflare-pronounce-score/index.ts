@@ -237,6 +237,8 @@ Deno.serve(async (req: Request) => {
     const word = String(body?.word || '').trim();
     const sentenceMode = body?.mode === 'sentence';
     const fastSentenceScreen = sentenceMode && body?.quick_check === true;
+    // Only the Dịch câu single-word repair step requests an extra Whisper retry.
+    const strictWordRetry = !sentenceMode && body?.retry_word === true;
     if (word.length > (sentenceMode ? 500 : 160)) return jsonResponse({ error: 'Nội dung cần chấm quá dài.' }, 400);
     if (sentenceMode && (sentenceWords(word).length < 2 || sentenceWords(word).length > 60)) return jsonResponse({ error: 'Độ dài câu không hợp lệ.' }, 400);
     const audioBase64 = String(body?.audio || '');
@@ -275,7 +277,14 @@ Deno.serve(async (req: Request) => {
     let secondText = '';
 
     // Don't select a more flattering pass for an audible sentence read incorrectly.
-    const shouldRescue = !fastSentenceScreen && (!firstNorm || (!sentenceMode && firstMatch.score <= 25));
+    // Short words like "hobby" can be transcribed as a similar-sounding single word.
+    // Retry one time with alternate VAD/decoding if the first result is not exact.
+    // Keep multiword/extra-word utterances strict: do not rescue them into a pass.
+    const firstWordCount = String(first.text || '').trim().split(/\s+/).filter(Boolean).length;
+    const shouldRescue = !fastSentenceScreen && (!firstNorm ||
+      (!sentenceMode && (firstMatch.score <= 25 ||
+        (strictWordRetry && firstWordCount === 1 &&
+          normalizeForMatch(first.text) !== normalizeForMatch(word)))));
     if (shouldRescue && currentCount + 1 < MAX_FREE_INFERENCES_PER_DAY) {
       try {
         const second = await callWhisper(audioBase64, true, sentenceMode);

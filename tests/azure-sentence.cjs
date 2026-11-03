@@ -126,7 +126,7 @@ const audio={duration:1,sampleRate:48000,numberOfChannels:2,getChannelData:()=>n
  assert.equal((await score(new Blob(['test']),'I am a teacher.',{access_token:'test'})).source,'azure');
  assert.deepEqual(urls,[cloudflareURL,azureURL]);
  let retryTranscript='teacher', retryScore=100;
- urls=[];frontendFetch=async(url,options)=>{urls.push(url);assert.equal(options.method,'POST');assert.equal(JSON.parse(options.body).mode,'word');return Response.json({scoring:'asr-word-match-v5',transcript:retryTranscript,score:retryScore});};
+ urls=[];frontendFetch=async(url,options)=>{urls.push(url);assert.equal(options.method,'POST');assert.equal(JSON.parse(options.body).mode,'word');assert.equal(JSON.parse(options.body).retry_word,true);return Response.json({scoring:'asr-word-match-v5',transcript:retryTranscript,score:retryScore});};
  let retry=await score(new Blob(['test']),'teacher',{access_token:'test'},true);
  assert.equal(retry.source,'whisper');assert.equal(retry.data.accepted,true);assert.equal(urls.length,1);assert.ok(urls[0].endsWith('cloudflare-pronounce-score'));
  retryTranscript='teaching';retryScore=70;assert.equal((await score(new Blob(['test']),'teacher',{access_token:'test'},true)).data.accepted,false);

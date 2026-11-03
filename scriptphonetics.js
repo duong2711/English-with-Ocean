@@ -15719,7 +15719,7 @@ function toggleCompletion(symbolElement) {
                 onStage('⏳ Whisper đang nhận diện từ…');
                 const recognition = await fetch(SUPABASE_URL + '/functions/v1/cloudflare-pronounce-score', {
                     method: 'POST', headers, signal: AbortSignal.timeout(30000),
-                    body: JSON.stringify({ mode: 'word', word, audio: btoa(originalBinary), mimeType: blob.type })
+                    body: JSON.stringify({ mode: 'word', retry_word: true, word, audio: btoa(originalBinary), mimeType: blob.type })
                 });
                 const recognized = await recognition.json().catch(() => ({}));
                 if (!recognition.ok || recognized.scoring !== 'asr-word-match-v5' || !recognized.transcript || !Number.isFinite(Number(recognized.score)))
@@ -15831,12 +15831,16 @@ function toggleCompletion(symbolElement) {
             let retryWords = [], correctedWords = [], repairing = false;
             const targetText = () => repairing && retryWords.length ? retryWords[0] : fullAnswer;
             const retryLabel = () => repairing ? '🎤 Đọc lại: ' + targetText() : '🎤 Đọc lại cả câu';
-            function showRepair() {
+            function showRepair(whisperHeard = '') {
                 mic.disabled = false; replay.disabled = false; heardReady = true;
                 mic.textContent = retryLabel();
                 replay.textContent = '🔊 Nghe từ: ' + targetText();
+                const heardNote = whisperHeard
+                    ? ' Whisper nhận diện: “' + String(whisperHeard).slice(0, 90) + '”.'
+                    : '';
                 setStatus('🔁 Chỉ đọc từ “' + targetText() + '”. Còn cần sửa: ' + retryWords.join(', ') +
-                    (correctedWords.length ? '. Đã sửa đúng: ' + correctedWords.join(', ') : '') + '.', 'retry');
+                    (correctedWords.length ? '. Đã sửa đúng: ' + correctedWords.join(', ') : '') +
+                    '.' + heardNote, 'retry');
             }
             function completeReading() {
                 mic.disabled = true; replay.disabled = true;
@@ -15890,7 +15894,7 @@ function toggleCompletion(symbolElement) {
                         correctedWords.push(retryWords.shift());
                         if (!retryWords.length) { completeReading(); return; }
                     }
-                    showRepair();
+                    showRepair(source === 'whisper' && assessment?.accepted !== true ? transcript : '');
                     return;
                 }
                 // Whisper screens sentence content quickly; Azure grades pronunciation in detail.
