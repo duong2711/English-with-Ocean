@@ -23,6 +23,7 @@
 
         safeInit(ensureUpgradeAssets);
         safeInit(installParentNavigationState);
+        safeInit(installRoadmapTabAutoScroll);
         safeInit(enhanceTestCenter);
         safeInit(installTestCenterNavigationGuard);
         safeInit(observeCustomTestRows);
@@ -81,6 +82,84 @@
         document.body.appendChild(script);
     }
 
+    // Scroll only the horizontal tab rail. scrollIntoView can inadvertently
+    // move the page vertically, especially when a learner is inside a test.
+    function revealHorizontalTab(rail, item, smooth) {
+        if (!rail || !item || !rail.contains(item) || rail.clientWidth <= 0 ||
+            rail.scrollWidth <= rail.clientWidth + 1) return;
+        const viewport = rail.getBoundingClientRect();
+        const selected = item.getBoundingClientRect();
+        const inset = 12;
+        if (selected.left >= viewport.left + inset &&
+            selected.right <= viewport.right - inset) return;
+        const centerOffset = (selected.left + selected.right - viewport.left - viewport.right) / 2;
+        const maxScroll = Math.max(0, rail.scrollWidth - rail.clientWidth);
+        const target = Math.max(0, Math.min(maxScroll, rail.scrollLeft + centerOffset));
+        if (Math.abs(target - rail.scrollLeft) < 1) return;
+        const reducedMotion = window.matchMedia &&
+            window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        rail.scrollTo({
+            left: target,
+            behavior: smooth && !reducedMotion ? 'smooth' : 'auto'
+        });
+    }
+
+    function installRoadmapTabAutoScroll() {
+        // Includes Mất gốc, Đi làm, IELTS, THCS/THPT class selection and
+        // their five-page curriculum switchers.
+        const rails = Array.from(document.querySelectorAll('.roadmap-switcher-tabs'));
+        if (!rails.length) return;
+        let scheduled = false;
+        let instant = false;
+
+        function alignVisibleRails(smooth) {
+            rails.forEach(function (rail) {
+                if (rail.clientWidth <= 0) return; // hidden parent/grade
+                const active = rail.querySelector(':scope > .active');
+                if (active) revealHorizontalTab(rail, active, smooth);
+            });
+        }
+        function schedule(snap) {
+            if (snap === true) instant = true;
+            if (scheduled) return;
+            scheduled = true;
+            requestAnimationFrame(function () {
+                scheduled = false;
+                const smooth = !instant;
+                instant = false;
+                alignVisibleRails(smooth);
+            });
+        }
+
+        // Selection can change via tabs, previous/next arrows or pager dots.
+        // Observe only tab selection attributes, never lesson/game content.
+        const selections = new MutationObserver(function () { schedule(); });
+        rails.forEach(function (rail) {
+            selections.observe(rail, {
+                subtree: true,
+                attributes: true,
+                attributeFilter: ['class']
+            });
+        });
+
+        // A parent curriculum or a different grade may become visible
+        // without changing its remembered inner selected tab.
+        const mainTabs = new MutationObserver(function () { schedule(true); });
+        document.querySelectorAll('.main-tab-content').forEach(function (panel) {
+            mainTabs.observe(panel, { attributes: true, attributeFilter: ['class'] });
+        });
+        document.addEventListener('click', function (event) {
+            if (event.target.closest('.roadmap-switcher-tabs, .roadmap-nav-btn, .roadmap-dot, .grade-tabs')) {
+                schedule();
+            }
+        });
+        window.addEventListener('resize', function () { schedule(true); }, { passive: true });
+        window.addEventListener('popstate', function () { schedule(true); });
+
+        // Initial alignment is immediate and never scrolls the document.
+        alignVisibleRails(false);
+    }
+
     function installParentNavigationState() {
         const nav = document.getElementById('header-tabs-nav');
         if (!nav || nav.dataset.lddParentState === '1') return;
@@ -95,21 +174,8 @@
             });
         });
 
-        // Keep the selected top-level item in view on horizontally scrolling
-        // phone/tablet headers. Never call scrollIntoView: it may also move
-        // the document vertically while the learner is reading or doing a test.
         function revealSelected(item, smooth) {
-            if (!item || !nav.contains(item) || nav.scrollWidth <= nav.clientWidth + 1) return;
-            const bounds = nav.getBoundingClientRect();
-            const selected = item.getBoundingClientRect();
-            const inset = 12;
-            if (selected.left >= bounds.left + inset && selected.right <= bounds.right - inset) return;
-            const offset = (selected.left + selected.right - bounds.left - bounds.right) / 2;
-            const maxScroll = Math.max(0, nav.scrollWidth - nav.clientWidth);
-            const next = Math.max(0, Math.min(maxScroll, nav.scrollLeft + offset));
-            if (Math.abs(next - nav.scrollLeft) < 1) return;
-            const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-            nav.scrollTo({ left: next, behavior: smooth && !reducedMotion ? 'smooth' : 'auto' });
+            revealHorizontalTab(nav, item, smooth);
         }
 
         let queued = false;
@@ -157,9 +223,16 @@
         });
         // Home tab is inserted by a later enhancement script.
         new MutationObserver(function () { schedule(true); }).observe(nav, { childList: true });
+        // Reveal the parent as soon as its dropdown is opened, even before
+        // a child tab is chosen. Instant alignment keeps the floating dropdown
+        // anchored to the correct position on mobile and tablet.
         document.addEventListener('click', function (event) {
+            const parentTrigger = event.target.closest('.main-tab-dropdown-btn');
+            if (parentTrigger && nav.contains(parentTrigger)) {
+                revealSelected(parentTrigger, false);
+            }
             if (event.target.closest('[data-main-target], #ldd-tab-home')) schedule();
-        });
+        }, true);
         window.addEventListener('popstate', function () { schedule(true); });
         if ('ResizeObserver' in window) {
             let previousWidth = nav.clientWidth;
