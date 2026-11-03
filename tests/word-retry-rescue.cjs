@@ -41,7 +41,7 @@ const send=async(word,heard,opts={})=>{
  assert.equal(r.transcript,'a hobby');assert.equal(cfCalls,1,'Extra words remain a hard failure (no second inference)');
  r=await(await send('hobby',['happy','hobby'],{})).json();
  assert.equal(r.transcript,'happy');assert.equal(cfCalls,1,'Other word practices remain unchanged');
- r=await(await send('hobby',['happy','hobby'],{mode:'sentence',quick_check:true,retry_word:true})).json();
+ r=await(await send('I am a teacher.',['I am a teacher.'],{mode:'sentence',quick_check:true,retry_word:true})).json();
  assert.equal(cfCalls,1,'Fast sentence recognition is not affected');
  assert.equal(r.scoring,'asr-sentence-screen-v1');
  assert.ok(lastUsage>0,'All attempted Whisper inferences must be counted');
