@@ -15707,11 +15707,65 @@ function toggleCompletion(symbolElement) {
             return new Blob([buffer], { type: 'audio/wav' });
         }
 
+
+        // Monthly Azure quota bypass (reset at the next UTC calendar month).
+        // Temporary Azure 429 throttling is rechecked after five minutes.
+        const thcsAzureQuotaStorageKey = 'ldd_sentence_azure_skip_until_v1';
+        let thcsAzureQuotaSkipUntil = 0;
+        let thcsAzureQuotaCheckedAt = 0;
+        let thcsAzureQuotaLastKnownExhausted = false;
+        function thcsAzureQuotaSkipActive() {
+            let saved = 0;
+            try { saved = Number(window.localStorage?.getItem(thcsAzureQuotaStorageKey) || 0); } catch (_) {}
+            const until = Math.max(thcsAzureQuotaSkipUntil, Number.isFinite(saved) ? saved : 0);
+            if (until > Date.now()) return true;
+            thcsAzureQuotaSkipUntil = 0;
+            if (thcsAzureQuotaLastKnownExhausted) {
+                thcsAzureQuotaLastKnownExhausted = false;
+                thcsAzureQuotaCheckedAt = 0;
+            }
+            return false;
+        }
+        function thcsMarkAzureQuotaSkipped(code, resetsAt) {
+            const now = Date.now(), today = new Date(now);
+            const nextMonth = Date.UTC(today.getUTCFullYear(), today.getUTCMonth() + 1, 1);
+            const resetDate = Date.parse(resetsAt || '');
+            const monthUntil = Number.isFinite(resetDate) && resetDate > now ? resetDate : nextMonth;
+            const until = code === 'AZURE_RATE_LIMIT' ? now + 5 * 60 * 1000 : monthUntil;
+            thcsAzureQuotaSkipUntil = until;
+            thcsAzureQuotaCheckedAt = now;
+            thcsAzureQuotaLastKnownExhausted = true;
+            try { window.localStorage?.setItem(thcsAzureQuotaStorageKey, String(until)); } catch (_) {}
+        }
+        async function thcsAzureQuotaExhausted() {
+            if (thcsAzureQuotaSkipActive()) return true;
+            if (thcsAzureQuotaCheckedAt && Date.now() - thcsAzureQuotaCheckedAt < 45000)
+                return thcsAzureQuotaLastKnownExhausted;
+            // Shared quota check: one authenticated GET for all students, cached for 45s.
+            // If the check itself fails, Azure still gets its normal chance to grade.
+            try {
+                const sessionResult = await sb.auth.getSession();
+                const session = sessionResult.data && sessionResult.data.session;
+                if (!session) return false;
+                const response = await fetch(SUPABASE_URL + '/functions/v1/azure-pronounce-sentence?view=availability', {
+                    method:'GET', signal:AbortSignal.timeout(6500),
+                    headers:{'Authorization':'Bearer ' + session.access_token, 'apikey':SUPABASE_ANON_KEY}
+                });
+                if (!response.ok) return false;
+                const info = await response.json().catch(() => null);
+                if (!info || typeof info.quota_exhausted !== 'boolean') return false;
+                thcsAzureQuotaCheckedAt = Date.now();
+                thcsAzureQuotaLastKnownExhausted = info.quota_exhausted;
+                if (info.quota_exhausted) thcsMarkAzureQuotaSkipped('AZURE_LOCAL_MONTHLY_LIMIT', info.resets_at);
+                return info.quota_exhausted;
+            } catch (_) { return false; }
+        }
+
         async function thcsScoreSentenceAudio(blob, word, session, wordRetry = false, decodedAudio = null, onStage = () => {}) {
             const headers = { 'Content-Type': 'application/json',
                 'Authorization': 'Bearer ' + session.access_token, 'apikey': SUPABASE_ANON_KEY };
 
-            // Whisper checks individual-word retries; full sentences use quick ASR then Azure.
+            // Whisper checks word retries only; Azure scores full sentences directly.
             if (wordRetry) {
                 const originalBytes = new Uint8Array(await blob.arrayBuffer());
                 let originalBinary = '';
@@ -15733,31 +15787,7 @@ function toggleCompletion(symbolElement) {
                 return { data: recognized, source: 'whisper' };
             }
 
-            // Screening only: Whisper transcribes once with fast decoding.
-            // Azure alone decides pronunciation quality and whether the learner passes.
-            onStage('⏳ Whisper đang nhận diện nhanh nội dung câu…');
-            const originalBytes = new Uint8Array(await blob.arrayBuffer());
-            let originalBinary = '';
-            for (let i = 0; i < originalBytes.length; i += 8192)
-                originalBinary += String.fromCharCode(...originalBytes.subarray(i, i + 8192));
-            const recognition = await fetch(SUPABASE_URL + '/functions/v1/cloudflare-pronounce-score', {
-                method: 'POST', headers, signal: AbortSignal.timeout(30000),
-                body: JSON.stringify({ mode: 'sentence', quick_check: true, word,
-                    audio: btoa(originalBinary), mimeType: blob.type })
-            });
-            const recognized = await recognition.json().catch(() => ({}));
-            if (!recognition.ok || !recognized.transcript ||
-                !['asr-sentence-screen-v1', 'asr-sentence-wer-v1'].includes(recognized.scoring))
-                throw new Error(recognized.error || 'Whisper chưa nhận diện được cả câu. Hãy đọc lại.');
-
-            // A fast Whisper transcript must contain every expected word in exact order.
-            // This is a content gate, not detailed pronunciation scoring.
-            // Azure is called only after the complete sentence passes this comparison.
-            const expectedWords = thcsSentenceGateWords(word);
-            const heardWords = thcsSentenceGateWords(recognized.transcript);
-            if (!expectedWords.length || heardWords.length !== expectedWords.length ||
-                !expectedWords.every((item, i) => item === heardWords[i]))
-                throw new Error('Whisper chưa nhận diện đúng và đủ từng từ trong câu. Hãy đọc lại cả câu.');
+            // Full sentence: send straight to Azure, without a Whisper preflight.
             const azureUrl = SUPABASE_URL + '/functions/v1/azure-pronounce-sentence';
             // Azure is activated: the scoring response itself reports configuration/errors.
             // Reuse the audio decoded for local silence validation instead of decoding twice.
@@ -15782,11 +15812,13 @@ function toggleCompletion(symbolElement) {
             if (!response.ok || data.error || data.code) {
                 const messages = {
                     AZURE_NOT_CONFIGURED: 'Azure chưa sẵn sàng. Vui lòng thử lại sau.',
-                    AZURE_LOCAL_MONTHLY_LIMIT: 'Đã hết hạn mức chấm phát âm miễn phí tháng này. Hãy quay lại tháng sau.',
+                    AZURE_LOCAL_MONTHLY_LIMIT: 'Hết hạn mức chấm phát âm Azure tháng này.',
                     AZURE_RATE_LIMIT: 'Dịch vụ đang bận. Hãy đợi một chút rồi đọc lại.',
                     UNCERTAIN_SPEECH: 'Chưa nghe rõ cả câu. Hãy đọc lại gần micro hơn.'
                 };
-                throw new Error(messages[data.code] || data.error || 'Chưa chấm được phát âm. Hãy thử lại.');
+                const err = new Error(messages[data.code] || data.error || 'Chưa chấm được phát âm. Hãy thử lại.');
+                err.code = data.code || 'AZURE_ERROR';
+                throw err;
             }
             const scoring = 'azure-pronunciation-assessment-v1';
             if (!data.transcript || data.scoring !== scoring || !Number.isFinite(Number(data.score)))
@@ -15805,6 +15837,42 @@ function toggleCompletion(symbolElement) {
             const targets = reference.match(/[A-Za-z0-9]+(?:['’][A-Za-z]+)*/g) || [];
             return [...new Set(targets.filter(word => problems.some(problem =>
                 thcsSentenceGateWords(word).some(w => thcsSentenceGateWords(problem).includes(w)))))];
+        }
+
+
+        // Pronunciation is optional while the Azure allowance is exhausted.
+        function thcsSkipSentenceSpeakingForQuota() {
+            const token = thcsSpeechToken;
+            thcsSpeechWaiting = false;
+            thcsSpeechListening = false;
+            const panel = document.getElementById('thcs-translate-speaking');
+            if (panel) panel.remove();
+            thcsTrCheckBtn.disabled = true;
+            thcsTrFeedback.className = 'thcs-translate-feedback is-correct';
+            thcsTrFeedback.textContent =
+                '✅ Điền đúng! Azure tạm hết hạn mức, bỏ qua chấm phát âm và chuyển câu tiếp theo.';
+            if (thcsSpeechTimer) clearTimeout(thcsSpeechTimer);
+            thcsSpeechTimer = setTimeout(() => {
+                if (token !== thcsSpeechToken) return;
+                thcsTranslateBusy = false;
+                thcsAdvanceTranslate();
+            }, 900);
+        }
+        function thcsBeginSentenceOrSkipForQuota(fullAnswer) {
+            const token = thcsSpeechToken;
+            const index = trIndex;
+            if (thcsAzureQuotaSkipActive()) {
+                thcsSkipSentenceSpeakingForQuota();
+                return;
+            }
+            thcsAzureQuotaExhausted().then(exhausted => {
+                if (token !== thcsSpeechToken || index !== trIndex || !thcsTranslateBusy) return;
+                if (exhausted) thcsSkipSentenceSpeakingForQuota();
+                else thcsStartSentenceSpeaking(fullAnswer);
+            }).catch(() => {
+                if (token === thcsSpeechToken && index === trIndex && thcsTranslateBusy)
+                    thcsStartSentenceSpeaking(fullAnswer);
+            });
         }
 
         function thcsStartSentenceSpeaking(fullAnswer) {
@@ -15900,7 +15968,7 @@ function toggleCompletion(symbolElement) {
                     showRepair(source === 'whisper' && assessment?.accepted !== true ? transcript : '');
                     return;
                 }
-                // Whisper screens sentence content quickly; Azure grades pronunciation in detail.
+                // Azure grades full sentences directly; Whisper checks only failed words.
                 const numericScore = Number(serverScore);
                 const score = serverScore != null && Number.isFinite(numericScore)
                     ? Math.min(100, Math.max(0, Math.round(numericScore)))
@@ -16101,6 +16169,12 @@ function toggleCompletion(symbolElement) {
                             finishTranscript(data.transcript, data.score, data.word_feedback, source, data);
                         } catch (error) {
                             if (token !== thcsSpeechToken) return;
+                            // A genuine quota limit skips pronunciation; unrelated failures do not.
+                            if (!repairing && ['AZURE_LOCAL_MONTHLY_LIMIT', 'AZURE_RATE_LIMIT', 'AZURE_QUOTA_EXHAUSTED'].includes(error?.code)) {
+                                thcsMarkAzureQuotaSkipped(error.code);
+                                thcsSkipSentenceSpeakingForQuota();
+                                return;
+                            }
                             thcsSpeechListening = false;
                             mic.disabled = false;
                             replay.disabled = false;
@@ -16131,6 +16205,10 @@ function toggleCompletion(symbolElement) {
                 if (token !== thcsSpeechToken || !heardReady) return;
                 // Không cần bấm dừng: VAD tự kết thúc ghi âm khi học viên đọc xong.
                 if (thcsSpeechListening) return;
+                if (thcsAzureQuotaSkipActive()) {
+                    thcsSkipSentenceSpeakingForQuota();
+                    return;
+                }
                 thcsSpeechListening = true;
                 mic.disabled = true;
                 replay.disabled = true;
@@ -16283,7 +16361,7 @@ function toggleCompletion(symbolElement) {
 
             if (userAns === correctAns) {
                 thcsPlayCorrectSound();
-                thcsStartSentenceSpeaking(trWords[trIndex].trAnswer || trWords[trIndex].ex || '');
+                thcsBeginSentenceOrSkipForQuota(trWords[trIndex].trAnswer || trWords[trIndex].ex || '');
             } else {
                 thcsPlayWrongSound();
                 blankInput.classList.add('is-wrong');
