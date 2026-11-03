@@ -468,7 +468,7 @@
                     analyser = audioContext.createAnalyser();
                     analyser.fftSize = 1024;
                     source.connect(analyser);
-                    if (audioContext.state === 'suspended') await audioContext.resume();
+                    if (audioContext.state === 'suspended') audioContext.resume().catch(function () {});
                 } catch (_) {
                     analyser = null; // The recorder still works without WebAudio/VAD.
                 }
@@ -568,7 +568,7 @@
                 signal: signal
             });
         } catch (err) {
-            throw Object.assign(err || new Error('network'), { code: 'NETWORK', status: 0 });
+            throw Object.assign(new Error(err && err.message || 'network'), { code: 'NETWORK', status: 0 });
         }
         const data = await response.json().catch(function () { return {}; });
         if (!response.ok || data.error) {
