@@ -4,6 +4,7 @@ on:
     paths:
       - 'scriptphonetics.js'
       - 'tests/azure-sentence.cjs'
+      - 'tests/word-retry-rescue.cjs'
       - 'supabase/functions/azure-pronounce-sentence/index.ts'
       - 'supabase/functions/cloudflare-pronounce-score/index.ts'
       - '.github/workflows/check-azure-sentence.yml'
@@ -11,6 +12,7 @@ on:
     paths:
       - 'scriptphonetics.js'
       - 'tests/azure-sentence.cjs'
+      - 'tests/word-retry-rescue.cjs'
       - 'supabase/functions/azure-pronounce-sentence/index.ts'
       - 'supabase/functions/cloudflare-pronounce-score/index.ts'
 jobs:
