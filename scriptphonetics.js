@@ -15747,20 +15747,14 @@ function toggleCompletion(symbolElement) {
                 !['asr-sentence-screen-v1', 'asr-sentence-wer-v1'].includes(recognized.scoring))
                 throw new Error(recognized.error || 'Whisper chưa nhận diện được cả câu. Hãy đọc lại.');
 
-            // Only reject obviously incomplete/unrelated speech. Minor Whisper errors
-            // must not prevent Azure from making the final, strict word-level decision.
+            // A fast Whisper transcript must contain every expected word in exact order.
+            // This is a content gate, not detailed pronunciation scoring.
+            // Azure is called only after the complete sentence passes this comparison.
             const expectedWords = thcsSentenceGateWords(word);
             const heardWords = thcsSentenceGateWords(recognized.transcript);
-            const available = new Map();
-            for (const item of expectedWords) available.set(item, (available.get(item) || 0) + 1);
-            let matches = 0;
-            for (const item of heardWords) {
-                const count = available.get(item) || 0;
-                if (count) { matches++; available.set(item, count - 1); }
-            }
-            const needed = Math.max(1, Math.ceil(expectedWords.length * 0.6));
-            if (heardWords.length < needed || matches < needed)
-                throw new Error('Whisper chỉ nhận ra một phần câu. Hãy đọc lại cả câu rõ hơn.');
+            if (!expectedWords.length || heardWords.length !== expectedWords.length ||
+                !expectedWords.every((item, i) => item === heardWords[i]))
+                throw new Error('Whisper chưa nhận diện đúng và đủ từng từ trong câu. Hãy đọc lại cả câu.');
             const azureUrl = SUPABASE_URL + '/functions/v1/azure-pronounce-sentence';
             // Azure is activated: the scoring response itself reports configuration/errors.
             // Reuse the audio decoded for local silence validation instead of decoding twice.
