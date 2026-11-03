@@ -94,34 +94,85 @@
                 parents.set(child.dataset.mainTarget, trigger);
             });
         });
+
+        // Keep the selected top-level item in view on horizontally scrolling
+        // phone/tablet headers. Never call scrollIntoView: it may also move
+        // the document vertically while the learner is reading or doing a test.
+        function revealSelected(item, smooth) {
+            if (!item || !nav.contains(item) || nav.scrollWidth <= nav.clientWidth + 1) return;
+            const bounds = nav.getBoundingClientRect();
+            const selected = item.getBoundingClientRect();
+            const inset = 12;
+            if (selected.left >= bounds.left + inset && selected.right <= bounds.right - inset) return;
+            const offset = (selected.left + selected.right - bounds.left - bounds.right) / 2;
+            const maxScroll = Math.max(0, nav.scrollWidth - nav.clientWidth);
+            const next = Math.max(0, Math.min(maxScroll, nav.scrollLeft + offset));
+            if (Math.abs(next - nav.scrollLeft) < 1) return;
+            const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            nav.scrollTo({ left: next, behavior: smooth && !reducedMotion ? 'smooth' : 'auto' });
+        }
+
         let queued = false;
+        let forceReveal = false;
+        let lastSelected = null;
         function sync() {
             queued = false;
             const panel = document.querySelector('.main-tab-content.active');
             const target = panel && panel.id;
             const parent = parents.get(target);
+            let visibleItem = parent || null;
             nav.querySelectorAll('.main-tab-dropdown-btn, .main-tab-btn[data-main-target]').forEach(function (button) {
                 const selected = button === parent || button.dataset.mainTarget === target;
                 button.classList.toggle('active', selected);
                 if (selected) button.setAttribute('aria-current', 'page');
                 else button.removeAttribute('aria-current');
+                // Menu items live in fixed dropdowns; scroll their parent trigger,
+                // not the offscreen child (or the whole document).
+                if (!visibleItem && selected && button.parentElement === nav) visibleItem = button;
             });
+            const changed = target !== lastSelected;
+            const shouldReveal = changed || forceReveal;
+            forceReveal = false;
+            if (visibleItem) lastSelected = target;
+            if (shouldReveal && visibleItem) {
+                requestAnimationFrame(function () {
+                    const active = document.querySelector('.main-tab-content.active');
+                    if (active && active.id === target) revealSelected(visibleItem, !forceInitialMotion);
+                });
+            }
         }
-        function schedule() {
+        // First sync and viewport changes reposition instantly; tab switches
+        // can animate unless the learner requests reduced motion.
+        let forceInitialMotion = true;
+        function schedule(reveal) {
+            if (reveal === true) forceReveal = true;
             if (queued) return;
             queued = true;
             queueMicrotask(sync);
         }
-        // Observe only top-level panel selection, never game frames or content updates.
         const observer = new MutationObserver(schedule);
         document.querySelectorAll('.main-tab-content').forEach(function (panel) {
             observer.observe(panel, { attributes: true, attributeFilter: ['class'] });
         });
+        // Home tab is inserted by a later enhancement script.
+        new MutationObserver(function () { schedule(true); }).observe(nav, { childList: true });
         document.addEventListener('click', function (event) {
             if (event.target.closest('[data-main-target], #ldd-tab-home')) schedule();
         });
-        window.addEventListener('popstate', schedule);
+        window.addEventListener('popstate', function () { schedule(true); });
+        if ('ResizeObserver' in window) {
+            let previousWidth = nav.clientWidth;
+            new ResizeObserver(function () {
+                if (previousWidth !== nav.clientWidth) {
+                    previousWidth = nav.clientWidth;
+                    schedule(true);
+                }
+            }).observe(nav);
+        } else {
+            window.addEventListener('resize', function () { schedule(true); }, { passive: true });
+        }
         sync();
+        forceInitialMotion = false;
     }
 
     function initPremiumMotion() {
