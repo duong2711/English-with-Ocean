@@ -1358,6 +1358,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // [MỚI] Khôi phục tab đang xem lần trước (nếu có), để khi tải lại trang
             // người dùng vẫn ở đúng nơi họ đang xem thay vì quay về tab đầu tiên.
             restoreActiveMainTab();
+            window.dispatchEvent(new Event('ldd-main-tab-ready'));
 
             // [EGRESS] Chỉ tải ipa_completions + comments khi tab Phiên âm thực sự đang mở.
             // Nếu người dùng khôi phục vào tab khác, dữ liệu Phiên âm sẽ được lazy-load khi bấm vào.
@@ -14736,6 +14737,98 @@ function toggleCompletion(symbolElement) {
         let currentGradeUnits = null;
         let currentGradeNum = null;
 
+        // Restore the exact vocabulary folder / grade / Unit / activity after reload.
+        // Stored per account: one student's location never opens in another account.
+        const thcsLocationPrefix = 'ldd_vocab_thcs_location_v1:';
+        let thcsRestoringLocation = false;
+        let thcsLocationRestoredUser = null;
+        function thcsLocationKey() {
+            return currentUserId ? thcsLocationPrefix + currentUserId : null;
+        }
+        function thcsReadLocation() {
+            const key = thcsLocationKey();
+            if (!key) return null;
+            try {
+                const value = JSON.parse(localStorage.getItem(key) || 'null');
+                if (!value || !['grades', 'units', 'unit', 'folders'].includes(value.view)) return null;
+                return value;
+            } catch (_) { return null; }
+        }
+        function thcsSaveLocation(view, sub = '') {
+            if (thcsRestoringLocation) return;
+            const key = thcsLocationKey();
+            if (!key) return;
+            const activity = ['flashcard','translate','story','game'].includes(sub) ? sub : 'flashcard';
+            const input = document.getElementById('thcs-translate-blank-input');
+            const translating = view === 'unit' && activity === 'translate';
+            const value = {
+                view, grade: view === 'folders' || view === 'grades' ? null : currentGradeNum,
+                unitId: view === 'unit' && currentUnit ? currentUnit.id : null,
+                sub: translating ? 'translate' : (view === 'unit' ? activity : null),
+                translateIndex: translating ? trIndex : 0,
+                step: translating && thcsSpeechWaiting ? 'speaking' : 'write',
+                draft: translating && !thcsSpeechWaiting && input ? String(input.value || '').slice(0, 200) : ''
+            };
+            try { localStorage.setItem(key, JSON.stringify(value)); } catch (_) {}
+        }
+        async function thcsRestoreLocation() {
+            if (!currentUserId || thcsLocationRestoredUser === currentUserId ||
+                !document.getElementById('tab-tu-vung')?.classList.contains('active')) return;
+            thcsLocationRestoredUser = currentUserId;
+            const saved = thcsReadLocation();
+            if (!saved || saved.view === 'folders') return;
+            thcsRestoringLocation = true;
+            let invalidUnit = false;
+            try {
+                thcsFolderCard.click();
+                if (saved.view === 'grades') return;
+                const grade = Number(saved.grade);
+                const units = thcsGetGradeUnits(grade);
+                if (!units || !Number.isInteger(grade) || grade < 1 || grade > 12) return;
+                currentGradeNum = grade;
+                currentGradeUnits = units;
+                if (thcsGradePanelTitle)
+                    thcsGradePanelTitle.textContent = '📁 Lớp ' + grade + ' (Global Success)';
+                thcsPanel.style.display = 'none';
+                thcsGrade6Panel.style.display = 'block';
+                await renderUnitGrid(); // Respect the student's current unlock permissions.
+                if (saved.view !== 'unit') return;
+                const unit = units.find(item => item.id === saved.unitId);
+                const unitIndex = unit ? units.indexOf(unit) : -1;
+                if (!unit || !thcsIsUnitUnlocked(grade, units, unitIndex)) {
+                    invalidUnit = true;
+                    return;
+                }
+                await openUnit(unit, { restoring: true });
+                const sub = ['flashcard','translate','story','game'].includes(saved.sub) ? saved.sub : 'flashcard';
+                const activity = thcsSubtabs.querySelector('.kid-subtab-btn[data-sub="' + sub + '"]');
+                if (activity) activity.click();
+                if (sub === 'translate' && trWords.length) {
+                    const index = Number(saved.translateIndex);
+                    trIndex = Number.isInteger(index) && index >= 0 && index < trWords.length ? index : 0;
+                    thcsRenderTranslate();
+                    const input = document.getElementById('thcs-translate-blank-input');
+                    if (input && typeof saved.draft === 'string') input.value = saved.draft.slice(0, 200);
+                    // Recording is never resumed automatically. A completed written answer
+                    // can return to step 2, but the learner must start the microphone again.
+                    if (saved.step === 'speaking') {
+                        thcsTranslateBusy = true;
+                        thcsBeginSentenceOrSkipForQuota(trWords[trIndex].trAnswer || trWords[trIndex].ex || '');
+                    }
+                }
+            } catch (error) {
+                console.warn('[Dịch câu] Không thể khôi phục vị trí học:', error);
+            } finally {
+                thcsRestoringLocation = false;
+                if (invalidUnit) thcsSaveLocation('units');
+            }
+        }
+        window.addEventListener('ldd-main-tab-ready', () => {
+            thcsRestoreLocation().catch(err => console.warn('[Dịch câu] Khôi phục vị trí:', err));
+        });
+        setTimeout(() => { thcsRestoreLocation().catch(() => {}); }, 0);
+
+
         // ===================================================================
         // ----- TIẾN ĐỘ HOÀN THÀNH UNIT (lưu trên Supabase, bảng "thcs_unit_progress") -----
         // Một Unit được coi là HOÀN THÀNH khi học viên đã:
@@ -15107,6 +15200,7 @@ function toggleCompletion(symbolElement) {
                         if (thcsGradePanelTitle) thcsGradePanelTitle.textContent = `📁 Lớp ${g} (Global Success)`;
                         thcsPanel.style.display = 'none';
                         thcsGrade6Panel.style.display = 'block';
+                        thcsSaveLocation('units');
                         renderUnitGrid();
                     });
                 } else {
@@ -15121,17 +15215,20 @@ function toggleCompletion(symbolElement) {
             thcsPanel.style.display = 'block';
             thcsGrade6Panel.style.display = 'none';
             thcsUnitPanel.style.display = 'none';
+            thcsSaveLocation('grades');
             renderGradeGrid();
         });
 
         thcsBackBtn.addEventListener('click', () => {
             thcsPanel.style.display = 'none';
             vocabFolderGrid.style.display = '';
+            thcsSaveLocation('folders');
         });
 
         thcsGrade6BackBtn.addEventListener('click', () => {
             thcsGrade6Panel.style.display = 'none';
             thcsPanel.style.display = 'block';
+            thcsSaveLocation('grades');
         });
 
         // [MỚI] Giữ chuột/chạm 5 giây vào thẻ Unit -> mở hộp thoại nhập mật khẩu Admin để bật/tắt
@@ -15229,11 +15326,12 @@ function toggleCompletion(symbolElement) {
             thcsResetTranslateIfMidProgress(); // rời cả Unit giữa chừng khi đang dịch câu -> làm lại từ đầu
             thcsUnitPanel.style.display = 'none';
             thcsGrade6Panel.style.display = 'block';
+            thcsSaveLocation('units');
             renderUnitGrid(); // làm mới trạng thái khóa/hoàn thành sau khi có thể vừa hoàn thành 1 Unit
         });
 
         // ---------- Mở 1 Unit ----------
-        async function openUnit(unit) {
+        async function openUnit(unit, { restoring = false } = {}) {
             // Lớp bảo vệ: phòng trường hợp bị gọi trực tiếp dù Unit đang bị khóa
             const idx = (currentGradeUnits || []).indexOf(unit);
             if (idx > 0 && !thcsIsUnitUnlocked(currentGradeNum, currentGradeUnits, idx)) {
@@ -15248,6 +15346,7 @@ function toggleCompletion(symbolElement) {
             thcsGrade6Panel.style.display = 'none';
             thcsUnitPanel.style.display = 'block';
             thcsUnitTitle.textContent = `${unit.icon} Unit ${unit.number}: ${unit.title}`;
+            thcsSaveLocation('unit', 'flashcard');
 
             thcsSubtabs.querySelectorAll('.kid-subtab-btn').forEach(b => b.classList.remove('active'));
             thcsSubtabs.querySelector('[data-sub="flashcard"]').classList.add('active');
@@ -15260,7 +15359,7 @@ function toggleCompletion(symbolElement) {
             // không có khoảng trễ (kể cả 1 "await") kể từ thao tác bấm của người dùng; nếu
             // không, lệnh đọc sẽ bị trình duyệt âm thầm bỏ qua (không lỗi, không có tiếng).
             if (unit.words && unit.words[0]) {
-                thcsSpeak(unit.words[0].en);
+                if (!restoring) thcsSpeak(unit.words[0].en);
                 thcsSkipNextAutoSpeak = true;
             }
 
@@ -15329,6 +15428,7 @@ function toggleCompletion(symbolElement) {
             btn.classList.add('active');
             thcsUnitPanel.querySelectorAll('.kid-sub-content').forEach(el => el.style.display = 'none');
             document.getElementById('thcs-sub-' + btn.dataset.sub).style.display = 'block';
+            thcsSaveLocation('unit', btn.dataset.sub);
         });
 
         // ---------- 1. FLASHCARD ----------
@@ -15569,7 +15669,11 @@ function toggleCompletion(symbolElement) {
         const thcsTrSentence  = document.getElementById('thcs-translate-sentence');
         const thcsTrCheckBtn  = document.getElementById('thcs-translate-check-btn');
         const thcsTrRestartBtn= document.getElementById('thcs-translate-restart-btn');
+        const thcsTrActions   = thcsTrCheckBtn?.closest('.thcs-translate-actions');
         const thcsTrFeedback  = document.getElementById('thcs-translate-feedback');
+        function thcsShowTranslateActions(visible) {
+            if (thcsTrActions) thcsTrActions.style.display = visible ? '' : 'none';
+        }
 
         let trWords = [];
         let trIndex = 0;
@@ -15606,6 +15710,7 @@ function toggleCompletion(symbolElement) {
             const panel = document.getElementById('thcs-translate-speaking');
             if (panel) panel.remove();
             thcsTrCheckBtn.disabled = false;
+            thcsShowTranslateActions(true);
         }
 
         // Word-level edit distance: chấm toàn bộ câu, không thể vượt ngưỡng bằng cách chỉ đọc 1 từ.
@@ -15848,6 +15953,7 @@ function toggleCompletion(symbolElement) {
             const panel = document.getElementById('thcs-translate-speaking');
             if (panel) panel.remove();
             thcsTrCheckBtn.disabled = true;
+            thcsShowTranslateActions(false);
             thcsTrFeedback.className = 'thcs-translate-feedback is-correct';
             thcsTrFeedback.textContent =
                 '✅ Điền đúng! Azure tạm hết hạn mức, bỏ qua chấm phát âm và chuyển câu tiếp theo.';
@@ -15879,6 +15985,8 @@ function toggleCompletion(symbolElement) {
             thcsSpeechWaiting = true;
             const token = ++thcsSpeechToken;
             thcsTrCheckBtn.disabled = true;
+            thcsShowTranslateActions(false);
+            thcsSaveLocation('unit', 'translate');
             const input = document.getElementById('thcs-translate-blank-input');
             if (input) input.style.display = 'none';
             thcsTrSentence.innerHTML = (window.vocabTap && window.vocabTap.wrap)
@@ -16304,6 +16412,7 @@ function toggleCompletion(symbolElement) {
             thcsStopSentenceStep();
             thcsTranslateBusy = false;
             const w = trWords[trIndex];
+            if (!w) return;
             thcsTrProg.textContent = `Câu ${trIndex + 1} / ${trWords.length}`;
             thcsTrVi.textContent = w.trVi || w.vi;
             thcsTrFeedback.className = 'thcs-translate-feedback';
@@ -16330,9 +16439,12 @@ function toggleCompletion(symbolElement) {
             }
             thcsTrSentence.dataset.vocabContext = fullAnswer;
             thcsTrSentence.dataset.vocabSource = sourceLabel;
+            if (thcsSubtabs.querySelector('.kid-subtab-btn.active')?.dataset.sub === 'translate')
+                thcsSaveLocation('unit', 'translate');
 
             const blankInput = document.getElementById('thcs-translate-blank-input');
             if (blankInput) {
+                blankInput.addEventListener('input', () => thcsSaveLocation('unit', 'translate'));
                 blankInput.addEventListener('keydown', (e) => {
                     if (e.key === 'Enter') { e.preventDefault(); thcsCheckAnswer(); }
                 });
@@ -16361,6 +16473,7 @@ function toggleCompletion(symbolElement) {
 
             if (userAns === correctAns) {
                 thcsPlayCorrectSound();
+                thcsShowTranslateActions(false);
                 thcsBeginSentenceOrSkipForQuota(trWords[trIndex].trAnswer || trWords[trIndex].ex || '');
             } else {
                 thcsPlayWrongSound();
@@ -16402,7 +16515,7 @@ function toggleCompletion(symbolElement) {
 
         thcsTrCheckBtn.addEventListener('click', thcsCheckAnswer);
         thcsTrRestartBtn.addEventListener('click', () => {
-            if (thcsTranslateBusy && !thcsSpeechWaiting) return;
+            if (thcsTranslateBusy) return;
             thcsStopSentenceStep();
             trIndex = 0;
             thcsRenderTranslate();
