@@ -1,0 +1,24 @@
+name: Check sentence pronunciation flow
+on:
+  push:
+    paths:
+      - 'scriptphonetics.js'
+      - 'tests/azure-sentence.cjs'
+      - 'supabase/functions/azure-pronounce-sentence/index.ts'
+      - 'supabase/functions/cloudflare-pronounce-score/index.ts'
+      - '.github/workflows/check-azure-sentence.yml'
+  pull_request:
+    paths:
+      - 'scriptphonetics.js'
+      - 'tests/azure-sentence.cjs'
+      - 'supabase/functions/azure-pronounce-sentence/index.ts'
+      - 'supabase/functions/cloudflare-pronounce-score/index.ts'
+jobs:
+  sentence-flow:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node tests/azure-sentence.cjs

@@ -15711,7 +15711,7 @@ function toggleCompletion(symbolElement) {
             const headers = { 'Content-Type': 'application/json',
                 'Authorization': 'Bearer ' + session.access_token, 'apikey': SUPABASE_ANON_KEY };
 
-            // Only individual-word retries use Whisper. Full sentences go directly to Azure.
+            // Whisper checks individual-word retries; full sentences use quick ASR then Azure.
             if (wordRetry) {
                 const originalBytes = new Uint8Array(await blob.arrayBuffer());
                 let originalBinary = '';
@@ -15729,10 +15729,42 @@ function toggleCompletion(symbolElement) {
                 recognized.accepted = !!expected && expected === heard && Number(recognized.score) === 100;
                 return { data: recognized, source: 'whisper' };
             }
+
+            // Screening only: Whisper transcribes once with fast decoding.
+            // Azure alone decides pronunciation quality and whether the learner passes.
+            onStage('⏳ Whisper đang nhận diện nhanh nội dung câu…');
+            const originalBytes = new Uint8Array(await blob.arrayBuffer());
+            let originalBinary = '';
+            for (let i = 0; i < originalBytes.length; i += 8192)
+                originalBinary += String.fromCharCode(...originalBytes.subarray(i, i + 8192));
+            const recognition = await fetch(SUPABASE_URL + '/functions/v1/cloudflare-pronounce-score', {
+                method: 'POST', headers, signal: AbortSignal.timeout(30000),
+                body: JSON.stringify({ mode: 'sentence', quick_check: true, word,
+                    audio: btoa(originalBinary), mimeType: blob.type })
+            });
+            const recognized = await recognition.json().catch(() => ({}));
+            if (!recognition.ok || !recognized.transcript ||
+                !['asr-sentence-screen-v1', 'asr-sentence-wer-v1'].includes(recognized.scoring))
+                throw new Error(recognized.error || 'Whisper chưa nhận diện được cả câu. Hãy đọc lại.');
+
+            // Only reject obviously incomplete/unrelated speech. Minor Whisper errors
+            // must not prevent Azure from making the final, strict word-level decision.
+            const expectedWords = thcsSentenceGateWords(word);
+            const heardWords = thcsSentenceGateWords(recognized.transcript);
+            const available = new Map();
+            for (const item of expectedWords) available.set(item, (available.get(item) || 0) + 1);
+            let matches = 0;
+            for (const item of heardWords) {
+                const count = available.get(item) || 0;
+                if (count) { matches++; available.set(item, count - 1); }
+            }
+            const needed = Math.max(1, Math.ceil(expectedWords.length * 0.6));
+            if (heardWords.length < needed || matches < needed)
+                throw new Error('Whisper chỉ nhận ra một phần câu. Hãy đọc lại cả câu rõ hơn.');
             const azureUrl = SUPABASE_URL + '/functions/v1/azure-pronounce-sentence';
             // Azure is activated: the scoring response itself reports configuration/errors.
             // Reuse the audio decoded for local silence validation instead of decoding twice.
-            onStage('⏳ Azure đang chấm phát âm cả câu…');
+            onStage('⏳ Azure đang chấm phát âm chi tiết…');
             let upload;
             if (decodedAudio) upload = thcsEncodeSentenceWav(decodedAudio);
             else {
@@ -15867,7 +15899,7 @@ function toggleCompletion(symbolElement) {
                     showRepair();
                     return;
                 }
-                // Azure evaluates the complete sentence; Whisper checks only single-word retries.
+                // Whisper screens sentence content quickly; Azure grades pronunciation in detail.
                 const numericScore = Number(serverScore);
                 const score = serverScore != null && Number.isFinite(numericScore)
                     ? Math.min(100, Math.max(0, Math.round(numericScore)))
