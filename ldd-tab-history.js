@@ -13,7 +13,8 @@
     const NAV_TARGET_SELECTOR = [
         '.folder-card', '[class*="-folder-card"]', '[class*="-grade-card"]',
         '[class*="-unit-card"]', '[class*="-topic-card"]', '[class*="-lesson-card"]',
-        '.news-article-card', '.news-list-item', '.podcast-card',
+        '.news-card', '.news-article-card', '.news-list-item', '.podcast-card',
+        '.kid-subtab-btn',
         '.ldd-stage-card', '.ldd-ent-comic-cover-card', '.ldd-ent-grade-btn',
         '.ldd-ent-chapter-card', '.ldd-wimpy-card',
         '#ldd-ent-games-entry', '#ldd-ent-movies-entry', '#ldd-ent-comics-entry'
@@ -260,6 +261,13 @@
             const step = { selector: selector, label: String(target.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 70) };
             const isTopFolder = !!target.closest('#vocab-folder-grid, #kiemtra-folder-grid, #entertainment-folder-grid');
             if (isTopFolder) navigationPath = [];
+            const subTabs = target.closest('.kid-subtabs');
+            if (subTabs && subTabs.id) {
+                const prefix = '#' + cssEscape(subTabs.id) + ' > ';
+                navigationPath = navigationPath.filter(function (entry) {
+                    return !entry.selector.startsWith(prefix);
+                });
+            }
             if (!navigationPath.length || navigationPath[navigationPath.length - 1].selector !== selector) {
                 navigationPath.push(step);
                 navigationPath = navigationPath.slice(-8);
