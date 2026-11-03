@@ -15655,9 +15655,11 @@ function toggleCompletion(symbolElement) {
             return new Blob([buffer], { type: 'audio/wav' });
         }
 
-        async function thcsScoreSentenceAudio(blob, word, session) {
+        async function thcsScoreSentenceAudio(blob, word, session, wordRetry = false) {
             const headers = { 'Content-Type': 'application/json',
                 'Authorization': 'Bearer ' + session.access_token, 'apikey': SUPABASE_ANON_KEY };
+            let recognized;
+            if (!wordRetry) {
             const originalBytes = new Uint8Array(await blob.arrayBuffer());
             let originalBinary = '';
             for (let i = 0; i < originalBytes.length; i += 8192) originalBinary += String.fromCharCode(...originalBytes.subarray(i, i + 8192));
@@ -15665,11 +15667,12 @@ function toggleCompletion(symbolElement) {
                 method: 'POST', headers, signal: AbortSignal.timeout(30000),
                 body: JSON.stringify({ mode: 'sentence', word, audio: btoa(originalBinary), mimeType: blob.type })
             });
-            const recognized = await recognition.json().catch(() => ({}));
+            recognized = await recognition.json().catch(() => ({}));
             if (!recognition.ok || recognized.scoring !== 'asr-sentence-wer-v1' || !recognized.transcript)
                 throw new Error('Whisper chưa nhận diện được cả câu. Hãy đọc lại.');
             if (!thcsSentenceIsFullyCorrect(word, recognized.transcript, Number(recognized.score), recognized.word_feedback, 'whisper'))
                 return { data: recognized, source: 'whisper' };
+            }
             const azureUrl = SUPABASE_URL + '/functions/v1/azure-pronounce-sentence';
             // Until Azure secrets are activated, keep the existing sentence scorer.
             // Once activated, an Azure error must never pass via a weaker ASR fallback.
@@ -15677,6 +15680,7 @@ function toggleCompletion(symbolElement) {
             if (!readiness.ok) throw new Error('Chưa kiểm tra được dịch vụ chấm phát âm. Hãy thử lại.');
             const configuration = await readiness.json();
             const azure = configuration.enabled === true;
+            if (!azure && wordRetry) throw new Error('Dịch vụ chấm lại từng từ chưa sẵn sàng.');
             if (!azure) return { data: recognized, source: 'whisper' };
             let upload = blob;
             if (azure) {
@@ -15691,7 +15695,7 @@ function toggleCompletion(symbolElement) {
             for (let i = 0; i < bytes.length; i += 8192) binary += String.fromCharCode(...bytes.subarray(i, i + 8192));
             const response = await fetch(azure ? azureUrl : SUPABASE_URL + '/functions/v1/cloudflare-pronounce-score', {
                 method: 'POST', headers, signal: AbortSignal.timeout(30000),
-                body: JSON.stringify({ mode: 'sentence', word, audio: btoa(binary), mimeType: upload.type })
+                body: JSON.stringify({ mode: wordRetry ? 'word' : 'sentence', word, audio: btoa(binary), mimeType: upload.type })
             });
             const data = await response.json().catch(() => ({}));
             if (!response.ok || data.error || data.code) {
@@ -15706,8 +15710,20 @@ function toggleCompletion(symbolElement) {
             if (!data.transcript || data.scoring !== scoring || !Number.isFinite(Number(data.score)))
                 throw new Error('Dịch vụ chưa trả kết quả chấm hợp lệ. Hãy thử lại.');
             if (azure && data.accepted !== true) data.score = Math.min(99, Number(data.score));
-            data.transcript = recognized.transcript;
+            if (recognized) data.transcript = recognized.transcript;
             return { data, source: 'azure' };
+        }
+
+        function thcsSentenceRepairWords(reference, assessment) {
+            const details = assessment.word_feedback || {};
+            const grades = Array.isArray(assessment.word_scores) ? assessment.word_scores : [];
+            const problems = [...(details.missing || []), ...(details.wrong || []),
+                ...grades.filter(w => w.score < 80 || (w.error_type && w.error_type !== 'None')).map(w => w.word)];
+            // When only the overall score failed, practise the lowest-scoring word.
+            if (!problems.length && grades.length) problems.push([...grades].sort((a,b) => a.score-b.score)[0].word);
+            const targets = reference.match(/[A-Za-z0-9]+(?:['’][A-Za-z]+)*/g) || [];
+            return [...new Set(targets.filter(word => problems.some(problem =>
+                thcsSentenceGateWords(word).some(w => thcsSentenceGateWords(problem).includes(w)))))];
         }
 
         function thcsStartSentenceSpeaking(fullAnswer) {
@@ -15734,6 +15750,25 @@ function toggleCompletion(symbolElement) {
             const mic = panel.querySelector('#thcs-translate-mic');
             const status = panel.querySelector('#thcs-translate-speech-status');
             let heardReady = false;
+            let retryWords = [], correctedWords = [], repairing = false;
+            const targetText = () => repairing && retryWords.length ? retryWords[0] : fullAnswer;
+            const retryLabel = () => repairing ? '🎤 Đọc lại: ' + targetText() : '🎤 Đọc lại cả câu';
+            function showRepair() {
+                mic.disabled = false; replay.disabled = false; heardReady = true;
+                mic.textContent = retryLabel();
+                replay.textContent = '🔊 Nghe từ: ' + targetText();
+                setStatus('🔁 Chỉ đọc từ “' + targetText() + '”. Còn cần sửa: ' + retryWords.join(', ') +
+                    (correctedWords.length ? '. Đã sửa đúng: ' + correctedWords.join(', ') : '') + '.', 'retry');
+            }
+            function completeReading() {
+                mic.disabled = true; replay.disabled = true;
+                thcsPlayCorrectSound();
+                setStatus('✅ Đã đọc đạt tất cả các từ — chuyển câu tiếp theo…', 'pass');
+                thcsSpeechTimer = setTimeout(() => {
+                    if (token !== thcsSpeechToken) return;
+                    thcsTranslateBusy = false; thcsAdvanceTranslate();
+                }, 1000);
+            }
 
             function setStatus(message, type) {
                 status.textContent = message;
@@ -15744,7 +15779,7 @@ function toggleCompletion(symbolElement) {
                 heardReady = false;
                 mic.disabled = true;
                 replay.disabled = true;
-                setStatus('🔊 Đang nghe câu tiếng Anh mẫu…');
+                setStatus(repairing ? '🔊 Đang nghe từ: ' + targetText() : '🔊 Đang nghe câu tiếng Anh mẫu…');
                 let finished = false;
                 const finish = () => {
                     if (finished || token !== thcsSpeechToken) return;
@@ -15752,7 +15787,8 @@ function toggleCompletion(symbolElement) {
                     heardReady = true;
                     mic.disabled = false;
                     replay.disabled = false;
-                    setStatus('🎤 Đến lượt em: nhấn micro và đọc đúng 100% các từ trong cả câu.');
+                    if (repairing) showRepair();
+                    else setStatus('🎤 Đến lượt em: nhấn micro và đọc cả câu.');
                 };
                 if (!('speechSynthesis' in window)) {
                     replay.disabled = true;
@@ -15760,17 +15796,25 @@ function toggleCompletion(symbolElement) {
                     setStatus('⚠️ Thiết bị không phát được giọng mẫu. Hãy dùng trình duyệt hỗ trợ âm thanh.', 'warning');
                     return;
                 }
-                phoneticsSpeak(fullAnswer, 0.9, finish);
+                phoneticsSpeak(targetText(), 0.9, finish);
                 // Một vài thiết bị không gọi onend; tránh khóa micro vĩnh viễn.
                 setTimeout(finish, Math.max(4500, Math.min(17000, fullAnswer.split(/\s+/).length * 800 + 2600)));
             }
 
-            function finishTranscript(transcript, serverScore, wordFeedback, source) {
+            function finishTranscript(transcript, serverScore, wordFeedback, source, assessment) {
                 if (token !== thcsSpeechToken || !thcsSpeechWaiting) return;
                 thcsSpeechListening = false;
                 mic.disabled = false;
-                mic.textContent = '🎤 Đọc lại cả câu';
+                mic.textContent = retryLabel();
                 replay.disabled = false;
+                if (repairing) {
+                    if (source === 'azure' && assessment?.accepted === true) {
+                        correctedWords.push(retryWords.shift());
+                        if (!retryWords.length) { completeReading(); return; }
+                    }
+                    showRepair();
+                    return;
+                }
                 // Server scores the entire utterance with Whisper word error rate;
                 // browser ASR is only an explicitly labelled outage fallback.
                 const numericScore = Number(serverScore);
@@ -15790,16 +15834,14 @@ function toggleCompletion(symbolElement) {
                 // so chuỗi thô thấp hơn; hiển thị 100% tương ứng với luật qua câu.
                 const displayedScore = fullyCorrect ? 100 : score;
                 if (fullyCorrect) {
-                    mic.disabled = true;
-                    replay.disabled = true;
-                    thcsPlayCorrectSound();
-                    setStatus('✅ ' + label + ': ' + displayedScore + '% — đúng toàn bộ từ, chuyển câu tiếp theo…', 'pass');
-                    thcsSpeechTimer = setTimeout(() => {
-                        if (token !== thcsSpeechToken) return;
-                        thcsTranslateBusy = false;
-                        thcsAdvanceTranslate();
-                    }, 1000);
+                    completeReading();
                 } else {
+                    retryWords = thcsSentenceRepairWords(fullAnswer, assessment || { word_feedback: details });
+                    if (retryWords.length) {
+                        repairing = true;
+                        showRepair();
+                        return;
+                    }
                     setStatus('🔁 ' + label + ': ' + score + '% — cần đúng 100% từng từ mới được qua. ' +
                         (detailParts.length ? detailParts.join('; ') + '. ' : '') +
                         'Hãy nghe lại và đọc đủ cả câu.', 'retry');
@@ -15819,7 +15861,7 @@ function toggleCompletion(symbolElement) {
                     let audio;
                     try { audio = await context.decodeAudioData((await blob.arrayBuffer()).slice(0)); }
                     catch (_) { return; }
-                    if (!audio || audio.duration < Math.max(0.45, Math.min(2, fullAnswer.split(/\s+/).length * 0.12))) {
+                    if (!audio || audio.duration < Math.max(repairing ? 0.2 : 0.45, Math.min(2, targetText().split(/\s+/).length * 0.12))) {
                         throw new Error('Ghi âm quá ngắn so với cả câu. Hãy đọc trọn câu.');
                     }
                     const channel = audio.getChannelData(0);
@@ -15860,7 +15902,7 @@ function toggleCompletion(symbolElement) {
                     if (thcsActiveSentenceSpeech === recognition) thcsActiveSentenceSpeech = null;
                     thcsSpeechListening = false;
                     mic.disabled = false; replay.disabled = false;
-                    mic.textContent = '🎤 Đọc lại cả câu';
+                    mic.textContent = retryLabel();
                     setStatus(message, 'warning');
                 }
                 recognition.onresult = event => {
@@ -15871,7 +15913,7 @@ function toggleCompletion(symbolElement) {
                     if (transcript.trim()) finishTranscript(transcript, undefined, undefined, 'browser');
                     else {
                         thcsSpeechListening = false; mic.disabled = false; replay.disabled = false;
-                        mic.textContent = '🎤 Đọc lại cả câu';
+                        mic.textContent = retryLabel();
                         setStatus('⚠️ Chưa nghe được giọng nói. Hãy thử lại.', 'warning');
                     }
                 };
@@ -15901,7 +15943,7 @@ function toggleCompletion(symbolElement) {
                         .find(type => MediaRecorder.isTypeSupported(type)) || '';
                     const recorder = new MediaRecorder(stream, mime ? { mimeType: mime } : undefined);
                     thcsSpeechRecorder = recorder;
-                    const wordCount = Math.max(1, fullAnswer.trim().split(/\s+/).filter(Boolean).length);
+                    const wordCount = Math.max(1, targetText().trim().split(/\s+/).filter(Boolean).length);
                     const policy = thcsSentenceRecordingPolicy(wordCount);
                     const voiceState = { startedAt: Date.now(), hasSpeech: false, lastVoiceAt: 0 };
                     let context = null, source = null, analyser = null, silentGain = null, vadInterval = null;
@@ -15999,26 +16041,26 @@ function toggleCompletion(symbolElement) {
                             thcsSpeechListening = false;
                             mic.disabled = false;
                             replay.disabled = false;
-                            mic.textContent = '🎤 Đọc lại cả câu';
+                            mic.textContent = retryLabel();
                             setStatus('⚠️ Chưa nghe thấy giọng đọc. Hãy nói gần micro và thử lại.', 'warning');
                             return;
                         }
                         try {
-                            setStatus('⏳ Đang chấm phần đọc cả câu…');
+                            setStatus(repairing ? '⏳ Đang chấm từ: ' + targetText() : '⏳ Đang chấm phần đọc cả câu…');
                             const blob = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' });
                             await validateSentenceAudio(blob);
                             const sessionResult = await sb.auth.getSession();
                             const session = sessionResult.data && sessionResult.data.session;
                             if (!session) throw new Error('Vui lòng đăng nhập lại để chấm phát âm.');
-                            const { data, source } = await thcsScoreSentenceAudio(blob, fullAnswer, session);
+                            const { data, source } = await thcsScoreSentenceAudio(blob, targetText(), session, repairing);
                             if (token !== thcsSpeechToken) return;
-                            finishTranscript(data.transcript, data.score, data.word_feedback, source);
+                            finishTranscript(data.transcript, data.score, data.word_feedback, source, data);
                         } catch (error) {
                             if (token !== thcsSpeechToken) return;
                             thcsSpeechListening = false;
                             mic.disabled = false;
                             replay.disabled = false;
-                            mic.textContent = '🎤 Đọc lại cả câu';
+                            mic.textContent = retryLabel();
                             setStatus('⚠️ ' + (error.message || 'Chưa chấm được giọng nói. Hãy thử lại.'), 'warning');
                         }
                     };
@@ -16026,7 +16068,7 @@ function toggleCompletion(symbolElement) {
                     startAutomaticSilenceDetection();
                     mic.disabled = true;
                     mic.textContent = '🔴 Đang nghe…';
-                    setStatus('🔴 Hãy đọc cả câu. Micro tự dừng sau khi em đọc xong và im lặng một chút.');
+                    setStatus('🔴 ' + (repairing ? 'Chỉ đọc từ “' + targetText() + '”.' : 'Hãy đọc cả câu.') + ' Micro tự dừng khi em đọc xong.');
                     thcsSpeechTimer = setTimeout(
                         () => stopRecordingAutomatically('max-duration'), policy.maxMs
                     );
@@ -16048,7 +16090,7 @@ function toggleCompletion(symbolElement) {
                 thcsSpeechListening = true;
                 mic.disabled = true;
                 replay.disabled = true;
-                setStatus('🎤 Đang lắng nghe — hãy đọc trọn câu tiếng Anh.');
+                setStatus(repairing ? '🎤 Hãy đọc từ: ' + targetText() : '🎤 Đang lắng nghe — hãy đọc trọn câu tiếng Anh.');
                 listenByCloudflare();
             });
             // Chỉ bắt đầu phát sau khi điền đúng, không chuyển câu tự động.

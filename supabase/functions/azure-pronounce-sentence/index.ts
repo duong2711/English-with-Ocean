@@ -83,7 +83,8 @@ Deno.serve(async (req: Request) => {
   if (error || !user || user.is_anonymous) return response(req, { code:'NOT_AUTHENTICATED' },401);
   const data = await req.json().catch(()=>null);
   const word = String(data?.word||'').trim();
-  if (data?.mode !== 'sentence' || word.length > 500 || sentenceWords(word).length < 2
+  const wordRetry = data?.mode === 'word';
+  if ((!wordRetry && data?.mode !== 'sentence') || (wordRetry && !/^[A-Za-z0-9]+(?:['’][A-Za-z]+)*$/.test(word)) || word.length > 500 || sentenceWords(word).length < (wordRetry ? 1 : 2)
     || sentenceWords(word).length > 50 || !/^[A-Za-z0-9 ,.!?'’\-]+$/.test(word))
     return response(req, { code:'INVALID_SENTENCE' }, 422);
   let wav: {bytes: Uint8Array;seconds: number};
@@ -134,7 +135,7 @@ Deno.serve(async (req: Request) => {
     return {word:String(w.Word||''),score:Number.isFinite(score)?score:0,
       error_type:String((w?.PronunciationAssessment ?? w)?.ErrorType||'None'),phonemes};
   });
-  const weakWords = wordGrades.filter((w:any)=>w.score<65 || (w.error_type!=='None' && w.error_type!=='')).map((w:any)=>w.word);
+  const weakWords = wordGrades.filter((w:any)=>w.score<(wordRetry ? 80 : 65) || (w.error_type!=='None' && w.error_type!=='')).map((w:any)=>w.word);
   const accuracy = Number(pa.AccuracyScore||0), rawScore = Number(pa.PronScore||accuracy);
   const passed = alignment.missing.length===0 && alignment.wrong.length===0 && alignment.extra.length===0
     && alignment.correct===alignment.total && wordGrades.length>0

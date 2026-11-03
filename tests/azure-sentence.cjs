@@ -23,7 +23,7 @@ const azureFetch=async(url, options)=>{
 new Function('Deno','createClient','fetch',stripTypeScriptTypes(text))({env:{get:key=>env[key]},serve:h=>{handler=h}},createClient,azureFetch);
 let frontendFetch;
 class AudioContext {async decodeAudioData(){return audio;} async close(){}}
-const {encode,score,isCorrect} = new Function('window','fetch','SUPABASE_URL','SUPABASE_ANON_KEY',helpers+gate+';return {encode:thcsEncodeSentenceWav,score:thcsScoreSentenceAudio,isCorrect:thcsSentenceIsFullyCorrect};')({AudioContext},(...args)=>frontendFetch(...args),'https://example.test','test');
+const {encode,score,isCorrect,repairWords} = new Function('window','fetch','SUPABASE_URL','SUPABASE_ANON_KEY',helpers+gate+';return {repairWords:thcsSentenceRepairWords,encode:thcsEncodeSentenceWav,score:thcsScoreSentenceAudio,isCorrect:thcsSentenceIsFullyCorrect};')({AudioContext},(...args)=>frontendFetch(...args),'https://example.test','test');
 const audio={duration:1,sampleRate:48000,numberOfChannels:2,getChannelData:()=>new Float32Array(48000).fill(0.25)};
 (async()=>{
  const wav=encode(audio), bytes=Buffer.from(await wav.arrayBuffer());
@@ -35,6 +35,12 @@ const audio={duration:1,sampleRate:48000,numberOfChannels:2,getChannelData:()=>n
  transcript='I am teacher.';result=await(await handler(req())).json();assert.equal(result.accepted,false);assert.equal(result.word_feedback.missing[0],'a');
  transcript='I am a teacher.';wordScore=50;result=await(await handler(req())).json();assert.equal(result.accepted,false);assert.ok(result.word_feedback.wrong.length);
  wordScore=95;transcript="I'm a teacher.";result=await(await handler(req("I'm a teacher."))).json();assert.equal(result.accepted,true,'Valid contractions must not require expanded Azure word count');
+ transcript='teacher';
+ const wordReq=()=>new Request('https://example.test',{method:'POST',headers:{Authorization:'Bearer test'},body:JSON.stringify({mode:'word',word:'teacher',audio:bytes.toString('base64')})});
+ result=await(await handler(wordReq())).json();assert.equal(result.accepted,true,'Single word retry accepted');
+ wordScore=40;result=await(await handler(wordReq())).json();assert.equal(result.accepted,false,'Weak single word must not pass');wordScore=95;
+ assert.deepEqual(repairWords('I am a teacher.',{word_feedback:{missing:[],wrong:['teacher']},word_scores:[{word:'I',score:95},{word:'teacher',score:40}]}),['teacher']);
+ assert.deepEqual(repairWords("I'm a teacher.",{word_feedback:{missing:['am'],wrong:[]}}),["I'm"]);
  quota=false;const before=calls;assert.equal((await handler(req())).status,429);assert.equal(calls,before,'Quota denial must prevent Azure call');
  assert.equal((await handler(req('I am a teacher.','bad'))).status,422);
  // Azure enabled: convert audio, send authenticated request, never retry through ASR on quota/error.
@@ -45,5 +51,7 @@ const audio={duration:1,sampleRate:48000,numberOfChannels:2,getChannelData:()=>n
  assert.equal((await score(new Blob(['test']),'I am a teacher.',{access_token:'test'})).source,'whisper');assert.ok(urls[0].endsWith('cloudflare-pronounce-score'));
  urls=[];frontendFetch=async(url)=>{urls.push(url);return Response.json({...whisperResult,transcript:'I am teacher.',score:75,word_feedback:{total:4,heard:3,correct:3,missing:['a'],wrong:[],extra:[]}})};
  assert.equal((await score(new Blob(['test']),'I am a teacher.',{access_token:'test'})).source,'whisper');assert.equal(urls.length,1,'Wrong words must not consume Azure quota');
+ urls=[];frontendFetch=async(url,options)=>{urls.push(url);if(options.method==='POST'){assert.equal(JSON.parse(options.body).mode,'word');return Response.json({scoring:'azure-pronunciation-assessment-v1',transcript:'teacher',score:100,accepted:true});}return Response.json({enabled:true});};
+ assert.equal((await score(new Blob(['test']),'teacher',{access_token:'test'},true)).data.accepted,true);assert.equal(urls.length,2);assert.ok(urls.every(u=>u.endsWith('azure-pronounce-sentence')));
  console.log('PASS: PCM conversion, duration cap, exact words, weak-word rejection, contractions, quota guard, no Azure error fallback, disabled rollout');
 })().catch(error=>{console.error(error);process.exitCode=1});
