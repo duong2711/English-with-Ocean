@@ -5,6 +5,7 @@ on:
       - 'scriptphonetics.js'
       - 'tests/azure-sentence.cjs'
       - 'tests/word-retry-rescue.cjs'
+      - 'tests/translate-location.cjs'
       - 'supabase/functions/azure-pronounce-sentence/index.ts'
       - 'supabase/functions/cloudflare-pronounce-score/index.ts'
       - '.github/workflows/check-azure-sentence.yml'
@@ -13,6 +14,7 @@ on:
       - 'scriptphonetics.js'
       - 'tests/azure-sentence.cjs'
       - 'tests/word-retry-rescue.cjs'
+      - 'tests/translate-location.cjs'
       - 'supabase/functions/azure-pronounce-sentence/index.ts'
       - 'supabase/functions/cloudflare-pronounce-score/index.ts'
 jobs:
@@ -25,3 +27,4 @@ jobs:
           node-version: '22'
       - run: node tests/azure-sentence.cjs
       - run: node tests/word-retry-rescue.cjs
+      - run: node tests/translate-location.cjs
