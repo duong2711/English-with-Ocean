@@ -59,7 +59,12 @@ const audio={duration:1,sampleRate:48000,numberOfChannels:2,getChannelData:()=>n
  assert.equal((await score(new Blob(['test']),'I am a teacher.',{access_token:'test'})).source,'whisper');assert.ok(urls[0].endsWith('cloudflare-pronounce-score'));
  urls=[];frontendFetch=async(url)=>{urls.push(url);return Response.json({...whisperResult,transcript:'I am teacher.',score:75,word_feedback:{total:4,heard:3,correct:3,missing:['a'],wrong:[],extra:[]}})};
  assert.equal((await score(new Blob(['test']),'I am a teacher.',{access_token:'test'})).source,'whisper');assert.equal(urls.length,1,'Wrong words must not consume Azure quota');
- urls=[];frontendFetch=async(url,options)=>{urls.push(url);if(options.method==='POST'){assert.equal(JSON.parse(options.body).mode,'word');return Response.json({scoring:'azure-pronunciation-assessment-v1',transcript:'teacher',score:100,accepted:true});}return Response.json({enabled:true});};
- assert.equal((await score(new Blob(['test']),'teacher',{access_token:'test'},true)).data.accepted,true);assert.equal(urls.length,2);assert.ok(urls.every(u=>u.endsWith('azure-pronounce-sentence')));
+ let retryTranscript='teacher', retryScore=100;
+ urls=[];frontendFetch=async(url,options)=>{urls.push(url);assert.equal(options.method,'POST');assert.equal(JSON.parse(options.body).mode,'word');return Response.json({scoring:'asr-word-match-v5',transcript:retryTranscript,score:retryScore});};
+ let retry=await score(new Blob(['test']),'teacher',{access_token:'test'},true);
+ assert.equal(retry.source,'whisper');assert.equal(retry.data.accepted,true);assert.equal(urls.length,1);assert.ok(urls[0].endsWith('cloudflare-pronounce-score'));
+ retryTranscript='teaching';retryScore=70;assert.equal((await score(new Blob(['test']),'teacher',{access_token:'test'},true)).data.accepted,false);
+ retryTranscript='a teacher';retryScore=100;assert.equal((await score(new Blob(['test']),'teacher',{access_token:'test'},true)).data.accepted,false,'Extra words must not pass via best-match scoring');
+ frontendFetch=async()=>Response.json({error:'Service unavailable'},{status:503});await assert.rejects(()=>score(new Blob(['test']),'teacher',{access_token:'test'},true),/Service unavailable/);
  console.log('PASS: PCM conversion, duration cap, exact words, weak-word rejection, contractions, quota guard, no Azure error fallback, disabled rollout');
 })().catch(error=>{console.error(error);process.exitCode=1});

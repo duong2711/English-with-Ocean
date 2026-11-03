@@ -15712,20 +15712,26 @@ function toggleCompletion(symbolElement) {
             const headers = { 'Content-Type': 'application/json',
                 'Authorization': 'Bearer ' + session.access_token, 'apikey': SUPABASE_ANON_KEY };
             let recognized;
-            if (!wordRetry) {
             const originalBytes = new Uint8Array(await blob.arrayBuffer());
             let originalBinary = '';
             for (let i = 0; i < originalBytes.length; i += 8192) originalBinary += String.fromCharCode(...originalBytes.subarray(i, i + 8192));
             const recognition = await fetch(SUPABASE_URL + '/functions/v1/cloudflare-pronounce-score', {
                 method: 'POST', headers, signal: AbortSignal.timeout(30000),
-                body: JSON.stringify({ mode: 'sentence', word, audio: btoa(originalBinary), mimeType: blob.type })
+                body: JSON.stringify({ mode: wordRetry ? 'word' : 'sentence', word, audio: btoa(originalBinary), mimeType: blob.type })
             });
             recognized = await recognition.json().catch(() => ({}));
+            if (wordRetry) {
+                if (!recognition.ok || recognized.scoring !== 'asr-word-match-v5' || !recognized.transcript || !Number.isFinite(Number(recognized.score)))
+                    throw new Error(recognized.error || 'Whisper chưa nhận diện được từ. Hãy đọc lại.');
+                const expected = thcsSentenceGateWords(word).join(' ');
+                const heard = thcsSentenceGateWords(recognized.transcript).join(' ');
+                recognized.accepted = !!expected && expected === heard && Number(recognized.score) === 100;
+                return { data: recognized, source: 'whisper' };
+            }
             if (!recognition.ok || recognized.scoring !== 'asr-sentence-wer-v1' || !recognized.transcript)
                 throw new Error('Whisper chưa nhận diện được cả câu. Hãy đọc lại.');
             if (!thcsSentenceIsFullyCorrect(word, recognized.transcript, Number(recognized.score), recognized.word_feedback, 'whisper'))
                 return { data: recognized, source: 'whisper' };
-            }
             const azureUrl = SUPABASE_URL + '/functions/v1/azure-pronounce-sentence';
             // Until Azure secrets are activated, keep the existing sentence scorer.
             // Once activated, an Azure error must never pass via a weaker ASR fallback.
@@ -15733,7 +15739,6 @@ function toggleCompletion(symbolElement) {
             if (!readiness.ok) throw new Error('Chưa kiểm tra được dịch vụ chấm phát âm. Hãy thử lại.');
             const configuration = await readiness.json();
             const azure = configuration.enabled === true;
-            if (!azure && wordRetry) throw new Error('Dịch vụ chấm lại từng từ chưa sẵn sàng.');
             if (!azure) return { data: recognized, source: 'whisper' };
             let upload = blob;
             if (azure) {
@@ -15748,7 +15753,7 @@ function toggleCompletion(symbolElement) {
             for (let i = 0; i < bytes.length; i += 8192) binary += String.fromCharCode(...bytes.subarray(i, i + 8192));
             const response = await fetch(azure ? azureUrl : SUPABASE_URL + '/functions/v1/cloudflare-pronounce-score', {
                 method: 'POST', headers, signal: AbortSignal.timeout(30000),
-                body: JSON.stringify({ mode: wordRetry ? 'word' : 'sentence', word, audio: btoa(binary), mimeType: upload.type })
+                body: JSON.stringify({ mode: 'sentence', word, audio: btoa(binary), mimeType: upload.type })
             });
             const data = await response.json().catch(() => ({}));
             if (!response.ok || data.error || data.code) {
@@ -15861,7 +15866,7 @@ function toggleCompletion(symbolElement) {
                 mic.textContent = retryLabel();
                 replay.disabled = false;
                 if (repairing) {
-                    if (source === 'azure' && assessment?.accepted === true) {
+                    if (source === 'whisper' && assessment?.accepted === true) {
                         correctedWords.push(retryWords.shift());
                         if (!retryWords.length) { completeReading(); return; }
                     }
