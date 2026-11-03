@@ -28,22 +28,45 @@ const send=async(word,heard,opts={})=>{
 };
 (async()=>{
  let r=await(await send('hobby',['hobby'],{retry_word:true})).json();
- assert.equal(r.transcript,'hobby');assert.equal(r.score,100);assert.equal(cfCalls,1,'Correct word never needs extra inference');
- r=await(await send('hobby',['happy','hobby'],{retry_word:true})).json();
- assert.equal(r.transcript,'hobby');assert.equal(r.score,100);assert.equal(r.rescued,true);
- assert.equal(cfCalls,2,'Near-word mismatch should receive a second recognition');
+ assert.equal(r.transcript,'hobby');assert.equal(r.score,100);assert.equal(r.accepted,true);
+ assert.equal(cfCalls,1,'Exact word needs one inference');
+
+ // Fuzzy check: a 1-2 letter transcription difference passes immediately.
+ r=await(await send('hobby',['happy'],{retry_word:true})).json();
+ assert.equal(r.transcript,'happy');assert.equal(r.accepted,true);
+ assert.equal(r.edit_distance,2);assert.equal(cfCalls,1);
+ assert.ok(r.score<90,'Original similarity should remain visible, not inflated to 90');
+ r=await(await send('cooking',['looking'],{retry_word:true})).json();
+ assert.equal(r.accepted,true);assert.equal(r.edit_distance,1);assert.equal(cfCalls,1);
+ r=await(await send('cooking',['cookin'],{retry_word:true})).json();
+ assert.equal(r.accepted,true);assert.equal(cfCalls,1);
+
+ // Truly different words get one confirmation pass using the same recording.
+ r=await(await send('hobby',['coffee','hobby'],{retry_word:true})).json();
+ assert.equal(r.accepted,true);assert.equal(r.transcript,'hobby');
+ assert.equal(cfCalls,2);assert.equal(r.rescued,true);
  assert.equal(latestBody[0].vad_filter,true);assert.equal(latestBody[1].vad_filter,false);
- r=await(await send('cooking',['looking','cooking'],{retry_word:true})).json();
- assert.equal(r.transcript,'cooking');assert.equal(r.score,100);assert.equal(cfCalls,2);
- r=await(await send('hobby',['happy','happy'],{retry_word:true})).json();
- assert.notEqual(r.transcript,'hobby');assert.ok(r.score<100,'Two incorrect transcripts must not pass');
- r=await(await send('hobby',['a hobby','hobby'],{retry_word:true})).json();
- assert.equal(r.transcript,'a hobby');assert.equal(cfCalls,1,'Extra words remain a hard failure (no second inference)');
- r=await(await send('hobby',['happy','hobby'],{})).json();
- assert.equal(r.transcript,'happy');assert.equal(cfCalls,1,'Other word practices remain unchanged');
+ r=await(await send('hobby',['coffee','coffee'],{retry_word:true})).json();
+ assert.equal(r.accepted,false);assert.equal(cfCalls,2);
+
+ // Strict word count, even when the target appears inside the transcript.
+ r=await(await send('hobby',['a hobby'],{retry_word:true})).json();
+ assert.equal(r.accepted,false);assert.equal(cfCalls,1);
+ r=await(await send('hobby',['hobby cooking'],{retry_word:true})).json();
+ assert.equal(r.accepted,false);assert.equal(cfCalls,1);
+ // Short one- or two-letter words must not accept unrelated near-spellings.
+ r=await(await send('a',['i'],{retry_word:true})).json();
+ assert.equal(r.accepted,false);
+ r=await(await send('at',['am'],{retry_word:true})).json();
+ assert.equal(r.accepted,false);
+ // Other word practices still return their original score rather than fuzzy acceptance.
+ r=await(await send('hobby',['happy'],{})).json();
+ assert.equal(r.transcript,'happy');assert.equal(r.accepted,undefined);
+ assert.equal(cfCalls,1);
  r=await(await send('I am a teacher.',['I am a teacher.'],{mode:'sentence',quick_check:true,retry_word:true})).json();
- assert.equal(cfCalls,1,'Fast sentence recognition is not affected');
+ assert.equal(cfCalls,1,'Fast sentence recognition must remain unchanged');
  assert.equal(r.scoring,'asr-sentence-screen-v1');
- assert.ok(lastUsage>0,'All attempted Whisper inferences must be counted');
- console.log('PASS word retry: near-word rescue, correct-word fast path, strict extra words, sentence isolation');
+ assert.equal(r.accepted,undefined);
+ assert.ok(lastUsage>0);
+ console.log('PASS: word retry fuzzy 1-2 letters, rescue only for wrong words, block extra words, no sentence looseness');
 })().catch(err=>{console.error(err);process.exitCode=1;});

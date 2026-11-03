@@ -125,12 +125,26 @@ const audio={duration:1,sampleRate:48000,numberOfChannels:2,getChannelData:()=>n
  };
  assert.equal((await score(new Blob(['test']),'I am a teacher.',{access_token:'test'})).source,'azure');
  assert.deepEqual(urls,[cloudflareURL,azureURL]);
- let retryTranscript='teacher', retryScore=100;
- urls=[];frontendFetch=async(url,options)=>{urls.push(url);assert.equal(options.method,'POST');assert.equal(JSON.parse(options.body).mode,'word');assert.equal(JSON.parse(options.body).retry_word,true);return Response.json({scoring:'asr-word-match-v5',transcript:retryTranscript,score:retryScore});};
+ let retryTranscript='teacher', retryScore=100, retryAccepted=true;
+ urls=[];frontendFetch=async(url,options)=>{
+  urls.push(url);assert.equal(options.method,'POST');
+  assert.equal(JSON.parse(options.body).mode,'word');
+  assert.equal(JSON.parse(options.body).retry_word,true);
+  return Response.json({scoring:'asr-word-match-v5',transcript:retryTranscript,score:retryScore,accepted:retryAccepted});
+ };
  let retry=await score(new Blob(['test']),'teacher',{access_token:'test'},true);
- assert.equal(retry.source,'whisper');assert.equal(retry.data.accepted,true);assert.equal(urls.length,1);assert.ok(urls[0].endsWith('cloudflare-pronounce-score'));
- retryTranscript='teaching';retryScore=70;assert.equal((await score(new Blob(['test']),'teacher',{access_token:'test'},true)).data.accepted,false);
- retryTranscript='a teacher';retryScore=100;assert.equal((await score(new Blob(['test']),'teacher',{access_token:'test'},true)).data.accepted,false,'Extra words must not pass via best-match scoring');
- frontendFetch=async()=>Response.json({error:'Service unavailable'},{status:503});await assert.rejects(()=>score(new Blob(['test']),'teacher',{access_token:'test'},true),/Service unavailable/);
+ assert.equal(retry.source,'whisper');assert.equal(retry.data.accepted,true);
+ assert.equal(urls.length,1);assert.ok(urls[0].endsWith('cloudflare-pronounce-score'));
+ // Backend can pass a near-match with a raw transcript score lower than 90.
+ retryTranscript='happy';retryScore=60;retryAccepted=true;
+ retry=await score(new Blob(['test']),'hobby',{access_token:'test'},true);
+ assert.equal(retry.data.accepted,true);
+ retryTranscript='coffee';retryScore=20;retryAccepted=false;
+ assert.equal((await score(new Blob(['test']),'hobby',{access_token:'test'},true)).data.accepted,false);
+ retryTranscript='a hobby';retryScore=100;retryAccepted=true;
+ assert.equal((await score(new Blob(['test']),'hobby',{access_token:'test'},true)).data.accepted,false,
+  'Extra words must never pass despite a falsely permissive server response');
+ frontendFetch=async()=>Response.json({error:'Service unavailable'},{status:503});
+ await assert.rejects(()=>score(new Blob(['test']),'teacher',{access_token:'test'},true),/Service unavailable/);
  console.log('PASS: Whisper fast exact-word gate then Azure, PCM conversion, duration cap, exact words, weak-word rejection, contractions, quota guard, no Azure error fallback, direct Azure request, decoded audio reuse');
 })().catch(error=>{console.error(error);process.exitCode=1});

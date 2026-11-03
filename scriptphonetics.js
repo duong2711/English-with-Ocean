@@ -15724,9 +15724,12 @@ function toggleCompletion(symbolElement) {
                 const recognized = await recognition.json().catch(() => ({}));
                 if (!recognition.ok || recognized.scoring !== 'asr-word-match-v5' || !recognized.transcript || !Number.isFinite(Number(recognized.score)))
                     throw new Error(recognized.error || 'Whisper chưa nhận diện được từ. Hãy đọc lại.');
-                const expected = thcsSentenceGateWords(word).join(' ');
-                const heard = thcsSentenceGateWords(recognized.transcript).join(' ');
-                recognized.accepted = !!expected && expected === heard && Number(recognized.score) === 100;
+                // Word-repair tolerance is calculated on the server. Do not
+                // accidentally force 100% spelling again in the browser.
+                const expectedWords = thcsSentenceGateWords(word);
+                const spokenTokens = String(recognized.transcript || '').trim().split(/\s+/).filter(Boolean);
+                recognized.accepted = expectedWords.length === 1 && spokenTokens.length === 1 &&
+                    recognized.accepted === true;
                 return { data: recognized, source: 'whisper' };
             }
 

@@ -77,6 +77,28 @@ function pairScore(a: string, b: string): number {
   return Math.round(Math.max(0, 1 - dist / maxLen) * 100);
 }
 
+
+/** Loose word-recognition rule used only for single-word repairs in Dịch câu.
+ * Prefer >=90% similarity, and tolerate 1-2 character ASR mistakes for short
+ * learner words. Never match more than one spoken word or very short words loosely.
+ */
+function wordRetryMatch(target: string, transcript: string): {
+  accepted: boolean; similarity: number; editDistance: number;
+} {
+  const rawTokens = String(transcript || '').trim().split(/\s+/).filter(Boolean);
+  const expected = normalizeForMatch(target);
+  const heard = rawTokens.length === 1 ? normalizeForMatch(rawTokens[0]) : '';
+  if (!expected || !heard || rawTokens.length !== 1)
+    return { accepted: false, similarity: 0, editDistance: -1 };
+  const distance = levenshtein(expected, heard);
+  const similarity = pairScore(expected, heard);
+  const allowedEdits = expected.length >= 5 ? 2 : expected.length >= 3 ? 1 : 0;
+  return {
+    accepted: similarity >= 90 || distance <= allowedEdits,
+    similarity, editDistance: distance,
+  };
+}
+
 function candidatesFromTranscript(transcript: string): string[] {
   const words = String(transcript || '').split(/\s+/).map(normalizeForMatch).filter(Boolean);
   const whole = normalizeForMatch(transcript);
@@ -284,7 +306,7 @@ Deno.serve(async (req: Request) => {
     const shouldRescue = !fastSentenceScreen && (!firstNorm ||
       (!sentenceMode && (firstMatch.score <= 25 ||
         (strictWordRetry && firstWordCount === 1 &&
-          normalizeForMatch(first.text) !== normalizeForMatch(word)))));
+          !wordRetryMatch(word, first.text).accepted))));
     if (shouldRescue && currentCount + 1 < MAX_FREE_INFERENCES_PER_DAY) {
       try {
         const second = await callWhisper(audioBase64, true, sentenceMode);
@@ -294,7 +316,12 @@ Deno.serve(async (req: Request) => {
         const secondNorm = normalizeForMatch(second.text);
         const secondMatch = sentenceMode ? sentenceMatch(word, second.text) : bestMatch(word, second.text);
 
-        if (secondMatch.score > bestMatchResult.score || !firstNorm) {
+        // Prefer a passing single-word result even when the previous transcript
+        // contained extra words and bestMatch() liked one of its tokens.
+        const firstWordAccepted = strictWordRetry && wordRetryMatch(word, bestTranscript).accepted;
+        const secondWordAccepted = strictWordRetry && wordRetryMatch(word, second.text).accepted;
+        if ((secondWordAccepted && !firstWordAccepted) ||
+            (!firstWordAccepted && (secondMatch.score > bestMatchResult.score || !firstNorm))) {
           bestMatchResult = secondMatch;
           bestTranscript = second.text;
         }
@@ -347,8 +374,13 @@ Deno.serve(async (req: Request) => {
     }
 
     const sentenceGrade = sentenceMode && !fastSentenceScreen ? sentenceMatch(word, bestTranscript) : null;
+    const retryGrade = strictWordRetry ? wordRetryMatch(word, bestTranscript) : null;
     return jsonResponse({
-      score: fastSentenceScreen ? undefined : (sentenceGrade ? sentenceGrade.score : bestMatchResult.score),
+      // Preserve the measured ASR similarity separately from the lenient pass rule.
+      score: fastSentenceScreen ? undefined : (retryGrade ? retryGrade.similarity :
+        (sentenceGrade ? sentenceGrade.score : bestMatchResult.score)),
+      accepted: retryGrade ? retryGrade.accepted : undefined,
+      edit_distance: retryGrade ? retryGrade.editDistance : undefined,
       transcript: bestTranscript,
       rescued,
       scoring: fastSentenceScreen ? 'asr-sentence-screen-v1' : (sentenceMode ? 'asr-sentence-wer-v1' : 'asr-word-match-v5'),
