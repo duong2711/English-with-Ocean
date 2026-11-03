@@ -15708,13 +15708,14 @@ function toggleCompletion(symbolElement) {
             return new Blob([buffer], { type: 'audio/wav' });
         }
 
-        async function thcsScoreSentenceAudio(blob, word, session, wordRetry = false) {
+        async function thcsScoreSentenceAudio(blob, word, session, wordRetry = false, decodedAudio = null, onStage = () => {}) {
             const headers = { 'Content-Type': 'application/json',
                 'Authorization': 'Bearer ' + session.access_token, 'apikey': SUPABASE_ANON_KEY };
             let recognized;
             const originalBytes = new Uint8Array(await blob.arrayBuffer());
             let originalBinary = '';
             for (let i = 0; i < originalBytes.length; i += 8192) originalBinary += String.fromCharCode(...originalBytes.subarray(i, i + 8192));
+            onStage(wordRetry ? '⏳ Whisper đang nhận diện từ…' : '⏳ Whisper đang nhận diện câu…');
             const recognition = await fetch(SUPABASE_URL + '/functions/v1/cloudflare-pronounce-score', {
                 method: 'POST', headers, signal: AbortSignal.timeout(30000),
                 body: JSON.stringify({ mode: wordRetry ? 'word' : 'sentence', word, audio: btoa(originalBinary), mimeType: blob.type })
@@ -15733,15 +15734,12 @@ function toggleCompletion(symbolElement) {
             if (!thcsSentenceIsFullyCorrect(word, recognized.transcript, Number(recognized.score), recognized.word_feedback, 'whisper'))
                 return { data: recognized, source: 'whisper' };
             const azureUrl = SUPABASE_URL + '/functions/v1/azure-pronounce-sentence';
-            // Until Azure secrets are activated, keep the existing sentence scorer.
-            // Once activated, an Azure error must never pass via a weaker ASR fallback.
-            const readiness = await fetch(azureUrl, { headers, signal: AbortSignal.timeout(8000) });
-            if (!readiness.ok) throw new Error('Chưa kiểm tra được dịch vụ chấm phát âm. Hãy thử lại.');
-            const configuration = await readiness.json();
-            const azure = configuration.enabled === true;
-            if (!azure) return { data: recognized, source: 'whisper' };
-            let upload = blob;
-            if (azure) {
+            // Azure is activated: the scoring response itself reports configuration/errors.
+            // Reuse the audio decoded for local silence validation instead of decoding twice.
+            onStage('⏳ Nội dung đã đúng. Azure đang chấm phát âm…');
+            let upload;
+            if (decodedAudio) upload = thcsEncodeSentenceWav(decodedAudio);
+            else {
                 const AudioCtor = window.AudioContext || window.webkitAudioContext;
                 if (!AudioCtor) throw new Error('Thiết bị chưa hỗ trợ xử lý ghi âm.');
                 const context = new AudioCtor();
@@ -15751,23 +15749,24 @@ function toggleCompletion(symbolElement) {
             const bytes = new Uint8Array(await upload.arrayBuffer());
             let binary = '';
             for (let i = 0; i < bytes.length; i += 8192) binary += String.fromCharCode(...bytes.subarray(i, i + 8192));
-            const response = await fetch(azure ? azureUrl : SUPABASE_URL + '/functions/v1/cloudflare-pronounce-score', {
+            const response = await fetch(azureUrl, {
                 method: 'POST', headers, signal: AbortSignal.timeout(30000),
                 body: JSON.stringify({ mode: 'sentence', word, audio: btoa(binary), mimeType: upload.type })
             });
             const data = await response.json().catch(() => ({}));
             if (!response.ok || data.error || data.code) {
                 const messages = {
+                    AZURE_NOT_CONFIGURED: 'Azure chưa sẵn sàng. Vui lòng thử lại sau.',
                     AZURE_LOCAL_MONTHLY_LIMIT: 'Đã hết hạn mức chấm phát âm miễn phí tháng này. Hãy quay lại tháng sau.',
                     AZURE_RATE_LIMIT: 'Dịch vụ đang bận. Hãy đợi một chút rồi đọc lại.',
                     UNCERTAIN_SPEECH: 'Chưa nghe rõ cả câu. Hãy đọc lại gần micro hơn.'
                 };
                 throw new Error(messages[data.code] || data.error || 'Chưa chấm được phát âm. Hãy thử lại.');
             }
-            const scoring = azure ? 'azure-pronunciation-assessment-v1' : 'asr-sentence-wer-v1';
+            const scoring = 'azure-pronunciation-assessment-v1';
             if (!data.transcript || data.scoring !== scoring || !Number.isFinite(Number(data.score)))
                 throw new Error('Dịch vụ chưa trả kết quả chấm hợp lệ. Hãy thử lại.');
-            if (azure && data.accepted !== true) data.score = Math.min(99, Number(data.score));
+            if (data.accepted !== true) data.score = Math.min(99, Number(data.score));
             if (recognized) data.transcript = recognized.transcript;
             return { data, source: 'azure' };
         }
@@ -15938,6 +15937,7 @@ function toggleCompletion(symbolElement) {
                     if (peak < 0.02 || rmsPeak < 0.0045 || loudFrames * 0.02 < 0.16) {
                         throw new Error('Chưa nghe rõ tiếng nói. Hãy đến gần micro và đọc lại.');
                     }
+                    return audio;
                 } finally {
                     try { await context.close(); } catch (_) {}
                 }
@@ -16106,11 +16106,12 @@ function toggleCompletion(symbolElement) {
                         try {
                             setStatus(repairing ? '⏳ Đang chấm từ: ' + targetText() : '⏳ Đang chấm phần đọc cả câu…');
                             const blob = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' });
-                            await validateSentenceAudio(blob);
-                            const sessionResult = await sb.auth.getSession();
+                            const [decodedAudio, sessionResult] = await Promise.all([validateSentenceAudio(blob), sb.auth.getSession()]);
                             const session = sessionResult.data && sessionResult.data.session;
                             if (!session) throw new Error('Vui lòng đăng nhập lại để chấm phát âm.');
-                            const { data, source } = await thcsScoreSentenceAudio(blob, targetText(), session, repairing);
+                            const { data, source } = await thcsScoreSentenceAudio(blob, targetText(), session, repairing, decodedAudio, message => {
+                                if (token === thcsSpeechToken) setStatus(message);
+                            });
                             if (token !== thcsSpeechToken) return;
                             finishTranscript(data.transcript, data.score, data.word_feedback, source, data);
                         } catch (error) {

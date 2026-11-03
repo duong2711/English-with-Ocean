@@ -23,7 +23,8 @@ const azureFetch=async(url, options)=>{
 };
 new Function('Deno','createClient','fetch',stripTypeScriptTypes(text))({env:{get:key=>env[key]},serve:h=>{handler=h}},createClient,azureFetch);
 let frontendFetch;
-class AudioContext {async decodeAudioData(){return audio;} async close(){}}
+let decodeCalls=0;
+class AudioContext {async decodeAudioData(){decodeCalls++;return audio;} async close(){}}
 const {encode,score,isCorrect,repairWords} = new Function('window','fetch','SUPABASE_URL','SUPABASE_ANON_KEY',helpers+gate+';return {repairWords:thcsSentenceRepairWords,encode:thcsEncodeSentenceWav,score:thcsScoreSentenceAudio,isCorrect:thcsSentenceIsFullyCorrect};')({AudioContext},(...args)=>frontendFetch(...args),'https://example.test','test');
 const audio={duration:1,sampleRate:48000,numberOfChannels:2,getChannelData:()=>new Float32Array(48000).fill(0.25)};
 (async()=>{
@@ -54,9 +55,10 @@ const audio={duration:1,sampleRate:48000,numberOfChannels:2,getChannelData:()=>n
  // Azure enabled: convert audio, send authenticated request, never retry through ASR on quota/error.
  const whisperResult={transcript:'I am a teacher.',scoring:'asr-sentence-wer-v1',score:100,word_feedback:{total:4,heard:4,correct:4,missing:[],wrong:[],extra:[]}};
  let urls=[];frontendFetch=async(url,options)=>{urls.push(url);if(url.endsWith('cloudflare-pronounce-score'))return Response.json(whisperResult);if(options.method==='POST'){const payload=JSON.parse(options.body);assert.equal(payload.mimeType,'audio/wav');assert.equal(Buffer.from(payload.audio,'base64').toString('ascii',0,4),'RIFF');return Response.json({code:'AZURE_LOCAL_MONTHLY_LIMIT'},{status:429});}return Response.json({enabled:true});};
- await assert.rejects(()=>score(new Blob(['test']),'I am a teacher.',{access_token:'test'}),/hạn mức/);assert.equal(urls.length,3);assert.ok(urls[0].endsWith('cloudflare-pronounce-score'));assert.ok(urls.slice(1).every(u=>u.endsWith('azure-pronounce-sentence')));
- urls=[];frontendFetch=async(url,options)=>{urls.push(url);return options.method==='POST'?Response.json(whisperResult):Response.json({enabled:false});};
- assert.equal((await score(new Blob(['test']),'I am a teacher.',{access_token:'test'})).source,'whisper');assert.ok(urls[0].endsWith('cloudflare-pronounce-score'));
+ await assert.rejects(()=>score(new Blob(['test']),'I am a teacher.',{access_token:'test'}),/hạn mức/);assert.equal(urls.length,2);assert.ok(urls[0].endsWith('cloudflare-pronounce-score'));assert.ok(urls.slice(1).every(u=>u.endsWith('azure-pronounce-sentence')));
+ urls=[];frontendFetch=async(url,options)=>{urls.push(url);assert.equal(options.method,'POST','No readiness round trip');return url.endsWith('cloudflare-pronounce-score')?Response.json(whisperResult):Response.json({code:'AZURE_NOT_CONFIGURED'},{status:503});};
+ const decodeBefore=decodeCalls;
+ await assert.rejects(()=>score(new Blob(['test']),'I am a teacher.',{access_token:'test'},false,audio),/chưa sẵn sàng/);assert.equal(urls.length,2);assert.equal(decodeCalls,decodeBefore,'Reuse validated audio without another decode');
  urls=[];frontendFetch=async(url)=>{urls.push(url);return Response.json({...whisperResult,transcript:'I am teacher.',score:75,word_feedback:{total:4,heard:3,correct:3,missing:['a'],wrong:[],extra:[]}})};
  assert.equal((await score(new Blob(['test']),'I am a teacher.',{access_token:'test'})).source,'whisper');assert.equal(urls.length,1,'Wrong words must not consume Azure quota');
  let retryTranscript='teacher', retryScore=100;
@@ -66,5 +68,5 @@ const audio={duration:1,sampleRate:48000,numberOfChannels:2,getChannelData:()=>n
  retryTranscript='teaching';retryScore=70;assert.equal((await score(new Blob(['test']),'teacher',{access_token:'test'},true)).data.accepted,false);
  retryTranscript='a teacher';retryScore=100;assert.equal((await score(new Blob(['test']),'teacher',{access_token:'test'},true)).data.accepted,false,'Extra words must not pass via best-match scoring');
  frontendFetch=async()=>Response.json({error:'Service unavailable'},{status:503});await assert.rejects(()=>score(new Blob(['test']),'teacher',{access_token:'test'},true),/Service unavailable/);
- console.log('PASS: PCM conversion, duration cap, exact words, weak-word rejection, contractions, quota guard, no Azure error fallback, disabled rollout');
+ console.log('PASS: PCM conversion, duration cap, exact words, weak-word rejection, contractions, quota guard, no Azure error fallback, direct Azure request, decoded audio reuse');
 })().catch(error=>{console.error(error);process.exitCode=1});
