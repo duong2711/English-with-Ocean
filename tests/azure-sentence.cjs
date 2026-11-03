@@ -136,7 +136,7 @@ const audio={duration:1,sampleRate:48000,numberOfChannels:2,getChannelData:()=>n
  assert.equal(retry.source,'whisper');assert.equal(retry.data.accepted,true);
  assert.equal(urls.length,1);assert.ok(urls[0].endsWith('cloudflare-pronounce-score'));
  // Backend can pass a near-match with a raw transcript score lower than 90.
- retryTranscript='happy';retryScore=60;retryAccepted=true;
+ retryTranscript='hoppy';retryScore=60;retryAccepted=true;
  retry=await score(new Blob(['test']),'hobby',{access_token:'test'},true);
  assert.equal(retry.data.accepted,true);
  retryTranscript='coffee';retryScore=20;retryAccepted=false;

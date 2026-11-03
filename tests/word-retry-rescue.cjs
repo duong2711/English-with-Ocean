@@ -32,8 +32,8 @@ const send=async(word,heard,opts={})=>{
  assert.equal(cfCalls,1,'Exact word needs one inference');
 
  // Fuzzy check: a 1-2 letter transcription difference passes immediately.
- r=await(await send('hobby',['happy'],{retry_word:true})).json();
- assert.equal(r.transcript,'happy');assert.equal(r.accepted,true);
+ r=await(await send('hobby',['hoppy'],{retry_word:true})).json();
+ assert.equal(r.transcript,'hoppy');assert.equal(r.accepted,true);
  assert.equal(r.edit_distance,2);assert.equal(cfCalls,1);
  assert.ok(r.score<90,'Original similarity should remain visible, not inflated to 90');
  r=await(await send('cooking',['looking'],{retry_word:true})).json();
@@ -42,6 +42,9 @@ const send=async(word,heard,opts={})=>{
  assert.equal(r.accepted,true);assert.equal(cfCalls,1);
 
  // Truly different words get one confirmation pass using the same recording.
+ r=await(await send('hobby',['happy','happy'],{retry_word:true})).json();
+ assert.equal(r.accepted,false,'Three character differences exceed the two-edit limit');
+ assert.equal(cfCalls,2);
  r=await(await send('hobby',['coffee','hobby'],{retry_word:true})).json();
  assert.equal(r.accepted,true);assert.equal(r.transcript,'hobby');
  assert.equal(cfCalls,2);assert.equal(r.rescued,true);
