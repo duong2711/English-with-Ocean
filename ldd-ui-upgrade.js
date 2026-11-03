@@ -135,9 +135,10 @@
             forceReveal = false;
             if (visibleItem) lastSelected = target;
             if (shouldReveal && visibleItem) {
+                const smooth = !forceInitialMotion;
                 requestAnimationFrame(function () {
                     const active = document.querySelector('.main-tab-content.active');
-                    if (active && active.id === target) revealSelected(visibleItem, !forceInitialMotion);
+                    if (active && active.id === target) revealSelected(visibleItem, smooth);
                 });
             }
         }
