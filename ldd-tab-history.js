@@ -14,10 +14,11 @@
         '.folder-card', '[class*="-folder-card"]', '[class*="-grade-card"]',
         '[class*="-unit-card"]', '[class*="-topic-card"]', '[class*="-lesson-card"]',
         '.news-article-card', '.news-list-item', '.podcast-card',
-        '.ldd-ent-series-card', '.ldd-ent-comic-card',
+        '.ldd-stage-card', '.ldd-ent-comic-cover-card', '.ldd-ent-grade-btn',
+        '.ldd-ent-chapter-card', '.ldd-wimpy-card',
         '#ldd-ent-games-entry', '#ldd-ent-movies-entry', '#ldd-ent-comics-entry'
     ].join(', ');
-    const BACK_TARGET_SELECTOR = '[id$="-back-btn"], [id$="-back"], [data-ent-back], .folder-back-btn, .grammar-back-btn';
+    const BACK_TARGET_SELECTOR = '[id$="-back-btn"], [id$="-back"], [data-ent-back], .folder-back-btn, .grammar-back-btn, .ldd-ent-inline-back';
 
     const TAB_LABELS = {
         'tab-trang-chu': 'Trang chủ',
@@ -68,7 +69,7 @@
         if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
 
         savedPosition = isPageReload ? readSavedPosition() : null;
-        freshContext = sessionStorage.getItem(CONTEXT_STARTED_KEY) !== '1' && !savedPosition;
+        freshContext = sessionStorage.getItem(CONTEXT_STARTED_KEY) !== '1' && !isPageReload;
         sessionStorage.setItem(CONTEXT_STARTED_KEY, '1');
 
         createHistoryControls(header);
@@ -342,15 +343,15 @@
             if (index >= steps.length) return finish();
             const step = steps[index];
             let target = null;
-            try { target = root.querySelector(step.selector); } catch (_) {}
-            if (!target || !target.matches(NAV_TARGET_SELECTOR) ||
+            try { target = document.querySelector(step.selector); } catch (_) {}
+            if (!target || !root.contains(target) || !target.matches(NAV_TARGET_SELECTOR) ||
                 !target.getClientRects().length) {
                 if (++retries <= 35) return setTimeout(next, 120);
                 return finish();
             }
             // Prevent an nth-child fallback from opening an unrelated item after list changes.
             const currentLabel = String(target.textContent || '').trim().replace(/\s+/g, ' ');
-            if (step.label && !step.selector.startsWith('#') && currentLabel.slice(0, 25) !== step.label.slice(0, 25)) {
+            if (step.label && step.selector.includes(':nth-of-type(') && currentLabel.slice(0, 25) !== step.label.slice(0, 25)) {
                 return finish();
             }
             retries = 0;
