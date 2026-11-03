@@ -18,7 +18,7 @@
 
     function ensureTabHistoryAssets() {
         ensureStyle('ldd-tab-history-style', 'ldd-tab-history.css?v=2');
-        ensureScript('ldd-tab-history-script', 'ldd-tab-history.js?v=3');
+        ensureScript('ldd-tab-history-script', 'ldd-tab-history.js?v=4');
     }
 
     function ensureTodayAssets() {
