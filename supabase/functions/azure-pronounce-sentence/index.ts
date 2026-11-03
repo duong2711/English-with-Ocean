@@ -122,17 +122,17 @@ Deno.serve(async (req: Request) => {
     return response(req,{code:'AZURE_UNAVAILABLE',retryable:true},503);
   }
   const result = payload?.NBest?.[0];
-  const pa = result?.PronunciationAssessment;
+  const pa = result?.PronunciationAssessment ?? (Number.isFinite(result?.AccuracyScore) ? result : null);
   if (payload?.RecognitionStatus !== 'Success' || !pa || !result) {
     return response(req,{code:'UNCERTAIN_SPEECH',retryable:true},422);
   }
   const transcript = String(result.Display||result.Lexical||payload.DisplayText||'').trim();
   const alignment = wordAlignment(word, transcript);
   const wordGrades = (Array.isArray(result.Words)?result.Words:[]).map((w:any)=>{
-    const score = Number(w?.PronunciationAssessment?.AccuracyScore);
-    const phonemes = (w.Phonemes||[]).map((p:any)=>({phoneme:String(p.Phoneme||''),score:Number(p?.PronunciationAssessment?.AccuracyScore)}));
+    const score = Number((w?.PronunciationAssessment ?? w)?.AccuracyScore);
+    const phonemes = (w.Phonemes||[]).map((p:any)=>({phoneme:String(p.Phoneme||''),score:Number((p?.PronunciationAssessment ?? p)?.AccuracyScore)}));
     return {word:String(w.Word||''),score:Number.isFinite(score)?score:0,
-      error_type:String(w?.PronunciationAssessment?.ErrorType||'None'),phonemes};
+      error_type:String((w?.PronunciationAssessment ?? w)?.ErrorType||'None'),phonemes};
   });
   const weakWords = wordGrades.filter((w:any)=>w.score<65 || (w.error_type!=='None' && w.error_type!=='')).map((w:any)=>w.word);
   const accuracy = Number(pa.AccuracyScore||0), rawScore = Number(pa.PronScore||accuracy);

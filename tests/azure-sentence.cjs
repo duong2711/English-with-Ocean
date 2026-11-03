@@ -6,10 +6,20 @@ const helpers = src.slice(src.indexOf('        function thcsEncodeSentenceWav(')
 const gate = src.slice(src.indexOf('        function thcsSentenceGateWords('),src.indexOf('        // Voice Activity Detection:'));
 const text = fs.readFileSync('supabase/functions/azure-pronounce-sentence/index.ts','utf8').replace(/^import.*\n/,'');
 let handler, quota = true, calls = 0, config;
+let flatRest = false;
 let transcript = 'I am a teacher.', wordScore = 95, errorType='None';
 const env={SUPABASE_URL:'https://example.test',SUPABASE_ANON_KEY:'test',SUPABASE_SERVICE_ROLE_KEY:'test',AZURE_SPEECH_KEY:'test',AZURE_SPEECH_REGION:'southeastasia',AZURE_SPEECH_TIER:'F0',AZURE_SPEECH_ENABLED:'1'};
 const createClient=()=>({auth:{getUser:async()=>({data:{user:{id:'test'}}})},rpc:async(_,args)=>{assert.ok(args.p_seconds<=26);return {data:quota}}});
-const azureFetch=async(url, options)=>{calls++;config=JSON.parse(Buffer.from(options.headers['Pronunciation-Assessment'],'base64').toString());return Response.json({RecognitionStatus:'Success',NBest:[{Display:transcript,PronunciationAssessment:{AccuracyScore:95,PronScore:95},Words:transcript.replace(/[.!]/g,'').split(' ').map(Word=>({Word,PronunciationAssessment:{AccuracyScore:wordScore,ErrorType:errorType}}))}]})};
+const azureFetch=async(url, options)=>{
+ calls++;config=JSON.parse(Buffer.from(options.headers['Pronunciation-Assessment'],'base64').toString());
+ const assessment={AccuracyScore:95,PronScore:95};
+ const Words=transcript.replace(/[.!]/g,'').split(' ').map(Word=>{
+  const grade={AccuracyScore:wordScore,ErrorType:errorType};
+  const phoneme={Phoneme:'a',...(flatRest?{AccuracyScore:wordScore}:{PronunciationAssessment:{AccuracyScore:wordScore}})};
+  return {Word,Phonemes:[phoneme],...(flatRest?grade:{PronunciationAssessment:grade})};
+ });
+ return Response.json({RecognitionStatus:'Success',NBest:[{Display:transcript,Words,...(flatRest?assessment:{PronunciationAssessment:assessment})}]});
+};
 new Function('Deno','createClient','fetch',stripTypeScriptTypes(text))({env:{get:key=>env[key]},serve:h=>{handler=h}},createClient,azureFetch);
 let frontendFetch;
 class AudioContext {async decodeAudioData(){return audio;} async close(){}}
@@ -21,6 +31,7 @@ const audio={duration:1,sampleRate:48000,numberOfChannels:2,getChannelData:()=>n
  assert.throws(()=>encode({...audio,duration:26}),/25/);
  const req=(word='I am a teacher.',audio=bytes.toString('base64'))=>new Request('https://example.test',{method:'POST',headers:{Authorization:'Bearer test'},body:JSON.stringify({mode:'sentence',word,audio})});
  let result=await (await handler(req())).json();assert.equal(result.accepted,true);assert.equal(config.EnableProsodyAssessment,undefined);assert.equal(isCorrect('I am a teacher.',result.transcript,result.score,result.word_feedback,'azure'),true);
+ flatRest=true;result=await(await handler(req())).json();assert.equal(result.accepted,true,'REST flat assessment must be accepted');assert.equal(result.word_scores[0].score,95);assert.equal(result.word_scores[0].phonemes[0].score,95);
  transcript='I am teacher.';result=await(await handler(req())).json();assert.equal(result.accepted,false);assert.equal(result.word_feedback.missing[0],'a');
  transcript='I am a teacher.';wordScore=50;result=await(await handler(req())).json();assert.equal(result.accepted,false);assert.ok(result.word_feedback.wrong.length);
  wordScore=95;transcript="I'm a teacher.";result=await(await handler(req("I'm a teacher."))).json();assert.equal(result.accepted,true,'Valid contractions must not require expanded Azure word count');
