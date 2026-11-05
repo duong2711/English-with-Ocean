@@ -354,6 +354,13 @@
         let galleryIndex = 0;
         if (!modal || !openBtn || !closeBtn) return;
 
+        // The About Me popup is public: render it outside #inside so links also
+        // work for visitors who have not logged in (#inside is hidden then).
+        if (modal.parentElement !== document.body) document.body.appendChild(modal);
+        if (galleryLightbox && galleryLightbox.parentElement !== document.body) {
+            document.body.appendChild(galleryLightbox);
+        }
+
         function openModal() {
             modal.classList.add('is-open');
             modal.setAttribute('aria-hidden', 'false');
@@ -439,6 +446,12 @@
                 galleryIndex = (galleryIndex + 1) % galleryItems.length;
                 renderGalleryImage();
             });
+        }
+
+        // Shareable public link: https://lddenglish.page/?about-me=1
+        // Reuse the existing About Me modal and content; no duplicate page.
+        if (new URLSearchParams(window.location.search).get('about-me') === '1') {
+            openModal();
         }
 
         document.addEventListener('keydown', function (event) {
