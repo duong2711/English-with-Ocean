@@ -681,14 +681,14 @@
       },
       {
         "format": "long_answer",
-        "text": "What geographical feature is shown in another picture?",
+        "text": "What geographical feature is shown in one picture?",
         "options": [
-          "The speaker describes Phu Quoc as a large country in the sea.",
-          "The speaker describes Phu Quoc as a large island in the sea.",
-          "The speaker describes Phu Quoc as a large library in the sea.",
-          "The speaker describes Phu Quoc as a large street in the sea."
+          "One of the pictures shows a large island surrounded by water.",
+          "One of the pictures shows a modern airport near the city.",
+          "One of the pictures shows a busy railway station in town.",
+          "One of the pictures shows a small restaurant beside the market."
         ],
-        "answer": 1
+        "answer": 0
       }
     ],
     "source": {
@@ -734,12 +734,12 @@
       },
       {
         "format": "long_answer",
-        "text": "What do they say about meeting at nine?",
+        "text": "What arrangement do the friends make?",
         "options": [
-          "One person agrees and says that I'll meet the other at nine o'clock.",
-          "One person agrees and says that Weather meet the other at nine o'clock.",
-          "One person agrees and says that Evening meet the other at nine o'clock.",
-          "One person agrees and says that Year meet the other at nine o'clock."
+          "The speaker agrees to meet at nine o'clock on Sunday.",
+          "The speaker suggests meeting much earlier on Saturday morning.",
+          "The speaker says that nobody should meet on Sunday.",
+          "The speaker refuses to arrange a time for the picnic."
         ],
         "answer": 0
       }
@@ -1041,14 +1041,14 @@
       },
       {
         "format": "short_answer",
-        "text": "What can the person see on TV?",
+        "text": "Why does the speaker like the television programme?",
         "options": [
-          "The Holiday",
-          "The Laptop",
-          "The Because",
-          "The Food"
+          "It shows real animals",
+          "It has famous singers",
+          "It teaches cooking",
+          "It tells ghost stories"
         ],
-        "answer": 2
+        "answer": 0
       },
       {
         "format": "long_answer",
@@ -1264,14 +1264,14 @@
       },
       {
         "format": "long_answer",
-        "text": "What does Alice sometimes do on Saturdays?",
+        "text": "What other activity does Alice sometimes enjoy?",
         "options": [
-          "Alice says that she sometimes write computer games on Saturdays as well.",
-          "Alice says that she sometimes play computer games on Saturdays as well.",
-          "Alice says that she sometimes try computer games on Saturdays as well.",
-          "Alice says that she sometimes stay computer games on Saturdays as well."
+          "She sometimes plays computer games on Saturdays in her free time.",
+          "She always spends every Saturday playing football with her classmates.",
+          "She often goes swimming on Sundays with her grandparents.",
+          "She never plays computer games when she has free time."
         ],
-        "answer": 1
+        "answer": 0
       }
     ],
     "source": {
@@ -2962,12 +2962,12 @@
         "format": "long_answer",
         "text": "How often does the other mother cycle to work?",
         "options": [
-          "The speaker says that she Slowly cycles instead of going by bus.",
-          "The speaker says that she Sometimes cycles instead of going by bus.",
-          "The speaker says that she Finally cycles instead of going by bus.",
-          "The speaker says that she Frequently cycles instead of going by bus."
+          "She sometimes cycles to work instead of taking the bus.",
+          "She always cycles and never uses any public transport.",
+          "She never cycles because she does not own a bicycle.",
+          "She cycles to work every morning with her friends."
         ],
-        "answer": 1
+        "answer": 0
       }
     ],
     "source": {
@@ -3278,14 +3278,14 @@
       },
       {
         "format": "long_answer",
-        "text": "How were the singers described?",
+        "text": "How did the speaker describe the singers?",
         "options": [
-          "The speaker says that the singers were not very good laptop at the event.",
-          "The speaker says that the singers were not very good air at the event.",
-          "The speaker says that the singers were not very good either at the event.",
-          "The speaker says that the singers were not very good energy at the event."
+          "The singers were not very good at the music festival.",
+          "The singers gave an excellent performance for the whole audience.",
+          "The singers were too busy to come to the festival.",
+          "The singers left early because the music festival was cancelled."
         ],
-        "answer": 2
+        "answer": 0
       }
     ],
     "source": {
@@ -3755,14 +3755,14 @@
       },
       {
         "format": "long_answer",
-        "text": "How many visitors did California attract?",
+        "text": "How many visitors did the attraction in California receive?",
         "options": [
-          "The speaker says that California attracted nearly 22 million visitors during that year.",
-          "The speaker says that California attracted nearly 24 million visitors during that year.",
-          "The speaker says that California attracted nearly 21 million visitors during that year.",
-          "The speaker says that California attracted nearly 23 million visitors during that year."
+          "The attraction in California received nearly twenty-one million visitors.",
+          "The attraction in California received only one million visitors.",
+          "The attraction in California received fewer than ten thousand visitors.",
+          "The attraction in California received almost fifty million visitors."
         ],
-        "answer": 2
+        "answer": 0
       }
     ],
     "source": {
@@ -4285,12 +4285,12 @@
       },
       {
         "format": "long_answer",
-        "text": "How does the other student begin their response?",
+        "text": "How does Mi begin her reply?",
         "options": [
-          "The other student starts by saying Actually before explaining the situation.",
-          "The other student starts by saying Really before explaining the situation.",
-          "The other student starts by saying Carefully before explaining the situation.",
-          "The other student starts by saying Especially before explaining the situation."
+          "She starts her reply by saying “Actually” before explaining her situation.",
+          "She immediately refuses to answer any of her friend's questions.",
+          "She begins by asking her teacher to leave the room.",
+          "She starts by talking about a school trip next week."
         ],
         "answer": 0
       }
@@ -4338,14 +4338,14 @@
       },
       {
         "format": "long_answer",
-        "text": "How does the speaker respond to the question about culture?",
+        "text": "How does the speaker respond to a question about culture?",
         "options": [
-          "The speaker answers Finally and begins describing local customs and culture.",
-          "The speaker answers Certainly and begins describing local customs and culture.",
-          "The speaker answers Secondly and begins describing local customs and culture.",
-          "The speaker answers Carefully and begins describing local customs and culture."
+          "The speaker replies “Certainly” and starts describing the local culture.",
+          "The speaker refuses to explain anything about the local culture.",
+          "The speaker says there are no traditions in the mountains.",
+          "The speaker changes the subject to weather in the city."
         ],
-        "answer": 1
+        "answer": 0
       }
     ],
     "source": {
@@ -4709,14 +4709,14 @@
       },
       {
         "format": "long_answer",
-        "text": "How does someone respond to the comment about food?",
+        "text": "What does the speaker say about Vietnamese cooking?",
         "options": [
-          "The speaker agrees and answers slowly while talking about Vietnamese cuisine.",
-          "The speaker agrees and answers firstly while talking about Vietnamese cuisine.",
-          "The speaker agrees and answers certainly while talking about Vietnamese cuisine.",
-          "The speaker agrees and answers often while talking about Vietnamese cuisine."
+          "The speaker agrees that Vietnamese cooking uses many vegetables and herbs.",
+          "The speaker says Vietnamese meals never include vegetables or herbs.",
+          "The speaker says Vietnamese cooking uses only meat and rice.",
+          "The speaker says that Vietnamese food does not include herbs."
         ],
-        "answer": 2
+        "answer": 0
       }
     ],
     "source": {
@@ -5027,12 +5027,12 @@
       },
       {
         "format": "long_answer",
-        "text": "What colour is the backpack that was received?",
+        "text": "What colour is the smart backpack the customer received?",
         "options": [
-          "The customer says that the backpack is a yellowish brown instead of the expected colour.",
-          "The customer says that the backpack is a yellowish blue instead of the expected colour.",
-          "The customer says that the backpack is a yellowish white instead of the expected colour.",
-          "The customer says that the backpack is a yellowish purple instead of the expected colour."
+          "The backpack they received is yellowish brown, not the expected colour.",
+          "The backpack they received is bright blue, exactly as advertised.",
+          "The backpack they received is solid black without any other colour.",
+          "The backpack they received is dark purple with white stripes."
         ],
         "answer": 0
       }
@@ -5345,12 +5345,12 @@
       },
       {
         "format": "long_answer",
-        "text": "What does someone say when adjusting the equipment?",
+        "text": "What does someone say while adjusting the devices?",
         "options": [
-          "The speaker asks the others to Hold on while they make changes.",
-          "The speaker asks the others to Habit on while they make changes.",
-          "The speaker asks the others to Breakfast on while they make changes.",
-          "The speaker asks the others to Weather on while they make changes."
+          "The speaker asks the others to hold on while they adjust the devices.",
+          "The speaker asks everyone to leave before the meeting starts.",
+          "The speaker asks the others to turn off the lights immediately.",
+          "The speaker says the meeting has been cancelled for today."
         ],
         "answer": 0
       }
@@ -6396,12 +6396,12 @@
         "format": "short_answer",
         "text": "What kinds of species are mentioned?",
         "options": [
-          "know and animals",
-          "try and animals",
-          "plant and animals",
-          "talk and animals"
+          "Plants and animals",
+          "Fish and birds",
+          "Rocks and minerals",
+          "Trees and buildings"
         ],
-        "answer": 2
+        "answer": 0
       },
       {
         "format": "long_answer",
@@ -6712,14 +6712,14 @@
       },
       {
         "format": "short_answer",
-        "text": "What can the people not stop doing?",
+        "text": "Which expression does the speaker use?",
         "options": [
-          "bring admiring",
-          "help admiring",
-          "work admiring",
-          "have admiring"
+          "Can't help admiring",
+          "Can't stop laughing",
+          "Must keep waiting",
+          "Enjoys going home"
         ],
-        "answer": 1
+        "answer": 0
       },
       {
         "format": "long_answer",
@@ -7573,12 +7573,12 @@
         "format": "long_answer",
         "text": "What does the applicant hope after sending a letter?",
         "options": [
-          "The applicant says they hope Geography get the job they applied for.",
-          "The applicant says they hope Food get the job they applied for.",
-          "The applicant says they hope Year get the job they applied for.",
-          "The applicant says they hope I'll get the job they applied for."
+          "The applicant hopes to get the job after sending the letter.",
+          "The applicant hopes to cancel the application before the interview.",
+          "The applicant hopes to leave school without finding any work.",
+          "The applicant hopes that someone else receives the position instead."
         ],
-        "answer": 3
+        "answer": 0
       }
     ],
     "source": {
