@@ -25,12 +25,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "Phong introduces Duy as his new friend.",
+        "text": "Duy is introduced as a stranger rather than a friend.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -101,7 +101,7 @@
         "text": "What does someone say when meeting Phong?",
         "options": [
           "The speaker says that it is Health to meet Phong for the first time.",
-          "The speaker says that it is Nice to meet Phong for the first time.",
+          "The speaker says that it is nice to meet Phong for the first time.",
           "The speaker says that it is Computer to meet Phong for the first time.",
           "The speaker says that it is Evening to meet Phong for the first time."
         ],
@@ -184,12 +184,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "Elena is Nick's sister.",
+        "text": "Elena is Nick's teacher, not his sister.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -290,12 +290,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "The speaker lives with their parents.",
+        "text": "The speaker says they live alone.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -343,12 +343,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "Phong is reading something when the conversation begins.",
+        "text": "Phong is writing rather than reading.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -449,12 +449,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "The girl in the description has short black hair.",
+        "text": "The friend is described as having long blonde hair.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -502,12 +502,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "A speaker thinks the area is beautiful.",
+        "text": "The speakers describe the place as ugly.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -608,12 +608,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "The speaker talks about Ho Chi Minh City.",
+        "text": "The speaker is describing Hanoi rather than Ho Chi Minh City.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -767,12 +767,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "The speaker describes beautiful beaches.",
+        "text": "The speaker says the beaches are dirty and unattractive.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -926,12 +926,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "The speaker feels happy about Tet.",
+        "text": "The speaker is unhappy about Tet.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -979,12 +979,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "The speaker finds the television show interesting.",
+        "text": "The speaker finds the television show boring.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -1138,12 +1138,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "The speakers talk about karate and table tennis.",
+        "text": "The speaker says they never play table tennis.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -1297,12 +1297,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "Sydney is a city in Australia.",
+        "text": "Sydney is described as a city in England.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -1456,12 +1456,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "Someone imagines a future house with twenty rooms.",
+        "text": "The imagined future house has only two rooms.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -1615,12 +1615,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "The speakers discuss helping the environment.",
+        "text": "The speakers say reusable bags are harmful to the environment.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -1880,12 +1880,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "Home robots can do housework.",
+        "text": "The speaker says robots can completely understand human feelings.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -2410,12 +2410,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "The speaker often plays the piano.",
+        "text": "The speaker says they never play the piano.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -2569,12 +2569,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "The meal includes pork cooked in fish sauce.",
+        "text": "The dish is cooked without fish sauce.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -2675,12 +2675,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "The speaker sometimes eats instant soup with bread.",
+        "text": "The speaker says family members never eat together.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -2728,12 +2728,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "The speakers mention Minh Lower Secondary School.",
+        "text": "The school has no library for visitors.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -2887,12 +2887,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "The speaker cycled around the area last Sunday afternoon.",
+        "text": "The speaker went cycling on Monday morning.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -3046,12 +3046,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "The speakers plan to visit Sao Mai Cinema tonight.",
+        "text": "The speakers are not planning to visit a cinema.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -3311,12 +3311,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "The celebration is a national holiday.",
+        "text": "Only adults can take part in this holiday.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -3364,12 +3364,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "One speaker is unsure what energy means.",
+        "text": "The speaker fully understands energy at the beginning.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -3523,12 +3523,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "The speaker thinks it is a pity that something is missing.",
+        "text": "The speakers predict there will be more traffic jams in hyperloops.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -3682,12 +3682,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "The speakers discuss reading maps to find directions.",
+        "text": "Australians dislike outdoor activities.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -3841,12 +3841,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "A speaker likes knitting as a leisure activity.",
+        "text": "The speaker says knitting is one activity they hate.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -3947,12 +3947,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "The speaker likes connecting with family on Saturdays.",
+        "text": "The speaker spends Saturdays without seeing family.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -4000,12 +4000,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "The speaker visits an uncle's house outside the city.",
+        "text": "The speaker never visits relatives outside the city.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -4159,12 +4159,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "The students are planning school club activities.",
+        "text": "The school is cancelling every club activity.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -4265,12 +4265,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "A student feels pressure to meet their parents' expectations.",
+        "text": "The student has no worries about their parents' expectations.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -4318,12 +4318,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "The speaker lives in a stilt house in the mountains.",
+        "text": "The speaker lives in a tower block in the city centre.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -4424,12 +4424,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "Children learn skills inside and outside the house.",
+        "text": "Children are not taught any practical skills outside their homes.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -4477,12 +4477,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "People visit villages to take pictures of the flowers.",
+        "text": "There are no flowers or ornamental trees in the villages.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -4583,12 +4583,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "The Khmer community celebrates an important festival.",
+        "text": "The Khmer community does not celebrate the festival.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -4742,12 +4742,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "The speaker says modern technology can cause problems.",
+        "text": "Technology makes it impossible for friends to keep in touch.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -4795,12 +4795,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "The speakers say air and water quality are getting worse.",
+        "text": "The speakers say air and water quality are improving.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -4901,12 +4901,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "The speaker explains causes of water pollution.",
+        "text": "The speaker says waste does not cause water pollution.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -5060,12 +5060,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "The speaker explains how online shopping works.",
+        "text": "The speaker claims online shopping offers very few choices.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -5219,12 +5219,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "Each family should prepare before a storm.",
+        "text": "People should go outside during a storm.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -5272,12 +5272,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "A speaker has never had a video conference before.",
+        "text": "The speaker has already attended many video conferences.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -5537,12 +5537,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "The speakers talk about robots interacting with students.",
+        "text": "The speakers believe robots have all the emotional skills of human teachers.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -6173,12 +6173,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "Students are advised to record due dates and test dates.",
+        "text": "The speaker suggests ignoring homework and test deadlines.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -6226,12 +6226,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "The speakers are impressed by a historical site.",
+        "text": "The speakers find the historic site completely ordinary.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -6385,12 +6385,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "The travellers visit Langbiang Mountain and Cu Lan Village.",
+        "text": "The travellers did not visit any mountains.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -6491,12 +6491,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "The speaker worries that lost things may never be returned.",
+        "text": "The speaker says the lost money was never returned.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -6597,12 +6597,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "One person offers to share some helpful links.",
+        "text": "The person refuses to share any useful links.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -6703,12 +6703,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "The speakers discuss places they want to visit.",
+        "text": "No one is interested in visiting the places discussed.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -6809,12 +6809,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "The text describes a tropical forest area.",
+        "text": "Conservation workers cut down trees to restore damaged ecosystems.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -7127,12 +7127,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "The speaker reads different kinds of English texts.",
+        "text": "The speaker avoids reading English texts.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -7286,12 +7286,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "The speaker says people can harm the environment.",
+        "text": "The speaker says humans are unable to harm the environment.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
@@ -7445,12 +7445,12 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "The speaker mentions dust, spots and dirty marks.",
+        "text": "The speaker says future homes will never use laser technology.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
