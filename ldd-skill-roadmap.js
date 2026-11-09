@@ -661,13 +661,13 @@
                 config.stages.map((stage, index) => stageCardHtml(skill, stage, index + 1, state)).join('') +
             '</ol>';
 
-        if (skill === 'writing' && state.audience === 'thcs' && window.LDDTHCSWriting) {
+        if (skill === 'writing' && ['thcs','thpt'].includes(state.audience) && window.LDDTHCSWriting) {
             const list = hub.querySelector('.ldd-stage-list');
             const workshop = document.createElement('div');
             list.replaceWith(workshop);
             hub.querySelector('.ldd-skill-summary').hidden = true;
             hub.querySelector('[data-roadmap-assess]').hidden = true;
-            window.LDDTHCSWriting.mount(workshop);
+            window.LDDTHCSWriting.mount(workshop,state.audience);
         }
 
         hub.querySelectorAll('[data-skill-audience]').forEach(button => {
