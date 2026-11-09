@@ -1979,3 +1979,14 @@
     .ldd-skill-header-actions { flex-direction: column; align-items: stretch; }
     .ldd-skill-header-actions .ldd-skill-summary { width: 100%; min-width: 0; }
 }
+
+/* THCS listening: full-width readable choices for sentence-length answers. */
+#ldd-listening-lab-panel .ldd-listening-mcq-question.is-long-answer .ldd-reading-answers {
+    grid-template-columns: minmax(0, 1fr);
+}
+#ldd-listening-lab-panel .ldd-listening-mcq-question.is-long-answer .ldd-reading-answers button {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.5;
+    text-align: left;
+}
