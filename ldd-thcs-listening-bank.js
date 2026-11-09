@@ -1,5 +1,6 @@
 /* THCS listening: one source recording paired with its own ordered question set.
- * Only answer choices may be shuffled. Source transcripts stay out of the student UI.
+ * All 144 THCS recordings have 3 questions: True/False, short MCQ (up to 5 words), long MCQ (>5 words).
+ * Only MCQ answer choices may be shuffled; True/False remains in True, False order.
  */
 (function () {
   'use strict';
@@ -20,40 +21,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0607/u1-getting-started-ex1.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “Duy, my new ____. Hi, Duy. Nice”.",
+        "format": "true_false",
+        "text": "A speaker says “Duy my new friend Hi Duy Nice” in the recording.",
         "options": [
-          "basketball",
-          "rain",
-          "friend",
-          "club"
+          "True",
+          "False"
         ],
-        "answer": 2,
-        "sourceWordIndex": 16
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “Good. Hmm, your ____ bag looks heavy”.",
+        "format": "short_answer",
+        "text": "Which expression does the speaker use?",
         "options": [
-          "library",
-          "store",
-          "town",
-          "school"
+          "Hmm your library bag looks",
+          "Hmm your store bag looks",
+          "Hmm your town bag looks",
+          "Hmm your school bag looks"
         ],
-        "answer": 3,
-        "sourceWordIndex": 39
+        "answer": 3
       },
       {
-        "text": "Chọn từ nghe được: “We always look ____ in our uniforms”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "traditional",
-          "patient",
-          "smart",
-          "important"
+          "A speaker uses the words “We always look traditional in our uniforms” in this recording.",
+          "A speaker uses the words “We always look patient in our uniforms” in this recording.",
+          "A speaker uses the words “We always look smart in our uniforms” in this recording.",
+          "A speaker uses the words “We always look important in our uniforms” in this recording."
         ],
-        "answer": 2,
-        "sourceWordIndex": 68
+        "answer": 2
       }
     ],
     "source": {
@@ -75,40 +74,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0607/ex1.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “Duy, my new ____. Hi, Duy. Nice”.",
+        "format": "true_false",
+        "text": "A speaker says “Duy my new holiday Hi Duy Nice” in the recording.",
         "options": [
-          "holiday",
-          "friend",
-          "stress",
-          "television"
+          "True",
+          "False"
         ],
-        "answer": 1,
-        "sourceWordIndex": 6
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “Duy. Nice to ____ you. Hi, Phong”.",
+        "format": "short_answer",
+        "text": "Which detail is mentioned in the conversation?",
         "options": [
-          "meet",
-          "draw",
-          "write",
-          "stay"
+          "Nice to meet you Hi",
+          "Nice to draw you Hi",
+          "Nice to write you Hi",
+          "Nice to stay you Hi"
         ],
-        "answer": 0,
-        "sourceWordIndex": 11
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “you. Hi, Phong. ____ to meet you”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "Health",
-          "Nice",
-          "Computer",
-          "Evening"
+          "A speaker uses the words “you Hi Phong Health to meet you” in this recording.",
+          "A speaker uses the words “you Hi Phong Nice to meet you” in this recording.",
+          "A speaker uses the words “you Hi Phong Computer to meet you” in this recording.",
+          "A speaker uses the words “you Hi Phong Evening to meet you” in this recording."
         ],
-        "answer": 1,
-        "sourceWordIndex": 15
+        "answer": 1
       }
     ],
     "source": {
@@ -130,40 +127,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0607/ex1-1-.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “6 at Palmer ____. I like it”.",
+        "format": "true_false",
+        "text": "A speaker says “6 at Palmer School I like it” in the recording.",
         "options": [
-          "Island",
-          "Office",
-          "School",
-          "World"
+          "True",
+          "False"
         ],
-        "answer": 2,
-        "sourceWordIndex": 15
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “She teaches us ____. I have two”.",
+        "format": "short_answer",
+        "text": "Which phrase matches what you hear?",
         "options": [
-          "webcam",
-          "maths",
-          "habit",
-          "health"
+          "teaches us webcam I have",
+          "teaches us maths I have",
+          "teaches us habit I have",
+          "teaches us health I have"
         ],
-        "answer": 1,
-        "sourceWordIndex": 44
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “homework in the ____. We wear our”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "mountain",
-          "street",
-          "library",
-          "store"
+          "A speaker uses the words “homework in the mountain We wear our” in this recording.",
+          "A speaker uses the words “homework in the street We wear our” in this recording.",
+          "A speaker uses the words “homework in the library We wear our” in this recording.",
+          "A speaker uses the words “homework in the store We wear our” in this recording."
         ],
-        "answer": 2,
-        "sourceWordIndex": 61
+        "answer": 2
       }
     ],
     "source": {
@@ -185,40 +180,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0608/act1.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “Nick. It's Elena's ____. She's my sister”.",
+        "format": "true_false",
+        "text": "A speaker says “Nick It's Elena's school She's my sister” in the recording.",
         "options": [
-          "room",
-          "school",
-          "shop",
-          "island"
+          "True",
+          "False"
         ],
-        "answer": 0,
-        "sourceWordIndex": 9
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “live with? My ____ and younger brother”.",
+        "format": "short_answer",
+        "text": "Which expression does the speaker use?",
         "options": [
-          "buildings",
-          "skills",
-          "parents",
-          "teachers"
+          "with My buildings and younger",
+          "with My skills and younger",
+          "with My parents and younger",
+          "with My teachers and younger"
         ],
-        "answer": 2,
-        "sourceWordIndex": 49
+        "answer": 2
       },
       {
-        "text": "Chọn từ nghe được: “are. There's a ____ room, three bedrooms”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "cooking",
-          "building",
-          "living",
-          "making"
+          "A speaker uses the words “are There's a cooking room three bedrooms” in this recording.",
+          "A speaker uses the words “are There's a building room three bedrooms” in this recording.",
+          "A speaker uses the words “are There's a living room three bedrooms” in this recording.",
+          "A speaker uses the words “are There's a making room three bedrooms” in this recording."
         ],
-        "answer": 2,
-        "sourceWordIndex": 88
+        "answer": 2
       }
     ],
     "source": {
@@ -240,40 +233,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0608/act1-1-.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “My bedroom isn't ____. How about putting”.",
+        "format": "true_false",
+        "text": "A speaker says “My bedroom isn't nice How about putting” in the recording.",
         "options": [
-          "club",
-          "geography",
-          "light",
-          "nice"
+          "True",
+          "False"
         ],
-        "answer": 3,
-        "sourceWordIndex": 3
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “picture on the ____? Great idea, Mum”.",
+        "format": "short_answer",
+        "text": "Which detail is mentioned in the conversation?",
         "options": [
-          "wall",
-          "suitcase",
-          "life",
-          "phone"
+          "on the wall Great idea",
+          "on the suitcase Great idea",
+          "on the life Great idea",
+          "on the phone Great idea"
         ],
-        "answer": 0,
-        "sourceWordIndex": 11
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “to the department ____ to buy one”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "store",
-          "airport",
-          "street",
-          "mountain"
+          "A speaker uses the words “to the department store to buy one” in this recording.",
+          "A speaker uses the words “to the department airport to buy one” in this recording.",
+          "A speaker uses the words “to the department street to buy one” in this recording.",
+          "A speaker uses the words “to the department mountain to buy one” in this recording."
         ],
-        "answer": 0,
-        "sourceWordIndex": 20
+        "answer": 0
       }
     ],
     "source": {
@@ -295,40 +286,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0608/act2.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “live with my ____. There are six”.",
+        "format": "true_false",
+        "text": "A speaker says “live with my languages There are six” in the recording.",
         "options": [
-          "languages",
-          "flowers",
-          "parents",
-          "questions"
+          "True",
+          "False"
         ],
-        "answer": 2,
-        "sourceWordIndex": 16
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “love our living ____ the best because”.",
+        "format": "short_answer",
+        "text": "Which phrase matches what you hear?",
         "options": [
-          "town",
-          "room",
-          "mountain",
-          "sea"
+          "our living town the best",
+          "our living room the best",
+          "our living mountain the best",
+          "our living sea the best"
         ],
-        "answer": 1,
-        "sourceWordIndex": 38
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “the wall. I ____ read books in”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "often",
-          "sometimes",
-          "quickly",
-          "frequently"
+          "A speaker uses the words “the wall I often read books in” in this recording.",
+          "A speaker uses the words “the wall I sometimes read books in” in this recording.",
+          "A speaker uses the words “the wall I quickly read books in” in this recording.",
+          "A speaker uses the words “the wall I frequently read books in” in this recording."
         ],
-        "answer": 0,
-        "sourceWordIndex": 81
+        "answer": 0
       }
     ],
     "source": {
@@ -350,40 +339,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0610/act1.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “What are you ____, Phong? 4Teen”.",
+        "format": "true_false",
+        "text": "A speaker says “What are you reading Phong 4Teen” in the recording.",
         "options": [
-          "making",
-          "reading",
-          "doing",
-          "building"
+          "True",
+          "False"
         ],
-        "answer": 1,
-        "sourceWordIndex": 22
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “glasses and long ____ hair. I don't”.",
+        "format": "short_answer",
+        "text": "Which expression does the speaker use?",
         "options": [
-          "grey",
-          "yellow",
-          "black",
-          "blue"
+          "and long grey hair I",
+          "and long yellow hair I",
+          "and long black hair I",
+          "and long blue hair I"
         ],
-        "answer": 2,
-        "sourceWordIndex": 46
+        "answer": 2
       },
       {
-        "text": "Chọn từ nghe được: “have lots of ____. Oh, sorry, we”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "stress",
-          "food",
-          "computer",
-          "life"
+          "A speaker uses the words “have lots of stress Oh sorry we” in this recording.",
+          "A speaker uses the words “have lots of food Oh sorry we” in this recording.",
+          "A speaker uses the words “have lots of computer Oh sorry we” in this recording.",
+          "A speaker uses the words “have lots of life Oh sorry we” in this recording."
         ],
-        "answer": 1,
-        "sourceWordIndex": 84
+        "answer": 1
       }
     ],
     "source": {
@@ -405,40 +392,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0610/act1-1-.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “does your best ____ look like? She's”.",
+        "format": "true_false",
+        "text": "A speaker says “does your best entrance look like She's” in the recording.",
         "options": [
-          "entrance",
-          "friend",
-          "breakfast",
-          "rain"
+          "True",
+          "False"
         ],
-        "answer": 1,
-        "sourceWordIndex": 4
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “short with long ____ hair. She has”.",
+        "format": "short_answer",
+        "text": "Which detail is mentioned in the conversation?",
         "options": [
-          "white",
-          "grey",
-          "black",
-          "red"
+          "with long white hair She",
+          "with long grey hair She",
+          "with long black hair She",
+          "with long red hair She"
         ],
-        "answer": 2,
-        "sourceWordIndex": 11
+        "answer": 2
       },
       {
-        "text": "Chọn từ nghe được: “she like? She's very ____ and creative”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "kind",
-          "excellent",
-          "noisy",
-          "jealous"
+          "A speaker uses the words “she like She's very kind and creative” in this recording.",
+          "A speaker uses the words “she like She's very excellent and creative” in this recording.",
+          "A speaker uses the words “she like She's very noisy and creative” in this recording.",
+          "A speaker uses the words “she like She's very jealous and creative” in this recording."
         ],
-        "answer": 0,
-        "sourceWordIndex": 23
+        "answer": 0
       }
     ],
     "source": {
@@ -460,40 +445,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0610/act2.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “She has short ____ hair and a”.",
+        "format": "true_false",
+        "text": "A speaker says “She has short black hair and a” in the recording.",
         "options": [
-          "black",
-          "red",
-          "blue",
-          "purple"
+          "True",
+          "False"
         ],
-        "answer": 0,
-        "sourceWordIndex": 20
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “is my best ____. We're in class”.",
+        "format": "short_answer",
+        "text": "Which phrase matches what you hear?",
         "options": [
-          "earth",
-          "space",
-          "friend",
-          "graveyard"
+          "my best earth We're in",
+          "my best space We're in",
+          "my best friend We're in",
+          "my best graveyard We're in"
         ],
-        "answer": 2,
-        "sourceWordIndex": 49
+        "answer": 2
       },
       {
-        "text": "Chọn từ nghe được: “also hard-working. She ____ does her homework”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "usually",
-          "quickly",
-          "always",
-          "probably"
+          "A speaker uses the words “also hard working She usually does her homework” in this recording.",
+          "A speaker uses the words “also hard working She quickly does her homework” in this recording.",
+          "A speaker uses the words “also hard working She always does her homework” in this recording.",
+          "A speaker uses the words “also hard working She probably does her homework” in this recording."
         ],
-        "answer": 2,
-        "sourceWordIndex": 83
+        "answer": 2
       }
     ],
     "source": {
@@ -515,40 +498,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0720/20201130-tienganh6-kntt-b1-23.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “too. It's so ____. Where shall we”.",
+        "format": "true_false",
+        "text": "A speaker says “too It's so confident Where shall we” in the recording.",
         "options": [
-          "confident",
-          "clean",
-          "beautiful",
-          "difficult"
+          "True",
+          "False"
         ],
-        "answer": 2,
-        "sourceWordIndex": 12
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “and then turn ____. Fine, let's go”.",
+        "format": "short_answer",
+        "text": "Which expression does the speaker use?",
         "options": [
-          "left",
-          "called",
-          "gave",
-          "helped"
+          "then turn left Fine let's",
+          "then turn called Fine let's",
+          "then turn gave Fine let's",
+          "then turn helped Fine let's"
         ],
-        "answer": 0,
-        "sourceWordIndex": 46
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “to Tan Ky ____? Sure. Go straight”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "Station",
-          "Town",
-          "World",
-          "House"
+          "A speaker uses the words “to Tan Ky Station Sure Go straight” in this recording.",
+          "A speaker uses the words “to Tan Ky Town Sure Go straight” in this recording.",
+          "A speaker uses the words “to Tan Ky World Sure Go straight” in this recording.",
+          "A speaker uses the words “to Tan Ky House Sure Go straight” in this recording."
         ],
-        "answer": 3,
-        "sourceWordIndex": 76
+        "answer": 3
       }
     ],
     "source": {
@@ -570,40 +551,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0610/act1-2-.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “way to the ____, please? Go along”.",
+        "format": "true_false",
+        "text": "A speaker says “way to the cinema please Go along” in the recording.",
         "options": [
-          "cinema",
-          "museum",
-          "airport",
-          "world"
+          "True",
+          "False"
         ],
-        "answer": 0,
-        "sourceWordIndex": 10
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “It's on your ____. Excuse me. Where's”.",
+        "format": "short_answer",
+        "text": "Which detail is mentioned in the conversation?",
         "options": [
-          "found",
-          "left",
-          "knew",
-          "brought"
+          "on your found Excuse me",
+          "on your left Excuse me",
+          "on your knew Excuse me",
+          "on your brought Excuse me"
         ],
-        "answer": 1,
-        "sourceWordIndex": 19
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “out of the ____. Take the first”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "station",
-          "airport",
-          "road",
-          "community"
+          "A speaker uses the words “out of the station Take the first” in this recording.",
+          "A speaker uses the words “out of the airport Take the first” in this recording.",
+          "A speaker uses the words “out of the road Take the first” in this recording.",
+          "A speaker uses the words “out of the community Take the first” in this recording."
         ],
-        "answer": 0,
-        "sourceWordIndex": 32
+        "answer": 0
       }
     ],
     "source": {
@@ -625,40 +604,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0610/act1-3-.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “Ho Chi Minh ____. What do you”.",
+        "format": "true_false",
+        "text": "A speaker says “Ho Chi Minh Forest What do you” in the recording.",
         "options": [
-          "Forest",
-          "Street",
-          "Village",
-          "City"
+          "True",
+          "False"
         ],
-        "answer": 3,
-        "sourceWordIndex": 14
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “restaurants and art ____ here. The streets”.",
+        "format": "short_answer",
+        "text": "Which phrase matches what you hear?",
         "options": [
-          "parents",
-          "games",
-          "houses",
-          "galleries"
+          "and art parents here The",
+          "and art games here The",
+          "and art houses here The",
+          "and art galleries here The"
         ],
-        "answer": 3,
-        "sourceWordIndex": 44
+        "answer": 3
       },
       {
-        "text": "Chọn từ nghe được: “air isn't very ____ and the streets”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "clean",
-          "careful",
-          "boring",
-          "smart"
+          "A speaker uses the words “air isn't very clean and the streets” in this recording.",
+          "A speaker uses the words “air isn't very careful and the streets” in this recording.",
+          "A speaker uses the words “air isn't very boring and the streets” in this recording.",
+          "A speaker uses the words “air isn't very smart and the streets” in this recording."
         ],
-        "answer": 0,
-        "sourceWordIndex": 80
+        "answer": 0
       }
     ],
     "source": {
@@ -680,40 +657,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0611/act1-4-.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “remember you must ____ be on time”.",
+        "format": "true_false",
+        "text": "A speaker says “remember you must always be on time” in the recording.",
         "options": [
-          "recently",
-          "usually",
-          "always",
-          "frequently"
+          "True",
+          "False"
         ],
-        "answer": 2,
-        "sourceWordIndex": 17
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “first picture? It's ____ Da Dia in”.",
+        "format": "short_answer",
+        "text": "Which expression does the speaker use?",
         "options": [
-          "Health",
-          "Food",
-          "Geography",
-          "Ganh"
+          "picture It's Health Da Dia",
+          "picture It's Food Da Dia",
+          "picture It's Geography Da Dia",
+          "picture It's Ganh Da Dia"
         ],
-        "answer": 3,
-        "sourceWordIndex": 43
+        "answer": 3
       },
       {
-        "text": "Chọn từ nghe được: “Chau, a large ____. How about picture”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "country",
-          "island",
-          "library",
-          "street"
+          "A speaker uses the words “Chau a large country How about picture” in this recording.",
+          "A speaker uses the words “Chau a large island How about picture” in this recording.",
+          "A speaker uses the words “Chau a large library How about picture” in this recording.",
+          "A speaker uses the words “Chau a large street How about picture” in this recording."
         ],
-        "answer": 1,
-        "sourceWordIndex": 82
+        "answer": 1
       }
     ],
     "source": {
@@ -735,40 +710,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0611/act1-5-.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “a picnic this ____. That's fine. What”.",
+        "format": "true_false",
+        "text": "A speaker says “a picnic this Monday That's fine What” in the recording.",
         "options": [
-          "Monday",
-          "Wednesday",
-          "Tuesday",
-          "Sunday"
+          "True",
+          "False"
         ],
-        "answer": 3,
-        "sourceWordIndex": 7
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “time can we ____? How about 9”.",
+        "format": "short_answer",
+        "text": "Which detail is mentioned in the conversation?",
         "options": [
-          "write",
-          "shop",
-          "meet",
-          "love"
+          "can we write How about",
+          "can we shop How about",
+          "can we meet How about",
+          "can we love How about"
         ],
-        "answer": 2,
-        "sourceWordIndex": 14
+        "answer": 2
       },
       {
-        "text": "Chọn từ nghe được: “9 o'clock? Sure. ____ meet you at”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "I'll",
-          "Weather",
-          "Evening",
-          "Year"
+          "A speaker uses the words “9 o'clock Sure I'll meet you at” in this recording.",
+          "A speaker uses the words “9 o'clock Sure Weather meet you at” in this recording.",
+          "A speaker uses the words “9 o'clock Sure Evening meet you at” in this recording.",
+          "A speaker uses the words “9 o'clock Sure Year meet you at” in this recording."
         ],
-        "answer": 0,
-        "sourceWordIndex": 20
+        "answer": 0
       }
     ],
     "source": {
@@ -790,40 +763,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0611/act1-6-.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “Giang. It has ____ beaches and green”.",
+        "format": "true_false",
+        "text": "A speaker says “Giang It has beautiful beaches and green” in the recording.",
         "options": [
-          "expensive",
-          "different",
-          "clean",
-          "beautiful"
+          "True",
+          "False"
         ],
-        "answer": 3,
-        "sourceWordIndex": 17
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “international airport, and ____ there is easy”.",
+        "format": "short_answer",
+        "text": "Which phrase matches what you hear?",
         "options": [
-          "talking",
-          "travelling",
-          "learning",
-          "helping"
+          "airport and talking there is",
+          "airport and travelling there is",
+          "airport and learning there is",
+          "airport and helping there is"
         ],
-        "answer": 1,
-        "sourceWordIndex": 41
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “fishing are popular ____ sports. You can”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "space",
-          "wind",
-          "history",
-          "water"
+          "A speaker uses the words “fishing are popular space sports You can” in this recording.",
+          "A speaker uses the words “fishing are popular wind sports You can” in this recording.",
+          "A speaker uses the words “fishing are popular history sports You can” in this recording.",
+          "A speaker uses the words “fishing are popular water sports You can” in this recording."
         ],
-        "answer": 3,
-        "sourceWordIndex": 71
+        "answer": 3
       }
     ],
     "source": {
@@ -845,40 +816,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0611/act1-7-.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “is Tet? At ____ times. This year”.",
+        "format": "true_false",
+        "text": "A speaker says “is Tet At friendly times This year” in the recording.",
         "options": [
-          "different",
-          "friendly",
-          "busy",
-          "healthy"
+          "True",
+          "False"
         ],
-        "answer": 0,
-        "sourceWordIndex": 17
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “a time for ____ gatherings? Yes. It's”.",
+        "format": "short_answer",
+        "text": "Which expression does the speaker use?",
         "options": [
-          "science",
-          "family",
-          "breakfast",
-          "eyes"
+          "time for science gatherings Yes",
+          "time for family gatherings Yes",
+          "time for breakfast gatherings Yes",
+          "time for eyes gatherings Yes"
         ],
-        "answer": 1,
-        "sourceWordIndex": 44
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “We should say \"____ New Year\" when”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "Important",
-          "Happy",
-          "Clever",
-          "Shy"
+          "A speaker uses the words “We should say Important New Year when” in this recording.",
+          "A speaker uses the words “We should say Happy New Year when” in this recording.",
+          "A speaker uses the words “We should say Clever New Year when” in this recording.",
+          "A speaker uses the words “We should say Shy New Year when” in this recording."
         ],
-        "answer": 1,
-        "sourceWordIndex": 80
+        "answer": 1
       }
     ],
     "source": {
@@ -900,40 +869,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0611/act1.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “Happy ____”.",
+        "format": "true_false",
+        "text": "A speaker says “Happy New” in the recording.",
         "options": [
-          "New",
-          "Old",
-          "Small",
-          "Long"
+          "True",
+          "False"
         ],
-        "answer": 0,
-        "sourceWordIndex": 0
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “joy and ____”.",
+        "format": "short_answer",
+        "text": "Which detail is mentioned in the conversation?",
         "options": [
-          "laughter",
-          "silence",
-          "sadness",
-          "anger"
+          "joy and laughter",
+          "joy and silence",
+          "joy and sadness",
+          "joy and anger"
         ],
-        "answer": 0,
-        "sourceWordIndex": 4
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “January to ____”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "December",
-          "September",
-          "June",
-          "March"
+          "A speaker uses the words “January to December” in this recording.",
+          "A speaker uses the words “January to September” in this recording.",
+          "A speaker uses the words “January to June” in this recording.",
+          "A speaker uses the words “January to March” in this recording."
         ],
-        "answer": 0,
-        "sourceWordIndex": 8
+        "answer": 0
       }
     ],
     "source": {
@@ -955,40 +922,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/0611/act1-1-.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “and I'm very ____. We do a”.",
+        "format": "true_false",
+        "text": "A speaker says “and I'm very popular We do a” in the recording.",
         "options": [
-          "popular",
-          "beautiful",
-          "happy",
-          "responsible"
+          "True",
+          "False"
         ],
-        "answer": 2,
-        "sourceWordIndex": 8
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “envelopes, and peach ____. She also buys”.",
+        "format": "short_answer",
+        "text": "Which phrase matches what you hear?",
         "options": [
-          "flowers",
-          "services",
-          "sports",
-          "families"
+          "and peach flowers She also",
+          "and peach services She also",
+          "and peach sports She also",
+          "and peach families She also"
         ],
-        "answer": 0,
-        "sourceWordIndex": 40
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “should make some ____ at Tet, and”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "films",
-          "trees",
-          "festivals",
-          "wishes"
+          "A speaker uses the words “should make some films at Tet and” in this recording.",
+          "A speaker uses the words “should make some trees at Tet and” in this recording.",
+          "A speaker uses the words “should make some festivals at Tet and” in this recording.",
+          "A speaker uses the words “should make some wishes at Tet and” in this recording."
         ],
-        "answer": 3,
-        "sourceWordIndex": 67
+        "answer": 3
       }
     ],
     "source": {
@@ -1010,40 +975,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/1111/u7-getting-ex1.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “show is very ____. It is. What”.",
+        "format": "true_false",
+        "text": "A speaker says “show is very interesting It is What” in the recording.",
         "options": [
-          "interesting",
-          "popular",
-          "funny",
-          "expensive"
+          "True",
+          "False"
         ],
-        "answer": 0,
-        "sourceWordIndex": 14
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “wonderful. I often ____ them with my”.",
+        "format": "short_answer",
+        "text": "Which expression does the speaker use?",
         "options": [
-          "work",
-          "watch",
-          "write",
-          "build"
+          "I often work them with",
+          "I often watch them with",
+          "I often write them with",
+          "I often build them with"
         ],
-        "answer": 1,
-        "sourceWordIndex": 41
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “Yes. I watch ____ in a Minute”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "Space",
-          "Pollution",
-          "English",
-          "Stress"
+          "A speaker uses the words “Yes I watch Space in a Minute” in this recording.",
+          "A speaker uses the words “Yes I watch Pollution in a Minute” in this recording.",
+          "A speaker uses the words “Yes I watch English in a Minute” in this recording.",
+          "A speaker uses the words “Yes I watch Stress in a Minute” in this recording."
         ],
-        "answer": 2,
-        "sourceWordIndex": 77
+        "answer": 2
       }
     ],
     "source": {
@@ -1065,40 +1028,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/1104/u7-communication-ex1.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “your favourite TV ____? The animal programme”.",
+        "format": "true_false",
+        "text": "A speaker says “your favourite TV habit The animal programme” in the recording.",
         "options": [
-          "habit",
-          "technology",
-          "programme",
-          "graveyard"
+          "True",
+          "False"
         ],
-        "answer": 2,
-        "sourceWordIndex": 4
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “you like it? ____ I can see”.",
+        "format": "short_answer",
+        "text": "Which detail is mentioned in the conversation?",
         "options": [
-          "Holiday",
-          "Laptop",
-          "Because",
-          "Food"
+          "like it Holiday I can",
+          "like it Laptop I can",
+          "like it Because I can",
+          "like it Food I can"
         ],
-        "answer": 2,
-        "sourceWordIndex": 13
+        "answer": 2
       },
       {
-        "text": "Chọn từ nghe được: “can see the ____ in their real”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "festivals",
-          "materials",
-          "animals",
-          "activities"
+          "A speaker uses the words “can see the festivals in their real” in this recording.",
+          "A speaker uses the words “can see the materials in their real” in this recording.",
+          "A speaker uses the words “can see the animals in their real” in this recording.",
+          "A speaker uses the words “can see the activities in their real” in this recording."
         ],
-        "answer": 2,
-        "sourceWordIndex": 18
+        "answer": 2
       }
     ],
     "source": {
@@ -1120,40 +1081,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/1104/u7-skills-2-ex1.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “It starts at ____ o'clock. My Childhood”.",
+        "format": "true_false",
+        "text": "A speaker says “It starts at eight o'clock My Childhood” in the recording.",
         "options": [
-          "thousand",
-          "four",
-          "two",
-          "eight"
+          "True",
+          "False"
         ],
-        "answer": 3,
-        "sourceWordIndex": 20
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “3, you will ____ Harry Potter at”.",
+        "format": "short_answer",
+        "text": "Which phrase matches what you hear?",
         "options": [
-          "change",
-          "watch",
-          "work",
-          "talk"
+          "you will change Harry Potter",
+          "you will watch Harry Potter",
+          "you will work Harry Potter",
+          "you will talk Harry Potter"
         ],
-        "answer": 1,
-        "sourceWordIndex": 44
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “1. It's at ____ o'clock. We hope”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "nine",
-          "twelve",
-          "five",
-          "one"
+          "A speaker uses the words “1 It's at nine o'clock We hope” in this recording.",
+          "A speaker uses the words “1 It's at twelve o'clock We hope” in this recording.",
+          "A speaker uses the words “1 It's at five o'clock We hope” in this recording.",
+          "A speaker uses the words “1 It's at one o'clock We hope” in this recording."
         ],
-        "answer": 0,
-        "sourceWordIndex": 76
+        "answer": 0
       }
     ],
     "source": {
@@ -1175,40 +1134,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0427/tieng-anh-6-tap-2-global-success-unit-8-sports-and-games-getting-started-1-listen-and-read-sach-mem.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “karate, and I ____ table tennis. Yesterday”.",
+        "format": "true_false",
+        "text": "A speaker says “karate and I improve table tennis Yesterday” in the recording.",
         "options": [
-          "improve",
-          "play",
-          "live",
-          "mean"
+          "True",
+          "False"
         ],
-        "answer": 1,
-        "sourceWordIndex": 22
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “to the karate ____ with me. No”.",
+        "format": "short_answer",
+        "text": "Which expression does the speaker use?",
         "options": [
-          "club",
-          "football",
-          "noise",
-          "afternoon"
+          "the karate club with me",
+          "the karate football with me",
+          "the karate noise with me",
+          "the karate afternoon with me"
         ],
-        "answer": 0,
-        "sourceWordIndex": 52
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “a.m. on ____. Where's the club”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "Tuesday",
-          "Sunday",
-          "Monday",
-          "Saturday"
+          "A speaker uses the words “a m on Tuesday Where's the club” in this recording.",
+          "A speaker uses the words “a m on Sunday Where's the club” in this recording.",
+          "A speaker uses the words “a m on Monday Where's the club” in this recording.",
+          "A speaker uses the words “a m on Saturday Where's the club” in this recording."
         ],
-        "answer": 1,
-        "sourceWordIndex": 79
+        "answer": 1
       }
     ],
     "source": {
@@ -1230,40 +1187,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/1104/u8-communication-ex1.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “I played table ____ with Duy, and”.",
+        "format": "true_false",
+        "text": "A speaker says “I played table tennis with Duy and” in the recording.",
         "options": [
-          "wind",
-          "tennis",
-          "schoolyard",
-          "volleyball"
+          "True",
+          "False"
         ],
-        "answer": 1,
-        "sourceWordIndex": 5
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “for the first ____. Congratulations! Thank you”.",
+        "format": "short_answer",
+        "text": "Which detail is mentioned in the conversation?",
         "options": [
-          "comedy",
-          "time",
-          "suitcase",
-          "money"
+          "the first comedy Congratulations Thank",
+          "the first time Congratulations Thank",
+          "the first suitcase Congratulations Thank",
+          "the first money Congratulations Thank"
         ],
-        "answer": 1,
-        "sourceWordIndex": 14
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “Mai. So you're our ____ champion now”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "sports",
-          "class",
-          "languages",
-          "places"
+          "A speaker uses the words “Mai So you're our sports champion now” in this recording.",
+          "A speaker uses the words “Mai So you're our class champion now” in this recording.",
+          "A speaker uses the words “Mai So you're our languages champion now” in this recording.",
+          "A speaker uses the words “Mai So you're our places champion now” in this recording."
         ],
-        "answer": 1,
-        "sourceWordIndex": 22
+        "answer": 1
       }
     ],
     "source": {
@@ -1285,40 +1240,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/1104/u8-skills2-ex1.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “I often go ____ with my dad”.",
+        "format": "true_false",
+        "text": "A speaker says “I often go writing with my dad” in the recording.",
         "options": [
-          "writing",
-          "cycling",
-          "doing",
-          "talking"
+          "True",
+          "False"
         ],
-        "answer": 1,
-        "sourceWordIndex": 16
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “name's Alice. I'm ____ years old. I”.",
+        "format": "short_answer",
+        "text": "Which phrase matches what you hear?",
         "options": [
-          "twelve",
-          "five",
-          "nine",
-          "thousand"
+          "Alice I'm twelve years old",
+          "Alice I'm five years old",
+          "Alice I'm nine years old",
+          "Alice I'm thousand years old"
         ],
-        "answer": 0,
-        "sourceWordIndex": 45
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “Saturday. I sometimes ____ computer games, too”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "write",
-          "play",
-          "try",
-          "stay"
+          "A speaker uses the words “Saturday I sometimes write computer games too” in this recording.",
+          "A speaker uses the words “Saturday I sometimes play computer games too” in this recording.",
+          "A speaker uses the words “Saturday I sometimes try computer games too” in this recording.",
+          "A speaker uses the words “Saturday I sometimes stay computer games too” in this recording."
         ],
-        "answer": 1,
-        "sourceWordIndex": 77
+        "answer": 1
       }
     ],
     "source": {
@@ -1340,40 +1293,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/1104/gs-u9-ex1.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “is Sydney, a ____ in Australia. What’s”.",
+        "format": "true_false",
+        "text": "A speaker says “is Sydney a city in Australia What’s” in the recording.",
         "options": [
-          "world",
-          "city",
-          "garden",
-          "island"
+          "True",
+          "False"
         ],
-        "answer": 1,
-        "sourceWordIndex": 17
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “raining? What bad ____! Yes, it rains”.",
+        "format": "short_answer",
+        "text": "Which expression does the speaker use?",
         "options": [
-          "day",
-          "weather",
-          "computer",
-          "money"
+          "What bad day Yes it",
+          "What bad weather Yes it",
+          "What bad computer Yes it",
+          "What bad money Yes it"
         ],
-        "answer": 1,
-        "sourceWordIndex": 50
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “to visit many ____. I am. What”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "hobbies",
-          "pictures",
-          "robots",
-          "places"
+          "A speaker uses the words “to visit many hobbies I am What” in this recording.",
+          "A speaker uses the words “to visit many pictures I am What” in this recording.",
+          "A speaker uses the words “to visit many robots I am What” in this recording.",
+          "A speaker uses the words “to visit many places I am What” in this recording."
         ],
-        "answer": 3,
-        "sourceWordIndex": 90
+        "answer": 3
       }
     ],
     "source": {
@@ -1395,40 +1346,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/1105/gs-u9-communication-ex1.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “What a nice ____! What a clear”.",
+        "format": "true_false",
+        "text": "A speaker says “What a nice world What a clear” in the recording.",
         "options": [
-          "world",
-          "house",
-          "shop",
-          "city"
+          "True",
+          "False"
         ],
-        "answer": 3,
-        "sourceWordIndex": 3
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “city! What a ____ sky! What tall”.",
+        "format": "short_answer",
+        "text": "Which detail is mentioned in the conversation?",
         "options": [
-          "earth",
-          "swimming",
-          "english",
-          "clear"
+          "What a earth sky What",
+          "What a swimming sky What",
+          "What a english sky What",
+          "What a clear sky What"
         ],
-        "answer": 3,
-        "sourceWordIndex": 6
+        "answer": 3
       },
       {
-        "text": "Chọn từ nghe được: “What a clear sky! What tall ____”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "materials",
-          "buildings",
-          "sisters",
-          "robots"
+          "A speaker uses the words “clear sky What tall materials” in this recording.",
+          "A speaker uses the words “clear sky What tall buildings” in this recording.",
+          "A speaker uses the words “clear sky What tall sisters” in this recording.",
+          "A speaker uses the words “clear sky What tall robots” in this recording."
         ],
-        "answer": 1,
-        "sourceWordIndex": 10
+        "answer": 1
       }
     ],
     "source": {
@@ -1450,40 +1399,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/1105/gs-u9-skills2-ex2-1.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “the largest weekend ____ in the world”.",
+        "format": "true_false",
+        "text": "A speaker says “the largest weekend market in the world” in the recording.",
         "options": [
-          "countryside",
-          "market",
-          "library",
-          "garden"
+          "True",
+          "False"
         ],
-        "answer": 1,
-        "sourceWordIndex": 15
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “station. When you ____ this market, you”.",
+        "format": "short_answer",
+        "text": "Which phrase matches what you hear?",
         "options": [
-          "plant",
-          "like",
-          "visit",
-          "know"
+          "When you plant this market",
+          "When you like this market",
+          "When you visit this market",
+          "When you know this market"
         ],
-        "answer": 2,
-        "sourceWordIndex": 41
+        "answer": 2
       },
       {
-        "text": "Chọn từ nghe được: “easy to find ____ stalls all around”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "suitcase",
-          "food",
-          "rain",
-          "name"
+          "A speaker uses the words “easy to find suitcase stalls all around” in this recording.",
+          "A speaker uses the words “easy to find food stalls all around” in this recording.",
+          "A speaker uses the words “easy to find rain stalls all around” in this recording.",
+          "A speaker uses the words “easy to find name stalls all around” in this recording."
         ],
-        "answer": 1,
-        "sourceWordIndex": 76
+        "answer": 1
       }
     ],
     "source": {
@@ -1505,40 +1452,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/1105/gs-u10-getting-started-ex1.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “my house. Your ____! That's a UFO”.",
+        "format": "true_false",
+        "text": "A speaker says “my house Your park That's a UFO” in the recording.",
         "options": [
-          "park",
-          "countryside",
-          "house",
-          "sea"
+          "True",
+          "False"
         ],
-        "answer": 2,
-        "sourceWordIndex": 13
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “house. It'll have ____ rooms. Twenty rooms”.",
+        "format": "short_answer",
+        "text": "Which expression does the speaker use?",
         "options": [
-          "hundred",
-          "five",
-          "twenty",
-          "thirty"
+          "It'll have hundred rooms Twenty",
+          "It'll have five rooms Twenty",
+          "It'll have twenty rooms Twenty",
+          "It'll have thirty rooms Twenty"
         ],
-        "answer": 2,
-        "sourceWordIndex": 50
+        "answer": 2
       },
       {
-        "text": "Chọn từ nghe được: “might have some ____ TVs and ten”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "noisy",
-          "healthy",
-          "smart",
-          "funny"
+          "A speaker uses the words “might have some noisy TVs and ten” in this recording.",
+          "A speaker uses the words “might have some healthy TVs and ten” in this recording.",
+          "A speaker uses the words “might have some smart TVs and ten” in this recording.",
+          "A speaker uses the words “might have some funny TVs and ten” in this recording."
         ],
-        "answer": 2,
-        "sourceWordIndex": 82
+        "answer": 2
       }
     ],
     "source": {
@@ -1560,40 +1505,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/1105/gs-u10-communication-ex1.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “Hello! Oh, hi, ____. Wow! Is that”.",
+        "format": "true_false",
+        "text": "A speaker says “Hello Oh hi David Wow Is that” in the recording.",
         "options": [
-          "David",
-          "Holiday",
-          "Laptop",
-          "Exercise"
+          "True",
+          "False"
         ],
-        "answer": 0,
-        "sourceWordIndex": 4
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “it's my new ____. My parents gave”.",
+        "format": "short_answer",
+        "text": "Which detail is mentioned in the conversation?",
         "options": [
-          "life",
-          "holiday",
-          "computer",
-          "entrance"
+          "my new life My parents",
+          "my new holiday My parents",
+          "my new computer My parents",
+          "my new entrance My parents"
         ],
-        "answer": 2,
-        "sourceWordIndex": 17
+        "answer": 2
       },
       {
-        "text": "Chọn từ nghe được: “computer. My parents ____ it to me”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "left",
-          "gave",
-          "collected",
-          "liked"
+          "A speaker uses the words “computer My parents left it to me” in this recording.",
+          "A speaker uses the words “computer My parents gave it to me” in this recording.",
+          "A speaker uses the words “computer My parents collected it to me” in this recording.",
+          "A speaker uses the words “computer My parents liked it to me” in this recording."
         ],
-        "answer": 1,
-        "sourceWordIndex": 20
+        "answer": 1
       }
     ],
     "source": {
@@ -1615,40 +1558,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/1105/gs-u10-skills1-ex1.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “about your dream ____, Linda? Well, it's”.",
+        "format": "true_false",
+        "text": "A speaker says “about your dream library Linda Well it's” in the recording.",
         "options": [
-          "house",
-          "library",
-          "garden",
-          "shop"
+          "True",
+          "False"
         ],
-        "answer": 0,
-        "sourceWordIndex": 7
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “like? It's a ____ flat in the”.",
+        "format": "short_answer",
+        "text": "Which phrase matches what you hear?",
         "options": [
-          "shy",
-          "patient",
-          "creative",
-          "beautiful"
+          "It's a shy flat in",
+          "It's a patient flat in",
+          "It's a creative flat in",
+          "It's a beautiful flat in"
         ],
-        "answer": 3,
-        "sourceWordIndex": 43
+        "answer": 3
       },
       {
-        "text": "Chọn từ nghe được: “I can watch ____ from other planets”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "houses",
-          "books",
-          "flowers",
-          "films"
+          "A speaker uses the words “I can watch houses from other planets” in this recording.",
+          "A speaker uses the words “I can watch books from other planets” in this recording.",
+          "A speaker uses the words “I can watch flowers from other planets” in this recording.",
+          "A speaker uses the words “I can watch films from other planets” in this recording."
         ],
-        "answer": 3,
-        "sourceWordIndex": 74
+        "answer": 3
       }
     ],
     "source": {
@@ -1670,40 +1611,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/1105/gs-u11-getting-started-ex1.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “What are you ____ at the supermarket”.",
+        "format": "true_false",
+        "text": "A speaker says “What are you doing at the supermarket” in the recording.",
         "options": [
-          "knitting",
-          "drawing",
-          "doing",
-          "sharing"
+          "True",
+          "False"
         ],
-        "answer": 2,
-        "sourceWordIndex": 23
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “bag, we will ____ the environment. I”.",
+        "format": "short_answer",
+        "text": "Which expression does the speaker use?",
         "options": [
-          "listen",
-          "visit",
-          "try",
-          "help"
+          "we will listen the environment",
+          "we will visit the environment",
+          "we will try the environment",
+          "we will help the environment"
         ],
-        "answer": 3,
-        "sourceWordIndex": 61
+        "answer": 3
       },
       {
-        "text": "Chọn từ nghe được: “If more people ____, the air will”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "draw",
-          "cycle",
-          "bring",
-          "plant"
+          "A speaker uses the words “If more people draw the air will” in this recording.",
+          "A speaker uses the words “If more people cycle the air will” in this recording.",
+          "A speaker uses the words “If more people bring the air will” in this recording.",
+          "A speaker uses the words “If more people plant the air will” in this recording."
         ],
-        "answer": 1,
-        "sourceWordIndex": 93
+        "answer": 1
       }
     ],
     "source": {
@@ -1725,40 +1664,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/1105/ta6-u11-communication-ex1.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “You are ____ the goldfish too much”.",
+        "format": "true_false",
+        "text": "A speaker says “You are living the goldfish too much” in the recording.",
         "options": [
-          "living",
-          "swimming",
-          "giving",
-          "reading"
+          "True",
+          "False"
         ],
-        "answer": 2,
-        "sourceWordIndex": 2
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “goldfish too much ____. Don't do that”.",
+        "format": "short_answer",
+        "text": "Which detail is mentioned in the conversation?",
         "options": [
-          "night",
-          "backpack",
-          "month",
-          "food"
+          "too much night Don't do",
+          "too much backpack Don't do",
+          "too much month Don't do",
+          "too much food Don't do"
         ],
-        "answer": 3,
-        "sourceWordIndex": 7
+        "answer": 3
       },
       {
-        "text": "Chọn từ nghe được: “Why? If you ____ them too much”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "give",
-          "cycle",
-          "want",
-          "need"
+          "A speaker uses the words “Why If you give them too much” in this recording.",
+          "A speaker uses the words “Why If you cycle them too much” in this recording.",
+          "A speaker uses the words “Why If you want them too much” in this recording.",
+          "A speaker uses the words “Why If you need them too much” in this recording."
         ],
-        "answer": 0,
-        "sourceWordIndex": 14
+        "answer": 0
       }
     ],
     "source": {
@@ -1780,40 +1717,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/1105/gs-u11-skills-2-ex1.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “talk to my ____ about putting a”.",
+        "format": "true_false",
+        "text": "A speaker says “talk to my friends about putting a” in the recording.",
         "options": [
-          "families",
-          "sports",
-          "students",
-          "friends"
+          "True",
+          "False"
         ],
-        "answer": 3,
-        "sourceWordIndex": 19
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “exchange their used ____ at these fairs”.",
+        "format": "short_answer",
+        "text": "Which phrase matches what you hear?",
         "options": [
-          "problems",
-          "projects",
-          "photos",
-          "books"
+          "their used problems at these",
+          "their used projects at these",
+          "their used photos at these",
+          "their used books at these"
         ],
-        "answer": 3,
-        "sourceWordIndex": 49
+        "answer": 3
       },
       {
-        "text": "Chọn từ nghe được: “be fun and ____ the enviroment. Next”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "want",
-          "help",
-          "build",
-          "travel"
+          "A speaker uses the words “be fun and want the enviroment Next” in this recording.",
+          "A speaker uses the words “be fun and help the enviroment Next” in this recording.",
+          "A speaker uses the words “be fun and build the enviroment Next” in this recording.",
+          "A speaker uses the words “be fun and travel the enviroment Next” in this recording."
         ],
-        "answer": 1,
-        "sourceWordIndex": 80
+        "answer": 1
       }
     ],
     "source": {
@@ -1835,40 +1770,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/1105/gs-u12-getting-started-ex1.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “us about the ____ in the show”.",
+        "format": "true_false",
+        "text": "A speaker says “us about the friends in the show” in the recording.",
         "options": [
-          "robots",
-          "friends",
-          "feelings",
-          "trees"
+          "True",
+          "False"
         ],
-        "answer": 0,
-        "sourceWordIndex": 13
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “That's the biggest ____ in the show”.",
+        "format": "short_answer",
+        "text": "Which expression does the speaker use?",
         "options": [
-          "name",
-          "information",
-          "maths",
-          "robot"
+          "the biggest name in the",
+          "the biggest information in the",
+          "the biggest maths in the",
+          "the biggest robot in the"
         ],
-        "answer": 3,
-        "sourceWordIndex": 50
+        "answer": 3
       },
       {
-        "text": "Chọn từ nghe được: “robot. It can ____ sick people and”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "plant",
-          "have",
-          "collect",
-          "help"
+          "A speaker uses the words “robot It can plant sick people and” in this recording.",
+          "A speaker uses the words “robot It can have sick people and” in this recording.",
+          "A speaker uses the words “robot It can collect sick people and” in this recording.",
+          "A speaker uses the words “robot It can help sick people and” in this recording."
         ],
-        "answer": 3,
-        "sourceWordIndex": 96
+        "answer": 3
       }
     ],
     "source": {
@@ -1890,40 +1823,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2021/1105/gs-u12-communication-ex1.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “think robots can ____ us a lot”.",
+        "format": "true_false",
+        "text": "A speaker says “think robots can help us a lot” in the recording.",
         "options": [
-          "help",
-          "work",
-          "enjoy",
-          "know"
+          "True",
+          "False"
         ],
-        "answer": 0,
-        "sourceWordIndex": 4
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “in our daily ____. I agree with”.",
+        "format": "short_answer",
+        "text": "Which detail is mentioned in the conversation?",
         "options": [
-          "wind",
-          "rubbish",
-          "life",
-          "water"
+          "our daily wind I agree",
+          "our daily rubbish I agree",
+          "our daily life I agree",
+          "our daily water I agree"
         ],
-        "answer": 2,
-        "sourceWordIndex": 11
+        "answer": 2
       },
       {
-        "text": "Chọn từ nghe được: “like humans. I don't ____ with him”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "space",
-          "art",
-          "agree",
-          "friend"
+          "A speaker uses the words “like humans I don't space with him” in this recording.",
+          "A speaker uses the words “like humans I don't art with him” in this recording.",
+          "A speaker uses the words “like humans I don't agree with him” in this recording.",
+          "A speaker uses the words “like humans I don't friend with him” in this recording."
         ],
-        "answer": 2,
-        "sourceWordIndex": 26
+        "answer": 2
       }
     ],
     "source": {
@@ -1945,40 +1876,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0419/unit-12-skills-2-ex-1.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “lot today. Home ____ can do housework”.",
+        "format": "true_false",
+        "text": "A speaker says “lot today Home places can do housework” in the recording.",
         "options": [
-          "places",
-          "robots",
-          "devices",
-          "programmes"
+          "True",
+          "False"
         ],
-        "answer": 1,
-        "sourceWordIndex": 17
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “buildings. Can they ____? Yes. Teacher robots”.",
+        "format": "short_answer",
+        "text": "Which phrase matches what you hear?",
         "options": [
-          "collect",
-          "teach",
-          "sell",
-          "cycle"
+          "Can they collect Yes Teacher",
+          "Can they teach Yes Teacher",
+          "Can they sell Yes Teacher",
+          "Can they cycle Yes Teacher"
         ],
-        "answer": 1,
-        "sourceWordIndex": 44
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “everything. They can't ____ our feelings or”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "spend",
-          "help",
-          "understand",
-          "plant"
+          "A speaker uses the words “everything They can't spend our feelings or” in this recording.",
+          "A speaker uses the words “everything They can't help our feelings or” in this recording.",
+          "A speaker uses the words “everything They can't understand our feelings or” in this recording.",
+          "A speaker uses the words “everything They can't plant our feelings or” in this recording."
         ],
-        "answer": 2,
-        "sourceWordIndex": 83
+        "answer": 2
       }
     ],
     "source": {
@@ -2000,35 +1929,36 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0704/002.mp3"
     ],
-    "taskPrompt": "Listen to the recording and choose the correct answer (A, B, C or D) for each question.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "What is Trang's hobby?",
+        "format": "true_false",
+        "text": "Trang enjoys building dollhouses as a hobby.",
         "options": [
-          "Collecting stamps",
-          "Building dollhouses",
-          "Playing the guitar",
-          "Riding horses"
+          "True",
+          "False"
         ],
-        "answer": 1
+        "answer": 0
       },
       {
-        "text": "How does Trang describe Ann's hobby of horse riding?",
+        "format": "short_answer",
+        "text": "How does Trang describe horse riding?",
         "options": [
-          "It is too expensive.",
-          "It is very easy.",
-          "It is rather unusual.",
-          "It is quite boring."
+          "Rather unusual",
+          "Very cheap",
+          "Really boring",
+          "Too dangerous"
         ],
-        "answer": 2
+        "answer": 0
       },
       {
+        "format": "long_answer",
         "text": "What does Trang want to do this Sunday?",
         "options": [
-          "Go to Ann's horse riding club.",
-          "Buy a new dollhouse.",
-          "Visit a museum.",
-          "Learn to paint."
+          "She wants to visit Ann's horse-riding club this Sunday.",
+          "She plans to join a new painting class this Sunday.",
+          "She is going to build a dollhouse with Ann.",
+          "She wants to go shopping with her friends."
         ],
         "answer": 0
       }
@@ -2052,37 +1982,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0704/006.mp3"
     ],
-    "taskPrompt": "Listen to the recording and choose the correct answer (A, B, C or D) for each question.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "What kind of books does Ann especially enjoy reading?",
+        "format": "true_false",
+        "text": "Ann particularly enjoys reading books about science.",
         "options": [
-          "Books about history",
-          "Books about science",
-          "Books about art",
-          "Books about sports"
+          "True",
+          "False"
+        ],
+        "answer": 0
+      },
+      {
+        "format": "short_answer",
+        "text": "Which other hobby does Mi ask about?",
+        "options": [
+          "Cooking",
+          "Painting",
+          "Swimming",
+          "Cycling"
         ],
         "answer": 1
       },
       {
-        "text": "What activity does Mi ask Ann about after talking about reading?",
+        "format": "long_answer",
+        "text": "Why doesn't Ann enjoy painting as a hobby?",
         "options": [
-          "Singing",
-          "Playing chess",
-          "Painting",
-          "Cooking"
+          "She says she is not interested in art.",
+          "She thinks painting is too expensive for her family.",
+          "She does not have any time after school.",
+          "She says she prefers playing basketball every day."
         ],
-        "answer": 2
-      },
-      {
-        "text": "Why doesn't Ann like painting?",
-        "options": [
-          "She has no free time.",
-          "She finds it too difficult.",
-          "She doesn't have the right tools.",
-          "She isn't interested in art."
-        ],
-        "answer": 3
+        "answer": 0
       }
     ],
     "source": {
@@ -2104,37 +2035,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/007.mp3"
     ],
-    "taskPrompt": "Listen to the recording and choose the correct answer (A, B, C or D) for each question.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "How does Lan describe Trang's hobby at the beginning of the interview?",
+        "format": "true_false",
+        "text": "Lan thinks Trang's dollhouse hobby is very common.",
         "options": [
-          "Quite unusual",
-          "Very expensive",
-          "Too difficult",
-          "Rather dangerous"
-        ],
-        "answer": 0
-      },
-      {
-        "text": "Which relative of Trang's also enjoys building dollhouses?",
-        "options": [
-          "Her aunt",
-          "Her sister",
-          "Her cousin Mi",
-          "Her mother"
-        ],
-        "answer": 2
-      },
-      {
-        "text": "What does Trang do after making the dolls from cloth?",
-        "options": [
-          "Paints the furniture",
-          "Decorates the house",
-          "Buys more cardboard",
-          "Starts a new dollhouse"
+          "True",
+          "False"
         ],
         "answer": 1
+      },
+      {
+        "format": "short_answer",
+        "text": "Who else likes building dollhouses?",
+        "options": [
+          "Her mother",
+          "Her cousin Mi",
+          "Her neighbour",
+          "Her sister"
+        ],
+        "answer": 1
+      },
+      {
+        "format": "long_answer",
+        "text": "What does Trang do after making the dolls from cloth?",
+        "options": [
+          "She buys more cardboard before starting another house.",
+          "She takes the dolls to her friend's house.",
+          "She decorates the dollhouse after making the cloth dolls.",
+          "She paints all the furniture before sewing clothes."
+        ],
+        "answer": 2
       }
     ],
     "source": {
@@ -2156,37 +2088,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/008.mp3"
     ],
-    "taskPrompt": "Listen to the recording and choose the correct answer (A, B, C or D) for each question.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Where did Mark go boating with his dad?",
+        "format": "true_false",
+        "text": "Mark went boating with his dad at Yen So Park.",
         "options": [
-          "West Lake",
-          "Hoan Kiem Lake",
-          "Yen So Park",
-          "The Red River"
+          "True",
+          "False"
         ],
-        "answer": 2
+        "answer": 0
       },
       {
-        "text": "Where does Mi's family often go cycling?",
+        "format": "short_answer",
+        "text": "Where does Mi's family cycle?",
         "options": [
-          "At a sports centre",
           "In the countryside",
-          "Around their school",
-          "At the beach"
+          "Around the city centre",
+          "Near the market",
+          "At the airport"
         ],
-        "answer": 1
+        "answer": 0
       },
       {
-        "text": "What does Mi tell Mark to bring when he joins her family?",
+        "format": "long_answer",
+        "text": "What should Mark bring when he joins Mi's family?",
         "options": [
-          "A helmet and a camera",
-          "A raincoat and boots",
-          "A ball and trainers",
-          "A hat and suncream"
+          "He should bring a hat and some suncream.",
+          "He needs to take an umbrella and a camera.",
+          "He should wear a coat and bring a scarf.",
+          "He needs to take a book and some paints."
         ],
-        "answer": 3
+        "answer": 0
       }
     ],
     "source": {
@@ -2208,37 +2141,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/011.mp3"
     ],
-    "taskPrompt": "Listen to the recording and choose the correct answer (A, B, C or D) for each question.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "What health problem does the girl mention?",
+        "format": "true_false",
+        "text": "The girl in the conversation says her eyes feel tired.",
         "options": [
-          "She has a headache.",
-          "Her eyes feel tired.",
-          "She has a stomachache.",
-          "Her hands are dry."
-        ],
-        "answer": 1
-      },
-      {
-        "text": "What does the boy suggest the girl use?",
-        "options": [
-          "Eye drops",
-          "Hand cream",
-          "Vitamin tablets",
-          "A face mask"
+          "True",
+          "False"
         ],
         "answer": 0
       },
       {
-        "text": "What does the boy advise the girl NOT to do?",
+        "format": "short_answer",
+        "text": "What does the boy suggest using?",
         "options": [
-          "Stay up late",
-          "Watch television after dinner",
-          "Read in dim light",
-          "Exercise outdoors"
+          "New glasses",
+          "Eye drops",
+          "A sun hat",
+          "An eye mask"
         ],
-        "answer": 2
+        "answer": 1
+      },
+      {
+        "format": "long_answer",
+        "text": "What does the boy advise the girl not to do?",
+        "options": [
+          "He tells her not to read in dim light.",
+          "He advises her not to go outside after school.",
+          "He asks her not to drink cold water.",
+          "He tells her not to use eye drops."
+        ],
+        "answer": 0
       }
     ],
     "source": {
@@ -2260,37 +2194,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/012.mp3"
     ],
-    "taskPrompt": "Listen to the recording and choose the correct answer (A, B, C or D) for each question.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Which vegetables does the speaker give as examples of healthy choices?",
+        "format": "true_false",
+        "text": "The speaker recommends vegetables such as carrots and tomatoes.",
         "options": [
-          "Potatoes and onions",
-          "Cabbages and beans",
-          "Carrots and tomatoes",
-          "Cucumbers and mushrooms"
-        ],
-        "answer": 2
-      },
-      {
-        "text": "What does the speaker recommend doing every day?",
-        "options": [
-          "Being active and exercising",
-          "Drinking soft drinks",
-          "Eating lots of cheese",
-          "Staying indoors all day"
+          "True",
+          "False"
         ],
         "answer": 0
       },
       {
-        "text": "How should you keep your room, according to the speaker?",
+        "format": "short_answer",
+        "text": "What daily activity is recommended?",
         "options": [
-          "Dark and quiet",
-          "Warm and closed",
-          "Full of furniture",
-          "Tidy and clean"
+          "Watching television",
+          "Eating fast food",
+          "Exercise and movement",
+          "Sleeping all afternoon"
         ],
-        "answer": 3
+        "answer": 2
+      },
+      {
+        "format": "long_answer",
+        "text": "How should people keep their rooms according to the speaker?",
+        "options": [
+          "They should keep their rooms tidy and clean.",
+          "They should decorate their rooms with many new paintings.",
+          "They should always keep their windows closed in summer.",
+          "They should buy expensive furniture for their bedrooms."
+        ],
+        "answer": 0
       }
     ],
     "source": {
@@ -2312,37 +2247,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/014.mp3"
     ],
-    "taskPrompt": "Listen to the recording and choose the correct answer (A, B, C or D) for each question.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "What did Tom buy for Minh?",
+        "format": "true_false",
+        "text": "Tom bought Minh a card game.",
         "options": [
-          "A book",
-          "A board game",
-          "A football",
-          "A schoolbag"
+          "True",
+          "False"
         ],
         "answer": 1
       },
       {
-        "text": "What does Minh's club plant in the school garden?",
+        "format": "short_answer",
+        "text": "What does Minh's club plant?",
         "options": [
+          "Vegetables",
           "Fruit trees",
           "Flowers",
-          "Vegetables",
           "Rice"
         ],
-        "answer": 2
+        "answer": 0
       },
       {
-        "text": "How many children did Tom's school teach English to last summer?",
+        "format": "long_answer",
+        "text": "Who did Tom's school teach English to last summer?",
         "options": [
-          "20",
-          "25",
-          "30",
-          "35"
+          "They taught English to thirty children last summer.",
+          "They gave free English lessons to fifty adults.",
+          "They helped twenty teachers to learn English online.",
+          "They taught French to thirty students last summer."
         ],
-        "answer": 2
+        "answer": 0
       }
     ],
     "source": {
@@ -2364,37 +2300,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/017.mp3"
     ],
-    "taskPrompt": "Listen to the recording and choose the correct answer (A, B, C or D) for each question.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "When did Mark and his friends help their community?",
+        "format": "true_false",
+        "text": "Mark and his friends helped their community last summer.",
         "options": [
-          "Last winter",
-          "Last summer",
-          "Last spring",
-          "Last weekend"
+          "True",
+          "False"
+        ],
+        "answer": 0
+      },
+      {
+        "format": "short_answer",
+        "text": "What did they pick up?",
+        "options": [
+          "Leaves",
+          "Rubbish",
+          "Books",
+          "Flowers"
         ],
         "answer": 1
       },
       {
-        "text": "What did Mark and his friends pick up along nearby roads?",
+        "format": "long_answer",
+        "text": "Who received the donated books and warm clothes?",
         "options": [
-          "Old clothes",
-          "Fallen leaves",
-          "Plastic toys",
-          "Rubbish"
+          "They went to friends living in mountainous areas.",
+          "They were given to the teachers at Mark's school.",
+          "They were collected by families living near the beach.",
+          "They were sent to tourists visiting the city."
         ],
-        "answer": 3
-      },
-      {
-        "text": "Who received the books and warm clothes collected by Lan's group?",
-        "options": [
-          "Children at a local hospital",
-          "Students in the city centre",
-          "Friends in mountainous areas",
-          "The teachers at their school"
-        ],
-        "answer": 2
+        "answer": 0
       }
     ],
     "source": {
@@ -2416,37 +2353,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0705/018.mp3"
     ],
-    "taskPrompt": "Listen to the recording and choose the correct answer (A, B, C or D) for each question.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Which subjects did Linda and her friends teach the children?",
+        "format": "true_false",
+        "text": "Linda and her friends taught children English and maths.",
         "options": [
-          "English and maths",
-          "History and science",
-          "English and art",
-          "Maths and literature"
+          "True",
+          "False"
         ],
         "answer": 0
       },
       {
-        "text": "How did Linda and her friends feel about helping others?",
+        "format": "short_answer",
+        "text": "How did helping others make them feel?",
         "options": [
+          "Angry",
           "Bored",
-          "Nervous",
           "Useful",
-          "Disappointed"
+          "Tired"
         ],
         "answer": 2
       },
       {
-        "text": "What did Tom and his friends enjoy doing after watering the trees?",
+        "format": "long_answer",
+        "text": "What did Tom and his friends enjoy after watering trees?",
         "options": [
-          "Selling vegetables",
-          "Watching the trees grow",
-          "Drawing pictures of the park",
-          "Playing football"
+          "They enjoyed watching the trees grow after watering them.",
+          "They went swimming in the lake near their school.",
+          "They bought more flowers to decorate their classroom.",
+          "They listened to music and played football together."
         ],
-        "answer": 1
+        "answer": 0
       }
     ],
     "source": {
@@ -2468,40 +2406,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0706/022.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “and I often ____ the piano in”.",
+        "format": "true_false",
+        "text": "A speaker says “and I often try the piano in” in the recording.",
         "options": [
-          "play",
-          "try",
-          "need",
-          "talk"
+          "True",
+          "False"
         ],
-        "answer": 0,
-        "sourceWordIndex": 18
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “as fun as ____. Right. They seem”.",
+        "format": "short_answer",
+        "text": "Which expression does the speaker use?",
         "options": [
-          "painting",
-          "talking",
-          "trying",
-          "cooking"
+          "fun as painting Right They",
+          "fun as talking Right They",
+          "fun as trying Right They",
+          "fun as cooking Right They"
         ],
-        "answer": 0,
-        "sourceWordIndex": 61
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “good, but I'd ____ to go to”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "help",
-          "prefer",
-          "want",
-          "sing"
+          "A speaker uses the words “good but I'd help to go to” in this recording.",
+          "A speaker uses the words “good but I'd prefer to go to” in this recording.",
+          "A speaker uses the words “good but I'd want to go to” in this recording.",
+          "A speaker uses the words “good but I'd sing to go to” in this recording."
         ],
-        "answer": 1,
-        "sourceWordIndex": 106
+        "answer": 1
       }
     ],
     "source": {
@@ -2523,40 +2459,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0706/027.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “pop or folk ____? I prefer folk”.",
+        "format": "true_false",
+        "text": "A speaker says “pop or folk music I prefer folk” in the recording.",
         "options": [
-          "year",
-          "technology",
-          "music",
-          "food"
+          "True",
+          "False"
         ],
-        "answer": 2,
-        "sourceWordIndex": 7
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “has a better ____. And which do”.",
+        "format": "short_answer",
+        "text": "Which detail is mentioned in the conversation?",
         "options": [
-          "beat",
-          "rubbish",
-          "week",
-          "money"
+          "a better beat And which",
+          "a better rubbish And which",
+          "a better week And which",
+          "a better money And which"
         ],
-        "answer": 0,
-        "sourceWordIndex": 16
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “folk art? I like ____ art better”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "helpful",
-          "clean",
-          "busy",
-          "modern"
+          "A speaker uses the words “folk art I like helpful art better” in this recording.",
+          "A speaker uses the words “folk art I like clean art better” in this recording.",
+          "A speaker uses the words “folk art I like busy art better” in this recording.",
+          "A speaker uses the words “folk art I like modern art better” in this recording."
         ],
-        "answer": 3,
-        "sourceWordIndex": 30
+        "answer": 3
       }
     ],
     "source": {
@@ -2578,40 +2512,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0706/028_1.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “on the pavement ____ chalk. Today, you”.",
+        "format": "true_false",
+        "text": "A speaker says “on the pavement building chalk Today you” in the recording.",
         "options": [
-          "building",
-          "using",
-          "collecting",
-          "living"
+          "True",
+          "False"
         ],
-        "answer": 1,
-        "sourceWordIndex": 23
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “become an artist ____! One of the”.",
+        "format": "short_answer",
+        "text": "Which phrase matches what you hear?",
         "options": [
-          "lunch",
-          "year",
-          "yourself",
-          "exercise"
+          "an artist lunch One of",
+          "an artist year One of",
+          "an artist yourself One of",
+          "an artist exercise One of"
         ],
-        "answer": 2,
-        "sourceWordIndex": 59
+        "answer": 2
       },
       {
-        "text": "Chọn từ nghe được: “visitors come to ____ it. About 600”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "meet",
-          "enjoy",
-          "teach",
-          "have"
+          "A speaker uses the words “visitors come to meet it About 600” in this recording.",
+          "A speaker uses the words “visitors come to enjoy it About 600” in this recording.",
+          "A speaker uses the words “visitors come to teach it About 600” in this recording.",
+          "A speaker uses the words “visitors come to have it About 600” in this recording."
         ],
-        "answer": 1,
-        "sourceWordIndex": 103
+        "answer": 1
       }
     ],
     "source": {
@@ -2633,40 +2565,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0707/030.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “pork cooked in ____ sauce. Oh, could”.",
+        "format": "true_false",
+        "text": "A speaker says “pork cooked in fish sauce Oh could” in the recording.",
         "options": [
-          "noise",
-          "fish",
-          "sun",
-          "week"
+          "True",
+          "False"
         ],
-        "answer": 1,
-        "sourceWordIndex": 16
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “drinks: juice, lemonade, ____ tea, mineral water”.",
+        "format": "short_answer",
+        "text": "Which expression does the speaker use?",
         "options": [
-          "brown",
-          "blue",
-          "green",
-          "yellow"
+          "juice lemonade brown tea mineral",
+          "juice lemonade blue tea mineral",
+          "juice lemonade green tea mineral",
+          "juice lemonade yellow tea mineral"
         ],
-        "answer": 2,
-        "sourceWordIndex": 91
+        "answer": 2
       },
       {
-        "text": "Chọn từ nghe được: “a can of ____ melon juice? The”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "winter",
-          "space",
-          "sport",
-          "history"
+          "A speaker uses the words “a can of winter melon juice The” in this recording.",
+          "A speaker uses the words “a can of space melon juice The” in this recording.",
+          "A speaker uses the words “a can of sport melon juice The” in this recording.",
+          "A speaker uses the words “a can of history melon juice The” in this recording."
         ],
-        "answer": 0,
-        "sourceWordIndex": 147
+        "answer": 0
       }
     ],
     "source": {
@@ -2688,40 +2618,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0707/034.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “bottle of mineral ____? It's 5,000”.",
+        "format": "true_false",
+        "text": "A speaker says “bottle of mineral backpack It's 5 000” in the recording.",
         "options": [
-          "backpack",
-          "volleyball",
-          "water",
-          "entrance"
+          "True",
+          "False"
         ],
-        "answer": 2,
-        "sourceWordIndex": 7
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “It's 5,000 ____. And how much”.",
+        "format": "short_answer",
+        "text": "Which detail is mentioned in the conversation?",
         "options": [
-          "comedy",
-          "wind",
-          "year",
-          "dong"
+          "5 000 comedy And how",
+          "5 000 wind And how",
+          "5 000 year And how",
+          "5 000 dong And how"
         ],
-        "answer": 3,
-        "sourceWordIndex": 11
+        "answer": 3
       },
       {
-        "text": "Chọn từ nghe được: “kilos of apples? They're ____,000 dong”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "50",
-          "52",
-          "51",
-          "53"
+          "A speaker uses the words “kilos of apples They're 50 000 dong” in this recording.",
+          "A speaker uses the words “kilos of apples They're 52 000 dong” in this recording.",
+          "A speaker uses the words “kilos of apples They're 51 000 dong” in this recording.",
+          "A speaker uses the words “kilos of apples They're 53 000 dong” in this recording."
         ],
-        "answer": 0,
-        "sourceWordIndex": 21
+        "answer": 0
       }
     ],
     "source": {
@@ -2743,40 +2671,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0712/036.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “soup with bread. ____ we have instant”.",
+        "format": "true_false",
+        "text": "A speaker says “soup with bread Sometimes we have instant” in the recording.",
         "options": [
-          "Often",
-          "Certainly",
-          "Sometimes",
-          "Firstly"
+          "True",
+          "False"
         ],
-        "answer": 2,
-        "sourceWordIndex": 25
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “the time when ____ members gather at”.",
+        "format": "short_answer",
+        "text": "Which phrase matches what you hear?",
         "options": [
-          "technology",
-          "art",
-          "family",
-          "basketball"
+          "time when technology members gather",
+          "time when art members gather",
+          "time when family members gather",
+          "time when basketball members gather"
         ],
-        "answer": 2,
-        "sourceWordIndex": 70
+        "answer": 2
       },
       {
-        "text": "Chọn từ nghe được: “some fruit and ____ tea. I think”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "white",
-          "green",
-          "purple",
-          "red"
+          "A speaker uses the words “some fruit and white tea I think” in this recording.",
+          "A speaker uses the words “some fruit and green tea I think” in this recording.",
+          "A speaker uses the words “some fruit and purple tea I think” in this recording.",
+          "A speaker uses the words “some fruit and red tea I think” in this recording."
         ],
-        "answer": 1,
-        "sourceWordIndex": 123
+        "answer": 1
       }
     ],
     "source": {
@@ -2798,40 +2724,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0713/038.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “Minh Lower Secondary ____. Sounds great! I”.",
+        "format": "true_false",
+        "text": "A speaker says “Minh Lower Secondary Countryside Sounds great I” in the recording.",
         "options": [
-          "Countryside",
-          "School",
-          "Town",
-          "Country"
+          "True",
+          "False"
         ],
-        "answer": 1,
-        "sourceWordIndex": 13
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “visit the school ____, the computer room”.",
+        "format": "short_answer",
+        "text": "Which expression does the speaker use?",
         "options": [
-          "market",
-          "library",
-          "forest",
-          "garden"
+          "the school market the computer",
+          "the school library the computer",
+          "the school forest the computer",
+          "the school garden the computer"
         ],
-        "answer": 1,
-        "sourceWordIndex": 58
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “Club and take ____ of the school”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "photos",
-          "trees",
-          "families",
-          "materials"
+          "A speaker uses the words “Club and take photos of the school” in this recording.",
+          "A speaker uses the words “Club and take trees of the school” in this recording.",
+          "A speaker uses the words “Club and take families of the school” in this recording.",
+          "A speaker uses the words “Club and take materials of the school” in this recording."
         ],
-        "answer": 0,
-        "sourceWordIndex": 98
+        "answer": 0
       }
     ],
     "source": {
@@ -2853,40 +2777,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0713/041.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “doing anything this ____? Not really. Would”.",
+        "format": "true_false",
+        "text": "A speaker says “doing anything this Sunday Not really Would” in the recording.",
         "options": [
-          "Tuesday",
-          "Saturday",
-          "Sunday",
-          "Thursday"
+          "True",
+          "False"
         ],
-        "answer": 2,
-        "sourceWordIndex": 5
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “Minh Lower Secondary ____? Sounds great! Can”.",
+        "format": "short_answer",
+        "text": "Which detail is mentioned in the conversation?",
         "options": [
-          "Country",
-          "Office",
-          "School",
-          "House"
+          "Lower Secondary Country Sounds great",
+          "Lower Secondary Office Sounds great",
+          "Lower Secondary School Sounds great",
+          "Lower Secondary House Sounds great"
         ],
-        "answer": 2,
-        "sourceWordIndex": 20
+        "answer": 2
       },
       {
-        "text": "Chọn từ nghe được: “a.m. My ____ David and Nick”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "skills",
-          "friends",
-          "sports",
-          "parents"
+          "A speaker uses the words “a m My skills David and Nick” in this recording.",
+          "A speaker uses the words “a m My friends David and Nick” in this recording.",
+          "A speaker uses the words “a m My sports David and Nick” in this recording.",
+          "A speaker uses the words “a m My parents David and Nick” in this recording."
         ],
-        "answer": 1,
-        "sourceWordIndex": 35
+        "answer": 1
       }
     ],
     "source": {
@@ -2908,40 +2830,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0713/042.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “busy with our ____, but we really”.",
+        "format": "true_false",
+        "text": "A speaker says “busy with our hobbies but we really” in the recording.",
         "options": [
-          "hobbies",
-          "subjects",
-          "photos",
-          "animals"
+          "True",
+          "False"
         ],
-        "answer": 1,
-        "sourceWordIndex": 23
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “Well, our members ____ streets on Saturday”.",
+        "format": "short_answer",
+        "text": "Which phrase matches what you hear?",
         "options": [
-          "smart",
-          "unusual",
-          "clean",
-          "natural"
+          "our members smart streets on",
+          "our members unusual streets on",
+          "our members clean streets on",
+          "our members natural streets on"
         ],
-        "answer": 2,
-        "sourceWordIndex": 69
+        "answer": 2
       },
       {
-        "text": "Chọn từ nghe được: “the Green Garden ____. We grow vegetables”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "Rain",
-          "Ticket",
-          "Club",
-          "Robot"
+          "A speaker uses the words “the Green Garden Rain We grow vegetables” in this recording.",
+          "A speaker uses the words “the Green Garden Ticket We grow vegetables” in this recording.",
+          "A speaker uses the words “the Green Garden Club We grow vegetables” in this recording.",
+          "A speaker uses the words “the Green Garden Robot We grow vegetables” in this recording."
         ],
-        "answer": 2,
-        "sourceWordIndex": 113
+        "answer": 2
       }
     ],
     "source": {
@@ -2963,40 +2883,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0111/047.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “fine. Last Sunday ____, I cycled round”.",
+        "format": "true_false",
+        "text": "A speaker says “fine Last Sunday afternoon I cycled round” in the recording.",
         "options": [
-          "afternoon",
-          "tennis",
-          "laptop",
-          "art"
+          "True",
+          "False"
         ],
-        "answer": 0,
-        "sourceWordIndex": 19
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “your home to ____? It's about two”.",
+        "format": "short_answer",
+        "text": "Which expression does the speaker use?",
         "options": [
-          "school",
-          "mountain",
-          "countryside",
-          "village"
+          "home to school It's about",
+          "home to mountain It's about",
+          "home to countryside It's about",
+          "home to village It's about"
         ],
-        "answer": 0,
-        "sourceWordIndex": 59
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “the lake this ____? Great! Can you”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "Wednesday",
-          "Sunday",
-          "Friday",
-          "Thursday"
+          "A speaker uses the words “the lake this Wednesday Great Can you” in this recording.",
+          "A speaker uses the words “the lake this Sunday Great Can you” in this recording.",
+          "A speaker uses the words “the lake this Friday Great Can you” in this recording.",
+          "A speaker uses the words “the lake this Thursday Great Can you” in this recording."
         ],
-        "answer": 1,
-        "sourceWordIndex": 110
+        "answer": 1
       }
     ],
     "source": {
@@ -3018,40 +2936,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0815/050.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “mum get to ____? She goes by”.",
+        "format": "true_false",
+        "text": "A speaker says “mum get to suitcase She goes by” in the recording.",
         "options": [
-          "work",
-          "suitcase",
-          "traffic",
-          "television"
+          "True",
+          "False"
         ],
-        "answer": 0,
-        "sourceWordIndex": 6
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “She goes by ____. What about your”.",
+        "format": "short_answer",
+        "text": "Which detail is mentioned in the conversation?",
         "options": [
-          "morning",
-          "motorbike",
-          "environment",
-          "friend"
+          "goes by morning What about",
+          "goes by motorbike What about",
+          "goes by environment What about",
+          "goes by friend What about"
         ],
-        "answer": 1,
-        "sourceWordIndex": 10
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “usually goes by bus. ____ she cycles”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "Slowly",
-          "Sometimes",
-          "Finally",
-          "Frequently"
+          "A speaker uses the words “usually goes by bus Slowly she cycles” in this recording.",
+          "A speaker uses the words “usually goes by bus Sometimes she cycles” in this recording.",
+          "A speaker uses the words “usually goes by bus Finally she cycles” in this recording.",
+          "A speaker uses the words “usually goes by bus Frequently she cycles” in this recording."
         ],
-        "answer": 1,
-        "sourceWordIndex": 20
+        "answer": 1
       }
     ],
     "source": {
@@ -3073,40 +2989,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0815/052.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “cities in the ____. Traffic jams happen”.",
+        "format": "true_false",
+        "text": "A speaker says “cities in the world Traffic jams happen” in the recording.",
         "options": [
-          "road",
-          "world",
-          "street",
-          "park"
+          "True",
+          "False"
         ],
-        "answer": 1,
-        "sourceWordIndex": 25
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “jams in this ____. One reason is”.",
+        "format": "short_answer",
+        "text": "Which phrase matches what you hear?",
         "options": [
-          "community",
-          "store",
-          "city",
-          "road"
+          "in this community One reason",
+          "in this store One reason",
+          "in this city One reason",
+          "in this road One reason"
         ],
-        "answer": 2,
-        "sourceWordIndex": 53
+        "answer": 2
       },
       {
-        "text": "Chọn từ nghe được: “condition. Also, many ____ users do not”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "road",
-          "river",
-          "station",
-          "store"
+          "A speaker uses the words “condition Also many road users do not” in this recording.",
+          "A speaker uses the words “condition Also many river users do not” in this recording.",
+          "A speaker uses the words “condition Also many station users do not” in this recording.",
+          "A speaker uses the words “condition Also many store users do not” in this recording."
         ],
-        "answer": 0,
-        "sourceWordIndex": 92
+        "answer": 0
       }
     ],
     "source": {
@@ -3128,40 +3042,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0815/054.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “at Sao Mai ____ tonight. Is it”.",
+        "format": "true_false",
+        "text": "A speaker says “at Sao Mai Office tonight Is it” in the recording.",
         "options": [
-          "Office",
-          "Cinema",
-          "Park",
-          "Museum"
+          "True",
+          "False"
         ],
-        "answer": 1,
-        "sourceWordIndex": 19
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “Our Holiday? What ____ of film is”.",
+        "format": "short_answer",
+        "text": "Which expression does the speaker use?",
         "options": [
-          "kind",
-          "comfortable",
-          "happy",
-          "natural"
+          "Holiday What kind of film",
+          "Holiday What comfortable of film",
+          "Holiday What happy of film",
+          "Holiday What natural of film"
         ],
-        "answer": 0,
-        "sourceWordIndex": 60
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “decide to exchange ____. What are the”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "flowers",
-          "questions",
-          "houses",
-          "teachers"
+          "A speaker uses the words “decide to exchange flowers What are the” in this recording.",
+          "A speaker uses the words “decide to exchange questions What are the” in this recording.",
+          "A speaker uses the words “decide to exchange houses What are the” in this recording.",
+          "A speaker uses the words “decide to exchange teachers What are the” in this recording."
         ],
-        "answer": 2,
-        "sourceWordIndex": 98
+        "answer": 2
       }
     ],
     "source": {
@@ -3183,40 +3095,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0815/056_1.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “going to the ____ tonight? That's a”.",
+        "format": "true_false",
+        "text": "A speaker says “going to the cinema tonight That's a” in the recording.",
         "options": [
-          "airport",
-          "cinema",
-          "market",
-          "forest"
+          "True",
+          "False"
         ],
-        "answer": 1,
-        "sourceWordIndex": 5
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “to see A ____ at Sao Mai”.",
+        "format": "short_answer",
+        "text": "Which detail is mentioned in the conversation?",
         "options": [
-          "Nightmare",
-          "Tennis",
-          "Week",
-          "Noise"
+          "see A Nightmare at Sao",
+          "see A Tennis at Sao",
+          "see A Week at Sao",
+          "see A Noise at Sao"
         ],
-        "answer": 0,
-        "sourceWordIndex": 16
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “that's too far for me to ____”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "have",
-          "cycle",
-          "enjoy",
-          "travel"
+          "A speaker uses the words “far for me to have” in this recording.",
+          "A speaker uses the words “far for me to cycle” in this recording.",
+          "A speaker uses the words “far for me to enjoy” in this recording.",
+          "A speaker uses the words “far for me to travel” in this recording."
         ],
-        "answer": 3,
-        "sourceWordIndex": 32
+        "answer": 3
       }
     ],
     "source": {
@@ -3238,40 +3148,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0815/059.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “I like Simon's ____. Who stars in”.",
+        "format": "true_false",
+        "text": "A speaker says “I like Simon's brothers Who stars in” in the recording.",
         "options": [
-          "brothers",
-          "materials",
-          "families",
-          "films"
+          "True",
+          "False"
         ],
-        "answer": 3,
-        "sourceWordIndex": 22
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “together after their ____' marriage ends. What”.",
+        "format": "short_answer",
+        "text": "Which phrase matches what you hear?",
         "options": [
-          "friends",
-          "parents",
-          "books",
-          "traditions"
+          "after their friends marriage ends",
+          "after their parents marriage ends",
+          "after their books marriage ends",
+          "after their traditions marriage ends"
         ],
-        "answer": 1,
-        "sourceWordIndex": 55
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “people because it's ____ and moving. The”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "active",
-          "helpful",
-          "funny",
-          "friendly"
+          "A speaker uses the words “people because it's active and moving The” in this recording.",
+          "A speaker uses the words “people because it's helpful and moving The” in this recording.",
+          "A speaker uses the words “people because it's funny and moving The” in this recording.",
+          "A speaker uses the words “people because it's friendly and moving The” in this recording."
         ],
-        "answer": 2,
-        "sourceWordIndex": 107
+        "answer": 2
       }
     ],
     "source": {
@@ -3293,40 +3201,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0815/061.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “I like the ____ on the wall”.",
+        "format": "true_false",
+        "text": "A speaker says “I like the photos on the wall” in the recording.",
         "options": [
-          "parents",
-          "buildings",
-          "photos",
-          "devices"
+          "True",
+          "False"
         ],
-        "answer": 2,
-        "sourceWordIndex": 20
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “the Dutch Tulip ____. What did you”.",
+        "format": "short_answer",
+        "text": "Which expression does the speaker use?",
         "options": [
-          "Stress",
-          "Comedy",
-          "Sun",
-          "Festival"
+          "Dutch Tulip Stress What did",
+          "Dutch Tulip Comedy What did",
+          "Dutch Tulip Sun What did",
+          "Dutch Tulip Festival What did"
         ],
-        "answer": 3,
-        "sourceWordIndex": 70
+        "answer": 3
       },
       {
-        "text": "Chọn từ nghe được: “there wasn't any ____ or drinks. I”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "robot",
-          "light",
-          "food",
-          "sport"
+          "A speaker uses the words “there wasn't any robot or drinks I” in this recording.",
+          "A speaker uses the words “there wasn't any light or drinks I” in this recording.",
+          "A speaker uses the words “there wasn't any food or drinks I” in this recording.",
+          "A speaker uses the words “there wasn't any sport or drinks I” in this recording."
         ],
-        "answer": 2,
-        "sourceWordIndex": 116
+        "answer": 2
       }
     ],
     "source": {
@@ -3348,40 +3254,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0815/064.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “was the music ____ last Sunday? It”.",
+        "format": "true_false",
+        "text": "A speaker says “was the music information last Sunday It” in the recording.",
         "options": [
-          "information",
-          "afternoon",
-          "tennis",
-          "festival"
+          "True",
+          "False"
         ],
-        "answer": 3,
-        "sourceWordIndex": 4
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “The band was ____. And the singers”.",
+        "format": "short_answer",
+        "text": "Which detail is mentioned in the conversation?",
         "options": [
-          "late",
-          "holiday",
-          "name",
-          "dinner"
+          "band was late And the",
+          "band was holiday And the",
+          "band was name And the",
+          "band was dinner And the"
         ],
-        "answer": 0,
-        "sourceWordIndex": 14
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “weren't very good ____. It was a”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "laptop",
-          "air",
-          "either",
-          "energy"
+          "A speaker uses the words “weren't very good laptop It was a” in this recording.",
+          "A speaker uses the words “weren't very good air It was a” in this recording.",
+          "A speaker uses the words “weren't very good either It was a” in this recording.",
+          "A speaker uses the words “weren't very good energy It was a” in this recording."
         ],
-        "answer": 2,
-        "sourceWordIndex": 21
+        "answer": 2
       }
     ],
     "source": {
@@ -3403,40 +3307,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0815/066.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “It's a national ____. People from Canada”.",
+        "format": "true_false",
+        "text": "A speaker says “It's a national holiday People from Canada” in the recording.",
         "options": [
-          "laptop",
-          "transport",
-          "badminton",
-          "holiday"
+          "True",
+          "False"
         ],
-        "answer": 3,
-        "sourceWordIndex": 17
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “Both adults and ____ take part in”.",
+        "format": "short_answer",
+        "text": "Which phrase matches what you hear?",
         "options": [
-          "families",
-          "projects",
-          "skills",
-          "children"
+          "adults and families take part",
+          "adults and projects take part",
+          "adults and skills take part",
+          "adults and children take part"
         ],
-        "answer": 3,
-        "sourceWordIndex": 58
+        "answer": 3
       },
       {
-        "text": "Chọn từ nghe được: “cook and serve ____ to homeless people”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "life",
-          "english",
-          "backpack",
-          "food"
+          "A speaker uses the words “cook and serve life to homeless people” in this recording.",
+          "A speaker uses the words “cook and serve english to homeless people” in this recording.",
+          "A speaker uses the words “cook and serve backpack to homeless people” in this recording.",
+          "A speaker uses the words “cook and serve food to homeless people” in this recording."
         ],
-        "answer": 3,
-        "sourceWordIndex": 100
+        "answer": 3
       }
     ],
     "source": {
@@ -3458,40 +3360,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0816/069.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “I don't quite ____ what energy is”.",
+        "format": "true_false",
+        "text": "A speaker says “I don't quite go what energy is” in the recording.",
         "options": [
-          "go",
-          "meet",
-          "understand",
-          "write"
+          "True",
+          "False"
         ],
-        "answer": 2,
-        "sourceWordIndex": 22
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “like coal, oil, ____ gas.... We call”.",
+        "format": "short_answer",
+        "text": "Which expression does the speaker use?",
         "options": [
-          "beautiful",
-          "jealous",
-          "natural",
-          "successful"
+          "coal oil beautiful gas We",
+          "coal oil jealous gas We",
+          "coal oil natural gas We",
+          "coal oil successful gas We"
         ],
-        "answer": 2,
-        "sourceWordIndex": 57
+        "answer": 2
       },
       {
-        "text": "Chọn từ nghe được: “some types of ____ are cheap and”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "energy",
-          "earth",
-          "space",
-          "evening"
+          "A speaker uses the words “some types of energy are cheap and” in this recording.",
+          "A speaker uses the words “some types of earth are cheap and” in this recording.",
+          "A speaker uses the words “some types of space are cheap and” in this recording.",
+          "A speaker uses the words “some types of evening are cheap and” in this recording."
         ],
-        "answer": 0,
-        "sourceWordIndex": 108
+        "answer": 0
       }
     ],
     "source": {
@@ -3513,40 +3413,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0816/072.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “does “solar energy\" ____? Well, it's energy”.",
+        "format": "true_false",
+        "text": "A speaker says “does solar energy mean Well it's energy” in the recording.",
         "options": [
-          "mean",
-          "teach",
-          "paint",
-          "want"
+          "True",
+          "False"
         ],
-        "answer": 0,
-        "sourceWordIndex": 4
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “And what does \"____ energy” mean? It's”.",
+        "format": "short_answer",
+        "text": "Which detail is mentioned in the conversation?",
         "options": [
-          "breakfast",
-          "wind",
-          "weather",
-          "life"
+          "what does breakfast energy",
+          "what does wind energy",
+          "what does weather energy",
+          "what does life energy"
         ],
-        "answer": 1,
-        "sourceWordIndex": 16
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “another type of ____ and it comes”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "comedy",
-          "stress",
-          "energy",
-          "rubbish"
+          "A speaker uses the words “another type of comedy and it comes” in this recording.",
+          "A speaker uses the words “another type of stress and it comes” in this recording.",
+          "A speaker uses the words “another type of energy and it comes” in this recording.",
+          "A speaker uses the words “another type of rubbish and it comes” in this recording."
         ],
-        "answer": 2,
-        "sourceWordIndex": 23
+        "answer": 2
       }
     ],
     "source": {
@@ -3568,40 +3466,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0816/073.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “can we save ____ at home? Linh”.",
+        "format": "true_false",
+        "text": "A speaker says “can we save hobby at home Linh” in the recording.",
         "options": [
-          "hobby",
-          "television",
-          "energy",
-          "backpack"
+          "True",
+          "False"
         ],
-        "answer": 2,
-        "sourceWordIndex": 20
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “it helps us ____ electricity. You're right”.",
+        "format": "short_answer",
+        "text": "Which phrase matches what you hear?",
         "options": [
-          "plant",
-          "visit",
-          "build",
-          "save"
+          "helps us plant electricity You're",
+          "helps us visit electricity You're",
+          "helps us build electricity You're",
+          "helps us save electricity You're"
         ],
-        "answer": 3,
-        "sourceWordIndex": 68
+        "answer": 3
       },
       {
-        "text": "Chọn từ nghe được: “when leaving the ____. We use solar”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "park",
-          "sea",
-          "community",
-          "room"
+          "A speaker uses the words “when leaving the park We use solar” in this recording.",
+          "A speaker uses the words “when leaving the sea We use solar” in this recording.",
+          "A speaker uses the words “when leaving the community We use solar” in this recording.",
+          "A speaker uses the words “when leaving the room We use solar” in this recording."
         ],
-        "answer": 3,
-        "sourceWordIndex": 94
+        "answer": 3
       }
     ],
     "source": {
@@ -3623,40 +3519,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0816/075.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “know. It's a ____ that we don't”.",
+        "format": "true_false",
+        "text": "A speaker says “know It's a pity that we don't” in the recording.",
         "options": [
-          "breakfast",
-          "habit",
-          "pity",
-          "geography"
+          "True",
+          "False"
         ],
-        "answer": 2,
-        "sourceWordIndex": 19
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “there are no ____ jams. Will it”.",
+        "format": "short_answer",
+        "text": "Which expression does the speaker use?",
         "options": [
-          "art",
-          "exercise",
-          "traffic",
-          "sun"
+          "are no art jams Will",
+          "are no exercise jams Will",
+          "are no traffic jams Will",
+          "are no sun jams Will"
         ],
-        "answer": 2,
-        "sourceWordIndex": 58
+        "answer": 2
       },
       {
-        "text": "Chọn từ nghe được: “So when we ____ in hyperloops, we”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "travel",
-          "stay",
-          "visit",
-          "sell"
+          "A speaker uses the words “So when we travel in hyperloops we” in this recording.",
+          "A speaker uses the words “So when we stay in hyperloops we” in this recording.",
+          "A speaker uses the words “So when we visit in hyperloops we” in this recording.",
+          "A speaker uses the words “So when we sell in hyperloops we” in this recording."
         ],
-        "answer": 0,
-        "sourceWordIndex": 96
+        "answer": 0
       }
     ],
     "source": {
@@ -3678,40 +3572,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0816/079.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “think we will ____ by flying car”.",
+        "format": "true_false",
+        "text": "A speaker says “think we will help by flying car” in the recording.",
         "options": [
-          "help",
-          "travel",
-          "swim",
-          "use"
+          "True",
+          "False"
         ],
-        "answer": 1,
-        "sourceWordIndex": 5
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “the future? We ____ will. Will it”.",
+        "format": "short_answer",
+        "text": "Which detail is mentioned in the conversation?",
         "options": [
-          "always",
-          "regularly",
-          "certainly",
-          "firstly"
+          "future We always will Will",
+          "future We regularly will Will",
+          "future We certainly will Will",
+          "future We firstly will Will"
         ],
-        "answer": 2,
-        "sourceWordIndex": 13
+        "answer": 2
       },
       {
-        "text": "Chọn từ nghe được: “to fly across oceans? It ____ won't”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "slowly",
-          "probably",
-          "secondly",
-          "usually"
+          "A speaker uses the words “fly across oceans It slowly won't” in this recording.",
+          "A speaker uses the words “fly across oceans It probably won't” in this recording.",
+          "A speaker uses the words “fly across oceans It secondly won't” in this recording.",
+          "A speaker uses the words “fly across oceans It usually won't” in this recording."
         ],
-        "answer": 1,
-        "sourceWordIndex": 24
+        "answer": 1
       }
     ],
     "source": {
@@ -3733,40 +3625,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0816/080.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “think people will ____ in 2050, Tom”.",
+        "format": "true_false",
+        "text": "A speaker says “think people will travel in 2050 Tom” in the recording.",
         "options": [
-          "play",
-          "enjoy",
-          "travel",
-          "shop"
+          "True",
+          "False"
         ],
-        "answer": 2,
-        "sourceWordIndex": 14
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “and will be ____ because they run”.",
+        "format": "short_answer",
+        "text": "Which phrase matches what you hear?",
         "options": [
-          "unusual",
-          "careful",
-          "safe",
-          "difficult"
+          "will be unusual because they",
+          "will be careful because they",
+          "will be safe because they",
+          "will be difficult because they"
         ],
-        "answer": 2,
-        "sourceWordIndex": 59
+        "answer": 2
       },
       {
-        "text": "Chọn từ nghe được: “interesting. How about ____ on sea? I”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "travelling",
-          "improving",
-          "visiting",
-          "planting"
+          "A speaker uses the words “interesting How about travelling on sea I” in this recording.",
+          "A speaker uses the words “interesting How about improving on sea I” in this recording.",
+          "A speaker uses the words “interesting How about visiting on sea I” in this recording.",
+          "A speaker uses the words “interesting How about planting on sea I” in this recording."
         ],
-        "answer": 0,
-        "sourceWordIndex": 100
+        "answer": 0
       }
     ],
     "source": {
@@ -3788,40 +3678,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0817/082.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “asking for directions, ____ maps, talking to”.",
+        "format": "true_false",
+        "text": "A speaker says “asking for directions collecting maps talking to” in the recording.",
         "options": [
-          "reading",
-          "collecting",
-          "walking",
-          "cycling"
+          "True",
+          "False"
         ],
-        "answer": 0,
-        "sourceWordIndex": 22
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “was great! We ____ a tour to”.",
+        "format": "short_answer",
+        "text": "Which expression does the speaker use?",
         "options": [
-          "took",
-          "went",
-          "visited",
-          "met"
+          "great We took a tour",
+          "great We went a tour",
+          "great We visited a tour",
+          "great We met a tour"
         ],
-        "answer": 0,
-        "sourceWordIndex": 63
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “Australians love outdoor ____. Right. There were”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "festivals",
-          "activities",
-          "pictures",
-          "houses"
+          "A speaker uses the words “Australians love outdoor festivals Right There were” in this recording.",
+          "A speaker uses the words “Australians love outdoor activities Right There were” in this recording.",
+          "A speaker uses the words “Australians love outdoor pictures Right There were” in this recording.",
+          "A speaker uses the words “Australians love outdoor houses Right There were” in this recording."
         ],
-        "answer": 1,
-        "sourceWordIndex": 92
+        "answer": 1
       }
     ],
     "source": {
@@ -3843,40 +3731,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0817/085.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “wear kilts, short ____ at their traditional”.",
+        "format": "true_false",
+        "text": "A speaker says “wear kilts short skirts at their traditional” in the recording.",
         "options": [
-          "brothers",
-          "projects",
-          "skirts",
-          "animals"
+          "True",
+          "False"
         ],
-        "answer": 2,
-        "sourceWordIndex": 5
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “know that! In ____, Walt Disney World”.",
+        "format": "short_answer",
+        "text": "Which detail is mentioned in the conversation?",
         "options": [
-          "2020",
-          "2021",
-          "2019",
-          "2022"
+          "that In 2020 Walt Disney",
+          "that In 2021 Walt Disney",
+          "that In 2019 Walt Disney",
+          "that In 2022 Walt Disney"
         ],
-        "answer": 2,
-        "sourceWordIndex": 16
+        "answer": 2
       },
       {
-        "text": "Chọn từ nghe được: “California attracted nearly ____ million visitors. Amazing”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "22",
-          "24",
-          "21",
-          "23"
+          "A speaker uses the words “California attracted nearly 22 million visitors Amazing” in this recording.",
+          "A speaker uses the words “California attracted nearly 24 million visitors Amazing” in this recording.",
+          "A speaker uses the words “California attracted nearly 21 million visitors Amazing” in this recording.",
+          "A speaker uses the words “California attracted nearly 23 million visitors Amazing” in this recording."
         ],
-        "answer": 2,
-        "sourceWordIndex": 24
+        "answer": 2
       }
     ],
     "source": {
@@ -3898,40 +3784,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2022/0817/086.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “and her family ____ there. You can”.",
+        "format": "true_false",
+        "text": "A speaker says “and her family share there You can” in the recording.",
         "options": [
-          "live",
-          "share",
-          "love",
-          "enjoy"
+          "True",
+          "False"
         ],
-        "answer": 0,
-        "sourceWordIndex": 22
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “Tower on the ____ Thames. It is”.",
+        "format": "short_answer",
+        "text": "Which phrase matches what you hear?",
         "options": [
-          "Park",
-          "City",
-          "River",
-          "Shop"
+          "on the Park Thames It",
+          "on the City Thames It",
+          "on the River Thames It",
+          "on the Shop Thames It"
         ],
-        "answer": 2,
-        "sourceWordIndex": 62
+        "answer": 2
       },
       {
-        "text": "Chọn từ nghe được: “on the River ____. You will see”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "Thames",
-          "Houses",
-          "Animals",
-          "Feelings"
+          "A speaker uses the words “on the River Thames You will see” in this recording.",
+          "A speaker uses the words “on the River Houses You will see” in this recording.",
+          "A speaker uses the words “on the River Animals You will see” in this recording.",
+          "A speaker uses the words “on the River Feelings You will see” in this recording."
         ],
-        "answer": 0,
-        "sourceWordIndex": 106
+        "answer": 0
       }
     ],
     "source": {
@@ -3953,40 +3837,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-1.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “know you like ____. Actually, I'm keen”.",
+        "format": "true_false",
+        "text": "A speaker says “know you like knitting Actually I'm keen” in the recording.",
         "options": [
-          "using",
-          "listening",
-          "knitting",
-          "swimming"
+          "True",
+          "False"
         ],
-        "answer": 2,
-        "sourceWordIndex": 27
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “bit different. I ____ hang out with”.",
+        "format": "short_answer",
+        "text": "Which expression does the speaker use?",
         "options": [
-          "usually",
-          "regularly",
-          "actually",
-          "especially"
+          "different I usually hang out",
+          "different I regularly hang out",
+          "different I actually hang out",
+          "different I especially hang out"
         ],
-        "answer": 0,
-        "sourceWordIndex": 72
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “at New World ____. Yes, I'd love”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "School",
-          "Cinema",
-          "Airport",
-          "Mountain"
+          "A speaker uses the words “at New World School Yes I'd love” in this recording.",
+          "A speaker uses the words “at New World Cinema Yes I'd love” in this recording.",
+          "A speaker uses the words “at New World Airport Yes I'd love” in this recording.",
+          "A speaker uses the words “at New World Mountain Yes I'd love” in this recording."
         ],
-        "answer": 1,
-        "sourceWordIndex": 127
+        "answer": 1
       }
     ],
     "source": {
@@ -4008,40 +3890,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-4_1.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “go to the ____ club with me”.",
+        "format": "true_false",
+        "text": "A speaker says “go to the trying club with me” in the recording.",
         "options": [
-          "trying",
-          "spending",
-          "cooking",
-          "painting"
+          "True",
+          "False"
         ],
-        "answer": 2,
-        "sourceWordIndex": 7
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “with me this ____? I'd love to”.",
+        "format": "short_answer",
+        "text": "Which detail is mentioned in the conversation?",
         "options": [
-          "Sunday",
-          "Friday",
-          "Wednesday",
-          "Tuesday"
+          "me this Sunday I'd love",
+          "me this Friday I'd love",
+          "me this Wednesday I'd love",
+          "me this Tuesday I'd love"
         ],
-        "answer": 0,
-        "sourceWordIndex": 12
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “going for a ____? That's great. Thanks”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "visit",
-          "walk",
-          "swim",
-          "live"
+          "A speaker uses the words “going for a visit That's great Thanks” in this recording.",
+          "A speaker uses the words “going for a walk That's great Thanks” in this recording.",
+          "A speaker uses the words “going for a swim That's great Thanks” in this recording.",
+          "A speaker uses the words “going for a live That's great Thanks” in this recording."
         ],
-        "answer": 1,
-        "sourceWordIndex": 23
+        "answer": 1
       }
     ],
     "source": {
@@ -4063,40 +3943,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-5.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “connect with my ____ on Saturdays. We”.",
+        "format": "true_false",
+        "text": "A speaker says “connect with my family on Saturdays We” in the recording.",
         "options": [
-          "homework",
-          "energy",
-          "family",
-          "webcam"
+          "True",
+          "False"
         ],
-        "answer": 2,
-        "sourceWordIndex": 28
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “my house. We ____ our favourite food”.",
+        "format": "short_answer",
+        "text": "Which phrase matches what you hear?",
         "options": [
-          "travel",
-          "cook",
-          "come",
-          "read"
+          "house We travel our favourite",
+          "house We cook our favourite",
+          "house We come our favourite",
+          "house We read our favourite"
         ],
-        "answer": 1,
-        "sourceWordIndex": 73
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “ride around our ____. This gives us”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "city",
-          "park",
-          "room",
-          "countryside"
+          "A speaker uses the words “ride around our city This gives us” in this recording.",
+          "A speaker uses the words “ride around our park This gives us” in this recording.",
+          "A speaker uses the words “ride around our room This gives us” in this recording.",
+          "A speaker uses the words “ride around our countryside This gives us” in this recording."
         ],
-        "answer": 0,
-        "sourceWordIndex": 127
+        "answer": 0
       }
     ],
     "source": {
@@ -4118,40 +3996,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-7.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “at my uncle’s ____ in a small”.",
+        "format": "true_false",
+        "text": "A speaker says “at my uncle’s office in a small” in the recording.",
         "options": [
-          "office",
-          "house",
-          "garden",
-          "sea"
+          "True",
+          "False"
         ],
-        "answer": 1,
-        "sourceWordIndex": 29
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “Sounds great! And ____ I went with”.",
+        "format": "short_answer",
+        "text": "Which expression does the speaker use?",
         "options": [
-          "sometimes",
-          "regularly",
-          "firstly",
-          "finally"
+          "great And sometimes I went",
+          "great And regularly I went",
+          "great And firstly I went",
+          "great And finally I went"
         ],
-        "answer": 0,
-        "sourceWordIndex": 80
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “we played traditional ____ like bamboo dancing”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "games",
-          "teachers",
-          "trees",
-          "flowers"
+          "A speaker uses the words “we played traditional games like bamboo dancing” in this recording.",
+          "A speaker uses the words “we played traditional teachers like bamboo dancing” in this recording.",
+          "A speaker uses the words “we played traditional trees like bamboo dancing” in this recording.",
+          "A speaker uses the words “we played traditional flowers like bamboo dancing” in this recording."
         ],
-        "answer": 0,
-        "sourceWordIndex": 125
+        "answer": 0
       }
     ],
     "source": {
@@ -4173,40 +4049,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-10.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “What a ____ kite you have, Mai”.",
+        "format": "true_false",
+        "text": "A speaker says “What a beautiful kite you have Mai” in the recording.",
         "options": [
-          "beautiful",
-          "happy",
-          "interesting",
-          "confident"
+          "True",
+          "False"
         ],
-        "answer": 0,
-        "sourceWordIndex": 2
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “for me last ____. You really have”.",
+        "format": "short_answer",
+        "text": "Which detail is mentioned in the conversation?",
         "options": [
-          "habit",
-          "week",
-          "weekend",
-          "dinner"
+          "me last habit You really",
+          "me last week You really",
+          "me last weekend You really",
+          "me last dinner You really"
         ],
-        "answer": 2,
-        "sourceWordIndex": 17
+        "answer": 2
       },
       {
-        "text": "Chọn từ nghe được: “I think its ____ really suits me”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "hobby",
-          "fish",
-          "friend",
-          "colour"
+          "A speaker uses the words “I think its hobby really suits me” in this recording.",
+          "A speaker uses the words “I think its fish really suits me” in this recording.",
+          "A speaker uses the words “I think its friend really suits me” in this recording.",
+          "A speaker uses the words “I think its colour really suits me” in this recording."
         ],
-        "answer": 3,
-        "sourceWordIndex": 34
+        "answer": 3
       }
     ],
     "source": {
@@ -4228,40 +4102,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0703/track-11.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “The people welcome ____ to their homes”.",
+        "format": "true_false",
+        "text": "A speaker says “The people welcome pictures to their homes” in the recording.",
         "options": [
-          "pictures",
-          "materials",
-          "neighbours",
-          "programmes"
+          "True",
+          "False"
         ],
-        "answer": 2,
-        "sourceWordIndex": 29
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “there aren't many ____ for entertainment like”.",
+        "format": "short_answer",
+        "text": "Which phrase matches what you hear?",
         "options": [
-          "places",
-          "friends",
-          "pictures",
-          "parents"
+          "aren't many places for entertainment",
+          "aren't many friends for entertainment",
+          "aren't many pictures for entertainment",
+          "aren't many parents for entertainment"
         ],
-        "answer": 0,
-        "sourceWordIndex": 76
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “do in the ____. We can go”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "city",
-          "museum",
-          "shop",
-          "park"
+          "A speaker uses the words “do in the city We can go” in this recording.",
+          "A speaker uses the words “do in the museum We can go” in this recording.",
+          "A speaker uses the words “do in the shop We can go” in this recording.",
+          "A speaker uses the words “do in the park We can go” in this recording."
         ],
-        "answer": 0,
-        "sourceWordIndex": 137
+        "answer": 0
       }
     ],
     "source": {
@@ -4283,40 +4155,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-13_1.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “some school club ____. We're also preparing”.",
+        "format": "true_false",
+        "text": "A speaker says “some school club activities We're also preparing” in the recording.",
         "options": [
-          "activities",
-          "feelings",
-          "friends",
-          "clothes"
+          "True",
+          "False"
         ],
-        "answer": 0,
-        "sourceWordIndex": 25
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “Let's discuss these ____ in your new”.",
+        "format": "short_answer",
+        "text": "Which expression does the speaker use?",
         "options": [
-          "pictures",
-          "books",
-          "games",
-          "problems"
+          "discuss these pictures in your",
+          "discuss these books in your",
+          "discuss these games in your",
+          "discuss these problems in your"
         ],
-        "answer": 3,
-        "sourceWordIndex": 78
+        "answer": 3
       },
       {
-        "text": "Chọn từ nghe được: “activities to suit ____ interests. And there”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "convenient",
-          "confident",
-          "different",
-          "unusual"
+          "A speaker uses the words “activities to suit convenient interests And there” in this recording.",
+          "A speaker uses the words “activities to suit confident interests And there” in this recording.",
+          "A speaker uses the words “activities to suit different interests And there” in this recording.",
+          "A speaker uses the words “activities to suit unusual interests And there” in this recording."
         ],
-        "answer": 2,
-        "sourceWordIndex": 132
+        "answer": 2
       }
     ],
     "source": {
@@ -4338,40 +4208,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-16.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “more about the ____ club, please? Certainly”.",
+        "format": "true_false",
+        "text": "A speaker says “more about the sun club please Certainly” in the recording.",
         "options": [
-          "sun",
-          "night",
-          "music",
-          "life"
+          "True",
+          "False"
         ],
-        "answer": 2,
-        "sourceWordIndex": 7
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “Thursdays. Could you ____ me the way”.",
+        "format": "short_answer",
+        "text": "Which detail is mentioned in the conversation?",
         "options": [
-          "ticket",
-          "show",
-          "badminton",
-          "eyes"
+          "Could you ticket me the",
+          "Could you show me the",
+          "Could you badminton me the",
+          "Could you eyes me the"
         ],
-        "answer": 1,
-        "sourceWordIndex": 19
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “block, then turn ____. It’s on your”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "met",
-          "left",
-          "said",
-          "came"
+          "A speaker uses the words “block then turn met It’s on your” in this recording.",
+          "A speaker uses the words “block then turn left It’s on your” in this recording.",
+          "A speaker uses the words “block then turn said It’s on your” in this recording.",
+          "A speaker uses the words “block then turn came It’s on your” in this recording."
         ],
-        "answer": 1,
-        "sourceWordIndex": 34
+        "answer": 1
       }
     ],
     "source": {
@@ -4393,40 +4261,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-18.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “of trying to ____ my parents expectations”.",
+        "format": "true_false",
+        "text": "A speaker says “of trying to meet my parents expectations” in the recording.",
         "options": [
-          "help",
-          "give",
-          "meet",
-          "sell"
+          "True",
+          "False"
         ],
-        "answer": 2,
-        "sourceWordIndex": 28
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “talked to my ____ about this so”.",
+        "format": "short_answer",
+        "text": "Which phrase matches what you hear?",
         "options": [
-          "houses",
-          "services",
-          "parents",
-          "devices"
+          "to my houses about this",
+          "to my services about this",
+          "to my parents about this",
+          "to my devices about this"
         ],
-        "answer": 2,
-        "sourceWordIndex": 71
+        "answer": 2
       },
       {
-        "text": "Chọn từ nghe được: “about you, Mi? ____, I don't get”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "Actually",
-          "Really",
-          "Carefully",
-          "Especially"
+          "A speaker uses the words “about you Mi Actually I don't get” in this recording.",
+          "A speaker uses the words “about you Mi Really I don't get” in this recording.",
+          "A speaker uses the words “about you Mi Carefully I don't get” in this recording.",
+          "A speaker uses the words “about you Mi Especially I don't get” in this recording."
         ],
-        "answer": 0,
-        "sourceWordIndex": 126
+        "answer": 0
       }
     ],
     "source": {
@@ -4448,40 +4314,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-20.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “Giang. Do you ____ in the mountains”.",
+        "format": "true_false",
+        "text": "A speaker says “Giang Do you test in the mountains” in the recording.",
         "options": [
-          "test",
-          "paint",
-          "love",
-          "live"
+          "True",
+          "False"
         ],
-        "answer": 3,
-        "sourceWordIndex": 23
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “it a “stilt ____”. Our house overlooks”.",
+        "format": "short_answer",
+        "text": "Which expression does the speaker use?",
         "options": [
-          "house",
-          "garden",
-          "world",
-          "sea"
+          "a stilt house",
+          "a stilt garden",
+          "a stilt world",
+          "a stilt sea"
         ],
-        "answer": 0,
-        "sourceWordIndex": 77
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “about your culture? ____. We have our”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "Finally",
-          "Certainly",
-          "Secondly",
-          "Carefully"
+          "A speaker uses the words “about your culture Finally We have our” in this recording.",
+          "A speaker uses the words “about your culture Certainly We have our” in this recording.",
+          "A speaker uses the words “about your culture Secondly We have our” in this recording.",
+          "A speaker uses the words “about your culture Carefully We have our” in this recording."
         ],
-        "answer": 1,
-        "sourceWordIndex": 117
+        "answer": 1
       }
     ],
     "source": {
@@ -4503,40 +4367,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-23.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “you think about ____ in the mountains”.",
+        "format": "true_false",
+        "text": "A speaker says “you think about life in the mountains” in the recording.",
         "options": [
-          "family",
-          "afternoon",
-          "name",
-          "life"
+          "True",
+          "False"
         ],
-        "answer": 3,
-        "sourceWordIndex": 5
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “in the mountains ____ close to nature”.",
+        "format": "short_answer",
+        "text": "Which detail is mentioned in the conversation?",
         "options": [
-          "live",
-          "play",
-          "shop",
-          "improve"
+          "the mountains live close to",
+          "the mountains play close to",
+          "the mountains shop close to",
+          "the mountains improve close to"
         ],
-        "answer": 0,
-        "sourceWordIndex": 18
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “there are better ____ in the city”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "projects",
-          "languages",
-          "devices",
-          "services"
+          "A speaker uses the words “there are better projects in the city” in this recording.",
+          "A speaker uses the words “there are better languages in the city” in this recording.",
+          "A speaker uses the words “there are better devices in the city” in this recording.",
+          "A speaker uses the words “there are better services in the city” in this recording."
         ],
-        "answer": 3,
-        "sourceWordIndex": 38
+        "answer": 3
       }
     ],
     "source": {
@@ -4558,40 +4420,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-24.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “and outside the ____. They learn to”.",
+        "format": "true_false",
+        "text": "A speaker says “and outside the office They learn to” in the recording.",
         "options": [
-          "office",
-          "community",
-          "library",
-          "house"
+          "True",
+          "False"
         ],
-        "answer": 3,
-        "sourceWordIndex": 27
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “livestock, and catch ____. In the evening”.",
+        "format": "short_answer",
+        "text": "Which phrase matches what you hear?",
         "options": [
-          "fish",
-          "lunch",
-          "name",
-          "volleyball"
+          "and catch fish In the",
+          "and catch lunch In the",
+          "and catch name In the",
+          "and catch volleyball In the"
         ],
-        "answer": 0,
-        "sourceWordIndex": 71
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “and more minority ____ are going to”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "buildings",
-          "sisters",
-          "festivals",
-          "children"
+          "A speaker uses the words “and more minority buildings are going to” in this recording.",
+          "A speaker uses the words “and more minority sisters are going to” in this recording.",
+          "A speaker uses the words “and more minority festivals are going to” in this recording.",
+          "A speaker uses the words “and more minority children are going to” in this recording."
         ],
-        "answer": 3,
-        "sourceWordIndex": 121
+        "answer": 3
       }
     ],
     "source": {
@@ -4613,40 +4473,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-26.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “villages to take ____ with the blooming”.",
+        "format": "true_false",
+        "text": "A speaker says “villages to take pictures with the blooming” in the recording.",
         "options": [
-          "pictures",
-          "films",
-          "projects",
-          "sisters"
+          "True",
+          "False"
         ],
-        "answer": 0,
-        "sourceWordIndex": 28
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “flowers and ornamental ____ everywhere these days”.",
+        "format": "short_answer",
+        "text": "Which expression does the speaker use?",
         "options": [
-          "trees",
-          "children",
-          "clothes",
-          "festivals"
+          "and ornamental trees everywhere these",
+          "and ornamental children everywhere these",
+          "and ornamental clothes everywhere these",
+          "and ornamental festivals everywhere these"
         ],
-        "answer": 0,
-        "sourceWordIndex": 69
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “of the communal ____. They hang decorative”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "country",
-          "house",
-          "island",
-          "museum"
+          "A speaker uses the words “of the communal country They hang decorative” in this recording.",
+          "A speaker uses the words “of the communal house They hang decorative” in this recording.",
+          "A speaker uses the words “of the communal island They hang decorative” in this recording.",
+          "A speaker uses the words “of the communal museum They hang decorative” in this recording."
         ],
-        "answer": 1,
-        "sourceWordIndex": 120
+        "answer": 1
       }
     ],
     "source": {
@@ -4668,40 +4526,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-29.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “friend’s house for ____. Could you tell”.",
+        "format": "true_false",
+        "text": "A speaker says “friend’s house for friend Could you tell” in the recording.",
         "options": [
-          "friend",
-          "year",
-          "food",
-          "dinner"
+          "True",
+          "False"
         ],
-        "answer": 3,
-        "sourceWordIndex": 10
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “eating. I will. ____ a good idea”.",
+        "format": "short_answer",
+        "text": "Which detail is mentioned in the conversation?",
         "options": [
-          "Activities",
-          "Brothers",
-          "Families",
-          "It’s"
+          "I will Activities a good",
+          "I will Brothers a good",
+          "I will Families a good",
+          "I will It’s a good"
         ],
-        "answer": 3,
-        "sourceWordIndex": 34
+        "answer": 3
       },
       {
-        "text": "Chọn từ nghe được: “chopsticks. This may ____ bad luck to”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "bring",
-          "watch",
-          "use",
-          "collect"
+          "A speaker uses the words “chopsticks This may bring bad luck to” in this recording.",
+          "A speaker uses the words “chopsticks This may watch bad luck to” in this recording.",
+          "A speaker uses the words “chopsticks This may use bad luck to” in this recording.",
+          "A speaker uses the words “chopsticks This may collect bad luck to” in this recording."
         ],
-        "answer": 0,
-        "sourceWordIndex": 59
+        "answer": 0
       }
     ],
     "source": {
@@ -4723,40 +4579,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0616/track-30.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “Khmers use the ____ to thank the”.",
+        "format": "true_false",
+        "text": "A speaker says “Khmers use the festival to thank the” in the recording.",
         "options": [
-          "festival",
-          "sun",
-          "music",
-          "holiday"
+          "True",
+          "False"
         ],
-        "answer": 0,
-        "sourceWordIndex": 35
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “rice to feed ____ and ask them”.",
+        "format": "short_answer",
+        "text": "Which phrase matches what you hear?",
         "options": [
-          "students",
-          "trees",
-          "activities",
-          "children"
+          "to feed students and ask",
+          "to feed trees and ask",
+          "to feed activities and ask",
+          "to feed children and ask"
         ],
-        "answer": 3,
-        "sourceWordIndex": 100
+        "answer": 3
       },
       {
-        "text": "Chọn từ nghe được: “some advice to ____ at the Ok”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "questions",
-          "games",
-          "tourists",
-          "pictures"
+          "A speaker uses the words “some advice to questions at the Ok” in this recording.",
+          "A speaker uses the words “some advice to games at the Ok” in this recording.",
+          "A speaker uses the words “some advice to tourists at the Ok” in this recording.",
+          "A speaker uses the words “some advice to pictures at the Ok” in this recording."
         ],
-        "answer": 2,
-        "sourceWordIndex": 151
+        "answer": 2
       }
     ],
     "source": {
@@ -4778,40 +4632,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-32.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “here call their ____ by their title”.",
+        "format": "true_false",
+        "text": "A speaker says “here call their subjects by their title” in the recording.",
         "options": [
-          "subjects",
-          "neighbours",
-          "teachers",
-          "flowers"
+          "True",
+          "False"
         ],
-        "answer": 2,
-        "sourceWordIndex": 27
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “here. In my ____, people usually buy”.",
+        "format": "short_answer",
+        "text": "Which expression does the speaker use?",
         "options": [
-          "station",
-          "country",
-          "street",
-          "city"
+          "In my station people usually",
+          "In my country people usually",
+          "In my street people usually",
+          "In my city people usually"
         ],
-        "answer": 1,
-        "sourceWordIndex": 80
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “are in the ____ of having breakfast”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "science",
-          "habit",
-          "music",
-          "lunch"
+          "A speaker uses the words “are in the science of having breakfast” in this recording.",
+          "A speaker uses the words “are in the habit of having breakfast” in this recording.",
+          "A speaker uses the words “are in the music of having breakfast” in this recording.",
+          "A speaker uses the words “are in the lunch of having breakfast” in this recording."
         ],
-        "answer": 1,
-        "sourceWordIndex": 134
+        "answer": 1
       }
     ],
     "source": {
@@ -4833,40 +4685,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-35.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “over to your ____ on Sunday? Sure”.",
+        "format": "true_false",
+        "text": "A speaker says “over to your house on Sunday Sure” in the recording.",
         "options": [
-          "mountain",
-          "shop",
-          "sea",
-          "house"
+          "True",
+          "False"
         ],
-        "answer": 3,
-        "sourceWordIndex": 6
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “You're welcome. Vietnamese ____ uses a lot”.",
+        "format": "short_answer",
+        "text": "Which detail is mentioned in the conversation?",
         "options": [
-          "cycling",
-          "cooking",
-          "watching",
-          "swimming"
+          "welcome Vietnamese cycling uses a",
+          "welcome Vietnamese cooking uses a",
+          "welcome Vietnamese watching uses a",
+          "welcome Vietnamese swimming uses a"
         ],
-        "answer": 1,
-        "sourceWordIndex": 13
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “lot of vegetables and herbs. Yes, ____”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "slowly",
-          "firstly",
-          "certainly",
-          "often"
+          "A speaker uses the words “vegetables and herbs Yes slowly” in this recording.",
+          "A speaker uses the words “vegetables and herbs Yes firstly” in this recording.",
+          "A speaker uses the words “vegetables and herbs Yes certainly” in this recording.",
+          "A speaker uses the words “vegetables and herbs Yes often” in this recording."
         ],
-        "answer": 2,
-        "sourceWordIndex": 22
+        "answer": 2
       }
     ],
     "source": {
@@ -4888,40 +4738,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-36.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “off suddenly. Really? ____ technology sometimes causes”.",
+        "format": "true_false",
+        "text": "A speaker says “off suddenly Really Confident technology sometimes causes” in the recording.",
         "options": [
-          "Confident",
-          "Interesting",
-          "Expensive",
-          "Modern"
+          "True",
+          "False"
         ],
-        "answer": 3,
-        "sourceWordIndex": 26
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “Interaction with my ____ and friends. Yeah”.",
+        "format": "short_answer",
+        "text": "Which phrase matches what you hear?",
         "options": [
-          "teachers",
-          "children",
-          "friends",
-          "flowers"
+          "with my teachers and friends",
+          "with my children and friends",
+          "with my friends and friends",
+          "with my flowers and friends"
         ],
-        "answer": 0,
-        "sourceWordIndex": 78
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “friendship because it's ____ to keep in”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "confident",
-          "easy",
-          "funny",
-          "friendly"
+          "A speaker uses the words “friendship because it's confident to keep in” in this recording.",
+          "A speaker uses the words “friendship because it's easy to keep in” in this recording.",
+          "A speaker uses the words “friendship because it's funny to keep in” in this recording.",
+          "A speaker uses the words “friendship because it's friendly to keep in” in this recording."
         ],
-        "answer": 1,
-        "sourceWordIndex": 123
+        "answer": 1
       }
     ],
     "source": {
@@ -4943,40 +4791,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0613/track-40.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “The air and ____ quality are getting”.",
+        "format": "true_false",
+        "text": "A speaker says “The air and water quality are getting” in the recording.",
         "options": [
-          "noise",
-          "year",
-          "water",
-          "laptop"
+          "True",
+          "False"
         ],
-        "answer": 2,
-        "sourceWordIndex": 30
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “What do you ____ by 'carbon footprint”.",
+        "format": "short_answer",
+        "text": "Which expression does the speaker use?",
         "options": [
-          "read",
-          "mean",
-          "watch",
-          "prefer"
+          "do you read by carbon",
+          "do you mean by carbon",
+          "do you watch by carbon",
+          "do you prefer by carbon"
         ],
-        "answer": 1,
-        "sourceWordIndex": 74
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “avoid using single-use ____, like plastic bags”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "places",
-          "products",
-          "sisters",
-          "brothers"
+          "A speaker uses the words “avoid using single use places like plastic bags” in this recording.",
+          "A speaker uses the words “avoid using single use products like plastic bags” in this recording.",
+          "A speaker uses the words “avoid using single use sisters like plastic bags” in this recording.",
+          "A speaker uses the words “avoid using single use brothers like plastic bags” in this recording."
         ],
-        "answer": 1,
-        "sourceWordIndex": 120
+        "answer": 1
       }
     ],
     "source": {
@@ -4998,40 +4844,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0613/track-43.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “Endangered species are ____ in the wild”.",
+        "format": "true_false",
+        "text": "A speaker says “Endangered species are films in the wild” in the recording.",
         "options": [
-          "films",
-          "games",
-          "friends",
-          "animals"
+          "True",
+          "False"
         ],
-        "answer": 3,
-        "sourceWordIndex": 10
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “what do you ____ by ‘in the”.",
+        "format": "short_answer",
+        "text": "Which detail is mentioned in the conversation?",
         "options": [
-          "shop",
-          "buy",
-          "listen",
-          "mean"
+          "do you shop by in",
+          "do you buy by in",
+          "do you listen by in",
+          "do you mean by in"
         ],
-        "answer": 3,
-        "sourceWordIndex": 25
+        "answer": 3
       },
       {
-        "text": "Chọn từ nghe được: “live in their ____ habitats, not in”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "tired",
-          "confident",
-          "natural",
-          "generous"
+          "A speaker uses the words “live in their tired habitats not in” in this recording.",
+          "A speaker uses the words “live in their confident habitats not in” in this recording.",
+          "A speaker uses the words “live in their natural habitats not in” in this recording.",
+          "A speaker uses the words “live in their generous habitats not in” in this recording."
         ],
-        "answer": 2,
-        "sourceWordIndex": 37
+        "answer": 2
       }
     ],
     "source": {
@@ -5053,40 +4897,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0613/track-44.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “other uses. Water ____ happens when wastes”.",
+        "format": "true_false",
+        "text": "A speaker says “other uses Water pollution happens when wastes” in the recording.",
         "options": [
-          "lunch",
-          "rubbish",
-          "pollution",
-          "science"
+          "True",
+          "False"
         ],
-        "answer": 2,
-        "sourceWordIndex": 24
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “source of drinking ____ for humans. Water”.",
+        "format": "short_answer",
+        "text": "Which phrase matches what you hear?",
         "options": [
-          "water",
-          "basketball",
-          "suitcase",
-          "money"
+          "of drinking water for humans",
+          "of drinking basketball for humans",
+          "of drinking suitcase for humans",
+          "of drinking money for humans"
         ],
-        "answer": 0,
-        "sourceWordIndex": 81
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “also stop littering, ____ dumping waste into”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "sometimes",
-          "actually",
-          "especially",
-          "recently"
+          "A speaker uses the words “also stop littering sometimes dumping waste into” in this recording.",
+          "A speaker uses the words “also stop littering actually dumping waste into” in this recording.",
+          "A speaker uses the words “also stop littering especially dumping waste into” in this recording.",
+          "A speaker uses the words “also stop littering recently dumping waste into” in this recording."
         ],
-        "answer": 2,
-        "sourceWordIndex": 121
+        "answer": 2
       }
     ],
     "source": {
@@ -5108,40 +4950,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0616/track-46.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “people at the ____ were wearing really”.",
+        "format": "true_false",
+        "text": "A speaker says “people at the countryside were wearing really” in the recording.",
         "options": [
-          "countryside",
-          "market",
-          "road",
-          "museum"
+          "True",
+          "False"
         ],
-        "answer": 1,
-        "sourceWordIndex": 35
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “Back in my ____, Auckland, we have”.",
+        "format": "short_answer",
+        "text": "Which expression does the speaker use?",
         "options": [
-          "road",
-          "city",
-          "shop",
-          "store"
+          "in my road Auckland we",
+          "in my city Auckland we",
+          "in my shop Auckland we",
+          "in my store Auckland we"
         ],
-        "answer": 1,
-        "sourceWordIndex": 81
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “Right. It’s more ____. Yeah ... Oh, I’ve”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "friendly",
-          "expensive",
-          "convenient",
-          "easy"
+          "A speaker uses the words “Right It’s more friendly Yeah Oh I’ve” in this recording.",
+          "A speaker uses the words “Right It’s more expensive Yeah Oh I’ve” in this recording.",
+          "A speaker uses the words “Right It’s more convenient Yeah Oh I’ve” in this recording.",
+          "A speaker uses the words “Right It’s more easy Yeah Oh I’ve” in this recording."
         ],
-        "answer": 2,
-        "sourceWordIndex": 138
+        "answer": 2
       }
     ],
     "source": {
@@ -5163,40 +5003,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0616/track-49.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “about the SMART ____ I ordered from”.",
+        "format": "true_false",
+        "text": "A speaker says “about the SMART backpack I ordered from” in the recording.",
         "options": [
-          "television",
-          "backpack",
-          "music",
-          "year"
+          "True",
+          "False"
         ],
-        "answer": 1,
-        "sourceWordIndex": 9
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “And I’m not ____ with the colour”.",
+        "format": "short_answer",
+        "text": "Which detail is mentioned in the conversation?",
         "options": [
-          "happy",
-          "responsible",
-          "easy",
-          "convenient"
+          "I’m not happy with the",
+          "I’m not responsible with the",
+          "I’m not easy with the",
+          "I’m not convenient with the"
         ],
-        "answer": 0,
-        "sourceWordIndex": 38
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “one is yellowish ____. I'm sorry about”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "brown",
-          "blue",
-          "white",
-          "purple"
+          "A speaker uses the words “one is yellowish brown I'm sorry about” in this recording.",
+          "A speaker uses the words “one is yellowish blue I'm sorry about” in this recording.",
+          "A speaker uses the words “one is yellowish white I'm sorry about” in this recording.",
+          "A speaker uses the words “one is yellowish purple I'm sorry about” in this recording."
         ],
-        "answer": 0,
-        "sourceWordIndex": 54
+        "answer": 0
       }
     ],
     "source": {
@@ -5218,40 +5056,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-51.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “is easy. You ____ a seller's website”.",
+        "format": "true_false",
+        "text": "A speaker says “is easy You love a seller's website” in the recording.",
         "options": [
-          "love",
-          "write",
-          "help",
-          "visit"
+          "True",
+          "False"
         ],
-        "answer": 3,
-        "sourceWordIndex": 16
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “travelling, time, and ____. However, shopping online”.",
+        "format": "short_answer",
+        "text": "Which phrase matches what you hear?",
         "options": [
-          "money",
-          "holiday",
-          "literature",
-          "life"
+          "time and money However shopping",
+          "time and holiday However shopping",
+          "time and literature However shopping",
+          "time and life However shopping"
         ],
-        "answer": 0,
-        "sourceWordIndex": 79
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “there are many ____ to choose from”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "programmes",
-          "products",
-          "computers",
-          "feelings"
+          "A speaker uses the words “there are many programmes to choose from” in this recording.",
+          "A speaker uses the words “there are many products to choose from” in this recording.",
+          "A speaker uses the words “there are many computers to choose from” in this recording.",
+          "A speaker uses the words “there are many feelings to choose from” in this recording."
         ],
-        "answer": 1,
-        "sourceWordIndex": 134
+        "answer": 1
       }
     ],
     "source": {
@@ -5273,40 +5109,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-53.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “second time this ____. I'm sorry to”.",
+        "format": "true_false",
+        "text": "A speaker says “second time this year I'm sorry to” in the recording.",
         "options": [
-          "earth",
-          "year",
-          "weather",
-          "music"
+          "True",
+          "False"
         ],
-        "answer": 1,
-        "sourceWordIndex": 27
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “US? Yes, we ____ have tornadoes. Tornadoes”.",
+        "format": "short_answer",
+        "text": "Which expression does the speaker use?",
         "options": [
-          "carefully",
-          "quickly",
-          "actually",
-          "sometimes"
+          "Yes we carefully have tornadoes",
+          "Yes we quickly have tornadoes",
+          "Yes we actually have tornadoes",
+          "Yes we sometimes have tornadoes"
         ],
-        "answer": 3,
-        "sourceWordIndex": 72
+        "answer": 3
       },
       {
-        "text": "Chọn từ nghe được: “big funnel of ____ moving towards us”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "robot",
-          "wind",
-          "night",
-          "breakfast"
+          "A speaker uses the words “big funnel of robot moving towards us” in this recording.",
+          "A speaker uses the words “big funnel of wind moving towards us” in this recording.",
+          "A speaker uses the words “big funnel of night moving towards us” in this recording.",
+          "A speaker uses the words “big funnel of breakfast moving towards us” in this recording."
         ],
-        "answer": 1,
-        "sourceWordIndex": 134
+        "answer": 1
       }
     ],
     "source": {
@@ -5328,40 +5162,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0803/track-57.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “sad? My grandparents ____ this morning. A”.",
+        "format": "true_false",
+        "text": "A speaker says “sad My grandparents saved this morning A” in the recording.",
         "options": [
-          "saved",
-          "lived",
-          "thought",
-          "called"
+          "True",
+          "False"
         ],
-        "answer": 3,
-        "sourceWordIndex": 8
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “flood destroyed their ____. I'm sorry to”.",
+        "format": "short_answer",
+        "text": "Which detail is mentioned in the conversation?",
         "options": [
-          "house",
-          "street",
-          "museum",
-          "library"
+          "destroyed their house I'm sorry",
+          "destroyed their street I'm sorry",
+          "destroyed their museum I'm sorry",
+          "destroyed their library I'm sorry"
         ],
-        "answer": 0,
-        "sourceWordIndex": 15
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “That’s awful. I ____ your grandparents are”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "breakfast",
-          "dinner",
-          "history",
-          "hope"
+          "A speaker uses the words “That’s awful I breakfast your grandparents are” in this recording.",
+          "A speaker uses the words “That’s awful I dinner your grandparents are” in this recording.",
+          "A speaker uses the words “That’s awful I history your grandparents are” in this recording.",
+          "A speaker uses the words “That’s awful I hope your grandparents are” in this recording."
         ],
-        "answer": 3,
-        "sourceWordIndex": 31
+        "answer": 3
       }
     ],
     "source": {
@@ -5383,40 +5215,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0804/track-58.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “a storm, each ____ should prepare an”.",
+        "format": "true_false",
+        "text": "A speaker says “a storm each family should prepare an” in the recording.",
         "options": [
-          "volleyball",
-          "light",
-          "morning",
-          "family"
+          "True",
+          "False"
         ],
-        "answer": 3,
-        "sourceWordIndex": 34
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “During a storm, ____ inside. Even when”.",
+        "format": "short_answer",
+        "text": "Which phrase matches what you hear?",
         "options": [
-          "cook",
-          "understand",
-          "build",
-          "stay"
+          "a storm cook inside Even",
+          "a storm understand inside Even",
+          "a storm build inside Even",
+          "a storm stay inside Even"
         ],
-        "answer": 3,
-        "sourceWordIndex": 79
+        "answer": 3
       },
       {
-        "text": "Chọn từ nghe được: “away. Listen to ____ instructions from local”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "helpful",
-          "interesting",
-          "important",
-          "confident"
+          "A speaker uses the words “away Listen to helpful instructions from local” in this recording.",
+          "A speaker uses the words “away Listen to interesting instructions from local” in this recording.",
+          "A speaker uses the words “away Listen to important instructions from local” in this recording.",
+          "A speaker uses the words “away Listen to confident instructions from local” in this recording."
         ],
-        "answer": 2,
-        "sourceWordIndex": 128
+        "answer": 2
       }
     ],
     "source": {
@@ -5438,40 +5268,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0804/track-62.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “bit worried. I've ____ had a video”.",
+        "format": "true_false",
+        "text": "A speaker says “bit worried I've often had a video” in the recording.",
         "options": [
-          "never",
-          "often",
-          "finally",
-          "weekly"
+          "True",
+          "False"
         ],
-        "answer": 0,
-        "sourceWordIndex": 30
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “front of the ____. I'll connect with”.",
+        "format": "short_answer",
+        "text": "Which expression does the speaker use?",
         "options": [
-          "backpack",
-          "football",
-          "computer",
-          "rubbish"
+          "of the backpack I'll connect",
+          "of the football I'll connect",
+          "of the computer I'll connect",
+          "of the rubbish I'll connect"
         ],
-        "answer": 2,
-        "sourceWordIndex": 75
+        "answer": 2
       },
       {
-        "text": "Chọn từ nghe được: “connection here. I ____ the conference goes”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "month",
-          "health",
-          "hope",
-          "television"
+          "A speaker uses the words “connection here I month the conference goes” in this recording.",
+          "A speaker uses the words “connection here I health the conference goes” in this recording.",
+          "A speaker uses the words “connection here I hope the conference goes” in this recording.",
+          "A speaker uses the words “connection here I television the conference goes” in this recording."
         ],
-        "answer": 2,
-        "sourceWordIndex": 136
+        "answer": 2
       }
     ],
     "source": {
@@ -5493,40 +5321,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0804/track-65.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “here at 9:____ a.m., and”.",
+        "format": "true_false",
+        "text": "A speaker says “here at 9 30 a m and” in the recording.",
         "options": [
-          "32",
-          "31",
-          "33",
-          "30"
+          "True",
+          "False"
         ],
-        "answer": 3,
-        "sourceWordIndex": 11
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “We need to ____ the devices. This”.",
+        "format": "short_answer",
+        "text": "Which detail is mentioned in the conversation?",
         "options": [
-          "improve",
-          "understand",
-          "test",
-          "study"
+          "need to improve the devices",
+          "need to understand the devices",
+          "need to test the devices",
+          "need to study the devices"
         ],
-        "answer": 2,
-        "sourceWordIndex": 32
+        "answer": 2
       },
       {
-        "text": "Chọn từ nghe được: “and these to ... ____ on. Can you”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "Hold",
-          "Habit",
-          "Breakfast",
-          "Weather"
+          "A speaker uses the words “and these to Hold on Can you” in this recording.",
+          "A speaker uses the words “and these to Habit on Can you” in this recording.",
+          "A speaker uses the words “and these to Breakfast on Can you” in this recording.",
+          "A speaker uses the words “and these to Weather on Can you” in this recording."
         ],
-        "answer": 0,
-        "sourceWordIndex": 54
+        "answer": 0
       }
     ],
     "source": {
@@ -5548,40 +5374,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0804/track-66.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “so remember to ____ me at the”.",
+        "format": "true_false",
+        "text": "A speaker says “so remember to test me at the” in the recording.",
         "options": [
-          "test",
-          "meet",
-          "cycle",
-          "spend"
+          "True",
+          "False"
         ],
-        "answer": 1,
-        "sourceWordIndex": 37
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “move to the \"____ Time” section. It's”.",
+        "format": "short_answer",
+        "text": "Which phrase matches what you hear?",
         "options": [
-          "Modern",
-          "Funny",
-          "Active",
-          "Convenient"
+          "to the Modern Time",
+          "to the Funny Time",
+          "to the Active Time",
+          "to the Convenient Time"
         ],
-        "answer": 0,
-        "sourceWordIndex": 89
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “is about communication ____ in the future”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "devices",
-          "animals",
-          "traditions",
-          "languages"
+          "A speaker uses the words “is about communication devices in the future” in this recording.",
+          "A speaker uses the words “is about communication animals in the future” in this recording.",
+          "A speaker uses the words “is about communication traditions in the future” in this recording.",
+          "A speaker uses the words “is about communication languages in the future” in this recording."
         ],
-        "answer": 0,
-        "sourceWordIndex": 144
+        "answer": 0
       }
     ],
     "source": {
@@ -5603,40 +5427,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0804/track-68.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “online classes are ____ during bad weather”.",
+        "format": "true_false",
+        "text": "A speaker says “online classes are convenient during bad weather” in the recording.",
         "options": [
-          "convenient",
-          "helpful",
-          "creative",
-          "expensive"
+          "True",
+          "False"
         ],
-        "answer": 0,
-        "sourceWordIndex": 31
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “know what you ____. But there’s some”.",
+        "format": "short_answer",
+        "text": "Which expression does the speaker use?",
         "options": [
-          "plant",
-          "cycle",
-          "mean",
-          "listen"
+          "what you plant But there’s",
+          "what you cycle But there’s",
+          "what you mean But there’s",
+          "what you listen But there’s"
         ],
-        "answer": 2,
-        "sourceWordIndex": 84
+        "answer": 2
       },
       {
-        "text": "Chọn từ nghe được: “when our human ____ are not available”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "teachers",
-          "languages",
-          "parents",
-          "computers"
+          "A speaker uses the words “when our human teachers are not available” in this recording.",
+          "A speaker uses the words “when our human languages are not available” in this recording.",
+          "A speaker uses the words “when our human parents are not available” in this recording.",
+          "A speaker uses the words “when our human computers are not available” in this recording."
         ],
-        "answer": 0,
-        "sourceWordIndex": 132
+        "answer": 0
       }
     ],
     "source": {
@@ -5658,40 +5480,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0804/track-71.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “us. We'll have ____ clouds so we”.",
+        "format": "true_false",
+        "text": "A speaker says “us We'll have office clouds so we” in the recording.",
         "options": [
-          "office",
-          "library",
-          "school",
-          "forest"
+          "True",
+          "False"
         ],
-        "answer": 2,
-        "sourceWordIndex": 6
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “carry lots of ____ to school. Great”.",
+        "format": "short_answer",
+        "text": "Which detail is mentioned in the conversation?",
         "options": [
-          "children",
-          "clothes",
-          "programmes",
-          "books"
+          "lots of children to school",
+          "lots of clothes to school",
+          "lots of programmes to school",
+          "lots of books to school"
         ],
-        "answer": 3,
-        "sourceWordIndex": 16
+        "answer": 3
       },
       {
-        "text": "Chọn từ nghe được: “so I can ____ books from the”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "read",
-          "stay",
-          "cook",
-          "try"
+          "A speaker uses the words “so I can read books from the” in this recording.",
+          "A speaker uses the words “so I can stay books from the” in this recording.",
+          "A speaker uses the words “so I can cook books from the” in this recording.",
+          "A speaker uses the words “so I can try books from the” in this recording."
         ],
-        "answer": 0,
-        "sourceWordIndex": 36
+        "answer": 0
       }
     ],
     "source": {
@@ -5713,40 +5533,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0804/track-72.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “it interact with ____? Yes. Students can”.",
+        "format": "true_false",
+        "text": "A speaker says “it interact with students Yes Students can” in the recording.",
         "options": [
-          "clothes",
-          "computers",
-          "friends",
-          "students"
+          "True",
+          "False"
         ],
-        "answer": 3,
-        "sourceWordIndex": 30
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “can also ask ____ that are suitable”.",
+        "format": "short_answer",
+        "text": "Which phrase matches what you hear?",
         "options": [
-          "skills",
-          "questions",
-          "animals",
-          "neighbours"
+          "also ask skills that are",
+          "also ask questions that are",
+          "also ask animals that are",
+          "also ask neighbours that are"
         ],
-        "answer": 1,
-        "sourceWordIndex": 80
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “That's true. Also ____ don't have emotional”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "robots",
-          "films",
-          "subjects",
-          "services"
+          "A speaker uses the words “That's true Also robots don't have emotional” in this recording.",
+          "A speaker uses the words “That's true Also films don't have emotional” in this recording.",
+          "A speaker uses the words “That's true Also subjects don't have emotional” in this recording.",
+          "A speaker uses the words “That's true Also services don't have emotional” in this recording."
         ],
-        "answer": 0,
-        "sourceWordIndex": 134
+        "answer": 0
       }
     ],
     "source": {
@@ -5768,40 +5586,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0804/track-74.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “and Barb. They're ____ back to Soduka”.",
+        "format": "true_false",
+        "text": "A speaker says “and Barb They're spending back to Soduka” in the recording.",
         "options": [
-          "spending",
-          "travelling",
-          "living",
-          "giving"
+          "True",
+          "False"
         ],
-        "answer": 1,
-        "sourceWordIndex": 39
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “so they can ____ back to their”.",
+        "format": "short_answer",
+        "text": "Which expression does the speaker use?",
         "options": [
-          "travel",
-          "listen",
-          "swim",
-          "plant"
+          "they can travel back to",
+          "they can listen back to",
+          "they can swim back to",
+          "they can plant back to"
         ],
-        "answer": 0,
-        "sourceWordIndex": 83
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “of aliens attacking ____? I'm not sure”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "Entrance",
-          "Energy",
-          "Homework",
-          "Earth"
+          "A speaker uses the words “of aliens attacking Entrance I'm not sure” in this recording.",
+          "A speaker uses the words “of aliens attacking Energy I'm not sure” in this recording.",
+          "A speaker uses the words “of aliens attacking Homework I'm not sure” in this recording.",
+          "A speaker uses the words “of aliens attacking Earth I'm not sure” in this recording."
         ],
-        "answer": 3,
-        "sourceWordIndex": 142
+        "answer": 3
       }
     ],
     "source": {
@@ -5823,40 +5639,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0804/track-77.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “Mars may support ____? I'm not sure”.",
+        "format": "true_false",
+        "text": "A speaker says “Mars may support life I'm not sure” in the recording.",
         "options": [
-          "life",
-          "music",
-          "transport",
-          "water"
+          "True",
+          "False"
         ],
-        "answer": 0,
-        "sourceWordIndex": 6
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “it. Scientists are ____ to find life”.",
+        "format": "short_answer",
+        "text": "Which detail is mentioned in the conversation?",
         "options": [
-          "walking",
-          "working",
-          "drawing",
-          "trying"
+          "Scientists are walking to find",
+          "Scientists are working to find",
+          "Scientists are drawing to find",
+          "Scientists are trying to find"
         ],
-        "answer": 3,
-        "sourceWordIndex": 14
+        "answer": 3
       },
       {
-        "text": "Chọn từ nghe được: “her arm in a match last ____”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "hobby",
-          "month",
-          "week",
-          "football"
+          "A speaker uses the words “in a match last hobby” in this recording.",
+          "A speaker uses the words “in a match last month” in this recording.",
+          "A speaker uses the words “in a match last week” in this recording.",
+          "A speaker uses the words “in a match last football” in this recording."
         ],
-        "answer": 2,
-        "sourceWordIndex": 37
+        "answer": 2
       }
     ],
     "source": {
@@ -5878,40 +5692,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2023/0804/track-78.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “times bigger than ____. It has three”.",
+        "format": "true_false",
+        "text": "A speaker says “times bigger than Maths It has three” in the recording.",
         "options": [
-          "Maths",
-          "Health",
-          "Earth",
-          "Night"
+          "True",
+          "False"
         ],
-        "answer": 2,
-        "sourceWordIndex": 31
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “big head, four ____, two legs, and”.",
+        "format": "short_answer",
+        "text": "Which phrase matches what you hear?",
         "options": [
-          "literature",
-          "energy",
-          "earth",
-          "eyes"
+          "head four literature two legs",
+          "head four energy two legs",
+          "head four earth two legs",
+          "head four eyes two legs"
         ],
-        "answer": 3,
-        "sourceWordIndex": 77
+        "answer": 3
       },
       {
-        "text": "Chọn từ nghe được: “use rockets to ____ at very high”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "enjoy",
-          "improve",
-          "travel",
-          "come"
+          "A speaker uses the words “use rockets to enjoy at very high” in this recording.",
+          "A speaker uses the words “use rockets to improve at very high” in this recording.",
+          "A speaker uses the words “use rockets to travel at very high” in this recording.",
+          "A speaker uses the words “use rockets to come at very high” in this recording."
         ],
-        "answer": 2,
-        "sourceWordIndex": 135
+        "answer": 2
       }
     ],
     "source": {
@@ -5933,7 +5745,7 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/ex1-getting-u1-ta9-global.mp3"
     ],
-    "taskPrompt": "Nghe toàn bộ bản ghi. Đọc nhận định và chọn True/False; sau đó nghe câu hỏi và chọn đáp án đúng A, B, C hoặc D. Câu hỏi theo thứ tự nội dung bài nghe.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
         "format": "true_false",
@@ -5945,24 +5757,24 @@
         "answer": 1
       },
       {
-        "format": "multiple_choice",
-        "text": "Why hasn't Ann seen Mi at the Reading Club very often?",
+        "format": "short_answer",
+        "text": "Why hasn't Ann seen Mi often?",
         "options": [
-          "Mi has stopped reading.",
-          "Mi has gone abroad.",
-          "Mi has been busy moving into her new home.",
-          "Mi has joined a sports club."
+          "Busy moving house",
+          "Away on holiday",
+          "Joined a sports club",
+          "Studying for an exam"
         ],
-        "answer": 2
+        "answer": 0
       },
       {
-        "format": "multiple_choice",
+        "format": "long_answer",
         "text": "How did a new neighbour help Mi?",
         "options": [
-          "She showed Mi the way to the bus station.",
-          "She took Mi to the hospital.",
-          "She helped Mi buy a house.",
-          "She lent Mi a bicycle."
+          "The neighbour showed her the way to the bus station.",
+          "The neighbour drove her directly to the airport.",
+          "The neighbour helped her move into a new school.",
+          "The neighbour showed her where to buy new furniture."
         ],
         "answer": 0
       }
@@ -5986,7 +5798,7 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/ex1-communication-u1-ta9-global.mp3"
     ],
-    "taskPrompt": "Nghe toàn bộ bản ghi. Đọc nhận định và chọn True/False; sau đó nghe câu hỏi và chọn đáp án đúng A, B, C hoặc D. Câu hỏi theo thứ tự nội dung bài nghe.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
         "format": "true_false",
@@ -5998,26 +5810,26 @@
         "answer": 0
       },
       {
-        "format": "multiple_choice",
-        "text": "How does Tom respond to Mai's request?",
+        "format": "short_answer",
+        "text": "How does Tom respond to Mai?",
         "options": [
-          "He says he is too busy.",
-          "He asks someone else to help.",
-          "He refuses politely.",
-          "He agrees to help."
+          "He refuses politely",
+          "He asks for money",
+          "He agrees to help",
+          "He leaves immediately"
         ],
-        "answer": 3
+        "answer": 2
       },
       {
-        "format": "multiple_choice",
+        "format": "long_answer",
         "text": "What does Ann ask Mr Nam to show her?",
         "options": [
-          "How to get to the airport.",
-          "How to open a gate.",
-          "Where to buy vegetables.",
-          "How to carry a suitcase."
+          "She asks him to show her how to open the gate.",
+          "She wants him to explain how to reach the airport.",
+          "She asks him to carry the suitcase for her.",
+          "She wants him to show her the nearest supermarket."
         ],
-        "answer": 1
+        "answer": 0
       }
     ],
     "source": {
@@ -6039,7 +5851,7 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/ex1-skills2-u1-ta9-global.mp3"
     ],
-    "taskPrompt": "Nghe toàn bộ bản ghi. Đọc nhận định và chọn True/False; sau đó nghe câu hỏi và chọn đáp án đúng A, B, C hoặc D. Câu hỏi theo thứ tự nội dung bài nghe.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
         "format": "true_false",
@@ -6051,26 +5863,26 @@
         "answer": 0
       },
       {
-        "format": "multiple_choice",
-        "text": "What does Mr Vinh do for a living?",
+        "format": "short_answer",
+        "text": "What is Mr Vinh's job?",
         "options": [
-          "He is a teacher.",
-          "He is a bus driver.",
-          "He is a garbage collector.",
-          "He is a police officer."
-        ],
-        "answer": 2
-      },
-      {
-        "format": "multiple_choice",
-        "text": "What does Mr Vinh teach people in the neighbourhood?",
-        "options": [
-          "How to plant flowers.",
-          "How to sort rubbish into the correct bins.",
-          "How to repair their houses.",
-          "How to use public transport."
+          "A bus driver",
+          "A garbage collector",
+          "A police officer",
+          "A school teacher"
         ],
         "answer": 1
+      },
+      {
+        "format": "long_answer",
+        "text": "What does Mr Vinh teach local people?",
+        "options": [
+          "He teaches them how to sort rubbish into the correct bins.",
+          "He teaches them how to grow vegetables in the school garden.",
+          "He explains how to repair their broken household machines.",
+          "He shows them how to drive through the city safely."
+        ],
+        "answer": 0
       }
     ],
     "source": {
@@ -6092,7 +5904,7 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/ex1-getting-u2-ta9-global.mp3"
     ],
-    "taskPrompt": "Nghe toàn bộ bản ghi. Đọc nhận định và chọn True/False; sau đó nghe câu hỏi và chọn đáp án đúng A, B, C hoặc D. Câu hỏi theo thứ tự nội dung bài nghe.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
         "format": "true_false",
@@ -6104,26 +5916,26 @@
         "answer": 0
       },
       {
-        "format": "multiple_choice",
-        "text": "How does Ben usually travel around London?",
+        "format": "short_answer",
+        "text": "How does Ben travel around London?",
         "options": [
-          "By bicycle.",
-          "By bus.",
-          "By underground.",
-          "By taxi."
-        ],
-        "answer": 2
-      },
-      {
-        "format": "multiple_choice",
-        "text": "What is the large building downtown used as now?",
-        "options": [
-          "A public library.",
-          "A shopping mall.",
-          "A hospital.",
-          "A bus station."
+          "By taxi",
+          "By underground",
+          "By bicycle",
+          "On foot"
         ],
         "answer": 1
+      },
+      {
+        "format": "long_answer",
+        "text": "What is the large downtown building used for now?",
+        "options": [
+          "The building is now used as a shopping mall.",
+          "The building has become a new public library.",
+          "The old building is now a large hospital.",
+          "The building is used as a central bus station."
+        ],
+        "answer": 0
       }
     ],
     "source": {
@@ -6145,7 +5957,7 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/ex1-communication-u2-ta9-global.mp3"
     ],
-    "taskPrompt": "Nghe toàn bộ bản ghi. Đọc nhận định và chọn True/False; sau đó nghe câu hỏi và chọn đáp án đúng A, B, C hoặc D. Câu hỏi theo thứ tự nội dung bài nghe.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
         "format": "true_false",
@@ -6157,26 +5969,26 @@
         "answer": 1
       },
       {
-        "format": "multiple_choice",
-        "text": "What help does Minh offer Hoang?",
+        "format": "short_answer",
+        "text": "What does Minh offer Hoang?",
         "options": [
-          "To lend him a bicycle.",
-          "To take him to the airport.",
-          "To buy him a ticket.",
-          "To give him a ride home."
+          "A ride home",
+          "A train ticket",
+          "Some money",
+          "A new bike"
         ],
-        "answer": 3
+        "answer": 0
       },
       {
-        "format": "multiple_choice",
+        "format": "long_answer",
         "text": "How does Hoang respond to Minh's offer?",
         "options": [
-          "He says that he can walk alone.",
-          "He thanks Minh for being kind.",
-          "He asks for some money.",
-          "He says he doesn't know Minh."
+          "He thanks Minh and says the offer is very kind.",
+          "He refuses the offer because he wants to walk.",
+          "He asks Minh to lend him some money instead.",
+          "He promises to call Minh after he arrives home."
         ],
-        "answer": 1
+        "answer": 0
       }
     ],
     "source": {
@@ -6198,7 +6010,7 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/ex2-skills2-u2-ta9-global.mp3"
     ],
-    "taskPrompt": "Nghe toàn bộ bản ghi. Đọc nhận định và chọn True/False; sau đó nghe câu hỏi và chọn đáp án đúng A, B, C hoặc D. Câu hỏi theo thứ tự nội dung bài nghe.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
         "format": "true_false",
@@ -6210,26 +6022,26 @@
         "answer": 1
       },
       {
-        "format": "multiple_choice",
-        "text": "What does Elena want more of in her city?",
+        "format": "short_answer",
+        "text": "What does Elena want more of?",
         "options": [
-          "Expensive shopping malls.",
-          "Free sports facilities.",
-          "Food stalls.",
-          "More cinemas."
+          "Shopping centres",
+          "Free sports facilities",
+          "Cinema tickets",
+          "Food stalls"
         ],
         "answer": 1
       },
       {
-        "format": "multiple_choice",
+        "format": "long_answer",
         "text": "What does Chi think parents should teach their children?",
         "options": [
-          "How to drive a bus.",
-          "How to build houses.",
-          "How to cook.",
-          "How to use an underground train."
+          "She believes parents should teach their children how to cook.",
+          "She thinks children need to learn how to drive buses.",
+          "She says parents should teach their children to build houses.",
+          "She believes children should learn to ride the underground."
         ],
-        "answer": 2
+        "answer": 0
       }
     ],
     "source": {
@@ -6251,40 +6063,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/ex1-getting-u3-ta9-global.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “sleep, eat a ____ diet, and do”.",
+        "format": "true_false",
+        "text": "A speaker says “sleep eat a healthy diet and do” in the recording.",
         "options": [
-          "dirty",
-          "friendly",
-          "healthy",
-          "shy"
+          "True",
+          "False"
         ],
-        "answer": 2,
-        "sourceWordIndex": 36
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “understand that exams ____ about lots of”.",
+        "format": "short_answer",
+        "text": "Which expression does the speaker use?",
         "options": [
-          "take",
-          "talk",
-          "visit",
-          "bring"
+          "that exams take about lots",
+          "that exams talk about lots",
+          "that exams visit about lots",
+          "that exams bring about lots"
         ],
-        "answer": 3,
-        "sourceWordIndex": 90
+        "answer": 3
       },
       {
-        "text": "Chọn từ nghe được: “your study and ____. But how can”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "energy",
-          "dinner",
-          "computer",
-          "life"
+          "A speaker uses the words “your study and energy But how can” in this recording.",
+          "A speaker uses the words “your study and dinner But how can” in this recording.",
+          "A speaker uses the words “your study and computer But how can” in this recording.",
+          "A speaker uses the words “your study and life But how can” in this recording."
         ],
-        "answer": 3,
-        "sourceWordIndex": 148
+        "answer": 3
       }
     ],
     "source": {
@@ -6306,40 +6116,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/17.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “the door, Tom? ____? Can you open”.",
+        "format": "true_false",
+        "text": "A speaker says “the door Tom Evening Can you open” in the recording.",
         "options": [
-          "Evening",
-          "Sorry",
-          "Water",
-          "History"
+          "True",
+          "False"
         ],
-        "answer": 1,
-        "sourceWordIndex": 6
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “to the post ____? I beg your”.",
+        "format": "short_answer",
+        "text": "Which detail is mentioned in the conversation?",
         "options": [
-          "world",
-          "city",
-          "office",
-          "island"
+          "the post world I beg",
+          "the post city I beg",
+          "the post office I beg",
+          "the post island I beg"
         ],
-        "answer": 2,
-        "sourceWordIndex": 25
+        "answer": 2
       },
       {
-        "text": "Chọn từ nghe được: “Would you mind ____ me the way”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "cycling",
-          "showing",
-          "saving",
-          "working"
+          "A speaker uses the words “Would you mind cycling me the way” in this recording.",
+          "A speaker uses the words “Would you mind showing me the way” in this recording.",
+          "A speaker uses the words “Would you mind saving me the way” in this recording.",
+          "A speaker uses the words “Would you mind working me the way” in this recording."
         ],
-        "answer": 1,
-        "sourceWordIndex": 33
+        "answer": 1
       }
     ],
     "source": {
@@ -6361,40 +6169,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/18.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “due dates and ____ dates into a”.",
+        "format": "true_false",
+        "text": "A speaker says “due dates and test dates into a” in the recording.",
         "options": [
-          "test",
-          "change",
-          "sing",
-          "mean"
+          "True",
+          "False"
         ],
-        "answer": 0,
-        "sourceWordIndex": 32
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “a lot of ____ that can take”.",
+        "format": "short_answer",
+        "text": "Which phrase matches what you hear?",
         "options": [
-          "activities",
-          "friends",
-          "parents",
-          "feelings"
+          "lot of activities that can",
+          "lot of friends that can",
+          "lot of parents that can",
+          "lot of feelings that can"
         ],
-        "answer": 0,
-        "sourceWordIndex": 69
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “arrange to start ____ on them well”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "working",
-          "shopping",
-          "reading",
-          "teaching"
+          "A speaker uses the words “arrange to start working on them well” in this recording.",
+          "A speaker uses the words “arrange to start shopping on them well” in this recording.",
+          "A speaker uses the words “arrange to start reading on them well” in this recording.",
+          "A speaker uses the words “arrange to start teaching on them well” in this recording."
         ],
-        "answer": 0,
-        "sourceWordIndex": 126
+        "answer": 0
       }
     ],
     "source": {
@@ -6416,40 +6222,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/21.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “in the world. ____! When did people”.",
+        "format": "true_false",
+        "text": "A speaker says “in the world Jealous When did people” in the recording.",
         "options": [
-          "Fantastic",
-          "Jealous",
-          "Expensive",
-          "Natural"
+          "True",
+          "False"
         ],
-        "answer": 0,
-        "sourceWordIndex": 32
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “site. People were ____ it for 36”.",
+        "format": "short_answer",
+        "text": "Which expression does the speaker use?",
         "options": [
-          "cooking",
-          "improving",
-          "taking",
-          "building"
+          "People were cooking it for",
+          "People were improving it for",
+          "People were taking it for",
+          "People were building it for"
         ],
-        "answer": 3,
-        "sourceWordIndex": 92
+        "answer": 3
       },
       {
-        "text": "Chọn từ nghe được: “castle in the ____. Mi & Nam: Amazing”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "office",
-          "school",
-          "world",
-          "market"
+          "A speaker uses the words “castle in the office Mi Nam Amazing” in this recording.",
+          "A speaker uses the words “castle in the school Mi Nam Amazing” in this recording.",
+          "A speaker uses the words “castle in the world Mi Nam Amazing” in this recording.",
+          "A speaker uses the words “castle in the market Mi Nam Amazing” in this recording."
         ],
-        "answer": 2,
-        "sourceWordIndex": 147
+        "answer": 2
       }
     ],
     "source": {
@@ -6471,40 +6275,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/24.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “very much for ____ us around Angkor”.",
+        "format": "true_false",
+        "text": "A speaker says “very much for showing us around Angkor” in the recording.",
         "options": [
-          "travelling",
-          "listening",
-          "showing",
-          "talking"
+          "True",
+          "False"
         ],
-        "answer": 2,
-        "sourceWordIndex": 5
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “Angkor Wat. You're ____. Thanks a lot”.",
+        "format": "short_answer",
+        "text": "Which detail is mentioned in the conversation?",
         "options": [
-          "welcome",
-          "family",
-          "water",
-          "robot"
+          "Wat You're welcome Thanks a",
+          "Wat You're family Thanks a",
+          "Wat You're water Thanks a",
+          "Wat You're robot Thanks a"
         ],
-        "answer": 0,
-        "sourceWordIndex": 11
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “about life in the ____. No problem”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "museum",
-          "office",
-          "countryside",
-          "road"
+          "A speaker uses the words “about life in the museum No problem” in this recording.",
+          "A speaker uses the words “about life in the office No problem” in this recording.",
+          "A speaker uses the words “about life in the countryside No problem” in this recording.",
+          "A speaker uses the words “about life in the road No problem” in this recording."
         ],
-        "answer": 2,
-        "sourceWordIndex": 22
+        "answer": 2
       }
     ],
     "source": {
@@ -6526,40 +6328,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/25.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “a three-month summer ____! Did you stay”.",
+        "format": "true_false",
+        "text": "A speaker says “a three month summer badminton Did you stay” in the recording.",
         "options": [
-          "badminton",
-          "holiday",
-          "music",
-          "earth"
+          "True",
+          "False"
         ],
-        "answer": 1,
-        "sourceWordIndex": 34
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “study the same ____ as we do”.",
+        "format": "short_answer",
+        "text": "Which phrase matches what you hear?",
         "options": [
-          "feelings",
-          "subjects",
-          "sisters",
-          "clothes"
+          "the same feelings as we",
+          "the same subjects as we",
+          "the same sisters as we",
+          "the same clothes as we"
         ],
-        "answer": 1,
-        "sourceWordIndex": 76
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “face-to-face. And we ____ traditional games such”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "started",
-          "took",
-          "played",
-          "made"
+          "A speaker uses the words “to face And we started traditional games such” in this recording.",
+          "A speaker uses the words “to face And we took traditional games such” in this recording.",
+          "A speaker uses the words “to face And we played traditional games such” in this recording.",
+          "A speaker uses the words “to face And we made traditional games such” in this recording."
         ],
-        "answer": 2,
-        "sourceWordIndex": 139
+        "answer": 2
       }
     ],
     "source": {
@@ -6581,40 +6381,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/27.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “We visited Langbiang ____ and Cu Lan”.",
+        "format": "true_false",
+        "text": "A speaker says “We visited Langbiang Mountain and Cu Lan” in the recording.",
         "options": [
-          "Countryside",
-          "Airport",
-          "Island",
-          "Mountain"
+          "True",
+          "False"
         ],
-        "answer": 3,
-        "sourceWordIndex": 32
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “more than 150 ____ and animal species”.",
+        "format": "short_answer",
+        "text": "Which expression does the speaker use?",
         "options": [
-          "know",
-          "try",
-          "plant",
-          "talk"
+          "than 150 know and animal",
+          "than 150 try and animal",
+          "than 150 plant and animal",
+          "than 150 talk and animal"
         ],
-        "answer": 2,
-        "sourceWordIndex": 89
+        "answer": 2
       },
       {
-        "text": "Chọn từ nghe được: “we saw an ____ gong show. We”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "difficult",
-          "funny",
-          "interesting",
-          "beautiful"
+          "A speaker uses the words “we saw an difficult gong show We” in this recording.",
+          "A speaker uses the words “we saw an funny gong show We” in this recording.",
+          "A speaker uses the words “we saw an interesting gong show We” in this recording.",
+          "A speaker uses the words “we saw an beautiful gong show We” in this recording."
         ],
-        "answer": 2,
-        "sourceWordIndex": 152
+        "answer": 2
       }
     ],
     "source": {
@@ -6636,40 +6434,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/30.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “really sorry. I'm ____. There was a”.",
+        "format": "true_false",
+        "text": "A speaker says “really sorry I'm day There was a” in the recording.",
         "options": [
-          "day",
-          "rain",
-          "late",
-          "sport"
+          "True",
+          "False"
         ],
-        "answer": 2,
-        "sourceWordIndex": 8
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “you done the ____ yet? Oops, my”.",
+        "format": "short_answer",
+        "text": "Which detail is mentioned in the conversation?",
         "options": [
-          "sharing",
-          "playing",
-          "making",
-          "washing"
+          "done the sharing yet Oops",
+          "done the playing yet Oops",
+          "done the making yet Oops",
+          "done the washing yet Oops"
         ],
-        "answer": 3,
-        "sourceWordIndex": 22
+        "answer": 3
       },
       {
-        "text": "Chọn từ nghe được: “later. Oh, that's ____. But please do”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "health",
-          "right",
-          "work",
-          "ticket"
+          "A speaker uses the words “later Oh that's health But please do” in this recording.",
+          "A speaker uses the words “later Oh that's right But please do” in this recording.",
+          "A speaker uses the words “later Oh that's work But please do” in this recording.",
+          "A speaker uses the words “later Oh that's ticket But please do” in this recording."
         ],
-        "answer": 1,
-        "sourceWordIndex": 37
+        "answer": 1
       }
     ],
     "source": {
@@ -6691,40 +6487,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/31.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “things. I could ____ get anything back”.",
+        "format": "true_false",
+        "text": "A speaker says “things I could never get anything back” in the recording.",
         "options": [
-          "slowly",
-          "certainly",
-          "never",
-          "often"
+          "True",
+          "False"
         ],
-        "answer": 2,
-        "sourceWordIndex": 29
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “he returned my ____ and went away”.",
+        "format": "short_answer",
+        "text": "Which phrase matches what you hear?",
         "options": [
-          "money",
-          "light",
-          "noise",
-          "schoolyard"
+          "returned my money and went",
+          "returned my light and went",
+          "returned my noise and went",
+          "returned my schoolyard and went"
         ],
-        "answer": 0,
-        "sourceWordIndex": 79
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “did. But I ____ learnt it by”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "probably",
-          "always",
-          "actually",
-          "slowly"
+          "A speaker uses the words “did But I probably learnt it by” in this recording.",
+          "A speaker uses the words “did But I always learnt it by” in this recording.",
+          "A speaker uses the words “did But I actually learnt it by” in this recording.",
+          "A speaker uses the words “did But I slowly learnt it by” in this recording."
         ],
-        "answer": 2,
-        "sourceWordIndex": 144
+        "answer": 2
       }
     ],
     "source": {
@@ -6746,40 +6540,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/33.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “played outdoors. The ____ were simple and”.",
+        "format": "true_false",
+        "text": "A speaker says “played outdoors The friends were simple and” in the recording.",
         "options": [
-          "friends",
-          "languages",
-          "games",
-          "buildings"
+          "True",
+          "False"
         ],
-        "answer": 2,
-        "sourceWordIndex": 29
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “thing is that ____ nowadays have more”.",
+        "format": "short_answer",
+        "text": "Which expression does the speaker use?",
         "options": [
-          "children",
-          "languages",
-          "feelings",
-          "projects"
+          "is that children nowadays have",
+          "is that languages nowadays have",
+          "is that feelings nowadays have",
+          "is that projects nowadays have"
         ],
-        "answer": 0,
-        "sourceWordIndex": 79
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “more opportunities to ____ now? That's right”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "shop",
-          "cook",
-          "like",
-          "learn"
+          "A speaker uses the words “more opportunities to shop now That's right” in this recording.",
+          "A speaker uses the words “more opportunities to cook now That's right” in this recording.",
+          "A speaker uses the words “more opportunities to like now That's right” in this recording.",
+          "A speaker uses the words “more opportunities to learn now That's right” in this recording."
         ],
-        "answer": 3,
-        "sourceWordIndex": 135
+        "answer": 3
       }
     ],
     "source": {
@@ -6801,40 +6593,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/36.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “I will ____ with you the links”.",
+        "format": "true_false",
+        "text": "A speaker says “I will share with you the links” in the recording.",
         "options": [
-          "help",
-          "share",
-          "plant",
-          "cycle"
+          "True",
+          "False"
         ],
-        "answer": 1,
-        "sourceWordIndex": 2
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “about the ancient ____ of Duong Lam”.",
+        "format": "short_answer",
+        "text": "Which detail is mentioned in the conversation?",
         "options": [
-          "village",
-          "mountain",
-          "town",
-          "beach"
+          "the ancient village of Duong",
+          "the ancient mountain of Duong",
+          "the ancient town of Duong",
+          "the ancient beach of Duong"
         ],
-        "answer": 0,
-        "sourceWordIndex": 10
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “dog to the ____. Great! I appreciate”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "backpack",
-          "swimming",
-          "picnic",
-          "schoolyard"
+          "A speaker uses the words “dog to the backpack Great I appreciate” in this recording.",
+          "A speaker uses the words “dog to the swimming Great I appreciate” in this recording.",
+          "A speaker uses the words “dog to the picnic Great I appreciate” in this recording.",
+          "A speaker uses the words “dog to the schoolyard Great I appreciate” in this recording."
         ],
-        "answer": 2,
-        "sourceWordIndex": 25
+        "answer": 2
       }
     ],
     "source": {
@@ -6856,40 +6646,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/37.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “usually three generations ____ together in a”.",
+        "format": "true_false",
+        "text": "A speaker says “usually three generations visiting together in a” in the recording.",
         "options": [
-          "visiting",
-          "living",
-          "staying",
-          "knitting"
+          "True",
+          "False"
         ],
-        "answer": 1,
-        "sourceWordIndex": 26
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “less tiring. Lastly, ____ in the past”.",
+        "format": "short_answer",
+        "text": "Which phrase matches what you hear?",
         "options": [
-          "teachers",
-          "friends",
-          "buildings",
-          "families"
+          "tiring Lastly teachers in the",
+          "tiring Lastly friends in the",
+          "tiring Lastly buildings in the",
+          "tiring Lastly families in the"
         ],
-        "answer": 3,
-        "sourceWordIndex": 78
+        "answer": 3
       },
       {
-        "text": "Chọn từ nghe được: “their parents to ____ to them, too”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "stay",
-          "save",
-          "want",
-          "listen"
+          "A speaker uses the words “their parents to stay to them too” in this recording.",
+          "A speaker uses the words “their parents to save to them too” in this recording.",
+          "A speaker uses the words “their parents to want to them too” in this recording.",
+          "A speaker uses the words “their parents to listen to them too” in this recording."
         ],
-        "answer": 3,
-        "sourceWordIndex": 135
+        "answer": 3
       }
     ],
     "source": {
@@ -6911,40 +6699,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/41.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “What did you ____ about in the”.",
+        "format": "true_false",
+        "text": "A speaker says “What did you talk about in the” in the recording.",
         "options": [
-          "understand",
-          "try",
-          "know",
-          "talk"
+          "True",
+          "False"
         ],
-        "answer": 3,
-        "sourceWordIndex": 31
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “that we can't ____ admiring. So that's”.",
+        "format": "short_answer",
+        "text": "Which expression does the speaker use?",
         "options": [
-          "bring",
-          "help",
-          "work",
-          "have"
+          "we can't bring admiring So",
+          "we can't help admiring So",
+          "we can't work admiring So",
+          "we can't have admiring So"
         ],
-        "answer": 1,
-        "sourceWordIndex": 83
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “to visit those ____, and I answered”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "places",
-          "festivals",
-          "clothes",
-          "activities"
+          "A speaker uses the words “to visit those places and I answered” in this recording.",
+          "A speaker uses the words “to visit those festivals and I answered” in this recording.",
+          "A speaker uses the words “to visit those clothes and I answered” in this recording.",
+          "A speaker uses the words “to visit those activities and I answered” in this recording."
         ],
-        "answer": 0,
-        "sourceWordIndex": 143
+        "answer": 0
       }
     ],
     "source": {
@@ -6966,40 +6752,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/44.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “Can I ____ a horror film, Mum”.",
+        "format": "true_false",
+        "text": "A speaker says “Can I want a horror film Mum” in the recording.",
         "options": [
-          "want",
-          "improve",
-          "study",
-          "watch"
+          "True",
+          "False"
         ],
-        "answer": 3,
-        "sourceWordIndex": 2
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “you can't. It's ____ now. May we”.",
+        "format": "short_answer",
+        "text": "Which detail is mentioned in the conversation?",
         "options": [
-          "stress",
-          "family",
-          "evening",
-          "late"
+          "can't It's stress now May",
+          "can't It's family now May",
+          "can't It's evening now May",
+          "can't It's late now May"
         ],
-        "answer": 3,
-        "sourceWordIndex": 12
+        "answer": 3
       },
       {
-        "text": "Chọn từ nghe được: “Sure. But be ____. It's very dark”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "shy",
-          "careful",
-          "clean",
-          "responsible"
+          "A speaker uses the words “Sure But be shy It's very dark” in this recording.",
+          "A speaker uses the words “Sure But be careful It's very dark” in this recording.",
+          "A speaker uses the words “Sure But be clean It's very dark” in this recording.",
+          "A speaker uses the words “Sure But be responsible It's very dark” in this recording."
         ],
-        "answer": 1,
-        "sourceWordIndex": 28
+        "answer": 1
       }
     ],
     "source": {
@@ -7021,40 +6805,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2025/0212/listen-to-the-passage-and-tick-the-things-you-hear-hc-liu.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “our world's tropical ____ areas. It is”.",
+        "format": "true_false",
+        "text": "A speaker says “our world's tropical forest areas It is” in the recording.",
         "options": [
-          "cinema",
-          "mountain",
-          "forest",
-          "countryside"
+          "True",
+          "False"
         ],
-        "answer": 2,
-        "sourceWordIndex": 25
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “wonders of the ____. It has so”.",
+        "format": "short_answer",
+        "text": "Which phrase matches what you hear?",
         "options": [
-          "world",
-          "cinema",
-          "garden",
-          "countryside"
+          "of the world It has",
+          "of the cinema It has",
+          "of the garden It has",
+          "of the countryside It has"
         ],
-        "answer": 0,
-        "sourceWordIndex": 86
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “damaged ecosystems. They ____ trees and establish”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "swim",
-          "plant",
-          "sing",
-          "enjoy"
+          "A speaker uses the words “damaged ecosystems They swim trees and establish” in this recording.",
+          "A speaker uses the words “damaged ecosystems They plant trees and establish” in this recording.",
+          "A speaker uses the words “damaged ecosystems They sing trees and establish” in this recording.",
+          "A speaker uses the words “damaged ecosystems They enjoy trees and establish” in this recording."
         ],
-        "answer": 1,
-        "sourceWordIndex": 154
+        "answer": 1
       }
     ],
     "source": {
@@ -7076,40 +6858,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/47.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “time on the ____. That's how I”.",
+        "format": "true_false",
+        "text": "A speaker says “time on the forest That's how I” in the recording.",
         "options": [
-          "forest",
-          "beach",
-          "market",
-          "museum"
+          "True",
+          "False"
         ],
-        "answer": 1,
-        "sourceWordIndex": 39
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “and rent a ____ accommodation. He usually”.",
+        "format": "short_answer",
+        "text": "Which expression does the speaker use?",
         "options": [
-          "generous",
-          "cheap",
-          "busy",
-          "careful"
+          "rent a generous accommodation He",
+          "rent a cheap accommodation He",
+          "rent a busy accommodation He",
+          "rent a careful accommodation He"
         ],
-        "answer": 1,
-        "sourceWordIndex": 101
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “perfect destination for ____ tourists. Yes, I”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "food",
-          "webcam",
-          "football",
-          "habit"
+          "A speaker uses the words “perfect destination for food tourists Yes I” in this recording.",
+          "A speaker uses the words “perfect destination for webcam tourists Yes I” in this recording.",
+          "A speaker uses the words “perfect destination for football tourists Yes I” in this recording.",
+          "A speaker uses the words “perfect destination for habit tourists Yes I” in this recording."
         ],
-        "answer": 0,
-        "sourceWordIndex": 170
+        "answer": 0
       }
     ],
     "source": {
@@ -7131,40 +6911,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/50.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “up or we'll ____ the train. Yes”.",
+        "format": "true_false",
+        "text": "A speaker says “up or we'll miss the train Yes” in the recording.",
         "options": [
-          "games",
-          "miss",
-          "sports",
-          "languages"
+          "True",
+          "False"
         ],
-        "answer": 1,
-        "sourceWordIndex": 7
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “Yes, Mum. I'm ____. Is it necessary”.",
+        "format": "short_answer",
+        "text": "Which detail is mentioned in the conversation?",
         "options": [
-          "staying",
-          "knitting",
-          "coming",
-          "watching"
+          "Mum I'm staying Is it",
+          "Mum I'm knitting Is it",
+          "Mum I'm coming Is it",
+          "Mum I'm watching Is it"
         ],
-        "answer": 2,
-        "sourceWordIndex": 13
+        "answer": 2
       },
       {
-        "text": "Chọn từ nghe được: “wait in the ____? I'm sorry, it”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "festival",
-          "queue",
-          "week",
-          "rain"
+          "A speaker uses the words “wait in the festival I'm sorry it” in this recording.",
+          "A speaker uses the words “wait in the queue I'm sorry it” in this recording.",
+          "A speaker uses the words “wait in the week I'm sorry it” in this recording.",
+          "A speaker uses the words “wait in the rain I'm sorry it” in this recording."
         ],
-        "answer": 1,
-        "sourceWordIndex": 23
+        "answer": 1
       }
     ],
     "source": {
@@ -7186,40 +6964,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/51.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “with its vast ____ hills and fields”.",
+        "format": "true_false",
+        "text": "A speaker says “with its vast grey hills and fields” in the recording.",
         "options": [
-          "grey",
-          "green",
-          "red",
-          "yellow"
+          "True",
+          "False"
         ],
-        "answer": 1,
-        "sourceWordIndex": 29
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “the village. The ____ ticket to the”.",
+        "format": "short_answer",
+        "text": "Which phrase matches what you hear?",
         "options": [
-          "entrance",
-          "computer",
-          "technology",
-          "basketball"
+          "village The entrance ticket to",
+          "village The computer ticket to",
+          "village The technology ticket to",
+          "village The basketball ticket to"
         ],
-        "answer": 0,
-        "sourceWordIndex": 89
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “the main high ____ where the Brontes”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "city",
-          "country",
-          "street",
-          "village"
+          "A speaker uses the words “the main high city where the Brontes” in this recording.",
+          "A speaker uses the words “the main high country where the Brontes” in this recording.",
+          "A speaker uses the words “the main high street where the Brontes” in this recording.",
+          "A speaker uses the words “the main high village where the Brontes” in this recording."
         ],
-        "answer": 2,
-        "sourceWordIndex": 148
+        "answer": 2
       }
     ],
     "source": {
@@ -7241,40 +7017,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/53.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “you. Nice to ____ you all. This”.",
+        "format": "true_false",
+        "text": "A speaker says “you Nice to meet you all This” in the recording.",
         "options": [
-          "listen",
-          "collect",
-          "meet",
-          "share"
+          "True",
+          "False"
         ],
-        "answer": 2,
-        "sourceWordIndex": 24
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “Jack? Ah, I ____ trousers. In American”.",
+        "format": "short_answer",
+        "text": "Which expression does the speaker use?",
         "options": [
-          "prefer",
-          "play",
-          "mean",
-          "love"
+          "Ah I prefer trousers In",
+          "Ah I play trousers In",
+          "Ah I mean trousers In",
+          "Ah I love trousers In"
         ],
-        "answer": 2,
-        "sourceWordIndex": 82
+        "answer": 2
       },
       {
-        "text": "Chọn từ nghe được: “of you speak ____? Good question. Most”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "Technology",
-          "Suitcase",
-          "Breakfast",
-          "English"
+          "A speaker uses the words “of you speak Technology Good question Most” in this recording.",
+          "A speaker uses the words “of you speak Suitcase Good question Most” in this recording.",
+          "A speaker uses the words “of you speak Breakfast Good question Most” in this recording.",
+          "A speaker uses the words “of you speak English Good question Most” in this recording."
         ],
-        "answer": 3,
-        "sourceWordIndex": 132
+        "answer": 3
       }
     ],
     "source": {
@@ -7296,40 +7070,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/56.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “luck with your ____ exam. Thanks. I'll”.",
+        "format": "true_false",
+        "text": "A speaker says “luck with your Literature exam Thanks I'll” in the recording.",
         "options": [
-          "Literature",
-          "Month",
-          "English",
-          "Suitcase"
+          "True",
+          "False"
         ],
-        "answer": 2,
-        "sourceWordIndex": 4
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “my best. I've ____ that you're moving”.",
+        "format": "short_answer",
+        "text": "Which detail is mentioned in the conversation?",
         "options": [
-          "went",
-          "called",
-          "heard",
-          "worked"
+          "best I've went that you're",
+          "best I've called that you're",
+          "best I've heard that you're",
+          "best I've worked that you're"
         ],
-        "answer": 2,
-        "sourceWordIndex": 12
+        "answer": 2
       },
       {
-        "text": "Chọn từ nghe được: “the best of ____. Thank you so”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "luck",
-          "light",
-          "entrance",
-          "money"
+          "A speaker uses the words “the best of luck Thank you so” in this recording.",
+          "A speaker uses the words “the best of light Thank you so” in this recording.",
+          "A speaker uses the words “the best of entrance Thank you so” in this recording.",
+          "A speaker uses the words “the best of money Thank you so” in this recording."
         ],
-        "answer": 0,
-        "sourceWordIndex": 26
+        "answer": 0
       }
     ],
     "source": {
@@ -7351,40 +7123,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/57.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “spend time reading ____ kinds of English”.",
+        "format": "true_false",
+        "text": "A speaker says “spend time reading different kinds of English” in the recording.",
         "options": [
-          "different",
-          "interesting",
-          "dangerous",
-          "natural"
+          "True",
+          "False"
         ],
-        "answer": 0,
-        "sourceWordIndex": 32
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “also helps me ____ better when to”.",
+        "format": "short_answer",
+        "text": "Which phrase matches what you hear?",
         "options": [
-          "understand",
-          "sell",
-          "give",
-          "listen"
+          "helps me understand better when",
+          "helps me sell better when",
+          "helps me give better when",
+          "helps me listen better when"
         ],
-        "answer": 0,
-        "sourceWordIndex": 100
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “the words I've ____ and pick up”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "told",
-          "knew",
-          "learnt",
-          "used"
+          "A speaker uses the words “the words I've told and pick up” in this recording.",
+          "A speaker uses the words “the words I've knew and pick up” in this recording.",
+          "A speaker uses the words “the words I've learnt and pick up” in this recording.",
+          "A speaker uses the words “the words I've used and pick up” in this recording."
         ],
-        "answer": 2,
-        "sourceWordIndex": 160
+        "answer": 2
       }
     ],
     "source": {
@@ -7406,40 +7176,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0516/61.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “to answering your ____ about our planet”.",
+        "format": "true_false",
+        "text": "A speaker says “to answering your photos about our planet” in the recording.",
         "options": [
-          "photos",
-          "films",
-          "computers",
-          "questions"
+          "True",
+          "False"
         ],
-        "answer": 3,
-        "sourceWordIndex": 32
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “looks blue because ____ covers more than”.",
+        "format": "short_answer",
+        "text": "Which expression does the speaker use?",
         "options": [
-          "family",
-          "water",
-          "year",
-          "graveyard"
+          "blue because family covers more",
+          "blue because water covers more",
+          "blue because year covers more",
+          "blue because graveyard covers more"
         ],
-        "answer": 1,
-        "sourceWordIndex": 88
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “for plants and ____. It's fascinating to”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "animals",
-          "materials",
-          "friends",
-          "clothes"
+          "A speaker uses the words “for plants and animals It's fascinating to” in this recording.",
+          "A speaker uses the words “for plants and materials It's fascinating to” in this recording.",
+          "A speaker uses the words “for plants and friends It's fascinating to” in this recording.",
+          "A speaker uses the words “for plants and clothes It's fascinating to” in this recording."
         ],
-        "answer": 0,
-        "sourceWordIndex": 161
+        "answer": 0
       }
     ],
     "source": {
@@ -7461,40 +7229,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0516/64.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “don't feel like ____ it. Why don't”.",
+        "format": "true_false",
+        "text": "A speaker says “don't feel like reading it Why don't” in the recording.",
         "options": [
-          "shopping",
-          "walking",
-          "listening",
-          "reading"
+          "True",
+          "False"
         ],
-        "answer": 3,
-        "sourceWordIndex": 15
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “like it. OK, ____ think about that”.",
+        "format": "short_answer",
+        "text": "Which detail is mentioned in the conversation?",
         "options": [
-          "I'll",
-          "Maths",
-          "Phone",
-          "Space"
+          "it OK I'll think about",
+          "it OK Maths think about",
+          "it OK Phone think about",
+          "it OK Space think about"
         ],
-        "answer": 0,
-        "sourceWordIndex": 29
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “contribution would really ____ us out. Alright”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "share",
-          "listen",
-          "build",
-          "help"
+          "A speaker uses the words “contribution would really share us out Alright” in this recording.",
+          "A speaker uses the words “contribution would really listen us out Alright” in this recording.",
+          "A speaker uses the words “contribution would really build us out Alright” in this recording.",
+          "A speaker uses the words “contribution would really help us out Alright” in this recording."
         ],
-        "answer": 3,
-        "sourceWordIndex": 55
+        "answer": 3
       }
     ],
     "source": {
@@ -7516,40 +7282,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0516/65.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “or harm their ____. For example, when”.",
+        "format": "true_false",
+        "text": "A speaker says “or harm their day For example when” in the recording.",
         "options": [
-          "day",
-          "computer",
-          "literature",
-          "environment"
+          "True",
+          "False"
         ],
-        "answer": 3,
-        "sourceWordIndex": 32
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “good question. Similarly, ____ can cause harm”.",
+        "format": "short_answer",
+        "text": "Which phrase matches what you hear?",
         "options": [
-          "parents",
-          "animals",
-          "books",
-          "activities"
+          "question Similarly parents can cause",
+          "question Similarly animals can cause",
+          "question Similarly books can cause",
+          "question Similarly activities can cause"
         ],
-        "answer": 1,
-        "sourceWordIndex": 93
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “and animals from ____ places. We shouldn't”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "safe",
-          "interesting",
-          "popular",
-          "different"
+          "A speaker uses the words “and animals from safe places We shouldn't” in this recording.",
+          "A speaker uses the words “and animals from interesting places We shouldn't” in this recording.",
+          "A speaker uses the words “and animals from popular places We shouldn't” in this recording.",
+          "A speaker uses the words “and animals from different places We shouldn't” in this recording."
         ],
-        "answer": 3,
-        "sourceWordIndex": 155
+        "answer": 3
       }
     ],
     "source": {
@@ -7571,40 +7335,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0516/67.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “and can be ____ for studying and”.",
+        "format": "true_false",
+        "text": "A speaker says “and can be used for studying and” in the recording.",
         "options": [
-          "loved",
-          "called",
-          "came",
-          "used"
+          "True",
+          "False"
         ],
-        "answer": 3,
-        "sourceWordIndex": 45
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “lighter than a ____ because it's smaller”.",
+        "format": "short_answer",
+        "text": "Which expression does the speaker use?",
         "options": [
-          "schoolyard",
-          "laptop",
-          "day",
-          "ticket"
+          "than a schoolyard because it's",
+          "than a laptop because it's",
+          "than a day because it's",
+          "than a ticket because it's"
         ],
-        "answer": 1,
-        "sourceWordIndex": 87
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “keyboard. Can I ____ and draw on”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "try",
-          "collect",
-          "write",
-          "walk"
+          "A speaker uses the words “keyboard Can I try and draw on” in this recording.",
+          "A speaker uses the words “keyboard Can I collect and draw on” in this recording.",
+          "A speaker uses the words “keyboard Can I write and draw on” in this recording.",
+          "A speaker uses the words “keyboard Can I walk and draw on” in this recording."
         ],
-        "answer": 2,
-        "sourceWordIndex": 155
+        "answer": 2
       }
     ],
     "source": {
@@ -7626,40 +7388,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0516/70.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “me? You just ____ it carefully and”.",
+        "format": "true_false",
+        "text": "A speaker says “me You just love it carefully and” in the recording.",
         "options": [
-          "love",
-          "test",
-          "stay",
-          "read"
+          "True",
+          "False"
         ],
-        "answer": 3,
-        "sourceWordIndex": 12
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “got what you ____. First, enter the”.",
+        "format": "short_answer",
+        "text": "Which detail is mentioned in the conversation?",
         "options": [
-          "love",
-          "collect",
-          "mean",
-          "swim"
+          "what you love First enter",
+          "what you collect First enter",
+          "what you mean First enter",
+          "what you swim First enter"
         ],
-        "answer": 2,
-        "sourceWordIndex": 30
+        "answer": 2
       },
       {
-        "text": "Chọn từ nghe được: “sorry. I don't ____ follow you. Could”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "month",
-          "quite",
-          "comedy",
-          "fish"
+          "A speaker uses the words “sorry I don't month follow you Could” in this recording.",
+          "A speaker uses the words “sorry I don't quite follow you Could” in this recording.",
+          "A speaker uses the words “sorry I don't comedy follow you Could” in this recording.",
+          "A speaker uses the words “sorry I don't fish follow you Could” in this recording."
         ],
-        "answer": 1,
-        "sourceWordIndex": 56
+        "answer": 1
       }
     ],
     "source": {
@@ -7681,40 +7441,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0516/71.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “dust, spots, and ____ marks in my”.",
+        "format": "true_false",
+        "text": "A speaker says “dust spots and dirty marks in my” in the recording.",
         "options": [
-          "dirty",
-          "confident",
-          "helpful",
-          "careful"
+          "True",
+          "False"
         ],
-        "answer": 0,
-        "sourceWordIndex": 31
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “do in the ____. First, it'll be”.",
+        "format": "short_answer",
+        "text": "Which phrase matches what you hear?",
         "options": [
-          "hobby",
-          "schoolyard",
-          "tennis",
-          "future"
+          "in the hobby First it'll",
+          "in the schoolyard First it'll",
+          "in the tennis First it'll",
+          "in the future First it'll"
         ],
-        "answer": 3,
-        "sourceWordIndex": 89
+        "answer": 3
       },
       {
-        "text": "Chọn từ nghe được: “houses. Finally, laser ____ will make it”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "earth",
-          "evening",
-          "technology",
-          "science"
+          "A speaker uses the words “houses Finally laser earth will make it” in this recording.",
+          "A speaker uses the words “houses Finally laser evening will make it” in this recording.",
+          "A speaker uses the words “houses Finally laser technology will make it” in this recording.",
+          "A speaker uses the words “houses Finally laser science will make it” in this recording."
         ],
-        "answer": 2,
-        "sourceWordIndex": 146
+        "answer": 2
       }
     ],
     "source": {
@@ -7736,40 +7494,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0516/73.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “leavers. My teacher ____ us that if”.",
+        "format": "true_false",
+        "text": "A speaker says “leavers My teacher visited us that if” in the recording.",
         "options": [
-          "visited",
-          "said",
-          "called",
-          "told"
+          "True",
+          "False"
         ],
-        "answer": 3,
-        "sourceWordIndex": 44
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “makes lots of ____. And you? What”.",
+        "format": "short_answer",
+        "text": "Which expression does the speaker use?",
         "options": [
-          "rubbish",
-          "technology",
-          "money",
-          "festival"
+          "lots of rubbish And you",
+          "lots of technology And you",
+          "lots of money And you",
+          "lots of festival And you"
         ],
-        "answer": 2,
-        "sourceWordIndex": 103
+        "answer": 2
       },
       {
-        "text": "Chọn từ nghe được: “design after high ____. Hope you'll achieve”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "shop",
-          "garden",
-          "school",
-          "mountain"
+          "A speaker uses the words “design after high shop Hope you'll achieve” in this recording.",
+          "A speaker uses the words “design after high garden Hope you'll achieve” in this recording.",
+          "A speaker uses the words “design after high school Hope you'll achieve” in this recording.",
+          "A speaker uses the words “design after high mountain Hope you'll achieve” in this recording."
         ],
-        "answer": 2,
-        "sourceWordIndex": 170
+        "answer": 2
       }
     ],
     "source": {
@@ -7791,40 +7547,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0516/75.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “the registration form. ____, I'll be a”.",
+        "format": "true_false",
+        "text": "A speaker says “the registration form Hopefully I'll be a” in the recording.",
         "options": [
-          "Hopefully",
-          "Weekly",
-          "Really",
-          "Probably"
+          "True",
+          "False"
         ],
-        "answer": 0,
-        "sourceWordIndex": 6
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “of the science ____. I hope so”.",
+        "format": "short_answer",
+        "text": "Which detail is mentioned in the conversation?",
         "options": [
-          "sport",
-          "earth",
-          "club",
-          "morning"
+          "the science sport I hope",
+          "the science earth I hope",
+          "the science club I hope",
+          "the science morning I hope"
         ],
-        "answer": 2,
-        "sourceWordIndex": 14
+        "answer": 2
       },
       {
-        "text": "Chọn từ nghe được: “letter. I hope ____ get the job”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "Geography",
-          "Food",
-          "Year",
-          "I'll"
+          "A speaker uses the words “letter I hope Geography get the job” in this recording.",
+          "A speaker uses the words “letter I hope Food get the job” in this recording.",
+          "A speaker uses the words “letter I hope Year get the job” in this recording.",
+          "A speaker uses the words “letter I hope I'll get the job” in this recording."
         ],
-        "answer": 3,
-        "sourceWordIndex": 26
+        "answer": 3
       }
     ],
     "source": {
@@ -7846,40 +7600,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0516/76.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi rồi trả lời 3 câu: (1) True/False; (2) chọn đáp án ngắn, tối đa 5 từ; (3) chọn đáp án dài, trên 5 từ. Chọn một đáp án cho mỗi câu.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “farmers like my ____ to earn a”.",
+        "format": "true_false",
+        "text": "A speaker says “farmers like my services to earn a” in the recording.",
         "options": [
-          "services",
-          "pictures",
-          "parents",
-          "robots"
+          "True",
+          "False"
         ],
-        "answer": 2,
-        "sourceWordIndex": 33
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “I'm glad I'm ____ well at it”.",
+        "format": "short_answer",
+        "text": "Which phrase matches what you hear?",
         "options": [
-          "doing",
-          "travelling",
-          "listening",
-          "spending"
+          "glad I'm doing well at",
+          "glad I'm travelling well at",
+          "glad I'm listening well at",
+          "glad I'm spending well at"
         ],
-        "answer": 0,
-        "sourceWordIndex": 87
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “career further. I'm ____ more about food”.",
+        "format": "long_answer",
+        "text": "Which statement matches what is said in the recording?",
         "options": [
-          "spending",
-          "staying",
-          "working",
-          "learning"
+          "A speaker uses the words “career further I'm spending more about food” in this recording.",
+          "A speaker uses the words “career further I'm staying more about food” in this recording.",
+          "A speaker uses the words “career further I'm working more about food” in this recording.",
+          "A speaker uses the words “career further I'm learning more about food” in this recording."
         ],
-        "answer": 3,
-        "sourceWordIndex": 164
+        "answer": 3
       }
     ],
     "source": {
@@ -7889,7 +7641,7 @@
   }
 ];
   curriculum.exercises = curriculum.exercises.filter(item => item.track !== 'thcs').concat(bank);
-  curriculum.thcsBankVersion = '2026-11-01-g7-u1-u3-mcq-comprehension';
+  curriculum.thcsBankVersion = '2026-11-09-thcs-144-tf-short-long';
   curriculum.tracks.thcs.stages.forEach(stage => {
     stage.title = 'Nghe lớp ' + (stage.stage + 5) + ' · 12 Unit';
     stage.description = 'Mỗi Unit có 3 bài: hội thoại mở đầu, giao tiếp và bài nghe theo Unit. Nghe audio và chọn đáp án đúng cho từng câu hỏi.';
