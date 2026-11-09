@@ -1,6 +1,6 @@
-# Tiến độ bài nghe THCS — 01/10/2026
+# Tiến độ bài nghe THCS — 09/11/2026
 
-Đã hoàn thành 144 bộ MP3–câu hỏi cho Global Success lớp 6–9.
+Toàn bộ lớp 6, 7, 8, 9 (Global Success) sử dụng một định dạng thống nhất cho phần Luyện nghe.
 
 | Lớp | Unit | Bài/Unit | Tổng bài | Tổng câu hỏi |
 | --- | --- | --- | --- | --- |
@@ -8,16 +8,30 @@
 | 7 | 1–12 | 3 | 36 | 108 |
 | 8 | 1–12 | 3 | 36 | 108 |
 | 9 | 1–12 | 3 | 36 | 108 |
+| **Tổng** | | | **144** | **432** |
 
-Mỗi Unit gồm Getting Started, Communication và Skills 2; mỗi bản ghi đi kèm 3 câu trắc nghiệm nhận diện từ/cụm từ. Câu hỏi đi theo thứ tự xuất hiện trong bản ghi. Chỉ đảo vị trí lựa chọn, đồng thời ánh xạ lại đáp án đúng.
+## Định dạng câu hỏi của mỗi bài
 
-- Tệp âm thanh: bucket `lddenglish`, prefix `listening/loigiaihay/`.
-- Ngân hàng đang dùng: `ldd-thcs-listening-bank.js`.
-- Đối chiếu từng bài, URL nguồn, URL B2, kích thước và SHA-1: `THCS_LISTENING_MANIFEST.json`.
-- 128 tệp bổ sung; 16 tệp B2 có sẵn được dùng lại sau khi đối chiếu checksum.
-- Getting Started lớp 6 Unit 8: nguồn mang đuôi `.mp3` nhưng thực tế là WAV; đã chuyển sang MP3 128 kbps, giữ nội dung ghi âm.
-- Giao diện có bộ chọn Unit; 3 bài mỗi Unit. Điểm lớp tổng hợp sau đủ 36 bài. Không cho nộp khi còn câu bỏ trống.
-- Điểm của bộ câu hỏi THCS cũ được tách khỏi bộ mới bằng phiên bản ngân hàng; nội dung Mất gốc giữ riêng.
-- Công cụ tải lên tạm thời đã khóa lại sau khi xử lý xong.
+1. **True / False**: một nhận định dựa trên nội dung bản ghi, chọn True hoặc False; thứ tự nút luôn cố định. Trên toàn ngân hàng, 72 câu True và 72 câu False.
+2. **Câu hỏi trắc nghiệm đáp án ngắn**: 4 phương án A–D, từng phương án tối đa **5 từ**.
+3. **Câu hỏi trắc nghiệm đáp án dài**: 4 phương án A–D, từng phương án **trên 5 từ**, hiển thị một cột cho dễ đọc.
 
-Câu hỏi hiện tập trung vào nhận diện từ/cụm từ. Không coi đây là bộ câu hỏi suy luận chuyên sâu.
+Mỗi Unit giữ đủ 3 phần **Getting Started / Communication / Skills 2**. Các câu hỏi ngắn và dài dựa trên những thông tin nghe được, thay thế dạng điền từ vào chỗ trống trước đây. Các phương án A–D được đảo theo lượt làm, đồng thời ánh xạ lại đáp án đúng.
+
+## Âm thanh và lưu điểm
+
+- Giữ nguyên 144 MP3 ở bucket Backblaze B2 `lddenglish`, prefix `listening/loigiaihay/`; không thay đổi URL hoặc mã âm thanh.
+- Ngân hàng trên web: `ldd-thcs-listening-bank.js`.
+- Mã phiên bản: `2026-11-09-thcs-144-tf-short-long`.
+- Tệp đối chiếu audio, URL và checksum: `THCS_LISTENING_MANIFEST.json`.
+- Bản chấm của các câu hỏi cũ không được dùng lại cho bộ câu hỏi mới; học viên làm lại để lấy điểm mới. Nội dung Mất gốc được giữ riêng.
+- Không cho nộp bài khi còn câu bỏ trống. Điểm lớp được tổng hợp khi đã nộp đủ 36 bài.
+- Giao diện hỗ trợ chọn Unit và hiển thị nhãn dạng câu hỏi; đáp án dài được đặt theo một cột để đọc rõ trên điện thoại.
+- Bộ câu hỏi được biên soạn dựa trên nội dung và ngữ cảnh thể hiện ở ngân hàng nguồn. Việc nghe đối chiếu từng MP3 trên trình duyệt vẫn là bước QA riêng nếu cần kiểm tra sát nghĩa từng lời thoại.
+
+## Kiểm tra dữ liệu
+
+- 144/144 bài có đúng ba dạng theo thứ tự True/False → ngắn → dài.
+- 144/144 câu ngắn và 144/144 câu dài đáp ứng giới hạn số từ ở cả 4 lựa chọn.
+- 432/432 câu có đáp án hợp lệ. Không còn bài yêu cầu chọn từ để điền vào dấu gạch trống.
+- 144/144 URL MP3 và số lượng bản ghi vẫn giữ nguyên.
