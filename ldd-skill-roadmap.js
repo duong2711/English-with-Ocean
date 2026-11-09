@@ -1507,7 +1507,7 @@
         return '<p class="ldd-listening-instruction">' + escapeListening(item.taskPrompt || 'Nghe toàn bộ bài rồi trả lời các câu hỏi.') + '</p>' +
             '<div class="ldd-listening-mcq-set">' + item.questions.map((question,qIndex) =>
                 '<section class="ldd-listening-mcq-question"><h5>Câu ' + (qIndex + 1) + '. ' + escapeListening(question.text) + '</h5><div class="ldd-reading-answers">' +
-                    question.options.map((option,aIndex) => '<button type="button" data-listening-q="' + qIndex + '" data-listening-a="' + aIndex + '" aria-pressed="false">' + String.fromCharCode(65 + aIndex) + '. ' + escapeListening(option) + '</button>').join('') +
+                    question.options.map((option,aIndex) => '<button type="button" data-listening-q="' + qIndex + '" data-listening-a="' + aIndex + '" aria-pressed="false">' + (question.format === 'true_false' ? escapeListening(option) : String.fromCharCode(65 + aIndex) + '. ' + escapeListening(option)) + '</button>').join('') +
                 '</div></section>'
             ).join('') + '</div>';
     }
@@ -1764,6 +1764,8 @@
         const useAudioBank = trackId === 'thcs' || (trackId === 'foundation' && stageNumber >= 2);
         const lessonCount = audioBank.length;
         const bankVersion = trackId === 'thcs' ? LISTENING_CURRICULUM.thcsBankVersion : '';
+        // Only class 9 Units 1–2 changed; keep other grades and units' listening scores.
+        const questionRevision = trackId === 'thcs' && stageNumber === 4 ? '2026-11-09-g9-u1-u2-tf-mcq' : '';
         let selectedUnit = trackId === 'thcs' ? 1 : null;
         let vocabWords = [];
         let vocabUserId = null;
@@ -1846,6 +1848,9 @@
             const previous = useAudioBank || useStudentVocab ? stored && stored.scores : stored;
             return Array.isArray(previous) && Number.isFinite(previous[index]) ? previous[index] : null;
         });
+        if (questionRevision && stored && stored.questionRevision !== questionRevision) {
+            scores = scores.map((score, index) => [1, 2].includes(audioBank[order[index]]?.unit) ? null : score);
+        }
         const buildExercise = function (sourceIndex, seed) {
             const source = audioBank[sourceIndex];
             if (!useAudioBank) return source;
@@ -1856,6 +1861,8 @@
                 return seed / 4294967296;
             };
             const shuffleQuestion = function (question) {
+                // T/F is always shown in the familiar True, False order.
+                if (question.format === 'true_false') return Object.assign({}, question);
                 const indices = question.options.map((_, i) => i);
                 for (let i = indices.length - 1; i > 0; i--) {
                     const j = Math.floor(nextRandom() * (i + 1));
@@ -1898,7 +1905,7 @@
         if (useStudentVocab && !savedSpellingValid) scores = scores.map(() => null);
         const saveAttempt = function () {
             try { localStorage.setItem(attemptKey, JSON.stringify(useAudioBank ?
-                {order: order, variants: variants, scores: scores} :
+                {order: order, variants: variants, scores: scores, questionRevision: questionRevision} :
                 useStudentVocab ? {exercises: exercises, scores: scores} : scores)); }
             catch (error) { /* Continue grading locally. */ }
         };
