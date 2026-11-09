@@ -58,6 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const DEVICE_TOKEN_STORAGE_PREFIX = 'ldd_device_token::';
     const { createClient } = supabase;
     const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    if (window.initLDDWritingAPI) window.initLDDWritingAPI(sb);
     // ------------------------------------------
 
     // ================== [MỚI] Chọn giọng đọc tiếng Anh tự nhiên (kiểu Cambridge) ==================
