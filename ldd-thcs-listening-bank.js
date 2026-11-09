@@ -2410,32 +2410,32 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "A speaker says “and I often try the piano in” in the recording.",
+        "text": "The speaker often plays the piano.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 1
+        "answer": 0
       },
       {
         "format": "short_answer",
-        "text": "Which expression does the speaker use?",
+        "text": "Which art activity is mentioned?",
         "options": [
-          "fun as painting Right They",
-          "fun as talking Right They",
-          "fun as trying Right They",
-          "fun as cooking Right They"
+          "painting",
+          "talking",
+          "trying",
+          "cooking"
         ],
         "answer": 0
       },
       {
         "format": "long_answer",
-        "text": "Which statement matches what is said in the recording?",
+        "text": "What does the speaker want to do instead?",
         "options": [
-          "A speaker uses the words “good but I'd help to go to” in this recording.",
-          "A speaker uses the words “good but I'd prefer to go to” in this recording.",
-          "A speaker uses the words “good but I'd want to go to” in this recording.",
-          "A speaker uses the words “good but I'd sing to go to” in this recording."
+          "One person says they would help to go to a different activity.",
+          "One person says they would prefer to go to a different activity.",
+          "One person says they would want to go to a different activity.",
+          "One person says they would sing to go to a different activity."
         ],
         "answer": 1
       }
@@ -2463,32 +2463,32 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "A speaker says “pop or folk music I prefer folk” in the recording.",
+        "text": "The speakers both say they prefer pop music over folk music.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
-        "text": "Which detail is mentioned in the conversation?",
+        "text": "What aspect of the music is compared?",
         "options": [
-          "a better beat And which",
-          "a better rubbish And which",
-          "a better week And which",
-          "a better money And which"
+          "The beat",
+          "The rubbish",
+          "The week",
+          "The money"
         ],
         "answer": 0
       },
       {
         "format": "long_answer",
-        "text": "Which statement matches what is said in the recording?",
+        "text": "Which type of art does the speaker prefer?",
         "options": [
-          "A speaker uses the words “folk art I like helpful art better” in this recording.",
-          "A speaker uses the words “folk art I like clean art better” in this recording.",
-          "A speaker uses the words “folk art I like busy art better” in this recording.",
-          "A speaker uses the words “folk art I like modern art better” in this recording."
+          "The speaker says that they like helpful art more than folk art.",
+          "The speaker says that they like clean art more than folk art.",
+          "The speaker says that they like busy art more than folk art.",
+          "The speaker says that they like modern art more than folk art."
         ],
         "answer": 3
       }
@@ -2516,32 +2516,32 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "A speaker says “on the pavement building chalk Today you” in the recording.",
+        "text": "Artists create pictures on pavements using chalk.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 1
+        "answer": 0
       },
       {
         "format": "short_answer",
-        "text": "Which phrase matches what you hear?",
+        "text": "Who can become an artist?",
         "options": [
-          "an artist lunch One of",
-          "an artist year One of",
-          "an artist yourself One of",
-          "an artist exercise One of"
+          "lunch",
+          "year",
+          "yourself",
+          "exercise"
         ],
         "answer": 2
       },
       {
         "format": "long_answer",
-        "text": "Which statement matches what is said in the recording?",
+        "text": "Why do visitors come to the event?",
         "options": [
-          "A speaker uses the words “visitors come to meet it About 600” in this recording.",
-          "A speaker uses the words “visitors come to enjoy it About 600” in this recording.",
-          "A speaker uses the words “visitors come to teach it About 600” in this recording.",
-          "A speaker uses the words “visitors come to have it About 600” in this recording."
+          "Visitors come to meet the pavement art and watch the artists at work.",
+          "Visitors come to enjoy the pavement art and watch the artists at work.",
+          "Visitors come to teach the pavement art and watch the artists at work.",
+          "Visitors come to have the pavement art and watch the artists at work."
         ],
         "answer": 1
       }
@@ -2569,7 +2569,7 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "A speaker says “pork cooked in fish sauce Oh could” in the recording.",
+        "text": "The meal includes pork cooked in fish sauce.",
         "options": [
           "True",
           "False"
@@ -2578,23 +2578,23 @@
       },
       {
         "format": "short_answer",
-        "text": "Which expression does the speaker use?",
+        "text": "Which kind of tea is available?",
         "options": [
-          "juice lemonade brown tea mineral",
-          "juice lemonade blue tea mineral",
-          "juice lemonade green tea mineral",
-          "juice lemonade yellow tea mineral"
+          "brown tea",
+          "blue tea",
+          "green tea",
+          "yellow tea"
         ],
         "answer": 2
       },
       {
         "format": "long_answer",
-        "text": "Which statement matches what is said in the recording?",
+        "text": "What kind of melon juice is ordered?",
         "options": [
-          "A speaker uses the words “a can of winter melon juice The” in this recording.",
-          "A speaker uses the words “a can of space melon juice The” in this recording.",
-          "A speaker uses the words “a can of sport melon juice The” in this recording.",
-          "A speaker uses the words “a can of history melon juice The” in this recording."
+          "The customer asks for a can of winter melon juice with the meal.",
+          "The customer asks for a can of space melon juice with the meal.",
+          "The customer asks for a can of sport melon juice with the meal.",
+          "The customer asks for a can of history melon juice with the meal."
         ],
         "answer": 0
       }
@@ -2622,7 +2622,7 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "A speaker says “bottle of mineral backpack It's 5 000” in the recording.",
+        "text": "A bottle of mineral water costs fifty thousand dong.",
         "options": [
           "True",
           "False"
@@ -2631,23 +2631,23 @@
       },
       {
         "format": "short_answer",
-        "text": "Which detail is mentioned in the conversation?",
+        "text": "What currency is used for prices?",
         "options": [
-          "5 000 comedy And how",
-          "5 000 wind And how",
-          "5 000 year And how",
-          "5 000 dong And how"
+          "comedy",
+          "wind",
+          "year",
+          "dong"
         ],
         "answer": 3
       },
       {
         "format": "long_answer",
-        "text": "Which statement matches what is said in the recording?",
+        "text": "How much do the apples cost?",
         "options": [
-          "A speaker uses the words “kilos of apples They're 50 000 dong” in this recording.",
-          "A speaker uses the words “kilos of apples They're 52 000 dong” in this recording.",
-          "A speaker uses the words “kilos of apples They're 51 000 dong” in this recording.",
-          "A speaker uses the words “kilos of apples They're 53 000 dong” in this recording."
+          "The price for the apples is 50 thousand dong in the conversation.",
+          "The price for the apples is 52 thousand dong in the conversation.",
+          "The price for the apples is 51 thousand dong in the conversation.",
+          "The price for the apples is 53 thousand dong in the conversation."
         ],
         "answer": 0
       }
@@ -2675,7 +2675,7 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "A speaker says “soup with bread Sometimes we have instant” in the recording.",
+        "text": "The speaker sometimes eats instant soup with bread.",
         "options": [
           "True",
           "False"
@@ -2684,23 +2684,23 @@
       },
       {
         "format": "short_answer",
-        "text": "Which phrase matches what you hear?",
+        "text": "Who gathers around the table?",
         "options": [
-          "time when technology members gather",
-          "time when art members gather",
-          "time when family members gather",
-          "time when basketball members gather"
+          "The technology",
+          "The art",
+          "The family",
+          "The basketball"
         ],
         "answer": 2
       },
       {
         "format": "long_answer",
-        "text": "Which statement matches what is said in the recording?",
+        "text": "What does the speaker have with some fruit?",
         "options": [
-          "A speaker uses the words “some fruit and white tea I think” in this recording.",
-          "A speaker uses the words “some fruit and green tea I think” in this recording.",
-          "A speaker uses the words “some fruit and purple tea I think” in this recording.",
-          "A speaker uses the words “some fruit and red tea I think” in this recording."
+          "The speaker says that they have fruit and white tea after the meal.",
+          "The speaker says that they have fruit and green tea after the meal.",
+          "The speaker says that they have fruit and purple tea after the meal.",
+          "The speaker says that they have fruit and red tea after the meal."
         ],
         "answer": 1
       }
@@ -2728,32 +2728,32 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "A speaker says “Minh Lower Secondary Countryside Sounds great I” in the recording.",
+        "text": "The speakers mention Minh Lower Secondary School.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 1
+        "answer": 0
       },
       {
         "format": "short_answer",
-        "text": "Which expression does the speaker use?",
+        "text": "Which school room can visitors see?",
         "options": [
-          "the school market the computer",
-          "the school library the computer",
-          "the school forest the computer",
-          "the school garden the computer"
+          "The school market",
+          "The school library",
+          "The school forest",
+          "The school garden"
         ],
         "answer": 1
       },
       {
         "format": "long_answer",
-        "text": "Which statement matches what is said in the recording?",
+        "text": "What do visitors plan to do at the school?",
         "options": [
-          "A speaker uses the words “Club and take photos of the school” in this recording.",
-          "A speaker uses the words “Club and take trees of the school” in this recording.",
-          "A speaker uses the words “Club and take families of the school” in this recording.",
-          "A speaker uses the words “Club and take materials of the school” in this recording."
+          "The visitors plan to take photos of the school during their visit.",
+          "The visitors plan to take trees of the school during their visit.",
+          "The visitors plan to take families of the school during their visit.",
+          "The visitors plan to take materials of the school during their visit."
         ],
         "answer": 0
       }
@@ -2781,7 +2781,7 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "A speaker says “doing anything this Sunday Not really Would” in the recording.",
+        "text": "The invitation is for Sunday.",
         "options": [
           "True",
           "False"
@@ -2790,23 +2790,23 @@
       },
       {
         "format": "short_answer",
-        "text": "Which detail is mentioned in the conversation?",
+        "text": "Which school are they talking about?",
         "options": [
-          "Lower Secondary Country Sounds great",
-          "Lower Secondary Office Sounds great",
-          "Lower Secondary School Sounds great",
-          "Lower Secondary House Sounds great"
+          "Minh Lower Secondary Country",
+          "Minh Lower Secondary Office",
+          "Minh Lower Secondary School",
+          "Minh Lower Secondary House"
         ],
         "answer": 2
       },
       {
         "format": "long_answer",
-        "text": "Which statement matches what is said in the recording?",
+        "text": "Who is expected to join the visit?",
         "options": [
-          "A speaker uses the words “a m My skills David and Nick” in this recording.",
-          "A speaker uses the words “a m My friends David and Nick” in this recording.",
-          "A speaker uses the words “a m My sports David and Nick” in this recording.",
-          "A speaker uses the words “a m My parents David and Nick” in this recording."
+          "The speaker says that their skills David and Nick will also join the visit.",
+          "The speaker says that their friends David and Nick will also join the visit.",
+          "The speaker says that their sports David and Nick will also join the visit.",
+          "The speaker says that their parents David and Nick will also join the visit."
         ],
         "answer": 1
       }
@@ -2834,32 +2834,32 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "A speaker says “busy with our hobbies but we really” in the recording.",
+        "text": "The students have been busy studying their subjects.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 1
+        "answer": 0
       },
       {
         "format": "short_answer",
-        "text": "Which phrase matches what you hear?",
+        "text": "What do club members do on Saturdays?",
         "options": [
-          "our members smart streets on",
-          "our members unusual streets on",
-          "our members clean streets on",
-          "our members natural streets on"
+          "smart streets",
+          "unusual streets",
+          "clean streets",
+          "natural streets"
         ],
         "answer": 2
       },
       {
         "format": "long_answer",
-        "text": "Which statement matches what is said in the recording?",
+        "text": "Which group grows vegetables in the garden?",
         "options": [
-          "A speaker uses the words “the Green Garden Rain We grow vegetables” in this recording.",
-          "A speaker uses the words “the Green Garden Ticket We grow vegetables” in this recording.",
-          "A speaker uses the words “the Green Garden Club We grow vegetables” in this recording.",
-          "A speaker uses the words “the Green Garden Robot We grow vegetables” in this recording."
+          "The students take part in the Green Garden Rain where they grow vegetables.",
+          "The students take part in the Green Garden Ticket where they grow vegetables.",
+          "The students take part in the Green Garden Club where they grow vegetables.",
+          "The students take part in the Green Garden Robot where they grow vegetables."
         ],
         "answer": 2
       }
@@ -2887,7 +2887,7 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "A speaker says “fine Last Sunday afternoon I cycled round” in the recording.",
+        "text": "The speaker cycled around the area last Sunday afternoon.",
         "options": [
           "True",
           "False"
@@ -2896,23 +2896,23 @@
       },
       {
         "format": "short_answer",
-        "text": "Which expression does the speaker use?",
+        "text": "Where does the other person travel?",
         "options": [
-          "home to school It's about",
-          "home to mountain It's about",
-          "home to countryside It's about",
-          "home to village It's about"
+          "To school",
+          "To mountain",
+          "To countryside",
+          "To village"
         ],
         "answer": 0
       },
       {
         "format": "long_answer",
-        "text": "Which statement matches what is said in the recording?",
+        "text": "When do the friends plan to visit the lake?",
         "options": [
-          "A speaker uses the words “the lake this Wednesday Great Can you” in this recording.",
-          "A speaker uses the words “the lake this Sunday Great Can you” in this recording.",
-          "A speaker uses the words “the lake this Friday Great Can you” in this recording.",
-          "A speaker uses the words “the lake this Thursday Great Can you” in this recording."
+          "The speaker suggests that the friends should meet this Wednesday at the lake.",
+          "The speaker suggests that the friends should meet this Sunday at the lake.",
+          "The speaker suggests that the friends should meet this Friday at the lake.",
+          "The speaker suggests that the friends should meet this Thursday at the lake."
         ],
         "answer": 1
       }
@@ -2940,32 +2940,32 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "A speaker says “mum get to suitcase She goes by” in the recording.",
+        "text": "The speakers discuss how their mothers travel to work.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 1
+        "answer": 0
       },
       {
         "format": "short_answer",
-        "text": "Which detail is mentioned in the conversation?",
+        "text": "How does one mother travel?",
         "options": [
-          "goes by morning What about",
-          "goes by motorbike What about",
-          "goes by environment What about",
-          "goes by friend What about"
+          "By morning",
+          "By motorbike",
+          "By environment",
+          "By friend"
         ],
         "answer": 1
       },
       {
         "format": "long_answer",
-        "text": "Which statement matches what is said in the recording?",
+        "text": "How often does the other mother cycle to work?",
         "options": [
-          "A speaker uses the words “usually goes by bus Slowly she cycles” in this recording.",
-          "A speaker uses the words “usually goes by bus Sometimes she cycles” in this recording.",
-          "A speaker uses the words “usually goes by bus Finally she cycles” in this recording.",
-          "A speaker uses the words “usually goes by bus Frequently she cycles” in this recording."
+          "The speaker says that she Slowly cycles instead of going by bus.",
+          "The speaker says that she Sometimes cycles instead of going by bus.",
+          "The speaker says that she Finally cycles instead of going by bus.",
+          "The speaker says that she Frequently cycles instead of going by bus."
         ],
         "answer": 1
       }
@@ -2993,7 +2993,7 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "A speaker says “cities in the world Traffic jams happen” in the recording.",
+        "text": "Traffic jams occur in cities around the world.",
         "options": [
           "True",
           "False"
@@ -3002,23 +3002,23 @@
       },
       {
         "format": "short_answer",
-        "text": "Which phrase matches what you hear?",
+        "text": "Where is there a traffic problem?",
         "options": [
-          "in this community One reason",
-          "in this store One reason",
-          "in this city One reason",
-          "in this road One reason"
+          "In this community",
+          "In this store",
+          "In this city",
+          "In this road"
         ],
         "answer": 2
       },
       {
         "format": "long_answer",
-        "text": "Which statement matches what is said in the recording?",
+        "text": "Who does not always follow traffic rules?",
         "options": [
-          "A speaker uses the words “condition Also many road users do not” in this recording.",
-          "A speaker uses the words “condition Also many river users do not” in this recording.",
-          "A speaker uses the words “condition Also many station users do not” in this recording.",
-          "A speaker uses the words “condition Also many store users do not” in this recording."
+          "The speaker explains that many road users do not follow the rules.",
+          "The speaker explains that many river users do not follow the rules.",
+          "The speaker explains that many station users do not follow the rules.",
+          "The speaker explains that many store users do not follow the rules."
         ],
         "answer": 0
       }
@@ -3046,32 +3046,32 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "A speaker says “at Sao Mai Office tonight Is it” in the recording.",
+        "text": "The speakers plan to visit Sao Mai Cinema tonight.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 1
+        "answer": 0
       },
       {
         "format": "short_answer",
-        "text": "Which expression does the speaker use?",
+        "text": "What do they ask about the film?",
         "options": [
-          "Holiday What kind of film",
-          "Holiday What comfortable of film",
-          "Holiday What happy of film",
-          "Holiday What natural of film"
+          "Its kind",
+          "Its comfortable",
+          "Its happy",
+          "Its natural"
         ],
         "answer": 0
       },
       {
         "format": "long_answer",
-        "text": "Which statement matches what is said in the recording?",
+        "text": "What do the film's characters decide to exchange?",
         "options": [
-          "A speaker uses the words “decide to exchange flowers What are the” in this recording.",
-          "A speaker uses the words “decide to exchange questions What are the” in this recording.",
-          "A speaker uses the words “decide to exchange houses What are the” in this recording.",
-          "A speaker uses the words “decide to exchange teachers What are the” in this recording."
+          "The characters in the film decide to exchange flowers during their holiday.",
+          "The characters in the film decide to exchange questions during their holiday.",
+          "The characters in the film decide to exchange houses during their holiday.",
+          "The characters in the film decide to exchange teachers during their holiday."
         ],
         "answer": 2
       }
@@ -3099,7 +3099,7 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "A speaker says “going to the cinema tonight That's a” in the recording.",
+        "text": "Someone suggests going to the cinema tonight.",
         "options": [
           "True",
           "False"
@@ -3108,23 +3108,23 @@
       },
       {
         "format": "short_answer",
-        "text": "Which detail is mentioned in the conversation?",
+        "text": "Which film is mentioned?",
         "options": [
-          "see A Nightmare at Sao",
-          "see A Tennis at Sao",
-          "see A Week at Sao",
-          "see A Noise at Sao"
+          "A Nightmare",
+          "A Tennis",
+          "A Week",
+          "A Noise"
         ],
         "answer": 0
       },
       {
         "format": "long_answer",
-        "text": "Which statement matches what is said in the recording?",
+        "text": "Why is the cinema difficult to visit?",
         "options": [
-          "A speaker uses the words “far for me to have” in this recording.",
-          "A speaker uses the words “far for me to cycle” in this recording.",
-          "A speaker uses the words “far for me to enjoy” in this recording.",
-          "A speaker uses the words “far for me to travel” in this recording."
+          "The speaker says that the cinema is too far to have to this evening.",
+          "The speaker says that the cinema is too far to cycle to this evening.",
+          "The speaker says that the cinema is too far to enjoy to this evening.",
+          "The speaker says that the cinema is too far to travel to this evening."
         ],
         "answer": 3
       }
@@ -3152,32 +3152,32 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "A speaker says “I like Simon's brothers Who stars in” in the recording.",
+        "text": "The speaker likes films made by Simon.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 1
+        "answer": 0
       },
       {
         "format": "short_answer",
-        "text": "Which phrase matches what you hear?",
+        "text": "Whose marriage ends in the film?",
         "options": [
-          "after their friends marriage ends",
-          "after their parents marriage ends",
-          "after their books marriage ends",
-          "after their traditions marriage ends"
+          "Their friends",
+          "Their parents",
+          "Their books",
+          "Their traditions"
         ],
         "answer": 1
       },
       {
         "format": "long_answer",
-        "text": "Which statement matches what is said in the recording?",
+        "text": "How does the speaker describe the film?",
         "options": [
-          "A speaker uses the words “people because it's active and moving The” in this recording.",
-          "A speaker uses the words “people because it's helpful and moving The” in this recording.",
-          "A speaker uses the words “people because it's funny and moving The” in this recording.",
-          "A speaker uses the words “people because it's friendly and moving The” in this recording."
+          "The speaker says that the film is both active and moving to the audience.",
+          "The speaker says that the film is both helpful and moving to the audience.",
+          "The speaker says that the film is both funny and moving to the audience.",
+          "The speaker says that the film is both friendly and moving to the audience."
         ],
         "answer": 2
       }
@@ -3205,7 +3205,7 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "A speaker says “I like the photos on the wall” in the recording.",
+        "text": "A picture from the Dutch Tulip Festival is mentioned.",
         "options": [
           "True",
           "False"
@@ -3214,23 +3214,23 @@
       },
       {
         "format": "short_answer",
-        "text": "Which expression does the speaker use?",
+        "text": "Which festival appears in the picture?",
         "options": [
-          "Dutch Tulip Stress What did",
-          "Dutch Tulip Comedy What did",
-          "Dutch Tulip Sun What did",
-          "Dutch Tulip Festival What did"
+          "The Dutch Tulip Stress",
+          "The Dutch Tulip Comedy",
+          "The Dutch Tulip Sun",
+          "The Dutch Tulip Festival"
         ],
         "answer": 3
       },
       {
         "format": "long_answer",
-        "text": "Which statement matches what is said in the recording?",
+        "text": "What disappoints someone about the festival?",
         "options": [
-          "A speaker uses the words “there wasn't any robot or drinks I” in this recording.",
-          "A speaker uses the words “there wasn't any light or drinks I” in this recording.",
-          "A speaker uses the words “there wasn't any food or drinks I” in this recording.",
-          "A speaker uses the words “there wasn't any sport or drinks I” in this recording."
+          "The speaker complains that there was no robot or drink available at the event.",
+          "The speaker complains that there was no light or drink available at the event.",
+          "The speaker complains that there was no food or drink available at the event.",
+          "The speaker complains that there was no sport or drink available at the event."
         ],
         "answer": 2
       }
@@ -3258,32 +3258,32 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "A speaker says “was the music information last Sunday It” in the recording.",
+        "text": "The conversation is about a music festival last Sunday.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 1
+        "answer": 0
       },
       {
         "format": "short_answer",
-        "text": "Which detail is mentioned in the conversation?",
+        "text": "What was the band like?",
         "options": [
-          "band was late And the",
-          "band was holiday And the",
-          "band was name And the",
-          "band was dinner And the"
+          "It was late",
+          "It was holiday",
+          "It was name",
+          "It was dinner"
         ],
         "answer": 0
       },
       {
         "format": "long_answer",
-        "text": "Which statement matches what is said in the recording?",
+        "text": "How were the singers described?",
         "options": [
-          "A speaker uses the words “weren't very good laptop It was a” in this recording.",
-          "A speaker uses the words “weren't very good air It was a” in this recording.",
-          "A speaker uses the words “weren't very good either It was a” in this recording.",
-          "A speaker uses the words “weren't very good energy It was a” in this recording."
+          "The speaker says that the singers were not very good laptop at the event.",
+          "The speaker says that the singers were not very good air at the event.",
+          "The speaker says that the singers were not very good either at the event.",
+          "The speaker says that the singers were not very good energy at the event."
         ],
         "answer": 2
       }
@@ -3311,7 +3311,7 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "A speaker says “It's a national holiday People from Canada” in the recording.",
+        "text": "The celebration is a national holiday.",
         "options": [
           "True",
           "False"
@@ -3320,23 +3320,23 @@
       },
       {
         "format": "short_answer",
-        "text": "Which phrase matches what you hear?",
+        "text": "Who participates alongside adults?",
         "options": [
-          "adults and families take part",
-          "adults and projects take part",
-          "adults and skills take part",
-          "adults and children take part"
+          "families",
+          "projects",
+          "skills",
+          "children"
         ],
         "answer": 3
       },
       {
         "format": "long_answer",
-        "text": "Which statement matches what is said in the recording?",
+        "text": "How do the participants help homeless people?",
         "options": [
-          "A speaker uses the words “cook and serve life to homeless people” in this recording.",
-          "A speaker uses the words “cook and serve english to homeless people” in this recording.",
-          "A speaker uses the words “cook and serve backpack to homeless people” in this recording.",
-          "A speaker uses the words “cook and serve food to homeless people” in this recording."
+          "The participants cook and serve life to homeless people during the holiday.",
+          "The participants cook and serve english to homeless people during the holiday.",
+          "The participants cook and serve backpack to homeless people during the holiday.",
+          "The participants cook and serve food to homeless people during the holiday."
         ],
         "answer": 3
       }
@@ -3364,32 +3364,32 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "A speaker says “I don't quite go what energy is” in the recording.",
+        "text": "One speaker is unsure what energy means.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 1
+        "answer": 0
       },
       {
         "format": "short_answer",
-        "text": "Which expression does the speaker use?",
+        "text": "What kind of gas is discussed?",
         "options": [
-          "coal oil beautiful gas We",
-          "coal oil jealous gas We",
-          "coal oil natural gas We",
-          "coal oil successful gas We"
+          "beautiful gas",
+          "jealous gas",
+          "natural gas",
+          "successful gas"
         ],
         "answer": 2
       },
       {
         "format": "long_answer",
-        "text": "Which statement matches what is said in the recording?",
+        "text": "How are some forms of energy described?",
         "options": [
-          "A speaker uses the words “some types of energy are cheap and” in this recording.",
-          "A speaker uses the words “some types of earth are cheap and” in this recording.",
-          "A speaker uses the words “some types of space are cheap and” in this recording.",
-          "A speaker uses the words “some types of evening are cheap and” in this recording."
+          "The speaker says that some types of energy are cheap to use.",
+          "The speaker says that some types of earth are cheap to use.",
+          "The speaker says that some types of space are cheap to use.",
+          "The speaker says that some types of evening are cheap to use."
         ],
         "answer": 0
       }
@@ -3417,7 +3417,7 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "A speaker says “does solar energy mean Well it's energy” in the recording.",
+        "text": "The speakers ask about the meaning of solar energy.",
         "options": [
           "True",
           "False"
@@ -3426,23 +3426,23 @@
       },
       {
         "format": "short_answer",
-        "text": "Which detail is mentioned in the conversation?",
+        "text": "Which other energy source is explained?",
         "options": [
-          "what does breakfast energy",
-          "what does wind energy",
-          "what does weather energy",
-          "what does life energy"
+          "breakfast energy",
+          "wind energy",
+          "weather energy",
+          "life energy"
         ],
         "answer": 1
       },
       {
         "format": "long_answer",
-        "text": "Which statement matches what is said in the recording?",
+        "text": "What topic does the conversation explain?",
         "options": [
-          "A speaker uses the words “another type of comedy and it comes” in this recording.",
-          "A speaker uses the words “another type of stress and it comes” in this recording.",
-          "A speaker uses the words “another type of energy and it comes” in this recording.",
-          "A speaker uses the words “another type of rubbish and it comes” in this recording."
+          "The speaker describes another type of comedy and where it comes from.",
+          "The speaker describes another type of stress and where it comes from.",
+          "The speaker describes another type of energy and where it comes from.",
+          "The speaker describes another type of rubbish and where it comes from."
         ],
         "answer": 2
       }
@@ -3470,32 +3470,32 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "A speaker says “can we save hobby at home Linh” in the recording.",
+        "text": "The discussion is about saving energy at home.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 1
+        "answer": 0
       },
       {
         "format": "short_answer",
-        "text": "Which phrase matches what you hear?",
+        "text": "What does the advice help people do?",
         "options": [
-          "helps us plant electricity You're",
-          "helps us visit electricity You're",
-          "helps us build electricity You're",
-          "helps us save electricity You're"
+          "plant electricity",
+          "visit electricity",
+          "build electricity",
+          "save electricity"
         ],
         "answer": 3
       },
       {
         "format": "long_answer",
-        "text": "Which statement matches what is said in the recording?",
+        "text": "When should people turn appliances off?",
         "options": [
-          "A speaker uses the words “when leaving the park We use solar” in this recording.",
-          "A speaker uses the words “when leaving the sea We use solar” in this recording.",
-          "A speaker uses the words “when leaving the community We use solar” in this recording.",
-          "A speaker uses the words “when leaving the room We use solar” in this recording."
+          "The speaker advises people to turn things off when leaving the park.",
+          "The speaker advises people to turn things off when leaving the sea.",
+          "The speaker advises people to turn things off when leaving the community.",
+          "The speaker advises people to turn things off when leaving the room."
         ],
         "answer": 3
       }
@@ -3523,7 +3523,7 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "A speaker says “know It's a pity that we don't” in the recording.",
+        "text": "The speaker thinks it is a pity that something is missing.",
         "options": [
           "True",
           "False"
@@ -3532,23 +3532,23 @@
       },
       {
         "format": "short_answer",
-        "text": "Which expression does the speaker use?",
+        "text": "What problem is absent in the imagined future?",
         "options": [
-          "are no art jams Will",
-          "are no exercise jams Will",
-          "are no traffic jams Will",
-          "are no sun jams Will"
+          "art jams",
+          "exercise jams",
+          "traffic jams",
+          "sun jams"
         ],
         "answer": 2
       },
       {
         "format": "long_answer",
-        "text": "Which statement matches what is said in the recording?",
+        "text": "What future transport system is discussed?",
         "options": [
-          "A speaker uses the words “So when we travel in hyperloops we” in this recording.",
-          "A speaker uses the words “So when we stay in hyperloops we” in this recording.",
-          "A speaker uses the words “So when we visit in hyperloops we” in this recording.",
-          "A speaker uses the words “So when we sell in hyperloops we” in this recording."
+          "The speakers imagine how people will travel in hyperloops in the future.",
+          "The speakers imagine how people will stay in hyperloops in the future.",
+          "The speakers imagine how people will visit in hyperloops in the future.",
+          "The speakers imagine how people will sell in hyperloops in the future."
         ],
         "answer": 0
       }
@@ -3576,32 +3576,32 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "A speaker says “think we will help by flying car” in the recording.",
+        "text": "The speakers imagine travelling by flying car.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 1
+        "answer": 0
       },
       {
         "format": "short_answer",
-        "text": "Which detail is mentioned in the conversation?",
+        "text": "How certain is the speaker's prediction?",
         "options": [
-          "future We always will Will",
-          "future We regularly will Will",
-          "future We certainly will Will",
-          "future We firstly will Will"
+          "always",
+          "regularly",
+          "certainly",
+          "firstly"
         ],
         "answer": 2
       },
       {
         "format": "long_answer",
-        "text": "Which statement matches what is said in the recording?",
+        "text": "Is crossing oceans with flying cars likely?",
         "options": [
-          "A speaker uses the words “fly across oceans It slowly won't” in this recording.",
-          "A speaker uses the words “fly across oceans It probably won't” in this recording.",
-          "A speaker uses the words “fly across oceans It secondly won't” in this recording.",
-          "A speaker uses the words “fly across oceans It usually won't” in this recording."
+          "The speaker thinks it slowly will not be possible to fly across oceans.",
+          "The speaker thinks it probably will not be possible to fly across oceans.",
+          "The speaker thinks it secondly will not be possible to fly across oceans.",
+          "The speaker thinks it usually will not be possible to fly across oceans."
         ],
         "answer": 1
       }
@@ -3629,32 +3629,32 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "A speaker says “think people will travel in 2050 Tom” in the recording.",
+        "text": "The discussion is about travelling in the year 2020.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 0
+        "answer": 1
       },
       {
         "format": "short_answer",
-        "text": "Which phrase matches what you hear?",
+        "text": "What might future vehicles be like?",
         "options": [
-          "will be unusual because they",
-          "will be careful because they",
-          "will be safe because they",
-          "will be difficult because they"
+          "unusual",
+          "careful",
+          "safe",
+          "difficult"
         ],
         "answer": 2
       },
       {
         "format": "long_answer",
-        "text": "Which statement matches what is said in the recording?",
+        "text": "What other way of travelling is considered?",
         "options": [
-          "A speaker uses the words “interesting How about travelling on sea I” in this recording.",
-          "A speaker uses the words “interesting How about improving on sea I” in this recording.",
-          "A speaker uses the words “interesting How about visiting on sea I” in this recording.",
-          "A speaker uses the words “interesting How about planting on sea I” in this recording."
+          "The speaker also discusses the possibility of travelling on the sea in the future.",
+          "The speaker also discusses the possibility of improving on the sea in the future.",
+          "The speaker also discusses the possibility of visiting on the sea in the future.",
+          "The speaker also discusses the possibility of planting on the sea in the future."
         ],
         "answer": 0
       }
@@ -3682,32 +3682,32 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "A speaker says “asking for directions collecting maps talking to” in the recording.",
+        "text": "The speakers discuss reading maps to find directions.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 1
+        "answer": 0
       },
       {
         "format": "short_answer",
-        "text": "Which expression does the speaker use?",
+        "text": "What did the visitors do during their trip?",
         "options": [
-          "great We took a tour",
-          "great We went a tour",
-          "great We visited a tour",
-          "great We met a tour"
+          "took a tour",
+          "went a tour",
+          "visited a tour",
+          "met a tour"
         ],
         "answer": 0
       },
       {
         "format": "long_answer",
-        "text": "Which statement matches what is said in the recording?",
+        "text": "What do Australians enjoy doing outside?",
         "options": [
-          "A speaker uses the words “Australians love outdoor festivals Right There were” in this recording.",
-          "A speaker uses the words “Australians love outdoor activities Right There were” in this recording.",
-          "A speaker uses the words “Australians love outdoor pictures Right There were” in this recording.",
-          "A speaker uses the words “Australians love outdoor houses Right There were” in this recording."
+          "The speakers say that Australians love outdoor festivals and take part in them.",
+          "The speakers say that Australians love outdoor activities and take part in them.",
+          "The speakers say that Australians love outdoor pictures and take part in them.",
+          "The speakers say that Australians love outdoor houses and take part in them."
         ],
         "answer": 1
       }
@@ -3735,7 +3735,7 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "A speaker says “wear kilts short skirts at their traditional” in the recording.",
+        "text": "Kilts are described as short skirts.",
         "options": [
           "True",
           "False"
@@ -3744,23 +3744,23 @@
       },
       {
         "format": "short_answer",
-        "text": "Which detail is mentioned in the conversation?",
+        "text": "Which year is mentioned in the discussion?",
         "options": [
-          "that In 2020 Walt Disney",
-          "that In 2021 Walt Disney",
-          "that In 2019 Walt Disney",
-          "that In 2022 Walt Disney"
+          "2020",
+          "2021",
+          "2019",
+          "2022"
         ],
         "answer": 2
       },
       {
         "format": "long_answer",
-        "text": "Which statement matches what is said in the recording?",
+        "text": "How many visitors did California attract?",
         "options": [
-          "A speaker uses the words “California attracted nearly 22 million visitors Amazing” in this recording.",
-          "A speaker uses the words “California attracted nearly 24 million visitors Amazing” in this recording.",
-          "A speaker uses the words “California attracted nearly 21 million visitors Amazing” in this recording.",
-          "A speaker uses the words “California attracted nearly 23 million visitors Amazing” in this recording."
+          "The speaker says that California attracted nearly 22 million visitors during that year.",
+          "The speaker says that California attracted nearly 24 million visitors during that year.",
+          "The speaker says that California attracted nearly 21 million visitors during that year.",
+          "The speaker says that California attracted nearly 23 million visitors during that year."
         ],
         "answer": 2
       }
@@ -3788,32 +3788,32 @@
     "questions": [
       {
         "format": "true_false",
-        "text": "A speaker says “and her family share there You can” in the recording.",
+        "text": "The speaker mentions a family living in London.",
         "options": [
           "True",
           "False"
         ],
-        "answer": 1
+        "answer": 0
       },
       {
         "format": "short_answer",
-        "text": "Which phrase matches what you hear?",
+        "text": "Which river is mentioned in London?",
         "options": [
-          "on the Park Thames It",
-          "on the City Thames It",
-          "on the River Thames It",
-          "on the Shop Thames It"
+          "The Park Thames",
+          "The City Thames",
+          "The River Thames",
+          "The Shop Thames"
         ],
         "answer": 2
       },
       {
         "format": "long_answer",
-        "text": "Which statement matches what is said in the recording?",
+        "text": "Where can people see the famous landmark?",
         "options": [
-          "A speaker uses the words “on the River Thames You will see” in this recording.",
-          "A speaker uses the words “on the River Houses You will see” in this recording.",
-          "A speaker uses the words “on the River Animals You will see” in this recording.",
-          "A speaker uses the words “on the River Feelings You will see” in this recording."
+          "The speaker says that the landmark stands on the River Thames in London.",
+          "The speaker says that the landmark stands on the River Houses in London.",
+          "The speaker says that the landmark stands on the River Animals in London.",
+          "The speaker says that the landmark stands on the River Feelings in London."
         ],
         "answer": 0
       }
