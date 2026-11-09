@@ -1506,7 +1506,9 @@
     function renderMcqSet(item) {
         return '<p class="ldd-listening-instruction">' + escapeListening(item.taskPrompt || 'Nghe toàn bộ bài rồi trả lời các câu hỏi.') + '</p>' +
             '<div class="ldd-listening-mcq-set">' + item.questions.map((question,qIndex) =>
-                '<section class="ldd-listening-mcq-question"><h5>Câu ' + (qIndex + 1) + '. ' + escapeListening(question.text) + '</h5><div class="ldd-reading-answers">' +
+                '<section class="ldd-listening-mcq-question' + (question.format === 'long_answer' ? ' is-long-answer' : '') + '"><h5>Câu ' + (qIndex + 1) + ' · ' +
+                    (question.format === 'true_false' ? 'True / False' : question.format === 'short_answer' ? 'Đáp án ngắn (≤5 từ)' : question.format === 'long_answer' ? 'Đáp án dài (>5 từ)' : 'Trắc nghiệm') +
+                    '. ' + escapeListening(question.text) + '</h5><div class="ldd-reading-answers">' +
                     question.options.map((option,aIndex) => '<button type="button" data-listening-q="' + qIndex + '" data-listening-a="' + aIndex + '" aria-pressed="false">' + (question.format === 'true_false' ? escapeListening(option) : String.fromCharCode(65 + aIndex) + '. ' + escapeListening(option)) + '</button>').join('') +
                 '</div></section>'
             ).join('') + '</div>';
