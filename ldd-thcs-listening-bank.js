@@ -5933,40 +5933,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/ex1-getting-u1-ta9-global.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi. Đọc nhận định và chọn True/False; sau đó nghe câu hỏi và chọn đáp án đúng A, B, C hoặc D. Câu hỏi theo thứ tự nội dung bài nghe.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “you in the ____ Club very often”.",
+        "format": "true_false",
+        "text": "Mi's family moved to a house in the city centre last month.",
         "options": [
-          "Making",
-          "Reading",
-          "Singing",
-          "Saving"
+          "True",
+          "False"
         ],
-        "answer": 1,
-        "sourceWordIndex": 35
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “there's a craft ____ near our house”.",
+        "format": "multiple_choice",
+        "text": "Why hasn't Ann seen Mi at the Reading Club very often?",
         "options": [
-          "village",
-          "river",
-          "country",
-          "museum"
+          "Mi has stopped reading.",
+          "Mi has gone abroad.",
+          "Mi has been busy moving into her new home.",
+          "Mi has joined a sports club."
         ],
-        "answer": 0,
-        "sourceWordIndex": 87
+        "answer": 2
       },
       {
-        "text": "Chọn từ nghe được: “stuff for our ____, and the new”.",
+        "format": "multiple_choice",
+        "text": "How did a new neighbour help Mi?",
         "options": [
-          "house",
-          "airport",
-          "street",
-          "office"
+          "She showed Mi the way to the bus station.",
+          "She took Mi to the hospital.",
+          "She helped Mi buy a house.",
+          "She lent Mi a bicycle."
         ],
-        "answer": 0,
-        "sourceWordIndex": 148
+        "answer": 0
       }
     ],
     "source": {
@@ -5988,40 +5986,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/ex1-communication-u1-ta9-global.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi. Đọc nhận định và chọn True/False; sau đó nghe câu hỏi và chọn đáp án đúng A, B, C hoặc D. Câu hỏi theo thứ tự nội dung bài nghe.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “mind carrying this ____ for me? Not”.",
+        "format": "true_false",
+        "text": "Mai asks Tom to help her carry a suitcase.",
         "options": [
-          "suitcase",
-          "breakfast",
-          "dinner",
-          "robot"
+          "True",
+          "False"
         ],
-        "answer": 0,
-        "sourceWordIndex": 5
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “all. Could you ____ me how to”.",
+        "format": "multiple_choice",
+        "text": "How does Tom respond to Mai's request?",
         "options": [
-          "comedy",
-          "health",
-          "show",
-          "festival"
+          "He says he is too busy.",
+          "He asks someone else to help.",
+          "He refuses politely.",
+          "He agrees to help."
         ],
-        "answer": 2,
-        "sourceWordIndex": 13
+        "answer": 3
       },
       {
-        "text": "Chọn từ nghe được: “how to open this ____, please? Sure”.",
+        "format": "multiple_choice",
+        "text": "What does Ann ask Mr Nam to show her?",
         "options": [
-          "fish",
-          "gate",
-          "science",
-          "day"
+          "How to get to the airport.",
+          "How to open a gate.",
+          "Where to buy vegetables.",
+          "How to carry a suitcase."
         ],
-        "answer": 1,
-        "sourceWordIndex": 19
+        "answer": 1
       }
     ],
     "source": {
@@ -6043,40 +6039,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/ex1-skills2-u1-ta9-global.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi. Đọc nhận định và chọn True/False; sau đó nghe câu hỏi và chọn đáp án đúng A, B, C hoặc D. Câu hỏi theo thứ tự nội dung bài nghe.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “called \"My Favourite ____ Helper\". This was”.",
+        "format": "true_false",
+        "text": "Mi's writing won first prize in the community helper contest.",
         "options": [
-          "Park",
-          "Island",
-          "Store",
-          "Community"
+          "True",
+          "False"
         ],
-        "answer": 3,
-        "sourceWordIndex": 31
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “is hard-working and ____. Every day he”.",
+        "format": "multiple_choice",
+        "text": "What does Mr Vinh do for a living?",
         "options": [
-          "peaceful",
-          "responsible",
-          "popular",
-          "creative"
+          "He is a teacher.",
+          "He is a bus driver.",
+          "He is a garbage collector.",
+          "He is a police officer."
         ],
-        "answer": 1,
-        "sourceWordIndex": 82
+        "answer": 2
       },
       {
-        "text": "Chọn từ nghe được: “also friendly. He ____ keeps a smile”.",
+        "format": "multiple_choice",
+        "text": "What does Mr Vinh teach people in the neighbourhood?",
         "options": [
-          "usually",
-          "certainly",
-          "always",
-          "finally"
+          "How to plant flowers.",
+          "How to sort rubbish into the correct bins.",
+          "How to repair their houses.",
+          "How to use public transport."
         ],
-        "answer": 0,
-        "sourceWordIndex": 138
+        "answer": 1
       }
     ],
     "source": {
@@ -6098,40 +6092,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/ex1-getting-u2-ta9-global.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi. Đọc nhận định và chọn True/False; sau đó nghe câu hỏi và chọn đáp án đúng A, B, C hoặc D. Câu hỏi theo thứ tự nội dung bài nghe.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “traffic jam and ____ home late No”.",
+        "format": "true_false",
+        "text": "Trang got home late because she was stuck in a traffic jam.",
         "options": [
-          "stopped",
-          "used",
-          "came",
-          "saved"
+          "True",
+          "False"
         ],
-        "answer": 2,
-        "sourceWordIndex": 16
+        "answer": 0
       },
       {
-        "text": "Chọn từ nghe được: “easily get itchy ____. It must be”.",
+        "format": "multiple_choice",
+        "text": "How does Ben usually travel around London?",
         "options": [
-          "space",
-          "eyes",
-          "energy",
-          "computer"
+          "By bicycle.",
+          "By bus.",
+          "By underground.",
+          "By taxi."
         ],
-        "answer": 1,
-        "sourceWordIndex": 101
+        "answer": 2
       },
       {
-        "text": "Chọn từ nghe được: “fun. Do you ____ go there? Sometimes”.",
+        "format": "multiple_choice",
+        "text": "What is the large building downtown used as now?",
         "options": [
-          "slowly",
-          "especially",
-          "recently",
-          "often"
+          "A public library.",
+          "A shopping mall.",
+          "A hospital.",
+          "A bus station."
         ],
-        "answer": 3,
-        "sourceWordIndex": 164
+        "answer": 1
       }
     ],
     "source": {
@@ -6153,40 +6145,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/ex1-communication-u2-ta9-global.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi. Đọc nhận định và chọn True/False; sau đó nghe câu hỏi và chọn đáp án đúng A, B, C hoặc D. Câu hỏi theo thứ tự nội dung bài nghe.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “you to the ____ if you like”.",
+        "format": "true_false",
+        "text": "Duong's dad refuses to take him to the airport.",
         "options": [
-          "community",
-          "city",
-          "airport",
-          "river"
+          "True",
+          "False"
         ],
-        "answer": 2,
-        "sourceWordIndex": 6
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “like me to ____ you a ride”.",
+        "format": "multiple_choice",
+        "text": "What help does Minh offer Hoang?",
         "options": [
-          "watch",
-          "build",
-          "give",
-          "talk"
+          "To lend him a bicycle.",
+          "To take him to the airport.",
+          "To buy him a ticket.",
+          "To give him a ride home."
         ],
-        "answer": 2,
-        "sourceWordIndex": 17
+        "answer": 3
       },
       {
-        "text": "Chọn từ nghe được: “Thank you. That's so ____ of you”.",
+        "format": "multiple_choice",
+        "text": "How does Hoang respond to Minh's offer?",
         "options": [
-          "kind",
-          "active",
-          "convenient",
-          "patient"
+          "He says that he can walk alone.",
+          "He thanks Minh for being kind.",
+          "He asks for some money.",
+          "He says he doesn't know Minh."
         ],
-        "answer": 0,
-        "sourceWordIndex": 26
+        "answer": 1
       }
     ],
     "source": {
@@ -6208,40 +6198,38 @@
     "referenceAudioUrls": [
       "https://f005.backblazeb2.com/file/lddenglish/listening/loigiaihay/2024/0515/ex2-skills2-u2-ta9-global.mp3"
     ],
-    "taskPrompt": "Nghe từ đầu đến cuối. Chọn từ còn thiếu trong các cụm dưới đây; câu hỏi giữ đúng thứ tự trong bản ghi âm.",
+    "taskPrompt": "Nghe toàn bộ bản ghi. Đọc nhận định và chọn True/False; sau đó nghe câu hỏi và chọn đáp án đúng A, B, C hoặc D. Câu hỏi theo thứ tự nội dung bài nghe.",
     "questions": [
       {
-        "text": "Chọn từ nghe được: “I love my ____. It has good”.",
+        "format": "true_false",
+        "text": "Tom says the buses in his city are modern and comfortable.",
         "options": [
-          "country",
-          "countryside",
-          "world",
-          "city"
+          "True",
+          "False"
         ],
-        "answer": 3,
-        "sourceWordIndex": 37
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “entertainment is a ____ mall but it's”.",
+        "format": "multiple_choice",
+        "text": "What does Elena want more of in her city?",
         "options": [
-          "listening",
-          "planting",
-          "shopping",
-          "building"
+          "Expensive shopping malls.",
+          "Free sports facilities.",
+          "Food stalls.",
+          "More cinemas."
         ],
-        "answer": 2,
-        "sourceWordIndex": 92
+        "answer": 1
       },
       {
-        "text": "Chọn từ nghe được: “too lazy to ____ on their own”.",
+        "format": "multiple_choice",
+        "text": "What does Chi think parents should teach their children?",
         "options": [
-          "cook",
-          "read",
-          "sing",
-          "go"
+          "How to drive a bus.",
+          "How to build houses.",
+          "How to cook.",
+          "How to use an underground train."
         ],
-        "answer": 0,
-        "sourceWordIndex": 151
+        "answer": 2
       }
     ],
     "source": {
