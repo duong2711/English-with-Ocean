@@ -1,5 +1,5 @@
 /* =============================================================
-   LDD ENGLISH — STUDENT GRADE ASSIGNMENT v1.1
+   LDD ENGLISH — STUDENT GRADE ASSIGNMENT v1.2
    Requires student_grade_assignments (diligence_scores_grade_level_setup.sql).
    ============================================================= */
 (function () {
@@ -48,7 +48,7 @@ async function loadOwn(silent){
    await api(TABLE,null,{}, {method:'POST',prefer:'resolution=ignore-duplicates,return=minimal',body:{email:e,user_id:uid(),display_name:name||null,grade_level:null,updated_at:new Date().toISOString()}});
    r=await api(TABLE,'email,user_id,display_name,grade_level,learning_track',{email:'eq.'+e,limit:'1'});row=r.ok&&Array.isArray(r.data)?r.data[0]:null;
  }
- const old=grade;grade=row&&['ielts','work'].includes(row.learning_track)?null:gradeNum(row&&row.grade_level);
+ const old=grade;grade=row&&['ielts','work','university'].includes(row.learning_track)?null:gradeNum(row&&row.grade_level);
  if(old!==grade||lastApplied!==grade){applyDefaults();document.dispatchEvent(new CustomEvent('ldd:student-grade-changed',{detail:{grade}}));}
  // Home data is supplied by Today; do not run a second dashboard query pipeline.
  if(old!==grade||!silent)document.dispatchEvent(new CustomEvent('ldd:today-refresh'));
@@ -89,12 +89,12 @@ function syncTeacherButton(){
  b.style.display=token()&&teacher()?'':'none';
 }
 const assignmentValue=r=>r.learning_track||r.grade_level||'';
-const assignmentLabel=v=>v==='ielts'?'Luyện IELTS':v==='work'?'Đi làm':gradeNum(v)?'Lớp '+gradeNum(v):'Chưa gán';
-const assignmentFields=v=>({grade_level:gradeNum(v),learning_track:['ielts','work'].includes(v)?v:null});
-function options(sel){let s='<option value="">— Chưa gán —</option>';for(let i=1;i<=12;i++)s+='<option value="'+i+'"'+(Number(sel)===i?' selected':'')+'>Lớp '+i+'</option>';for(const [v,label] of [['ielts','Luyện IELTS'],['work','Đi làm']])s+='<option value="'+v+'"'+(sel===v?' selected':'')+'>'+label+'</option>';return s;}
+const assignmentLabel=v=>v==='ielts'?'Luyện IELTS':v==='work'?'Đi làm':v==='university'?'Sinh viên':gradeNum(v)?'Lớp '+gradeNum(v):'Chưa gán';
+const assignmentFields=v=>({grade_level:gradeNum(v),learning_track:['ielts','work','university'].includes(v)?v:null});
+function options(sel){let s='<option value="">— Chưa gán —</option>';for(let i=1;i<=12;i++)s+='<option value="'+i+'"'+(Number(sel)===i?' selected':'')+'>Lớp '+i+'</option>';for(const [v,label] of [['university','Sinh viên'],['ielts','Luyện IELTS'],['work','Đi làm']])s+='<option value="'+v+'"'+(sel===v?' selected':'')+'>'+label+'</option>';return s;}
 function ensureModal(){
  if(document.getElementById('ldd-grade-modal'))return;const m=document.createElement('div');m.id='ldd-grade-modal';m.className='ldd-grade-modal-overlay';m.style.display='none';
- m.innerHTML='<div class="ldd-grade-modal" role="dialog" aria-modal="true"><div class="ldd-grade-modal-head"><div><span class="ldd-grade-kicker">Giảng viên</span><h3>🎓 Gán lớp / mục tiêu cho học viên</h3><p>Chọn Lớp 1–12, Luyện IELTS hoặc Đi làm.</p></div><button type="button" id="ldd-grade-modal-close" class="ldd-grade-close">×</button></div><div class="ldd-grade-add-row"><input type="email" id="ldd-grade-add-email" placeholder="Email tài khoản học viên"><select id="ldd-grade-add-select">'+options(null)+'</select><button type="button" id="ldd-grade-add-btn">Thêm / lưu</button></div><div class="ldd-grade-toolbar"><input type="search" id="ldd-grade-search" placeholder="Tìm theo email hoặc tên..."><span id="ldd-grade-summary"></span></div><div id="ldd-grade-status" class="ldd-grade-status"></div><div id="ldd-grade-list" class="ldd-grade-list"></div></div>';
+ m.innerHTML='<div class="ldd-grade-modal" role="dialog" aria-modal="true"><div class="ldd-grade-modal-head"><div><span class="ldd-grade-kicker">Giảng viên</span><h3>🎓 Gán lớp / mục tiêu cho học viên</h3><p>Chọn Lớp 1–12, Sinh viên, Luyện IELTS hoặc Đi làm.</p></div><button type="button" id="ldd-grade-modal-close" class="ldd-grade-close">×</button></div><div class="ldd-grade-add-row"><input type="email" id="ldd-grade-add-email" placeholder="Email tài khoản học viên"><select id="ldd-grade-add-select">'+options(null)+'</select><button type="button" id="ldd-grade-add-btn">Thêm / lưu</button></div><div class="ldd-grade-toolbar"><input type="search" id="ldd-grade-search" placeholder="Tìm theo email hoặc tên..."><span id="ldd-grade-summary"></span></div><div id="ldd-grade-status" class="ldd-grade-status"></div><div id="ldd-grade-list" class="ldd-grade-list"></div></div>';
  document.body.appendChild(m);m.onclick=e=>{if(e.target===m)closeModal();};document.getElementById('ldd-grade-modal-close').onclick=closeModal;document.getElementById('ldd-grade-search').oninput=filterRows;document.getElementById('ldd-grade-add-btn').onclick=addAccount;
 }
 async function openModal(){ensureModal();document.getElementById('ldd-grade-modal').style.display='flex';document.body.classList.add('ldd-grade-modal-open');await loadRows();}
