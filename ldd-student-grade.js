@@ -44,7 +44,9 @@ async function loadOwn(silent){
  if(!r.ok){if(!silent)console.warn('[LDD Grade] Chưa có bảng khối lớp. Chạy diligence_scores_grade_level_setup.sql.');return;}
  let row=Array.isArray(r.data)?r.data[0]:null;
  if(!row){
-   const name=String((document.getElementById('account-display-name')||{}).textContent||'').trim();
+   // Use the signed-in email as the stable account label. The page heading can
+   // still show the previous account's name during a login transition.
+   const name=e.split('@')[0];
    await api(TABLE,null,{}, {method:'POST',prefer:'resolution=ignore-duplicates,return=minimal',body:{email:e,user_id:uid(),display_name:name||null,grade_level:null,updated_at:new Date().toISOString()}});
    r=await api(TABLE,'email,user_id,display_name,grade_level,learning_track',{email:'eq.'+e,limit:'1'});row=r.ok&&Array.isArray(r.data)?r.data[0]:null;
  }
