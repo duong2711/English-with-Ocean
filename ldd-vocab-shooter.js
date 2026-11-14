@@ -17,7 +17,7 @@
  const ICONS = ['🚀','🛸','🦾','🛰️'];
  const $ = id => document.getElementById(id);
  const esc = text => String(text == null ? '' : text).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
- const normalize = str => String(str || '').trim().replace(/\s+/g,' ').toLocaleLowerCase('en');
+ const normalize = str => String(str || '').trim().replace(/\s+/g,' ').replace(/[.!?]+$/,'').toLocaleLowerCase('en');
  let sb = null, me = null, room = null, roster = [], shots = new Map(), channel = null;
  let offset = 0, frame = 0, finishPending = false, panelOpen = false, refreshBusy = false;
  let pending = new Set(), nodes = new Map(), activeWords = [], uiMode = '', lastShotText = '';
@@ -32,7 +32,7 @@
    if (!grid || $('shooter-folder-card')) return;
    const card = document.createElement('div');
    card.id = 'shooter-folder-card'; card.className = 'folder-card';
-   card.innerHTML = '<span class="shooter-folder-emoji">🔫</span><span><strong>Bắn từ vựng</strong><small>2–4 người · 30 từ rơi · gõ để bắn</small></span>';
+   card.innerHTML = '<span class="shooter-folder-emoji">🔫</span><span><strong>Bắn từ / Ngữ pháp</strong><small>2–4 người · 30 thử thách · gõ để bắn</small></span>';
    grid.appendChild(card);
 
    const panel = document.createElement('section');
@@ -41,13 +41,13 @@
     '<div class="shooter-shell">',
       '<div class="shooter-head">',
         '<button type="button" id="shooter-back" class="shooter-back">← Quay lại</button>',
-        '<div><h3>🔫 BẮN TỪ VỰNG</h3><p>Gõ đúng nhanh nhất để bắn hạ từ đang rơi và nhận +1 điểm chăm chỉ.</p></div>',
+        '<div><h3>🔫 BẮN TỪ / NGỮ PHÁP</h3><p>Chọn từ vựng hoặc xếp câu đúng ngữ pháp. Trả lời nhanh nhất để ghi điểm.</p></div>',
         '<button type="button" id="shooter-full" class="shooter-ghost shooter-full">⛶ Toàn màn hình</button>',
       '</div>',
       '<div class="shooter-info" id="shooter-info" role="status" aria-live="polite"></div>',
       '<div class="shooter-entry" id="shooter-entry">',
         '<div class="shooter-box"><h4>🎮 Tạo phòng chơi</h4>',
-         '<p>Chọn số người và bộ từ vựng. Cả phòng cùng nhìn thấy 30 từ giống nhau, rơi theo cùng nhịp.</p>',
+         '<p>Chọn từ vựng hoặc ngữ pháp theo lớp. Cả phòng cùng nhìn thấy 30 thử thách giống nhau.</p>',
          '<p class="shooter-room-note">Phòng tối đa 4 người. Có từ 2 người là chủ phòng có thể bắt đầu.</p>',
          '<label class="shooter-field">Chủ đề từ vựng<select id="shooter-topic"><option value="">Đang đọc chủ đề…</option></select></label>',
          '<button type="button" class="shooter-primary" id="shooter-create">Tạo phòng 30 từ</button>',
@@ -96,6 +96,7 @@
     '</div>'
    ].join('');
    grid.insertAdjacentElement('afterend', panel);
+   if(window.LDDGameGrammar)window.LDDGameGrammar.mount('shooter','shooter-topic');
    card.addEventListener('click', openPanel);
    $('shooter-back').addEventListener('click', () => closePanel(false));
    $('shooter-full').addEventListener('click', toggleFullscreen);
@@ -298,10 +299,14 @@
      throw e;
    }
  }
+ function isGrammarRoom(){return !!room && /^Ngữ pháp/.test(String(room.topic_title||''));}
  function setRoom(r){
    if(!r)return;
    const changed=!room || room.id!==r.id;
    room=r;
+   const label=$('shooter-answer')&&$('shooter-answer').previousElementSibling;
+   if(label)label.textContent=isGrammarRoom()?'⌨️ Sắp xếp rồi gõ câu tiếng Anh đúng (không cần dấu câu)':'⌨️ Gõ từ tiếng Anh đang rơi để bắn ngay (không cần Enter)';
+   if($('shooter-answer'))$('shooter-answer').placeholder=isGrammarRoom()?'Gõ câu đúng ở đây…':'Gõ từ đang rơi…';
    if(changed){rosterLoadedRevision=-1;rosterEventVersion=0;clearTimeout(lobbySyncTimer);lobbySyncTimer=null;}
    localStorage.setItem('ldd-shooter-room-'+me.id,room.code);
    if(changed){roster=[];shots.clear();pending.clear();optimisticShots.clear();resetWordNodes();needsRoomRefresh=false;}
@@ -516,7 +521,7 @@
    if(!w)return null;
    const el=document.createElement('div');
    el.className='shooter-word';el.dataset.index=index;el.style.left=positionFor(index)+'%';
-   el.innerHTML='<b>'+esc(w.en)+'</b><small>'+esc(w.vi)+'</small>';
+   el.innerHTML=isGrammarRoom()?'<b>✏️ Xếp câu đúng</b><small>'+esc(w.vi)+'</small>':'<b>'+esc(w.en)+'</b><small>'+esc(w.vi)+'</small>';
    $('shooter-words-layer').appendChild(el);nodes.set(index,el);
    return el;
  }
@@ -668,8 +673,9 @@
    const btn=$('shooter-create');btn.disabled=true;
    try{
      await identity();if(!me)throw Error('Bạn cần đăng nhập để tạo phòng.');
+     const grammarMode=!!(window.LDDGameGrammar&&window.LDDGameGrammar.isGrammar('shooter'));
      const topicId=$('shooter-topic').value;
-     const bank=await makeWords(topicId);
+     const bank=grammarMode?window.LDDGameGrammar.buildShooter('shooter'):await makeWords(topicId);
      const capacity=4; // 2–4 players may start; 4 is only the upper bound.
      const {data,error}=await sb.rpc('ldd_shooter_create',{p_words:bank.words,p_capacity:capacity,p_topic:bank.topic,p_name:me.name});
      if(error)throw error;
@@ -694,7 +700,7 @@
      const {data,error}=await sb.rpc('ldd_shooter_start',{p_room:room.id});
      if(error)throw error;
      room=data;await Promise.all([syncClock(),refreshSnapshot()]);render();playFrames();
-     info('Ván chơi bắt đầu. Chuẩn bị gõ từ!');
+     info(isGrammarRoom()?'Ván ngữ pháp bắt đầu. Sắp xếp rồi gõ câu đúng!':'Ván chơi bắt đầu. Chuẩn bị gõ từ!');
    }catch(e){info(errText(e),'error');btn.disabled=false;}
  }
  async function leaveLobby(){
