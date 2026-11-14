@@ -215,7 +215,8 @@
     let words = shuffle(parts.words);
     for(let i=0;i<8 && words.join(' ')===parts.words.join(' ');i++) words=shuffle(parts.words);
     if(words.join(' ')===parts.words.join(' ')) words=parts.words.slice().reverse();
-    return 'Sắp xếp câu: '+words.join(' / ');
+    const kind=sentence.endsWith('?')?'câu hỏi':/\b(not|never|cannot|don.t|doesn.t|didn.t|won.t)\b/i.test(sentence)?'câu phủ định':'câu khẳng định';
+    return 'Sắp xếp '+kind+': '+words.join(' / ');
   }
   function makeOptions(sentence) {
     const parts=splitSentence(sentence), original=parts.words.join(' ');
@@ -234,6 +235,20 @@
     itemsThrough(grade).forEach(item=>{const key=normalize(item.answer);if(!unique.has(key))unique.set(key,item);});
     return shuffle([...unique.values()]);
   }
+  function pickBalanced(grade,count) {
+    const pool=poolFor(grade), used=new Set(), chosen=[];
+    for(let level=1;level<=grade && chosen.length<count;level++){
+      const inLevel=pool.filter(item=>item.grade===level && !used.has(normalize(item.answer)));
+      if(!inLevel.length)continue;
+      const item=inLevel[0];chosen.push(item);used.add(normalize(item.answer));
+    }
+    for(const item of pool){
+      if(chosen.length>=count)break;
+      const key=normalize(item.answer);if(used.has(key))continue;
+      chosen.push(item);used.add(key);
+    }
+    return shuffle(chosen);
+  }
   function selectedGrade(game) {
     const fixed=assignedGrade();
     if(fixed) return fixed;
@@ -247,7 +262,7 @@
     return !!select && select.value==='grammar';
   }
   function buildRace(game) {
-    const grade=selectedGrade(game), selected=poolFor(grade).slice(0,20);
+    const grade=selectedGrade(game), selected=pickBalanced(grade,20);
     if(selected.length!==20) throw Error('Kho ngữ pháp không đủ 20 câu.');
     return {
       questions:selected.map((item,i)=>{
@@ -258,8 +273,8 @@
     };
   }
   function buildShooter(game) {
-    const grade=selectedGrade(game), selected=poolFor(grade).filter(item=>
-      makePrompt(item.answer).length<=120).slice(0,30);
+    const grade=selectedGrade(game), selected=pickBalanced(grade,30).filter(item=>
+      makePrompt(item.answer).length<=120);
     if(selected.length!==30) throw Error('Kho ngữ pháp không đủ 30 câu.');
     return {words:selected.map(item=>({en:item.answer,vi:makePrompt(item.answer)})),topic:'Ngữ pháp · Lớp 1–'+grade};
   }
@@ -304,7 +319,7 @@
       }
       const heading=document.createElement('p');
       heading.className='ldd-game-grammar-range';
-      heading.textContent='Phạm vi câu hỏi: lớp 1 đến lớp '+grade+'. Đề chọn ngẫu nhiên trong các chủ điểm dưới đây.';
+      heading.textContent='Phạm vi câu hỏi: lớp 1 đến lớp '+grade+'. Dạng câu hỏi: sắp xếp từ thành câu tiếng Anh đúng. Đề chọn ngẫu nhiên trong các chủ điểm dưới đây.';
       preview.append(heading);
       CATALOG.filter(g=>g.grade<=grade).forEach(group=>{
         const div=document.createElement('div');div.className='ldd-game-grammar-grade-group';
