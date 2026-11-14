@@ -29,9 +29,9 @@
         'Her dress is yellow.', 'Your book is new.', 'Our class is big.', 'Their dog is small.'
       ]],
       ['Câu đơn khẳng định và phủ định', [
-        'I like my school.', 'I like green apples.', 'I do not like milk.',
-        'He likes his new bag.', 'She likes red flowers.', 'We like English songs.',
-        'They do not like rain.', 'I have two books.'
+        'I like my school.', 'I like green apples.', 'I like cold milk.',
+        'I like my new bag.', 'You like red flowers.', 'We like English songs.',
+        'We like our school.', 'I have two books.'
       ]],
       ['Mệnh lệnh đơn giản', [
         'Open your English book.', 'Close the classroom door.', 'Look at the board.',
