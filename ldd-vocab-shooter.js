@@ -504,8 +504,8 @@
    $('shooter-results').innerHTML=sorted.map((p,i)=>
      '<div><span>'+(i===0?'🥇':i===1?'🥈':i===2?'🥉':'🏅')+' '+esc(p.display_name)+
      (me && p.user_id===me.id?' (Bạn)':'')+'</span><strong>'+String(scores.get(p.user_id)||0)+
-     ' từ · +'+String(scores.get(p.user_id)||0)+' điểm</strong></div>').join('')+
-     '<p>Toàn phòng bắn trúng '+shots.size+'/30 từ. Từ rơi xuống chưa kịp gõ không có điểm.</p>';
+     ' '+(isGrammarRoom()?'câu':'từ')+' · +'+String(scores.get(p.user_id)||0)+' điểm</strong></div>').join('')+
+     '<p>Toàn phòng bắn trúng '+shots.size+'/30 '+(isGrammarRoom()?'câu':'từ')+'. Câu/từ rơi xuống chưa kịp gõ không có điểm.</p>';
    $('shooter-feedback').textContent='';
    info('Ván chơi hoàn thành. Điểm đã được cộng ngay khi mỗi từ được xác nhận.','success');
  }
@@ -577,7 +577,7 @@
      });
      $('shooter-words-layer').style.height=Math.max(stage.clientHeight,contentBottom+92)+'px';
      const spawned=Math.min(WORD_COUNT,Math.floor(time/spawnInterval())+1);
-     $('shooter-progress').textContent=spawned+' / 30 từ đã thả';
+     $('shooter-progress').textContent=spawned+' / 30 '+(isGrammarRoom()?'câu':'từ')+' đã thả';
      $('shooter-track-bar').style.width=(spawned/30*100)+'%';
      if(time>=lastEnd() && !finishPending && Date.now()-lastFinishAttempt>4000)finishGame();
    }
@@ -603,6 +603,8 @@
      el.classList.toggle('is-matched',!!typed && word.startsWith(typed));
      const bold=el.querySelector('b');
      if(!bold)continue;
+     // Grammar answers must stay concealed, even while the player types a prefix.
+     if(isGrammarRoom()){bold.textContent='✏️ Xếp câu đúng';continue;}
      if(typed && word.startsWith(typed) && typed.length<word.length){
        const raw=String(room.word_list[id].en);
        bold.innerHTML='<span class="shooter-prefix">'+esc(raw.slice(0,typed.length))+'</span>'+esc(raw.slice(typed.length));
