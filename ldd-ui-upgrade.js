@@ -41,6 +41,7 @@
         ensureStylesheet('ldd-student-grade-style', 'ldd-student-grade.css?v=1');
         ensureStylesheet('ldd-vocab-race-style', 'ldd-vocab-race.css?v=3');
         ensureStylesheet('ldd-vocab-shooter-style', 'ldd-vocab-shooter.css?v=20261025-no-overlap1');
+        ensureStylesheet('ldd-game-grammar-style', 'ldd-game-grammar.css?v=20261114-grammar1');
         ensureStylesheet('ldd-quick-lookup-style', 'ldd-quick-lookup.css?v=20261025-valid2');
         ensureStylesheet('ldd-entertainment-style', 'ldd-entertainment.css?v=20261027-translation1');
         ensureStylesheet('ldd-film-cloze-style', 'ldd-film-cloze.css?v=20261030-continuous-film5');
@@ -55,6 +56,7 @@
         ensureScript('ldd-student-grade-script', 'ldd-student-grade.js?v=20261110-university-track1');
         ensureScript('ldd-thcs-vocab-reset-script', 'ldd-thcs-vocab-reset.js?v=11');
         ensureScript('ldd-fast-progress-script', 'ldd-fast-progress.js?v=1');
+        ensureScript('ldd-game-grammar-script', 'ldd-game-grammar.js?v=20261114-grammar1');
         ensureScript('ldd-vocab-race-script', 'ldd-vocab-race.js?v=20261025-entertainment1');
         ensureScript('ldd-vocab-shooter-script', 'ldd-vocab-shooter.js?v=20261025-entertainment1');
         ensureScript('ldd-quick-lookup-script', 'ldd-quick-lookup.js?v=20261025-valid2');
