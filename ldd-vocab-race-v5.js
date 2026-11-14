@@ -182,7 +182,7 @@
         const card = document.createElement('div');
         card.id = 'vocab-race-folder-card';
         card.className = 'folder-card vocab-race-folder-card';
-        card.innerHTML = '<span class="vocab-race-card-icon">🏎️</span><span><strong>Đua xe từ vựng</strong><small>2–4 người · 20 lượt · 30 giây/lượt</small></span>';
+        card.innerHTML = '<span class="vocab-race-card-icon">🏎️</span><span><strong>Đua xe: Từ vựng / Ngữ pháp</strong><small>2–4 người · 20 câu · 30 giây/lượt</small></span>';
         grid.appendChild(card);
 
         const panel = document.createElement('section');
@@ -197,7 +197,7 @@
             </div>
             <div id="vocab-race-status" class="vocab-race-status"></div>
             <div id="vocab-race-entry" class="vocab-race-entry">
-                <div class="vocab-race-entry-card"><span class="vocab-race-entry-icon">🏁</span><h4>Tạo phòng mới</h4><p>Chọn <b>1 chủ đề trong mục Vận dụng</b>. Cả 20 lượt chỉ dùng từ của chủ đề đó.</p><label class="vocab-race-topic-field"><span>Chủ đề từ vựng</span><select id="vocab-race-topic-select"><option value="">— Chọn chủ đề —</option></select></label><button type="button" id="vocab-race-create-btn" class="vocab-race-primary">Tạo phòng</button></div>
+                <div class="vocab-race-entry-card"><span class="vocab-race-entry-icon">🏁</span><h4>Tạo phòng mới</h4><p>Chọn từ vựng theo chủ đề hoặc ngữ pháp trong phạm vi lớp đã học. Cả phòng cùng chơi một bộ đề.</p><label class="vocab-race-topic-field"><span>Chủ đề từ vựng</span><select id="vocab-race-topic-select"><option value="">— Chọn chủ đề —</option></select></label><button type="button" id="vocab-race-create-btn" class="vocab-race-primary">Tạo phòng</button></div>
                 <div class="vocab-race-entry-card"><span class="vocab-race-entry-icon">🔑</span><h4>Vào phòng</h4><p>Nhập mã 6 ký tự do chủ phòng gửi.</p><div class="vocab-race-code-row"><input id="vocab-race-code-input" maxlength="6" autocomplete="off" placeholder="VD: A1B2C3"><button type="button" id="vocab-race-join-btn">Vào</button></div></div>
             </div>
             <div id="vocab-race-lobby" class="vocab-race-lobby" style="display:none">
@@ -228,6 +228,7 @@
             </div>
             <div id="vocab-race-finish" class="vocab-race-finish" style="display:none"><div class="vocab-race-trophy">🏆</div><h3>Kết thúc 20 lượt</h3><p>Hạng 1 nhận <b>+20 điểm chăm chỉ</b>.</p><div id="vocab-race-ranking" class="vocab-race-ranking"></div><div class="vocab-race-finish-actions"><button type="button" id="vocab-race-replay-btn" class="vocab-race-primary">Chơi lại cùng phòng</button><button type="button" id="vocab-race-finish-leave" class="vocab-race-secondary">Rời phòng</button></div></div>`;
         grid.insertAdjacentElement('afterend', panel);
+        if (window.LDDGameGrammar) window.LDDGameGrammar.mount('race', 'vocab-race-topic-select');
     }
 
     function bindEvents() {
@@ -513,12 +514,13 @@
     async function createRoom() {
         if (!me) await syncIdentity();
         if (!me || me.email === TEACHER_EMAIL) return;
+        const grammarMode = !!(window.LDDGameGrammar && window.LDDGameGrammar.isGrammar('race'));
         const topicId = String(($('vocab-race-topic-select') || {}).value || '').trim();
-        if (!topicId) { setStatus('Hãy chọn 1 chủ đề từ mục Vận dụng trước khi tạo phòng.', 'error'); return; }
+        if (!grammarMode && !topicId) { setStatus('Hãy chọn 1 chủ đề từ mục Vận dụng trước khi tạo phòng.', 'error'); return; }
         const btn = $('vocab-race-create-btn'); btn.disabled = true;
-        setStatus('Đang lấy 20 từ trong chủ đề đã chọn...', 'info');
+        setStatus(grammarMode ? 'Đang soạn 20 câu ngữ pháp theo lớp...' : 'Đang lấy 20 từ trong chủ đề đã chọn...', 'info');
         try {
-            const bank = await buildQuestionBank(topicId);
+            const bank = grammarMode ? window.LDDGameGrammar.buildRace('race') : await buildQuestionBank(topicId);
             const { data, error } = await raceSb.rpc('vocab_race_create_room_topic', {
                 p_questions:bank.questions,
                 p_topic_id:bank.topicId,
@@ -1194,7 +1196,10 @@
     function render() {
         if (!room) return;
         const panel = racePanel();
-        if (panel) panel.classList.toggle('is-race-playing', room.status === 'playing');
+        if (panel) {
+            panel.classList.toggle('is-race-playing', room.status === 'playing');
+            panel.classList.toggle('is-grammar-mode', /^grammar:/.test(String(room.topic_id || '')));
+        }
         $('vocab-race-entry').style.display = 'none';
         $('vocab-race-lobby').style.display = room.status === 'lobby' ? 'block' : 'none';
         $('vocab-race-game').style.display = room.status === 'playing' ? 'block' : 'none';
@@ -1238,6 +1243,8 @@
         if (!q) return;
         $('vocab-race-round').textContent = (room.round_index + 1) + '/20';
         $('vocab-race-meaning').textContent = q.vi || '—';
+        const meaningLabel = $('vocab-race-meaning').previousElementSibling;
+        if (meaningLabel) meaningLabel.textContent = /^grammar:/.test(String(room.topic_id || '')) ? 'Sắp xếp câu đúng' : 'Nghĩa tiếng Việt';
         buildTrack(q);
         renderScores();
         renderEvent();
