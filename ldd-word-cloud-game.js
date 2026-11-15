@@ -12,6 +12,7 @@ const translateErr=e=>{const value=String(e&&e.message||e||'Lỗi không xác đ
 };
 let sb=null,me=null,room=null,players=[],shots=new Map(),channel=null;
 let opened=false,busy=false,pending=false,shown=-1,refreshing=false,syncBusy=false,liveTimer=0,lobbyTimer=0;
+let lastBackgroundSync=0,revealUntil=0,revealTimer=0;
 const cloud=r=>!!(r&&r.word_list&&r.word_list[0]&&r.word_list[0].game_mode==='word_cloud');
 const storeKey=()=>me?'ldd-cloud-room-'+me.id:'';
 function notify(msg,type){const el=$('ldd-cloud-notice');if(el){el.textContent=msg||'';el.dataset.type=type||'';}}
@@ -85,11 +86,13 @@ function boot(){
  document.addEventListener('click',e=>{
   if(!opened||!e.target.closest)return;
   const nav=e.target.closest('[data-main-target]');if(nav&&nav.dataset.mainTarget!=='tab-giai-tri')closePanel(false);
-  const other=e.target.closest('.folder-card');if(other&&other.id!=='ldd-cloud-card')closePanel(true);
+  if(e.target.closest('#ldd-ent-games-back'))closePanel(false);
+  const other=e.target.closest('.folder-card');if(other&&other.id!=='ldd-cloud-card')closePanel(!!other.closest('#entertainment-games-grid'));
  },true);
 }
 function stopLive(){
  clearInterval(liveTimer);liveTimer=0;clearInterval(lobbyTimer);lobbyTimer=0;
+ clearTimeout(revealTimer);revealTimer=0;revealUntil=0;
  if(channel&&sb){sb.removeChannel(channel);channel=null;}
 }
 function closePanel(keepHidden){
@@ -202,8 +205,11 @@ async function resume(){
  clearInterval(liveTimer);liveTimer=setInterval(()=>{if(room&&room.status==='playing'&&opened&&!document.hidden){render();}},350);
  clearInterval(lobbyTimer);lobbyTimer=setInterval(()=>{
   if(!opened||document.hidden||!room)return;
-  if(room.status==='lobby')sync();else if(room.status==='playing')sync();
- },room.status==='lobby'?1800:12000);
+  if(room.status==='lobby'){sync();return;}
+  if(room.status==='playing'&&Date.now()-lastBackgroundSync>=12000){
+    lastBackgroundSync=Date.now();sync();
+  }
+ },1800);
 }
 async function startRoom(){
  if(!room||!me||busy||room.host_user_id!==me.id)return;busy=true;$('ldd-cloud-start').disabled=true;
@@ -254,7 +260,8 @@ function renderSentence(q,answer){
  });
 }
 function renderPlaying(){
- renderScores();const current=nextIndex();if(current>=30)return;
+ const current=nextIndex();if(current>=30)return;
+ if(revealUntil>Date.now())return;
  const start=Date.parse(room.started_at||0);
  if(start>Date.now()){
   $('ldd-cloud-round').textContent='Chuẩn bị '+Math.ceil((start-Date.now())/1000)+' giây';
@@ -264,7 +271,8 @@ function renderPlaying(){
  $('ldd-cloud-round').textContent='Câu '+(current+1)+'/30';
  $('ldd-cloud-topic-label').textContent=room.topic_title||'';
  $('ldd-cloud-kind').textContent=q.cloud_mode==='grammar'?'✏️ Ngữ pháp':'📖 Từ vựng';
- if(shown===current)return;shown=current;pending=false;
+ if(shown===current)return;
+ renderScores();shown=current;pending=false;
  $('ldd-cloud-feedback').textContent='Chọn một từ trong đám mây để hoàn thiện câu.';
  $('ldd-cloud-hint').textContent=q.hint||q.vi||'';
  renderSentence(q,null);
@@ -307,11 +315,14 @@ function applyShot(s){
  if(!room||s.room_id!==room.id)return;const i=Number(s.word_index);
  if(!Number.isInteger(i)||i<0||i>=30||shots.has(i))return;
  shots.set(i,s);
- if(shown===i){
+ if(shown===i&&room.status==='playing'){
   const q=room.word_list[i];renderSentence(q,q.en);
   $('ldd-cloud-feedback').textContent=(me&&s.user_id===me.id?'🎯 Bạn nhanh nhất! +1 điểm':'⚡ Một người chơi đã trả lời đúng!')+' '+q.en;
- }
- shown=-1;render();
+  revealUntil=Date.now()+650;
+  clearTimeout(revealTimer);
+  revealTimer=setTimeout(()=>{revealUntil=0;shown=-1;if(opened&&room)render();},650);
+  renderScores();
+ }else{shown=-1;render();}
 }
 function renderFinished(){
  const m=scoreMap(),out=$('ldd-cloud-results');out.replaceChildren();
@@ -328,7 +339,7 @@ async function leaveRoom(){
 }
 function resetRoom(){
  stopLive();if(me)localStorage.removeItem(storeKey());
- room=null;players=[];shots.clear();shown=-1;pending=false;render();notify('Chọn nội dung và tạo phòng mới.');
+ room=null;players=[];shots.clear();shown=-1;pending=false;lastBackgroundSync=0;render();notify('Chọn nội dung và tạo phòng mới.');
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
