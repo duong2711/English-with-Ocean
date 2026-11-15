@@ -1520,6 +1520,9 @@
     }
 
     function renderFinish() {
+        const solo = !!(room && room.questions && room.questions[0] && room.questions[0].play_mode==='solo');
+        const note=$('vocab-race-finish')&&$('vocab-race-finish').querySelector('p');
+        if(note)note.textContent=solo?'Luyện tập một mình: điểm theo từng câu, không cộng thưởng hạng nhất.':'Hạng 1 nhận +20 điểm chăm chỉ.';
         const ranking = room.last_result && Array.isArray(room.last_result.ranking)
             ? room.last_result.ranking
             : players.slice().sort((a,b) => b.score-a.score || a.wrong_count-b.wrong_count || Number(a.total_activation_ms)-Number(b.total_activation_ms));
