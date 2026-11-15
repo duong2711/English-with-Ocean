@@ -2,7 +2,7 @@
 (function(){
  'use strict';
  if(window.LDDCloudBank)return;
- const COUNT=30,CHOICES=16;
+ const COUNT=30,CHOICES=5;
  const norm=s=>String(s||'').trim().toLowerCase().replace(/\s+/g,' ');
  const shuffle=list=>{const a=list.slice();for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
  const word=s=>/^[A-Za-z]+(?:[-'][A-Za-z]+)?$/.test(String(s||'').trim());
@@ -30,7 +30,7 @@
      const name=clean(value.en||value);
      if(word(name)&&!map.has(norm(name))){map.set(norm(name),name);if(map.size===CHOICES)break;}
    }
-   if(map.size!==CHOICES)throw Error('Không có đủ 16 từ khác nhau để tạo đám mây.');
+   if(map.size!==CHOICES)throw Error('Không có đủ 5 từ khác nhau để tạo đám mây.');
    return shuffle([...map.values()]);
  }
  function promptFor(w){
@@ -149,7 +149,7 @@
  }
  function markRoom(bank){
    if(!bank||bank.words.length!==COUNT)throw Error('Bộ câu hỏi không đủ 30 lượt.');
-   const words=bank.words.map((w,i)=>i?{...w}:{...w,sequence_mode:'one_by_one',game_mode:'word_cloud'});
+   const words=bank.words.map((w,i)=>i?{...w}:{...w,sequence_mode:'one_by_one',game_mode:'word_cloud',cloud_rules:'two_misses_v1'});
    for(const w of words){
      if(!word(w.en)||w.en.length>55||!w.vi||w.vi.length>120||!w.prompt.includes('____')||
        w.prompt.length>240||!Array.isArray(w.choices)||w.choices.length!==CHOICES||
