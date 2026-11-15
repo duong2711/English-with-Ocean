@@ -1,6 +1,6 @@
-/* LDD English — Bắn từ vựng (2–4 học viên, 30 từ, Realtime ít egress).
- * The server arbitrates claims and diligence points; animations and falling words are LOCAL.
- * Timing is paired with ldd_shooter_claim/finish; old rooms keep legacy timing.
+/* LDD English — Bắn từ / Ngữ pháp (2–4 học viên, 30 câu, Realtime ít egress).
+ * New rooms show exactly one target, waiting for a server-confirmed claim before the next.
+ * Old rooms retain the original timed multi-word mode for backward compatibility.
  */
 (function () {
  'use strict';
@@ -47,10 +47,10 @@
       '<div class="shooter-info" id="shooter-info" role="status" aria-live="polite"></div>',
       '<div class="shooter-entry" id="shooter-entry">',
         '<div class="shooter-box"><h4>🎮 Tạo phòng chơi</h4>',
-         '<p>Chọn từ vựng hoặc ngữ pháp theo lớp. Cả phòng cùng nhìn thấy 30 thử thách giống nhau.</p>',
+         '<p>Chọn từ vựng hoặc ngữ pháp theo lớp. Mỗi lần chỉ có 1 từ/câu, bắn đúng mới hiện câu tiếp theo trên tất cả màn hình.</p>',
          '<p class="shooter-room-note">Phòng tối đa 4 người. Có từ 2 người là chủ phòng có thể bắt đầu.</p>',
          '<label class="shooter-field">Chủ đề từ vựng<select id="shooter-topic"><option value="">Đang đọc chủ đề…</option></select></label>',
-         '<button type="button" class="shooter-primary" id="shooter-create">Tạo phòng 30 từ</button>',
+         '<button type="button" class="shooter-primary" id="shooter-create">Tạo phòng 30 thử thách</button>',
         '</div>',
         '<div class="shooter-box"><h4>🔑 Tham gia phòng</h4>',
          '<p>Nhập mã phòng từ bạn bè. Bạn có thể dùng máy tính hoặc điện thoại, mỗi người một tài khoản.</p>',
@@ -83,13 +83,13 @@
             '<input id="shooter-answer" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" placeholder="Gõ từ đang rơi…" maxlength="65">',
             '<div class="shooter-mobile-toolbar" id="shooter-mobile-toolbar" hidden><strong>⌨️ Phím gọn</strong><button type="button" id="shooter-input-mode">Bàn phím điện thoại</button></div>',
              '<div id="shooter-keyboard" class="shooter-keyboard" hidden></div>',
-             '<p class="shooter-hint">Ai hoàn thành chính xác trước sẽ nhận 1 điểm chăm chỉ. Từ trúng đạn biến mất trên mọi màn hình.</p>',
+             '<p class="shooter-hint">Mỗi lần 1 từ/câu. Ai bắn đúng đầu tiên nhận 1 điểm và mở thử thách tiếp theo cho cả phòng.</p>',
             '<div class="shooter-feedback" id="shooter-feedback" aria-live="polite"></div>',
          '</div>',
       '</div>',
       '<div id="shooter-finish" class="shooter-finish" hidden>',
-         '<div class="shooter-medal">🏆</div><h3>ĐÃ KẾT THÚC 30 TỪ!</h3>',
-         '<p>Đã thả đủ 30 từ. Mỗi từ bắn trúng đầu tiên được cộng <b>+1 điểm chăm chỉ</b>.</p>',
+         '<div class="shooter-medal">🏆</div><h3>HOÀN THÀNH 30 THỬ THÁCH!</h3>',
+         '<p>Mỗi từ/câu được bắn trúng đầu tiên được cộng <b>+1 điểm chăm chỉ</b>.</p>',
          '<div class="shooter-results" id="shooter-results"></div>',
          '<button type="button" class="shooter-primary" id="shooter-new">🎮 Chơi ván mới</button>',
       '</div>',
@@ -300,12 +300,23 @@
    }
  }
  function isGrammarRoom(){return !!room && /^Ngữ pháp/.test(String(room.topic_title||''));}
+ // The word-list marker is persisted with the room, so ongoing legacy rooms
+ // preserve their old timed rules even after clients and server are updated.
+ function isSequentialRoom(){
+   return !!(room && Array.isArray(room.word_list) && room.word_list[0] &&
+     room.word_list[0].sequence_mode === 'one_by_one');
+ }
+ function nextUnclaimedIndex(){
+   for(let i=0;i<WORD_COUNT;i++)if(!shots.has(i))return i;
+   return WORD_COUNT;
+ }
  function setRoom(r){
    if(!r)return;
    const changed=!room || room.id!==r.id;
    room=r;
+   $('shooter-panel').classList.toggle('is-shooter-sequential',isSequentialRoom());
    const label=$('shooter-answer')&&$('shooter-answer').previousElementSibling;
-   if(label)label.textContent=isGrammarRoom()?'⌨️ Sắp xếp rồi gõ câu tiếng Anh đúng (không cần dấu câu)':'⌨️ Gõ từ tiếng Anh đang rơi để bắn ngay (không cần Enter)';
+   if(label)label.textContent=isGrammarRoom()?'⌨️ Sắp xếp rồi gõ câu tiếng Anh đúng (không cần dấu câu)':isSequentialRoom()?'⌨️ Gõ đúng từ đang hiển thị để mở từ tiếp theo':'⌨️ Gõ từ tiếng Anh đang rơi để bắn ngay (không cần Enter)';
    if($('shooter-answer'))$('shooter-answer').placeholder=isGrammarRoom()?'Gõ câu đúng ở đây…':'Gõ từ đang rơi…';
    if(changed){rosterLoadedRevision=-1;rosterEventVersion=0;clearTimeout(lobbySyncTimer);lobbySyncTimer=null;}
    localStorage.setItem('ldd-shooter-room-'+me.id,room.code);
@@ -444,6 +455,9 @@
     optimisticShots.delete(idx);
     if(shots.has(idx))return;
     shots.set(idx,s);pending.delete(idx);
+   if(isSequentialRoom() && idx===nextUnclaimedIndex()-1){
+     const input=$('shooter-answer');if(input)input.value='';
+   }
    const el=nodes.get(idx);
    if(el){burst(el);el.remove();nodes.delete(idx);}
    if(me && s.user_id===me.id) {
@@ -505,7 +519,7 @@
      '<div><span>'+(i===0?'🥇':i===1?'🥈':i===2?'🥉':'🏅')+' '+esc(p.display_name)+
      (me && p.user_id===me.id?' (Bạn)':'')+'</span><strong>'+String(scores.get(p.user_id)||0)+
      ' '+(isGrammarRoom()?'câu':'từ')+' · +'+String(scores.get(p.user_id)||0)+' điểm</strong></div>').join('')+
-     '<p>Toàn phòng bắn trúng '+shots.size+'/30 '+(isGrammarRoom()?'câu':'từ')+'. Câu/từ rơi xuống chưa kịp gõ không có điểm.</p>';
+     '<p>Toàn phòng bắn trúng '+shots.size+'/30 '+(isGrammarRoom()?'câu':'từ')+'. '+(isSequentialRoom()?'Mỗi lần mở một thử thách sau khi người chơi bắn đúng.':'Câu/từ rơi xuống chưa kịp gõ không có điểm.')+'</p>';
    $('shooter-feedback').textContent='';
    info('Ván chơi hoàn thành. Điểm đã được cộng ngay khi mỗi từ được xác nhận.','success');
  }
@@ -525,6 +539,46 @@
    $('shooter-words-layer').appendChild(el);nodes.set(index,el);
    return el;
  }
+ // Server-confirmed sequence: only the next contiguous unclaimed index is visible.
+ // The target falls slowly, then stays within the stage until someone gets it.
+ function renderSequentialFrame(){
+   activeWords=[];
+   const current=nextUnclaimedIndex();
+   const waiting=optimisticShots.has(current) || pending.has(current);
+   for(const [id,el] of nodes){
+     if(id!==current || waiting){el.remove();nodes.delete(id);}
+   }
+   const label=isGrammarRoom()?'Câu':'Từ';
+   const progress=$('shooter-progress');
+   const txt=current<WORD_COUNT?label+' '+(current+1)+' / '+WORD_COUNT:WORD_COUNT+' / '+WORD_COUNT+' đã hoàn thành';
+   if(progress.textContent!==txt)progress.textContent=txt;
+   $('shooter-track-bar').style.width=Math.min(100,shots.size/WORD_COUNT*100)+'%';
+   if(current>=WORD_COUNT){
+     if(!finishPending && Date.now()-lastFinishAttempt>4000)finishGame();
+     return;
+   }
+   // While our shot is awaiting confirmation, do NOT reveal the next target.
+   if(waiting)return;
+   const stage=$('shooter-stage');
+   const item=room.word_list[current];
+   if(!item)return;
+   let el=nodes.get(current);
+   if(!el)el=buildWord(current);
+   const width=Math.max(80,Math.min(stage.clientWidth-28,isGrammarRoom()?650:420));
+   el.style.width=width+'px';
+   el.style.maxWidth=width+'px';
+   el.style.minWidth='0';
+   el.style.left='50%';
+   el.style.top='0px';
+   const prev=shots.get(current-1);
+   const spawnedAt=current===0?room.started_at:prev&&prev.claimed_at;
+   const since=Math.max(0,Date.now()+offset-Date.parse(spawnedAt||room.started_at));
+   const maxY=Math.max(14,stage.clientHeight-el.offsetHeight-65);
+   const travelDuration=isGrammarRoom()?18000:14000;
+   const y=Math.round(14+(maxY-14)*Math.min(1,since/travelDuration));
+   el.style.transform='translate3d(-50%,'+y+'px,0)';
+   activeWords=[current];
+ }
  function updateFrame(){
    frame=0;
    if(!room || room.status!=='playing'||!activePanel())return;
@@ -542,6 +596,11 @@
        visualCountdown=0;
        if(window.matchMedia && window.matchMedia('(pointer:fine)').matches)
          $('shooter-answer').focus({preventScroll:true});
+     }
+     if(isSequentialRoom()){
+       renderSequentialFrame();
+       frame=requestAnimationFrame(updateFrame);
+       return;
      }
      activeWords=[];
      const stage=$('shooter-stage');
@@ -635,8 +694,15 @@
      }else{
        const reason=data && data.reason;
        $('shooter-feedback').textContent=reason==='already_claimed'?'⚡ Bạn khác đã bắn nhanh hơn!':
+         reason==='not_current_word'?'⏳ Đang đồng bộ câu tiếp theo…':
          reason==='expired'?'⌛ Từ đã rơi khỏi màn hình!':'Không ghi nhận phát bắn.';
-       if(reason==='already_claimed'||reason==='expired')keepHidden=true;
+       if(reason==='already_claimed'||reason==='expired'||reason==='not_current_word'){
+         keepHidden=true;
+         if(isSequentialRoom()){
+           await refreshSnapshot();
+           if(!shots.has(index))keepHidden=false;
+         }
+       }
      }
    }catch(e){info('Không thể ghi điểm: '+errText(e),'error');$('shooter-feedback').textContent='Mạng gián đoạn, phát bắn chưa được xác nhận.';}
    finally{
@@ -678,8 +744,10 @@
      const grammarMode=!!(window.LDDGameGrammar&&window.LDDGameGrammar.isGrammar('shooter'));
      const topicId=$('shooter-topic').value;
      const bank=grammarMode?window.LDDGameGrammar.buildShooter('shooter'):await makeWords(topicId);
+     // Mark new rooms in their persisted word list; existing rooms remain timed.
+     const words=bank.words.map((word,i)=>i===0?Object.assign({},word,{sequence_mode:'one_by_one'}):word);
      const capacity=4; // 2–4 players may start; 4 is only the upper bound.
-     const {data,error}=await sb.rpc('ldd_shooter_create',{p_words:bank.words,p_capacity:capacity,p_topic:bank.topic,p_name:me.name});
+     const {data,error}=await sb.rpc('ldd_shooter_create',{p_words:words,p_capacity:capacity,p_topic:bank.topic,p_name:me.name});
      if(error)throw error;
      unsubscribe();pendingJoinNotice=false;setRoom(data);
    }catch(e){info(errText(e),'error');}
