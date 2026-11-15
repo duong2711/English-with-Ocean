@@ -31,13 +31,13 @@ async function identity(){
 function boot(){
  const grid=$('entertainment-games-grid');if(!grid||$('ldd-cloud-card'))return;
  const card=document.createElement('button');card.type='button';card.id='ldd-cloud-card';card.className='folder-card ldd-cloud-card';
- card.innerHTML='<span class="ldd-cloud-icon">☁️</span><span><strong>Tìm từ còn thiếu</strong><small>Chạm tìm từ đúng · Từ vựng / Ngữ pháp</small></span>';
+ card.innerHTML='<span class="ldd-cloud-icon">☁️</span><span><strong>Tìm từ còn thiếu</strong><small>5 lựa chọn · 1 người / 2–4 người</small></span>';
  grid.appendChild(card);
  const view=document.createElement('section');view.id='ldd-cloud-panel';view.className='ldd-cloud-panel';view.hidden=true;
  view.innerHTML=`
  <div class="ldd-cloud-shell">
  <div class="ldd-cloud-head"><button type="button" id="ldd-cloud-back" class="ldd-cloud-secondary">← Trò chơi</button>
- <div><h3>☁️ TÌM TỪ CÒN THIẾU</h3><p>Chọn đúng một từ giữa đám mây lộn xộn để hoàn thiện câu.</p></div></div>
+ <div><h3>☁️ TÌM TỪ CÒN THIẾU</h3><p>Chọn 1 trong 5 từ lớn nhỏ lộn xộn. Sai lần 2 sẽ mất lượt vòng đó.</p></div></div>
  <p id="ldd-cloud-notice" class="ldd-cloud-notice" role="status" aria-live="polite"></p>
  <div id="ldd-cloud-entry" class="ldd-cloud-entry">
    <div class="ldd-cloud-box"><h4>🎮 Tạo phòng</h4><p>30 lượt · Chơi một mình hoặc 2–4 người. Mỗi vòng sai 2 lần sẽ mất lượt.</p>
