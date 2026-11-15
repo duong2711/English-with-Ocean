@@ -312,7 +312,8 @@ function renderPlaying(){
  const tones=['blue','purple','teal','gold','rose','green'];
  q.choices.forEach((value,i)=>{
   const btn=document.createElement('button');btn.type='button';btn.className='ldd-cloud-word';btn.textContent=value;
-  btn.style.setProperty('--word-size',(13+((i*17+current*13+Number(room.seed||0))%17))+'px');
+  // Use a coefficient coprime to 17; i*17 made every word the same size.
+  btn.style.setProperty('--word-size',(13+((i*11+current*13+Number(room.seed||0))%17))+'px');
   btn.style.setProperty('--word-turn',(((i*7+current*3)%13)-6)+'deg');
   btn.style.setProperty('--word-lift',(((i*3+current)%11)-5)+'px');
   btn.dataset.tone=tones[(i+current)%tones.length];
