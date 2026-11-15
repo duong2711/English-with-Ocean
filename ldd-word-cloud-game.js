@@ -13,7 +13,9 @@ const translateErr=e=>{const value=String(e&&e.message||e||'Lỗi không xác đ
 let sb=null,me=null,room=null,players=[],shots=new Map(),channel=null;
 let opened=false,busy=false,pending=false,shown=-1,refreshing=false,syncBusy=false,liveTimer=0,lobbyTimer=0;
 let lastBackgroundSync=0,revealUntil=0,revealTimer=0;
+let wrongCount=0,wrongRound=-1,wrongLoading=false;
 const cloud=r=>!!(r&&r.word_list&&r.word_list[0]&&r.word_list[0].game_mode==='word_cloud');
+const twoMisses=r=>cloud(r)&&r.word_list[0].cloud_rules==='two_misses_v1';
 const storeKey=()=>me?'ldd-cloud-room-'+me.id:'';
 function notify(msg,type){const el=$('ldd-cloud-notice');if(el){el.textContent=msg||'';el.dataset.type=type||'';}}
 function client(){
@@ -38,12 +40,13 @@ function boot(){
  <div><h3>☁️ TÌM TỪ CÒN THIẾU</h3><p>Chọn đúng một từ giữa đám mây lộn xộn để hoàn thiện câu.</p></div></div>
  <p id="ldd-cloud-notice" class="ldd-cloud-notice" role="status" aria-live="polite"></p>
  <div id="ldd-cloud-entry" class="ldd-cloud-entry">
-   <div class="ldd-cloud-box"><h4>🎮 Tạo phòng</h4><p>30 lượt · 2–4 người. Ai chạm đúng trước nhận 1 điểm.</p>
+   <div class="ldd-cloud-box"><h4>🎮 Tạo phòng</h4><p>30 lượt · Chơi một mình hoặc 2–4 người. Mỗi vòng sai 2 lần sẽ mất lượt.</p>
+     <label class="ldd-cloud-topic-field">Số người chơi<select id="ldd-cloud-players"><option value="1">👤 Chơi một mình</option><option value="4">👥 Chơi nhiều người (2–4)</option></select></label>
      <label class="ldd-cloud-topic-field">Chủ đề từ vựng
        <select id="ldd-cloud-topic"><option value="">Đang tải chủ đề…</option></select></label>
      <button type="button" id="ldd-cloud-create" class="ldd-cloud-primary">Tạo phòng 30 câu</button>
    </div>
-   <div class="ldd-cloud-box"><h4>🔑 Tham gia</h4><p>Cùng phòng, cùng bộ câu hỏi trên mọi thiết bị.</p>
+   <div class="ldd-cloud-box"><h4>🔑 Tham gia</h4><p>Chỉ cần mã phòng để vào ván nhiều người. Chọn đúng nhanh nhất được điểm.</p>
      <div class="ldd-cloud-code-line"><input id="ldd-cloud-code" maxlength="6" placeholder="MÃ PHÒNG" autocomplete="off" aria-label="Mã phòng">
        <button type="button" id="ldd-cloud-join" class="ldd-cloud-primary">Vào phòng</button></div>
    </div>
@@ -61,6 +64,7 @@ function boot(){
    <div class="ldd-cloud-question"><small id="ldd-cloud-kind"></small>
      <div id="ldd-cloud-sentence" class="ldd-cloud-sentence"></div><p id="ldd-cloud-hint"></p></div>
    <div id="ldd-cloud-words" class="ldd-cloud-words" aria-label="Nhấn chọn từ đúng"></div>
+   <small id="ldd-cloud-chances" class="ldd-cloud-chances"></small>
    <p id="ldd-cloud-feedback" class="ldd-cloud-feedback" role="status" aria-live="polite"></p>
  </div>
  <div id="ldd-cloud-finished" class="ldd-cloud-finished" hidden>
@@ -126,7 +130,7 @@ async function loadTopics(){
 function setRoom(r){
  if(!cloud(r))throw Error('Mã phòng thuộc một trò chơi khác.');
  const changed=!room||room.id!==r.id;room=r;localStorage.setItem(storeKey(),room.code);
- if(changed){shots.clear();players=[];shown=-1;pending=false;}
+ if(changed){shots.clear();players=[];shown=-1;pending=false;wrongCount=0;wrongRound=-1;}
  render();
 }
 async function createRoom(){
@@ -138,7 +142,7 @@ async function createRoom(){
   const bank=grammar?window.LDDCloudBank.makeGrammar(window.LDDGameGrammar.selectedGrade('cloud')):
    window.LDDCloudBank.makeVocabulary(await window.LDDCloudBank.topics(),$('ldd-cloud-topic').value);
   const validated=window.LDDCloudBank.markRoom(bank);
-  const {data,error}=await client().rpc('ldd_cloud_create',{p_words:validated.words,p_topic:validated.topic,p_name:me.name});
+  const {data,error}=await client().rpc('ldd_cloud_create_v2',{p_words:validated.words,p_topic:validated.topic,p_name:me.name,p_capacity:Number($('ldd-cloud-players').value)});
   if(error)throw error;stopLive();setRoom(data);players=[{user_id:me.id,display_name:me.name,slot:1}];
   notify('Đã tạo phòng! Mời 1–3 người vào cùng mã.','success');await resume();
  }catch(e){notify(translateErr(e),'error');}
@@ -186,8 +190,34 @@ async function snapshot(){
   if(!room||room.id!==id)return;
   players=a.data||[];for(const s of b.data||[])shots.set(Number(s.word_index),s);
   render();
+  if(twoMisses(room))await refreshOwnWrong();
  }catch(e){notify('Không tải được danh sách người chơi: '+translateErr(e),'error');}
  finally{refreshing=false;}
+}
+async function refreshOwnWrong(){
+ if(!room||!me||!twoMisses(room)||wrongLoading)return;
+ const id=room.id,index=nextIndex();if(index>=30)return;
+ wrongLoading=true;
+ try{
+  const {data,error}=await client().from('ldd_cloud_wrong_attempts').select('wrong_count')
+    .eq('room_id',id).eq('round_index',index).eq('user_id',me.id).maybeSingle();
+  if(error)throw error;
+  if(room&&room.id===id&&nextIndex()===index&&!pending){
+   wrongRound=index;wrongCount=Math.max(wrongCount,Number(data&&data.wrong_count||0));
+   updateChances();
+  }
+ }catch(e){notify('Không tải được số lượt sai: '+translateErr(e),'error');}
+ finally{wrongLoading=false;}
+}
+function updateChances(){
+ const el=$('ldd-cloud-chances');if(!el)return;
+ const current=nextIndex();
+ if(!room||!twoMisses(room)){el.textContent='';return;}
+ if(wrongRound!==current){wrongRound=current;wrongCount=0;}
+ el.textContent=wrongCount>=2?'⛔ Đã mất lượt vòng này. Chờ người khác hoặc câu tiếp theo.':
+  wrongCount===1?'⚠️ Sai 1/2: chỉ còn 1 cơ hội chọn.':'✅ Bạn có thể chọn sai tối đa 1 lần. Sai lần 2 sẽ mất lượt.';
+ const lock=wrongCount>=2;
+ $('ldd-cloud-words').querySelectorAll('button').forEach(b=>{if(lock)b.disabled=true;});
 }
 async function sync(){
  if(!room||syncBusy||!opened||document.hidden)return;
@@ -219,7 +249,7 @@ async function startRoom(){
  }catch(e){notify(translateErr(e),'error');}
  finally{busy=false;$('ldd-cloud-start').disabled=false;}
 }
-function nextIndex(){for(let i=0;i<30;i++)if(!shots.has(i))return i;return 30;}
+function nextIndex(){if(twoMisses(room))return Math.min(30,Math.max(0,Number(room.cloud_round_index)||0));for(let i=0;i<30;i++)if(!shots.has(i))return i;return 30;}
 function render(){
  if(!$('ldd-cloud-entry'))return;
  $('ldd-cloud-entry').hidden=!!room;
@@ -233,10 +263,11 @@ function render(){
 }
 function renderLobby(){
  $('ldd-cloud-room-code').textContent=room.code;
- $('ldd-cloud-lobby-hint').textContent=(room.topic_title||'')+' · '+players.length+'/4 người · '+(players.length<2?'Cần thêm ít nhất 1 người':'Có thể bắt đầu');
+ $('ldd-cloud-lobby-hint').textContent=(room.topic_title||'')+' · '+players.length+'/'+room.capacity+' người · '+(Number(room.capacity)===1?'Chơi 1 người — bắt đầu ngay':players.length<2?'Cần thêm ít nhất 1 người':'Có thể bắt đầu');
+ $('ldd-cloud-start').textContent=Number(room.capacity)===1?'▶ Bắt đầu một mình':'🚀 Bắt đầu';
  $('ldd-cloud-start').hidden=!(me&&room.host_user_id===me.id);
  const out=$('ldd-cloud-roster');out.replaceChildren();
- for(let i=1;i<=4;i++){
+ for(let i=1;i<=room.capacity;i++){
   const p=players.find(x=>Number(x.slot)===i),item=document.createElement('div');item.className='ldd-cloud-person';
   const name=document.createElement('strong');name.textContent=p?p.display_name||'Học viên':'Chỗ trống';
   const note=document.createElement('small');note.textContent=p?(p.user_id===room.host_user_id?'Chủ phòng':'Người chơi '+i):'Đang chờ';
@@ -271,9 +302,10 @@ function renderPlaying(){
  $('ldd-cloud-round').textContent='Câu '+(current+1)+'/30';
  $('ldd-cloud-topic-label').textContent=room.topic_title||'';
  $('ldd-cloud-kind').textContent=q.cloud_mode==='grammar'?'✏️ Ngữ pháp':'📖 Từ vựng';
- if(shown===current)return;
+ if(shown===current){updateChances();return;}
  renderScores();shown=current;pending=false;
- $('ldd-cloud-feedback').textContent='Chọn một từ trong đám mây để hoàn thiện câu.';
+ if(wrongRound!==current){wrongRound=current;wrongCount=0;}
+ $('ldd-cloud-feedback').textContent='Chọn 1 trong '+q.choices.length+' từ để hoàn thiện câu.';
  $('ldd-cloud-hint').textContent=q.hint||q.vi||'';
  renderSentence(q,null);
  const out=$('ldd-cloud-words');out.replaceChildren();
@@ -286,29 +318,65 @@ function renderPlaying(){
   btn.dataset.tone=tones[(i+current)%tones.length];
   btn.addEventListener('click',()=>selectWord(btn,value,current));out.appendChild(btn);
  });
+ updateChances();
 }
 async function selectWord(button,value,index){
  if(!room||room.status!=='playing'||pending||index!==nextIndex()||Date.now()<Date.parse(room.started_at||0))return;
- const q=room.word_list[index];
- if(norm(q.en)!==norm(value)){
+ if(twoMisses(room)&&wrongCount>=2)return;
+ const q=room.word_list[index],id=room.id,strict=twoMisses(room);
+ // Old rooms keep their original unlimited-guess 16-choice behaviour.
+ if(!strict&&norm(q.en)!==norm(value)){
   button.classList.remove('wrong');void button.offsetWidth;button.classList.add('wrong');
   $('ldd-cloud-feedback').textContent='Chưa đúng! Hãy chọn từ khác.';return;
  }
  pending=true;
- $('ldd-cloud-feedback').textContent='🎯 Đúng rồi! Đang xác nhận điểm…';
+ $('ldd-cloud-feedback').textContent='⏳ Đang kiểm tra đáp án…';
  $('ldd-cloud-words').querySelectorAll('button').forEach(b=>b.disabled=true);
  try{
-  const {data,error}=await client().rpc('ldd_shooter_claim',{p_room:room.id,p_word_index:index,p_typed:value});
-  if(error)throw error;
-  if(data&&data.ok)applyShot({room_id:room.id,word_index:index,user_id:me.id,claimed_at:new Date().toISOString()});
-  else{
-   $('ldd-cloud-feedback').textContent='⚡ Có người chọn nhanh hơn, đang chuyển câu…';await sync();
+  const call=strict
+   ?client().rpc('ldd_cloud_answer',{p_room:id,p_round:index,p_choice:value})
+   :client().rpc('ldd_shooter_claim',{p_room:id,p_word_index:index,p_typed:value});
+  const {data,error}=await call;if(error)throw error;
+  if(!room||room.id!==id)return;
+  if(strict){
+   if(!data||!data.ok){
+    $('ldd-cloud-feedback').textContent='Đang cập nhật vòng chơi…';
+    await sync();return;
+   }
+   wrongRound=index;wrongCount=Number(data.wrong_count||0);
+   const result=data.result;
+   if(result==='correct'){
+    room.cloud_round_index=Number(data.round_index);
+    if(Number(data.round_index)===30)room.status='finished';
+    applyShot({room_id:id,word_index:index,user_id:me.id,claimed_at:new Date().toISOString()});
+   }else if(result==='wrong_once'){
+    button.classList.add('wrong');
+    $('ldd-cloud-feedback').textContent='⚠️ Sai lần 1. Chỉ còn 1 cơ hội!';
+   }else if(result==='lost_round'||result==='round_skipped'){
+    button.classList.add('wrong');
+    $('ldd-cloud-feedback').textContent=result==='round_skipped'
+      ?'⛔ Sai lần 2. Tất cả đã mất lượt — chuyển câu mới.'
+      :'⛔ Sai lần 2 — bạn mất lượt vòng này, chờ người khác.';
+    if(result==='round_skipped'){
+      room.cloud_round_index=Number(data.round_index);
+      if(Number(data.round_index)===30)room.status='finished';
+      shown=-1;
+      render();
+    }
+   }
+   updateChances();
+  }else if(data&&data.ok){
+   applyShot({room_id:id,word_index:index,user_id:me.id,claimed_at:new Date().toISOString()});
+  }else{
+   $('ldd-cloud-feedback').textContent='⚡ Có người chọn nhanh hơn, đang chuyển câu…';
+   await sync();
   }
  }catch(e){notify('Lỗi chấm điểm: '+translateErr(e),'error');await sync();}
  finally{
   pending=false;
-  if(room&&room.status==='playing'&&nextIndex()===index)
-   $('ldd-cloud-words').querySelectorAll('button').forEach(b=>b.disabled=false);
+  if(room&&room.id===id&&room.status==='playing'&&nextIndex()===index){
+   $('ldd-cloud-words').querySelectorAll('button').forEach(b=>{b.disabled=strict&&wrongCount>=2;});
+  }
  }
 }
 function applyShot(s){
@@ -339,7 +407,7 @@ async function leaveRoom(){
 }
 function resetRoom(){
  stopLive();if(me)localStorage.removeItem(storeKey());
- room=null;players=[];shots.clear();shown=-1;pending=false;lastBackgroundSync=0;render();notify('Chọn nội dung và tạo phòng mới.');
+ room=null;players=[];shots.clear();shown=-1;pending=false;wrongCount=0;wrongRound=-1;lastBackgroundSync=0;render();notify('Chọn nội dung và tạo phòng mới.');
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
