@@ -49,7 +49,7 @@
         '<div class="shooter-box"><h4>🎮 Tạo phòng chơi</h4>',
          '<p>Chọn từ vựng hoặc ngữ pháp theo lớp. Mỗi lần chỉ có 1 từ/câu, bắn đúng mới hiện câu tiếp theo trên tất cả màn hình.</p>',
          '<p class="shooter-room-note">Chọn chơi 1 mình hoặc cùng 2–4 người.</p>',
-         '<label class="shooter-field">Số người chơi<select id="shooter-participants"><option value="1">👤 Chơi một mình</option><option value="4">👥 Chơi nhiều người (2–4)</option></select></label>',
+         '<label class="shooter-field">Số người chơi<select id="shooter-participants"><option value="4">👥 Chơi nhiều người (2–4)</option><option value="1">👤 Chơi một mình</option></select></label>',
          '<label class="shooter-field">Chủ đề từ vựng<select id="shooter-topic"><option value="">Đang đọc chủ đề…</option></select></label>',
          '<button type="button" class="shooter-primary" id="shooter-create">Tạo phòng 30 thử thách</button>',
         '</div>',
