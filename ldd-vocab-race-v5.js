@@ -182,7 +182,7 @@
         const card = document.createElement('div');
         card.id = 'vocab-race-folder-card';
         card.className = 'folder-card vocab-race-folder-card';
-        card.innerHTML = '<span class="vocab-race-card-icon">🏎️</span><span><strong>Đua xe: Từ vựng / Ngữ pháp</strong><small>2–4 người · 20 câu · 30 giây/lượt</small></span>';
+        card.innerHTML = '<span class="vocab-race-card-icon">🏎️</span><span><strong>Đua xe: Từ vựng / Ngữ pháp</strong><small>1–4 người · 20 câu · 30 giây/lượt</small></span>';
         grid.appendChild(card);
 
         const panel = document.createElement('section');
@@ -197,14 +197,14 @@
             </div>
             <div id="vocab-race-status" class="vocab-race-status"></div>
             <div id="vocab-race-entry" class="vocab-race-entry">
-                <div class="vocab-race-entry-card"><span class="vocab-race-entry-icon">🏁</span><h4>Tạo phòng mới</h4><p>Chọn từ vựng theo chủ đề hoặc ngữ pháp trong phạm vi lớp đã học. Cả phòng cùng chơi một bộ đề.</p><label class="vocab-race-topic-field"><span>Chủ đề từ vựng</span><select id="vocab-race-topic-select"><option value="">— Chọn chủ đề —</option></select></label><button type="button" id="vocab-race-create-btn" class="vocab-race-primary">Tạo phòng</button></div>
+                <div class="vocab-race-entry-card"><span class="vocab-race-entry-icon">🏁</span><h4>Tạo phòng mới</h4><p>Chọn từ vựng hoặc ngữ pháp theo lớp. Chơi một mình hoặc đua với 2–4 người.</p><label class="vocab-race-topic-field"><span>Số người chơi</span><select id="vocab-race-participants"><option value="multi">👥 Chơi nhiều người (2–4)</option><option value="solo">👤 Chơi một mình</option></select></label><label class="vocab-race-topic-field"><span>Chủ đề từ vựng</span><select id="vocab-race-topic-select"><option value="">— Chọn chủ đề —</option></select></label><button type="button" id="vocab-race-create-btn" class="vocab-race-primary">Tạo phòng</button></div>
                 <div class="vocab-race-entry-card"><span class="vocab-race-entry-icon">🔑</span><h4>Vào phòng</h4><p>Nhập mã 6 ký tự do chủ phòng gửi.</p><div class="vocab-race-code-row"><input id="vocab-race-code-input" maxlength="6" autocomplete="off" placeholder="VD: A1B2C3"><button type="button" id="vocab-race-join-btn">Vào</button></div></div>
             </div>
             <div id="vocab-race-lobby" class="vocab-race-lobby" style="display:none">
                 <div class="vocab-race-lobby-top"><div><span class="vocab-race-kicker">Mã phòng</span><strong id="vocab-race-room-code" class="vocab-race-room-code">------</strong></div><button type="button" id="vocab-race-copy-code" class="vocab-race-secondary">Sao chép mã</button></div>
                 <div id="vocab-race-roster" class="vocab-race-roster"></div>
                 <div class="vocab-race-lobby-actions"><button type="button" id="vocab-race-leave-btn" class="vocab-race-secondary">Rời phòng</button><button type="button" id="vocab-race-start-btn" class="vocab-race-primary">Bắt đầu 20 lượt</button></div>
-                <p id="vocab-race-lobby-hint" class="vocab-race-hint">Cần 2–4 học viên để bắt đầu.</p>
+                <p id="vocab-race-lobby-hint" class="vocab-race-hint">Chơi một mình hoặc chờ 2–4 người tham gia.</p>
             </div>
             <div id="vocab-race-game" class="vocab-race-game" style="display:none">
                 <div class="vocab-race-hud"><div class="vocab-race-round"><span>Lượt</span><strong id="vocab-race-round">1/20</strong></div><div class="vocab-race-meaning"><span>Nghĩa tiếng Việt</span><strong id="vocab-race-meaning">—</strong></div><div class="vocab-race-round-clock" id="vocab-race-round-clock">30.0s</div></div>
@@ -521,8 +521,10 @@
         setStatus(grammarMode ? 'Đang soạn 20 câu ngữ pháp theo lớp...' : 'Đang lấy 20 từ trong chủ đề đã chọn...', 'info');
         try {
             const bank = grammarMode ? window.LDDGameGrammar.buildRace('race') : await buildQuestionBank(topicId);
+            const solo = $('vocab-race-participants').value === 'solo';
+            const questions = bank.questions.map((question,i)=>i===0 && solo ? Object.assign({},question,{play_mode:'solo'}) : question);
             const { data, error } = await raceSb.rpc('vocab_race_create_room_topic', {
-                p_questions:bank.questions,
+                p_questions:questions,
                 p_topic_id:bank.topicId,
                 p_topic_title:bank.topicTitle,
                 p_display_name:me.name
@@ -1217,12 +1219,14 @@
         // Do not lock the host out when the local roster is stale; the RPC validates 2–4.
         $('vocab-race-start-btn').disabled = false;
         const topicLabel = room.topic_title ? ('Chủ đề: ' + room.topic_title + ' · ') : '';
-        const roomCount = players.length + '/4 học viên';
-        const lobbyState = players.length < 2 ? 'Đang chờ thêm người chơi…'
+        const solo = !!(room.questions && room.questions[0] && room.questions[0].play_mode==='solo');
+        $('vocab-race-start-btn').textContent=solo?'▶ Bắt đầu một mình':'Bắt đầu 20 lượt';
+        const roomCount = players.length + '/' + (solo?1:4) + ' học viên';
+        const lobbyState = solo ? 'Có thể bắt đầu ngay!' : players.length < 2 ? 'Đang chờ thêm người chơi…'
             : (host ? 'Đủ người, có thể bắt đầu!' : 'Đang chờ chủ phòng bắt đầu…');
         $('vocab-race-lobby-hint').textContent = topicLabel + roomCount + ' · ' + lobbyState;
         const out = $('vocab-race-roster'); out.innerHTML = '';
-        for (let slot = 1; slot <= 4; slot++) {
+        for (let slot = 1; slot <= (solo?1:4); slot++) {
             const p = players.find(x => Number(x.slot) === slot);
             const el = document.createElement('div');
             el.className = 'vocab-race-roster-row' + (p && me && p.user_id === me.id ? ' is-me' : '');
@@ -1516,6 +1520,9 @@
     }
 
     function renderFinish() {
+        const solo = !!(room && room.questions && room.questions[0] && room.questions[0].play_mode==='solo');
+        const note=$('vocab-race-finish')&&$('vocab-race-finish').querySelector('p');
+        if(note)note.textContent=solo?'Luyện tập một mình: điểm theo từng câu, không cộng thưởng hạng nhất.':'Hạng 1 nhận +20 điểm chăm chỉ.';
         const ranking = room.last_result && Array.isArray(room.last_result.ranking)
             ? room.last_result.ranking
             : players.slice().sort((a,b) => b.score-a.score || a.wrong_count-b.wrong_count || Number(a.total_activation_ms)-Number(b.total_activation_ms));
