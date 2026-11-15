@@ -41,7 +41,7 @@ function boot(){
  <p id="ldd-cloud-notice" class="ldd-cloud-notice" role="status" aria-live="polite"></p>
  <div id="ldd-cloud-entry" class="ldd-cloud-entry">
    <div class="ldd-cloud-box"><h4>🎮 Tạo phòng</h4><p>30 lượt · Chơi một mình hoặc 2–4 người. Mỗi vòng sai 2 lần sẽ mất lượt.</p>
-     <label class="ldd-cloud-topic-field">Số người chơi<select id="ldd-cloud-players"><option value="1">👤 Chơi một mình</option><option value="4">👥 Chơi nhiều người (2–4)</option></select></label>
+     <label class="ldd-cloud-topic-field">Số người chơi<select id="ldd-cloud-players"><option value="4">👥 Chơi nhiều người (2–4)</option><option value="1">👤 Chơi một mình</option></select></label>
      <label class="ldd-cloud-topic-field">Chủ đề từ vựng
        <select id="ldd-cloud-topic"><option value="">Đang tải chủ đề…</option></select></label>
      <button type="button" id="ldd-cloud-create" class="ldd-cloud-primary">Tạo phòng 30 câu</button>
