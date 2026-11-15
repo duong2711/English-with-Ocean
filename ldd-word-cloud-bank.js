@@ -51,10 +51,9 @@
        choices:choices(w.en,pool),cloud_mode:'vocabulary'}))};
  }
  const FORM_WORDS=('am is are was were be been being have has had do does did can cannot could will would should must might may '+
- 'not never already just used because although so if when while who which whose whom where that than as since for '+
- 'this these those there my your his her our their some many few little a an the '+
- 'go goes went gone going playing played read reading to of on in at under behind before after '+
- 'more most less only hardly sooner').split(' ');
+ 'not never already just used because although so if when while who which whose whom where than as since for '+
+ 'go goes went gone going playing played reading under behind more most less only hardly sooner '+
+ 'standing sitting written invited').split(' ');
  const FORMS=new Set(FORM_WORDS);
  const PRIORITY=new Set(('am is are was were have has had do does did can cannot could will would should must might '+
   'because although if when while who which whose where than since used been be just never only hardly sooner').split(' '));
@@ -87,19 +86,38 @@
  const FILLER=('am is are was were do does did have has had can could will would should must not this these those '+
   'who which where when because although so if than as since for to of in on at my your his her our their '+
   'a an the many some few little been being be more most gone going went not never just still already either yet until unless').split(' ');
+ const LOCATION_HINTS={
+  'The cat is under the table.':'Con mèo ở dưới bàn.',
+  'My bag is on the chair.':'Cặp của tôi ở trên ghế.',
+  'The ball is behind the door.':'Quả bóng ở sau cánh cửa.'
+ };
  function target(sentence,topic){
+   if(/Mệnh lệnh/.test(topic||'')){
+     const m=/^(?:Please\s+)?([A-Za-z]+)/.exec(sentence);
+     if(m)return{value:m[1],start:m.index+m[0].lastIndexOf(m[1]),low:m[1].toLowerCase()};
+   }
    const matches=[...sentence.matchAll(/[A-Za-z]+(?:'[A-Za-z]+)?/g)].map(m=>({value:m[0],start:m.index,low:m[0].toLowerCase()})).filter(m=>FORMS.has(m.low));
+   if(/Giới từ chỉ nơi chốn/.test(topic||'')&&LOCATION_HINTS[sentence]){
+     const preps=matches.filter(m=>['under','on','behind'].includes(m.low));if(preps.length)return preps[0];
+     if(sentence.includes(' on ')){const m=sentence.indexOf(' on ');return{value:'on',start:m+1,low:'on'};}
+   }
+   if(/Mệnh đề quan hệ rút gọn/.test(topic||'')){
+     const form=matches.filter(m=>['standing','sitting','written','invited'].includes(m.low));
+     if(form.length)return form[0];
+   }
+   if(/So sánh/.test(topic||'')){
+     const compare=matches.filter(m=>['than','as','more','most'].includes(m.low));
+     if(compare.length)return compare[0];
+   }
    const priority=matches.filter(m=>PRIORITY.has(m.low));
    if(priority.length)return priority[0];
-   if(matches.length)return matches[0];
-   if(/Mệnh lệnh/.test(topic||'')){
-     const m=/^[A-Za-z]+/.exec(sentence);if(m)return{value:m[0],start:0,low:m[0].toLowerCase()};
-   }
-   return null;
+   return matches[0]||null;
  }
  function grammarChoices(answer){
    const m=new Map([[norm(answer),answer]]),preferred=(D[norm(answer)]||'').split(' ').filter(Boolean);
    for(const name of [...shuffle(preferred),...shuffle(FILLER)]){
+     if(['am','is','are'].includes(norm(answer))&&['was','were'].includes(norm(name)))continue;
+     if(['has','have'].includes(norm(answer))&&norm(name)==='had')continue;
      if(word(name)&&!m.has(norm(name))){m.set(norm(name),name);if(m.size===CHOICES)break;}
    }
    if(m.size!==CHOICES)throw Error('Không đủ lựa chọn ngữ pháp.');
@@ -110,7 +128,7 @@
    const t=target(s,entry.topic);if(!t)return null;
    const prompt=s.slice(0,t.start)+'____'+s.slice(t.start+t.value.length);
    return {en:t.value,vi:clean(entry.topic).slice(0,120),prompt,
-     hint:'Ngữ pháp lớp '+entry.grade+' · '+entry.topic,choices:grammarChoices(t.value),
+     hint:(LOCATION_HINTS[s]?'Nghĩa: '+LOCATION_HINTS[s]+' · ':'')+'Ngữ pháp lớp '+entry.grade+' · '+entry.topic,choices:grammarChoices(t.value),
      cloud_mode:'grammar',grammar_grade:entry.grade};
  }
  function makeGrammar(grade){
