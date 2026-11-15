@@ -32,7 +32,7 @@
    if (!grid || $('shooter-folder-card')) return;
    const card = document.createElement('div');
    card.id = 'shooter-folder-card'; card.className = 'folder-card';
-   card.innerHTML = '<span class="shooter-folder-emoji">🔫</span><span><strong>Bắn từ / Ngữ pháp</strong><small>2–4 người · 30 thử thách · gõ để bắn</small></span>';
+   card.innerHTML = '<span class="shooter-folder-emoji">🔫</span><span><strong>Bắn từ / Ngữ pháp</strong><small>1–4 người · 30 thử thách · gõ để bắn</small></span>';
    grid.appendChild(card);
 
    const panel = document.createElement('section');
@@ -48,7 +48,8 @@
       '<div class="shooter-entry" id="shooter-entry">',
         '<div class="shooter-box"><h4>🎮 Tạo phòng chơi</h4>',
          '<p>Chọn từ vựng hoặc ngữ pháp theo lớp. Mỗi lần chỉ có 1 từ/câu, bắn đúng mới hiện câu tiếp theo trên tất cả màn hình.</p>',
-         '<p class="shooter-room-note">Phòng tối đa 4 người. Có từ 2 người là chủ phòng có thể bắt đầu.</p>',
+         '<p class="shooter-room-note">Chọn chơi 1 mình hoặc cùng 2–4 người.</p>',
+         '<label class="shooter-field">Số người chơi<select id="shooter-participants"><option value="1">👤 Chơi một mình</option><option value="4">👥 Chơi nhiều người (2–4)</option></select></label>',
          '<label class="shooter-field">Chủ đề từ vựng<select id="shooter-topic"><option value="">Đang đọc chủ đề…</option></select></label>',
          '<button type="button" class="shooter-primary" id="shooter-create">Tạo phòng 30 thử thách</button>',
         '</div>',
@@ -66,7 +67,7 @@
         '<div class="shooter-roster" id="shooter-roster"></div>',
         '<div class="shooter-room-buttons"><button class="shooter-primary" type="button" id="shooter-start">🚀 Bắt đầu</button>',
          '<button class="shooter-ghost" type="button" id="shooter-leave">Rời phòng</button></div>',
-        '<p class="shooter-room-note">Chủ phòng có thể bắt đầu khi có 2, 3 hoặc 4 người tham gia.</p>',
+        '<p class="shooter-room-note">Một người có thể bắt đầu ngay; phòng nhiều người cần tối thiểu 2 người.</p>',
       '</div>',
       '<div id="shooter-game" hidden>',
          '<div class="shooter-hud"><div class="shooter-match-title" id="shooter-match-title">🎯 Đấu trường từ vựng</div>',
@@ -493,7 +494,8 @@
      // Keep the host action available: the server checks the real player count,
      // even when a delayed Realtime packet leaves this screen at 1/4.
      $('shooter-start').disabled=false;
-     info(roster.length>=2?'Có '+roster.length+' người, chủ phòng có thể bắt đầu.':'Cần tối thiểu 2 người để bắt đầu (tối đa '+room.capacity+').');
+     $('shooter-start').textContent=room.capacity===1?'▶ Bắt đầu một mình':'🚀 Bắt đầu';
+     info(room.capacity===1?'Chơi một mình: có thể bắt đầu ngay.':roster.length>=2?'Có '+roster.length+' người, chủ phòng có thể bắt đầu.':'Cần tối thiểu 2 người để bắt đầu (tối đa '+room.capacity+').');
    } else {
      $('shooter-match-title').textContent='🎯 '+String(room.topic_title||'Bắn từ vựng');
      renderScores();
@@ -746,7 +748,7 @@
      const bank=grammarMode?window.LDDGameGrammar.buildShooter('shooter'):await makeWords(topicId);
      // Mark new rooms in their persisted word list; existing rooms remain timed.
      const words=bank.words.map((word,i)=>i===0?Object.assign({},word,{sequence_mode:'one_by_one'}):word);
-     const capacity=4; // 2–4 players may start; 4 is only the upper bound.
+     const capacity=Number($('shooter-participants').value)===1?1:4; // One person or multiplayer (2–4)
      const {data,error}=await sb.rpc('ldd_shooter_create',{p_words:words,p_capacity:capacity,p_topic:bank.topic,p_name:me.name});
      if(error)throw error;
      unsubscribe();pendingJoinNotice=false;setRoom(data);
