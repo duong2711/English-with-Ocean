@@ -319,7 +319,8 @@
       }
       const heading=document.createElement('p');
       heading.className='ldd-game-grammar-range';
-      heading.textContent='Phạm vi câu hỏi: lớp 1 đến lớp '+grade+'. Dạng câu hỏi: sắp xếp từ thành câu tiếng Anh đúng. Đề chọn ngẫu nhiên trong các chủ điểm dưới đây.';
+      const format = game==='cloud'?'chọn một từ đúng để điền vào chỗ trống':'sắp xếp từ thành câu tiếng Anh đúng';
+      heading.textContent='Phạm vi câu hỏi: lớp 1 đến lớp '+grade+'. Dạng câu hỏi: '+format+'. Đề chọn ngẫu nhiên trong các chủ điểm dưới đây.';
       preview.append(heading);
       CATALOG.filter(g=>g.grade<=grade).forEach(group=>{
         const div=document.createElement('div');div.className='ldd-game-grammar-grade-group';
@@ -335,5 +336,6 @@
     render();
   }
   window.LDDGameGrammar={mount,isGrammar,selectedGrade,buildRace,buildShooter,
+    examples:grade=>CATALOG.filter(group=>group.grade<=grade).flatMap(group=>group.topics.flatMap(([topic,sentences])=>sentences.map(sentence=>({grade:group.grade,topic,sentence})))),
     topics:grade=>CATALOG.filter(group=>group.grade<=grade).map(group=>({grade:group.grade,topics:group.topics.map(([title])=>title)}))};
 })();
