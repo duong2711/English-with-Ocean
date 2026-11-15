@@ -376,7 +376,7 @@ async function selectWord(button,value,index){
  finally{
   pending=false;
   if(room&&room.id===id&&room.status==='playing'&&nextIndex()===index){
-   $('ldd-cloud-words').querySelectorAll('button').forEach(b=>{b.disabled=strict&&wrongCount>=2;});
+   $('ldd-cloud-words').querySelectorAll('button').forEach(b=>{b.disabled=(strict&&wrongCount>=2)||(strict&&b.classList.contains('wrong'));});
   }
  }
 }
