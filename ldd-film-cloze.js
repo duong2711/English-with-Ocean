@@ -733,8 +733,9 @@
                 // Continue from the end of the answered line, including any
                 // intervening dialogue or music: never jump to the next cue.
                 try {
-                  if (Math.abs(Number(adapter.getTime()) - resumeAt) > 0.35)
-                    adapter.seek(resumeAt);
+                  const from = resumeFrom();
+                  if (Math.abs(Number(adapter.getTime()) - from) > 0.35)
+                    adapter.seek(from);
                   adapter.play();
                 } catch (_) {
                   state.textContent = 'Nhấn phát để tiếp tục video.';
@@ -782,8 +783,9 @@
       heardGate = false;
       updateRowStates();
       try {
-        if (Math.abs(Number(adapter.getTime()) - resumeAt) > 0.35)
-          adapter.seek(resumeAt);
+        const from = resumeFrom();
+        if (Math.abs(Number(adapter.getTime()) - from) > 0.35)
+          adapter.seek(from);
         adapter.play();
       } catch (_) {
         state.textContent = 'Không phát tiếp được. Hãy thử lại.';
@@ -836,6 +838,12 @@
     // time. Keep stored timestamps, answer indices and progress unchanged.
     const CUE_PADDING_SECONDS = 1;
     const replayStartOf = idx => Math.max(0, items[idx].start - CUE_PADDING_SECONDS);
+    // When consecutive cues touch or overlap after padding, repeat at most
+    // the tiny boundary needed to give the next unanswered cue its full
+    // one-second lead-in. Otherwise resume naturally without jumping.
+    const resumeFrom = () => gateIndex >= 0
+      ? Math.min(resumeAt, replayStartOf(gateIndex))
+      : resumeAt;
     const replayEndOf = idx => {
       const padded = items[idx].end + CUE_PADDING_SECONDS;
       const duration = Number(adapter.getDuration?.());
