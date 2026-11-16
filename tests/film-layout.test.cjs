@@ -294,3 +294,17 @@ test('teacher can rename a film directly beside the title without editing subtit
   assert.match(bootstrap, /ldd-film-cloze\.css\?v=20261030-continuous-film5/);
   assert.match(page, /ldd-ui-upgrade\.js\?v=20261030-continuous-film5/);
 });
+
+
+test('season playlists keep their ordered clips together without breaking standalone films', () => {
+  const mount = js.slice(js.indexOf('async function mount('), js.indexOf('async function renderCaptionExercise('));
+  assert.match(mount, /const playlistGroups = new Map\(\)/);
+  assert.match(mount, /safeText\(item\.playlist_name\)/);
+  assert.match(mount, /Number\(a\.playlist_position \|\| 0\) - Number\(b\.playlist_position \|\| 0\)/);
+  assert.match(mount, /\$el\('details', 'ldd-film-playlist'\)/);
+  assert.match(mount, /members\.forEach\(item => drawCard\(item, contents\)\)/);
+  assert.match(mount, /standaloneFilms\.forEach\(item => drawCard\(item, grid\)\)/);
+  assert.match(mount, /const nextButton = button\('▶ Video tiếp theo/);
+  assert.match(css, /\.ldd-film-playlist\s*\{[^}]*grid-column:1\/-1;/s);
+  assert.match(css, /\.ldd-film-next\s*\{[^}]*min-height:44px;/s);
+});
