@@ -676,7 +676,7 @@
           const term = targets[blankIndex];
           if (window.LDDTextActions?.translateTerm) {
             window.LDDTextActions.translateTerm(term,
-              String(cue.text || '').replace(/\\{([^{}]+)\\}/g, '$1'));
+              String(cue.text || '').replace(/\{([^{}]+)\}/g, '$1'));
           }
         });
         translation.append(meaning);
