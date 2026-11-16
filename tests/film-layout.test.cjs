@@ -290,9 +290,9 @@ test('teacher can rename a film directly beside the title without editing subtit
   assert.match(css, /\.ldd-film-title-status/);
   const bootstrap = fs.readFileSync(path.resolve(__dirname, '../ldd-ui-upgrade.js'), 'utf8');
   const page = fs.readFileSync(path.resolve(__dirname, '../index.html'), 'utf8');
-  assert.match(bootstrap, /ldd-film-cloze\.js\?v=20261116-film-cue-padding3/);
+  assert.match(bootstrap, /ldd-film-cloze\.js\?v=20261116-vi-focus1/);
   assert.match(bootstrap, /ldd-film-cloze\.css\?v=20261116-film-cue-padding3/);
-  assert.match(page, /ldd-ui-upgrade\.js\?v=20261116-film-cue-padding3/);
+  assert.match(page, /ldd-ui-upgrade\.js\?v=20261116-text-actions1/);
 });
 
 
@@ -371,4 +371,18 @@ test('every film cue plays one second before and after its original timestamps',
   assert.match(exercise, /resumeAt = paddedEnd;/);
   assert.match(exercise, /else if \(reachedReplayEnd\(gateIndex, t\)\) \{/);
   assert.match(exercise, /if \(t > paddedEnd \+ 0\.25\) adapter\.seek\(paddedEnd\);/);
+});
+
+test('Vietnamese film gloss highlights only explicitly aligned blanks and opens dictionary', () => {
+  const exercise = js.slice(js.indexOf('async function renderCaptionExercise('), js.indexOf('async function openStandalone('));
+  assert.match(exercise, /Array\.isArray\(cue\.translation_focus\)/);
+  assert.match(exercise, /const targets = blanksIn\(cue\.text\);/);
+  assert.match(exercise, /indexOf\(needle\.toLocaleLowerCase\('vi'\)\)/);
+  assert.match(exercise, /button\(viText\.slice\(start,end\),'ldd-vi-cloze-focus'\)/);
+  assert.match(exercise, /window\.LDDTextActions\.translateTerm\(term,/);
+  assert.match(js, /function decodeViFocus\(line, english\)/);
+  assert.match(js, /function encodeViFocus\(cue\)/);
+  assert.match(js, /translations\.value = cues\.map\(encodeViFocus\)\.join/);
+  assert.match(js, /decodeViFocus\(translated\[i\], segment\.text\)/);
+  assert.match(js, /bọc \*\*nghĩa cần tô đậm\*\*/);
 });
