@@ -153,7 +153,7 @@ test('correct answer resumes video naturally without skipping intervening music 
   assert.match(exercise, /showCue = idx => \{[\s\S]*?manualScrollUntil = 0;[\s\S]*?list\.scrollTop \+= rowRect\.top - listRect\.top - 8;/);
   assert.match(exercise, /row\.classList\.add\('is-current'\)/);
   assert.match(exercise, /seek\.addEventListener\('click', \(\) => playCue\(idx\)\)/);
-  assert.match(exercise, /playCue = idx => \{[\s\S]*?adapter\.seek\(items\[idx\]\.start\);\s*adapter\.play\(\);/);
+  assert.match(exercise, /playCue = idx => \{[\s\S]*?adapter\.seek\((?:replayStartOf\(idx\)|replayStartTime)\);\s*adapter\.play\(\);/);
   // Only the inner transcript scrolls, never the window or video.
   const show = exercise.slice(exercise.indexOf('showCue = idx => {'), exercise.indexOf('playCue = idx => {'));
   assert.doesNotMatch(show, /scrollIntoView\(|window\.scrollTo\(|document\.scrollTop/);
@@ -218,7 +218,7 @@ test('teacher can replay any subtitle while students remain gated in order', () 
   assert.match(exercise, /const enabled = idx === gateIndex;/);
   assert.match(exercise, /if \(busy \|\| answers\.has\(field\.key\) \|\| idx !== gateIndex\) return;/);
   assert.match(exercise, /if \(index === gateIndex && finished && !outside\) \{/);
-  assert.match(exercise, /adapter\.pause\(\);\s*adapter\.seek\(items\[idx\]\.start\);\s*adapter\.play\(\);/);
+  assert.match(exercise, /adapter\.pause\(\);\s*adapter\.seek\((?:replayStartOf\(idx\)|replayStartTime)\);\s*adapter\.play\(\);/);
 });
 
 test('mixed cue scripts skip unanswerable lines without blocking graded progress', () => {
@@ -312,8 +312,8 @@ test('season playlists keep their ordered clips together without breaking standa
 test('replaying completed film cues continues through answered blanks to the next unfinished cue', () => {
   const exercise = js.slice(js.indexOf('async function renderCaptionExercise('), js.indexOf('async function openStandalone('));
   assert.match(exercise, /let gateIndex = gradedIndices\.find\(idx => !isComplete\(idx\)\) \?\? -1;/);
-  assert.match(exercise, /playCue = idx => \{[\s\S]*?if \(isComplete\(idx\)\) \{[\s\S]*?playbackIndex = -1;[\s\S]*?adapter\.seek\(items\[idx\]\.start\);\s*adapter\.play\(\);[\s\S]*?return;/);
-  assert.match(exercise, /continuousReplayTarget = items\[idx\]\.start;/);
+  assert.match(exercise, /playCue = idx => \{[\s\S]*?if \(isComplete\(idx\)\) \{[\s\S]*?playbackIndex = -1;[\s\S]*?adapter\.seek\((?:replayStartOf\(idx\)|replayStartTime)\);\s*adapter\.play\(\);[\s\S]*?return;/);
+  assert.match(exercise, /continuousReplayTarget = replayStartOf\(idx\);/);
   assert.match(exercise, /if \(Number\.isFinite\(continuousReplayTarget\)\) \{/);
   assert.match(exercise, /else if \(gateIndex >= 0\) \{/);
 });
@@ -329,4 +329,17 @@ test('hint reveal requires explicit learner confirmation before playback resumes
   assert.match(exercise, /if \(awaitingContinue\) \{[\s\S]*?adapter\.pause\(\);[\s\S]*?return;/);
   assert.match(exercise, /const enabled = idx === gateIndex && !awaitingContinue;/);
   assert.match(css, /\.ldd-film-continue\[hidden\] \{display:none!important\}/);
+});
+
+test('film replay includes the whole preceding caption and never cuts off the current sentence', () => {
+  const exercise = js.slice(js.indexOf('async function renderCaptionExercise('), js.indexOf('async function openStandalone('));
+  assert.match(exercise, /const replayStartOf = idx => idx > 0/);
+  assert.match(exercise, /Math\.max\(0, items\[idx - 1\]\.start\)/);
+  assert.match(exercise, /continuousReplayTarget = replayStartOf\(idx\);/);
+  assert.match(exercise, /adapter\.seek\(replayStartOf\(idx\)\);/);
+  assert.match(exercise, /replayStartTime = replayStartOf\(idx\);/);
+  assert.match(exercise, /adapter\.seek\(replayStartTime\);/);
+  assert.match(exercise, /const outside = t < replayStartTime - 0\.45 \|\| t > cue\.end \+ 0\.25;/);
+  assert.match(exercise, /if \(outside\) adapter\.seek\(replayStartTime\);/);
+  assert.match(exercise, /if \(index === gateIndex && finished && !outside\) \{/);
 });
