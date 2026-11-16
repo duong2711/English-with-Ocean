@@ -375,16 +375,41 @@
             });
             area.appendChild(buttons);
         }
-        function showLesson(name) {
+        async function showLesson(name) {
             clear(); area.appendChild(button('← Các mục từ vựng', home));
             const heading = document.createElement('h4'); heading.textContent = name; area.appendChild(heading);
             const list = document.createElement('div'); list.className = 'school-vocab-list';
-            lessons[name].forEach(function (pair) {
+            area.appendChild(list);
+            let pairs = lessons[name] || [];
+            if (name === 'Collocations') {
+                const note = document.createElement('p');
+                note.textContent = 'Kho Collocation dùng chung: chỉ lưu các cụm đã được kiểm tra là kết hợp từ tự nhiên.';
+                area.insertBefore(note, list);
+                try {
+                    if (window.supabase?.createClient) {
+                        const api = window.supabase.createClient(
+                            'https://ywqbaksmmtvwbojcgsdd.supabase.co',
+                            'sb_publishable_AQZ6Jc8ZGID7kfRYPe9fLQ_Wmy7ekp_', 
+                            { auth: { detectSessionInUrl: false } });
+                        const {data,error} = await api.from('collocation_bank')
+                            .select('phrase,meaning_vi').order('phrase',{ascending:true}).limit(1000);
+                        if (error) throw error;
+                        pairs = (data || []).map(item => [item.phrase,item.meaning_vi]);
+                        if (!pairs.length) pairs = lessons.Collocations;
+                    }
+                } catch (err) {
+                    console.warn('[LDD Collocations] Could not load shared entries:', err);
+                    note.textContent = 'Đang hiển thị ví dụ cơ bản; chưa tải được kho chung.';
+                }
+                // Do not draw stale results after leaving the category.
+                if (!list.isConnected) return;
+            }
+            pairs.forEach(function (pair) {
                 const row = document.createElement('div'); row.className = 'school-vocab-row';
                 const word = document.createElement('strong'); word.textContent = pair[0];
                 const meaning = document.createElement('span'); meaning.textContent = pair[1];
                 row.append(word, meaning); list.appendChild(row);
-            }); area.appendChild(list);
+            });
         }
         trigger.addEventListener('click', home);
         back.addEventListener('click', function () { grid.style.display = ''; clear(); });
