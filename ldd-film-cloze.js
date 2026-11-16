@@ -568,6 +568,7 @@
     const hintedIndices = new Set();
     let awaitingContinue = false;
     let seekPendingUntil = 0;
+    let replayStartTime = NaN;
     let continuousReplayTarget = NaN;
     let continuousReplayUntil = 0;
     let resumeAt = 0;
@@ -602,7 +603,8 @@
       const item = $el('li', 'ldd-film-caption-item ldd-film-caption-exercise');
       const heading = $el('div', 'ldd-film-caption-line-heading');
       const seek = button('▶ Nghe lại · ' + padTime(Number(cue.start)), 'ldd-film-caption-seek');
-      seek.title = 'Chỉ phát lại đoạn câu ' + (idx + 1) + ' rồi tự dừng';
+      seek.title = 'Phát trọn đoạn ngay trước và câu ' + (idx + 1) +
+        ' để không bị mất đầu câu';
       seek.setAttribute('aria-label', 'Nghe lại câu ' + (idx + 1));
       seek.addEventListener('click', () => playCue(idx));
       const number = $el('span', 'ldd-film-caption-number', 'Câu ' + (idx + 1));
@@ -831,6 +833,11 @@
       activeIndex = idx;
       row.classList.add('is-current');
     };
+    // Include the entire preceding subtitle cue (not an arbitrary few seconds),
+    // so replay never starts halfway through a spoken sentence.
+    const replayStartOf = idx => idx > 0
+      ? Math.max(0, items[idx - 1].start)
+      : 0;
     playCue = idx => {
       if (seq !== generation || idx < 0 || idx >= items.length) return;
       // Only teachers can preview future segments without unlocking their answers.
@@ -847,15 +854,15 @@
         playbackIndex = -1;
         waitingForAnswer = false;
         heardGate = false;
-        continuousReplayTarget = items[idx].start;
+        continuousReplayTarget = replayStartOf(idx);
         continuousReplayUntil = Date.now() + 3200;
         updateRowStates();
         try {
           adapter.pause();
-          adapter.seek(items[idx].start);
+          adapter.seek(replayStartOf(idx));
           adapter.play();
           state.textContent = gateIndex >= 0
-            ? 'Đang phát qua các câu đã hoàn thành đến câu chưa điền tiếp theo.'
+            ? 'Đang phát từ đoạn trước, qua các câu đã hoàn thành đến câu chưa điền tiếp theo.'
             : 'Các ô trống đều đã hoàn thành. Video sẽ phát liền mạch.';
         } catch (_) {
           state.textContent = 'Không phát lại được. Hãy thử nút Nghe lại.';
@@ -863,6 +870,7 @@
         return;
       }
       continuousReplayTarget = NaN;
+      replayStartTime = replayStartOf(idx);
       playbackIndex = idx;
       waitingForAnswer = false;
       // YouTube seeks can be asynchronous, especially after long music gaps.
@@ -870,9 +878,10 @@
       seekPendingUntil = Date.now() + 2800;
       try {
         adapter.pause();
-        adapter.seek(items[idx].start);
+        adapter.seek(replayStartTime);
         adapter.play();
-        state.textContent = 'Đang nghe câu ' + (idx + 1) + '. Hết câu video sẽ tự dừng để bạn điền từ.';
+        state.textContent = 'Đang nghe từ đoạn trước đến hết câu ' +
+          (idx + 1) + '. Video sẽ tự dừng để bạn điền từ.';
       } catch (_) {
         playbackIndex = -1;
         state.textContent = 'Không phát lại được câu này. Hãy thử nút Nghe lại.';
@@ -911,12 +920,12 @@
         // The teacher/student explicitly chose a single line to replay.
         const index = playbackIndex;
         const cue = items[index];
-        const outside = t < cue.start - 0.45 || t > cue.end + 0.25;
+        const outside = t < replayStartTime - 0.45 || t > cue.end + 0.25;
         const finished = !outside && t >= cue.end - 0.055;
         if ((outside && Date.now() >= seekPendingUntil) || finished) {
           try {
             adapter.pause();
-            if (outside) adapter.seek(cue.start);
+            if (outside) adapter.seek(replayStartTime);
           } catch (_) {}
           playbackIndex = -1;
           if (index === gateIndex && finished && !outside) {
