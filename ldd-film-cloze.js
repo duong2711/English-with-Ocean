@@ -698,15 +698,13 @@
       located.forEach(({start,end,blankIndex}) => {
         if (start > translationOffset) translation.append(document.createTextNode(viText.slice(translationOffset,start)));
         const meaning = button(viText.slice(start,end),'ldd-vi-cloze-focus');
-        meaning.title = 'Tra nghĩa từ tiếng Anh tương ứng';
-        meaning.setAttribute('aria-label','Tra nghĩa: ' + viText.slice(start,end));
+        meaning.title = 'Giải thích nghĩa tiếng Việt theo ngữ cảnh (không lộ đáp án tiếng Anh)';
+        meaning.setAttribute('aria-label','Giải thích nghĩa: ' + viText.slice(start,end));
         meaning.addEventListener('click', event => {
           event.preventDefault();
           event.stopPropagation();
-          const term = targets[blankIndex];
-          if (window.LDDTextActions?.translateTerm) {
-            window.LDDTextActions.translateTerm(term,
-              String(cue.text || '').replace(/\{([^{}]+)\}/g, '$1'));
+          if (window.LDDTextActions?.explainVietnamese) {
+            window.LDDTextActions.explainVietnamese(viText.slice(start,end), viText);
           }
         });
         translation.append(meaning);
