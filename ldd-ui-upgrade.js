@@ -46,13 +46,14 @@
         ensureStylesheet('ldd-quick-lookup-style', 'ldd-quick-lookup.css?v=20261025-valid2');
         ensureStylesheet('ldd-entertainment-style', 'ldd-entertainment.css?v=20261027-translation1');
         ensureStylesheet('ldd-film-cloze-style', 'ldd-film-cloze.css?v=20261116-film-cue-padding3');
+        ensureStylesheet('ldd-text-actions-style', 'ldd-text-actions.css?v=20261116-text-actions1');
 
         // Load first. Dynamic scripts are async by default, so ensureScript sets async=false
         // to preserve insertion order and let all helper modules benefit from the guard.
         ensureScript('ldd-egress-guard-script', 'ldd-egress-guard.js?v=1');
         ensureScript('ldd-vocab-dedup-script', 'ldd-vocab-dedup.js?v=1');
         ensureScript('ldd-pronunciation-fix-script', 'ldd-pronunciation-fix.js?v=20261104-flash-mic4');
-        ensureScript('ldd-vocab-grammar-script', 'ldd-ui-vocab-grammar.js?v=20261027-vocab-flat3');
+        ensureScript('ldd-vocab-grammar-script', 'ldd-ui-vocab-grammar.js?v=20261116-shared-collocations1');
         ensureScript('ldd-home-phonetics-script', 'ldd-ui-home-phonetics.js?v=20261116-feedback');
         ensureScript('ldd-student-grade-script', 'ldd-student-grade.js?v=20261110-university-track1');
         ensureScript('ldd-thcs-vocab-reset-script', 'ldd-thcs-vocab-reset.js?v=11');
@@ -66,7 +67,8 @@
         ensureScript('ldd-entertainment-data-script', 'ldd-entertainment-data.js?v=20261027-wimpy1');
         ensureScript('ldd-entertainment-script', 'ldd-entertainment.js?v=20261029-filmcloze1');
         ensureScript('ldd-film-timing-script', 'ldd-film-timing.js?v=20261029-transcript-import1');
-        ensureScript('ldd-film-cloze-script', 'ldd-film-cloze.js?v=20261116-film-cue-padding3');
+        ensureScript('ldd-film-cloze-script', 'ldd-film-cloze.js?v=20261116-vi-focus1');
+        ensureScript('ldd-text-actions-script', 'ldd-text-actions.js?v=20261116-text-actions1');
     }
 
     function ensureStylesheet(id, href) {
