@@ -479,6 +479,10 @@
       const seen = new Set();
       const put = lesson => {
         if (!lesson?.video_url) return;
+        // Defense in depth: students must never see scriptless films, including
+        // legacy video entries outside the server-side movie_list_lessons RPC.
+        // Teachers still see these videos so they can attach/publish scripts.
+        if (!isTeacher && (!Array.isArray(lesson.segments) || !lesson.segments.length)) return;
         const info = providerOf(lesson.video_url);
         if (!info) return;
         const id = info.url;
