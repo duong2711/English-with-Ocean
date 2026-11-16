@@ -25,6 +25,11 @@
     let latestState = null;
     let currentPodcastId = null;
 
+    let feedbackOwner = null;
+    let feedbackVersion = 0;
+    let feedbackBusy = false;
+    let feedbackNext = 0;
+
     function ready(fn) {
         if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
         else fn();
@@ -76,6 +81,74 @@
     function userEmail() { return String(jwtPayload().email || '').toLowerCase(); }
     function todayIso() { return new Date().toISOString().slice(0, 10); }
 
+    function learnerComment(rows) {
+        // One or two answers are too little evidence for a strength or a weakness.
+        const usable = rows.map(row => ({category: row.category, topic: row.topic,
+            right: Number(row.correct_count), total: Number(row.item_count)}))
+            .filter(row => row.total >= 3 && row.right >= 0 && row.right <= row.total);
+        const rate = row => (row.right + 1) / (row.total + 2);
+        usable.sort((a,b) => rate(b) - rate(a) || b.total - a.total || a.topic.localeCompare(b.topic, 'vi'));
+        const strong = usable.find(row => row.right / row.total >= 0.75);
+        const weak = usable.slice().reverse().find(row => row.total - row.right >= 2 && row.right / row.total <= 0.65);
+        const lines = [];
+        if (strong) lines.push(['Em làm tốt', strong.category + ' · ' + strong.topic + ' (' + strong.right + '/' + strong.total + ' mục đúng).']);
+        if (weak) lines.push(['Em nên ôn', weak.category + ' · ' + weak.topic + ' (' + (weak.total - weak.right) + '/' + weak.total + ' mục sai).']);
+        if (!lines.length) {
+            const sample = usable[0];
+            if (sample) lines.push(['Đang luyện', sample.topic + ' (' + sample.right + '/' + sample.total + ' mục đúng).']);
+            else lines.push(['', rows.length ? 'Cần thêm câu đã chấm cùng chủ điểm để nhận xét chính xác hơn.' : 'Nhận xét sẽ xuất hiện khi có kết quả đã chấm đủ để đối chiếu.']);
+        }
+        return lines;
+    }
+
+    function syncLearningFeedback(token) {
+        let panel = document.getElementById('ldd-home-study-feedback');
+        if (feedbackOwner !== token) {
+            feedbackOwner = token;
+            feedbackVersion++;
+            feedbackBusy = false;
+            feedbackNext = 0;
+            if (panel) { panel.remove(); panel = null; }
+        }
+        const home = document.querySelector('#tab-trang-chu.active .ldd-home-dashboard');
+        if (!token || !home || document.hidden || feedbackBusy || Date.now() < feedbackNext) return;
+        if (!panel) {
+            panel = document.createElement('section');
+            panel.id = 'ldd-home-study-feedback';
+            panel.innerHTML = '<h3>Nhận xét từ bài kiểm tra</h3><div aria-live="polite">Đang xem kết quả của em…</div>';
+            home.insertBefore(panel, home.querySelector('.ldd-today-shell') || home.firstChild);
+        }
+        const body = panel.querySelector('div');
+        const version = feedbackVersion;
+        feedbackBusy = true;
+        fetch(SUPABASE_URL + '/rest/v1/rpc/my_private_test_feedback', {
+            method: 'POST', headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + token,
+                'Content-Type': 'application/json' }, body: '{}', cache: 'no-store'
+        }).then(response => {
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            return response.json();
+        }).then(rows => {
+            if (version !== feedbackVersion || token !== getToken()) return;
+            const lines = learnerComment(rows);
+            body.replaceChildren();
+            lines.forEach(([label, value]) => {
+                const line = document.createElement('p');
+                if (label) {
+                    const emphasis = document.createElement('strong');
+                    emphasis.textContent = label + ': ';
+                    line.appendChild(emphasis);
+                }
+                line.appendChild(document.createTextNode(value));
+                body.appendChild(line);
+            });
+            feedbackNext = Date.now() + 300000;
+        }).catch(() => {
+            if (version !== feedbackVersion || token !== getToken()) return;
+            body.textContent = 'Chưa tải được nhận xét. Trang sẽ tự thử lại.';
+            feedbackNext = Date.now() + 30000;
+        }).finally(() => { if (version === feedbackVersion) feedbackBusy = false; });
+    }
+
     function watchSession() {
         const token = getToken();
         if (token && token !== activeToken) {
@@ -96,6 +169,7 @@
         }
         ensureTodayHost();
         ensureLivePanel();
+        syncLearningFeedback(token);
     }
 
     function bindSessionUiWatcher() {

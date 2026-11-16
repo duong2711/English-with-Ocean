@@ -494,3 +494,7 @@ body.ldd-ui-v2 #tab-trang-chu .ldd-today-shell {
 @media(max-width: 670px) {
     #tab-trang-chu .ldd-study-overview { grid-template-columns: 1fr; gap: 10px; }
 }
+
+#ldd-home-study-feedback { grid-column: 1 / -1; padding: 14px 18px; text-align: left; border: 1px solid #b1dacf; border-radius: 16px; background: #f2faf6; color: #193d36; }
+#ldd-home-study-feedback h3 { margin: 0 0 6px; font-size: 1rem; }
+#ldd-home-study-feedback p { margin: 4px 0 0; line-height: 1.5; font-size: .92rem; }
