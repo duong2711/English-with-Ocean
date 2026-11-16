@@ -464,3 +464,33 @@ body.ldd-ui-v2 #tab-trang-chu .ldd-today-shell {
 }
 
 @media (max-width:480px) { .ldd-home-main-tab { padding-inline: 9px; } }
+
+/* Daily study overview */
+#tab-trang-chu .ldd-study-overview {
+    display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(240px, 1fr); gap: 14px;
+}
+#tab-trang-chu .ldd-study-next, #tab-trang-chu .ldd-study-week {
+    min-width: 0; padding: clamp(18px, 3vw, 32px); border-radius: 20px; text-align: left;
+}
+#tab-trang-chu .ldd-study-next {
+    color: white; background: radial-gradient(ellipse at top right, #207f93, transparent 58%), linear-gradient(115deg,#193661,#215582);
+}
+#tab-trang-chu .ldd-study-next small { font-size: .82rem; color: #d5f8f2; font-weight: 700; }
+#tab-trang-chu .ldd-study-next h3 { margin: 8px 0; font-size: clamp(1.4rem,3vw,2.1rem); color: white; line-height: 1.15; }
+#tab-trang-chu .ldd-study-next p { color: #eff9ff; margin: 0 0 16px; line-height: 1.5; }
+#tab-trang-chu .ldd-study-next button { background: #fff4c4; border: 0; color: #263347; font: inherit; font-weight: 750; min-height: 44px; padding: 10px 18px; border-radius: 12px; cursor: pointer; }
+#tab-trang-chu .ldd-study-next button:focus-visible { outline: 3px solid white; outline-offset: 3px; }
+#tab-trang-chu .ldd-study-week { background: #edf7f3; color: #174d43; }
+#tab-trang-chu .ldd-study-week h3, #tab-trang-chu .ldd-study-more { margin: 0; font-size: 1.05rem; }
+#tab-trang-chu .ldd-study-week p { font-size: .86rem; line-height: 1.4; margin: 12px 0 0; }
+.ldd-study-days { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); gap: 3px; margin: 14px 0 0; }
+.ldd-study-days span { display: grid; justify-items: center; gap: 4px; }
+.ldd-study-days b { display: grid; place-items: center; width: min(100%,32px); aspect-ratio: 1; background: white; color: #53766c; border: 1px solid #b6cdc5; border-radius: 50%; }
+.ldd-study-days .has-activity b { background: #19725d; color: white; }
+.ldd-study-days span:last-child b { outline: 2px solid #467c70; outline-offset: 1px; }
+#tab-trang-chu .ldd-study-more { margin: 22px 0 10px; }
+#tab-trang-chu .ldd-daily-mission-copy strong { font-size: .9rem; }
+#tab-trang-chu .ldd-daily-mission-copy small { font-size: .77rem; }
+@media(max-width: 670px) {
+    #tab-trang-chu .ldd-study-overview { grid-template-columns: 1fr; gap: 10px; }
+}

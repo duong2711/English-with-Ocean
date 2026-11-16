@@ -81,6 +81,7 @@
         if (token && token !== activeToken) {
             activeToken = token;
             latestState = null;
+            renderToday(null);
             // A fresh login should not inherit a dashboard cache from the previous session.
             if (window.LDDEgress && typeof window.LDDEgress.clear === 'function') {
                 window.LDDEgress.clear();
@@ -204,6 +205,7 @@
             latestState = state;
 
             await reconcileIpa(state);
+            if (getToken() !== requestToken) return;
             computePodcastState(state);
             renderToday(state);
             renderLive(state);
@@ -348,12 +350,71 @@
         return host;
     }
 
+    // A day is marked only when the learner has a saved activity.
+    function activityWeek(state, now) {
+        const dayKey = date => date.toLocaleDateString('sv-SE', { timeZone: 'Asia/Ho_Chi_Minh' });
+        const today = dayKey(now);
+        const days = Array.from({ length: 7 }, (_, index) => {
+            const date = new Date(Date.parse(today + 'T12:00:00+07:00') - (6 - index) * DAY_MS);
+            return { key: dayKey(date), label: ['CN','T2','T3','T4','T5','T6','T7'][date.getUTCDay()], active: false };
+        });
+        const weekStart = Date.parse(days[0].key + 'T00:00:00+07:00');
+        const recorded = new Set();
+        function mark(value) {
+            const stamp = Date.parse(value);
+            if (stamp >= weekStart && stamp <= now.getTime()) recorded.add(dayKey(new Date(stamp)));
+        }
+        state.reads.forEach(row => mark(row.read_at));
+        state.comments.forEach(row => mark(row.created_at));
+        state.podcastProgress.forEach(row => mark(row.created_at));
+        days.forEach(day => { day.active = recorded.has(day.key); });
+        return days;
+    }
+
+    function buildStudyWeek(days) {
+        const section = document.createElement('section');
+        section.className = 'ldd-study-week';
+        section.innerHTML = '<h3>7 ngày vừa qua</h3><div class="ldd-study-days"></div><p></p>';
+        const strip = section.querySelector('.ldd-study-days');
+        days.forEach((day, index) => {
+            const cell = document.createElement('span');
+            cell.className = day.active ? 'has-activity' : '';
+            cell.innerHTML = '<b aria-hidden="true"></b><small></small>';
+            cell.querySelector('b').textContent = day.active ? '✓' : '·';
+            cell.querySelector('small').textContent = index === 6 ? 'Nay' : day.label;
+            cell.setAttribute('aria-label', day.key + (day.active ? ' có luyện tập' : ' chưa ghi nhận'));
+            cell.setAttribute('role', 'img');
+            strip.appendChild(cell);
+        });
+        const count = days.filter(day => day.active).length;
+        section.querySelector('p').textContent = count
+            ? count + '/7 ngày có đọc báo, luyện podcast hoặc ghi âm IPA.'
+            : 'Đọc một bài báo, luyện podcast hoặc ghi âm IPA để đánh dấu ngày học.';
+        return section;
+    }
+
+    function buildNextTask(item) {
+        const box = document.createElement('section');
+        box.className = 'ldd-study-next';
+        box.innerHTML = '<small></small><h3></h3><p></p><button type="button"></button>';
+        const assigned = item.target === 'tests';
+        box.querySelector('small').textContent = assigned ? 'Giáo viên giao' : 'Gợi ý hôm nay';
+        box.querySelector('h3').textContent = item.title;
+        box.querySelector('p').textContent = assigned
+            ? 'Em có ' + item.count + ' bài đang chờ. Mở danh sách để chọn bài làm trước.'
+            : item.note + '.';
+        const button = box.querySelector('button');
+        button.textContent = assigned ? 'Xem bài được giao →' : 'Bắt đầu luyện →';
+        button.addEventListener('click', () => navigateToday(item.target));
+        return box;
+    }
+
     function renderToday(state) {
         const host = ensureTodayHost();
         if (!host) return;
         if (!getToken() || !state) {
             delete host.dataset.tasksSignature;
-            host.innerHTML = '<div class="ldd-today-loading">Đăng nhập để xem nhiệm vụ hôm nay.</div>';
+            host.innerHTML = getToken() ? '<div class="ldd-today-loading">Đang tải việc học hôm nay…</div>' : '<div class="ldd-today-loading">Đăng nhập để xem nhiệm vụ hôm nay.</div>';
             return;
         }
 
@@ -375,6 +436,7 @@
         const completedTasks = [];
 
         function place(item, done) {
+            if (done && !item.count) return;
             if (done) completedTasks.push(item);
             else activeTasks.push(item);
         }
@@ -432,21 +494,39 @@
             );
         }
 
-        const signature = JSON.stringify([activeTasks, completedTasks]);
+        const days = activityWeek(state, new Date());
+        const priority = activeTasks.find(item => item.target === 'tests')
+            || activeTasks.find(item => item.target === 'vocabtest')
+            || activeTasks[0];
+        const signature = JSON.stringify([activeTasks, completedTasks, days]);
         if (host.dataset.tasksSignature === signature) return;
         host.dataset.tasksSignature = signature;
         host.innerHTML = '';
+
+        const overview = document.createElement('div');
+        overview.className = 'ldd-study-overview';
+        if (priority) overview.appendChild(buildNextTask(priority));
+        overview.appendChild(buildStudyWeek(days));
+        host.appendChild(overview);
 
         const activeGrid = document.createElement('div');
         activeGrid.className = 'ldd-today-primary ldd-today-mission-grid';
         if (!activeTasks.length) {
             activeGrid.innerHTML = '<div class="ldd-today-all-done">✓ Không còn nhiệm vụ nào đang chờ.</div>';
         } else {
-            activeTasks.forEach(function (item) {
+            activeTasks.filter(item => item !== priority).forEach(function (item) {
                 activeGrid.appendChild(buildMissionCard(item, false));
             });
         }
-        host.appendChild(activeGrid);
+        if (activeGrid.childElementCount) {
+            if (priority) {
+                const label = document.createElement('h3');
+                label.className = 'ldd-study-more';
+                label.textContent = 'Em có thể luyện thêm';
+                host.appendChild(label);
+            }
+            host.appendChild(activeGrid);
+        }
 
         if (completedTasks.length) {
             const completedWrap = document.createElement('div');
