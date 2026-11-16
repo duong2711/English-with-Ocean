@@ -379,7 +379,7 @@ test('Vietnamese film gloss highlights only explicitly aligned blanks and opens 
   assert.match(exercise, /const targets = blanksIn\(cue\.text\);/);
   assert.match(exercise, /indexOf\(needle\.toLocaleLowerCase\('vi'\)\)/);
   assert.match(exercise, /button\(viText\.slice\(start,end\),'ldd-vi-cloze-focus'\)/);
-  assert.match(exercise, /window\.LDDTextActions\.translateTerm\(term,/);
+  assert.match(exercise, /window\.LDDTextActions\.explainVietnamese\(viText\.slice\(start,end\), viText\)/);
   assert.match(js, /function decodeViFocus\(line, english\)/);
   assert.match(js, /function encodeViFocus\(cue\)/);
   assert.match(js, /translations\.value = cues\.map\(encodeViFocus\)\.join/);
