@@ -568,6 +568,8 @@
     const hintedIndices = new Set();
     let awaitingContinue = false;
     let seekPendingUntil = 0;
+    let continuousReplayTarget = NaN;
+    let continuousReplayUntil = 0;
     let resumeAt = 0;
     let updateRowStates = () => {};
     let playCue = () => {};
@@ -845,6 +847,8 @@
         playbackIndex = -1;
         waitingForAnswer = false;
         heardGate = false;
+        continuousReplayTarget = items[idx].start;
+        continuousReplayUntil = Date.now() + 3200;
         updateRowStates();
         try {
           adapter.pause();
@@ -858,6 +862,7 @@
         }
         return;
       }
+      continuousReplayTarget = NaN;
       playbackIndex = idx;
       waitingForAnswer = false;
       // YouTube seeks can be asynchronous, especially after long music gaps.
@@ -892,6 +897,14 @@
           try { adapter.pause(); } catch (_) {}
         }
         return;
+      }
+      if (Number.isFinite(continuousReplayTarget)) {
+        // YouTube seeks asynchronously. Ignore the stale timestamp at the
+        // previous unanswered gate until the completed-cue replay has landed.
+        const landed = Math.abs(t - continuousReplayTarget) <= 1.5 ||
+          (gateIndex >= 0 && t < items[gateIndex].start - 0.25);
+        if (!landed && Date.now() < continuousReplayUntil) return;
+        continuousReplayTarget = NaN;
       }
 
       if (playbackIndex >= 0) {
