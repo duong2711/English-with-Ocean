@@ -211,7 +211,12 @@
    if(!WORD.test(clean))return showToast('Từ tiếng Anh chưa hợp lệ.');
    translateWord({text:clean,context:context||clean,source:'Bài nghe Phim ảnh'});
  }
- window.LDDTextActions={openWord,openPhrase:phrase=>present({text:normalize(phrase),range:document.createRange(),context:phrase,source:'LDD English'})};
+ function translateTerm(term,context){
+   const text=normalize(term);
+   if(!(WORD.test(text)||PHRASE.test(text)))return showToast('Chưa xác định được từ hoặc cụm cần tra.');
+   void translate({text,context:context||text,source:'Bài nghe Phim ảnh'});
+ }
+ window.LDDTextActions={openWord,translateTerm};
  function boot(){
    setup();
    window.addEventListener('click',function(e){
