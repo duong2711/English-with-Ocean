@@ -331,10 +331,10 @@ test('hint reveal requires explicit learner confirmation before playback resumes
   assert.match(css, /\.ldd-film-continue\[hidden\] \{display:none!important\}/);
 });
 
-test('film replay includes the whole preceding caption and never cuts off the current sentence', () => {
+test('film replay uses exactly one second of pre-roll before the chosen caption', () => {
   const exercise = js.slice(js.indexOf('async function renderCaptionExercise('), js.indexOf('async function openStandalone('));
-  assert.match(exercise, /const replayStartOf = idx => idx > 0/);
-  assert.match(exercise, /Math\.max\(0, items\[idx - 1\]\.start\)/);
+  assert.match(exercise, /const replayStartOf = idx => Math\.max\(0, items\[idx\]\.start - 1\);/);
+  assert.doesNotMatch(exercise, /items\[idx - 1\]\.start/);
   assert.match(exercise, /continuousReplayTarget = replayStartOf\(idx\);/);
   assert.match(exercise, /adapter\.seek\(replayStartOf\(idx\)\);/);
   assert.match(exercise, /replayStartTime = replayStartOf\(idx\);/);
