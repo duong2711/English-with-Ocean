@@ -970,3 +970,17 @@
   #tab-giai-tri .ldd-film-playlist-grid {grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;padding:10px}
   #tab-giai-tri .ldd-film-playlist-title {font-size:15px}
 }
+
+/* Confirm playback after a revealed hint: never auto-advance. */
+#tab-giai-tri .ldd-film-continue {
+  display:block;flex:0 0 auto;width:min(100%,360px);min-height:46px;
+  margin:8px auto 12px;padding:11px 18px;
+  border:1px solid #1666c5;border-radius:12px;
+  background:#1769cf;color:#fff;font:inherit;
+  font-weight:750;text-align:center;cursor:pointer;
+  box-shadow:0 4px 12px rgba(23,105,207,.13);
+}
+#tab-giai-tri .ldd-film-continue[hidden] {display:none!important}
+#tab-giai-tri .ldd-film-continue:focus-visible {
+  outline:3px solid #8cbeff;outline-offset:2px;
+}
