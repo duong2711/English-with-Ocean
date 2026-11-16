@@ -29,6 +29,36 @@
   const scoreLabel = number => (number > 0 ? '+' : '') + number + ' điểm';
   const keyOf = (segment, blank) => segment + ':' + blank;
   const blanksIn = text => Array.from(String(text || '').matchAll(/\{([^{}]+)\}/g), m => m[1]);
+  // The teacher can mark the Vietnamese meaning of each blank as **...**;
+  // plain prose remains unchanged and only the aligned phrases are decorated.
+  function decodeViFocus(line, english) {
+    const raw = String(line || '');
+    const targets = blanksIn(english);
+    const found = [...raw.matchAll(/\*\*([^*\n]+)\*\*/g)].map(m => m[1].trim());
+    if (found.length && found.length !== targets.length)
+      throw Error('Mỗi ô trống tiếng Anh phải có đúng một cụm nghĩa tiếng Việt được bọc **...**.');
+    const translation_vi = raw.replace(/\*\*([^*\n]+)\*\*/g, '$1');
+    return { translation_vi, ...(found.length ? { translation_focus: found } : {}) };
+  }
+  function encodeViFocus(cue) {
+    const raw = String(cue?.translation_vi || '');
+    const focus = Array.isArray(cue?.translation_focus) ? cue.translation_focus : [];
+    if (!focus.length || focus.length !== blanksIn(cue?.text).length) return raw;
+    const spans = []; let from = 0;
+    for (const phrase of focus) {
+      const pos = raw.toLocaleLowerCase('vi').indexOf(String(phrase).toLocaleLowerCase('vi'), from);
+      if (pos < 0) return raw;
+      spans.push([pos, pos + String(phrase).length]);
+      from = pos + String(phrase).length;
+    }
+    let annotated = raw;
+    for (let i = spans.length - 1; i >= 0; i--) {
+      const [a,b] = spans[i];
+      annotated = annotated.slice(0,a) + '**' + annotated.slice(a,b) + '**' + annotated.slice(b);
+    }
+    return annotated;
+  }
+
   const stopWords = new Set(['about','after','again','always','because','before','could','every','first','going','great','hello','there','their','these','thing','those','under','where','which','while','would','should','really','right','still','thank','thanks','today','tomorrow','something','someone','other','maybe']);
   function providerOf(raw) {
     try {
@@ -1708,7 +1738,7 @@
           (i + 1) + '\n' + toSrtTime(Number(s.start)) + ' --> ' +
           toSrtTime(Number(s.end)) + '\n' + String(s.text || '')
         ).join('\n\n');
-        translations.value = cues.map(s => String(s.translation_vi || '')).join('\n');
+        translations.value = cues.map(encodeViFocus).join('\n');
         noticePreview();
         notice.textContent = pendingAudioReview
           ? 'BẢN NHÁP CHƯA XÁC MINH: Đã tải ' + cues.length +
@@ -1873,9 +1903,12 @@
         notice.textContent = 'Số dòng dịch phải bằng số câu trong script: ' + segments.length + '.';
         return;
       }
-      const nextDraft = segments.map((segment, i) => ({
-        ...segment, ...(translated.length ? { translation_vi: translated[i] } : {})
-      }));
+      let nextDraft;
+      try {
+        nextDraft = segments.map((segment, i) => ({
+          ...segment, ...(translated.length ? decodeViFocus(translated[i], segment.text) : {})
+        }));
+      } catch (error) { notice.textContent = error.message; return; }
       const checked = filmTiming?.check(nextDraft, { duration: knownDurations.get(info.url) });
       if (!checked?.ok) {
         notice.textContent = 'Chưa lưu bản nháp: ' + (checked?.errors || ['Lỗi kiểm tra mốc.']).join(' ');
@@ -1974,9 +2007,12 @@
       if (translated.length && translated.length !== segments.length) {
         notice.textContent = 'Số dòng bản dịch phải khớp số câu: ' + segments.length + '.'; return;
       }
-      const withTranslations = segments.map((segment, i) => ({
-        ...segment, ...(translated.length ? { translation_vi: translated[i] } : {})
-      }));
+      let withTranslations;
+      try {
+        withTranslations = segments.map((segment, i) => ({
+          ...segment, ...(translated.length ? decodeViFocus(translated[i], segment.text) : {})
+        }));
+      } catch (error) { notice.textContent = error.message; return; }
       const checked = filmTiming?.check(withTranslations, {
         allowEmpty: !captions.value.trim() && !existing.value,
         duration: knownDurations.get(info.url)
@@ -2028,7 +2064,7 @@
       $el('label', '', 'Transcript đã bật Copy Timestamp ON'), copiedTranscript,
       $el('label', '', 'Thời lượng của video'), copiedDuration, importTimestamp,
       $el('label', '', 'Script tiếng Anh (SRT/VTT)'), upload, captions,
-      $el('label', '', 'Bản dịch tiếng Việt (mỗi câu một dòng)'), translationUpload, translations,
+      $el('label', '', 'Bản dịch tiếng Việt (mỗi câu một dòng; bọc **nghĩa cần tô đậm** cho mỗi ô trống)'), translationUpload, translations,
       sample, description, preview, timingConfirmRow, verifiedRow, saveDraft, save, notice
     );
     scriptDetails.append(scriptSummary, scriptFields);
