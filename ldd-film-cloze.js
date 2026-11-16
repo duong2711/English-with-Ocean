@@ -647,10 +647,42 @@
         inputs.push({ input, blankIndex, key });
       });
 
-      // Always show the Vietnamese translation below its English cloze line.
-      // Learners can listen and type without having to reveal a second panel.
-      const translation = $el('p', 'ldd-film-caption-translation',
-        cue.translation_vi || 'Bản dịch chưa có.');
+      // Always show the Vietnamese translation. Focus terms are explicitly
+      // aligned to each English blank in translation_focus, not guessed from
+      // nearby Vietnamese words (which can be a completely different sense).
+      const translation = $el('p', 'ldd-film-caption-translation');
+      const viText = String(cue.translation_vi || 'Bản dịch chưa có.');
+      const focus = Array.isArray(cue.translation_focus) ? cue.translation_focus :
+        (typeof cue.translation_focus === 'string' ? [cue.translation_focus] : []);
+      const targets = blanksIn(cue.text);
+      const located = [];
+      focus.forEach((phrase, blankIndex) => {
+        const needle = String(phrase || '').trim();
+        if (!needle || !targets[blankIndex]) return;
+        const first = viText.toLocaleLowerCase('vi').indexOf(needle.toLocaleLowerCase('vi'));
+        if (first < 0 || located.some(other => first < other.end && first + needle.length > other.start)) return;
+        located.push({ start:first, end:first+needle.length, blankIndex });
+      });
+      located.sort((a,b) => a.start - b.start);
+      let translationOffset = 0;
+      located.forEach(({start,end,blankIndex}) => {
+        if (start > translationOffset) translation.append(document.createTextNode(viText.slice(translationOffset,start)));
+        const meaning = button(viText.slice(start,end),'ldd-vi-cloze-focus');
+        meaning.title = 'Tra nghĩa từ tiếng Anh tương ứng';
+        meaning.setAttribute('aria-label','Tra nghĩa: ' + viText.slice(start,end));
+        meaning.addEventListener('click', event => {
+          event.preventDefault();
+          event.stopPropagation();
+          const term = targets[blankIndex];
+          if (window.LDDTextActions?.translateTerm) {
+            window.LDDTextActions.translateTerm(term,
+              String(cue.text || '').replace(/\\{([^{}]+)\\}/g, '$1'));
+          }
+        });
+        translation.append(meaning);
+        translationOffset = end;
+      });
+      translation.append(document.createTextNode(viText.slice(translationOffset)));
 
       for (const field of inputs) {
         const check = button('Kiểm tra', 'ldd-film-check ldd-film-caption-check');
