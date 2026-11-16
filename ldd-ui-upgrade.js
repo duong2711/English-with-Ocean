@@ -47,6 +47,7 @@
         ensureStylesheet('ldd-entertainment-style', 'ldd-entertainment.css?v=20261027-translation1');
         ensureStylesheet('ldd-film-cloze-style', 'ldd-film-cloze.css?v=20261116-film-cue-padding3');
         ensureStylesheet('ldd-text-actions-style', 'ldd-text-actions.css?v=20261116-text-actions2');
+        ensureStylesheet('ldd-ctest-student-groups-style', 'ldd-ctest-student-groups.css?v=20261116-grouped1');
 
         // Load first. Dynamic scripts are async by default, so ensureScript sets async=false
         // to preserve insertion order and let all helper modules benefit from the guard.
@@ -67,7 +68,7 @@
         ensureScript('ldd-entertainment-data-script', 'ldd-entertainment-data.js?v=20261027-wimpy1');
         ensureScript('ldd-entertainment-script', 'ldd-entertainment.js?v=20261029-filmcloze1');
         ensureScript('ldd-film-timing-script', 'ldd-film-timing.js?v=20261029-transcript-import1');
-        ensureScript('ldd-film-cloze-script', 'ldd-film-cloze.js?v=20261116-vi-focus3');
+        ensureScript('ldd-film-cloze-script', 'ldd-film-cloze.js?v=20261116-script-visibility1');
         ensureScript('ldd-text-actions-script', 'ldd-text-actions.js?v=20261116-text-actions3');
     }
 
