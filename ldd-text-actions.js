@@ -216,7 +216,40 @@
    if(!(WORD.test(text)||PHRASE.test(text)))return showToast('Chưa xác định được từ hoặc cụm cần tra.');
    void translate({text,context:context||text,source:'Bài nghe Phim ảnh'});
  }
- window.LDDTextActions={openWord,translateTerm};
+ async function explainVietnamese(term,context){
+   const phrase=normalize(term);
+   if(!phrase||phrase.length>100)return showToast('Chưa xác định được nghĩa cần giải thích.');
+   const dlg=createDialog();
+   const id=++sequence;
+   dlg.querySelector('h3').textContent=phrase;
+   dlg.querySelector('.ldd-phrase-definition').textContent='Đang giải thích nghĩa tiếng Việt…';
+   dlg.querySelector('.ldd-phrase-note').textContent='Không tiết lộ đáp án tiếng Anh. Muốn xem từ cần điền, hãy dùng Gợi ý trong bài nghe.';
+   dlg.hidden=false;
+   try{
+     const client=window.supabase?.createClient?.(ROOT,PUBLISHABLE,{auth:{detectSessionInUrl:false}});
+     if(!client)throw Error('Chưa kết nối từ điển.');
+     const {data:session}=await client.auth.getSession();
+     if(!session?.session?.access_token)throw Error('Hãy đăng nhập để tra nghĩa.');
+     const prompt='Giải nghĩa cho học viên bằng tiếng Việt, không dùng từ hoặc câu tiếng Anh, '+
+       'không đoán đáp án cho bài tập tiếng Anh. Chỉ trả JSON hợp lệ với khóa definition '+
+       '(một câu giải thích ngắn gọn bằng tiếng Việt), example_vi (một ví dụ mới bằng tiếng Việt). '+
+       'Dữ liệu: '+JSON.stringify({term:phrase,context:normalize(context).slice(0,350)});
+     const {data,error}=await client.functions.invoke('ai-proxy',{body:{prompt}});
+     if(error)throw Error(error.message||'Không kết nối được từ điển.');
+     if(id!==sequence)return;
+     const detail=data?.result||{};
+     const definition=normalize(detail.definition);
+     if(!definition)throw Error('Chưa tìm được giải thích phù hợp.');
+     dlg.querySelector('.ldd-phrase-definition').textContent=definition;
+     dlg.querySelector('.ldd-phrase-note').textContent=
+       (normalize(detail.example_vi)?'Ví dụ: '+normalize(detail.example_vi)+' · ':'')+
+       'Đáp án tiếng Anh vẫn được giữ kín. Dùng Gợi ý trong bài nếu cần.';
+   }catch(error){
+     if(id!==sequence)return;
+     dlg.querySelector('.ldd-phrase-definition').textContent=error.message||'Không tra nghĩa được lúc này.';
+   }
+ }
+ window.LDDTextActions={openWord,translateTerm,explainVietnamese};
  function boot(){
    setup();
    window.addEventListener('click',function(e){
