@@ -61,8 +61,8 @@
         ensureScript('ldd-fast-progress-script', 'ldd-fast-progress.js?v=1');
         ensureScript('ldd-game-grammar-script', 'ldd-game-grammar.js?v=20261115-cloud1');
         ensureScript('ldd-word-cloud-bank-script', 'ldd-word-cloud-bank.js?v=20261115-five-choices1');
-        ensureScript('ldd-word-cloud-game-script', 'ldd-word-cloud-game.js?v=20261115-two-misses1');
-        ensureScript('ldd-vocab-race-script', 'ldd-vocab-race.js?v=20261115-solo1');
+        ensureScript('ldd-word-cloud-game-script', 'ldd-word-cloud-game.js?v=20261116-fast1');
+        ensureScript('ldd-vocab-race-script', 'ldd-vocab-race.js?v=20261116-fast1');
         ensureScript('ldd-vocab-shooter-script', 'ldd-vocab-shooter.js?v=20261115-solo1');
         ensureScript('ldd-quick-lookup-script', 'ldd-quick-lookup.js?v=20261025-valid2');
         ensureScript('ldd-entertainment-data-script', 'ldd-entertainment-data.js?v=20261027-wimpy1');
