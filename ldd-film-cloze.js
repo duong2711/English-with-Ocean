@@ -603,7 +603,7 @@
       const item = $el('li', 'ldd-film-caption-item ldd-film-caption-exercise');
       const heading = $el('div', 'ldd-film-caption-line-heading');
       const seek = button('▶ Nghe lại · ' + padTime(Number(cue.start)), 'ldd-film-caption-seek');
-      seek.title = 'Phát lại từ 1 giây trước câu ' + (idx + 1);
+      seek.title = 'Nghe lại câu ' + (idx + 1) + ' (dư 1 giây trước và sau)';
       seek.setAttribute('aria-label', 'Nghe lại câu ' + (idx + 1));
       seek.addEventListener('click', () => playCue(idx));
       const number = $el('span', 'ldd-film-caption-number', 'Câu ' + (idx + 1));
@@ -832,9 +832,27 @@
       activeIndex = idx;
       row.classList.add('is-current');
     };
-    // Give the listener exactly one second of lead-in before the chosen cue.
-    // Never seek before the beginning of the video.
-    const replayStartOf = idx => Math.max(0, items[idx].start - 1);
+    // Apply one-second padding at both ends to every script cue at playback
+    // time. Keep stored timestamps, answer indices and progress unchanged.
+    const CUE_PADDING_SECONDS = 1;
+    const replayStartOf = idx => Math.max(0, items[idx].start - CUE_PADDING_SECONDS);
+    const replayEndOf = idx => {
+      const padded = items[idx].end + CUE_PADDING_SECONDS;
+      const duration = Number(adapter.getDuration?.());
+      return Number.isFinite(duration) && duration > 0
+        ? Math.min(padded, duration)
+        : padded;
+    };
+    const reachedReplayEnd = (idx, time) => {
+      const target = replayEndOf(idx);
+      if (time >= target - 0.055) return true;
+      // YouTube/MP4 can stop slightly before the reported duration; still
+      // release a final-line exercise when the player genuinely reaches EOF.
+      const duration = Number(adapter.getDuration?.());
+      return Number.isFinite(duration) && duration > 0 &&
+        target >= duration - 0.05 && time >= duration - 0.35 &&
+        adapter.isPlaying?.() === false;
+    };
     playCue = idx => {
       if (seq !== generation || idx < 0 || idx >= items.length) return;
       // Only teachers can preview future segments without unlocking their answers.
@@ -878,7 +896,7 @@
         adapter.seek(replayStartTime);
         adapter.play();
         state.textContent = 'Đang nghe từ 1 giây trước câu ' +
-          (idx + 1) + '. Video sẽ dừng ở cuối câu để bạn điền từ.';
+          (idx + 1) + '. Video dừng sau câu 1 giây để bạn điền từ.';
       } catch (_) {
         playbackIndex = -1;
         state.textContent = 'Không phát lại được câu này. Hãy thử nút Nghe lại.';
@@ -917,8 +935,9 @@
         // The teacher/student explicitly chose a single line to replay.
         const index = playbackIndex;
         const cue = items[index];
-        const outside = t < replayStartTime - 0.45 || t > cue.end + 0.25;
-        const finished = !outside && t >= cue.end - 0.055;
+        const paddedEnd = replayEndOf(index);
+        const outside = t < replayStartTime - 0.45 || t > paddedEnd + 0.25;
+        const finished = !outside && reachedReplayEnd(index, t);
         if ((outside && Date.now() >= seekPendingUntil) || finished) {
           try {
             adapter.pause();
@@ -928,7 +947,7 @@
           if (index === gateIndex && finished && !outside) {
             heardGate = true;
             waitingForAnswer = true;
-            resumeAt = cue.end;
+            resumeAt = paddedEnd;
             updateRowStates();
             showCue(gateIndex);
             state.textContent = 'Đã dừng. Điền từ rồi bấm Kiểm tra hoặc Gợi ý.';
@@ -947,14 +966,15 @@
           if (adapter.isPlaying?.()) {
             try { adapter.pause(); } catch (_) {}
           }
-        } else if (t >= cue.end - 0.055) {
+        } else if (reachedReplayEnd(gateIndex, t)) {
+          const paddedEnd = replayEndOf(gateIndex);
           try {
             adapter.pause();
-            if (t > cue.end + 0.25) adapter.seek(cue.end);
+            if (t > paddedEnd + 0.25) adapter.seek(paddedEnd);
           } catch (_) {}
           heardGate = true;
           waitingForAnswer = true;
-          resumeAt = cue.end;
+          resumeAt = paddedEnd;
           updateRowStates();
           showCue(gateIndex);
           state.textContent = 'Đã dừng. Điền từ rồi bấm Kiểm tra hoặc Gợi ý.';
