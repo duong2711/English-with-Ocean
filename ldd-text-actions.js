@@ -11,6 +11,12 @@
  const PHRASE=/^[A-Za-z]+(?:['’\-][A-Za-z]+)*(?: [A-Za-z]+(?:['’\-][A-Za-z]+)*){1,7}$/;
  const BAD_PARENT='input,textarea,select,option,button,a,[contenteditable],code,pre,script,style,svg,canvas,video,iframe,[role="textbox"],.word-lookup-popup,.ldd-text-action-menu,.ldd-text-action-dialog,.ldd-quick-lookup-overlay';
  let menu=null, dialog=null, toast=null, active=null, selectionTimer=0, lastTouch=0, sequence=0;
+ let sharedClient=null;
+ function dictionaryClient(){
+   if(!sharedClient && window.supabase?.createClient)
+     sharedClient=window.supabase.createClient(ROOT,PUBLISHABLE,{auth:{detectSessionInUrl:false}});
+   return sharedClient;
+ }
  let highlights=[];
  function elementOf(node){return node?.nodeType===1?node:node?.parentElement;}
  function blocked(node) {
@@ -40,7 +46,7 @@
    if(!inLearningArea(r.commonAncestorContainer) ||
       blocked(r.startContainer)||blocked(r.endContainer))return null;
    const text=normalize(sel.toString());
-   if(!text||text.length>100)return null;
+   if(!text||text.length>100||/[À-ỹĐđ]/u.test(text))return null;
    return {text,range:r.cloneRange(),partial:isPartial(r),
      context:contextOf(r.commonAncestorContainer),source:sourceOf(r.commonAncestorContainer)};
  }
@@ -61,6 +67,7 @@
    }
    if(!node||node.nodeType!==3||blocked(node)||!inLearningArea(node))return null;
    const s=node.nodeValue||'';
+   if(/[À-ỹĐđ]/u.test(s))return null;
    const isLetter=c=>/[A-Za-z'’\-]/.test(c||'');
    let index=offset;
    if(!isLetter(s[index]) && isLetter(s[index-1]))index--;
@@ -171,7 +178,7 @@
    showToast('Từ điển đang khởi tạo. Hãy thử lại.');
  }
  async function phraseRequest(phrase,context){
-   const client=window.supabase?.createClient?.(ROOT,PUBLISHABLE,{auth:{detectSessionInUrl:false}});
+   const client=dictionaryClient();
    if(!client)throw Error('Chưa có kết nối tài khoản.');
    const auth=await client.auth.getSession();
    const token=auth.data?.session?.access_token;
@@ -226,7 +233,7 @@
    dlg.querySelector('.ldd-phrase-note').textContent='Không tiết lộ đáp án tiếng Anh. Muốn xem từ cần điền, hãy dùng Gợi ý trong bài nghe.';
    dlg.hidden=false;
    try{
-     const client=window.supabase?.createClient?.(ROOT,PUBLISHABLE,{auth:{detectSessionInUrl:false}});
+     const client=dictionaryClient();
      if(!client)throw Error('Chưa kết nối từ điển.');
      const {data:session}=await client.auth.getSession();
      if(!session?.session?.access_token)throw Error('Hãy đăng nhập để tra nghĩa.');
