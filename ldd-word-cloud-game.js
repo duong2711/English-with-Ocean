@@ -387,9 +387,9 @@ function applyShot(s){
  if(shown===i&&room.status==='playing'){
   const q=room.word_list[i];renderSentence(q,q.en);
   $('ldd-cloud-feedback').textContent=(me&&s.user_id===me.id?'🎯 Bạn nhanh nhất! +1 điểm':'⚡ Một người chơi đã trả lời đúng!')+' '+q.en;
-  revealUntil=Date.now()+650;
+  revealUntil=Date.now()+250;
   clearTimeout(revealTimer);
-  revealTimer=setTimeout(()=>{revealUntil=0;shown=-1;if(opened&&room)render();},650);
+  revealTimer=setTimeout(()=>{revealUntil=0;shown=-1;if(opened&&room)render();},250);
   renderScores();
  }else{shown=-1;render();}
 }
