@@ -447,7 +447,24 @@
         playerWrap.classList.remove('ldd-film-paused');
         recList.replaceChildren();
         const current = providerOf(lesson.video_url).url;
-        const other = catalog.filter(item => providerOf(item.video_url)?.url !== current);
+        const playlistName = safeText(lesson.playlist_name);
+        const siblings = playlistName
+          ? catalog.filter(item => safeText(item.playlist_name) === playlistName)
+            .sort((a, b) => Number(a.playlist_position || 0) - Number(b.playlist_position || 0))
+          : [];
+        const related = siblings.length ? siblings : catalog;
+        const other = related.filter(item => providerOf(item.video_url)?.url !== current);
+        const currentIndex = siblings.findIndex(item => providerOf(item.video_url)?.url === current);
+        recHeading.textContent = siblings.length
+          ? playlistName + ' · ' + (currentIndex + 1) + '/' + siblings.length
+          : 'Xem tiếp';
+        const next = currentIndex >= 0 ? siblings[currentIndex + 1] : null;
+        if (next) {
+          const nextButton = button('▶ Video tiếp theo · ' + String(currentIndex + 2).padStart(2, '0'),
+            'ldd-film-next');
+          nextButton.addEventListener('click', () => select(next));
+          recList.append(nextButton);
+        }
         if (!other.length) {
           recList.append($el('p', 'ldd-film-rec-empty',
             'Thư viện chưa có video khác. Video mới sẽ xuất hiện tại đây khi được thêm vào.'));
@@ -469,14 +486,39 @@
         // Missing scripts get an honest empty state rather than a fake quiz.
         void openStandalone(lesson, playerWrap, isTeacher);
       };
-      catalog.forEach(item => {
+      const drawCard = (item, target) => {
         const card = button('', 'ldd-ent-media-card');
         if (item.id != null) card.dataset.filmId = String(item.id);
         card.append(coverOf(item), $el('strong', 'ldd-film-card-title', item.title || 'Video'),
           $el('small', '', labelOf(item)));
         card.addEventListener('click', () => select(item));
-        grid.append(card);
+        target.append(card);
+      };
+      const playlistGroups = new Map();
+      const standaloneFilms = [];
+      catalog.forEach(item => {
+        const playlistName = safeText(item.playlist_name);
+        if (!playlistName) { standaloneFilms.push(item); return; }
+        if (!playlistGroups.has(playlistName)) playlistGroups.set(playlistName, []);
+        playlistGroups.get(playlistName).push(item);
       });
+      for (const [playlistName, members] of playlistGroups) {
+        members.sort((a, b) =>
+          Number(a.playlist_position || 0) - Number(b.playlist_position || 0));
+        const folder = $el('details', 'ldd-film-playlist');
+        const heading = $el('summary', 'ldd-film-playlist-heading');
+        const cover = coverOf(members[0]);
+        const description = $el('span', 'ldd-film-playlist-details');
+        description.append(
+          $el('strong', 'ldd-film-playlist-title', playlistName),
+          $el('small', 'ldd-film-playlist-count', members.length + ' video · Xem theo thứ tự'));
+        heading.append(cover, description, $el('span', 'ldd-film-playlist-chevron', '⌄'));
+        const contents = $el('div', 'ldd-ent-media-grid ldd-film-playlist-grid');
+        members.forEach(item => drawCard(item, contents));
+        folder.append(heading, contents);
+        grid.append(folder);
+      }
+      standaloneFilms.forEach(item => drawCard(item, grid));
 
       // Enter Phim ảnh at the complete video library.
       // Open the player only after a learner explicitly selects a video.
