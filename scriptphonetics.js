@@ -20062,6 +20062,7 @@ function toggleCompletion(symbolElement) {
         const q = question || (CTEST_DEFAULTS[type] ? CTEST_DEFAULTS[type]() : {});
         const resolvedType = ctestResolveQuestionType(Object.assign({}, q, { type: q.type || type }));
         const card = CTEST_BUILDERS[resolvedType](q);
+        if (!LDDTestSkills.groupQuestion(resolvedType) && resolvedType !== 'unsupported') card.appendChild(LDDTestSkills.controls(q));
         card.dataset.qid = q.id || ctestUid('q');
         const header = card.querySelector(':scope > .ctest-qcard-header');
         header.querySelector('.ctest-qcard-remove-btn').addEventListener('click', () => {
@@ -20098,7 +20099,7 @@ function toggleCompletion(symbolElement) {
                     answer = current.sentence || '';
                 }
                 const replacement = buildQuestionCard('essay', {
-                    id: card.dataset.qid, type: 'essay', prompt, answer,
+                    id: card.dataset.qid, type: 'essay', prompt, answer, skill: current.skill,
                     image_url: current.image_url || '', image_width: current.image_width || null,
                     manual_grading: true
                 });
@@ -20112,6 +20113,8 @@ function toggleCompletion(symbolElement) {
         const fn = CTEST_COLLECTORS[card.dataset.qtype] || collectMcq;
         const data = fn(card);
         data.id = card.dataset.qid;
+        const skill = LDDTestSkills.read(card);
+        if (skill) data.skill = skill;
         return data;
     }
 
@@ -20329,6 +20332,7 @@ function toggleCompletion(symbolElement) {
             if (!totalQuestions) { alert('Hãy thêm ít nhất 1 câu hỏi trước khi giao bài.'); return; }
             const cached = myTestsCache.find(t => t.id === currentEditingTestId);
             const newStatus = (cached && cached.status === 'published') ? 'draft' : 'published';
+            if (newStatus === 'published' && !LDDTestSkills.check(sectionsContainer)) return;
             try {
                 const { error } = await sb.from('custom_tests').update(Object.assign({}, payload, { status: newStatus })).eq('id', currentEditingTestId);
                 if (error) throw error;
@@ -20425,6 +20429,36 @@ function toggleCompletion(symbolElement) {
             (subs || []).forEach(s => { (subsByTest[s.test_id] = subsByTest[s.test_id] || []).push(s); });
 
             listContainer.innerHTML = '';
+            const submitted = (subs || []).filter(sub => sub.status === 'submitted');
+            if (submitted.length) {
+                const picker = document.createElement('select');
+                picker.className = 'news-edit-input';
+                picker.setAttribute('aria-label', 'Tổng hợp kiến thức theo học viên');
+                picker.add(new Option('Tổng hợp kiến thức · Chọn học viên', ''));
+                [...new Set(submitted.map(sub => sub.student_email))].sort().forEach(email => picker.add(new Option(email,email)));
+                const reportHost = document.createElement('div');
+                listContainer.append(picker, reportHost);
+                picker.onchange = () => {
+                    reportHost.replaceChildren();
+                    if (!picker.value) return;
+                    const rows = [];
+                    myTestsCache.forEach(test => {
+                        if (ctestIsArchivedBackup(test)) return;
+                        const sub = (subsByTest[test.id] || []).filter(s => s.status === 'submitted' && s.student_email === picker.value)
+                            .sort((a,b) => Date.parse(b.submitted_at) - Date.parse(a.submitted_at))[0];
+                        if (!sub) return;
+                        let number = 0;
+                        const ctx = {overrides:sub.teacher_overrides || {}, skillRows:rows, testLabel:test.title + ' · '};
+                        (test.sections || []).forEach(section => {
+                            ctx.sectionTitle = section.title || '';
+                            (section.questions || []).forEach(q => {
+                                ctestResultQuestion(q, keyFor(section.id, q.id), sub.answers || {}, 'Câu ' + (++number) + '.', ctx);
+                            });
+                        });
+                    });
+                    reportHost.appendChild(LDDTestSkills.report(rows,'Tổng hợp các bài đã nộp · ' + picker.value));
+                };
+            }
             const publishedGroup = document.createElement('div');
             const draftGroup = document.createElement('div');
             const archiveGroup = document.createElement('div');
@@ -21693,6 +21727,25 @@ function toggleCompletion(symbolElement) {
     }
 
     function ctestResultQuestion(q, keyBase, answers, labelPrefix, ctx) {
+        if (!ctx || !ctx.skillRows) return ctestRenderScored(q, keyBase, answers, labelPrefix, ctx);
+        const type = ctestResolveQuestionType(q);
+        if (LDDTestSkills.groupQuestion(type)) {
+            return ctestRenderScored(q, keyBase, answers, labelPrefix, Object.assign({}, ctx, { skillParent: type }));
+        }
+        const result = ctestRenderScored(q, keyBase, answers, labelPrefix, ctx);
+        const skill = LDDTestSkills.guess(q, ctx.sectionTitle, ctx.skillParent);
+        if (ctx.showSkills) {
+            const label = document.createElement('small');
+            label.className = 'ctest-skill-label';
+            label.textContent = skill ? skill.category + ' · ' + skill.topic : 'Chưa phân loại';
+            result.el.prepend(label);
+        }
+        if (type !== 'essay' || q.answer || ctx.overrides[keyBase] || ctestEssayNeedsManualGrading(q)) {
+            ctx.skillRows.push({skill, label: (ctx.testLabel || '') + labelPrefix.trim(), correct:result.correct, total:result.total});
+        }
+        return result;
+    }
+    function ctestRenderScored(q, keyBase, answers, labelPrefix, ctx) {
         switch (ctestResolveQuestionType(q)) {
             case 'mcq': return ctestResultMcq(q, keyBase, answers, labelPrefix, ctx);
             case 'mcq_multi': return ctestResultMcqMulti(q, keyBase, answers, labelPrefix, ctx);
@@ -21818,8 +21871,11 @@ function toggleCompletion(symbolElement) {
             }
         };
 
+        ctx.skillRows = [];
+        ctx.showSkills = true;
         let qNum = 0;
         (test.sections || []).forEach(section => {
+            ctx.sectionTitle = section.title || '';
             const secEl = document.createElement('div');
             secEl.className = 'ctest-take-section';
             secEl.innerHTML = '<div class="ctest-take-section-title">' + ctestEscape(section.title || '') + '</div>';
@@ -21838,6 +21894,7 @@ function toggleCompletion(symbolElement) {
             });
             resultSectionsEl.appendChild(secEl);
         });
+        resultSectionsEl.prepend(LDDTestSkills.report(ctx.skillRows, 'Kết quả theo điểm kiến thức'));
     }
 
     // Chuyển sang mục khác trong ứng dụng (vd "Từ vựng", "Ngữ pháp"...) khi đang
