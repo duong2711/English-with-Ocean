@@ -215,7 +215,7 @@ test('teacher can replay any subtitle while students remain gated in order', () 
   assert.match(exercise, /const locked = !teacherPreview && gateIndex >= 0 && idx > gateIndex;/);
   assert.match(exercise, /row\.seek\.disabled = locked;/);
   assert.match(exercise, /if \(!teacherPreview && gateIndex >= 0 && idx > gateIndex\) return;/);
-  assert.match(exercise, /const enabled = idx === gateIndex;/);
+  assert.match(exercise, /const enabled = idx === gateIndex && !awaitingContinue;/);
   assert.match(exercise, /if \(busy \|\| answers\.has\(field\.key\) \|\| idx !== gateIndex\) return;/);
   assert.match(exercise, /if \(index === gateIndex && finished && !outside\) \{/);
   assert.match(exercise, /adapter\.pause\(\);\s*adapter\.seek\((?:replayStartOf\(idx\)|replayStartTime)\);\s*adapter\.play\(\);/);
