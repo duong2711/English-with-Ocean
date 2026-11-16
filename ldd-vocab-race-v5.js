@@ -3,7 +3,7 @@
    2–4 học viên · 20 lượt · 30 giây/lượt
    - Chọn làn -> LAO LÊN ĂN TỪ
    - Chướng ngại vật mỗi 5 giây
-   - Hết giờ: pause đồng bộ 6 giây rồi mới sang vòng tiếp
+   - Giữa các vòng: hiển thị kết quả đồng bộ 1,2 giây rồi tiếp tục
    - Mặt đường chuyển động bằng requestAnimationFrame trên mọi thiết bị
    - Đồng hồ dùng thời gian server Supabase để tránh lệch PC/tablet/mobile
    ============================================================= */
@@ -14,7 +14,7 @@
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl3cWJha3NtbXR2d2JvamNnc2RkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxNjc3NTAsImV4cCI6MjA5Nzc0Mzc1MH0.vhgt7cB6w2elm-MXY57U_wJtYkJQHDFAEsJwAArOjhQ';
     const TEACHER_EMAIL = 'lddbaiu@gmail.com';
     const ROUND_MS = 30000;
-    const PAUSE_MS = 6000;
+    const PAUSE_MS = 1200;
     const OBSTACLE_SPAWN_MS = 5000;
     const OBSTACLE_WARNING_MS = 2000;
     const OBSTACLE_FALL_MS = 4000;
@@ -22,8 +22,8 @@
     const MAX_OBSTACLE_WAVE = 5;
     // Host xử lý các RPC "trọng tài" ngay lập tức. Nếu host mất mạng/đóng tab,
     // các máy còn lại lần lượt tiếp quản sau một khoảng grace nhỏ, không cần heartbeat.
-    const REFEREE_FAILOVER_BASE_MS = 2000;
-    const REFEREE_FAILOVER_STEP_MS = 900;
+    const REFEREE_FAILOVER_BASE_MS = 850;
+    const REFEREE_FAILOVER_STEP_MS = 350;
     const PLAYER_COLORS = ['#4f6ef7', '#ef4444', '#10b981', '#f59e0b'];
 
     if (!window.supabase || !window.supabase.createClient) return;
@@ -608,7 +608,7 @@
         const id = room.id;
         const epoch = attachEpoch;
         // Rare missed Realtime events: a narrow REST check instead of 900ms polling.
-        const delay = roomReady && playerReady ? 3500 : 3000;
+        const delay = roomReady && playerReady ? 1500 : 1200;
         roomLobbySafetyTimer = setTimeout(async () => {
             if (epoch !== attachEpoch || !room || room.id !== id || room.status !== 'lobby') return;
             if (!document.hidden) {
