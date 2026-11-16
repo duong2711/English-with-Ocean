@@ -308,3 +308,25 @@ test('season playlists keep their ordered clips together without breaking standa
   assert.match(css, /\.ldd-film-playlist\s*\{[^}]*grid-column:1\/-1;/s);
   assert.match(css, /\.ldd-film-next\s*\{[^}]*min-height:44px;/s);
 });
+
+test('replaying completed film cues continues through answered blanks to the next unfinished cue', () => {
+  const exercise = js.slice(js.indexOf('async function renderCaptionExercise('), js.indexOf('async function openStandalone('));
+  assert.match(exercise, /let gateIndex = gradedIndices\.find\(idx => !isComplete\(idx\)\) \?\? -1;/);
+  assert.match(exercise, /playCue = idx => \{[\s\S]*?if \(isComplete\(idx\)\) \{[\s\S]*?playbackIndex = -1;[\s\S]*?adapter\.seek\(items\[idx\]\.start\);\s*adapter\.play\(\);[\s\S]*?return;/);
+  assert.match(exercise, /continuousReplayTarget = items\[idx\]\.start;/);
+  assert.match(exercise, /if \(Number\.isFinite\(continuousReplayTarget\)\) \{/);
+  assert.match(exercise, /else if \(gateIndex >= 0\) \{/);
+});
+
+test('hint reveal requires explicit learner confirmation before playback resumes', () => {
+  const exercise = js.slice(js.indexOf('async function renderCaptionExercise('), js.indexOf('async function openStandalone('));
+  assert.match(exercise, /const hintedIndices = new Set\(\);/);
+  assert.match(exercise, /if \(askHint\) hintedIndices\.add\(idx\);/);
+  assert.match(exercise, /const requiresConfirmation = hintedIndices\.has\(idx\);/);
+  assert.match(exercise, /if \(requiresConfirmation\) \{[\s\S]*?awaitingContinue = true;[\s\S]*?adapter\.pause\(\);[\s\S]*?continueButton\.hidden = false;/);
+  assert.match(exercise, /const continueButton = button\('▶ Tiếp tục video', 'ldd-film-continue'\)/);
+  assert.match(exercise, /continueButton\.addEventListener\('click', \(\) => \{[\s\S]*?awaitingContinue = false;[\s\S]*?adapter\.play\(\);/);
+  assert.match(exercise, /if \(awaitingContinue\) \{[\s\S]*?adapter\.pause\(\);[\s\S]*?return;/);
+  assert.match(exercise, /const enabled = idx === gateIndex && !awaitingContinue;/);
+  assert.match(css, /\.ldd-film-continue\[hidden\] \{display:none!important\}/);
+});
