@@ -46,8 +46,8 @@ test('no-lookup tests remain excluded, and phrase translation never invokes pron
 test('shared collocations render in existing vocabulary category and assets load globally',()=>{
  assert.match(grammar,/from\('collocation_bank'\)/);
  assert.match(grammar,/select\('phrase,meaning_vi'\)/);
- assert.match(boot,/ldd-text-actions\.js\?v=20261116-text-actions1/);
+ assert.match(boot,/ldd-text-actions\.js\?v=20261116-text-actions2/);
  assert.match(boot,/ldd-text-actions\.css\?v=20261116-text-actions1/);
  assert.match(boot,/ldd-ui-vocab-grammar\.js\?v=20261116-shared-collocations1/);
- assert.match(page,/ldd-ui-upgrade\.js\?v=20261116-text-actions1/);
+ assert.match(page,/ldd-ui-upgrade\.js\?v=20261116-text-actions2/);
 });
