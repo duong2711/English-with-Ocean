@@ -124,8 +124,8 @@ test('film autoplays from zero and pauses only after the first unanswered cloze 
   assert.match(exercise, /if \(gateIndex >= 0\) showCue\(gateIndex\);/);
   assert.doesNotMatch(exercise, /focusGate\(\);/);
   assert.match(exercise, /timer = setInterval\(\(\) => \{/);
-  assert.match(exercise, /else if \(t >= cue\.end - 0\.055\) \{/);
-  assert.match(exercise, /heardGate = true;\s*waitingForAnswer = true;\s*resumeAt = cue\.end;/);
+  assert.match(exercise, /else if \(reachedReplayEnd\(gateIndex, t\)\) \{/);
+  assert.match(exercise, /heardGate = true;\s*waitingForAnswer = true;\s*resumeAt = paddedEnd;/);
   assert.match(exercise, /try \{ adapter\.seek\(0\); adapter\.play\(\); \}/);
   assert.ok(exercise.indexOf('timer = setInterval(') < exercise.lastIndexOf('adapter.seek(0); adapter.play();'),
     'playback begins only after pause gating has been installed');
@@ -265,7 +265,7 @@ test('YouTube hides native navigation and attempts autoplay, with a one-tap fall
   assert.match(player, /blockedPlayButton = button\('▶ Nhấn để phát video', 'ldd-film-autoplay-fallback'\)/);
   assert.match(player, /if \(wantsPlay\) \{\s*player\.playVideo\(\);/);
   assert.match(player, /play: \(\) => \{ wantsPlay = true; if \(player\) player\.playVideo\(\); else start\(\); \}/);
-  assert.match(exercise, /if \(playbackIndex >= 0\) \{[\s\S]*?const finished = !outside && t >= cue\.end - 0\.055;/);
+  assert.match(exercise, /if \(playbackIndex >= 0\) \{[\s\S]*?const finished = !outside && reachedReplayEnd\(index, t\);/);
   assert.match(exercise, /else if \(gateIndex >= 0\) \{/);
   assert.match(watch, /if \(hasScript\) \{\s*await renderCaptionExercise\(lesson, captionPanel, adapter, seq, teacherPreview\);\s*\} else \{\s*\/\/ A video without a graded script also starts on selection\.\s*adapter\.play\(\);/);
   assert.match(css, /\.ldd-film-autoplay-fallback\s*\{/);
@@ -333,13 +333,39 @@ test('hint reveal requires explicit learner confirmation before playback resumes
 
 test('film replay uses exactly one second of pre-roll before the chosen caption', () => {
   const exercise = js.slice(js.indexOf('async function renderCaptionExercise('), js.indexOf('async function openStandalone('));
-  assert.match(exercise, /const replayStartOf = idx => Math\.max\(0, items\[idx\]\.start - 1\);/);
+  assert.match(exercise, /const replayStartOf = idx => Math\.max\(0, items\[idx\]\.start - CUE_PADDING_SECONDS\);/);
   assert.doesNotMatch(exercise, /items\[idx - 1\]\.start/);
   assert.match(exercise, /continuousReplayTarget = replayStartOf\(idx\);/);
   assert.match(exercise, /adapter\.seek\(replayStartOf\(idx\)\);/);
   assert.match(exercise, /replayStartTime = replayStartOf\(idx\);/);
   assert.match(exercise, /adapter\.seek\(replayStartTime\);/);
-  assert.match(exercise, /const outside = t < replayStartTime - 0\.45 \|\| t > cue\.end \+ 0\.25;/);
+  assert.match(exercise, /const outside = t < replayStartTime - 0\.45 \|\| t > paddedEnd \+ 0\.25;/);
   assert.match(exercise, /if \(outside\) adapter\.seek\(replayStartTime\);/);
   assert.match(exercise, /if \(index === gateIndex && finished && !outside\) \{/);
+});
+
+test('every film cue plays one second before and after its original timestamps', () => {
+  const exercise = js.slice(js.indexOf('async function renderCaptionExercise('), js.indexOf('async function openStandalone('));
+  const helperStart = exercise.indexOf('    const CUE_PADDING_SECONDS = 1;');
+  const helperEnd = exercise.indexOf('    playCue = idx => {', helperStart);
+  assert.ok(helperStart >= 0 && helperEnd > helperStart);
+  const makeHelpers = new Function('items', 'adapter',
+    exercise.slice(helperStart, helperEnd) +
+    '\nreturn { replayStartOf, replayEndOf, reachedReplayEnd };');
+  const source = [{start: 0, end: 3}, {start: 12, end: 16}, {start: 17, end: 20}];
+  const adapter = {getDuration: () => 20.4, isPlaying: () => true};
+  const timing = makeHelpers(source, adapter);
+  assert.equal(timing.replayStartOf(0), 0, 'the first cue never seeks before zero');
+  assert.equal(timing.replayStartOf(1), 11, 'one second of lead-in');
+  assert.equal(timing.replayEndOf(1), 17, 'one second of tail audio');
+  assert.equal(timing.replayEndOf(2), 20.4, 'never play past the real video end');
+  assert.equal(timing.reachedReplayEnd(1, 16.8), false);
+  assert.equal(timing.reachedReplayEnd(1, 16.96), true);
+  adapter.isPlaying = () => false;
+  assert.equal(timing.reachedReplayEnd(2, 20.12), true, 'end of video releases final answer');
+  assert.match(exercise, /const paddedEnd = replayEndOf\(index\);/);
+  assert.match(exercise, /const finished = !outside && reachedReplayEnd\(index, t\);/);
+  assert.match(exercise, /resumeAt = paddedEnd;/);
+  assert.match(exercise, /else if \(reachedReplayEnd\(gateIndex, t\)\) \{/);
+  assert.match(exercise, /if \(t > paddedEnd \+ 0\.25\) adapter\.seek\(paddedEnd\);/);
 });
