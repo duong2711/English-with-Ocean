@@ -603,8 +603,7 @@
       const item = $el('li', 'ldd-film-caption-item ldd-film-caption-exercise');
       const heading = $el('div', 'ldd-film-caption-line-heading');
       const seek = button('▶ Nghe lại · ' + padTime(Number(cue.start)), 'ldd-film-caption-seek');
-      seek.title = 'Phát trọn đoạn ngay trước và câu ' + (idx + 1) +
-        ' để không bị mất đầu câu';
+      seek.title = 'Phát lại từ 1 giây trước câu ' + (idx + 1);
       seek.setAttribute('aria-label', 'Nghe lại câu ' + (idx + 1));
       seek.addEventListener('click', () => playCue(idx));
       const number = $el('span', 'ldd-film-caption-number', 'Câu ' + (idx + 1));
@@ -833,11 +832,9 @@
       activeIndex = idx;
       row.classList.add('is-current');
     };
-    // Include the entire preceding subtitle cue (not an arbitrary few seconds),
-    // so replay never starts halfway through a spoken sentence.
-    const replayStartOf = idx => idx > 0
-      ? Math.max(0, items[idx - 1].start)
-      : 0;
+    // Give the listener exactly one second of lead-in before the chosen cue.
+    // Never seek before the beginning of the video.
+    const replayStartOf = idx => Math.max(0, items[idx].start - 1);
     playCue = idx => {
       if (seq !== generation || idx < 0 || idx >= items.length) return;
       // Only teachers can preview future segments without unlocking their answers.
@@ -862,7 +859,7 @@
           adapter.seek(replayStartOf(idx));
           adapter.play();
           state.textContent = gateIndex >= 0
-            ? 'Đang phát từ đoạn trước, qua các câu đã hoàn thành đến câu chưa điền tiếp theo.'
+            ? 'Đang phát từ 1 giây trước câu đã chọn, đến câu chưa điền tiếp theo.'
             : 'Các ô trống đều đã hoàn thành. Video sẽ phát liền mạch.';
         } catch (_) {
           state.textContent = 'Không phát lại được. Hãy thử nút Nghe lại.';
@@ -880,8 +877,8 @@
         adapter.pause();
         adapter.seek(replayStartTime);
         adapter.play();
-        state.textContent = 'Đang nghe từ đoạn trước đến hết câu ' +
-          (idx + 1) + '. Video sẽ tự dừng để bạn điền từ.';
+        state.textContent = 'Đang nghe từ 1 giây trước câu ' +
+          (idx + 1) + '. Video sẽ dừng ở cuối câu để bạn điền từ.';
       } catch (_) {
         playbackIndex = -1;
         state.textContent = 'Không phát lại được câu này. Hãy thử nút Nghe lại.';
