@@ -290,9 +290,9 @@ test('teacher can rename a film directly beside the title without editing subtit
   assert.match(css, /\.ldd-film-title-status/);
   const bootstrap = fs.readFileSync(path.resolve(__dirname, '../ldd-ui-upgrade.js'), 'utf8');
   const page = fs.readFileSync(path.resolve(__dirname, '../index.html'), 'utf8');
-  assert.match(bootstrap, /ldd-film-cloze\.js\?v=20261116-young-sheldon-playlist1/);
-  assert.match(bootstrap, /ldd-film-cloze\.css\?v=20261116-young-sheldon-playlist1/);
-  assert.match(page, /ldd-ui-upgrade\.js\?v=20261116-film-playlist/);
+  assert.match(bootstrap, /ldd-film-cloze\.js\?v=20261116-film-hint-confirm2/);
+  assert.match(bootstrap, /ldd-film-cloze\.css\?v=20261116-film-hint-confirm2/);
+  assert.match(page, /ldd-ui-upgrade\.js\?v=20261116-film-hint-confirm2/);
 });
 
 
