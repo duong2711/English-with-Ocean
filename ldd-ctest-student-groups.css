@@ -1,0 +1,42 @@
+/* Teacher view: private tests grouped by student, newest assignment first. */
+#ctest-list-container .ctest-student-group-filter {
+  display:block;width:min(100%,450px);min-height:42px;margin:14px 0 16px;padding:9px 12px;
+  border:1px solid var(--border-color,#ccd4e2);border-radius:10px;
+  background:var(--card-bg,#fff);color:var(--text-color,#263346);
+}
+#ctest-list-container .ctest-student-group {
+  margin:0 0 12px;border:1px solid var(--border-color,#d6deeb);
+  border-radius:12px;background:var(--card-bg,#fff);overflow:hidden;
+}
+#ctest-list-container .ctest-student-group[hidden] { display:none!important; }
+#ctest-list-container .ctest-student-group-summary {
+  display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
+  padding:14px 16px;cursor:pointer;list-style-position:inside;
+}
+#ctest-list-container .ctest-student-group-summary strong {
+  font-size:15px;overflow-wrap:anywhere;
+}
+#ctest-list-container .ctest-student-group-counts {
+  font-size:13px;color:var(--text-muted,#68758a);font-weight:500;
+}
+#ctest-list-container .ctest-student-group[open] > .ctest-student-group-summary {
+  border-bottom:1px solid var(--border-color,#d6deeb);
+}
+#ctest-list-container .ctest-student-group-tests {
+  display:grid;gap:9px;padding:12px;
+}
+#ctest-list-container .ctest-student-group .ctest-test-row {
+  margin:0;min-width:0;
+}
+#ctest-list-container .ctest-student-group .ctest-test-row-main{
+  min-width:0;
+}
+@media(max-width:600px) {
+  #ctest-list-container .ctest-student-group-summary {
+    display:block;padding:12px;
+  }
+  #ctest-list-container .ctest-student-group-counts{
+    display:block;margin-top:6px;
+  }
+  #ctest-list-container .ctest-student-group-tests{padding:8px;gap:8px}
+}
