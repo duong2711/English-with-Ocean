@@ -67,7 +67,7 @@
         ensureScript('ldd-entertainment-data-script', 'ldd-entertainment-data.js?v=20261027-wimpy1');
         ensureScript('ldd-entertainment-script', 'ldd-entertainment.js?v=20261029-filmcloze1');
         ensureScript('ldd-film-timing-script', 'ldd-film-timing.js?v=20261029-transcript-import1');
-        ensureScript('ldd-film-cloze-script', 'ldd-film-cloze.js?v=20261116-vi-focus2');
+        ensureScript('ldd-film-cloze-script', 'ldd-film-cloze.js?v=20261116-vi-focus3');
         ensureScript('ldd-text-actions-script', 'ldd-text-actions.js?v=20261116-text-actions2');
     }
 
