@@ -17,3 +17,6 @@ mark.ldd-user-mark{background:rgba(255,197,41,.68);color:inherit;border-radius:2
 .ldd-vi-cloze-focus:focus-visible{outline:2px solid #2580ed;outline-offset:2px}
 #tab-giai-tri .ldd-film-caption-translation .ldd-vi-cloze-focus{color:#124fa2}
 @media(max-width:600px){.ldd-text-action-menu button{font-size:13px;padding:10px}.ldd-text-action-menu{max-width:calc(100vw - 12px)}}
+
+/* Keep native press-and-drag text handles available on phones. */
+#inside :is(.tappable-word,.ldd-exam-lookup-word),.ldd-comic-overlay .tappable-word{user-select:text;-webkit-user-select:text;touch-action:auto!important}
