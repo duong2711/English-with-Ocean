@@ -146,7 +146,7 @@ test('guided listening visually locks future captions and leaves replay availabl
 test('correct answer resumes video naturally without skipping intervening music or dialogue', () => {
   const exercise = js.slice(js.indexOf('async function renderCaptionExercise('), js.indexOf('async function openStandalone('));
   assert.match(exercise, /gateIndex = gradedIndices\.find\(i => !isComplete\(i\)\) \?\? -1;/);
-  assert.match(exercise, /if \(Math\.abs\(Number\(adapter\.getTime\(\)\) - resumeAt\) > 0\.35\)\s*adapter\.seek\(resumeAt\);\s*adapter\.play\(\);/);
+  assert.match(exercise, /const from = resumeFrom\(\);\s*if \(Math\.abs\(Number\(adapter\.getTime\(\)\) - from\) > 0\.35\)\s*adapter\.seek\(from\);\s*adapter\.play\(\);/);
   const completion = exercise.slice(exercise.indexOf('if (isComplete(idx) && idx === gateIndex) {'),
     exercise.indexOf('} catch (err)', exercise.indexOf('if (isComplete(idx) && idx === gateIndex) {')));
   assert.doesNotMatch(completion, /playCue\(gateIndex\)|adapter\.seek\(items\[gateIndex\]\.start\)/);
@@ -349,15 +349,18 @@ test('every film cue plays one second before and after its original timestamps',
   const helperStart = exercise.indexOf('    const CUE_PADDING_SECONDS = 1;');
   const helperEnd = exercise.indexOf('    playCue = idx => {', helperStart);
   assert.ok(helperStart >= 0 && helperEnd > helperStart);
-  const makeHelpers = new Function('items', 'adapter',
+  const makeHelpers = new Function('items', 'adapter', 'gateIndex', 'resumeAt',
     exercise.slice(helperStart, helperEnd) +
-    '\nreturn { replayStartOf, replayEndOf, reachedReplayEnd };');
+    '\nreturn { replayStartOf, replayEndOf, reachedReplayEnd, resumeFrom };');
   const source = [{start: 0, end: 3}, {start: 12, end: 16}, {start: 17, end: 20}];
   const adapter = {getDuration: () => 20.4, isPlaying: () => true};
-  const timing = makeHelpers(source, adapter);
+  const timing = makeHelpers(source, adapter, 1, 16);
   assert.equal(timing.replayStartOf(0), 0, 'the first cue never seeks before zero');
   assert.equal(timing.replayStartOf(1), 11, 'one second of lead-in');
   assert.equal(timing.replayEndOf(1), 17, 'one second of tail audio');
+  assert.equal(timing.resumeFrom(), 11, 'adjacent cue resumes at its one-second lead-in');
+  assert.equal(makeHelpers(source, adapter, 2, 3).resumeFrom(), 3, 'distant next cue never jumps forward');
+  assert.equal(makeHelpers(source, adapter, -1, 16).resumeFrom(), 16, 'finished lessons continue normally');
   assert.equal(timing.replayEndOf(2), 20.4, 'never play past the real video end');
   assert.equal(timing.reachedReplayEnd(1, 16.8), false);
   assert.equal(timing.reachedReplayEnd(1, 16.96), true);
