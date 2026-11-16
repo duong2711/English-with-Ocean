@@ -20459,16 +20459,30 @@ function toggleCompletion(symbolElement) {
                     reportHost.appendChild(LDDTestSkills.report(rows,'Tổng hợp các bài đã nộp · ' + picker.value));
                 };
             }
-            const publishedGroup = document.createElement('div');
-            const draftGroup = document.createElement('div');
+
+            // Teacher-facing test library: group assignments by learner.
+            // A test assigned to multiple learners appears in both groups,
+            // but its original test ID and all submissions remain unchanged.
+            const learnerGroups = new Map();
+            const unassignedGroup = document.createElement('div');
             const archiveGroup = document.createElement('div');
-            // Đề đang được sử dụng hiện trước; trong mỗi nhóm, đề mới sửa đứng trước.
-            const orderedTests = myTestsCache.slice().sort((a, b) => {
-                const aa = Date.parse(a.updated_at || a.created_at || '') || 0;
-                const bb = Date.parse(b.updated_at || b.created_at || '') || 0;
-                return bb - aa;
-            });
+            // "Newest first" uses created_at (not updated_at): editing an older
+            // test must not unexpectedly move it ahead of newly assigned tests.
+            const orderedTests = myTestsCache.slice().sort((a,b) =>
+                (Date.parse(b.created_at || '') || 0) - (Date.parse(a.created_at || '') || 0)
+                || String(b.id || '').localeCompare(String(a.id || '')));
             orderedTests.forEach(test => {
+                const archived = ctestIsArchivedBackup(test);
+                const recipients = [...new Set((test.student_emails || []).map(e =>
+                    String(e || '').trim().toLowerCase()).filter(Boolean))];
+                const targets = archived ? [null] : (recipients.length ? recipients : [null]);
+                targets.forEach(studentEmail => {
+                    const assignedEmails = studentEmail ? [studentEmail] : (archived ? recipients : []);
+                    const createdAt = test.created_at ? new Date(test.created_at) : null;
+                    const createdLabel = createdAt && Number.isFinite(createdAt.getTime())
+                        ? 'Tạo ' + new Intl.DateTimeFormat('vi-VN', {day:'2-digit',month:'2-digit',year:'numeric',
+                            timeZone:'Asia/Ho_Chi_Minh'}).format(createdAt)
+                        : '';
                 const row = document.createElement('div');
                 row.className = 'ctest-test-row';
                 const totalQ = (test.sections || []).reduce((sum, s) => sum + (s.questions || []).length, 0);
@@ -20481,17 +20495,17 @@ function toggleCompletion(symbolElement) {
                     '<div><div class="ctest-test-title">' + ctestEscape(test.title || '(chưa có tiêu đề)') + '</div>' +
                     '<div class="ctest-test-meta">' + totalQ + ' câu hỏi · ' +
                     (test.duration_minutes ? test.duration_minutes + ' phút' : 'không giới hạn giờ') + ' · ' +
-                    (test.student_emails || []).length + ' học viên được giao</div></div>' +
+                    (test.student_emails || []).length + ' học viên được giao · ' + createdLabel + '</div></div>' +
                     statusBadge;
                 main.addEventListener('click', () => openEditorForTest(test));
                 row.appendChild(main);
 
                 const studentSubs = subsByTest[test.id] || [];
-                if ((test.student_emails || []).length) {
+                if (assignedEmails.length) {
                     const statusList = document.createElement('div');
                     statusList.className = 'ctest-student-status-list';
-                    test.student_emails.forEach(email => {
-                        const sub = studentSubs.find(s => s.student_email === email);
+                    assignedEmails.forEach(email => {
+                        const sub = studentSubs.filter(s => s.student_email === email).sort((a,b) => Date.parse(b.updated_at || b.submitted_at || b.started_at || 0) - Date.parse(a.updated_at || a.submitted_at || a.started_at || 0))[0];
                         const item = document.createElement('div');
                         item.className = 'ctest-student-status-item';
 
@@ -20548,21 +20562,76 @@ function toggleCompletion(symbolElement) {
                     });
                     row.appendChild(statusList);
                 }
-                const group = ctestIsArchivedBackup(test) ? archiveGroup
-                    : test.status === 'published' ? publishedGroup : draftGroup;
-                group.appendChild(row);
+                    if (archived) {
+                        archiveGroup.appendChild(row);
+                    } else if (!studentEmail) {
+                        unassignedGroup.appendChild(row);
+                    } else {
+                        let group = learnerGroups.get(studentEmail);
+                        if (!group) {
+                            group = { rows: document.createElement('div'), total:0, completed:0, pending:0, drafts:0 };
+                            learnerGroups.set(studentEmail, group);
+                        }
+                        group.rows.appendChild(row);
+                        group.total++;
+                        if (test.status === 'published') {
+                            const sub = (subsByTest[test.id] || []).filter(s => s.student_email === studentEmail)
+                                .sort((a,b) => Date.parse(b.updated_at || b.submitted_at || b.started_at || 0) -
+                                    Date.parse(a.updated_at || a.submitted_at || a.started_at || 0))[0];
+                            if (sub && sub.status === 'submitted') group.completed++;
+                            else group.pending++;
+                        } else group.drafts++;
+                    }
+                });
             });
 
-            function appendActiveGroup(title, group) {
-                if (!group.children.length) return;
-                const heading = document.createElement('div');
-                heading.className = 'ctest-list-group-heading';
-                heading.textContent = title + ' (' + group.children.length + ')';
-                listContainer.appendChild(heading);
-                listContainer.appendChild(group);
+            const learnerFilter = document.createElement('select');
+            learnerFilter.className = 'news-edit-input ctest-student-group-filter';
+            learnerFilter.setAttribute('aria-label', 'Lọc bài kiểm tra riêng theo học viên');
+            learnerFilter.add(new Option('Tất cả học viên · Bài mới nhất ở trên', ''));
+            const groupNodes = [];
+            [...learnerGroups.entries()].forEach(([email,info],index) => {
+                learnerFilter.add(new Option(email,email));
+                const folder = document.createElement('details');
+                folder.className = 'ctest-student-group';
+                folder.dataset.studentEmail = email;
+                folder.open = index === 0;
+                const summary = document.createElement('summary');
+                summary.className = 'ctest-student-group-summary';
+                const name = document.createElement('strong');
+                name.textContent = /^hv\d+@/i.test(email)
+                    ? email.split('@')[0].toUpperCase() + ' · ' + email : email;
+                const counts = document.createElement('span');
+                counts.className = 'ctest-student-group-counts';
+                counts.textContent = info.total + ' bài · ' + info.completed +
+                    ' đã nộp · ' + info.pending + ' chưa xong' +
+                    (info.drafts ? ' · ' + info.drafts + ' nháp' : '');
+                summary.append(name,counts);
+                info.rows.className = 'ctest-student-group-tests';
+                folder.append(summary,info.rows);
+                listContainer.appendChild(folder);
+                groupNodes.push(folder);
+            });
+            if (learnerGroups.size) {
+                listContainer.insertBefore(learnerFilter, groupNodes[0]);
+                learnerFilter.addEventListener('change', () => {
+                    groupNodes.forEach(folder => {
+                        folder.hidden = Boolean(learnerFilter.value && folder.dataset.studentEmail !== learnerFilter.value);
+                        if (learnerFilter.value === folder.dataset.studentEmail) folder.open = true;
+                    });
+                    if (unassignedFolder) unassignedFolder.hidden = Boolean(learnerFilter.value);
+                });
             }
-            appendActiveGroup('📢 BÀI ĐANG GIAO', publishedGroup);
-            appendActiveGroup('📝 BẢN NHÁP', draftGroup);
+            let unassignedFolder = null;
+            if (unassignedGroup.children.length) {
+                unassignedFolder = document.createElement('details');
+                unassignedFolder.className = 'ctest-student-group';
+                const summary = document.createElement('summary');
+                summary.className = 'ctest-student-group-summary';
+                summary.textContent = '📝 Chưa gán học viên · ' + unassignedGroup.children.length + ' bài';
+                unassignedFolder.append(summary,unassignedGroup);
+                listContainer.appendChild(unassignedFolder);
+            }
             if (archiveGroup.children.length) {
                 const archive = document.createElement('details');
                 archive.className = 'ctest-archive-group';
@@ -20572,9 +20641,8 @@ function toggleCompletion(symbolElement) {
                 archive.appendChild(summary);
                 const info = document.createElement('p');
                 info.className = 'ctest-archive-note';
-                info.textContent = 'Các bản sao này chỉ dùng để khôi phục. Muốn sửa bài HV2 hiện tại, hãy chọn bài có nhãn “Đang giao bài” ở phía trên.';
-                archive.appendChild(info);
-                archive.appendChild(archiveGroup);
+                info.textContent = 'Các bản sao lưu chỉ dùng để khôi phục, không tính vào danh sách bài đang giao của học viên.';
+                archive.append(info,archiveGroup);
                 listContainer.appendChild(archive);
             }
         } catch (err) {
