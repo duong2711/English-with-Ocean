@@ -563,6 +563,10 @@
     let playbackIndex = -1;
     let waitingForAnswer = false;
     let heardGate = false;
+    // A successful hint requires an explicit Continue click before advancing.
+    // Remember hinted multi-blank lines until all their blanks are completed.
+    const hintedIndices = new Set();
+    let awaitingContinue = false;
     let seekPendingUntil = 0;
     let resumeAt = 0;
     let updateRowStates = () => {};
@@ -692,6 +696,7 @@
               score_change: data.already_done ? Number(data.total_delta) || 0 : Number(data.delta) || 0,
               status: data.status
             });
+            if (askHint) hintedIndices.add(idx);
             field.input.value = data.word || (askHint ? '✓' : field.input.value);
             field.input.disabled = true;
             field.input.classList.add('done');
@@ -704,25 +709,39 @@
             document.dispatchEvent(new Event('ldd:today-refresh'));
             document.dispatchEvent(new Event('ldd:vocab-senses-updated'));
             if (isComplete(idx) && idx === gateIndex) {
+              const requiresConfirmation = hintedIndices.has(idx);
+              hintedIndices.delete(idx);
               gateIndex = gradedIndices.find(i => !isComplete(i)) ?? -1;
-              waitingForAnswer = false;
               heardGate = false;
-              updateRowStates();
               playbackIndex = -1;
-              // Continue from the end of the answered line, including any
-              // intervening dialogue or music: never jump to the next cue.
-              try {
-                if (Math.abs(Number(adapter.getTime()) - resumeAt) > 0.35)
-                  adapter.seek(resumeAt);
-                adapter.play();
-              } catch (_) {
-                state.textContent = 'Nhấn phát để tiếp tục video.';
-              }
-              if (gateIndex >= 0) {
-                showCue(gateIndex);
-                state.textContent = 'Đang phát tiếp đến câu có ô trống tiếp theo.';
+              if (requiresConfirmation) {
+                // Reveal the answer and leave the video paused; the student
+                // must explicitly resume, even if this was the final blank.
+                awaitingContinue = true;
+                waitingForAnswer = true;
+                try { adapter.pause(); } catch (_) {}
+                continueButton.hidden = false;
+                updateRowStates();
+                state.textContent = 'Đã dùng Gợi ý. Nhấn Tiếp tục video khi bạn đã sẵn sàng.';
+                feedback.textContent += ' · Nhấn Tiếp tục video để phát tiếp.';
               } else {
-                state.textContent = 'Đã hoàn thành bài luyện nghe. Video tiếp tục đến hết.';
+                waitingForAnswer = false;
+                updateRowStates();
+                // Continue from the end of the answered line, including any
+                // intervening dialogue or music: never jump to the next cue.
+                try {
+                  if (Math.abs(Number(adapter.getTime()) - resumeAt) > 0.35)
+                    adapter.seek(resumeAt);
+                  adapter.play();
+                } catch (_) {
+                  state.textContent = 'Nhấn phát để tiếp tục video.';
+                }
+                if (gateIndex >= 0) {
+                  showCue(gateIndex);
+                  state.textContent = 'Đang phát tiếp đến câu có ô trống tiếp theo.';
+                } else {
+                  state.textContent = 'Đã hoàn thành bài luyện nghe. Video tiếp tục đến hết.';
+                }
               }
             }
           } catch (err) {
@@ -749,7 +768,35 @@
     // Listeners can replay each caption, but no answer/score is recorded.
     const state = panel.querySelector('.ldd-film-caption-state');
     state.setAttribute('aria-live', 'polite');
-    panel.append(tally, list);
+    const continueButton = button('▶ Tiếp tục video', 'ldd-film-continue');
+    continueButton.hidden = true;
+    continueButton.setAttribute('aria-label', 'Xác nhận tiếp tục phát video sau khi dùng gợi ý');
+    continueButton.addEventListener('click', () => {
+      if (!awaitingContinue || seq !== generation) return;
+      awaitingContinue = false;
+      continueButton.hidden = true;
+      waitingForAnswer = false;
+      heardGate = false;
+      updateRowStates();
+      try {
+        if (Math.abs(Number(adapter.getTime()) - resumeAt) > 0.35)
+          adapter.seek(resumeAt);
+        adapter.play();
+      } catch (_) {
+        state.textContent = 'Không phát tiếp được. Hãy thử lại.';
+        awaitingContinue = true;
+        waitingForAnswer = true;
+        continueButton.hidden = false;
+        return;
+      }
+      if (gateIndex >= 0) {
+        showCue(gateIndex);
+        state.textContent = 'Đang phát đến câu chưa hoàn thành tiếp theo.';
+      } else {
+        state.textContent = 'Đã hoàn thành bài luyện nghe. Video tiếp tục đến hết.';
+      }
+    });
+    panel.append(tally, continueButton, list);
 
     // Keep all controls locked ahead of the earliest unanswered cue.
     updateRowStates = () => {
@@ -760,7 +807,7 @@
         row.seek.disabled = locked;
         row.fields.forEach(({ input, key, check, hint }) => {
           if (answers.has(key)) return;
-          const enabled = idx === gateIndex;
+          const enabled = idx === gateIndex && !awaitingContinue;
           input.disabled = !enabled;
           check.disabled = hint.disabled = !enabled || !heardGate;
         });
@@ -787,6 +834,30 @@
       // Only teachers can preview future segments without unlocking their answers.
       // Students must still complete each line in order.
       if (!teacherPreview && gateIndex >= 0 && idx > gateIndex) return;
+      if (awaitingContinue) {
+        state.textContent = 'Hãy nhấn Tiếp tục video sau khi dùng Gợi ý.';
+        continueButton.focus();
+        return;
+      }
+      if (isComplete(idx)) {
+        // Replaying an already answered line is continuous playback: do not
+        // stop again at completed blanks, only at the earliest unfinished one.
+        playbackIndex = -1;
+        waitingForAnswer = false;
+        heardGate = false;
+        updateRowStates();
+        try {
+          adapter.pause();
+          adapter.seek(items[idx].start);
+          adapter.play();
+          state.textContent = gateIndex >= 0
+            ? 'Đang phát qua các câu đã hoàn thành đến câu chưa điền tiếp theo.'
+            : 'Các ô trống đều đã hoàn thành. Video sẽ phát liền mạch.';
+        } catch (_) {
+          state.textContent = 'Không phát lại được. Hãy thử nút Nghe lại.';
+        }
+        return;
+      }
       playbackIndex = idx;
       waitingForAnswer = false;
       // YouTube seeks can be asynchronous, especially after long music gaps.
@@ -815,6 +886,13 @@
       if (seq !== generation) return;
       const t = Number(adapter.getTime());
       if (!Number.isFinite(t)) return;
+      if (awaitingContinue) {
+        // Never let a late YouTube autoplay state bypass a hint confirmation.
+        if (adapter.isPlaying?.()) {
+          try { adapter.pause(); } catch (_) {}
+        }
+        return;
+      }
 
       if (playbackIndex >= 0) {
         // The teacher/student explicitly chose a single line to replay.
