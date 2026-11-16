@@ -1,0 +1,19 @@
+/* Global text-selection actions, shared across learning tabs. */
+.ldd-text-action-menu[hidden],.ldd-text-action-dialog[hidden],.ldd-text-action-toast[hidden]{display:none!important}
+.ldd-text-action-menu{position:fixed;z-index:2147483001;display:flex;align-items:center;gap:4px;padding:5px;border-radius:12px;border:1px solid #c9d7ec;background:#fff;box-shadow:0 10px 35px #14254a30;max-width:calc(100vw - 16px)}
+.ldd-text-action-menu button{font:600 14px/1.2 system-ui,sans-serif;padding:10px 13px;min-height:42px;border:0;border-radius:9px;background:#f2f6ff;color:#1a458a;cursor:pointer;white-space:nowrap}
+.ldd-text-action-menu button:last-child{background:#225bc2;color:#fff}
+.ldd-text-action-menu button:focus-visible{outline:2px solid #f6a21a;outline-offset:1px}
+.ldd-text-action-toast{position:fixed;z-index:2147483003;left:50%;bottom:max(18px,env(safe-area-inset-bottom));transform:translateX(-50%);max-width:min(500px,calc(100vw - 24px));background:#292f3e;color:#fff;border-radius:10px;padding:12px 16px;box-shadow:0 8px 30px #0003;font:14px/1.5 system-ui,sans-serif;text-align:center}
+.ldd-text-action-dialog{position:fixed;inset:0;z-index:2147483002;background:#0c172850;display:grid;place-items:center;padding:16px}
+.ldd-text-action-dialog section{width:min(450px,100%);max-height:80vh;overflow:auto;padding:20px;border-radius:15px;background:#fff;color:#1c2940;box-shadow:0 18px 50px #0004;font:16px/1.55 system-ui,sans-serif}
+.ldd-text-action-dialog h3{font-size:20px;line-height:1.35;margin:0 28px 10px 0;overflow-wrap:anywhere}
+.ldd-text-action-dialog .ldd-phrase-definition{font-size:17px;margin:8px 0}
+.ldd-text-action-dialog .ldd-phrase-note{font-size:13px;color:#546278;margin:12px 0 0}
+.ldd-text-action-dialog .ldd-phrase-close{float:right;display:grid;place-items:center;border:0;border-radius:8px;width:34px;height:34px;font-size:22px;background:#edf2fa;color:#1c2940;cursor:pointer}
+::highlight(ldd-learning-highlight){background:rgba(255,197,41,.68);color:inherit}
+mark.ldd-user-mark{background:rgba(255,197,41,.68);color:inherit;border-radius:2px;padding:0}
+.ldd-vi-cloze-focus{font:inherit;font-weight:800;color:inherit;text-decoration:underline dotted;text-underline-offset:3px;cursor:pointer;border:0;background:transparent;padding:0}
+.ldd-vi-cloze-focus:focus-visible{outline:2px solid #2580ed;outline-offset:2px}
+#tab-giai-tri .ldd-film-caption-translation .ldd-vi-cloze-focus{color:#124fa2}
+@media(max-width:600px){.ldd-text-action-menu button{font-size:13px;padding:10px}.ldd-text-action-menu{max-width:calc(100vw - 12px)}}
