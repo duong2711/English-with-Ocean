@@ -57,7 +57,7 @@ begin
         updated_at=now()
     where user_id=new.user_id and gate_status='clear'
       and new.updated_at >= last_learning_at
-      and new.updated_at < last_learning_at + make_interval(hours=>max_hours);
+      and new.updated_at <= last_learning_at + make_interval(hours=>max_hours);
   end if;
   return new;
 end;
@@ -172,7 +172,7 @@ begin
       ));
     end if;
   end if;
-  if v_state.last_learning_at > now()-make_interval(hours=>v_config.inactivity_hours) then
+  if v_state.last_learning_at >= now()-make_interval(hours=>v_config.inactivity_hours) then
     return jsonb_build_object('mode','clear');
   end if;
 
