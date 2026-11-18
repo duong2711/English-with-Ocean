@@ -51,7 +51,14 @@ declare max_hours integer;
 begin
   select inactivity_hours into max_hours from public.ldd_reentry_settings where singleton=true;
   if max_hours is null then return new; end if;
-  if tg_op='INSERT' or new.seconds is distinct from old.seconds then
+  if tg_op='INSERT' then
+    update public.ldd_reentry_students
+    set last_learning_at=greatest(last_learning_at,least(new.updated_at,now())),
+        updated_at=now()
+    where user_id=new.user_id and gate_status='clear'
+      and new.updated_at >= last_learning_at
+      and new.updated_at <= last_learning_at + make_interval(hours=>max_hours);
+  elsif new.seconds is distinct from old.seconds then
     update public.ldd_reentry_students
     set last_learning_at=greatest(last_learning_at,least(new.updated_at,now())),
         updated_at=now()
@@ -61,7 +68,7 @@ begin
   end if;
   return new;
 end;
-$$;
+$;
 drop trigger if exists ldd_reentry_track_learning on public.study_time_log;
 create trigger ldd_reentry_track_learning
 after insert or update on public.study_time_log
@@ -100,8 +107,8 @@ begin
                 else lower(s.student_email)=lower(p_email) end)
       and q->>'type'='mcq'
       and nullif(trim(q->>'prompt'),'') is not null
-      and jsonb_typeof(q->'options')='array'
-      and jsonb_array_length(q->'options')=4
+      and case when jsonb_typeof(q->'options')='array'
+               then jsonb_array_length(q->'options')=4 else false end
       and (q->>'correct') ~ '^[0-3]$'
       and not (q->>'prompt' ~* '<(img|iframe|audio|video|svg)\b')
       and not (q->'options')::text ~* '<(img|iframe|audio|video|svg)\b'
@@ -112,8 +119,12 @@ begin
     select distinct on (fingerprint) q,fingerprint
     from eligible
     order by fingerprint
+  ), diversified as (
+    select q, row_number() over(
+      partition by coalesce(q#>>'{skill,category}','Khác') order by random()
+    ) as within_category from distinct_items
   ), picked as (
-    select q from distinct_items order by random() limit p_count
+    select q from diversified order by within_category,random() limit p_count
   ), numbered as (
     select jsonb_build_object(
       'id', gen_random_uuid()::text,
