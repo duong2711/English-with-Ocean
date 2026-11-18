@@ -57,7 +57,7 @@ test('lock screen is recoverable by teacher, without a learner-side unlock short
   const client=read('ldd-reentry-gate.js');
   assert.doesNotThrow(()=>new vm.Script(client));
   assert.match(client,/rpc\('ldd_reentry_submit'/);
-  assert.match(client,/rpc\('ldd_reentry_admin_unlock'/);
+  assert.match(client,/authLock\('teacher-unlock',student.user_id\)/);
   assert.match(client,/ldd-reentry-signout/);
   assert.match(client,/renderLocked\(result\.correct,result\.total\)/);
   assert.match(client,/lastEnabled=await rpc\('ldd_reentry_admin_set_enabled'/);
