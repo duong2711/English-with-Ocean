@@ -63,6 +63,17 @@ test('lock screen is recoverable by teacher, without a learner-side unlock short
   assert.match(client,/lastEnabled=await rpc\('ldd_reentry_admin_set_enabled'/);
 });
 
+test('Auth ban and teacher unban require verified identity and server-side locked state',()=>{
+  const edge=read('supabase/functions/reentry-auth-lock/index.ts');
+  assert.match(edge,/scoped\.auth\.getUser\(jwt\)/);
+  assert.match(edge,/scoped\.rpc\('ldd_reentry_status'\)/);
+  assert.match(edge,/state\?\.mode !== 'locked'/);
+  assert.match(edge,/ban_duration: '876000h'/);
+  assert.match(edge,/ban_duration: 'none'/);
+  assert.match(edge,/ldd_reentry_admin_can_unlock/);
+  assert.doesNotMatch(read('ldd-reentry-gate.js'),/SERVICE_ROLE_KEY/);
+});
+
 test('staged deployment does not auto-enable the gate',()=>{
   const sql=read('reentry_revision_gate_setup.sql');
   assert.match(sql,/enabled boolean not null default false/);
