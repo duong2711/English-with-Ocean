@@ -99,6 +99,17 @@
     btn.type = 'button';
     btn.addEventListener('click', () => refresh(true));
     card.appendChild(btn);
+    appendSignOut(card);
+  }
+  function appendSignOut(card) {
+    const signOut = node('button','ldd-reentry-signout','Đăng xuất / đổi tài khoản');
+    signOut.type='button';
+    signOut.addEventListener('click', () => {
+      const original = document.getElementById('logout-btn');
+      if (original) original.click();
+      else window.alert('Vui lòng tải lại trang và đăng xuất trước khi đổi tài khoản.');
+    });
+    card.appendChild(signOut);
   }
   function renderQuiz(questions) {
     if (!Array.isArray(questions) || questions.length !== 10) {
@@ -157,6 +168,7 @@
       }
     });
     card.appendChild(form);
+    appendSignOut(card);
   }
   function closeAdmin() {
     if (adminModal) { adminModal.remove(); adminModal=null; }
