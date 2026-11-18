@@ -57,6 +57,8 @@ Deno.serve(async (request: Request) => {
     if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(target) || target === user.id) {
       return json({ error: 'Invalid student ID' }, 400);
     }
+    const { data: canUnlock, error: permissionError } = await scoped.rpc('ldd_reentry_admin_can_unlock', { p_user_id: target });
+    if (permissionError || canUnlock !== true) return json({ error: 'This learner is not locked by the re-entry test' }, 403);
     // Restore sign-in first; if the database update fails, its locked gate
     // still denies website access and the teacher can retry safely.
     const { error: unbanError } = await admin.auth.admin.updateUserById(target, { ban_duration: 'none' });
