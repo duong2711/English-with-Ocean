@@ -17,6 +17,7 @@
   let adminModal = null;
   let lastMode = null;
   let lastEnabled = false;
+  const banRequestedFor = new Set();
 
   function token() {
     try {
@@ -46,6 +47,18 @@
     });
     const body = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(body.message || 'Không thể kết nối hệ thống kiểm tra.');
+    return body;
+  }
+  async function authLock(action, userId) {
+    const bearer = token();
+    if (!bearer) throw new Error('Phiên đăng nhập đã hết hạn.');
+    const response = await fetch(URL + '/functions/v1/reentry-auth-lock', {
+      method:'POST',
+      headers:{ apikey:ANON, Authorization:'Bearer ' + bearer, 'Content-Type':'application/json' },
+      body:JSON.stringify({action, ...(userId ? {user_id:userId} : {})})
+    });
+    const body=await response.json().catch(()=>({}));
+    if (!response.ok) throw new Error(body.error || 'Không thể thay đổi trạng thái đăng nhập.');
     return body;
   }
   function node(tag, className, content) {
@@ -88,6 +101,11 @@
   }
   function renderLocked(correct, total) {
     lastMode = 'locked';
+    // Also ban subsequent Supabase Auth sign-ins. Existing sessions still see this overlay.
+    if (currentUser && !banRequestedFor.has(currentUser)) {
+      banRequestedFor.add(currentUser);
+      authLock('ban-self').catch(e => console.warn('Auth lock pending:',e.message));
+    }
     const card = renderShell('Tài khoản đang tạm khóa',
       'Để được mở khóa, em hãy chủ động nhắn tin cho cậu để hẹn gọi Zalo dò bài và nhận một bài kiểm tra giấy.');
     if (Number.isFinite(correct) && total) {
@@ -215,8 +233,7 @@
           if (!window.confirm('Chỉ mở khóa sau khi đã dò bài qua Zalo và giao bài kiểm tra giấy cho ' + student.email + '. Tiếp tục?')) return;
           unlock.disabled=true;
           try {
-            const ok=await rpc('ldd_reentry_admin_unlock',{p_user_id:student.user_id});
-            if (!ok) throw new Error('Tài khoản không còn ở trạng thái khóa.');
+            await authLock('teacher-unlock',student.user_id);
             row.remove();
             if (!list.children.length) list.textContent='Không có học viên nào đang bị khóa.';
           } catch(e){ unlock.disabled=false;window.alert(e.message); }
@@ -278,6 +295,16 @@
     }finally { if(request===latestRequest)checking=false; }
   }
   function init() {
+    const loginError=document.getElementById('auth-status');
+    if(loginError){
+      const rewriteBanned=()=>{
+        if (/user is banned|account banned|temporarily banned|account disabled/i.test(loginError.textContent || '')) {
+          loginError.textContent='Tài khoản đang bị khóa vì bài kiểm tra ôn tập chưa đạt 6/10. Em hãy nhắn Zalo cho cậu để hẹn dò bài và nhận bài kiểm tra giấy.';
+        }
+      };
+      new MutationObserver(rewriteBanned).observe(loginError,{childList:true,characterData:true,subtree:true});
+      rewriteBanned();
+    }
     refresh(false);
     const account=document.getElementById('account-area');
     if(account) new MutationObserver(() => setTimeout(() => refresh(false),100)).observe(account,{attributes:true,attributeFilter:['style','class']});
