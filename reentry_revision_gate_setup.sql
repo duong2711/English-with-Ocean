@@ -262,6 +262,20 @@ begin
 end;
 $$;
 
+-- Prevent an unlock action from lifting an unrelated Auth ban.
+create or replace function public.ldd_reentry_admin_can_unlock(p_user_id uuid)
+returns boolean language plpgsql security definer set search_path = ''
+as $
+declare v_locked boolean;
+begin
+  if auth.uid() is null or lower(coalesce(auth.jwt()->>'email',''))<>'lddbaiu@gmail.com'
+    then raise exception 'Teacher only'; end if;
+  select gate_status='locked' into v_locked
+    from public.ldd_reentry_students where user_id=p_user_id;
+  return coalesce(v_locked,false);
+end;
+$;
+
 create or replace function public.ldd_reentry_admin_unlock(p_user_id uuid)
 returns boolean language plpgsql security definer set search_path = ''
 as $$
@@ -293,9 +307,11 @@ revoke all on function public.ldd_reentry_status() from public,anon;
 revoke all on function public.ldd_reentry_submit(jsonb) from public,anon;
 revoke all on function public.ldd_reentry_admin_list() from public,anon;
 revoke all on function public.ldd_reentry_admin_unlock(uuid) from public,anon;
+revoke all on function public.ldd_reentry_admin_can_unlock(uuid) from public,anon;
 revoke all on function public.ldd_reentry_admin_set_enabled(boolean) from public,anon;
 grant execute on function public.ldd_reentry_status() to authenticated;
 grant execute on function public.ldd_reentry_submit(jsonb) to authenticated;
 grant execute on function public.ldd_reentry_admin_list() to authenticated;
 grant execute on function public.ldd_reentry_admin_unlock(uuid) to authenticated;
+grant execute on function public.ldd_reentry_admin_can_unlock(uuid) to authenticated;
 grant execute on function public.ldd_reentry_admin_set_enabled(boolean) to authenticated;
