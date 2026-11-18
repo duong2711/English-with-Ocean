@@ -240,6 +240,12 @@
     closeAdmin();
   }
   async function refresh(force) {
+    // The existing device-approval gate owns entry until the account area is visible.
+    // Checking too early would cover the "Thiết bị đang chờ duyệt" dialog.
+    const account = document.getElementById('account-area');
+    if (!account || getComputedStyle(account).display === 'none') {
+      currentUser=null; latestRequest++; clearOverlay(); hideTeacher(); return;
+    }
     const jwt = token();
     const uid = tokenUser(jwt);
     if (!uid) {
