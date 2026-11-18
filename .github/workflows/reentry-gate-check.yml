@@ -1,0 +1,24 @@
+name: Re-entry revision gate checks
+on:
+  pull_request:
+    paths:
+      - 'ldd-reentry-gate.js'
+      - 'ldd-reentry-gate.css'
+      - 'supabase/functions/reentry-auth-lock/index.ts'
+      - 'ldd-test-skills.js'
+      - 'ldd-test-skills.css'
+      - 'reentry_revision_gate_setup.sql'
+      - 'tests/reentry-revision-gate.cjs'
+      - 'index.html'
+      - '.github/workflows/reentry-gate-check.yml'
+  workflow_dispatch:
+jobs:
+  node-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run re-entry regression tests
+        run: node --test tests/reentry-revision-gate.cjs

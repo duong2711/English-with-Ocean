@@ -65,10 +65,13 @@ window.LDDTestSkills = (() => {
         return true;
     }
     function report(rows, heading) {
-        const box = document.createElement('section');
+        // Thu gọn toàn bộ kết quả theo kiến thức khi mới mở kết quả.
+        const box = document.createElement('details');
         box.className = 'ctest-skill-report';
-        const title = document.createElement('h3');
+        const title = document.createElement('summary');
+        title.className = 'ctest-skill-toggle';
         title.textContent = heading;
+        title.setAttribute('aria-label', 'Mở hoặc thu gọn ' + heading);
         box.appendChild(title);
         const groups = new Map();
         let unmapped = 0;
