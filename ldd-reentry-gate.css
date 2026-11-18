@@ -25,3 +25,4 @@
 .ldd-reentry-admin-row button{border:1px solid #b8594c;border-radius:8px;background:#fff4f1;color:#892c20;padding:9px 13px;cursor:pointer;flex-shrink:0;font:inherit}
 .ldd-reentry-admin-close{margin-top:22px;background:#e8f0f3;color:#234454}
 @media(max-width:600px){.ldd-reentry-backdrop,.ldd-reentry-admin-backdrop{padding:8px}.ldd-reentry-card,.ldd-reentry-admin{max-height:96dvh;padding:17px 15px;border-radius:12px}.ldd-reentry-admin-trigger{bottom:12px;left:12px;font-size:.8rem}}
+.ldd-reentry-signout{display:block;margin-top:14px;padding:9px 4px;border:0;background:none;text-decoration:underline;color:#567483;font:inherit;cursor:pointer}
