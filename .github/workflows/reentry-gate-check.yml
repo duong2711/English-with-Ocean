@@ -4,6 +4,7 @@ on:
     paths:
       - 'ldd-reentry-gate.js'
       - 'ldd-reentry-gate.css'
+      - 'supabase/functions/reentry-auth-lock/index.ts'
       - 'ldd-test-skills.js'
       - 'ldd-test-skills.css'
       - 'reentry_revision_gate_setup.sql'
