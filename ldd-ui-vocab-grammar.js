@@ -346,6 +346,11 @@
         const grid = document.getElementById('thcs-grade-grid');
         const trigger = document.getElementById('thcs-folder-card');
         const back = document.getElementById('thcs-back-btn');
+        const conjCard = document.getElementById('conj-folder-card');
+        const conjBack = document.getElementById('conj-back-btn');
+        const originalConjBackText = conjBack ? conjBack.textContent : '';
+        let conjOpenedFromCategories = false;
+        let openingConjFromCategories = false;
         if (!panel || !grid || !trigger || !back) return;
         const title = panel.querySelector('h3');
         if (title) title.textContent = 'Tiểu học / THCS / THPT';
@@ -369,8 +374,14 @@
             buttons.appendChild(button('Từ vựng SGK', function () { clear(); grid.style.display = ''; area.appendChild(button('← Các nhóm từ vựng', home)); }));
             ['Collocations', 'Lượng từ', 'Liên từ', 'Giới từ', 'Trạng từ mức độ'].forEach(function (name) {
                 buttons.appendChild(button(name === 'Collocations' ? 'Collocation' : name, function () {
-                    if (name === 'Liên từ') window.LDDVocabNavigation.openFolder('conj-folder-card');
-                    else showLesson(name);
+                    if (name === 'Liên từ') {
+                        // Ghi nhớ nơi mở Liên từ để nút quay lại trở về đúng danh mục cấp trước.
+                        conjOpenedFromCategories = true;
+                        openingConjFromCategories = true;
+                        if (conjBack) conjBack.textContent = '← Các mục từ vựng';
+                        try { window.LDDVocabNavigation.openFolder('conj-folder-card'); }
+                        finally { openingConjFromCategories = false; }
+                    } else showLesson(name);
                 }));
             });
             area.appendChild(buttons);
@@ -413,6 +424,24 @@
         }
         trigger.addEventListener('click', home);
         back.addEventListener('click', function () { grid.style.display = ''; clear(); });
+
+        // Mở Liên từ trực tiếp từ danh mục gốc vẫn quay về danh mục gốc như cũ.
+        if (conjCard) conjCard.addEventListener('click', function () {
+            if (openingConjFromCategories) return;
+            conjOpenedFromCategories = false;
+            if (conjBack) conjBack.textContent = originalConjBackText;
+        }, true);
+
+        // Khi đi từ "Các mục từ vựng" sang "Liên từ", quay lại đúng menu đó.
+        // Handler capture chặn nút quay lại gốc (trong scriptphonetics.js).
+        if (conjBack) conjBack.addEventListener('click', function (event) {
+            if (!conjOpenedFromCategories) return;
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            conjOpenedFromCategories = false;
+            conjBack.textContent = originalConjBackText;
+            trigger.click();
+        }, true);
         home();
     }
 
