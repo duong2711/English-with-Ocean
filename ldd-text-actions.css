@@ -41,3 +41,10 @@ mark.ldd-user-mark{background:rgba(255,197,41,.68);color:inherit;border-radius:2
 .ldd-annotation-item{border-bottom:1px solid #e1eaf2;padding:10px 0 14px}
 .ldd-annotation-item p{white-space:pre-wrap;overflow-wrap:anywhere}
 @media(max-width:600px){.ldd-text-action-menu{gap:2px}.ldd-text-action-menu button{font-size:12px;padding:9px}.ldd-annotation-overlay>section{padding:15px}}
+
+/* A selected passage is a permitted study action; copy/cut remains blocked by
+   the existing exam anti-cheat event handlers. */
+#ctest-take-view.ctest-no-select :is(#ctest-take-sections,#ctest-take-notes),
+#ctest-take-view.ctest-no-select :is(#ctest-take-sections,#ctest-take-notes) *:not(input):not(textarea):not(select):not(button){
+  user-select:text!important;-webkit-user-select:text!important;
+}
