@@ -46,7 +46,7 @@
    if(!inLearningArea(r.commonAncestorContainer) ||
       blocked(r.startContainer)||blocked(r.endContainer))return null;
    const text=normalize(sel.toString());
-   if(!text||text.length>100||/[À-ỹĐđ]/u.test(text))return null;
+   if(!text||text.length>1200)return null;
    return {text,range:r.cloneRange(),partial:isPartial(r),
      context:contextOf(r.commonAncestorContainer),source:sourceOf(r.commonAncestorContainer)};
  }
@@ -91,15 +91,21 @@
    menu=document.createElement('div');
    menu.className='ldd-text-action-menu';menu.hidden=true;
    menu.setAttribute('role','group');menu.setAttribute('aria-label','Tùy chọn cho từ hoặc cụm đã chọn');
-   menu.innerHTML='<button type="button" data-action="highlight">🖍 Highlight</button><button type="button" data-action="translate">Dịch</button>';
+   menu.innerHTML='<button type="button" data-action="translate">Dịch</button><button type="button" data-action="highlight">🖍 Highlight</button><button type="button" data-action="note">📝 Ghi chú</button>';
    document.body.appendChild(menu);
    menu.addEventListener('pointerdown',e=>e.preventDefault());
    menu.addEventListener('click',function(e){
      const action=e.target.closest('[data-action]')?.dataset.action;
      if(!action||!active)return;
      const snapshot=active;hideMenu();
-     if(action==='highlight')highlight(snapshot.range,snapshot.text);
-     else void translate(snapshot);
+     if(action==='highlight'){
+       if(window.LDDTestAnnotations?.highlight)
+         void window.LDDTestAnnotations.highlight(snapshot).then(handled=>{if(!handled)highlight(snapshot.range,snapshot.text)});
+       else highlight(snapshot.range,snapshot.text);
+     }else if(action==='note'){
+       if(window.LDDTestAnnotations?.note)window.LDDTestAnnotations.note(snapshot);
+       else showToast('Ghi chú đang khởi tạo. Hãy thử lại.');
+     }else void translate(snapshot);
    });
  }
  function hideMenu(){if(menu)menu.hidden=true;}
@@ -113,10 +119,11 @@
  }
  function present(data){
    setup(); if(!data)return;
-   if(data.partial||!(WORD.test(data.text)||PHRASE.test(data.text))){
+   if(data.partial){
      hideMenu();showToast('Quét chưa trọn một từ hoặc cụm tiếng Anh. Hãy chọn lại đầy đủ, không cắt giữa từ/cụm.');
      return;
    }
+   menu.querySelector('[data-action="translate"]').disabled=!(WORD.test(data.text)||PHRASE.test(data.text));
    active=data;positionMenu(data);
  }
  function handleSelection(){

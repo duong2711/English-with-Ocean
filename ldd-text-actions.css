@@ -3,6 +3,7 @@
 .ldd-text-action-menu{position:fixed;z-index:2147483001;display:flex;align-items:center;gap:4px;padding:5px;border-radius:12px;border:1px solid #c9d7ec;background:#fff;box-shadow:0 10px 35px #14254a30;max-width:calc(100vw - 16px)}
 .ldd-text-action-menu button{font:600 14px/1.2 system-ui,sans-serif;padding:10px 13px;min-height:42px;border:0;border-radius:9px;background:#f2f6ff;color:#1a458a;cursor:pointer;white-space:nowrap}
 .ldd-text-action-menu button:last-child{background:#225bc2;color:#fff}
+.ldd-text-action-menu button:disabled{opacity:.45;cursor:not-allowed;background:#edf0f6;color:#657188}
 .ldd-text-action-menu button:focus-visible{outline:2px solid #f6a21a;outline-offset:1px}
 .ldd-text-action-toast{position:fixed;z-index:2147483003;left:50%;bottom:max(18px,env(safe-area-inset-bottom));transform:translateX(-50%);max-width:min(500px,calc(100vw - 24px));background:#292f3e;color:#fff;border-radius:10px;padding:12px 16px;box-shadow:0 8px 30px #0003;font:14px/1.5 system-ui,sans-serif;text-align:center}
 .ldd-text-action-dialog{position:fixed;inset:0;z-index:2147483002;background:#0c172850;display:grid;place-items:center;padding:16px}
@@ -20,3 +21,30 @@ mark.ldd-user-mark{background:rgba(255,197,41,.68);color:inherit;border-radius:2
 
 /* Keep native press-and-drag text handles available on phones. */
 #inside :is(.tappable-word,.ldd-exam-lookup-word),.ldd-comic-overlay .tappable-word{user-select:text;-webkit-user-select:text;touch-action:auto!important}
+
+/* Saved student annotations in assigned tests. */
+::highlight(ldd-test-saved-highlight){background:rgba(255,197,41,.68);color:inherit}
+::highlight(ldd-test-saved-note){background:rgba(114,217,212,.42);text-decoration:underline dotted #078883;color:inherit}
+.ldd-exam-notes-button{border:1px solid #a8c9e4;border-radius:10px;padding:8px 12px;background:#eef8fe;color:#145a81;cursor:pointer;font:600 13px/1.4 system-ui,sans-serif;margin:8px 0}
+#ldd-annotation-message[hidden],.ldd-annotation-overlay[hidden]{display:none!important}
+#ldd-annotation-message{position:fixed;z-index:2147483005;bottom:max(20px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);max-width:calc(100vw - 24px);padding:12px 16px;border-radius:10px;background:#20324b;color:white;box-shadow:0 8px 25px #0003;font:14px system-ui,sans-serif}
+.ldd-annotation-overlay{position:fixed;z-index:2147483004;inset:0;background:#07152e94;display:grid;place-items:center;padding:16px}
+.ldd-annotation-overlay>section{width:min(540px,100%);max-height:85vh;overflow:auto;border-radius:16px;padding:20px;background:#fff;color:#183048;box-shadow:0 20px 55px #0003;font:15px/1.5 system-ui,sans-serif}
+.ldd-annotation-overlay h3{margin:0 32px 10px 0;font-size:19px}
+.ldd-annotation-overlay blockquote{border-left:3px solid #2f82ae;margin:10px 0;padding:9px 12px;background:#f1f8fc;overflow-wrap:anywhere}
+.ldd-annotation-overlay textarea{box-sizing:border-box;display:block;width:100%;min-height:110px;resize:vertical;border:1px solid #acc4d7;border-radius:9px;padding:12px;font:inherit;color:inherit}
+.ldd-annotation-close{float:right;border:0;background:#edf2fa;border-radius:8px;font-size:22px;width:34px;height:34px;cursor:pointer}
+.ldd-annotation-footer{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;margin-top:12px}
+.ldd-annotation-footer button{border:1px solid #bbcbda;background:#f4f7fb;color:#24435d;border-radius:8px;padding:8px 13px;cursor:pointer;font:600 14px system-ui,sans-serif}
+.ldd-annotation-footer .ldd-annotation-primary{background:#206ac2;color:white;border-color:#206ac2}
+.ldd-annotation-footer button:disabled{opacity:.55;cursor:wait}
+.ldd-annotation-item{border-bottom:1px solid #e1eaf2;padding:10px 0 14px}
+.ldd-annotation-item p{white-space:pre-wrap;overflow-wrap:anywhere}
+@media(max-width:600px){.ldd-text-action-menu{gap:2px}.ldd-text-action-menu button{font-size:12px;padding:9px}.ldd-annotation-overlay>section{padding:15px}}
+
+/* A selected passage is a permitted study action; copy/cut remains blocked by
+   the existing exam anti-cheat event handlers. */
+#ctest-take-view.ctest-no-select :is(#ctest-take-sections,#ctest-take-notes),
+#ctest-take-view.ctest-no-select :is(#ctest-take-sections,#ctest-take-notes) *:not(input):not(textarea):not(select):not(button){
+  user-select:text!important;-webkit-user-select:text!important;
+}

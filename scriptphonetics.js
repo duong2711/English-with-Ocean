@@ -21291,6 +21291,8 @@ function toggleCompletion(symbolElement) {
         const paperMode = (test.sections || []).some(sec => sec.paper_style === 'exam');
         takeView.classList.toggle('ctest-paper-mode', paperMode);
         takeTitleEl.textContent = test.title || '';
+        // Stable ID for each learner's annotations; never rely on a possibly repeated title.
+        takeView.dataset.annotationTestId = String(test.id || '');
         if (test.notes_html && test.notes_html.trim()) {
             takeNotesEl.style.display = 'block';
             takeNotesEl.innerHTML = test.notes_html;
