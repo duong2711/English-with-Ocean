@@ -46,7 +46,8 @@
    // The first question and title distinguish tests with identical names.
    // Stable across ordinary answer entry, which changes input values, not textContent.
    const content=norm(root.textContent).slice(0,700);
-   return {root,view,title,key:prefix+':'+hash(title+'|'+content),prefix};
+   const stableId=prefix==='ctest'?norm(view.dataset.annotationTestId):'';
+   return {root,view,title,key:prefix+':'+(stableId||hash(title+'|'+content)),prefix};
  }
  function charOffset(root,node,offset){
    try{
