@@ -20,6 +20,13 @@ test('tapping or selecting text exposes exactly Translate, Highlight and Note ac
  assert.match(actions,/wordAtPoint\(e\)/);
  assert.match(actions,/translateWord\(\{text:clean,context:context\|\|clean,source:'Bài nghe Phim ảnh'\}\)/);
 });
+test('news article touch taps and phrase selections use the three-action menu',()=>{
+ assert.match(actions,/function inArticleText\(node\)/);
+ assert.match(actions,/articleSelection=inArticleText\(r\.startContainer\)&&inArticleText\(r\.endContainer\)/);
+ assert.match(actions,/lastTouch<550 && !inArticleText\(e\.target\)/);
+ assert.match(actions,/if\(selection\)\{present\(selection\);return;\}/);
+ assert.match(actions,/const word=wordAtPoint\(e\)/);
+});
 test('mouse drag and long-press mobile word selection use native selection handles',()=>{
  assert.match(actions,/window\.getSelection\?\.\(\)/);
  assert.match(actions,/document\.addEventListener\('selectionchange'/);
@@ -50,11 +57,11 @@ test('no-lookup tests remain excluded, and phrase translation never invokes pron
 test('shared collocations render in existing vocabulary category and assets load globally',()=>{
  assert.match(grammar,/from\('collocation_bank'\)/);
  assert.match(grammar,/select\('phrase,meaning_vi'\)/);
- assert.match(boot,/ldd-text-actions\.js\?v=20261120-selection-notes1/);
+ assert.match(boot,/ldd-text-actions\.js\?v=20261121-article-three-actions1/);
  assert.match(boot,/ldd-test-annotations\.js\?v=20261121-persistent-article-annotations1/);
  assert.match(boot,/ldd-text-actions\.css\?v=20261120-selection-notes1/);
  assert.match(boot,/ldd-ui-vocab-grammar\.js\?v=20261119-conj-return1/);
- assert.match(page,/ldd-ui-upgrade\.js\?v=20261121-persistent-article-annotations1/);
+ assert.match(page,/ldd-ui-upgrade\.js\?v=20261121-article-three-actions1/);
  assert.match(page,/scriptphonetics\.js\?v=20261120-selection-notes1/);
 });
 test('assigned-test highlights and notes use account-owned Supabase rows and safe text anchors',()=>{
@@ -88,5 +95,5 @@ test('news annotations retain their account-specific identity and text anchors',
  assert.match(annotations,/normalized\.indexOf\(expected/);
  assert.match(annotations,/if\(currentRoot!==root\|\|state\(info\)\?\.key!==info\.key\)/);
  assert.match(boot,/ldd-test-annotations\.js\?v=20261121-persistent-article-annotations1/);
- assert.match(page,/ldd-ui-upgrade\.js\?v=20261121-persistent-article-annotations1/);
+ assert.match(page,/ldd-ui-upgrade\.js\?v=20261121-article-three-actions1/);
 });
