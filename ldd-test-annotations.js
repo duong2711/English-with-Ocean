@@ -100,7 +100,7 @@
    let normalized='',positions=[];
    for(let i=0;i<raw.length;i++){
      const c=raw[i];
-     if(/\\s/.test(c)){
+     if(/\s/.test(c)){
        if(normalized&&!normalized.endsWith(' ')){
          normalized+=' ';positions.push(i);
        }
