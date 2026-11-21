@@ -65,7 +65,7 @@ test('assigned-test highlights and notes use account-owned Supabase rows and saf
  assert.match(annotations,/\.insert\(row\)/);
  assert.match(annotations,/\.update\(\{note_text:note\}\)/);
  assert.match(annotations,/start_offset:loc\.start,end_offset:loc\.end/);
- assert.match(annotations,/restoreRange\(info\.root,a\.start_offset,a\.end_offset\)/);
+ assert.match(annotations,/resolveRange\(info\.root,a\)/);
  assert.match(annotations,/CSS\.highlights\.set\(name,new Highlight/);
  assert.match(styles,/::highlight\(ldd-test-saved-highlight\)/);
  assert.match(styles,/::highlight\(ldd-test-saved-note\)/);
@@ -82,8 +82,10 @@ test('news annotations retain their account-specific identity and text anchors',
  assert.match(annotations,/\['ctest-take-sections','ilt-take-body','irt-take-body','news-article-text'\]/);
  assert.match(annotations,/\.eq\('user_id',uid\)\.eq\('test_key',info\.key\)/);
  assert.match(annotations,/s\.items=data\|\|\[\]/);
- assert.match(annotations,/restoreRange\(info\.root,a\.start_offset,a\.end_offset\)/);
+ assert.match(annotations,/resolveRange\(info\.root,a\)/);
  assert.match(annotations,/Ghi chú bài báo/);
+ assert.match(annotations,/function resolveRange\(root,entry\)/);
+ assert.match(annotations,/normalized\.indexOf\(expected/);
  assert.match(annotations,/if\(currentRoot!==root\|\|state\(info\)\?\.key!==info\.key\)/);
  assert.match(boot,/ldd-test-annotations\.js\?v=20261121-persistent-article-annotations1/);
  assert.match(page,/ldd-ui-upgrade\.js\?v=20261121-persistent-article-annotations1/);
