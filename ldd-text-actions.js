@@ -23,9 +23,10 @@
    const el=elementOf(node);
    return !el || !!el.closest(BAD_PARENT+',#ctest-take-view.ldd-exam-no-lookup,body.ldd-exam-no-lookup-active #ctest-take-view');
  }
+ function inArticleText(node){return !!elementOf(node)?.closest('#news-article-text');}
  function inLearningArea(node){
    const el=elementOf(node);
-   return !!el?.closest('#inside,.main-tab-content,#ldd-ent-movies-panel,.ldd-comic-overlay,.ldd-wimpy-reader') &&
+   return !!el?.closest('#inside,.main-tab-content,#news-article-text,#ldd-ent-movies-panel,.ldd-comic-overlay,.ldd-wimpy-reader') &&
      !el.closest('.ldd-exam-no-lookup');
  }
  function normalize(raw){return String(raw||'').replace(/\s+/g,' ').trim();}
@@ -43,7 +44,9 @@
    const sel=window.getSelection?.();
    if(!sel||sel.isCollapsed||!sel.rangeCount)return null;
    const r=sel.getRangeAt(0);
-   if(!inLearningArea(r.commonAncestorContainer) ||
+   // Selections may span nested inline elements in the news reader.
+   const articleSelection=inArticleText(r.startContainer)&&inArticleText(r.endContainer);
+   if((!articleSelection&&!inLearningArea(r.commonAncestorContainer)) ||
       blocked(r.startContainer)||blocked(r.endContainer))return null;
    const text=normalize(sel.toString());
    if(!text||text.length>1200)return null;
@@ -282,7 +285,10 @@
          return;
        }
      }
-     if(Date.now()-lastTouch<550)return;
+     // A touch tap produces a click soon after pointerup. Do not drop it for
+     // news text: unlike lessons, article words are not always wrapped in spans.
+     // When a phrase is selected, the selection branch above takes precedence.
+     if(Date.now()-lastTouch<550 && !inArticleText(e.target))return;
      const word=wordAtPoint(e);
      if(word){e.preventDefault();e.stopImmediatePropagation();present(word);}
      else hideMenu();
