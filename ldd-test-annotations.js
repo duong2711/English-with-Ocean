@@ -88,6 +88,38 @@
      return r;
    }catch(_){return null;}
  }
+ // If the teacher reflows or lightly edits an article, saved offsets can move.
+ // Match the original quote again, choosing the nearest occurrence when repeated.
+ // This is read-only reanchoring: we never silently overwrite saved notes.
+ function resolveRange(root,entry){
+   const expected=norm(entry.selected_text);
+   const original=restoreRange(root,entry.start_offset,entry.end_offset);
+   if(original&&norm(original.toString())===expected)return original;
+   if(!expected)return null;
+   const raw=root.textContent||'';
+   let normalized='',positions=[];
+   for(let i=0;i<raw.length;i++){
+     const c=raw[i];
+     if(/\\s/.test(c)){
+       if(normalized&&!normalized.endsWith(' ')){
+         normalized+=' ';positions.push(i);
+       }
+     }else{
+       normalized+=c;positions.push(i);
+     }
+   }
+   let at=normalized.indexOf(expected),best=null,bestDistance=Infinity;
+   while(at!==-1){
+     const start=positions[at],end=positions[at+expected.length-1]+1;
+     const range=restoreRange(root,start,end);
+     const distance=Math.abs(start-entry.start_offset);
+     if(range&&norm(range.toString())===expected&&distance<bestDistance){
+       best=range;bestDistance=distance;
+     }
+     at=normalized.indexOf(expected,at+1);
+   }
+   return best;
+ }
  function state(info){return states.get(info.root.id);}
  function setHighlights(name,ranges){
    if(window.CSS?.highlights&&typeof window.Highlight==='function'){
@@ -102,8 +134,8 @@
    if(!s||s.key!==info.key||currentRoot!==info.root)return;
    const plain=[],noted=[];
    for(const a of s.items){
-     const r=restoreRange(info.root,a.start_offset,a.end_offset);
-     if(!r||norm(r.toString())!==norm(a.selected_text))continue;
+     const r=resolveRange(info.root,a);
+     if(!r)continue;
      (a.kind==='note'?noted:plain).push(r);
    }
    setHighlights('ldd-test-saved-highlight',plain);
@@ -269,7 +301,7 @@
        });
      });
      const jump=document.createElement('button');jump.type='button';jump.textContent='Đến đoạn';jump.addEventListener('click',()=>{
-       close();const r=restoreRange(info.root,entry.start_offset,entry.end_offset);
+       close();const r=resolveRange(info.root,entry);
        const el=r?.startContainer?.parentElement;
        if(el)el.scrollIntoView({behavior:'smooth',block:'center'});
      });
