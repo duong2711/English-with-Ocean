@@ -51,10 +51,10 @@ test('shared collocations render in existing vocabulary category and assets load
  assert.match(grammar,/from\('collocation_bank'\)/);
  assert.match(grammar,/select\('phrase,meaning_vi'\)/);
  assert.match(boot,/ldd-text-actions\.js\?v=20261120-selection-notes1/);
- assert.match(boot,/ldd-test-annotations\.js\?v=20261120-selection-notes1/);
+ assert.match(boot,/ldd-test-annotations\.js\?v=20261121-persistent-article-annotations1/);
  assert.match(boot,/ldd-text-actions\.css\?v=20261120-selection-notes1/);
  assert.match(boot,/ldd-ui-vocab-grammar\.js\?v=20261119-conj-return1/);
- assert.match(page,/ldd-ui-upgrade\.js\?v=20261120-selection-notes1/);
+ assert.match(page,/ldd-ui-upgrade\.js\?v=20261121-persistent-article-annotations1/);
  assert.match(page,/scriptphonetics\.js\?v=20261120-selection-notes1/);
 });
 test('assigned-test highlights and notes use account-owned Supabase rows and safe text anchors',()=>{
@@ -70,4 +70,21 @@ test('assigned-test highlights and notes use account-owned Supabase rows and saf
  assert.match(styles,/::highlight\(ldd-test-saved-highlight\)/);
  assert.match(styles,/::highlight\(ldd-test-saved-note\)/);
  assert.match(annotations,/Ghi chú của tôi/);
+});
+
+test('news annotations retain their account-specific identity and text anchors',()=>{
+ assert.match(annotations,/news-article-text/);
+ assert.match(annotations,/news-article-panel/);
+ assert.match(annotations,/news-article-title/);
+ assert.match(annotations,/data-article-id/);
+ assert.match(annotations,/panel\.dataset\.annotationArticleId=card\.dataset\.articleId/);
+ assert.match(annotations,/key:'news:'\+\(articleId\|\|hash/);
+ assert.match(annotations,/\['ctest-take-sections','ilt-take-body','irt-take-body','news-article-text'\]/);
+ assert.match(annotations,/\.eq\('user_id',uid\)\.eq\('test_key',info\.key\)/);
+ assert.match(annotations,/s\.items=data\|\|\[\]/);
+ assert.match(annotations,/restoreRange\(info\.root,a\.start_offset,a\.end_offset\)/);
+ assert.match(annotations,/Ghi chú bài báo/);
+ assert.match(annotations,/if\(currentRoot!==root\|\|state\(info\)\?\.key!==info\.key\)/);
+ assert.match(boot,/ldd-test-annotations\.js\?v=20261121-persistent-article-annotations1/);
+ assert.match(page,/ldd-ui-upgrade\.js\?v=20261121-persistent-article-annotations1/);
 });
