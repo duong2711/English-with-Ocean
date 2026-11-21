@@ -1,4 +1,4 @@
-/* LDD English — per-student annotations for assigned tests.
+/* LDD English — per-student annotations for reading articles and assigned tests.
    Notes/highlights live in Supabase with RLS; never share annotations across students.
    Selections are anchored to character offsets in the rendered exam text. */
 (function(){
@@ -6,7 +6,7 @@
  if(window.LDDTestAnnotations)return;
  const PROJECT='ywqbaksmmtvwbojcgsdd';
  const KEY='sb_publishable_AQZ6Jc8ZGID7kfRYPe9fLQ_Wmy7ekp_';
- const ROOTS=['ctest-take-sections','ilt-take-body','irt-take-body'];
+ const ROOTS=['ctest-take-sections','ilt-take-body','irt-take-body','news-article-text'];
  const TABLE='student_test_annotations';
  let client=null, overlay=null, currentRoot=null, refreshTimer=0;
  const states=new Map();
@@ -37,6 +37,17 @@
  function scope(root){
    if(!root||!root.textContent?.trim())return null;
    const id=root.id;
+   if(id==='news-article-text'){
+     const view=document.getElementById('news-article-panel');
+     if(!view||view.style.display==='none'||!view.getClientRects().length)return null;
+     const title=norm(document.getElementById('news-article-title')?.textContent);
+     const articleId=norm(view.dataset.annotationArticleId);
+     const content=norm(root.textContent).slice(0,700);
+     if(!title||title==='Bài đọc'||!content)return null;
+     // Use the real news_articles.id captured from the article card. The
+     // fallback is for teacher-created articles opened before a card exists.
+     return {root,view,title,key:'news:'+(articleId||hash(title+'|'+content)),prefix:'news'};
+   }
    const prefix=id==='ctest-take-sections'?'ctest':id==='ilt-take-body'?'ilt':'irt';
    const view=document.getElementById(prefix+'-take-view');
    if(!view||view.style.display==='none'||!view.getClientRects().length)return null;
@@ -133,13 +144,19 @@
      if(currentRoot===root){currentRoot=null;setHighlights('ldd-test-saved-highlight',[]);setHighlights('ldd-test-saved-note',[]);}
      return;
    }
-   if(currentRoot!==root){
+   if(currentRoot!==root||state(info)?.key!==info.key){
      currentRoot=root;
      setHighlights('ldd-test-saved-highlight',[]);
      setHighlights('ldd-test-saved-note',[]);
    }
    try{await ensure(info);if(currentRoot===root)draw(info);}
-   catch(e){console.warn('[LDD annotations] restore:',e);}
+   catch(e){
+     if(currentRoot===root){
+       setHighlights('ldd-test-saved-highlight',[]);
+       setHighlights('ldd-test-saved-note',[]);
+     }
+     console.warn('[LDD annotations] restore:',e);
+   }
  }
  function schedule(root){
    clearTimeout(refreshTimer);
@@ -150,12 +167,14 @@
    if(!btn){
      btn=document.createElement('button');btn.type='button';btn.className='ldd-exam-notes-button';
      btn.addEventListener('click',()=>{const latest=scope(info.root);if(latest)void openList(latest);});
-     info.view.querySelector('.ctest-take-header')?.appendChild(btn);
+     const header=info.view.querySelector('.ctest-take-header,.ilt-take-header,.irt-take-header,.grammar-panel-header,[id$="-take-header"]')
+       ||info.view.querySelector('[id$="-take-title"]')?.parentElement||info.view;
+     header.appendChild(btn);
    }
    if(!btn)return;
    const s=state(info);
    const count=s?.items.filter(item=>item.kind==='note').length||0;
-   btn.textContent='📝 Ghi chú của tôi'+(count?' ('+count+')':'');
+   btn.textContent=(info.prefix==='news'?'📝 Ghi chú bài báo':'📝 Ghi chú của tôi')+(count?' ('+count+')':'');
  }
  function modal(){
    if(overlay)return overlay;
@@ -218,7 +237,7 @@
  function note(data){
    const root=rootFor(data.range),info=scope(root);
    if(!info){
-     // Outside exams, keep notes on this device; exam notes are always account-backed.
+     // Outside the supported article/exam readers, keep a device-local note.
      const k='ldd:selection-note:'+hash(location.pathname+'|'+(data.source||'')+'|'+data.text);
      let previous='';
      try{previous=localStorage.getItem(k)||'';}catch(_){}
@@ -265,6 +284,16 @@
    m.hidden=false;
  }
  function boot(){
+   // Remember the immutable article ID before the existing news click handler
+   // opens a card. Avoid keying annotations to a mutable headline or content.
+   function rememberArticleId(e){
+     const card=e.target?.closest?.('#news-cards-grid .news-card[data-article-id]');
+     if(!card||e.target.closest('.news-card-delete-btn'))return;
+     const panel=document.getElementById('news-article-panel');
+     if(panel)panel.dataset.annotationArticleId=card.dataset.articleId;
+   }
+   document.addEventListener('pointerdown',rememberArticleId,true);
+   document.addEventListener('click',rememberArticleId,true);
    ROOTS.forEach(id=>{
      const root=document.getElementById(id);if(!root)return;
      const view=root.closest('[id$="-take-view"]')||root.parentElement;
@@ -272,7 +301,7 @@
      observer.observe(root,{subtree:true,childList:true,characterData:true});
      if(view){
        new MutationObserver(()=>schedule(root)).observe(view,{attributes:true,attributeFilter:['style','class']});
-       const title=view.querySelector('[id$="-take-title"]');
+       const title=view.querySelector(id==='news-article-text'?'#news-article-title':'[id$="-take-title"]');
        if(title)new MutationObserver(()=>schedule(root)).observe(title,{childList:true,characterData:true,subtree:true});
      }
      schedule(root);
