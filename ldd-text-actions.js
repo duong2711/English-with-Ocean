@@ -129,12 +129,17 @@
  function positionMenu(data){
    const host=hostForRange(data.range);
    if(menu.parentElement!==host)host.appendChild(menu);
-   const rect=data.range.getBoundingClientRect?.()||{left:24,top:24,bottom:24,width:0};
+   // A selected article can span multiple screens. Anchor the menu to
+   // the last visible line, not to the enormous union rectangle.
+   const pieces=Array.from(data.range.getClientRects?.()||[]);
+   const visible=pieces.filter(r=>r.bottom>0&&r.top<window.innerHeight&&r.width>=0);
+   const rect=visible[visible.length-1]||data.range.getBoundingClientRect?.()||{left:24,top:24,bottom:24,width:0};
    menu.hidden=false;
    const width=menu.offsetWidth||174;
    const left=Math.max(8,Math.min(window.innerWidth-width-8,rect.left+(rect.width||0)/2-width/2));
    const top=rect.top>65?rect.top-menu.offsetHeight-10:rect.bottom+10;
-   menu.style.left=left+'px';menu.style.top=Math.max(8,top)+'px';
+   menu.style.left=left+'px';
+   menu.style.top=Math.min(Math.max(8,window.innerHeight-menu.offsetHeight-8),Math.max(8,top))+'px';
  }
  function present(data){
    setup(); if(!data)return;
