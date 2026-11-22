@@ -44,7 +44,7 @@
     // Remove non-article HTML rather than hiding it with CSS: it must not
     // reach the text-to-sentences pipeline or student word-tap handlers.
     container.querySelectorAll('script,style,iframe,noscript,svg,canvas,form,nav,[data-news-no-translate],.ldd-news-nontranslate-meta').forEach(el=>el.remove());
-    const candidates=Array.from(container.querySelectorAll('p,figcaption,details,small,aside,footer,div,li,h4,h5,h6'));
+    const candidates=Array.from(container.querySelectorAll('p,figcaption,details,small,aside,footer,section,div,li,h4,h5,h6'));
     for(const el of candidates){
       if(!container.contains(el))continue;
       if(el.matches('.ldd-news-image-attribution,figcaption,footer,[class*="image-credit"],[class*="photo-credit"],[class*="caption"]')){
@@ -53,7 +53,7 @@
         el.remove();continue;
       }
       // A wrapper containing genuine paragraphs is not itself a footer.
-      if(el.matches('div,aside')&&el.querySelector('p,li'))continue;
+      if(el.matches('div,aside,section')&&el.querySelector('p,li'))continue;
       const value=normalizeText(el.textContent);
       if(!value)continue;
       if(GLOSSARY.test(value)){
@@ -68,8 +68,11 @@
           meta.imageCredit=value.slice(0,1500);
         el.remove();continue;
       }
-      // Some older articles have a standalone small credit with no colon.
-      if(el.matches('small')&&/wikimedia|commons|creative\s+commons|cc\s+by|public\s+domain|ảnh\s+minh\s+họa/iu.test(value)){
+      // Standalone <small> contains editorial credits or side-notes, not the article.
+      // Even an unlabelled small-print line must never become a translation sentence.
+      const standaloneSmall=el.matches('small') && el.parentElement?.matches('p,div,section') &&
+        normalizeText(el.parentElement.textContent)===value;
+      if(el.matches('small')&&(standaloneSmall||/wikimedia|commons|creative\s+commons|cc\s+by|public\s+domain|ảnh\s+minh\s+họa/iu.test(value))){
         if(!meta.imageCredit)meta.imageCredit=value.slice(0,1500);
         const parent=el.parentElement;
         el.remove();
