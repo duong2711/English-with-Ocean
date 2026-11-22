@@ -6620,11 +6620,27 @@ function toggleCompletion(symbolElement) {
             return !!(p && p.learned);
         }
 
-        // [MỚI] Từ đã được CHẤM PHÁT ÂM ít nhất 1 lần chưa (không phân biệt đã "đã học" hay
-        // chưa) — dùng để xác định badge số + bắt buộc đọc trong "Kho từ vựng của tôi".
+        // Một điểm đọc hợp lệ (kể cả 0%) là bằng chứng từ đã được chấm.
+        // Chỉ xét tiến độ của tài khoản đang đăng nhập; nhiều nghĩa của cùng một từ
+        // có thể tạo các vocab_id khác nhau nhưng không nên bắt đọc lặp lại.
+        function savedPronunciationScore(progress) {
+            if (!progress || progress.pron_score === null || progress.pron_score === undefined || progress.pron_score === '') return null;
+            const score = Number(progress.pron_score);
+            return Number.isFinite(score) && score >= 0 && score <= 100 ? score : null;
+        }
+        function recordedPronunciationForWord(wordNorm) {
+            const norm = normalizeWord(wordNorm);
+            const match = myVocabList.find(v =>
+                normalizeWord(v.word_norm || v.word) === norm &&
+                savedPronunciationScore(vocabWordProgressMap[String(v.id)]) !== null);
+            if (!match) return null;
+            return { id: match.id, score: savedPronunciationScore(vocabWordProgressMap[String(match.id)]) };
+        }
         function isVocabWordPronounced(vocabId) {
-            const p = vocabWordProgressMap[String(vocabId)];
-            return !!(p && p.pron_first_checked);
+            const entry = myVocabList.find(v => String(v.id) === String(vocabId));
+            return entry
+                ? recordedPronunciationForWord(entry.word_norm || entry.word) !== null
+                : savedPronunciationScore(vocabWordProgressMap[String(vocabId)]) !== null;
         }
 
         // [MỚI] Badge số hiện trên thẻ "⭐ Từ vựng của tôi" (ở màn hình chọn mục "Từ vựng"),
@@ -7036,10 +7052,9 @@ function toggleCompletion(symbolElement) {
         // "hạng" (tier) — tức còn cần thêm bao nhiêu lần đọc ĐẠT nữa thì từ đó mới được đánh
         // dấu "đã học" trong bài kiểm tra từ vựng (xem recordPronunciationAttempt bên dưới).
         //
-        // [SỬA] Bắt buộc đọc ở MỌI hộp thoại tra từ, bất kể tra ở khu vực nào (Tin ngắn, IELTS,
-        // Cho bé, THCS/THPT...) và bất kể từ đó mới hay đã có sẵn trong "Từ vựng của tôi" — xem
-        // wordLookupIsGatedContext bên dưới (trước đây chỉ bắt ở Cho bé/THCS-THPT + từ đã lưu
-        // nhưng chưa chấm phát âm, giờ bỏ giới hạn phạm vi này theo yêu cầu).
+        // Bắt đọc lần đầu ở các hộp thoại tra từ thường, nhưng KHÔNG bắt lại
+        // nếu tài khoản đã có điểm đọc cho từ đó (kể cả 0% và các nghĩa khác).
+        // Trong bài kiểm tra, tra từ vẫn không bắt dùng micro.
         const wordLookupPronounceRow    = document.getElementById('word-lookup-pronounce-row');
         const wordLookupMicBtn          = document.getElementById('word-lookup-mic-btn');
         const wordLookupPronounceStatus = document.getElementById('word-lookup-pronounce-status');
@@ -7050,11 +7065,11 @@ function toggleCompletion(symbolElement) {
         let wordLookupTechErrorCount    = 0;     // đếm lỗi KỸ THUẬT (mất mạng, lỗi server...), KHÔNG tính điểm thấp là lỗi
         const WL_MAX_TECH_ERRORS = 3;
         let wordLookupPronounceVocabId  = null;  // vocab_id để lưu điểm phát âm (null nếu từ MỚI, chưa lưu vào "Từ vựng của tôi")
+        let wordLookupPreviousScore    = null;  // điểm đọc có sẵn của từ, kể cả nếu lưu dưới vocab_id của nghĩa khác
         let wordLookupPendingScore      = null;  // điểm vừa chấm được của từ MỚI, chờ gắn vocab_id sau khi lưu xong (xem runFreshWordLookup)
 
-        // [SỬA] Luôn bắt buộc đọc để chấm điểm, ở BẤT KỲ hộp thoại tra từ nào — không còn giới
-        // hạn theo khu vực (Cho bé/THCS-THPT) hay theo việc từ đã lưu/đã học hay chưa nữa.
-        // Giữ nguyên tham số (wordEl, norm) để không phải sửa các chỗ đang gọi hàm này.
+        // Chỉ xác định bối cảnh nào có thể yêu cầu đọc: điểm đã có hay chưa
+        // được kiểm tra riêng bằng recordedPronunciationForWord().
         function wordLookupIsGatedContext(wordEl, norm) {
             // Tra từ ngay trong bài kiểm tra là thao tác được phép: không bắt dùng micro.
             if (wordEl && wordEl.closest && wordEl.closest('.ldd-exam-lookup-word')) return false;
@@ -7064,7 +7079,18 @@ function toggleCompletion(symbolElement) {
         function wordLookupUpdatePronounceUI() {
             if (!wordLookupPronounceRow || !wordLookupMicBtn || !wordLookupPronounceStatus) return;
             if (!wordLookupPronounceRequired) {
-                wordLookupPronounceRow.style.display = 'none';
+                // Từ đã có điểm đọc: micro vẫn dùng được để luyện tự nguyện,
+                // nhưng KHÔNG được khóa đóng popup hoặc buộc đọc lại.
+                wordLookupPronounceRow.style.display = wordLookupPreviousScore === null ? 'none' : 'flex';
+                wordLookupMicBtn.style.display = '';
+                wordLookupMicBtn.disabled = wordLookupPronounceDone;
+                wordLookupMicBtn.classList.toggle('kf-mic-done', wordLookupPronounceDone);
+                if (wordLookupPreviousScore !== null) {
+                    wordLookupPronounceStatus.textContent = wordLookupPronounceDone
+                        ? '✅ Đã chấm lần luyện mới: ' + Math.round(wordLookupPreviousScore) + '%.'
+                        : '✅ Đã có điểm đọc: ' + Math.round(wordLookupPreviousScore) + '% — không cần đọc lại.';
+                    wordLookupPronounceStatus.className = 'word-lookup-pronounce-status word-lookup-pronounce-correct';
+                }
                 return;
             }
             // [LƯU Ý] CSS mặc định của .word-lookup-pronounce-row là display:none — phải gán rõ
@@ -7125,6 +7151,7 @@ function toggleCompletion(symbolElement) {
                     onDone: (score) => {
                         wordLookupMicBtn.classList.remove('kf-mic-listening');
                         wordLookupPronounceDone = true; // đọc xong 1 lần là đóng được, dù đạt hay không
+                        wordLookupPreviousScore = score;
                         const passed = score >= VOCAB_PRON_PASS_THRESHOLD;
                         wordLookupPronounceStatus.textContent = passed
                             ? `✅ Đạt (${score}%)! Giờ bạn có thể đóng hộp thoại này.`
@@ -7192,6 +7219,15 @@ function toggleCompletion(symbolElement) {
 
             wordLookupWordEl.textContent = rawWord;
             wordLookupPopup.style.display = 'flex';
+            const lookupToken = ++wordLookupSeq;
+            wordLookupPronounceRequired = false;
+            wordLookupPreviousScore = null;
+            wordLookupUpdatePronounceUI();
+            wordLookupBody.innerHTML = '<div class="word-lookup-loading">🔎 Đang kiểm tra lịch sử tra từ...</div>';
+            // iOS/Safari: giữ thao tác phát âm TTS đồng bộ với cú chạm trước khi await.
+            if (!isExamLookup && typeof window.speakEnglishWord === 'function') window.speakEnglishWord(rawWord);
+            await ensureMyVocabLoaded();
+            if (lookupToken !== wordLookupSeq || wordLookupPopup.style.display === 'none') return;
 
             // QUAN TRỌNG: nếu từ này (không phân biệt hoa/thường) đã có sẵn trong "Từ vựng của
             // tôi" thì lấy sẵn ra đây (tính SỚM hơn vị trí cũ) để vừa biết vocab_id (dùng lưu
@@ -7199,16 +7235,17 @@ function toggleCompletion(symbolElement) {
             // không — xem wordLookupIsGatedContext).
             const existingEntries = myVocabList.filter(v => normalizeWord(v.word_norm || v.word) === norm);
 
-            // [SỬA - Cloudflare Workers AI] Bắt buộc đọc mới được đóng hộp thoại khi từ này nằm
-            // trong khu vực Flashcard/Câu chuyện "Cho bé"/THCS-THPT, HOẶC đã có trong "Từ vựng
-            // của tôi" nhưng chưa "đã học" (xem wordLookupIsGatedContext).
-            wordLookupPronounceRequired = wordLookupIsGatedContext(wordEl, norm);
+            // Từ đã có điểm đọc ở BẤT KỲ bài học nào đều không bắt đọc lần nữa.
+            // Nếu có nhiều mục từ cùng chữ (khác nghĩa), dùng điểm từ mục đã chấm.
+            const recorded = recordedPronunciationForWord(norm);
+            wordLookupPronounceRequired = wordLookupIsGatedContext(wordEl, norm) && recorded === null;
+            wordLookupPreviousScore = recorded ? recorded.score : null;
             wordLookupPronounceWord = rawWord;
             wordLookupPronounceDone = false;
             wordLookupMicBlocked = false;
             wordLookupTechErrorCount = 0;
             wordLookupPendingScore = null;
-            wordLookupPronounceVocabId = existingEntries.length > 0 ? existingEntries[0].id : null;
+            wordLookupPronounceVocabId = recorded ? recorded.id : (existingEntries.length > 0 ? existingEntries[0].id : null);
             wordLookupUpdatePronounceUI();
 
             // Tự động phát âm ngay khi học viên chạm vào từ (gọi NGAY, đồng bộ, không
@@ -7217,8 +7254,6 @@ function toggleCompletion(symbolElement) {
             // speakEnglishWord được khai báo ở một khối code khác trong file.
             // Trong bài thi, không tự phát TTS làm gián đoạn IELTS Listening.
             // Học viên vẫn có thể chủ động bấm nút loa trong popup nếu muốn.
-            if (!isExamLookup && typeof window.speakEnglishWord === 'function') window.speakEnglishWord(rawWord);
-
             // Nút loa 🔊 để học viên bấm nghe lại bất cứ lúc nào trong lúc xem giải thích
             if (wordLookupSpeakBtn) {
                 wordLookupSpeakBtn.onclick = () => {
@@ -7277,11 +7312,8 @@ function toggleCompletion(symbolElement) {
             }
         }
 
-        // [MỚI - Cloudflare Workers AI] Mở lại hộp thoại tra từ cho 1 từ ĐÃ LƯU nhưng CHƯA
-        // "đã học", khi học viên chủ động bấm vào từ đó trong "Kho từ vựng của tôi" — giúp
-        // luyện đọc thêm ngay mà không cần chờ gặp lại từ đó ở 1 bài đọc khác. Dùng lại đúng
-        // khung + logic chấm phát âm của khung tra từ bình thường (wordLookupIsGatedContext
-        // sẽ tự bắt buộc đọc vì từ này chưa "đã học").
+        // Mở lại từ trong Kho từ vựng: từ chưa có điểm thì cần đọc một lần;
+        // từ đã có điểm chỉ hiện thông tin cũ và cho phép luyện thêm nếu muốn.
         function openMyVocabPracticePopup(vocabId) {
             if (!wordLookupPopup || !wordLookupBody || !wordLookupWordEl) return;
             const entry = myVocabList.find(v => String(v.id) === String(vocabId));
@@ -7290,16 +7322,19 @@ function toggleCompletion(symbolElement) {
             const norm = normalizeWord(entry.word_norm || entry.word);
             const entries = myVocabList.filter(v => normalizeWord(v.word_norm || v.word) === norm);
 
+            ++wordLookupSeq;
             wordLookupWordEl.textContent = rawWord;
             wordLookupPopup.style.display = 'flex';
 
-            wordLookupPronounceRequired = true; // đang chủ động luyện từ chưa học -> luôn bắt đọc
+            const recorded = recordedPronunciationForWord(norm);
+            wordLookupPronounceRequired = recorded === null; // đã có điểm thì không bắt đọc lại
+            wordLookupPreviousScore = recorded ? recorded.score : null;
             wordLookupPronounceWord = rawWord;
             wordLookupPronounceDone = false;
             wordLookupMicBlocked = false;
             wordLookupTechErrorCount = 0;
             wordLookupPendingScore = null;
-            wordLookupPronounceVocabId = entry.id;
+            wordLookupPronounceVocabId = recorded ? recorded.id : entry.id;
             wordLookupUpdatePronounceUI();
 
             if (typeof window.speakEnglishWord === 'function') window.speakEnglishWord(rawWord);
@@ -7476,10 +7511,10 @@ function toggleCompletion(symbolElement) {
                 // [SỬA - Cloudflare Workers AI] Bất kể đã học hay chưa: từ CHƯA từng chấm phát
                 // âm -> badge "Chưa đọc" (bắt buộc đọc khi bấm vào); từ ĐÃ chấm rồi -> hiện %
                 // điểm phát âm gần nhất (pron_score) thay vì số lần đạt như trước.
-                const pronProg = vocabWordProgressMap[String(v.id)];
-                const pronounced = !!(pronProg && pronProg.pron_first_checked);
+                const recorded = recordedPronunciationForWord(v.word_norm || v.word);
+                const pronounced = recorded !== null;
                 const pronBadge = pronounced
-                    ? `<span class="myvocab-pron-badge">🎤 ${Math.round(pronProg.pron_score || 0)}%</span>`
+                    ? `<span class="myvocab-pron-badge">🎤 ${Math.round(recorded.score)}%</span>`
                     : '<span class="myvocab-pron-missing-badge">🎤 Chưa đọc</span>';
                 // [MỚI] Phiên âm IPA của từ (nếu có) — hiện ngay cạnh từ để học viên đọc chính
                 // xác hơn. Nhiều từ lưu TRƯỚC KHI có cột "phonetic" sẽ tạm thời không có, xem
@@ -8212,12 +8247,9 @@ function toggleCompletion(symbolElement) {
                     return;
                 }
 
-                // [SỬA] Ưu tiên CHƯA PHÁT ÂM lên trên hết: từ nào chưa từng được chấm phát âm
-                // (dù đã "đã học" hay chưa) -> LUÔN mở lại hộp thoại tra từ để bắt đọc trước.
-                // Chỉ khi đã phát âm rồi VÀ đã "đã học" thì mới mở khung ôn lại nghĩa (sai thì
-                // trừ 0.5 điểm chăm chỉ — xem openVocabWordReviewCheck() bên dưới); còn lại
-                // (đã phát âm nhưng chưa "đã học" — còn thiếu lượt đọc đạt hoặc thiếu streak
-                // dịch/điền từ) vẫn cho luyện đọc thêm qua openMyVocabPracticePopup().
+                // Chưa có điểm đọc -> yêu cầu đọc lần đầu. Có điểm và đã thuộc ->
+                // ôn lại nghĩa; có điểm nhưng chưa thuộc -> có thể luyện đọc thêm,
+                // không bắt buộc khi chỉ xem lại từ.
                 const item = e.target.closest('.myvocab-item');
                 if (item) {
                     const idAttr = item.dataset.vocabId;
