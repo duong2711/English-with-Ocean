@@ -29,6 +29,16 @@
     }
     return base;
   }
+  function keepLinks(meta,el,kind){
+    const urls=Array.from(el.querySelectorAll('a[href]')).map(a=>a.href).filter(Boolean).slice(0,10);
+    if(!urls.length)return;
+    if(kind==='source' && !meta.editorialSourceUrls)meta.editorialSourceUrls=urls;
+    if(kind==='photo'){
+      if(!meta.imageUrl)meta.imageUrl=urls[0];
+      const license=urls.find(url=>/creativecommons\\.org|publicdomain/iu.test(url));
+      if(license&&!meta.imageLicenseUrl)meta.imageLicenseUrl=license;
+    }
+  }
   function unpack(el){
     try{return JSON.parse(decodeURIComponent(el.getAttribute('data-meta')||''));}
     catch(_){return null;}
@@ -50,6 +60,7 @@
       if(el.matches('.ldd-news-image-attribution,figcaption,footer,[class*="image-credit"],[class*="photo-credit"],[class*="caption"]')){
         const credit=normalizeText(el.textContent);
         if(credit&&!meta.imageCredit)meta.imageCredit=credit;
+        keepLinks(meta,el,'photo');
         el.remove();continue;
       }
       // A wrapper containing genuine paragraphs is not itself a footer.
@@ -63,9 +74,13 @@
       }
       const hasMedia=!!el.querySelector('a[href],small');
       if(FOOTER.test(value)||CLUTTER.test(value)){
-        if(/^sources?\s*[:：]/iu.test(value)&&!meta.editorialSources)meta.editorialSources=value.slice(0,1500);
-        else if((/^\s*(?:ảnh|hình|image|photo|picture|credit)/iu.test(value)||hasMedia)&&!meta.imageCredit)
-          meta.imageCredit=value.slice(0,1500);
+        if(/^sources?\s*[:：]/iu.test(value)){
+          if(!meta.editorialSources)meta.editorialSources=value.slice(0,1500);
+          keepLinks(meta,el,'source');
+        }else if(/^\s*(?:ảnh|hình|image|photo|picture|credit)/iu.test(value)||hasMedia){
+          if(!meta.imageCredit)meta.imageCredit=value.slice(0,1500);
+          keepLinks(meta,el,'photo');
+        }
         el.remove();continue;
       }
       // Standalone <small> contains editorial credits or side-notes, not the article.
@@ -74,6 +89,7 @@
         normalizeText(el.parentElement.textContent)===value;
       if(el.matches('small')&&(standaloneSmall||/wikimedia|commons|creative\s+commons|cc\s+by|public\s+domain|ảnh\s+minh\s+họa/iu.test(value))){
         if(!meta.imageCredit)meta.imageCredit=value.slice(0,1500);
+        keepLinks(meta,el,'photo');
         const parent=el.parentElement;
         el.remove();
         if(parent&&parent.matches('p')&&!normalizeText(parent.textContent))parent.remove();
