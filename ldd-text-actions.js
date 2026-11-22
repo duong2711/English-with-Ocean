@@ -229,7 +229,7 @@
    const token=auth.data?.session?.access_token;
    if(!token)throw Error('Hãy đăng nhập để dịch đoạn văn.');
    const chunks=[];
-   const words=text.split(/\\s+/);
+   const words=text.split(/\s+/);
    let segment='';
    for(const word of words){
      if(segment && segment.length+word.length+1>2400){
@@ -254,7 +254,7 @@
      if(!translated)throw Error('Chưa nhận được bản dịch.');
      results.push(String(translated).trim());
    }
-   return results.join('\\n\\n');
+   return results.join('\n\n');
  }
  async function translate(data){
    if(WORD.test(data.text)){translateWord(data);return;}
@@ -300,7 +300,7 @@
  // Default behavior is ALWAYS the three-action menu, not direct translation.
  function presentWordElement(el){
    if(!el||blocked(el.parentElement)||!el.isConnected)return false;
-   const text=normalize(el.dataset?.word||el.textContent);
+   const text=normalize(el.dataset?.word||el.dataset?.lddLookupWord||el.textContent);
    if(!WORD.test(text))return false;
    const range=document.createRange();
    range.selectNodeContents(el);
