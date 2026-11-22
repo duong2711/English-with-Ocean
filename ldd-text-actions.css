@@ -48,3 +48,25 @@ mark.ldd-user-mark{background:rgba(255,197,41,.68);color:inherit;border-radius:2
 #ctest-take-view.ctest-no-select :is(#ctest-take-sections,#ctest-take-notes) *:not(input):not(textarea):not(select):not(button){
   user-select:text!important;-webkit-user-select:text!important;
 }
+
+
+/* All text in an article, including nested tappable words, supports native
+   multi-paragraph selection on phones and desktops. Future readers can opt in
+   via data-ldd-text-actions without writing custom tap handlers. */
+#news-article-text,
+#news-article-text .tappable-word,
+[data-ldd-text-actions],
+[data-ldd-text-actions] .tappable-word,
+.ldd-comic-overlay .tappable-word,
+.ldd-wimpy-reader .tappable-word{
+  -webkit-user-select:text;
+  user-select:text;
+}
+.ldd-text-action-dialog .ldd-phrase-definition{
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+}
+.ldd-text-action-dialog h3{
+  max-height:6.6em;
+  overflow:auto;
+}
