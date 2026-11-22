@@ -46,7 +46,7 @@
     container.querySelectorAll('script,style,iframe,noscript,svg,canvas,form,nav,[data-news-no-translate],.ldd-news-nontranslate-meta').forEach(el=>el.remove());
     const candidates=Array.from(container.querySelectorAll('p,figcaption,details,small,aside,footer,div,li,h4,h5,h6'));
     for(const el of candidates){
-      if(!el.isConnected||!container.contains(el))continue;
+      if(!container.contains(el))continue;
       if(el.matches('.ldd-news-image-attribution,figcaption,footer,[class*="image-credit"],[class*="photo-credit"],[class*="caption"]')){
         const credit=normalizeText(el.textContent);
         if(credit&&!meta.imageCredit)meta.imageCredit=credit;
