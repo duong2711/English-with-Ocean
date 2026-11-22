@@ -16,14 +16,16 @@ test('tapping or selecting text exposes exactly Translate, Highlight and Note ac
  assert.match(actions,/data-action="translate">/);
  assert.match(actions,/window\.addEventListener\('click',[\s\S]*?true\);/);
  assert.match(actions,/e\.stopImmediatePropagation\(\)/);
- assert.match(actions,/closest\?\.\('\.tappable-word,\.ldd-exam-lookup-word'\)/);
+ assert.match(actions,/closest\?\.\('\.tappable-word,\.ldd-exam-lookup-word,\[data-ldd-lookup-word\]'\)/);
  assert.match(actions,/wordAtPoint\(e\)/);
  assert.match(actions,/translateWord\(\{text:clean,context:context\|\|clean,source:'Bài nghe Phim ảnh'\}\)/);
 });
 test('news article touch taps and phrase selections use the three-action menu',()=>{
  assert.match(actions,/function inArticleText\(node\)/);
  assert.match(actions,/articleSelection=inArticleText\(r\.startContainer\)&&inArticleText\(r\.endContainer\)/);
- assert.match(actions,/lastTouch<550 && !inArticleText\(e\.target\)/);
+ assert.match(actions,/const READING_ROOT=/);
+ assert.match(actions,/MAX_SELECTION=20000/);
+ assert.match(actions,/!isLookupReader\(node\)/);
  assert.match(actions,/if\(selection\)\{present\(selection\);return;\}/);
  assert.match(actions,/const word=wordAtPoint\(e\)/);
 });
@@ -57,11 +59,11 @@ test('no-lookup tests remain excluded, and phrase translation never invokes pron
 test('shared collocations render in existing vocabulary category and assets load globally',()=>{
  assert.match(grammar,/from\('collocation_bank'\)/);
  assert.match(grammar,/select\('phrase,meaning_vi'\)/);
- assert.match(boot,/ldd-text-actions\.js\?v=20261121-article-three-actions1/);
- assert.match(boot,/ldd-test-annotations\.js\?v=20261121-persistent-article-annotations1/);
- assert.match(boot,/ldd-text-actions\.css\?v=20261120-selection-notes1/);
+ assert.match(boot,/ldd-text-actions\.js\?v=20261122-universal-three-actions1/);
+ assert.match(boot,/ldd-test-annotations\.js\?v=20261122-universal-three-actions1/);
+ assert.match(boot,/ldd-text-actions\.css\?v=20261122-universal-three-actions1/);
  assert.match(boot,/ldd-ui-vocab-grammar\.js\?v=20261119-conj-return1/);
- assert.match(page,/ldd-ui-upgrade\.js\?v=20261121-article-three-actions1/);
+ assert.match(page,/ldd-ui-upgrade\.js\?v=20261122-universal-three-actions1/);
  assert.match(page,/scriptphonetics\.js\?v=20261122-pronunciation-history1/);
 });
 test('assigned-test highlights and notes use account-owned Supabase rows and safe text anchors',()=>{
@@ -94,6 +96,39 @@ test('news annotations retain their account-specific identity and text anchors',
  assert.match(annotations,/function resolveRange\(root,entry\)/);
  assert.match(annotations,/normalized\.indexOf\(expected/);
  assert.match(annotations,/if\(currentRoot!==root\|\|state\(info\)\?\.key!==info\.key\)/);
- assert.match(boot,/ldd-test-annotations\.js\?v=20261121-persistent-article-annotations1/);
- assert.match(page,/ldd-ui-upgrade\.js\?v=20261121-article-three-actions1/);
+ assert.match(boot,/ldd-test-annotations\.js\?v=20261122-universal-three-actions1/);
+ assert.match(page,/ldd-ui-upgrade\.js\?v=20261122-universal-three-actions1/);
+});
+
+test('every dictionary-enabled reading surface uses the same three actions by default',()=>{
+ assert.match(actions,/const READING_ROOT=/);
+ assert.match(actions,/data-ldd-text-actions/);
+ assert.match(actions,/function presentWordElement\(el\)/);
+ assert.match(actions,/function presentSelection\(\)/);
+ assert.match(actions,/LDDTextActions=\{openWord,translateTerm,explainVietnamese,presentWordElement,presentSelection\}/);
+ assert.match(actions,/tapped && presentWordElement\(tapped\)/);
+ assert.match(actions,/e\.stopImmediatePropagation\(\)/);
+ assert.match(actions,/if\(selection\)\{present\(selection\);return;\}/);
+ assert.doesNotMatch(actions,/lastTouch<550/);
+});
+test('the whole news article can be highlighted, annotated, or translated as passage text',()=>{
+ assert.match(actions,/MAX_SELECTION=20000/);
+ assert.match(actions,/articleSelection=inArticleText\(r\.startContainer\)&&inArticleText\(r\.endContainer\)/);
+ assert.match(actions,/menu\.querySelector\('\[data-action="translate"\]'\)\.disabled=!english/);
+ assert.match(actions,/async function passageRequest\(text\)/);
+ assert.match(actions,/text\.split\(\/\\s\+\/\)/);
+ assert.match(actions,/functions\/v1\/ai-proxy/);
+ assert.match(actions,/Văn bản:.*JSON\.stringify\(chunk\)/);
+ assert.match(actions,/const isPhrase=PHRASE\.test\(data\.text\)/);
+ assert.match(styles,/user-select:text/);
+ assert.match(styles,/white-space:pre-wrap/);
+ assert.match(annotations,/function editor\(quote,value,onSave,sourceRange\)/);
+ assert.match(annotations,/source\?\.closest\?\.\('dialog\[open\]'\)\|\|document\.body/);
+});
+test('exam taps keep their no-microphone exception and comic dialog lookups stay visible',()=>{
+ assert.match(actions,/if\(node\?\.closest\('\.ldd-exam-lookup-root'\)\|\|source==='Bài kiểm tra'\)/);
+ assert.match(actions,/function keepLegacyLookupAboveDialog\(range\)/);
+ assert.match(actions,/host\.addEventListener\('close',function restorePopup\(\)/);
+ assert.match(actions,/keepLegacyLookupAboveDialog\(data\.range\)/);
+ assert.match(actions,/hostForRange\(data\.range\)/);
 });
