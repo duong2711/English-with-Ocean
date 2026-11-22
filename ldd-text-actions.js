@@ -79,7 +79,10 @@
      const caret=document.caretRangeFromPoint(event.clientX,event.clientY);
      node=caret?.startContainer;offset=caret?.startOffset;
    }
-   if(!node||node.nodeType!==3||blocked(node)||!inLearningArea(node)||!isLookupReader(node))return null;
+   if(!node||node.nodeType!==3||blocked(node)||!inLearningArea(node))return null;
+   // Preserve legacy desktop lookup for unmarked lesson paragraphs. On touch,
+   // only explicit readers/lookup words intercept taps, so game tiles keep working.
+   if(!isLookupReader(node)&&Date.now()-lastTouch<550)return null;
    const s=node.nodeValue||'';
    if(/[À-ỹĐđ]/u.test(s))return null;
    const isLetter=c=>/[A-Za-z'’\-]/.test(c||'');
