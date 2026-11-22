@@ -5504,7 +5504,7 @@ function toggleCompletion(symbolElement) {
                     date: row.date,
                     title: row.title,
                     thumb: row.thumb,
-                    content: row.content,
+                    content: window.LDDNewsContent ? window.LDDNewsContent.clean(row.content) : row.content,
                     quiz: Array.isArray(row.quiz) ? row.quiz : [],
                     created_at: row.created_at || null
                 }));
@@ -5547,7 +5547,9 @@ function toggleCompletion(symbolElement) {
 
         // Cập nhật 1 hoặc nhiều trường của 1 bài tin — dùng cho autosave từng phần
         async function updateNewsArticleDB(articleId, fields) {
-            const payload = { ...fields, updated_at: new Date().toISOString(), updated_by: currentEmail };
+            const cleanFields = fields && Object.prototype.hasOwnProperty.call(fields, 'content') && window.LDDNewsContent
+                ? { ...fields, content: window.LDDNewsContent.clean(fields.content) } : fields;
+            const payload = { ...cleanFields, updated_at: new Date().toISOString(), updated_by: currentEmail };
             const { error } = await sb
                 .from('news_articles')
                 .update(payload)
@@ -5790,6 +5792,8 @@ function toggleCompletion(symbolElement) {
 
         // Chuyển nội dung HTML của bài báo thành văn bản thuần, giữ khoảng trắng giữa các đoạn/dòng
         function articleHtmlToPlainText(html) {
+            // Never feed image credits, sources or the glossary into translation.
+            if (window.LDDNewsContent) return window.LDDNewsContent.toPlainText(html);
             const withSpaces = String(html || '')
                 .replace(/<\/(p|div|li|h[1-6])>/gi, ' ')
                 .replace(/<br\s*\/?>/gi, ' ');
@@ -6473,13 +6477,14 @@ function toggleCompletion(symbolElement) {
             // Với GIẢNG VIÊN: vẫn giữ nguyên content THÔ (không bọc span) vì khung này đang
             // contentEditable — nếu bọc span vào sẽ làm rối lúc gõ/sửa bài và có nguy cơ lưu
             // nhầm các thẻ <span class="tappable-word"> lẫn vào nội dung gốc trên Supabase.
-            newsArticleText.innerHTML = isTeacher ? article.content : wrapWordsForTapHtml(article.content);
+            const readingHtml = window.LDDNewsContent ? window.LDDNewsContent.clean(article.content) : article.content;
+            newsArticleText.innerHTML = isTeacher ? readingHtml : wrapWordsForTapHtml(readingHtml);
             newsArticleText.contentEditable = isTeacher ? 'true' : 'false';
             newsArticleText.classList.toggle('news-editable', isTeacher);
             // data-vocab-context/data-vocab-source: dùng chung cơ chế đang có sẵn trong
             // handleWordTap() (xem "[data-vocab-context]" ở dưới) để AI tra nghĩa hiểu đúng
             // ngữ cảnh cả bài, và để lưu vào "Từ vựng của tôi" kèm đúng tên nguồn bài đọc.
-            newsArticleText.dataset.vocabContext = articleHtmlToPlainText(article.content);
+            newsArticleText.dataset.vocabContext = articleHtmlToPlainText(readingHtml);
             newsArticleText.dataset.vocabSource = article.title || '';
             newsEditToolbar.style.display = isTeacher ? 'flex' : 'none';
             newsEditContentStatus.textContent = '';
