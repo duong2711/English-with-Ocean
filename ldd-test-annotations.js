@@ -273,11 +273,14 @@
    catch(e){toast(e.message||'Không lưu được Highlight.');}
    return true;
  }
- function note(data){
+ async function note(data){
    const root=rootFor(data.range),info=scope(root);
    if(!info){
-     // Outside the supported article/exam readers, keep a device-local note.
-     const k='ldd:selection-note:'+hash(location.pathname+'|'+(data.source||'')+'|'+data.text);
+     // Other readers use a device-local fallback, isolated per signed-in user.
+     // Never expose a student's notes to another account sharing this browser.
+     const uid=await identity();
+     if(!uid){toast('Hãy đăng nhập để lưu ghi chú.');return;}
+     const k='ldd:selection-note:'+hash(uid+'|'+location.pathname+'|'+(data.source||'')+'|'+data.text);
      let previous='';
      try{previous=localStorage.getItem(k)||'';}catch(_){}
      editor(data.text,previous,async text=>{localStorage.setItem(k,text);},data.range);
