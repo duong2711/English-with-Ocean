@@ -7240,7 +7240,7 @@ function toggleCompletion(symbolElement) {
             // Nếu có nhiều mục từ cùng chữ (khác nghĩa), dùng điểm từ mục đã chấm.
             const recorded = recordedPronunciationForWord(norm);
             wordLookupPronounceRequired = wordLookupIsGatedContext(wordEl, norm) && recorded === null;
-            wordLookupPreviousScore = recorded ? recorded.score : null;
+            wordLookupPreviousScore = recorded && !isExamLookup ? recorded.score : null;
             wordLookupPronounceWord = rawWord;
             wordLookupPronounceDone = false;
             wordLookupMicBlocked = false;
