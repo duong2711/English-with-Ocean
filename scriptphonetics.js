@@ -7082,14 +7082,15 @@ function toggleCompletion(symbolElement) {
                 // Từ đã có điểm đọc: micro vẫn dùng được để luyện tự nguyện,
                 // nhưng KHÔNG được khóa đóng popup hoặc buộc đọc lại.
                 wordLookupPronounceRow.style.display = wordLookupPreviousScore === null ? 'none' : 'flex';
-                wordLookupMicBtn.style.display = '';
+                wordLookupMicBtn.style.display = wordLookupMicBlocked ? 'none' : '';
                 wordLookupMicBtn.disabled = wordLookupPronounceDone;
                 wordLookupMicBtn.classList.toggle('kf-mic-done', wordLookupPronounceDone);
                 if (wordLookupPreviousScore !== null) {
-                    wordLookupPronounceStatus.textContent = wordLookupPronounceDone
-                        ? '✅ Đã chấm lần luyện mới: ' + Math.round(wordLookupPreviousScore) + '%.'
-                        : '✅ Đã có điểm đọc: ' + Math.round(wordLookupPreviousScore) + '% — không cần đọc lại.';
-                    wordLookupPronounceStatus.className = 'word-lookup-pronounce-status word-lookup-pronounce-correct';
+                    const label = wordLookupPronounceDone ? 'Điểm đọc mới' : 'Đã có điểm đọc';
+                    wordLookupPronounceStatus.textContent = '📝 ' + label + ': '
+                        + Math.round(wordLookupPreviousScore) + '% — không bắt buộc đọc lại.'
+                        + (wordLookupMicBlocked ? ' Micro hiện không khả dụng.' : '');
+                    wordLookupPronounceStatus.className = 'word-lookup-pronounce-status';
                 }
                 return;
             }
