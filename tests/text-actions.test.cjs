@@ -59,11 +59,11 @@ test('no-lookup tests remain excluded, and phrase translation never invokes pron
 test('shared collocations render in existing vocabulary category and assets load globally',()=>{
  assert.match(grammar,/from\('collocation_bank'\)/);
  assert.match(grammar,/select\('phrase,meaning_vi'\)/);
- assert.match(boot,/ldd-text-actions\.js\?v=20261122-universal-three-actions1/);
- assert.match(boot,/ldd-test-annotations\.js\?v=20261122-universal-three-actions1/);
+ assert.match(boot,/ldd-text-actions\.js\?v=20261122-universal-three-actions2/);
+ assert.match(boot,/ldd-test-annotations\.js\?v=20261122-universal-three-actions2/);
  assert.match(boot,/ldd-text-actions\.css\?v=20261122-universal-three-actions1/);
  assert.match(boot,/ldd-ui-vocab-grammar\.js\?v=20261119-conj-return1/);
- assert.match(page,/ldd-ui-upgrade\.js\?v=20261122-universal-three-actions2/);
+ assert.match(page,/ldd-ui-upgrade\.js\?v=20261122-universal-three-actions3/);
  assert.match(page,/scriptphonetics\.js\?v=20261122-pronunciation-history1/);
 });
 test('assigned-test highlights and notes use account-owned Supabase rows and safe text anchors',()=>{
@@ -96,8 +96,8 @@ test('news annotations retain their account-specific identity and text anchors',
  assert.match(annotations,/function resolveRange\(root,entry\)/);
  assert.match(annotations,/normalized\.indexOf\(expected/);
  assert.match(annotations,/if\(currentRoot!==root\|\|state\(info\)\?\.key!==info\.key\)/);
- assert.match(boot,/ldd-test-annotations\.js\?v=20261122-universal-three-actions1/);
- assert.match(page,/ldd-ui-upgrade\.js\?v=20261122-universal-three-actions2/);
+ assert.match(boot,/ldd-test-annotations\.js\?v=20261122-universal-three-actions2/);
+ assert.match(page,/ldd-ui-upgrade\.js\?v=20261122-universal-three-actions3/);
 });
 
 test('every dictionary-enabled reading surface uses the same three actions by default',()=>{
@@ -141,4 +141,15 @@ test('comic and exam word-click modules use the shared three-action menu',()=>{
  assert.equal((comic.match(/window\.LDDTextActions\?\.presentWordElement\?\.\(word\)/g)||[]).length,2);
  assert.match(page,/ldd-exam-word-lookup\.js\?v=20261122-universal-three-actions1/);
  assert.match(boot,/ldd-entertainment\.js\?v=20261122-universal-three-actions1/);
+});
+
+test('fallback notes never leak between two accounts sharing one device',()=>{
+ assert.match(annotations,/async function note\(data\)/);
+ assert.match(annotations,/const uid=await identity\(\)/);
+ assert.match(annotations,/hash\(uid\+'\|'\+location\.pathname/);
+});
+test('long article action menu stays visible at the end of multi-screen selections',()=>{
+ assert.match(actions,/Array\.from\(data\.range\.getClientRects\?\.\(\)\|\|\[\]\)/);
+ assert.match(actions,/visible\[visible\.length-1\]/);
+ assert.match(actions,/window\.innerHeight-menu\.offsetHeight-8/);
 });
