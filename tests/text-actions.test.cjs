@@ -109,7 +109,8 @@ test('every dictionary-enabled reading surface uses the same three actions by de
  assert.match(actions,/tapped && presentWordElement\(tapped\)/);
  assert.match(actions,/e\.stopImmediatePropagation\(\)/);
  assert.match(actions,/if\(selection\)\{present\(selection\);return;\}/);
- assert.doesNotMatch(actions,/lastTouch<550/);
+ assert.match(actions,/if\(!isLookupReader\(node\)&&Date\.now\(\)-lastTouch<550\)return null/);
+ assert.doesNotMatch(actions,/lastTouch<550 && !inArticleText/);
 });
 test('the whole news article can be highlighted, annotated, or translated as passage text',()=>{
  assert.match(actions,/MAX_SELECTION=20000/);
