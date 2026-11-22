@@ -63,7 +63,7 @@ test('shared collocations render in existing vocabulary category and assets load
  assert.match(boot,/ldd-test-annotations\.js\?v=20261122-universal-three-actions1/);
  assert.match(boot,/ldd-text-actions\.css\?v=20261122-universal-three-actions1/);
  assert.match(boot,/ldd-ui-vocab-grammar\.js\?v=20261119-conj-return1/);
- assert.match(page,/ldd-ui-upgrade\.js\?v=20261122-universal-three-actions1/);
+ assert.match(page,/ldd-ui-upgrade\.js\?v=20261122-universal-three-actions2/);
  assert.match(page,/scriptphonetics\.js\?v=20261122-pronunciation-history1/);
 });
 test('assigned-test highlights and notes use account-owned Supabase rows and safe text anchors',()=>{
@@ -97,7 +97,7 @@ test('news annotations retain their account-specific identity and text anchors',
  assert.match(annotations,/normalized\.indexOf\(expected/);
  assert.match(annotations,/if\(currentRoot!==root\|\|state\(info\)\?\.key!==info\.key\)/);
  assert.match(boot,/ldd-test-annotations\.js\?v=20261122-universal-three-actions1/);
- assert.match(page,/ldd-ui-upgrade\.js\?v=20261122-universal-three-actions1/);
+ assert.match(page,/ldd-ui-upgrade\.js\?v=20261122-universal-three-actions2/);
 });
 
 test('every dictionary-enabled reading surface uses the same three actions by default',()=>{
@@ -132,4 +132,13 @@ test('exam taps keep their no-microphone exception and comic dialog lookups stay
  assert.match(actions,/host\.addEventListener\('close',function restorePopup\(\)/);
  assert.match(actions,/keepLegacyLookupAboveDialog\(data\.range\)/);
  assert.match(actions,/hostForRange\(data\.range\)/);
+});
+
+test('comic and exam word-click modules use the shared three-action menu',()=>{
+ const comic=fs.readFileSync(path.resolve(__dirname,'../ldd-entertainment.js'),'utf8');
+ const exam=fs.readFileSync(path.resolve(__dirname,'../ldd-exam-word-lookup.js'),'utf8');
+ assert.match(exam,/window\.LDDTextActions\?\.presentWordElement\?\.\(el\)/);
+ assert.equal((comic.match(/window\.LDDTextActions\?\.presentWordElement\?\.\(word\)/g)||[]).length,2);
+ assert.match(page,/ldd-exam-word-lookup\.js\?v=20261122-universal-three-actions1/);
+ assert.match(boot,/ldd-entertainment\.js\?v=20261122-universal-three-actions1/);
 });
