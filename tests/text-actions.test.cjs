@@ -62,7 +62,7 @@ test('shared collocations render in existing vocabulary category and assets load
  assert.match(boot,/ldd-text-actions\.css\?v=20261120-selection-notes1/);
  assert.match(boot,/ldd-ui-vocab-grammar\.js\?v=20261119-conj-return1/);
  assert.match(page,/ldd-ui-upgrade\.js\?v=20261121-article-three-actions1/);
- assert.match(page,/scriptphonetics\.js\?v=20261120-selection-notes1/);
+ assert.match(page,/scriptphonetics\.js\?v=20261122-pronunciation-history1/);
 });
 test('assigned-test highlights and notes use account-owned Supabase rows and safe text anchors',()=>{
  assert.match(annotations,/student_test_annotations/);
