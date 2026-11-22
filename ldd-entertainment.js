@@ -574,7 +574,12 @@
             }
             wordsLayer.addEventListener('click', event => {
                 const word = event.target.closest('.tappable-word');
-                if (!word || !window.vocabTap?.handleTap) return;
+                if (!word) return;
+                if (window.LDDTextActions?.presentWordElement?.(word)) {
+                    event.preventDefault(); event.stopPropagation();
+                    return;
+                }
+                if (!window.vocabTap?.handleTap) return;
                 event.preventDefault(); event.stopPropagation();
                 const popup = document.getElementById('word-lookup-popup');
                 if (popup && popup.parentNode !== dialog) {
@@ -775,7 +780,12 @@
             });
             deck.addEventListener('click', event => {
                 const word = event.target.closest('.tappable-word');
-                if (!word || !window.vocabTap?.handleTap) return;
+                if (!word) return;
+                if (window.LDDTextActions?.presentWordElement?.(word)) {
+                    event.preventDefault(); event.stopPropagation();
+                    return;
+                }
+                if (!window.vocabTap?.handleTap) return;
                 event.preventDefault();
                 event.stopPropagation();
                 const popup = document.getElementById('word-lookup-popup');
