@@ -219,8 +219,15 @@
    return overlay;
  }
  function close(){if(overlay)overlay.hidden=true;}
- function editor(quote,value,onSave){
-   const m=modal(),body=m.querySelector('.ldd-annotation-body');
+ function editor(quote,value,onSave,sourceRange){
+   const m=modal();
+   // Comics and some readers use a native <dialog> (browser top layer).
+   // Keep the note editor in that top layer rather than behind its backdrop.
+   const node=sourceRange?.commonAncestorContainer;
+   const source=node?.nodeType===1?node:node?.parentElement;
+   const host=source?.closest?.('dialog[open]')||document.body;
+   if(m.parentElement!==host)host.appendChild(m);
+   const body=m.querySelector('.ldd-annotation-body');
    body.replaceChildren();
    const h=document.createElement('h3');h.textContent='Ghi chú';body.appendChild(h);
    const q=document.createElement('blockquote');q.textContent=quote;body.appendChild(q);
@@ -273,13 +280,13 @@
      const k='ldd:selection-note:'+hash(location.pathname+'|'+(data.source||'')+'|'+data.text);
      let previous='';
      try{previous=localStorage.getItem(k)||'';}catch(_){}
-     editor(data.text,previous,async text=>{localStorage.setItem(k,text);});
+     editor(data.text,previous,async text=>{localStorage.setItem(k,text);},data.range);
      return;
    }
    const loc=anchors(info,data.range);
    if(!loc){toast('Hãy quét lại đoạn cần ghi chú.');return;}
    const existing=state(info)?.items.find(a=>a.kind==='note'&&a.start_offset===loc.start&&a.end_offset===loc.end);
-   editor(data.text,existing?.note_text||'',async text=>insert(info,'note',data,text));
+   editor(data.text,existing?.note_text||'',async text=>insert(info,'note',data,text),data.range);
  }
  async function openList(info){
    let s;
