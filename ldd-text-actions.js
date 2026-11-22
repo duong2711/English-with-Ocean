@@ -192,18 +192,39 @@
    dialog.addEventListener('click',e=>{if(e.target===dialog||e.target.closest('.ldd-phrase-close'))closeDialog();});
    hostForRange(data?.range).appendChild(dialog);return dialog;
  }
- function makeToken(word,context,source){
+ function makeToken(word,context,source,range){
    const span=document.createElement('span');
    span.className='tappable-word';
    span.dataset.word=word;span.dataset.vocabContext=context||word;
    span.dataset.vocabSource=source||'Chọn từ trên website';
+   const node=elementOf(range?.commonAncestorContainer);
+   // Preserve the existing exception: dictionary lookups inside assigned
+   // exams do not require students to record pronunciation.
+   if(node?.closest('.ldd-exam-lookup-root')||source==='Bài kiểm tra')
+     span.classList.add('ldd-exam-lookup-word');
    return span;
  }
+ function keepLegacyLookupAboveDialog(range){
+   const host=hostForRange(range);
+   if(host===document.body)return;
+   const popup=document.getElementById('word-lookup-popup');
+   if(!popup||popup.parentElement===host)return;
+   const parent=popup.parentNode,next=popup.nextSibling;
+   host.appendChild(popup);
+   host.addEventListener('close',function restorePopup(){
+     if(popup.parentNode!==host||!parent)return;
+     if(next&&next.parentNode===parent)parent.insertBefore(popup,next);
+     else parent.appendChild(popup);
+   },{once:true});
+ }
  function translateWord(data){
-   const el=makeToken(data.text,data.context,data.source);
+   const el=makeToken(data.text,data.context,data.source,data.range);
    if(typeof window.lddExamLookupWord==='function'){
-     try{window.lddExamLookupWord(el);return;}
-     catch(e){console.error('[LDD text actions] word lookup failed',e)}
+     try{
+       keepLegacyLookupAboveDialog(data.range);
+       window.lddExamLookupWord(el);
+       return;
+     }catch(e){console.error('[LDD text actions] word lookup failed',e)}
    }
    showToast('Từ điển đang khởi tạo. Hãy thử lại.');
  }
