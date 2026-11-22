@@ -248,6 +248,9 @@
         if (!isEnglishWord(el.dataset.word || el.textContent)) return;
         event.preventDefault();
         event.stopImmediatePropagation();
+        // One shared menu for every dictionary-enabled word, including exams.
+        // Preserve the legacy direct lookup only during initial app loading.
+        if (window.LDDTextActions?.presentWordElement?.(el)) return;
         if (typeof window.lddExamLookupWord === 'function') {
             window.lddExamLookupWord(el);
         } else {
