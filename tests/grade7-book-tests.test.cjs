@@ -28,11 +28,11 @@ test('assets for exam, two-action menu and persisted annotations are cache-versi
   assert.match(boot,/ldd-grade7-book-tests-data\.js\?v=20261124-mlh7-1/);
   assert.match(boot,/ldd-grade7-book-tests-unit2\.js\?v=20261124-mlh7-1/);
   assert.match(boot,/ldd-grade7-book-tests-rest\.js\?v=20261124-mlh7-rest1/);
-  assert.match(boot,/ldd-grade7-book-tests\.js\?v=20261124-mlh7-all12-1/);
+  assert.match(boot,/ldd-grade7-book-tests\.js\?v=20261124-mlh7-all12-final2/);
   assert.match(boot,/ldd-grade7-book-tests\.css\?v=20261124-mlh7-all12-1/);
-  assert.match(boot,/ldd-text-actions\.js\?v=20261124-mlh7-two-actions2/);
+  assert.match(boot,/ldd-text-actions\.js\?v=20261124-mlh7-all12-final2/);
   assert.match(boot,/ldd-test-annotations\.js\?v=20261124-mlh7-annotations1/);
-  assert.match(page,/ldd-ui-upgrade\.js\?v=20261124-mlh7-all12-1/);
+  assert.match(page,/ldd-ui-upgrade\.js\?v=20261124-mlh7-all12-catalog4/);
 });
 test('all twelve units exist; only scanned and reviewed workbook tests appear',()=>{
   assert.equal(book.units.length,12);
