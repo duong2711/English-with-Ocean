@@ -78,7 +78,7 @@
         ensureScript('ldd-grade7-book-tests-data', 'ldd-grade7-book-tests-data.js?v=20261124-mlh7-1');
         ensureScript('ldd-grade7-book-tests-unit2', 'ldd-grade7-book-tests-unit2.js?v=20261124-mlh7-1');
         ensureScript('ldd-grade7-book-tests', 'ldd-grade7-book-tests.js?v=20261124-mlh7-review2');
-        ensureScript('ldd-learning-experience-script', 'ldd-ui-experience.js?v=20261124-studentfirst2');
+        ensureScript('ldd-learning-experience-script', 'ldd-ui-experience.js?v=20261124-catalog3');
     }
 
     function ensureStylesheet(id, href) {
