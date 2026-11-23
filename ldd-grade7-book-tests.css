@@ -93,3 +93,8 @@
 @media(max-width:600px){
  #ldd-school-exams-panel .ldd-mlh7-teacher-choices{grid-template-columns:1fr}
 }
+
+/* An active workbook test is lookup-free. The global search/dictionary is
+   hidden only while this exam screen is visible; other tabs are unaffected. */
+body:has(#tab-kiem-tra.active #ldd-school-exams-panel:not([hidden]) #ldd-mlh7-text)
+:is(#ldd-quick-lookup-trigger,#word-lookup-popup){display:none!important}
