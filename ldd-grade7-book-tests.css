@@ -35,3 +35,53 @@
 #ldd-school-exams-panel .ldd-mlh7-primary{color:white;background:#2869b8;border:1px solid #2869b8}
 #ldd-school-exams-panel .ldd-mlh7-secondary{color:#235783;background:transparent;border:1px solid #aac6e0}
 @media(max-width:600px){#ldd-school-exams-panel{padding:4px 0 20px}#ldd-school-exams-panel .ldd-mlh7-section{padding:13px 12px}#ldd-school-exams-panel .ldd-mlh7-options{grid-template-columns:1fr}#ldd-school-exams-panel .ldd-mlh7-unit-grid{grid-template-columns:1fr}}
+
+/* Scoped study text: select to Highlight/Note without allowing dictionary.
+   Native selection handles stay available on phones, including multiword phrases. */
+#ldd-mlh7-text,
+#ldd-mlh7-text .ldd-mlh7-passage,
+#ldd-mlh7-text .ldd-mlh7-question legend,
+#ldd-mlh7-text .ldd-mlh7-option-text{
+  user-select:text;-webkit-user-select:text;
+}
+#ldd-school-exams-panel .ldd-mlh7-save-status{
+  padding:7px 0;font:500 13px/1.5 system-ui,sans-serif;
+  color:var(--text-muted,#62758b);
+}
+#ldd-school-exams-panel .ldd-mlh7-teacher-mark{
+  display:inline;font-weight:650;color:#205f87;
+}
+#ldd-school-exams-panel .ldd-mlh7-teacher-feedback{
+  padding:11px 15px;border-left:3px solid #3673b6;border-radius:8px;
+  background:var(--hover-bg,#eef5fd);white-space:pre-wrap;font-size:14px;
+}
+#ldd-school-exams-panel .ldd-mlh7-teacher-review{margin:16px 0;}
+#ldd-school-exams-panel .ldd-mlh7-review-item{
+  border-top:1px solid var(--border-color,#e2e9f0);
+  margin-top:14px;padding:15px 0 7px;
+}
+#ldd-school-exams-panel .ldd-mlh7-review-item h4{
+  font:650 15px/1.5 system-ui,sans-serif;margin:0 0 8px;
+}
+#ldd-school-exams-panel .ldd-mlh7-review-item p{
+  font:400 14px/1.55 system-ui,sans-serif;overflow-wrap:anywhere;
+  white-space:pre-wrap;margin:7px 0;
+}
+#ldd-school-exams-panel .ldd-mlh7-student-answer{
+  padding:9px 12px;background:var(--hover-bg,#f5f9fc);border-radius:9px;
+}
+#ldd-school-exams-panel .ldd-mlh7-book-answer{color:var(--text-muted,#546c83)}
+#ldd-school-exams-panel .ldd-mlh7-grade-line{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;font:600 14px system-ui,sans-serif;
+  margin:9px 0;
+}
+#ldd-school-exams-panel .ldd-mlh7-grade-select{
+  min-width:190px;padding:9px 12px;border:1px solid #abc6e0;
+  border-radius:8px;background:var(--card-bg,#fff);color:inherit;font:inherit;
+}
+#ldd-school-exams-panel .ldd-mlh7-teacher-comment{
+  width:100%;box-sizing:border-box;border:1px solid #b9cee2;border-radius:9px;
+  font:400 14px/1.55 system-ui,sans-serif;min-height:68px;padding:11px 12px;
+  background:var(--card-bg,#fff);color:inherit;resize:vertical;
+}
+#ldd-school-exams-panel .ldd-mlh7-overall{min-height:110px}
