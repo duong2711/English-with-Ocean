@@ -49,7 +49,7 @@
         ensureStylesheet('ldd-film-cloze-style', 'ldd-film-cloze.css?v=20261116-film-cue-padding3');
         ensureStylesheet('ldd-text-actions-style', 'ldd-text-actions.css?v=20261122-universal-three-actions1');
         ensureStylesheet('ldd-ctest-student-groups-style', 'ldd-ctest-student-groups.css?v=20261116-grouped1');
-        ensureStylesheet('ldd-grade7-book-tests-style', 'ldd-grade7-book-tests.css?v=20261124-mlh7-review2');
+        ensureStylesheet('ldd-grade7-book-tests-style', 'ldd-grade7-book-tests.css?v=20261124-mlh7-all12-1');
         ensureStylesheet('ldd-learning-experience-style', 'ldd-ui-experience.css?v=20261124-studentfirst2');
 
         // Load first. Dynamic scripts are async by default, so ensureScript sets async=false
@@ -77,7 +77,8 @@
         ensureScript('ldd-test-annotations-script', 'ldd-test-annotations.js?v=20261124-mlh7-annotations1');
         ensureScript('ldd-grade7-book-tests-data', 'ldd-grade7-book-tests-data.js?v=20261124-mlh7-1');
         ensureScript('ldd-grade7-book-tests-unit2', 'ldd-grade7-book-tests-unit2.js?v=20261124-mlh7-1');
-        ensureScript('ldd-grade7-book-tests', 'ldd-grade7-book-tests.js?v=20261124-mlh7-review2');
+        ensureScript('ldd-grade7-book-tests-rest', 'ldd-grade7-book-tests-rest.js?v=20261124-mlh7-rest1');
+        ensureScript('ldd-grade7-book-tests', 'ldd-grade7-book-tests.js?v=20261124-mlh7-all12-1');
         ensureScript('ldd-learning-experience-script', 'ldd-ui-experience.js?v=20261124-studentfirst2');
     }
 
