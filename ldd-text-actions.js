@@ -15,7 +15,7 @@
  const READING_ROOT='#news-article-text,.news-sentence-en,.news-sentence-history-en,.ldd-exam-lookup-root,[data-ldd-text-actions],.ldd-film-caption-item,.ldd-film-caption-sentence,.ldd-comic-swipe-deck,.ldd-wimpy-words';
  const LOOKUP_WORD='.tappable-word,.ldd-exam-lookup-word,[data-ldd-lookup-word]';
  const TEXT_BLOCK='p,li,blockquote,.news-paragraph,.pod-line,.kid-story-text,.thcs-story-text,.ldd-story-text,.conj-example';
- const NON_STUDY_UI='.folder-card,[id$="-folder-card"],.news-card,.ldd-wimpy-card,.ldd-comic-card,.ldd-ent-grade-btn,.grammar-panel-header,.ldd-reading-meta,nav,header,footer,[role="navigation"],.nav-item,.nav-link,.tab-btn,.tab-button,.menu-item,.sidebar-item,.bottom-nav-item';
+ const NON_STUDY_UI='.folder-card,[id$="-folder-card"],.news-card,.ldd-wimpy-card,.ldd-comic-card,.ldd-ent-grade-btn,.grammar-panel-header,.ldd-reading-meta,nav,header,footer,[role="navigation"],.nav-item,.nav-link,.tab-btn,.tab-button,.menu-item,.sidebar-item,.bottom-nav-item,.ldd-mlh7-ocr summary,.ldd-mlh7-ocr-warning';
  const BAD_PARENT='input,textarea,select,option,button,a,[contenteditable]:not([contenteditable="false"]),code,pre,script,style,svg,canvas,video,iframe,[role="textbox"],.word-lookup-popup,.ldd-text-action-menu,.ldd-text-action-dialog,.ldd-quick-lookup-overlay';
  let menu=null, dialog=null, toast=null, active=null, selectionTimer=0, lastTouch=0, sequence=0, menuVersion=0;
  let sharedClient=null;
