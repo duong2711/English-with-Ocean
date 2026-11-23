@@ -60,7 +60,7 @@ test('shared collocations render in existing vocabulary category and assets load
  assert.match(grammar,/from\('collocation_bank'\)/);
  assert.match(grammar,/select\('phrase,meaning_vi'\)/);
  assert.match(boot,/ldd-text-actions\.js\?v=20261124-study-only1/);
- assert.match(boot,/ldd-test-annotations\.js\?v=20261124-study-only1/);
+ assert.match(boot,/ldd-test-annotations\.js\?v=20261123-highlight-toggle1/);
  assert.match(boot,/ldd-text-actions\.css\?v=20261122-universal-three-actions1/);
  assert.match(boot,/ldd-ui-vocab-grammar\.js\?v=20261119-conj-return1/);
  assert.match(page,/ldd-ui-upgrade\.js\?v=20261124-study-only1/);
@@ -96,7 +96,7 @@ test('news annotations retain their account-specific identity and text anchors',
  assert.match(annotations,/function resolveRange\(root,entry\)/);
  assert.match(annotations,/normalized\.indexOf\(expected/);
  assert.match(annotations,/if\(currentRoot!==root\|\|state\(info\)\?\.key!==info\.key\)/);
- assert.match(boot,/ldd-test-annotations\.js\?v=20261124-study-only1/);
+ assert.match(boot,/ldd-test-annotations\.js\?v=20261123-highlight-toggle1/);
  assert.match(page,/ldd-ui-upgrade\.js\?v=20261124-study-only1/);
 });
 
