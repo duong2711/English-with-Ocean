@@ -71,7 +71,7 @@
         ensureScript('ldd-entertainment-script', 'ldd-entertainment.js?v=20261122-universal-three-actions1');
         ensureScript('ldd-film-timing-script', 'ldd-film-timing.js?v=20261029-transcript-import1');
         ensureScript('ldd-film-cloze-script', 'ldd-film-cloze.js?v=20261116-script-visibility1');
-        ensureScript('ldd-text-actions-script', 'ldd-text-actions.js?v=20261123-highlight-toggle1');
+        ensureScript('ldd-text-actions-script', 'ldd-text-actions.js?v=20261124-study-only1');
         ensureScript('ldd-test-annotations-script', 'ldd-test-annotations.js?v=20261123-highlight-toggle1');
     }
 
