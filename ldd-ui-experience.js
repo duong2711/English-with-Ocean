@@ -155,6 +155,11 @@
     // remain accessible through a clearly labeled keyboard-operable button.
     function simplifyDailyTasks(host) {
         if (!host) return;
+        const weekTitle = host.querySelector('.ldd-study-week h3');
+        if (weekTitle && weekTitle.textContent === '7 ngày vừa qua') {
+            // Only reading, podcast and IPA-related activity currently feeds this chart.
+            weekTitle.textContent = 'Đọc, nghe & ghi âm · 7 ngày';
+        }
         const grid = host.querySelector('.ldd-today-primary.ldd-today-mission-grid');
         if (grid && grid.dataset.uxFolded !== '1') {
             grid.dataset.uxFolded = '1';
