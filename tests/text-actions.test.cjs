@@ -59,11 +59,11 @@ test('no-lookup tests remain excluded, and phrase translation never invokes pron
 test('shared collocations render in existing vocabulary category and assets load globally',()=>{
  assert.match(grammar,/from\('collocation_bank'\)/);
  assert.match(grammar,/select\('phrase,meaning_vi'\)/);
- assert.match(boot,/ldd-text-actions\.js\?v=20261123-news-article-menu1/);
+ assert.match(boot,/ldd-text-actions\.js\?v=20261123-news-article-menu2/);
  assert.match(boot,/ldd-test-annotations\.js\?v=20261122-universal-three-actions2/);
  assert.match(boot,/ldd-text-actions\.css\?v=20261122-universal-three-actions1/);
  assert.match(boot,/ldd-ui-vocab-grammar\.js\?v=20261119-conj-return1/);
- assert.match(page,/ldd-ui-upgrade\.js\?v=20261123-news-article-menu1/);
+ assert.match(page,/ldd-ui-upgrade\.js\?v=20261123-news-article-menu2/);
  assert.match(page,/scriptphonetics\.js\?v=20261122-pronunciation-history1/);
 });
 test('assigned-test highlights and notes use account-owned Supabase rows and safe text anchors',()=>{
@@ -97,7 +97,7 @@ test('news annotations retain their account-specific identity and text anchors',
  assert.match(annotations,/normalized\.indexOf\(expected/);
  assert.match(annotations,/if\(currentRoot!==root\|\|state\(info\)\?\.key!==info\.key\)/);
  assert.match(boot,/ldd-test-annotations\.js\?v=20261122-universal-three-actions2/);
- assert.match(page,/ldd-ui-upgrade\.js\?v=20261123-news-article-menu1/);
+ assert.match(page,/ldd-ui-upgrade\.js\?v=20261123-news-article-menu2/);
 });
 
 test('every dictionary-enabled reading surface uses the same three actions by default',()=>{
@@ -156,6 +156,7 @@ test('long article action menu stays visible at the end of multi-screen selectio
 
 test('news article non-editable content is interactive without reopening the old dictionary',()=>{
  assert.match(actions,/\[contenteditable\]:not\(\[contenteditable="false"\]\)/);
+ assert.equal((actions.match(/\[contenteditable\]:not\(\[contenteditable="false"\]\)/g)||[]).length,2);
  const capture=actions.slice(actions.indexOf("window.addEventListener('click',function(e)"));
  assert.match(capture,/if\(selection\)\{[\s\S]*?e\.stopImmediatePropagation\(\);[\s\S]*?present\(selection\);return;/);
  assert.match(capture,/tapped && presentWordElement\(tapped\)/);
