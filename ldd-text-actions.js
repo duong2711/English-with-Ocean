@@ -13,7 +13,7 @@
  // Future dictionary-enabled readers opt in through data-ldd-text-actions.
  const READING_ROOT='#news-article-text,.news-sentence-en,.news-sentence-history-en,.ldd-exam-lookup-root,[data-vocab-context],[data-ldd-text-actions],.ldd-film-caption-item,.ldd-film-caption-sentence,.ldd-comic-overlay,.ldd-wimpy-reader';
  const BAD_PARENT='input,textarea,select,option,button,a,[contenteditable]:not([contenteditable="false"]),code,pre,script,style,svg,canvas,video,iframe,[role="textbox"],.word-lookup-popup,.ldd-text-action-menu,.ldd-text-action-dialog,.ldd-quick-lookup-overlay';
- let menu=null, dialog=null, toast=null, active=null, selectionTimer=0, lastTouch=0, sequence=0;
+ let menu=null, dialog=null, toast=null, active=null, selectionTimer=0, lastTouch=0, sequence=0, menuVersion=0;
  let sharedClient=null;
  function dictionaryClient(){
    if(!sharedClient && window.supabase?.createClient)
@@ -117,15 +117,21 @@
      const snapshot=active;hideMenu();
      if(action==='highlight'){
        if(window.LDDTestAnnotations?.highlight)
-         void window.LDDTestAnnotations.highlight(snapshot).then(handled=>{if(!handled)highlight(snapshot.range,snapshot.text)});
-       else highlight(snapshot.range,snapshot.text);
+         void window.LDDTestAnnotations.highlight(snapshot).then(handled=>{if(!handled)toggleLocalHighlight(snapshot.range,snapshot.text)});
+       else toggleLocalHighlight(snapshot.range,snapshot.text);
      }else if(action==='note'){
        if(window.LDDTestAnnotations?.note)window.LDDTestAnnotations.note(snapshot);
        else showToast('Ghi chú đang khởi tạo. Hãy thử lại.');
      }else void translate(snapshot);
    });
  }
- function hideMenu(){if(menu)menu.hidden=true;}
+ function hideMenu(){menuVersion++;if(menu)menu.hidden=true;}
+ function updateHighlightLabel(enabled){
+   const button=menu?.querySelector('[data-action="highlight"]');
+   if(!button)return;
+   button.textContent=enabled?'🖍 Bỏ highlight':'🖍 Highlight';
+   button.title=enabled?'Bỏ phần đánh dấu đã lưu':'Đánh dấu phần văn bản đã chọn';
+ }
  function positionMenu(data){
    const host=hostForRange(data.range);
    if(menu.parentElement!==host)host.appendChild(menu);
@@ -151,11 +157,64 @@
    // must retain all three actions (not just short dictionary phrases).
    const english= /[A-Za-z]/.test(data.text) && !/[À-ỹĐđ]/u.test(data.text);
    menu.querySelector('[data-action="translate"]').disabled=!english;
-   active=data;positionMenu(data);
+   active=data;
+   const version=++menuVersion;
+   const saved=window.LDDTestAnnotations?.isHighlighted?.(data);
+   updateHighlightLabel(typeof saved==='boolean'?saved:isLocalHighlighted(data.range));
+   positionMenu(data);
+   // Saved annotations may still be loading after the article opens.
+   // Correct the label asynchronously, but never update an older menu.
+   if(saved!==null&&window.LDDTestAnnotations?.highlightStatus){
+     void window.LDDTestAnnotations.highlightStatus(data).then(enabled=>{
+       if(version!==menuVersion||menu.hidden||active!==data||typeof enabled!=='boolean')return;
+       updateHighlightLabel(enabled);positionMenu(data);
+     }).catch(()=>{});
+   }
  }
  function handleSelection(){
    const data=selectionData();
    if(data)present(data);
+ }
+ function rangesOverlap(a,b){
+   try{
+     return a.compareBoundaryPoints(Range.END_TO_START,b)>0&&
+       a.compareBoundaryPoints(Range.START_TO_END,b)<0;
+   }catch(_){return false;}
+ }
+ function isLocalHighlighted(range){
+   if(window.CSS?.highlights&&typeof window.Highlight==='function')
+     return highlights.some(r=>rangesOverlap(r,range));
+   return !!elementOf(range?.startContainer)?.closest('mark.ldd-user-mark');
+ }
+ function toggleLocalHighlight(range,text){
+   if(window.CSS?.highlights&&typeof window.Highlight==='function'){
+     let existing=false;
+     const remaining=[];
+     for(const original of highlights){
+       if(!rangesOverlap(original,range)){remaining.push(original);continue;}
+       existing=true;
+       if(original.compareBoundaryPoints(Range.START_TO_START,range)<0){
+         const before=original.cloneRange();
+         before.setEnd(range.startContainer,range.startOffset);
+         if(!before.collapsed)remaining.push(before);
+       }
+       if(original.compareBoundaryPoints(Range.END_TO_END,range)>0){
+         const after=original.cloneRange();
+         after.setStart(range.endContainer,range.endOffset);
+         if(!after.collapsed)remaining.push(after);
+       }
+     }
+     if(existing){
+       highlights=remaining;
+       if(remaining.length)CSS.highlights.set('ldd-learning-highlight',new Highlight(...remaining));
+       else CSS.highlights.delete('ldd-learning-highlight');
+       return;
+     }
+   }else{
+     const marked=elementOf(range?.startContainer)?.closest('mark.ldd-user-mark');
+     if(marked){marked.replaceWith(...Array.from(marked.childNodes));return;}
+   }
+   highlight(range,text);
  }
  function highlight(range,text){
    try{
