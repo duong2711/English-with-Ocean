@@ -386,7 +386,7 @@ function boot(){
     panel.append(list);list.append(el('p','','Đang tải bài nộp…'));
     try{
       const [attempts,students,reviews]=await Promise.all([
-        db.from('grade7_book_test_attempts').select('id,user_id,test_id,answers,updated_at,status')
+        db.from('grade7_book_test_attempts').select('id,user_id,test_id,updated_at,status')
           .eq('status','submitted').order('updated_at',{ascending:false}).limit(200),
         db.from('student_grade_assignments').select('user_id,email,display_name'),
         db.from('grade7_book_test_reviews').select('attempt_id,status,score_correct,score_total')
@@ -400,12 +400,11 @@ function boot(){
       records.forEach(a=>{
         const test=library.tests.find(t=>t.id===a.test_id);
         const who=people.get(a.user_id);
-        const auto=scoreObjective(test,a.answers||{});
         const review=grades.get(a.id);
         const name=who?.display_name||who?.email||a.user_id;
         const summary=review?.status==='published'?'Đã chấm '+review.score_correct+'/'+review.score_total:'Chưa công bố điểm giáo viên';
         const row=folder('📝 '+name+' · Unit '+test.unit+' · '+test.title,
-          'Máy: '+auto.correct+'/'+auto.total+' · '+summary,
+          'Đã nộp · '+summary,
           ()=>{void teacherGrade(a,test)});
         list.append(row);
       });
@@ -417,9 +416,19 @@ function boot(){
     titleBar('Chấm bài · Unit '+test.unit+' · '+test.title,()=>{void teacherList()});
     const loading=el('p','ldd-mlh7-intro','Đang đọc điểm chấm…');panel.append(loading);
     try{
-      const {data:existing,error}=await db.from('grade7_book_test_reviews')
-        .select('grades,comments,overall_feedback,status').eq('attempt_id',attempt.id).maybeSingle();
-      if(error)throw error;
+      // The list is metadata-only for low egress. Load one learner's answer
+      // sheet only when the teacher opens that submitted attempt.
+      const [saved,previous]=await Promise.all([
+        db.from('grade7_book_test_attempts').select('answers')
+          .eq('id',attempt.id).eq('status','submitted').single(),
+        db.from('grade7_book_test_reviews')
+          .select('grades,comments,overall_feedback,status')
+          .eq('attempt_id',attempt.id).maybeSingle()
+      ]);
+      if(saved.error)throw saved.error;
+      if(previous.error)throw previous.error;
+      const studentAnswers=saved.data?.answers||{};
+      const existing=previous.data;
       loading.remove();
       const state={grades:{...(existing?.grades||{})},comments:{...(existing?.comments||{})},
         feedback:existing?.overall_feedback||'',published:existing?.status==='published',
@@ -428,8 +437,9 @@ function boot(){
       const statusLine=el('p','ldd-mlh7-save-status');panel.append(statusLine);
       const body=el('div','ldd-mlh7-teacher-review');panel.append(body);
       function paintSummary(){
-        const score=reviewSummary(test,attempt.answers||{},state.grades);
-        summary.textContent='Điểm hiện tại: '+score.correct+'/'+score.total+
+        const score=reviewSummary(test,studentAnswers,state.grades);
+        const auto=scoreObjective(test,studentAnswers);
+        summary.textContent='Máy: '+auto.correct+'/'+auto.total+' câu khách quan · Điểm hiện tại: '+score.correct+'/'+score.total+
           (score.pending?' · Còn '+score.pending+' câu tự luận chưa chấm':' · Đã chấm đủ');
         return score;
       }
@@ -500,9 +510,9 @@ function boot(){
             field.append(choices);
           }
           field.append(el('p','ldd-mlh7-student-answer',
-            'Học viên: '+String(attempt.answers?.[key]||'(chưa trả lời)')));
+            'Học viên: '+String(studentAnswers[key]||'(chưa trả lời)')));
           field.append(el('p','ldd-mlh7-book-answer','Đáp án sách: '+q.answer));
-          const automatic=autoMark(q,attempt.answers?.[key]);
+          const automatic=autoMark(q,studentAnswers[key]);
           const label=el('label','ldd-mlh7-grade-line',automatic===null?
             'Giáo viên chấm tự luận: ':'Điểm máy: '+(automatic?'Đúng':'Sai')+' · Chấm lại: ');
           const select=el('select','ldd-mlh7-grade-select');
