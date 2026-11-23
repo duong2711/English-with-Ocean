@@ -332,3 +332,169 @@ body.ldd-ui-v2 :is(.ldd-ux-cta,.ldd-home-action,.ldd-ux-dock-btn,.folder-card[ro
   body.ldd-ui-v2 #tab-trang-chu :is(.ldd-home-action,.ldd-ux-cta,.ldd-daily-mission,.ldd-ux-card-arrow),
   body.ldd-ui-v2 #kiemtra-folder-grid > .folder-card { animation: none !important; transition: none !important; transform: none !important; }
 }
+
+
+/* Student-first hierarchy: the next recommended task appears before browsing options.
+   These more specific selectors also neutralize late-loaded legacy home grid rules. */
+body.ldd-ui-v2 #tab-trang-chu.main-tab-content .ldd-home-dashboard {
+  grid-template-columns: minmax(0,1fr);
+  padding: 0;
+  gap: clamp(16px,2.2vw,25px);
+}
+body.ldd-ui-v2 #tab-trang-chu .ldd-home-dashboard > .ldd-home-main {
+  display: block;
+  grid-template-columns: none;
+  width: 100%;
+  min-width: 0;
+}
+body.ldd-ui-v2 #tab-trang-chu .ldd-home-dashboard > .ldd-home-side.ldd-today-shell {
+  grid-column: 1 / -1;
+  padding: clamp(18px,2.4vw,28px);
+  border: 1px solid var(--ldd-ux-line);
+  border-radius: 23px;
+  background: #fff;
+}
+body.ldd-ui-v2 #tab-trang-chu .ldd-home-dashboard > .ldd-ux-learning-shortcuts {
+  min-width: 0;
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+body.ldd-ui-v2 #tab-trang-chu .ldd-home-dashboard > .ldd-ux-learning-shortcuts .ldd-home-actions {
+  display: grid;
+  grid-template-columns: repeat(4,minmax(0,1fr));
+  gap: 13px;
+  align-self: stretch;
+}
+#tab-trang-chu .ldd-ux-section-heading {
+  margin: 0 0 2px;
+  font-size: clamp(1.08rem,2vw,1.4rem);
+  color: var(--ldd-ux-ink);
+  font-weight: 800;
+  letter-spacing: -.025em;
+}
+#tab-trang-chu .ldd-ux-today-tip {
+  margin: 4px 0 0;
+  color: var(--ldd-ux-muted);
+  font-size: .82rem;
+  line-height: 1.5;
+}
+#tab-trang-chu .ldd-ux-more-missions {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+#tab-trang-chu .ldd-ux-more-missions[hidden] { display: none !important; }
+#tab-trang-chu .ldd-ux-fold-button {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  margin: 11px auto 4px;
+  min-height: 44px;
+  padding: 9px 15px;
+  color: #3453b7;
+  border: 1px solid #d2dffb;
+  border-radius: 12px;
+  background: #f4f7ff;
+  font: inherit;
+  font-weight: 750;
+  font-size: .86rem;
+  cursor: pointer;
+}
+#tab-trang-chu .ldd-ux-fold-button:hover { background: #e9f0ff; }
+#tab-trang-chu :is(.ldd-ux-fold-button,.ldd-ux-completed-summary,.ldd-ux-leaderboard-summary):focus-visible {
+  outline: 3px solid #90aaff;
+  outline-offset: 3px;
+}
+#tab-trang-chu .ldd-ux-completed-details {
+  margin-top: 14px;
+  border-top: 1px solid var(--ldd-ux-line);
+  padding-top: 14px;
+}
+#tab-trang-chu .ldd-ux-completed-summary,
+#tab-trang-chu .ldd-ux-leaderboard-summary {
+  list-style: none;
+  position: relative;
+  padding: 13px 40px 13px 16px;
+  min-height: 48px;
+  border: 1px solid #dce8e0;
+  border-radius: 13px;
+  background: #f3fbf6;
+  color: #1d7653;
+  font-size: .88rem;
+  font-weight: 760;
+  cursor: pointer;
+}
+#tab-trang-chu .ldd-ux-leaderboard-summary {
+  border-color: #e2e7f4;
+  background: #f5f7ff;
+  color: #384e8c;
+}
+#tab-trang-chu :is(.ldd-ux-completed-summary,.ldd-ux-leaderboard-summary)::-webkit-details-marker { display: none; }
+#tab-trang-chu :is(.ldd-ux-completed-summary,.ldd-ux-leaderboard-summary)::after {
+  content: '⌄';
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.3rem;
+}
+#tab-trang-chu details[open] > :is(.ldd-ux-completed-summary,.ldd-ux-leaderboard-summary)::after {
+  transform: translateY(-50%) rotate(180deg);
+}
+#tab-trang-chu .ldd-ux-completed-details .ldd-today-completed-wrap {
+  margin-top: 0;
+  border-top: 0;
+  padding-top: 12px;
+}
+body.ldd-ui-v2 #tab-trang-chu #ldd-home-live-panel {
+  display: grid;
+  grid-template-columns: minmax(0,1fr);
+  gap: 13px;
+}
+body.ldd-ui-v2 #tab-trang-chu #ldd-home-live-panel .ldd-ux-leaderboard-details {
+  min-width: 0;
+  grid-column: 1 / -1;
+}
+#tab-trang-chu .ldd-ux-leaderboard-details .ldd-home-live-card {
+  margin-top: 10px;
+}
+#tab-trang-chu .ldd-ux-leaderboard-details .ldd-home-live-head { display: none; }
+body.ldd-ui-v2 #kiemtra-folder-grid > #ctest-folder-card {
+  border-color: #b7c8f6;
+  background: linear-gradient(138deg,#f4f7ff,#fff);
+}
+body.ldd-ui-v2 #kiemtra-folder-grid > #ctest-folder-card .ldd-folder-card-title { color: #2545aa; }
+@media (max-width:920px) {
+  body.ldd-ui-v2 #tab-trang-chu .ldd-home-dashboard > .ldd-ux-learning-shortcuts .ldd-home-actions {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+  }
+}
+@media (max-width:700px) {
+  body.ldd-ui-v2 #tab-trang-chu.main-tab-content .ldd-home-dashboard { gap: 15px; padding: 0; }
+  body.ldd-ui-v2 #tab-trang-chu .ldd-home-dashboard > .ldd-home-side.ldd-today-shell { padding: 16px; }
+  #tab-trang-chu .ldd-ux-more-missions { grid-template-columns: 1fr; }
+  #tab-trang-chu .ldd-ux-completed-summary,
+  #tab-trang-chu .ldd-ux-leaderboard-summary { font-size: .84rem; }
+}
+
+/* Assigned tests are now first in the examination catalog. */
+body.ldd-ui-v2 #kiemtra-folder-grid > #ctest-folder-card {
+  position: relative;
+}
+body.ldd-ui-v2 #kiemtra-folder-grid > #ctest-folder-card .ldd-ux-assigned-cue {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  margin-top: 7px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: #e6eeff;
+  color: #294eae;
+  font-size: .65rem;
+  font-weight: 810;
+  line-height: 1.3;
+  letter-spacing: .03em;
+}
