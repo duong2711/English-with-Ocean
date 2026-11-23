@@ -114,11 +114,41 @@
         document.body.appendChild(dock);
 
         const account = document.getElementById('account-area');
+        // Keep navigation familiar in main catalogs, but never float over an
+        // active exercise, nested lesson, exam, video or multiplayer game.
+        const rootGrids = {
+            'tab-tu-vung': 'vocab-folder-grid',
+            'tab-kiem-tra': 'kiemtra-folder-grid',
+            'tab-giai-tri': 'entertainment-folder-grid'
+        };
+        const panels = Array.from(document.querySelectorAll('.main-tab-content'));
+        function visibleRoot(id) {
+            const grid = document.getElementById(rootGrids[id]);
+            return !!grid && !grid.hidden && getComputedStyle(grid).display !== 'none' &&
+                grid.getClientRects().length > 0;
+        }
         function sync() {
             const loggedIn = !!account && getComputedStyle(account).display !== 'none';
-            document.body.classList.toggle('ldd-ux-home-active', loggedIn && tab.classList.contains('active'));
+            const active = panels.find(function (p) { return p.classList.contains('active'); });
+            const target = active ? active.id : '';
+            const safe = target === 'tab-trang-chu' || (rootGrids[target] && visibleRoot(target));
+            document.body.classList.toggle('ldd-ux-home-active', !!loggedIn && !!safe);
+            dock.querySelectorAll('.ldd-ux-dock-btn').forEach(function (button, index) {
+                const current = [
+                    'tab-trang-chu','tab-tu-vung','tab-kiem-tra','tab-giai-tri'
+                ][index] === target;
+                button.classList.toggle('is-current', current);
+                if (current) button.setAttribute('aria-current', 'page');
+                else button.removeAttribute('aria-current');
+            });
         }
-        new MutationObserver(sync).observe(tab, {attributes:true, attributeFilter:['class']});
+        panels.forEach(function (panel) {
+            new MutationObserver(sync).observe(panel, {attributes:true, attributeFilter:['class']});
+        });
+        Object.values(rootGrids).forEach(function (id) {
+            const grid = document.getElementById(id);
+            if (grid) new MutationObserver(sync).observe(grid, {attributes:true, attributeFilter:['style','class','hidden']});
+        });
         if (account) new MutationObserver(sync).observe(account, {attributes:true, attributeFilter:['style','class']});
         sync();
     }
