@@ -12,7 +12,7 @@
  const MAX_SELECTION=20000;
  // Future dictionary-enabled readers opt in through data-ldd-text-actions.
  const READING_ROOT='#news-article-text,.news-sentence-en,.news-sentence-history-en,.ldd-exam-lookup-root,[data-vocab-context],[data-ldd-text-actions],.ldd-film-caption-item,.ldd-film-caption-sentence,.ldd-comic-overlay,.ldd-wimpy-reader';
- const BAD_PARENT='input,textarea,select,option,button,a,[contenteditable],code,pre,script,style,svg,canvas,video,iframe,[role="textbox"],.word-lookup-popup,.ldd-text-action-menu,.ldd-text-action-dialog,.ldd-quick-lookup-overlay';
+ const BAD_PARENT='input,textarea,select,option,button,a,[contenteditable]:not([contenteditable="false"]),code,pre,script,style,svg,canvas,video,iframe,[role="textbox"],.word-lookup-popup,.ldd-text-action-menu,.ldd-text-action-dialog,.ldd-quick-lookup-overlay';
  let menu=null, dialog=null, toast=null, active=null, selectionTimer=0, lastTouch=0, sequence=0;
  let sharedClient=null;
  function dictionaryClient(){
@@ -378,7 +378,11 @@
      if(e.target.closest?.('#ctest-take-view.ldd-exam-no-lookup'))return;
      if(e.target.closest?.('input,textarea,select,button,a,[contenteditable],.ldd-quick-lookup-overlay')){hideMenu();return;}
      const selection=selectionData();
-     if(selection){present(selection);return;}
+     if(selection){
+        // The old news click handler must not open its dictionary or pronunciation gate.
+        e.preventDefault();e.stopImmediatePropagation();
+        present(selection);return;
+      }
      const tapped=e.target.closest?.('.tappable-word,.ldd-exam-lookup-word,[data-ldd-lookup-word]');
      if(tapped && presentWordElement(tapped)){
        e.preventDefault();e.stopImmediatePropagation();
