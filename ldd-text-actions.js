@@ -140,7 +140,7 @@
      }else if(action==='note'){
        if(window.LDDTestAnnotations?.note)window.LDDTestAnnotations.note(snapshot);
        else showToast('Ghi chú đang khởi tạo. Hãy thử lại.');
-     }else void translate(snapshot);
+     }else if(!elementOf(snapshot.range?.commonAncestorContainer)?.closest('[data-ldd-no-translation]')) void translate(snapshot);
    });
  }
  function hideMenu(){menuVersion++;if(menu)menu.hidden=true;}
@@ -174,7 +174,12 @@
    // A whole sentence, multiple paragraphs or even the entire news article
    // must retain all three actions (not just short dictionary phrases).
    const english= /[A-Za-z]/.test(data.text) && !/[À-ỹĐđ]/u.test(data.text);
-   menu.querySelector('[data-action="translate"]').disabled=!english;
+   // Workbook exercises intentionally allow only Highlight and Note. No
+   // dictionary, translation, or automatic pronunciation is available there.
+   const translationDisabled=!!elementOf(data.range?.commonAncestorContainer)?.closest('[data-ldd-no-translation]');
+   const translateButton=menu.querySelector('[data-action="translate"]');
+   translateButton.hidden=translationDisabled;
+   translateButton.disabled=translationDisabled||!english;
    active=data;
    const version=++menuVersion;
    const saved=window.LDDTestAnnotations?.isHighlighted?.(data);
@@ -471,6 +476,9 @@
      }
      // Touch taps on ordinary article text and future opted-in readers also
      // open the shared menu; legacy touch suppression hid this outside news.
+     // Clicking an answer choice must still select the radio option; selecting
+     // its text with the mouse may separately show Highlight and Note.
+     if(e.target.closest?.('#ldd-mlh7-text label')){hideMenu();return;}
      const word=wordAtPoint(e);
      if(word){e.preventDefault();e.stopImmediatePropagation();present(word);}
      else hideMenu();
