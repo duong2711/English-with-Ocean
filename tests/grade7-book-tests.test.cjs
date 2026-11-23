@@ -29,7 +29,7 @@ test('school exam folder opens grade7 unit hierarchy without replacing private t
 test('grade7 has 12 book units but only shows carefully verified tests',()=>{
   assert.equal(book.units.length,12);
   assert.equal(book.tests.length,2);
-  assert.deepEqual(book.tests.map(t=>t.unit),[1,2]);
+  assert.deepEqual(Array.from(book.tests,t=>t.unit),[1,2]);
   for(const item of book.tests)assert.equal(item.verified,true);
   assert.match(view,/Không tự động đăng nội dung OCR chưa đối chiếu/);
 });
@@ -37,7 +37,7 @@ test('Unit 1 and Unit 2 preserve the ten book exercise sections and answer types
   for(const [unit,expectedCount] of [[1,73],[2,71]]){
     const t=book.tests.find(x=>x.unit===unit);
     assert.equal(t.sections.length,10);
-    assert.deepEqual(t.sections.map(s=>s.label),['I','II','III','IV','V','VI','VII','VIII','IX','X']);
+    assert.deepEqual(Array.from(t.sections,s=>s.label),['I','II','III','IV','V','VI','VII','VIII','IX','X']);
     assert.equal(t.sections.reduce((n,s)=>n+s.questions.length,0),expectedCount);
     for(const section of t.sections){
       for(const q of section.questions){
