@@ -485,6 +485,20 @@ function boot(){
         sec.questions.forEach((q,i)=>{
           const key=answerKey(sec,i),field=el('article','ldd-mlh7-review-item');
           field.append(el('h4','',key+' · '+(q.text||('Câu '+(i+1)+' ('+sec.title+')'))));
+          // Show the actual source options; without these, teachers cannot
+          // judge questions that contain only four answer choices.
+          if(q.type==='choice'){
+            const choices=el('div','ldd-mlh7-teacher-choices');
+            q.options.forEach((choice,n)=>{
+              const item=el('span','',letters[n]+'. '+choice);
+              choices.append(item);
+            });
+            field.append(choices);
+          }else if(q.type==='match'){
+            const choices=el('div','ldd-mlh7-teacher-choices');
+            sec.choices.forEach((choice,n)=>choices.append(el('span','',letters[n]+'. '+choice)));
+            field.append(choices);
+          }
           field.append(el('p','ldd-mlh7-student-answer',
             'Học viên: '+String(attempt.answers?.[key]||'(chưa trả lời)')));
           field.append(el('p','ldd-mlh7-book-answer','Đáp án sách: '+q.answer));
