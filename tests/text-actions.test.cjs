@@ -59,11 +59,11 @@ test('no-lookup tests remain excluded, and phrase translation never invokes pron
 test('shared collocations render in existing vocabulary category and assets load globally',()=>{
  assert.match(grammar,/from\('collocation_bank'\)/);
  assert.match(grammar,/select\('phrase,meaning_vi'\)/);
- assert.match(boot,/ldd-text-actions\.js\?v=20261123-news-article-menu2/);
- assert.match(boot,/ldd-test-annotations\.js\?v=20261122-universal-three-actions2/);
+ assert.match(boot,/ldd-text-actions\.js\?v=20261123-highlight-toggle1/);
+ assert.match(boot,/ldd-test-annotations\.js\?v=20261123-highlight-toggle1/);
  assert.match(boot,/ldd-text-actions\.css\?v=20261122-universal-three-actions1/);
  assert.match(boot,/ldd-ui-vocab-grammar\.js\?v=20261119-conj-return1/);
- assert.match(page,/ldd-ui-upgrade\.js\?v=20261123-news-article-menu2/);
+ assert.match(page,/ldd-ui-upgrade\.js\?v=20261123-highlight-toggle1/);
  assert.match(page,/scriptphonetics\.js\?v=20261122-pronunciation-history1/);
 });
 test('assigned-test highlights and notes use account-owned Supabase rows and safe text anchors',()=>{
@@ -96,8 +96,8 @@ test('news annotations retain their account-specific identity and text anchors',
  assert.match(annotations,/function resolveRange\(root,entry\)/);
  assert.match(annotations,/normalized\.indexOf\(expected/);
  assert.match(annotations,/if\(currentRoot!==root\|\|state\(info\)\?\.key!==info\.key\)/);
- assert.match(boot,/ldd-test-annotations\.js\?v=20261122-universal-three-actions2/);
- assert.match(page,/ldd-ui-upgrade\.js\?v=20261123-news-article-menu2/);
+ assert.match(boot,/ldd-test-annotations\.js\?v=20261123-highlight-toggle1/);
+ assert.match(page,/ldd-ui-upgrade\.js\?v=20261123-highlight-toggle1/);
 });
 
 test('every dictionary-enabled reading surface uses the same three actions by default',()=>{
@@ -161,4 +161,28 @@ test('news article non-editable content is interactive without reopening the old
  assert.match(capture,/if\(selection\)\{[\s\S]*?e\.stopImmediatePropagation\(\);[\s\S]*?present\(selection\);return;/);
  assert.match(capture,/tapped && presentWordElement\(tapped\)/);
  assert.match(capture,/e\.preventDefault\(\);e\.stopImmediatePropagation\(\);/);
+});
+
+test('highlight option toggles to remove while retaining all three reading actions',()=>{
+ const menu = actions.match(/menu\.innerHTML='([^']*)'/)?.[1] || '';
+ assert.deepEqual([...menu.matchAll(/data-action="([a-z]+)"/g)].map(m=>m[1]),['translate','highlight','note']);
+ assert.match(actions,/button\.textContent=enabled\?'🖍 Bỏ highlight':'🖍 Highlight'/);
+ assert.match(actions,/LDDTestAnnotations\?\.isHighlighted\?\.\(data\)/);
+ assert.match(actions,/LDDTestAnnotations\?\.highlightStatus/);
+ assert.match(actions,/toggleLocalHighlight\(snapshot\.range,snapshot\.text\)/);
+ assert.match(actions,/function rangesOverlap\(a,b\)/);
+ assert.match(actions,/Range\.START_TO_END,b\)>0/);
+ assert.match(actions,/Range\.END_TO_START,b\)<0/);
+});
+test('saved highlights are removed from user-owned storage without deleting notes or neighboring words',()=>{
+ assert.match(annotations,/function overlappingHighlights\(info,s,loc\)/);
+ assert.match(annotations,/entry\.kind!=='highlight'/);
+ assert.match(annotations,/function isHighlighted\(data\)/);
+ assert.match(annotations,/async function highlightStatus\(data\)/);
+ assert.match(annotations,/const overlaps=overlappingHighlights\(info,s,loc\)/);
+ assert.match(annotations,/raw\.slice\(start,end\)/);
+ assert.match(annotations,/const oldIds=overlaps\.map\(o=>o\.entry\.id\)/);
+ assert.match(annotations,/\.in\('id',oldIds\)\.select\('id'\)/);
+ assert.match(annotations,/s\.items=s\.items\.filter\(item=>!oldIds\.includes\(item\.id\)\)\.concat\(added\)/);
+ assert.match(annotations,/window\.LDDTestAnnotations=\{highlight,isHighlighted,highlightStatus,note,refresh:/);
 });
