@@ -15,7 +15,7 @@ function boot(){
   grid.insertAdjacentElement('afterend',panel);
   const KEY='ldd:mlh-grade7:';
   const TEACHER='lddbaiu@gmail.com';
-  const letters=['a','b','c','d','e','f','g','h'];
+  const letters=['a','b','c','d','e','f','g','h','i','j'];
   let stage='grades',unit=1,current=null,db=null,uid=null,teacher=false;
   let currentContext=null,sessionRequest=null,openSerial=0;
   const drafts=new Map();
@@ -283,7 +283,7 @@ function boot(){
       field.append(input);
     }
     if(ctx.submitted){
-      const row=el('p','ldd-mlh7-solution','Đáp án sách: '+q.answer);
+      const row=el('p','ldd-mlh7-solution',q.answer?'Đáp án sách: '+q.answer:'Phần tự luận: giảng viên đối chiếu và chấm theo đáp án sách.');
       if(q.type!=='written')row.classList.add(autoMark(q,ctx.answers[key])?'ldd-mlh7-right':'ldd-mlh7-wrong');
       const comment=ctx.review?.comments?.[key];
       const override=ctx.review?.grades?.[key];
@@ -294,6 +294,99 @@ function boot(){
     }
     return field;
   }
+  // Original scanned source is the authority for question text. Each Unit is
+  // fetched only when opened; never download ten PDF assets on the home page.
+  const scannedPages=new Map();
+  const scansLoading=new Map();
+  let ocrLoading=null,ocrByUnit=null;
+  function injectScript(src){
+    return new Promise((resolve,reject)=>{
+      const tag=document.createElement('script');
+      tag.async=true;tag.src=src;
+      tag.onload=resolve;
+      tag.onerror=()=>reject(new Error('Không tải được tài liệu sách. Hãy thử tải lại.'));
+      document.head.append(tag);
+    });
+  }
+  async function originalPDF(test){
+    if(!test.pdfAsset)return null;
+    if(scannedPages.has(test.unit))return scannedPages.get(test.unit);
+    if(scansLoading.has(test.unit))return scansLoading.get(test.unit);
+    const task=(async()=>{
+      if(!window.LDDGrade7PDFData?.[test.unit])
+        await injectScript(test.pdfAsset+'?v=20261124-mlh7-original1');
+      const b64=window.LDDGrade7PDFData?.[test.unit];
+      if(!b64)throw Error('Chưa có bản scan của Unit '+test.unit);
+      const binary=atob(b64),bytes=new Uint8Array(binary.length);
+      for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+      const url=URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));
+      scannedPages.set(test.unit,url);return url;
+    })();
+    scansLoading.set(test.unit,task);
+    try{return await task;}finally{scansLoading.delete(test.unit);}
+  }
+  function sourceViewer(test,target){
+    if(!test.pdfAsset)return null;
+    const wrap=el('section','ldd-mlh7-source');
+    const heading=el('h3','','Đề gốc từ sách · Unit '+test.unit);
+    const note=el('p','ldd-mlh7-intro',
+      'Đọc câu hỏi và các phương án trên bản scan gốc. Phiếu bên dưới dùng để trả lời theo số câu trong sách.');
+    const viewer=el('div','ldd-mlh7-pdf-container','Đang tải trang đề gốc…');
+    const tools=el('div','ldd-mlh7-source-tools');
+    wrap.append(heading,note,tools,viewer);
+    target.append(wrap);
+    void originalPDF(test).then(url=>{
+      if(!wrap.isConnected)return;
+      viewer.replaceChildren();
+      const iframe=el('iframe','ldd-mlh7-pdf-frame');
+      iframe.title='Bản PDF gốc Test for Unit '+test.unit;
+      iframe.loading='lazy';iframe.src=url+'#view=FitH&toolbar=1';
+      viewer.append(iframe);
+      const link=el('a','ldd-mlh7-source-link','Mở đề gốc ở cửa sổ riêng');
+      link.href=url;link.target='_blank';link.rel='noopener';
+      const download=el('a','ldd-mlh7-source-link','Lưu bản PDF của Unit '+test.unit);
+      download.href=url;download.download='Mai-Lan-Huong-Grade7-Unit'+test.unit+'-Test.pdf';
+      tools.append(link,download);
+    }).catch(e=>{if(wrap.isConnected)viewer.textContent=e.message||'Không tải được PDF';});
+    return wrap;
+  }
+  async function ocrCompanion(){
+    if(ocrByUnit)return ocrByUnit;
+    if(ocrLoading)return ocrLoading;
+    ocrLoading=(async()=>{
+      if(!window.LDDGrade7OCRB64)
+        await injectScript('ldd-grade7-book-tests-ocr.js?v=20261124-mlh7-ocr1');
+      const b64=window.LDDGrade7OCRB64;
+      if(!b64)throw Error('Không tải được bản chữ để ghi chú');
+      const bin=atob(b64),bytes=new Uint8Array(bin.length);
+      for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+      return JSON.parse(new TextDecoder().decode(bytes));
+    })();
+    try{ocrByUnit=await ocrLoading;return ocrByUnit;}
+    finally{ocrLoading=null;}
+  }
+  function addSelectableStudyText(test,content){
+    if(!test.pdfAsset)return;
+    const details=el('details','ldd-mlh7-ocr');
+    const summary=el('summary','','Văn bản chọn để Highlight / Ghi chú');
+    const warn=el('p','ldd-mlh7-ocr-warning',
+      'Văn bản này được nhận dạng từ bản scan và có thể sai ký tự. Hãy đối chiếu PDF gốc ở phía trên trước khi làm bài.');
+    const body=el('div','ldd-mlh7-ocr-text','Đang tải văn bản…');
+    body.setAttribute('data-ldd-no-translation','true');
+    details.append(summary,warn,body);
+    // Append the OCR companion *after* all numbered answer sections; the
+    // same order is maintained when reopening the exam, so text anchors persist.
+    content.append(details);
+    void ocrCompanion().then(data=>{
+      if(!body.isConnected)return;
+      body.textContent=String(data?.[test.unit]||'Không có bản chữ cho Unit này.');
+      window.LDDTestAnnotations?.refresh?.();
+    }).catch(e=>{if(body.isConnected)body.textContent=e.message||'Không tải được văn bản';});
+  }
+  window.addEventListener('pagehide',()=>{
+    for(const url of scannedPages.values())URL.revokeObjectURL(url);
+    scannedPages.clear();
+  });
   function drawExam(ctx){
     current=ctx.test;currentContext=ctx;unit=ctx.test.unit;
     setView('exam');
@@ -314,6 +407,7 @@ function boot(){
     }
     const statusLine=el('p','ldd-mlh7-save-status');
     statusLine.id='ldd-mlh7-save-status';panel.append(statusLine);
+    sourceViewer(ctx.test,panel);
     const form=el('form','ldd-mlh7-form');
     form.addEventListener('submit',e=>e.preventDefault());
     const content=el('div','ldd-mlh7-learning-content');
@@ -332,6 +426,7 @@ function boot(){
       sec.questions.forEach((q,i)=>section.append(renderQuestion(sec,q,i,ctx)));
       content.append(section);
     });
+    addSelectableStudyText(ctx.test,content);
     form.append(content);
     const actions=el('div','ldd-mlh7-actions');
     if(!ctx.submitted){
@@ -414,6 +509,7 @@ function boot(){
     await initDb();if(!teacher||attempt.status!=='submitted')return;
     setView('teacher-grade');
     titleBar('Chấm bài · Unit '+test.unit+' · '+test.title,()=>{void teacherList()});
+    sourceViewer(test,panel);
     const loading=el('p','ldd-mlh7-intro','Đang đọc điểm chấm…');panel.append(loading);
     try{
       // The list is metadata-only for low egress. Load one learner's answer
@@ -511,7 +607,7 @@ function boot(){
           }
           field.append(el('p','ldd-mlh7-student-answer',
             'Học viên: '+String(studentAnswers[key]||'(chưa trả lời)')));
-          field.append(el('p','ldd-mlh7-book-answer','Đáp án sách: '+q.answer));
+          field.append(el('p','ldd-mlh7-book-answer',q.answer?'Đáp án sách: '+q.answer:'Tự luận: đối chiếu đáp án trong sách để chấm.'));
           const automatic=autoMark(q,studentAnswers[key]);
           const label=el('label','ldd-mlh7-grade-line',automatic===null?
             'Giáo viên chấm tự luận: ':'Điểm máy: '+(automatic?'Đúng':'Sai')+' · Chấm lại: ');
