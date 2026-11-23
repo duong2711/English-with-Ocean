@@ -30,12 +30,12 @@
    function setView(next){stage=next;panel.replaceChildren();navigate();}
    function openRoot(){
      card.classList.add('ldd-mlh7-selected');
-     grid.style.display='none';panel.hidden=false;
+     grid.style.display='none';panel.hidden=false;panel.style.display='';
      grades();
    }
    function closeRoot(){
      card.classList.remove('ldd-mlh7-selected');
-     panel.hidden=true;grid.style.display='';
+     panel.hidden=true;panel.style.display='none';grid.style.display='';
      stage='grades';current=null;navigate();
    }
    function folder(label,sub,onClick,disabled=false){
