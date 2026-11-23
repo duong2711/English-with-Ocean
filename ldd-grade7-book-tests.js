@@ -423,7 +423,7 @@ function boot(){
       loading.remove();
       const state={grades:{...(existing?.grades||{})},comments:{...(existing?.comments||{})},
         feedback:existing?.overall_feedback||'',published:existing?.status==='published',
-        saveTimer:0,saving:false,error:'',revision:0};
+        saveTimer:0,saving:false,error:'',revision:0,queued:false,queuedPublish:false};
       const summary=el('p','ldd-mlh7-score');panel.append(summary);
       const statusLine=el('p','ldd-mlh7-save-status');panel.append(statusLine);
       const body=el('div','ldd-mlh7-teacher-review');panel.append(body);
@@ -434,15 +434,22 @@ function boot(){
         return score;
       }
       const save=async publish=>{
-        if(state.saving)return false;
+        if(state.saving){
+          // Serialize instructor saves. A later edit or Publish may arrive
+          // before the previous request completes; never discard it.
+          state.queued=true;
+          state.queuedPublish=state.queuedPublish||!!publish;
+          return false;
+        }
         const score=paintSummary();
         if(publish&&score.pending){
           window.alert('Còn '+score.pending+' câu chưa chấm. Hãy chấm đủ trước khi công bố.');return false;
         }
+        const revision=state.revision;
         state.saving=true;statusLine.textContent='Đang lưu điểm và nhận xét…';
         try{
           const row={
-            attempt_id:attempt.id,grades:state.grades,comments:state.comments,
+            attempt_id:attempt.id,grades:{...state.grades},comments:{...state.comments},
             overall_feedback:state.feedback,score_correct:score.pending?null:score.correct,
             score_total:score.pending?null:score.total,
             status:publish||state.published?'published':'draft',
@@ -456,9 +463,17 @@ function boot(){
           statusLine.textContent=state.published?'✓ Đã công bố điểm giáo viên':'✓ Đã lưu bản chấm nháp';
           return true;
         }catch(e){statusLine.textContent='Chưa lưu được: '+(e.message||'Lỗi kết nối');return false;}
-        finally{state.saving=false;}
+        finally{
+          state.saving=false;
+          if(state.queued||revision!==state.revision){
+            const nextPublish=state.queuedPublish;
+            state.queued=false;state.queuedPublish=false;
+            void save(nextPublish);
+          }
+        }
       };
       function changed(){
+        state.revision++;
         paintSummary();statusLine.textContent='Chưa lưu thay đổi';
         clearTimeout(state.saveTimer);
         state.saveTimer=setTimeout(()=>{void save(false)},1200);
