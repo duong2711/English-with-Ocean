@@ -374,9 +374,9 @@ function boot(){
     const body=el('div','ldd-mlh7-ocr-text','Đang tải văn bản…');
     body.setAttribute('data-ldd-no-translation','true');
     details.append(summary,warn,body);
-    // Append the OCR companion *after* all numbered answer sections; the
-    // same order is maintained when reopening the exam, so text anchors persist.
-    content.append(details);
+    // Keep source text first. Teacher feedback added after submission must
+    // not shift existing highlight/note offsets anchored inside the OCR text.
+    content.prepend(details);
     void ocrCompanion().then(data=>{
       if(!body.isConnected)return;
       body.textContent=String(data?.[test.unit]||'Không có bản chữ cho Unit này.');
