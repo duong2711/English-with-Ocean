@@ -234,6 +234,25 @@
             .observe(dashboard, {childList:true});
     }
 
+    function clarifyStudyChoices() {
+        const vocabHeading = document.querySelector('#tab-tu-vung > h2');
+        if (vocabHeading && vocabHeading.textContent.trim() === 'Từ vựng theo chủ đề') {
+            vocabHeading.textContent = 'Từ vựng';
+        }
+        const grid = document.getElementById('kiemtra-folder-grid');
+        const assigned = document.getElementById('ctest-folder-card');
+        if (!grid || !assigned || !grid.contains(assigned)) return;
+        // The assigned test is the most relevant exam entry for enrolled learners.
+        // Reorder AFTER legacy test-card decoration has finished.
+        if (grid.firstElementChild !== assigned) grid.insertBefore(assigned, grid.firstElementChild);
+        if (assigned.dataset.uxPriority !== '1') {
+            assigned.dataset.uxPriority = '1';
+            const label = make('span', 'ldd-ux-assigned-cue');
+            label.textContent = 'BÀI GIÁO VIÊN GIAO';
+            assigned.appendChild(label);
+        }
+    }
+
     function keyboardCards() {
         document.querySelectorAll('#kiemtra-folder-grid > .folder-card, #vocab-folder-grid > .folder-card, #huongdan-folder-grid > .folder-card').forEach(function (card) {
             if (card.tagName === 'BUTTON' || card.tagName === 'A' || card.hidden || card.hasAttribute('tabindex')) return;
@@ -260,6 +279,7 @@
             makeDock(tab);
             observeStudentHome(tab);
         }
+        clarifyStudyChoices();
         keyboardCards();
     }
     window.LDDLearningExperience = { refresh: start };
