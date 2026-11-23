@@ -177,8 +177,8 @@
  }
  function rangesOverlap(a,b){
    try{
-     return a.compareBoundaryPoints(Range.END_TO_START,b)>0&&
-       a.compareBoundaryPoints(Range.START_TO_END,b)<0;
+     return a.compareBoundaryPoints(Range.START_TO_END,b)>0&&
+       a.compareBoundaryPoints(Range.END_TO_START,b)<0;
    }catch(_){return false;}
  }
  function isLocalHighlighted(range){
