@@ -98,3 +98,50 @@
    hidden only while this exam screen is visible; other tabs are unaffected. */
 body:has(#tab-kiem-tra.active #ldd-school-exams-panel:not([hidden]) #ldd-mlh7-text)
 :is(#ldd-quick-lookup-trigger,#word-lookup-popup){display:none!important}
+
+/* Original Mai Lan Hương scan is the canonical wording of Units 3–12.
+   Keep a visible PDF fallback because some mobile browsers lack inline PDF. */
+#ldd-school-exams-panel .ldd-mlh7-source{
+  min-width:0;margin:18px 0 24px;padding:16px;
+  border:1px solid var(--border-color,#dbe3ee);
+  background:var(--card-bg,#fff);border-radius:14px;
+}
+#ldd-school-exams-panel .ldd-mlh7-source h3{font:700 17px/1.4 system-ui,sans-serif;margin:0}
+#ldd-school-exams-panel .ldd-mlh7-source-tools{display:flex;gap:12px;flex-wrap:wrap;margin:10px 0}
+#ldd-school-exams-panel .ldd-mlh7-source-link{
+  display:inline-flex;align-items:center;justify-content:center;min-height:38px;
+  border:1px solid #abc7e7;border-radius:9px;padding:6px 12px;
+  text-decoration:none;color:var(--text-color,#245a8d);
+  font:600 13px/1.5 system-ui,sans-serif;
+}
+#ldd-school-exams-panel .ldd-mlh7-pdf-container{
+  min-width:0;overflow:hidden;min-height:50px;border:1px solid #d7e1ef;
+  border-radius:10px;background:#f4f6f9;
+}
+#ldd-school-exams-panel .ldd-mlh7-pdf-frame{
+  display:block;border:0;width:100%;height:min(82vh,900px);
+  min-height:520px;background:#fff;
+}
+#ldd-school-exams-panel .ldd-mlh7-ocr{
+  margin:0 0 20px;padding:12px 15px;border:1px solid #a7bfdc;
+  border-radius:12px;background:var(--hover-bg,#f7faff);
+}
+#ldd-school-exams-panel .ldd-mlh7-ocr summary{
+  cursor:pointer;font:700 14px/1.5 system-ui,sans-serif;
+  min-height:26px;
+}
+#ldd-school-exams-panel .ldd-mlh7-ocr-warning{
+  font:400 13px/1.6 system-ui,sans-serif;color:var(--text-muted,#63738b);
+  margin:12px 0;
+}
+#ldd-school-exams-panel .ldd-mlh7-ocr-text{
+  color:var(--text-color,#1d334e);
+  font:400 15px/1.7 system-ui,sans-serif;white-space:pre-wrap;
+  overflow-wrap:anywhere;user-select:text;-webkit-user-select:text;
+  background:var(--card-bg,#fff);padding:15px;border-radius:10px;
+}
+@media(max-width:650px){
+  #ldd-school-exams-panel .ldd-mlh7-source{padding:10px}
+  #ldd-school-exams-panel .ldd-mlh7-pdf-frame{height:62vh;min-height:400px}
+  #ldd-school-exams-panel .ldd-mlh7-ocr-text{font-size:14px;padding:10px}
+}
