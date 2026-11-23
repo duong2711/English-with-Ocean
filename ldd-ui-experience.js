@@ -142,12 +142,13 @@
                 else button.removeAttribute('aria-current');
             });
         }
+        const navigationObserver = new MutationObserver(sync);
         panels.forEach(function (panel) {
-            new MutationObserver(sync).observe(panel, {attributes:true, attributeFilter:['class']});
+            navigationObserver.observe(panel, {attributes:true, attributeFilter:['class']});
         });
         Object.values(rootGrids).forEach(function (id) {
             const grid = document.getElementById(id);
-            if (grid) new MutationObserver(sync).observe(grid, {attributes:true, attributeFilter:['style','class','hidden']});
+            if (grid) navigationObserver.observe(grid, {attributes:true, attributeFilter:['style','class','hidden']});
         });
         if (account) new MutationObserver(sync).observe(account, {attributes:true, attributeFilter:['style','class']});
         sync();
