@@ -118,7 +118,9 @@ function boot(){
     try{
       const record=JSON.parse(localStorage.getItem(localKey(ctx.test))||'null');
       if(record?.answers&&typeof record.answers==='object'&&!Array.isArray(record.answers)){
-        ctx.answers=record.answers;ctx.dirty=record.dirty||{};
+        ctx.answers=record.answers;
+        // Migrate device-only answers from the previous reader version.
+        ctx.dirty=record.dirty&&typeof record.dirty==='object'?record.dirty:{...record.answers};
         ctx.submitted=!!record.submitted;
       }
     }catch(_){}
@@ -153,6 +155,9 @@ function boot(){
         ctx.answers={...(data.answers||{}),...ctx.dirty};
         ctx.submitted=data.status==='submitted';
         if(ctx.submitted)ctx.dirty={};
+      }else{
+        // A local submitted flag is not authoritative without a server row.
+        ctx.submitted=false;
       }
       ctx.error='';ctx.synced=!!data;
       persist(ctx);
@@ -399,9 +404,10 @@ function boot(){
         const review=grades.get(a.id);
         const name=who?.display_name||who?.email||a.user_id;
         const summary=review?.status==='published'?'Đã chấm '+review.score_correct+'/'+review.score_total:'Chưa công bố điểm giáo viên';
-        folder('📝 '+name+' · Unit '+test.unit+' · '+test.title,
+        const row=folder('📝 '+name+' · Unit '+test.unit+' · '+test.title,
           'Máy: '+auto.correct+'/'+auto.total+' · '+summary,
           ()=>{void teacherGrade(a,test)});
+        list.append(row);
       });
     }catch(e){list.replaceChildren(el('p','ldd-mlh7-empty','Không tải được bài nộp: '+(e.message||'Lỗi kết nối')));}
   }
@@ -417,7 +423,7 @@ function boot(){
       loading.remove();
       const state={grades:{...(existing?.grades||{})},comments:{...(existing?.comments||{})},
         feedback:existing?.overall_feedback||'',published:existing?.status==='published',
-        saveTimer:0,saving:false,error:''};
+        saveTimer:0,saving:false,error:'',revision:0};
       const summary=el('p','ldd-mlh7-score');panel.append(summary);
       const statusLine=el('p','ldd-mlh7-save-status');panel.append(statusLine);
       const body=el('div','ldd-mlh7-teacher-review');panel.append(body);
