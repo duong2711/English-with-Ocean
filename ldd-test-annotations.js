@@ -266,11 +266,84 @@
    else s.items.push(Object.assign({id:response.data.id},row));
    draw(info);
  }
+ // Resolve saved highlight coverage against the current text, including articles
+ // whose formatting has changed since the annotation was created.
+ function overlappingHighlights(info,s,loc){
+   return s.items.filter(entry=>{
+     if(entry.kind!=='highlight')return false;
+     const r=resolveRange(info.root,entry);
+     const pos=r&&anchors(info,r);
+     return !!pos&&pos.start<loc.end&&pos.end>loc.start;
+   }).map(entry=>({entry,pos:anchors(info,resolveRange(info.root,entry))}));
+ }
+ function isHighlighted(data){
+   const root=rootFor(data?.range),info=scope(root);
+   if(!info)return null; // Not a Supabase-backed reader.
+   const s=state(info),loc=anchors(info,data.range);
+   if(!s||s.key!==info.key||!loc)return false;
+   return overlappingHighlights(info,s,loc).length>0;
+ }
+ async function highlightStatus(data){
+   const root=rootFor(data?.range),info=scope(root);
+   if(!info)return null;
+   const loc=anchors(info,data.range);
+   if(!loc)return false;
+   const s=await ensure(info);
+   return s.key===info.key&&state(info)===s&&overlappingHighlights(info,s,loc).length>0;
+ }
  async function highlight(data){
-   const root=rootFor(data.range),info=scope(root);
+   const root=rootFor(data?.range),info=scope(root);
    if(!info)return false;
-   try{await insert(info,'highlight',data,null);toast('Đã lưu Highlight vào bài kiểm tra.');}
-   catch(e){toast(e.message||'Không lưu được Highlight.');}
+   try{
+     const loc=anchors(info,data.range);
+     if(!loc)throw Error('Đoạn văn bản đã thay đổi. Hãy quét lại.');
+     const s=await ensure(info);
+     if(s.key!==info.key||state(info)!==s)throw Error('Bài đọc đã thay đổi. Hãy mở lại.');
+     if(s.highlightBusy){toast('Đang lưu đánh dấu trước đó.');return true;}
+     s.highlightBusy=true;
+     try{
+       const overlaps=overlappingHighlights(info,s,loc);
+       if(!overlaps.length){
+         await insert(info,'highlight',data,null);
+         toast(info.prefix==='news'?'Đã lưu highlight trong bài báo.':'Đã lưu highlight trong bài kiểm tra.');
+         return true;
+       }
+       // Remove only the selected word/phrase from a longer highlighted span.
+       // Keep the text on either side, without touching notes or other students.
+       const raw=info.root.textContent||'',remainders=[];
+       for(const {pos} of overlaps){
+         for(const [start,end] of [[pos.start,Math.min(pos.end,loc.start)],
+                                    [Math.max(pos.start,loc.end),pos.end]]){
+           if(start>=end||!raw.slice(start,end).trim())continue;
+           remainders.push({user_id:s.uid,test_key:info.key,root_id:info.root.id,
+             kind:'highlight',selected_text:raw.slice(start,end),
+             start_offset:start,end_offset:end,note_text:null});
+         }
+       }
+       // Insert replacements before deleting originals, so an insertion error
+       // never destroys a student's existing annotation.
+       let added=[];
+       if(remainders.length){
+         const response=await db().from(TABLE).insert(remainders)
+           .select('id,kind,selected_text,start_offset,end_offset,note_text');
+         if(response.error)throw response.error;
+         added=response.data||[];
+         if(added.length!==remainders.length)throw Error('Chưa lưu đủ các phần highlight còn lại.');
+       }
+       const oldIds=overlaps.map(o=>o.entry.id);
+       const removed=await db().from(TABLE).delete().eq('user_id',s.uid)
+         .eq('test_key',info.key).eq('root_id',info.root.id)
+         .in('id',oldIds).select('id');
+       if(removed.error||(removed.data||[]).length!==oldIds.length){
+         if(added.length)await db().from(TABLE).delete().eq('user_id',s.uid)
+           .in('id',added.map(row=>row.id));
+         throw removed.error||Error('Không xóa được highlight đã lưu.');
+       }
+       s.items=s.items.filter(item=>!oldIds.includes(item.id)).concat(added);
+       draw(info);
+       toast('Đã bỏ highlight khỏi phần được chọn.');
+     }finally{s.highlightBusy=false;}
+   }catch(e){toast(e.message||'Không cập nhật được highlight.');}
    return true;
  }
  async function note(data){
@@ -351,7 +424,7 @@
    document.addEventListener('keydown',e=>{if(e.key==='Escape')close();},true);
    window.addEventListener('pageshow',()=>ROOTS.forEach(id=>{const root=document.getElementById(id);if(root)schedule(root);}));
  }
- window.LDDTestAnnotations={highlight,note,refresh:()=>ROOTS.forEach(id=>{const r=document.getElementById(id);if(r)schedule(r);})};
+ window.LDDTestAnnotations={highlight,isHighlighted,highlightStatus,note,refresh:()=>ROOTS.forEach(id=>{const r=document.getElementById(id);if(r)schedule(r);})};
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});
  else boot();
 })();
