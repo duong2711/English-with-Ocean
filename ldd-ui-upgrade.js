@@ -57,7 +57,7 @@
         ensureScript('ldd-egress-guard-script', 'ldd-egress-guard.js?v=1');
         ensureScript('ldd-vocab-dedup-script', 'ldd-vocab-dedup.js?v=1');
         ensureScript('ldd-pronunciation-fix-script', 'ldd-pronunciation-fix.js?v=20261104-flash-mic4');
-        ensureScript('ldd-vocab-grammar-script', 'ldd-ui-vocab-grammar.js?v=20261119-conj-return1');
+        ensureScript('ldd-vocab-grammar-script', 'ldd-ui-vocab-grammar.js?v=20261124-catalog3');
         ensureScript('ldd-home-phonetics-script', 'ldd-ui-home-phonetics.js?v=20261116-feedback');
         ensureScript('ldd-mascot-oci-script', 'ldd-mascot-oci.js?v=20261116-oci1');
         ensureScript('ldd-student-grade-script', 'ldd-student-grade.js?v=20261110-university-track1');
@@ -79,7 +79,7 @@
         ensureScript('ldd-grade7-book-tests-unit2', 'ldd-grade7-book-tests-unit2.js?v=20261124-mlh7-1');
         ensureScript('ldd-grade7-book-tests-rest', 'ldd-grade7-book-tests-rest.js?v=20261124-mlh7-rest1');
         ensureScript('ldd-grade7-book-tests', 'ldd-grade7-book-tests.js?v=20261124-mlh7-all12-1');
-        ensureScript('ldd-learning-experience-script', 'ldd-ui-experience.js?v=20261124-studentfirst2');
+        ensureScript('ldd-learning-experience-script', 'ldd-ui-experience.js?v=20261124-catalog3');
     }
 
     function ensureStylesheet(id, href) {
@@ -597,7 +597,12 @@
 
 
             copy.appendChild(title);
-
+            if (cfg.subtitle) {
+                const subtitle = document.createElement('span');
+                subtitle.className = 'ldd-folder-card-subtitle';
+                subtitle.textContent = cfg.subtitle;
+                copy.appendChild(subtitle);
+            }
 
             card.insertBefore(icon, card.firstChild);
             const firstBadge = Array.from(card.children).find(function (el) {

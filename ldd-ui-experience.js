@@ -271,7 +271,7 @@
     }
 
     function clarifyStudyChoices() {
-        const vocabHeading = document.querySelector('#tab-tu-vung > h2');
+        const vocabHeading = document.querySelector('#tab-tu-vung .ldd-vocab-hero h2') || document.querySelector('#tab-tu-vung > h2');
         if (vocabHeading && vocabHeading.textContent.trim() === 'Từ vựng theo chủ đề') {
             vocabHeading.textContent = 'Từ vựng';
         }
