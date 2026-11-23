@@ -6,7 +6,7 @@
  if(window.LDDTestAnnotations)return;
  const PROJECT='ywqbaksmmtvwbojcgsdd';
  const KEY='sb_publishable_AQZ6Jc8ZGID7kfRYPe9fLQ_Wmy7ekp_';
- const ROOTS=['ctest-take-sections','ilt-take-body','irt-take-body','news-article-text'];
+ const ROOTS=['ctest-take-sections','ilt-take-body','irt-take-body','news-article-text','ldd-mlh7-text'];
  const TABLE='student_test_annotations';
  let client=null, overlay=null, currentRoot=null, refreshTimer=0;
  const states=new Map();
@@ -37,6 +37,14 @@
  function scope(root){
    if(!root||!root.textContent?.trim())return null;
    const id=root.id;
+   if(id==='ldd-mlh7-text'){
+     const view=document.getElementById('ldd-school-exams-panel');
+     if(!view||view.hidden||view.style.display==='none'||!view.getClientRects().length)return null;
+     const testId=norm(view.dataset.annotationTestId);
+     const title=norm(view.querySelector('.ldd-mlh7-head h2')?.textContent)||'Bài tập lớp 7';
+     if(!testId||!norm(root.textContent))return null;
+     return {root,view,title,key:'mlh7:'+testId,prefix:'mlh7'};
+   }
    if(id==='news-article-text'){
      const view=document.getElementById('news-article-panel');
      if(!view||view.style.display==='none'||!view.getClientRects().length)return null;
@@ -199,7 +207,7 @@
    if(!btn){
      btn=document.createElement('button');btn.type='button';btn.className='ldd-exam-notes-button';
      btn.addEventListener('click',()=>{const latest=scope(info.root);if(latest)void openList(latest);});
-     const header=info.view.querySelector('.ctest-take-header,.ilt-take-header,.irt-take-header,.grammar-panel-header,[id$="-take-header"]')
+     const header=info.view.querySelector('.ctest-take-header,.ilt-take-header,.irt-take-header,.grammar-panel-header,.ldd-mlh7-head,[id$="-take-header"]')
        ||info.view.querySelector('[id$="-take-title"]')?.parentElement||info.view;
      header.appendChild(btn);
    }
