@@ -11,7 +11,11 @@
  const PHRASE=/^[A-Za-z]+(?:['’\-][A-Za-z]+)*(?: [A-Za-z]+(?:['’\-][A-Za-z]+)*){1,7}$/;
  const MAX_SELECTION=20000;
  // Future dictionary-enabled readers opt in through data-ldd-text-actions.
- const READING_ROOT='#news-article-text,.news-sentence-en,.news-sentence-history-en,.ldd-exam-lookup-root,[data-vocab-context],[data-ldd-text-actions],.ldd-film-caption-item,.ldd-film-caption-sentence,.ldd-comic-overlay,.ldd-wimpy-reader';
+ // Opt-in study text only: broad tabs, folder catalogs and metadata are not readers.
+ const READING_ROOT='#news-article-text,.news-sentence-en,.news-sentence-history-en,.ldd-exam-lookup-root,[data-ldd-text-actions],.ldd-film-caption-item,.ldd-film-caption-sentence,.ldd-comic-swipe-deck,.ldd-wimpy-words';
+ const LOOKUP_WORD='.tappable-word,.ldd-exam-lookup-word,[data-ldd-lookup-word]';
+ const TEXT_BLOCK='p,li,blockquote,.news-paragraph,.pod-line,.kid-story-text,.thcs-story-text,.ldd-story-text,.conj-example';
+ const NON_STUDY_UI='.folder-card,[id$="-folder-card"],.news-card,.ldd-wimpy-card,.ldd-comic-card,.ldd-ent-grade-btn,.grammar-panel-header,.ldd-reading-meta,nav,header,footer,[role="navigation"],.nav-item,.nav-link,.tab-btn,.tab-button,.menu-item,.sidebar-item,.bottom-nav-item';
  const BAD_PARENT='input,textarea,select,option,button,a,[contenteditable]:not([contenteditable="false"]),code,pre,script,style,svg,canvas,video,iframe,[role="textbox"],.word-lookup-popup,.ldd-text-action-menu,.ldd-text-action-dialog,.ldd-quick-lookup-overlay';
  let menu=null, dialog=null, toast=null, active=null, selectionTimer=0, lastTouch=0, sequence=0, menuVersion=0;
  let sharedClient=null;
@@ -27,14 +31,21 @@
    return !el || !!el.closest(BAD_PARENT+',#ctest-take-view.ldd-exam-no-lookup,body.ldd-exam-no-lookup-active #ctest-take-view');
  }
  function inArticleText(node){return !!elementOf(node)?.closest('#news-article-text');}
- function inLearningArea(node){
-   const el=elementOf(node);
-   return !!el?.closest('#inside,.main-tab-content,#news-article-text,#ldd-ent-movies-panel,.ldd-comic-overlay,.ldd-wimpy-reader,[data-ldd-text-actions]') &&
-     !el.closest('.ldd-exam-no-lookup');
- }
+ function inNonStudyUI(node){return !!elementOf(node)?.closest(NON_STUDY_UI);}
  function isLookupReader(node){
    const el=elementOf(node);
-   return !!el?.closest(READING_ROOT);
+   return !!el&&!inNonStudyUI(el)&&!el.closest('.ldd-exam-no-lookup')&&!!el.closest(READING_ROOT);
+ }
+ function tokenizedTextBlock(node){
+   const el=elementOf(node);
+   if(!el||inNonStudyUI(el)||el.closest('.ldd-exam-no-lookup'))return null;
+   const block=el.closest(TEXT_BLOCK);
+   return block?.querySelector(LOOKUP_WORD)?block:null;
+ }
+ function inLearningArea(node){
+   const el=elementOf(node);
+   return !!el&&!inNonStudyUI(el)&&!el.closest('.ldd-exam-no-lookup')&&
+     (isLookupReader(el)||!!el.closest(LOOKUP_WORD));
  }
  function hostForRange(range){
    const el=elementOf(range?.commonAncestorContainer);
@@ -55,10 +66,18 @@
    const sel=window.getSelection?.();
    if(!sel||sel.isCollapsed||!sel.rangeCount)return null;
    const r=sel.getRangeAt(0);
-   // Selections may span nested inline elements in the news reader.
+   // Both ends must belong to the SAME learning passage, or to a block
+   // whose words were already explicitly made dictionary-clickable.
    const articleSelection=inArticleText(r.startContainer)&&inArticleText(r.endContainer);
-   if((!articleSelection&&!inLearningArea(r.commonAncestorContainer)) ||
-      blocked(r.startContainer)||blocked(r.endContainer))return null;
+   const start=elementOf(r.startContainer),end=elementOf(r.endContainer);
+   const startReader=start?.closest(READING_ROOT),endReader=end?.closest(READING_ROOT);
+   const sameReader=!!startReader&&startReader===endReader;
+   const inlineWords=!!start?.closest(LOOKUP_WORD)&&!!end?.closest(LOOKUP_WORD);
+   const block=tokenizedTextBlock(r.commonAncestorContainer);
+   const sameTokenizedBlock=!!block&&block.contains(r.startContainer)&&block.contains(r.endContainer);
+   if(!(sameReader||inlineWords||sameTokenizedBlock) ||
+      blocked(r.startContainer)||blocked(r.endContainer)||
+      inNonStudyUI(r.startContainer)||inNonStudyUI(r.endContainer))return null;
    const text=normalize(sel.toString());
    if(!text||text.length>MAX_SELECTION)return null;
    return {text,range:r.cloneRange(),partial:isPartial(r),
@@ -79,10 +98,9 @@
      const caret=document.caretRangeFromPoint(event.clientX,event.clientY);
      node=caret?.startContainer;offset=caret?.startOffset;
    }
-   if(!node||node.nodeType!==3||blocked(node)||!inLearningArea(node))return null;
-   // Preserve legacy desktop lookup for unmarked lesson paragraphs. On touch,
-   // only explicit readers/lookup words intercept taps, so game tiles keep working.
-   if(!isLookupReader(node)&&Date.now()-lastTouch<550)return null;
+   // Never discover dictionary words inside navigation, folder cards, or
+   // arbitrary English UI copy. Only named learning-text readers opt in.
+   if(!node||node.nodeType!==3||blocked(node)||!isLookupReader(node))return null;
    const s=node.nodeValue||'';
    if(/[À-ỹĐđ]/u.test(s))return null;
    const isLetter=c=>/[A-Za-z'’\-]/.test(c||'');
@@ -387,7 +405,7 @@
  // Public entrypoint for any future tappable dictionary component.
  // Default behavior is ALWAYS the three-action menu, not direct translation.
  function presentWordElement(el){
-   if(!el||blocked(el.parentElement)||!el.isConnected)return false;
+   if(!el||blocked(el.parentElement)||!inLearningArea(el)||!el.isConnected)return false;
    const text=normalize(el.dataset?.word||el.dataset?.lddLookupWord||el.textContent);
    if(!WORD.test(text))return false;
    const range=document.createRange();
@@ -436,13 +454,17 @@
      if(e.target.closest?.('.ldd-text-action-menu,.ldd-text-action-dialog,.ldd-vi-cloze-focus'))return;
      if(e.target.closest?.('#ctest-take-view.ldd-exam-no-lookup'))return;
      if(e.target.closest?.('input,textarea,select,button,a,[contenteditable]:not([contenteditable="false"]),.ldd-quick-lookup-overlay')){hideMenu();return;}
+     const tapped=e.target.closest?.(LOOKUP_WORD);
+     // A selection elsewhere on the page must not hijack a click on a folder
+     // card or keep the toolbar open while navigating to a different screen.
+     if(inNonStudyUI(e.target)||!(isLookupReader(e.target)||
+        (tapped&&inLearningArea(tapped))||tokenizedTextBlock(e.target))){hideMenu();return;}
      const selection=selectionData();
      if(selection){
-        // The old news click handler must not open its dictionary or pronunciation gate.
-        e.preventDefault();e.stopImmediatePropagation();
-        present(selection);return;
-      }
-     const tapped=e.target.closest?.('.tappable-word,.ldd-exam-lookup-word,[data-ldd-lookup-word]');
+       // Prevent the old news dictionary from opening behind the choice menu.
+       e.preventDefault();e.stopImmediatePropagation();
+       present(selection);return;
+     }
      if(tapped && presentWordElement(tapped)){
        e.preventDefault();e.stopImmediatePropagation();
        return;
