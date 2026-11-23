@@ -328,7 +328,11 @@
            .select('id,kind,selected_text,start_offset,end_offset,note_text');
          if(response.error)throw response.error;
          added=response.data||[];
-         if(added.length!==remainders.length)throw Error('Chưa lưu đủ các phần highlight còn lại.');
+         if(added.length!==remainders.length){
+           if(added.length)await db().from(TABLE).delete().eq('user_id',s.uid)
+             .in('id',added.map(row=>row.id));
+           throw Error('Chưa lưu đủ các phần highlight còn lại.');
+         }
        }
        const oldIds=overlaps.map(o=>o.entry.id);
        const removed=await db().from(TABLE).delete().eq('user_id',s.uid)
