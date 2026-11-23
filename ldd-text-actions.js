@@ -376,7 +376,7 @@
    window.addEventListener('click',function(e){
      if(e.target.closest?.('.ldd-text-action-menu,.ldd-text-action-dialog,.ldd-vi-cloze-focus'))return;
      if(e.target.closest?.('#ctest-take-view.ldd-exam-no-lookup'))return;
-     if(e.target.closest?.('input,textarea,select,button,a,[contenteditable],.ldd-quick-lookup-overlay')){hideMenu();return;}
+     if(e.target.closest?.('input,textarea,select,button,a,[contenteditable]:not([contenteditable="false"]),.ldd-quick-lookup-overlay')){hideMenu();return;}
      const selection=selectionData();
      if(selection){
         // The old news click handler must not open its dictionary or pronunciation gate.
