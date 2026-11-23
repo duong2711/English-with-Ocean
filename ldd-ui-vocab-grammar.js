@@ -145,7 +145,7 @@
         kicker.textContent = 'LDD Vocabulary Lab';
 
         const desc = document.createElement('p');
-        desc.textContent = 'Học từ theo chủ đề, gom từ của riêng bạn, đọc tin và luyện dictation trong cùng một không gian.';
+        desc.textContent = 'Ôn từ đã lưu, học theo lớp, đọc bài báo hoặc luyện nghe Podcast.';
 
         copy.appendChild(kicker);
         copy.appendChild(title);
@@ -176,11 +176,11 @@
     function decorateVocabularyCards(grid) {
         const configs = [
             { id: 'myvocab-folder-card', icon: '★', title: 'Từ vựng của tôi', subtitle: 'Kho từ bạn đã lưu khi học và đọc bài', kind: 'mine' },
-            { id: 'kid-folder-card', icon: '20', title: 'Vận dụng theo chủ đề', subtitle: '20 chủ đề để dùng từ trong ngữ cảnh', kind: 'topic' },
-            { id: 'thcs-folder-card', icon: '1–12', title: 'Tiểu học / THCS / THPT', subtitle: 'Từ vựng bám SGK Global Success', kind: 'school' },
+            { id: 'kid-folder-card', icon: '20', title: 'Vận dụng theo chủ đề', subtitle: 'Flashcard, nối từ và trò chơi · 20 chủ đề', kind: 'topic' },
+            { id: 'thcs-folder-card', icon: '1–12', title: 'Theo chương trình lớp học', subtitle: 'Từ vựng bám SGK Global Success', kind: 'school' },
             { id: 'conj-folder-card', icon: '↔', title: 'Liên từ', subtitle: 'Kết nối ý và câu tự nhiên hơn', kind: 'conj' },
             { id: 'news-folder-card', icon: 'NEWS', title: 'Tin ngắn', subtitle: 'Đọc báo, tra từ và luyện dịch thực tế', kind: 'news' },
-            { id: 'podcast-folder-card', icon: '▶', title: 'Podcast dictation', subtitle: 'Nghe – chép chính tả – học từ qua âm thanh', kind: 'podcast' }
+            { id: 'podcast-folder-card', icon: '▶', title: 'Podcast', subtitle: 'Nghe, điền từ và luyện nghe hiểu', kind: 'podcast' }
         ];
 
         configs.forEach(function (cfg) {
@@ -203,6 +203,14 @@
             copy.className = 'ldd-vocab-card-copy';
             copy.innerHTML = '<span class="ldd-vocab-card-title"></span>';
             copy.querySelector('.ldd-vocab-card-title').textContent = cfg.title;
+            // Short explanations were already defined in the catalog data but
+            // never rendered, leaving learners guessing what each folder contains.
+            if (cfg.subtitle) {
+                const subtitle = document.createElement('span');
+                subtitle.className = 'ldd-vocab-card-subtitle';
+                subtitle.textContent = cfg.subtitle;
+                copy.appendChild(subtitle);
+            }
 
             card.insertBefore(icon, card.firstChild);
             const badge = Array.from(card.children).find(function (el) {
