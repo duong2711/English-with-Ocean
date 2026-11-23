@@ -1,244 +1,538 @@
-/* Public workbook tests: Exam center -> Grade 7 -> Unit -> tests.
-   Only verified transcriptions are shown to learners; more tests can be
-   appended to LDDGrade7BookTests.tests without changing folder navigation. */
+/* Grade 7 workbook exams — resumable per-question answers, two-action
+   annotations (Highlight/Note, NO translation), teacher review alongside
+   objective auto-marking. Student progress is isolated by Supabase Auth uid. */
 (function(){
- 'use strict';
- function boot(){
-   const tab=document.getElementById('tab-kiem-tra');
-   const grid=document.getElementById('kiemtra-folder-grid');
-   const card=document.getElementById('ldd-school-exams-folder');
-   const library=window.LDDGrade7BookTests;
-   if(!tab||!grid||!card||!library||document.getElementById('ldd-school-exams-panel'))return;
-   const panel=document.createElement('section');
-   panel.id='ldd-school-exams-panel';panel.hidden=true;
-   panel.setAttribute('aria-label','Đề thi lớp 6–12');
-   grid.insertAdjacentElement('afterend',panel);
-   let stage='grades',unit=1,current=null,answers={},submitted=false,uid=null,db=null,saveTimer=0;
-   const letters=['a','b','c','d','e','f','g','h'];
-   const idRoot='ldd:mlh-grade7:';
-   const escapeKey=test=>idRoot+(uid||'guest')+':'+test.id;
-   const navigate=()=>{ try{sessionStorage.setItem(idRoot+'route',JSON.stringify({stage,unit,testId:current?.id||''}));}catch(_){} };
-   const elt=(tag,cls,text)=>{
-     const e=document.createElement(tag);if(cls)e.className=cls;
-     if(text!==undefined)e.textContent=String(text);return e;
-   };
-   const titleBar=(heading,back)=>{
-     const bar=elt('div','ldd-mlh7-head');
-     const b=elt('button','ldd-mlh7-back','← Quay lại');b.type='button';b.addEventListener('click',back);
-     bar.append(b,elt('h2','',heading));panel.append(bar);
-   };
-   function setView(next){stage=next;panel.replaceChildren();navigate();}
-   function openRoot(){
-     card.classList.add('ldd-mlh7-selected');
-     grid.style.display='none';panel.hidden=false;panel.style.display='';
-     grades();
-   }
-   function closeRoot(){
-     card.classList.remove('ldd-mlh7-selected');
-     panel.hidden=true;panel.style.display='none';grid.style.display='';
-     stage='grades';current=null;navigate();
-   }
-   function folder(label,sub,onClick,disabled=false){
-     const b=elt('button','ldd-mlh7-folder',label);b.type='button';
-     b.append(elt('small','',sub));
-     b.disabled=disabled;
-     if(!disabled)b.addEventListener('click',onClick);
-     panel.append(b);return b;
-   }
-   function grades(){
-     setView('grades');
-     titleBar('Đề thi lớp 6–12',closeRoot);
-     panel.append(elt('p','ldd-mlh7-intro','Bài kiểm tra theo sách và khối lớp.'));
-     folder('📁 Lớp 7','Bài tập Tiếng Anh 7 – Mai Lan Hương, Hà Thanh Uyên',units);
-   }
-   function units(){
-     setView('units');titleBar('Lớp 7 – Danh sách Unit',grades);
-     panel.append(elt('p','ldd-mlh7-intro','Chọn Unit để xem các bài test đã được đối chiếu với bản PDF. Một Unit có thể có nhiều bài test.'));
-     const wrap=elt('div','ldd-mlh7-unit-grid');panel.append(wrap);
-     library.units.forEach((name,i)=>{
-       const n=i+1,records=library.tests.filter(t=>t.unit===n&&t.verified);
-       const b=elt('button','ldd-mlh7-unit','Unit '+n+' · '+name);
-       b.type='button';b.append(elt('small','',records.length?records.length+' bài test':'Chưa có bài test đã đối chiếu'));
-       b.addEventListener('click',()=>tests(n));wrap.append(b);
-     });
-   }
-   function tests(n){
-     unit=n;setView('tests');
-     titleBar('Unit '+unit+' – '+library.units[unit-1],units);
-     const items=library.tests.filter(t=>t.unit===unit&&t.verified);
-     if(!items.length){
-       panel.append(elt('p','ldd-mlh7-empty','Unit này chưa có bài test được kiểm tra chính xác từ PDF. Không tự động đăng nội dung OCR chưa đối chiếu.'));
-       return;
-     }
-     items.forEach(t=>{
-       const count=t.sections.reduce((a,s)=>a+s.questions.length,0);
-       folder('📝 '+t.title,count+' câu · Trang sách '+t.bookPages,()=>{void openTest(t)});
-     });
-   }
-   function progressKey(test){return escapeKey(test)}
-   function writeLocal(test){try{localStorage.setItem(progressKey(test),JSON.stringify({answers,submitted}));}catch(_){}}
-   function readLocal(test){
-     try{const data=JSON.parse(localStorage.getItem(progressKey(test))||'{}');
-       if(data&&data.answers&&typeof data.answers==='object'){answers=data.answers;submitted=!!data.submitted;}}
-     catch(_){}
-   }
-   async function initDb(){
-     if(db)return;
-     if(!window.supabase?.createClient)return;
-     db=window.supabase.createClient('https://ywqbaksmmtvwbojcgsdd.supabase.co',
-       'sb_publishable_AQZ6Jc8ZGID7kfRYPe9fLQ_Wmy7ekp_',
-       {auth:{detectSessionInUrl:false}});
-     const {data}=await db.auth.getSession();
-     uid=data?.session?.user?.id||null;
-   }
-   async function fetchAttempt(test){
-     try{
-       await initDb();if(!uid)return;
-       const {data,error}=await db.from('grade7_book_test_attempts')
-         .select('answers,status').eq('user_id',uid).eq('test_id',test.id).maybeSingle();
-       if(error)throw error;
-       if(!data)return;
-       // Keep an unsent local draft so an asynchronous fetch cannot erase input.
-       if(Object.keys(answers).length===0){answers=data.answers||{};submitted=data.status==='submitted';writeLocal(test);}
-     }catch(e){console.warn('[Grade7 tests] load',e);}
-   }
-   async function saveAttempt(test){
-     try{
-       await initDb();if(!uid)return;
-       const score=calculate(test),row={
-         user_id:uid,test_id:test.id,answers,status:submitted?'submitted':'draft',
-         score_correct:submitted?score.correct:null,score_total:submitted?score.total:null,
-         updated_at:new Date().toISOString()
-       };
-       const {error}=await db.from('grade7_book_test_attempts')
-         .upsert(row,{onConflict:'user_id,test_id'});
-       if(error)throw error;
-     }catch(e){console.warn('[Grade7 tests] save',e);}
-   }
-   function scheduleSave(test){
-     writeLocal(test);
-     clearTimeout(saveTimer);saveTimer=setTimeout(()=>{void saveAttempt(test)},1800);
-   }
-   function answerKey(section,i){return section.label+'-'+(i+1)}
-   function calculate(test){
-     let correct=0,total=0;
-     test.sections.forEach(s=>s.questions.forEach((q,i)=>{
-       if(q.type!=='choice'&&q.type!=='match')return;
-       total++;if(answers[answerKey(s,i)]===q.answer)correct++;
-     }));
-     return {correct,total};
-   }
-   function renderOption(group,key,q,i,opt,index,underlines){
-     const lbl=elt('label','ldd-mlh7-option');
-     const radio=elt('input');radio.type='radio';radio.name='ldd-mlh7-'+key;
-     radio.value=letters[index];radio.checked=answers[key]===radio.value;radio.disabled=submitted;
-     radio.addEventListener('change',()=>{answers[key]=radio.value;scheduleSave(current)});
-     lbl.append(radio,elt('span','ldd-mlh7-letter',letters[index]+'.'));
-     const word=String(opt);const token=underlines?.[index];const at=token?word.indexOf(token):-1;
-     const words=elt('span','ldd-mlh7-option-text');
-     if(at>=0){
-       words.append(document.createTextNode(word.slice(0,at)));
-       words.append(elt('u','',token));words.append(document.createTextNode(word.slice(at+token.length)));
-     }else words.textContent=word;
-     lbl.append(words);group.append(lbl);
-   }
-   function questionEl(section,q,i){
-     const key=answerKey(section,i);
-     const field=elt('fieldset','ldd-mlh7-question');
-     const label=elt('legend','',String(i+1)+'. '+(q.text||''));
-     field.append(label);
-     if(q.type==='choice'){
-       const group=elt('div','ldd-mlh7-options');
-       q.options.forEach((choice,j)=>renderOption(group,key,q,i,choice,j,section.underlines?.[i]));
-       field.append(group);
-     }else if(q.type==='match'){
-       const select=elt('select','ldd-mlh7-select');
-       const first=elt('option','', '— Chọn đáp án —');first.value='';select.append(first);
-       section.choices.forEach((choice,j)=>{
-         const option=elt('option','',letters[j]+'. '+choice);
-         option.value=letters[j];select.append(option);
-       });
-       select.value=answers[key]||'';select.disabled=submitted;
-       select.addEventListener('change',()=>{answers[key]=select.value;scheduleSave(current)});
-       field.append(select);
-     }else{
-       const input=elt('textarea','ldd-mlh7-answer');
-       input.rows=2;input.placeholder='Nhập câu trả lời...';input.value=answers[key]||'';
-       input.disabled=submitted;
-       input.addEventListener('input',()=>{answers[key]=input.value;scheduleSave(current)});
-       field.append(input);
-     }
-     if(submitted){
-       const answer=elt('p','ldd-mlh7-solution','Đáp án sách: '+q.answer);
-       if(q.type!=='written')answer.classList.add(answers[key]===q.answer?'ldd-mlh7-right':'ldd-mlh7-wrong');
-       field.append(answer);
-     }
-     return field;
-   }
-   function exam(test){
-     current=test;setView('exam');
-     titleBar('Lớp 7 · Unit '+test.unit+' · '+test.title,()=>tests(test.unit));
-     const info=elt('p','ldd-mlh7-intro',test.source+' · Trang sách '+test.bookPages+'.');
-     panel.append(info);
-     if(submitted){const s=calculate(test);panel.append(elt('p','ldd-mlh7-score','Đã nộp: '+s.correct+'/'+s.total+' câu chọn đáp án. Phần tự luận cần đối chiếu đáp án sách bên dưới.'));}
-     else panel.append(elt('p','ldd-mlh7-intro','Bài làm được lưu để tiếp tục khi mở lại. Các câu tự luận giữ nguyên câu chữ sách và được đối chiếu sau khi nộp.'));
-     const form=elt('form','ldd-mlh7-form');
-     form.addEventListener('submit',e=>e.preventDefault());
-     test.sections.forEach(sec=>{
-       const block=elt('section','ldd-mlh7-section');
-       block.append(elt('h3','',sec.label+'. '+sec.title));
-       if(sec.passage)block.append(elt('div','ldd-mlh7-passage',sec.passage));
-       if(sec.type==='match'){
-         const legend=elt('div','ldd-mlh7-match-choices');
-         sec.choices.forEach((choice,i)=>legend.append(elt('div','',letters[i]+'. '+choice)));
-         block.append(legend);
-       }
-       sec.questions.forEach((q,i)=>block.append(questionEl(sec,q,i)));
-       form.append(block);
-     });
-     const buttons=elt('div','ldd-mlh7-actions');
-     if(!submitted){
-       const submit=elt('button','ldd-mlh7-primary','Nộp bài');
-       submit.type='button';submit.addEventListener('click',()=>{
-         const total=test.sections.reduce((a,s)=>a+s.questions.length,0);
-         const filled=Object.values(answers).filter(x=>String(x||'').trim()).length;
-         if(filled<total&&!window.confirm('Bạn đã làm '+filled+'/'+total+' câu. Vẫn nộp bài?'))return;
-         submitted=true;writeLocal(test);void saveAttempt(test);exam(test);
-       });buttons.append(submit);
-     }else{
-       const redo=elt('button','ldd-mlh7-secondary','Làm lại bài');
-       redo.type='button';redo.addEventListener('click',()=>{
-         if(!window.confirm('Làm lại sẽ thay thế bài làm gần nhất. Tiếp tục?'))return;
-         answers={};submitted=false;writeLocal(test);void saveAttempt(test);exam(test);
-       });buttons.append(redo);
-     }
-     form.append(buttons);panel.append(form);
-   }
-   async function openTest(test){
-     clearTimeout(saveTimer);current=test;answers={};submitted=false;
-     // Resolve the signed-in identity before accessing device-local progress.
-     try{await initDb()}catch(_){}
-     readLocal(test);
-     await fetchAttempt(test);
-     exam(test);
-   }
-   card.addEventListener('click',openRoot);
-   window.addEventListener('ldd:exam-close',()=>{if(!panel.hidden)closeRoot()});
-   // Recover the nested route on refresh only if the Exam tab is active.
-   try{
-     const saved=JSON.parse(sessionStorage.getItem(idRoot+'route')||'null');
-     if(saved?.stage&&['grades','units','tests','exam'].includes(saved.stage)&&
-        tab.classList.contains('active')){
-       openRoot();
-       if(saved.stage==='units')units();
-       if(saved.stage==='tests')tests(Number(saved.unit)||1);
-       if(saved.stage==='exam'){
-         const test=library.tests.find(t=>t.id===saved.testId&&t.verified);
-         if(test)void openTest(test);
-       }
-     }
-   }catch(_){}
- }
- if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});
- else boot();
+'use strict';
+function boot(){
+  const tab=document.getElementById('tab-kiem-tra');
+  const grid=document.getElementById('kiemtra-folder-grid');
+  const card=document.getElementById('ldd-school-exams-folder');
+  const library=window.LDDGrade7BookTests;
+  if(!tab||!grid||!card||!library||document.getElementById('ldd-school-exams-panel'))return;
+  const panel=document.createElement('section');
+  panel.id='ldd-school-exams-panel';panel.hidden=true;
+  panel.setAttribute('aria-label','Đề thi lớp 6–12');
+  grid.insertAdjacentElement('afterend',panel);
+  const KEY='ldd:mlh-grade7:';
+  const TEACHER='lddbaiu@gmail.com';
+  const letters=['a','b','c','d','e','f','g','h'];
+  let stage='grades',unit=1,current=null,db=null,uid=null,teacher=false;
+  let currentContext=null,sessionRequest=null,openSerial=0;
+  const drafts=new Map();
+  const el=(tag,cls,contents)=>{
+    const node=document.createElement(tag);
+    if(cls)node.className=cls;
+    if(contents!==undefined)node.textContent=String(contents);
+    return node;
+  };
+  const button=(text,cls,cb)=>{
+    const b=el('button',cls,text);b.type='button';b.addEventListener('click',cb);return b;
+  };
+  const route=()=>{
+    try{sessionStorage.setItem(KEY+'route',JSON.stringify({
+      stage,unit,testId:current?.id||''
+    }));}catch(_){}
+  };
+  function setView(next){
+    stage=next;panel.replaceChildren();
+    if(next!=='exam')delete panel.dataset.annotationTestId;
+    route();
+  }
+  function titleBar(title,back){
+    const head=el('div','ldd-mlh7-head');
+    head.append(button('← Quay lại','ldd-mlh7-back',back),el('h2','',title));
+    panel.append(head);
+  }
+  function folder(title,subtitle,callback){
+    const item=button(title,'ldd-mlh7-folder',callback);
+    item.append(el('small','',subtitle));panel.append(item);return item;
+  }
+  function openRoot(){
+    grid.style.display='none';panel.hidden=false;panel.style.display='';
+    grades();
+  }
+  function closeRoot(){
+    grid.style.display='';panel.hidden=true;panel.style.display='none';
+    stage='grades';current=null;currentContext=null;route();
+  }
+  function grades(){
+    current=null;currentContext=null;
+    setView('grades');titleBar('Đề thi lớp 6–12',closeRoot);
+    folder('📁 Lớp 7','Bài tập Tiếng Anh 7 – Mai Lan Hương, Hà Thanh Uyên',units);
+    void initDb().then(()=>{
+      if(!teacher||stage!=='grades'||panel.hidden)return;
+      if(panel.querySelector('.ldd-mlh7-teacher-folder'))return;
+      folder('👩‍🏫 Chấm bài lớp 7','Bài học viên đã nộp · chấm từng câu và nhận xét',()=>{void teacherList()})
+        .classList.add('ldd-mlh7-teacher-folder');
+    }).catch(()=>{});
+  }
+  function units(){
+    current=null;currentContext=null;
+    setView('units');titleBar('Lớp 7 – Danh sách Unit',grades);
+    panel.append(el('p','ldd-mlh7-intro','Chọn Unit để xem các bài test đã đối chiếu với PDF. Mỗi Unit có thể có nhiều bài.'));
+    const wrap=el('div','ldd-mlh7-unit-grid');panel.append(wrap);
+    library.units.forEach((name,index)=>{
+      const n=index+1,tests=library.tests.filter(t=>t.unit===n&&t.verified);
+      const item=button('Unit '+n+' · '+name,'ldd-mlh7-unit',()=>showTests(n));
+      item.append(el('small','',tests.length?tests.length+' bài test':'Chưa có bài test đã đối chiếu'));
+      wrap.append(item);
+    });
+  }
+  function showTests(n){
+    unit=n;current=null;currentContext=null;
+    setView('tests');titleBar('Unit '+n+' – '+library.units[n-1],units);
+    const matches=library.tests.filter(t=>t.unit===n&&t.verified);
+    if(!matches.length){
+      panel.append(el('p','ldd-mlh7-empty','Chưa có bài test được đối chiếu chính xác với PDF. Không đăng bản OCR chưa kiểm tra.'));
+      return;
+    }
+    matches.forEach(t=>{
+      const count=t.sections.reduce((sum,s)=>sum+s.questions.length,0);
+      folder('📝 '+t.title,count+' câu · Trang sách '+t.bookPages,()=>{void openTest(t)});
+    });
+  }
+  async function initDb(){
+    if(sessionRequest)return sessionRequest;
+    sessionRequest=(async()=>{
+      if(!window.supabase?.createClient)throw Error('Không kết nối được Supabase');
+      if(!db)db=window.supabase.createClient('https://ywqbaksmmtvwbojcgsdd.supabase.co',
+        'sb_publishable_AQZ6Jc8ZGID7kfRYPe9fLQ_Wmy7ekp_',{auth:{detectSessionInUrl:false}});
+      const {data,error}=await db.auth.getSession();
+      if(error)throw error;
+      const session=data?.session;
+      const nextUid=session?.user?.id||null;
+      if(uid!==nextUid)drafts.clear(); // never reuse another learner's draft
+      uid=nextUid;
+      teacher=String(session?.user?.email||'').toLowerCase()===TEACHER;
+      return session;
+    })();
+    try{return await sessionRequest;}finally{sessionRequest=null;}
+  }
+  function localKey(test){return KEY+'answer:'+(uid||'signed-out')+':'+test.id;}
+  function persist(ctx){
+    try{localStorage.setItem(localKey(ctx.test),JSON.stringify({
+      answers:ctx.answers,dirty:ctx.dirty,submitted:ctx.submitted,updatedAt:Date.now()
+    }));}catch(_){}
+  }
+  function readLocal(ctx){
+    try{
+      const record=JSON.parse(localStorage.getItem(localKey(ctx.test))||'null');
+      if(record?.answers&&typeof record.answers==='object'&&!Array.isArray(record.answers)){
+        ctx.answers=record.answers;ctx.dirty=record.dirty||{};
+        ctx.submitted=!!record.submitted;
+      }
+    }catch(_){}
+  }
+  function newContext(test){
+    const ctx={
+      test,answers:{},dirty:{},submitted:false,attemptId:null,
+      loading:false,saving:null,syncTimer:0,error:'',synced:false,review:null
+    };
+    drafts.set(test.id,ctx);readLocal(ctx);return ctx;
+  }
+  function status(ctx,message){
+    if(ctx!==currentContext)return;
+    const bar=panel.querySelector('#ldd-mlh7-save-status');
+    if(bar)bar.textContent=message||(
+      ctx.error?'Đã lưu trên thiết bị; chưa đồng bộ: '+ctx.error:
+      Object.keys(ctx.dirty).length?'Đã lưu trên thiết bị · Đang đồng bộ…':
+      ctx.synced?'✓ Đã lưu trên tài khoản':'Đã lưu trên thiết bị');
+  }
+  async function getAttempt(ctx){
+    await initDb();
+    if(!uid){ctx.error='Hãy đăng nhập để đồng bộ bài làm';return;}
+    try{
+      const {data,error}=await db.from('grade7_book_test_attempts')
+        .select('id,answers,status,updated_at')
+        .eq('user_id',uid).eq('test_id',ctx.test.id).maybeSingle();
+      if(error)throw error;
+      if(data){
+        ctx.attemptId=data.id;
+        // Pending local answers are the only values allowed to override server
+        // answers. All synced values from other devices are authoritative.
+        ctx.answers={...(data.answers||{}),...ctx.dirty};
+        ctx.submitted=data.status==='submitted';
+        if(ctx.submitted)ctx.dirty={};
+      }
+      ctx.error='';ctx.synced=!!data;
+      persist(ctx);
+    }catch(e){ctx.error=e.message||'Không kết nối được máy chủ';}
+  }
+  function changeAnswer(ctx,key,value){
+    if(ctx.submitted)return;
+    ctx.answers[key]=value;ctx.dirty[key]=value;
+    ctx.synced=false;ctx.error='';persist(ctx);status(ctx);
+    clearTimeout(ctx.syncTimer);
+    // Only a short debounce for typing; radio/select changes flush at once.
+    ctx.syncTimer=setTimeout(()=>{void flushAnswers(ctx)},ctx._choice?0:250);
+    ctx._choice=false;
+  }
+  function flushAnswers(ctx){
+    clearTimeout(ctx.syncTimer);
+    if(ctx.saving)return ctx.saving;
+    if(ctx.submitted||!Object.keys(ctx.dirty).length)return Promise.resolve();
+    ctx.saving=(async()=>{
+      try{
+        await initDb();
+        if(!uid)throw Error('Bạn cần đăng nhập để đồng bộ');
+        while(!ctx.submitted&&Object.keys(ctx.dirty).length){
+          const key=Object.keys(ctx.dirty)[0],value=ctx.dirty[key];
+          const {data,error}=await db.rpc('grade7_save_answer',{
+            p_test_id:ctx.test.id,p_question_key:key,p_answer:value
+          });
+          if(error||data!==true)throw error||Error('Chưa lưu được câu trả lời');
+          if(ctx.dirty[key]===value)delete ctx.dirty[key];
+          ctx.synced=!Object.keys(ctx.dirty).length;
+          persist(ctx);status(ctx);
+        }
+        ctx.error='';
+      }catch(e){ctx.error=e.message||'Chưa đồng bộ';status(ctx);}
+      finally{
+        ctx.saving=null;
+        status(ctx);
+      }
+    })();
+    return ctx.saving;
+  }
+  function answerKey(s,i){return s.label+'-'+(i+1);}
+  function scoreObjective(test,values){
+    let correct=0,total=0;
+    test.sections.forEach(s=>s.questions.forEach((q,i)=>{
+      if(q.type==='choice'||q.type==='match'){
+        total++;
+        if(values[answerKey(s,i)]===q.answer)correct++;
+      }
+    }));
+    return {correct,total};
+  }
+  function countAll(test){
+    return test.sections.reduce((sum,sec)=>sum+sec.questions.length,0);
+  }
+  function autoMark(q,answer){
+    return q.type==='written'?null:(answer===q.answer?1:0);
+  }
+  function reviewSummary(test,values,grades){
+    let correct=0,pending=0,total=0;
+    test.sections.forEach(sec=>sec.questions.forEach((q,i)=>{
+      total++;
+      const key=answerKey(sec,i),manual=grades?.[key];
+      const mark=(manual===0||manual===1)?manual:autoMark(q,values[key]);
+      if(mark===null)pending++;
+      else correct+=mark;
+    }));
+    return {correct,total,pending};
+  }
+  async function getPublishedReview(ctx){
+    if(!ctx.attemptId)return;
+    try{
+      const {data,error}=await db.from('grade7_book_test_reviews')
+        .select('grades,comments,overall_feedback,score_correct,score_total,status')
+        .eq('attempt_id',ctx.attemptId).maybeSingle();
+      if(error)throw error;
+      ctx.review=data?.status==='published'?data:null;
+    }catch(e){console.warn('[Grade7] review read',e);}
+  }
+  function drawChoice(group,ctx,key,q,word,index,underlines){
+    const label=el('label','ldd-mlh7-option');
+    const radio=el('input');radio.type='radio';radio.value=letters[index];
+    radio.name='ldd-mlh7-'+key;radio.checked=ctx.answers[key]===radio.value;
+    radio.disabled=ctx.submitted;
+    radio.addEventListener('change',()=>{
+      ctx._choice=true;changeAnswer(ctx,key,radio.value);
+    });
+    const answer=el('span','ldd-mlh7-option-text');
+    const token=underlines?.[index],at=token?String(word).indexOf(token):-1;
+    if(at>=0){
+      answer.append(document.createTextNode(String(word).slice(0,at)));
+      answer.append(el('u','',token));
+      answer.append(document.createTextNode(String(word).slice(at+token.length)));
+    }else answer.textContent=String(word);
+    label.append(radio,el('span','ldd-mlh7-letter',letters[index]+'.'),answer);
+    group.append(label);
+  }
+  function renderQuestion(sec,q,i,ctx){
+    const key=answerKey(sec,i);
+    const field=el('fieldset','ldd-mlh7-question');
+    field.append(el('legend','',String(i+1)+'. '+(q.text||'')));
+    if(q.type==='choice'){
+      const group=el('div','ldd-mlh7-options');
+      q.options.forEach((opt,n)=>drawChoice(group,ctx,key,q,opt,n,sec.underlines?.[i]));
+      field.append(group);
+    }else if(q.type==='match'){
+      const select=el('select','ldd-mlh7-select');
+      const first=el('option','','— Chọn đáp án —');first.value='';select.append(first);
+      sec.choices.forEach((value,j)=>{
+        const o=el('option','',letters[j]+'. '+value);o.value=letters[j];select.append(o);
+      });
+      select.value=ctx.answers[key]||'';select.disabled=ctx.submitted;
+      select.addEventListener('change',()=>{
+        ctx._choice=true;changeAnswer(ctx,key,select.value);
+      });
+      field.append(select);
+    }else{
+      const input=el('textarea','ldd-mlh7-answer');
+      input.rows=2;input.placeholder='Nhập câu trả lời…';
+      input.value=ctx.answers[key]||'';input.disabled=ctx.submitted;
+      input.addEventListener('input',()=>changeAnswer(ctx,key,input.value));
+      input.addEventListener('blur',()=>{void flushAnswers(ctx)});
+      field.append(input);
+    }
+    if(ctx.submitted){
+      const row=el('p','ldd-mlh7-solution','Đáp án sách: '+q.answer);
+      if(q.type!=='written')row.classList.add(autoMark(q,ctx.answers[key])?'ldd-mlh7-right':'ldd-mlh7-wrong');
+      const comment=ctx.review?.comments?.[key];
+      const override=ctx.review?.grades?.[key];
+      if(override===0||override===1)
+        row.append(el('span','ldd-mlh7-teacher-mark',' · Giáo viên: '+(override?'Đúng':'Sai')));
+      if(comment)row.append(el('span','ldd-mlh7-teacher-mark',' · Nhận xét: '+comment));
+      field.append(row);
+    }
+    return field;
+  }
+  function drawExam(ctx){
+    current=ctx.test;currentContext=ctx;unit=ctx.test.unit;
+    setView('exam');
+    panel.dataset.annotationTestId=ctx.test.id;
+    titleBar('Lớp 7 · Unit '+ctx.test.unit+' · '+ctx.test.title,()=>showTests(ctx.test.unit));
+    const s=scoreObjective(ctx.test,ctx.answers);
+    panel.append(el('p','ldd-mlh7-intro',ctx.test.source+' · Trang sách '+ctx.test.bookPages));
+    if(ctx.submitted){
+      panel.append(el('p','ldd-mlh7-score',
+        'Máy chấm: '+s.correct+'/'+s.total+' câu trắc nghiệm/nối đáp án. '+(ctx.review?
+          'Giáo viên chấm: '+ctx.review.score_correct+'/'+ctx.review.score_total+' câu (đã công bố).':
+          'Bài tự luận đang chờ giáo viên chấm.')));
+      if(ctx.review?.overall_feedback)
+        panel.append(el('p','ldd-mlh7-teacher-feedback','Nhận xét của giảng viên: '+ctx.review.overall_feedback));
+    }else{
+      panel.append(el('p','ldd-mlh7-intro',
+        'Chọn đáp án hoặc nhập câu trả lời: mỗi câu được lưu riêng. Chưa nộp có thể thoát và mở lại để làm tiếp. Chỉ có Highlight/Ghi chú, không có Dịch.'));
+    }
+    const statusLine=el('p','ldd-mlh7-save-status');
+    statusLine.id='ldd-mlh7-save-status';panel.append(statusLine);
+    const form=el('form','ldd-mlh7-form');
+    form.addEventListener('submit',e=>e.preventDefault());
+    const content=el('div','ldd-mlh7-learning-content');
+    content.id='ldd-mlh7-text';
+    content.setAttribute('data-ldd-text-actions','');
+    content.setAttribute('data-ldd-no-translation','true');
+    ctx.test.sections.forEach(sec=>{
+      const section=el('section','ldd-mlh7-section');
+      section.append(el('h3','',sec.label+'. '+sec.title));
+      if(sec.passage)section.append(el('div','ldd-mlh7-passage',sec.passage));
+      if(sec.type==='match'){
+        const legend=el('div','ldd-mlh7-match-choices');
+        sec.choices.forEach((text,n)=>legend.append(el('div','',letters[n]+'. '+text)));
+        section.append(legend);
+      }
+      sec.questions.forEach((q,i)=>section.append(renderQuestion(sec,q,i,ctx)));
+      content.append(section);
+    });
+    form.append(content);
+    const actions=el('div','ldd-mlh7-actions');
+    if(!ctx.submitted){
+      actions.append(button('Nộp bài','ldd-mlh7-primary',()=>{void submitExam(ctx)}));
+    }else{
+      actions.append(el('p','ldd-mlh7-intro','Đã nộp bài. Đáp án được khóa để giáo viên chấm trên bài làm hiện tại.'));
+    }
+    form.append(actions);panel.append(form);
+    status(ctx);
+    // Dynamic reader root: restore student-owned highlights and notes from
+    // Supabase after DOM insertion; notes do not live in local-only memory.
+    window.LDDTestAnnotations?.refresh?.();
+  }
+  async function submitExam(ctx){
+    if(ctx.submitted||!uid)return;
+    const total=countAll(ctx.test);
+    const filled=Object.values(ctx.answers).filter(x=>String(x||'').trim()).length;
+    if(filled<total&&!window.confirm('Bạn mới làm '+filled+'/'+total+' câu. Vẫn nộp bài?'))return;
+    await flushAnswers(ctx);
+    if(Object.keys(ctx.dirty).length){
+      window.alert('Có câu chưa đồng bộ. Bài vẫn được lưu trên thiết bị; hãy kiểm tra mạng rồi nộp lại.');
+      return;
+    }
+    try{
+      const {data,error}=await db.from('grade7_book_test_attempts')
+        .update({status:'submitted',updated_at:new Date().toISOString()})
+        .eq('user_id',uid).eq('test_id',ctx.test.id).eq('status','draft')
+        .select('id').single();
+      if(error)throw error;
+      ctx.submitted=true;ctx.attemptId=data.id;ctx.synced=true;persist(ctx);
+      await getPublishedReview(ctx);drawExam(ctx);
+    }catch(e){window.alert('Không nộp được bài: '+(e.message||'Lỗi kết nối')+'. Đáp án vẫn được lưu để làm tiếp.');}
+  }
+  async function openTest(test){
+    const request=++openSerial;
+    await initDb();
+    if(!uid){window.alert('Hãy đăng nhập để làm bài và lưu tiến độ.');return;}
+    const ctx=drafts.get(test.id)||newContext(test);
+    currentContext=ctx;
+    await getAttempt(ctx);
+    if(request!==openSerial)return;
+    if(ctx.submitted)await getPublishedReview(ctx);
+    drawExam(ctx);
+    if(Object.keys(ctx.dirty).length)void flushAnswers(ctx);
+  }
+  async function teacherList(){
+    await initDb();if(!teacher)return;
+    current=null;currentContext=null;setView('teacher-list');
+    titleBar('Giảng viên · Chấm bài lớp 7',grades);
+    panel.append(el('p','ldd-mlh7-intro','Bài đã nộp · điểm trắc nghiệm máy chấm · giáo viên chấm riêng từng câu và có thể sửa điểm.'));
+    const list=el('div','ldd-mlh7-teacher-list');
+    panel.append(list);list.append(el('p','','Đang tải bài nộp…'));
+    try{
+      const [attempts,students,reviews]=await Promise.all([
+        db.from('grade7_book_test_attempts').select('id,user_id,test_id,answers,updated_at,status')
+          .eq('status','submitted').order('updated_at',{ascending:false}).limit(200),
+        db.from('student_grade_assignments').select('user_id,email,display_name'),
+        db.from('grade7_book_test_reviews').select('attempt_id,status,score_correct,score_total')
+      ]);
+      if(attempts.error)throw attempts.error;
+      const people=new Map((students.data||[]).map(s=>[s.user_id,s]));
+      const grades=new Map((reviews.data||[]).map(s=>[s.attempt_id,s]));
+      list.replaceChildren();
+      const records=(attempts.data||[]).filter(a=>library.tests.some(t=>t.id===a.test_id));
+      if(!records.length){list.append(el('p','ldd-mlh7-empty','Chưa có học viên nộp bài lớp 7.'));return;}
+      records.forEach(a=>{
+        const test=library.tests.find(t=>t.id===a.test_id);
+        const who=people.get(a.user_id);
+        const auto=scoreObjective(test,a.answers||{});
+        const review=grades.get(a.id);
+        const name=who?.display_name||who?.email||a.user_id;
+        const summary=review?.status==='published'?'Đã chấm '+review.score_correct+'/'+review.score_total:'Chưa công bố điểm giáo viên';
+        folder('📝 '+name+' · Unit '+test.unit+' · '+test.title,
+          'Máy: '+auto.correct+'/'+auto.total+' · '+summary,
+          ()=>{void teacherGrade(a,test)});
+      });
+    }catch(e){list.replaceChildren(el('p','ldd-mlh7-empty','Không tải được bài nộp: '+(e.message||'Lỗi kết nối')));}
+  }
+  async function teacherGrade(attempt,test){
+    await initDb();if(!teacher||attempt.status!=='submitted')return;
+    setView('teacher-grade');
+    titleBar('Chấm bài · Unit '+test.unit+' · '+test.title,()=>{void teacherList()});
+    const loading=el('p','ldd-mlh7-intro','Đang đọc điểm chấm…');panel.append(loading);
+    try{
+      const {data:existing,error}=await db.from('grade7_book_test_reviews')
+        .select('grades,comments,overall_feedback,status').eq('attempt_id',attempt.id).maybeSingle();
+      if(error)throw error;
+      loading.remove();
+      const state={grades:{...(existing?.grades||{})},comments:{...(existing?.comments||{})},
+        feedback:existing?.overall_feedback||'',published:existing?.status==='published',
+        saveTimer:0,saving:false,error:''};
+      const summary=el('p','ldd-mlh7-score');panel.append(summary);
+      const statusLine=el('p','ldd-mlh7-save-status');panel.append(statusLine);
+      const body=el('div','ldd-mlh7-teacher-review');panel.append(body);
+      function paintSummary(){
+        const score=reviewSummary(test,attempt.answers||{},state.grades);
+        summary.textContent='Điểm hiện tại: '+score.correct+'/'+score.total+
+          (score.pending?' · Còn '+score.pending+' câu tự luận chưa chấm':' · Đã chấm đủ');
+        return score;
+      }
+      const save=async publish=>{
+        if(state.saving)return false;
+        const score=paintSummary();
+        if(publish&&score.pending){
+          window.alert('Còn '+score.pending+' câu chưa chấm. Hãy chấm đủ trước khi công bố.');return false;
+        }
+        state.saving=true;statusLine.textContent='Đang lưu điểm và nhận xét…';
+        try{
+          const row={
+            attempt_id:attempt.id,grades:state.grades,comments:state.comments,
+            overall_feedback:state.feedback,score_correct:score.pending?null:score.correct,
+            score_total:score.pending?null:score.total,
+            status:publish||state.published?'published':'draft',
+            graded_by:uid,graded_at:publish||state.published?new Date().toISOString():null,
+            updated_at:new Date().toISOString()
+          };
+          const {error}=await db.from('grade7_book_test_reviews')
+            .upsert(row,{onConflict:'attempt_id'});
+          if(error)throw error;
+          state.published=row.status==='published';
+          statusLine.textContent=state.published?'✓ Đã công bố điểm giáo viên':'✓ Đã lưu bản chấm nháp';
+          return true;
+        }catch(e){statusLine.textContent='Chưa lưu được: '+(e.message||'Lỗi kết nối');return false;}
+        finally{state.saving=false;}
+      };
+      function changed(){
+        paintSummary();statusLine.textContent='Chưa lưu thay đổi';
+        clearTimeout(state.saveTimer);
+        state.saveTimer=setTimeout(()=>{void save(false)},1200);
+      }
+      test.sections.forEach(sec=>{
+        const section=el('section','ldd-mlh7-section');
+        section.append(el('h3','',sec.label+'. '+sec.title));
+        if(sec.passage)section.append(el('div','ldd-mlh7-passage',sec.passage));
+        sec.questions.forEach((q,i)=>{
+          const key=answerKey(sec,i),field=el('article','ldd-mlh7-review-item');
+          field.append(el('h4','',key+' · '+(q.text||('Câu '+(i+1)+' ('+sec.title+')'))));
+          field.append(el('p','ldd-mlh7-student-answer',
+            'Học viên: '+String(attempt.answers?.[key]||'(chưa trả lời)')));
+          field.append(el('p','ldd-mlh7-book-answer','Đáp án sách: '+q.answer));
+          const automatic=autoMark(q,attempt.answers?.[key]);
+          const label=el('label','ldd-mlh7-grade-line',automatic===null?
+            'Giáo viên chấm tự luận: ':'Điểm máy: '+(automatic?'Đúng':'Sai')+' · Chấm lại: ');
+          const select=el('select','ldd-mlh7-grade-select');
+          const options=[
+            ['',''+(automatic===null?'— Chưa chấm —':'Giữ điểm máy')],['1','✓ Đúng (1 điểm)'],['0','✕ Sai (0 điểm)']
+          ];
+          options.forEach(([value,name])=>{
+            const o=el('option','',name);o.value=value;select.append(o);
+          });
+          select.value=state.grades[key]===0||state.grades[key]===1?
+            String(state.grades[key]):'';
+          select.addEventListener('change',()=>{
+            if(select.value==='')delete state.grades[key];
+            else state.grades[key]=Number(select.value);
+            changed();
+          });
+          label.append(select);field.append(label);
+          const comment=el('textarea','ldd-mlh7-teacher-comment');
+          comment.rows=2;comment.maxLength=1000;
+          comment.placeholder='Nhận xét câu này (nếu cần)…';
+          comment.value=state.comments[key]||'';
+          comment.addEventListener('input',()=>{
+            if(comment.value.trim())state.comments[key]=comment.value;
+            else delete state.comments[key];changed();
+          });
+          field.append(comment);section.append(field);
+        });
+        body.append(section);
+      });
+      const overall=el('textarea','ldd-mlh7-teacher-comment ldd-mlh7-overall');
+      overall.rows=4;overall.maxLength=4000;
+      overall.placeholder='Nhận xét tổng thể của giảng viên…';overall.value=state.feedback;
+      overall.addEventListener('input',()=>{state.feedback=overall.value;changed()});
+      body.append(el('h3','','Nhận xét tổng thể'),overall);
+      const actionbar=el('div','ldd-mlh7-actions');
+      actionbar.append(button('Lưu bản chấm','ldd-mlh7-secondary',()=>{
+        clearTimeout(state.saveTimer);void save(false);
+      }));
+      actionbar.append(button('Công bố điểm cho học viên','ldd-mlh7-primary',()=>{
+        clearTimeout(state.saveTimer);void save(true);
+      }));
+      panel.append(actionbar);paintSummary();
+    }catch(e){loading.textContent='Không mở được bài chấm: '+(e.message||'Lỗi kết nối');}
+  }
+  card.addEventListener('click',openRoot);
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='hidden')drafts.forEach(ctx=>{void flushAnswers(ctx)});
+  });
+  window.addEventListener('pagehide',()=>drafts.forEach(ctx=>{void flushAnswers(ctx)}));
+  window.addEventListener('online',()=>drafts.forEach(ctx=>{void flushAnswers(ctx)}));
+  window.addEventListener('ldd:exam-close',()=>{if(!panel.hidden)closeRoot()});
+  try{
+    const saved=JSON.parse(sessionStorage.getItem(KEY+'route')||'null');
+    if(saved?.stage&&tab.classList.contains('active')){
+      openRoot();
+      if(saved.stage==='units')units();
+      if(saved.stage==='tests')showTests(Number(saved.unit)||1);
+      if(saved.stage==='exam'){
+        const test=library.tests.find(t=>t.id===saved.testId&&t.verified);
+        if(test)void openTest(test);
+      }
+      if(saved.stage==='teacher-list')void teacherList();
+    }
+  }catch(_){}
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});
+else boot();
 })();
