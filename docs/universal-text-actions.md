@@ -12,7 +12,7 @@
 ## Ba lựa chọn
 
 1. **Dịch:** Từ đơn sử dụng popup từ điển hiện có; cụm từ ngắn dùng công cụ collocation; câu/đoạn/bài báo dài được dịch qua AI proxy đã xác thực. Cụm từ không bắt phát âm.
-2. **Highlight:** Đánh dấu đúng đoạn được quét.
+2. **Highlight:** Đánh dấu đúng đoạn được quét. Nếu phần được chọn đã được highlight, cùng vị trí nút này chuyển thành **Bỏ highlight**; thao tác bỏ chỉ xóa đánh dấu ở phần được chọn (giữ các từ bên cạnh nếu chúng vẫn còn được highlight). Đối với bài báo và bài kiểm tra, việc bỏ đánh dấu phải được lưu vào Supabase và vẫn có hiệu lực sau khi mở lại bài.
 3. **Ghi chú:** Cho phép viết lại suy nghĩ gắn với đoạn được chọn.
 
 Đối với bài báo và bài kiểm tra được hỗ trợ, Highlight/Ghi chú lưu theo tài khoản vào `student_test_annotations` với khóa bài và vị trí văn bản, sau đó khôi phục khi mở lại bài. Ngoài những vùng có annotation scope ổn định, ghi chú hiện có fallback **trên thiết bị** và phân tách theo tài khoản; highlight fallback hiện chỉ tồn tại trong phiên làm việc. Khi thêm một loại bài mới cần **đồng bộ highlight/ghi chú giữa thiết bị**, phải mở rộng `ldd-test-annotations.js` bằng một root/key ổn định, không chỉ bật ba nút.
