@@ -49,6 +49,7 @@
         ensureStylesheet('ldd-film-cloze-style', 'ldd-film-cloze.css?v=20261116-film-cue-padding3');
         ensureStylesheet('ldd-text-actions-style', 'ldd-text-actions.css?v=20261122-universal-three-actions1');
         ensureStylesheet('ldd-ctest-student-groups-style', 'ldd-ctest-student-groups.css?v=20261116-grouped1');
+        ensureStylesheet('ldd-grade7-book-tests-style', 'ldd-grade7-book-tests.css?v=20261124-mlh7-1');
 
         // Load first. Dynamic scripts are async by default, so ensureScript sets async=false
         // to preserve insertion order and let all helper modules benefit from the guard.
@@ -73,6 +74,8 @@
         ensureScript('ldd-film-cloze-script', 'ldd-film-cloze.js?v=20261116-script-visibility1');
         ensureScript('ldd-text-actions-script', 'ldd-text-actions.js?v=20261124-study-only1');
         ensureScript('ldd-test-annotations-script', 'ldd-test-annotations.js?v=20261123-highlight-toggle1');
+        ensureScript('ldd-grade7-book-tests-data', 'ldd-grade7-book-tests-data.js?v=20261124-mlh7-1');
+        ensureScript('ldd-grade7-book-tests', 'ldd-grade7-book-tests.js?v=20261124-mlh7-1');
     }
 
     function ensureStylesheet(id, href) {
@@ -493,6 +496,7 @@
 
     const TEST_CENTER_VIEW_IDS = [
         'vocab-own-test-panel',
+        'ldd-school-exams-panel',
         'ctest-panel',
         'ielts-sample-panel',
         'ilt-panel',
@@ -501,6 +505,7 @@
 
     const TEST_CENTER_ROOT_CARDS = new Set([
         'vocab-test-folder',
+        'ldd-school-exams-folder',
         'ielts-sample-folder-card',
         'ctest-folder-card'
     ]);
