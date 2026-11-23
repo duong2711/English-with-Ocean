@@ -75,6 +75,7 @@
         ensureScript('ldd-text-actions-script', 'ldd-text-actions.js?v=20261124-study-only1');
         ensureScript('ldd-test-annotations-script', 'ldd-test-annotations.js?v=20261123-highlight-toggle1');
         ensureScript('ldd-grade7-book-tests-data', 'ldd-grade7-book-tests-data.js?v=20261124-mlh7-1');
+        ensureScript('ldd-grade7-book-tests-unit2', 'ldd-grade7-book-tests-unit2.js?v=20261124-mlh7-1');
         ensureScript('ldd-grade7-book-tests', 'ldd-grade7-book-tests.js?v=20261124-mlh7-1');
     }
 
