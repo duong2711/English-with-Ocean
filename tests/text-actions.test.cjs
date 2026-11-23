@@ -26,7 +26,7 @@ test('news article touch taps and phrase selections use the three-action menu',(
  assert.match(actions,/const READING_ROOT=/);
  assert.match(actions,/MAX_SELECTION=20000/);
  assert.match(actions,/!isLookupReader\(node\)/);
- assert.match(actions,/if\(selection\)\{present\(selection\);return;\}/);
+ assert.match(actions,/if\(selection\)\{[\s\S]*?e\.preventDefault\(\);e\.stopImmediatePropagation\(\);[\s\S]*?present\(selection\);return;[\s\S]*?\}/);
  assert.match(actions,/const word=wordAtPoint\(e\)/);
 });
 test('mouse drag and long-press mobile word selection use native selection handles',()=>{
@@ -59,11 +59,11 @@ test('no-lookup tests remain excluded, and phrase translation never invokes pron
 test('shared collocations render in existing vocabulary category and assets load globally',()=>{
  assert.match(grammar,/from\('collocation_bank'\)/);
  assert.match(grammar,/select\('phrase,meaning_vi'\)/);
- assert.match(boot,/ldd-text-actions\.js\?v=20261122-universal-three-actions2/);
+ assert.match(boot,/ldd-text-actions\.js\?v=20261123-news-article-menu1/);
  assert.match(boot,/ldd-test-annotations\.js\?v=20261122-universal-three-actions2/);
  assert.match(boot,/ldd-text-actions\.css\?v=20261122-universal-three-actions1/);
  assert.match(boot,/ldd-ui-vocab-grammar\.js\?v=20261119-conj-return1/);
- assert.match(page,/ldd-ui-upgrade\.js\?v=20261122-universal-three-actions3/);
+ assert.match(page,/ldd-ui-upgrade\.js\?v=20261123-news-article-menu1/);
  assert.match(page,/scriptphonetics\.js\?v=20261122-pronunciation-history1/);
 });
 test('assigned-test highlights and notes use account-owned Supabase rows and safe text anchors',()=>{
@@ -97,7 +97,7 @@ test('news annotations retain their account-specific identity and text anchors',
  assert.match(annotations,/normalized\.indexOf\(expected/);
  assert.match(annotations,/if\(currentRoot!==root\|\|state\(info\)\?\.key!==info\.key\)/);
  assert.match(boot,/ldd-test-annotations\.js\?v=20261122-universal-three-actions2/);
- assert.match(page,/ldd-ui-upgrade\.js\?v=20261122-universal-three-actions3/);
+ assert.match(page,/ldd-ui-upgrade\.js\?v=20261123-news-article-menu1/);
 });
 
 test('every dictionary-enabled reading surface uses the same three actions by default',()=>{
@@ -108,7 +108,7 @@ test('every dictionary-enabled reading surface uses the same three actions by de
  assert.match(actions,/LDDTextActions=\{openWord,translateTerm,explainVietnamese,presentWordElement,presentSelection\}/);
  assert.match(actions,/tapped && presentWordElement\(tapped\)/);
  assert.match(actions,/e\.stopImmediatePropagation\(\)/);
- assert.match(actions,/if\(selection\)\{present\(selection\);return;\}/);
+ assert.match(actions,/if\(selection\)\{[\s\S]*?e\.preventDefault\(\);e\.stopImmediatePropagation\(\);[\s\S]*?present\(selection\);return;[\s\S]*?\}/);
  assert.match(actions,/if\(!isLookupReader\(node\)&&Date\.now\(\)-lastTouch<550\)return null/);
  assert.doesNotMatch(actions,/lastTouch<550 && !inArticleText/);
 });
@@ -152,4 +152,12 @@ test('long article action menu stays visible at the end of multi-screen selectio
  assert.match(actions,/Array\.from\(data\.range\.getClientRects\?\.\(\)\|\|\[\]\)/);
  assert.match(actions,/visible\[visible\.length-1\]/);
  assert.match(actions,/window\.innerHeight-menu\.offsetHeight-8/);
+});
+
+test('news article non-editable content is interactive without reopening the old dictionary',()=>{
+ assert.match(actions,/\[contenteditable\]:not\(\[contenteditable="false"\]\)/);
+ const capture=actions.slice(actions.indexOf("window.addEventListener('click',function(e)"));
+ assert.match(capture,/if\(selection\)\{[\s\S]*?e\.stopImmediatePropagation\(\);[\s\S]*?present\(selection\);return;/);
+ assert.match(capture,/tapped && presentWordElement\(tapped\)/);
+ assert.match(capture,/e\.preventDefault\(\);e\.stopImmediatePropagation\(\);/);
 });
