@@ -464,6 +464,9 @@
      // card or keep the toolbar open while navigating to a different screen.
      if(inNonStudyUI(e.target)||!(isLookupReader(e.target)||
         (tapped&&inLearningArea(tapped))||tokenizedTextBlock(e.target))){hideMenu();return;}
+     // Selection may remain active after reading; never let that old range
+     // hijack a click on an answer choice or prevent the student's response.
+     if(e.target.closest?.('#ldd-mlh7-text label')){hideMenu();return;}
      const selection=selectionData();
      if(selection){
        // Prevent the old news dictionary from opening behind the choice menu.
@@ -476,9 +479,6 @@
      }
      // Touch taps on ordinary article text and future opted-in readers also
      // open the shared menu; legacy touch suppression hid this outside news.
-     // Clicking an answer choice must still select the radio option; selecting
-     // its text with the mouse may separately show Highlight and Note.
-     if(e.target.closest?.('#ldd-mlh7-text label')){hideMenu();return;}
      const word=wordAtPoint(e);
      if(word){e.preventDefault();e.stopImmediatePropagation();present(word);}
      else hideMenu();
