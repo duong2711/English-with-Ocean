@@ -42,7 +42,7 @@ test('invalid or incomplete selections show an error and never save collocations
  assert.match(actions,/wholeWordBoundary\(range\.startContainer,range\.startOffset,true\)/);
  assert.match(actions,/wholeWordBoundary\(range\.endContainer,range\.endOffset,false\)/);
  assert.match(actions,/if\(data\.partial\)/);
- assert.match(actions,/menu\.querySelector\('\[data-action="translate"\]'\)\.disabled=/);
+ assert.match(actions,/translateButton\.disabled=translationDisabled\|\|!english/);
  assert.match(actions,/Quét chưa trọn một từ hoặc cụm tiếng Anh/);
  assert.match(actions,/result\.is_collocation/);
  assert.match(actions,/if\(result\.stored\)document\.dispatchEvent/);
@@ -59,11 +59,11 @@ test('no-lookup tests remain excluded, and phrase translation never invokes pron
 test('shared collocations render in existing vocabulary category and assets load globally',()=>{
  assert.match(grammar,/from\('collocation_bank'\)/);
  assert.match(grammar,/select\('phrase,meaning_vi'\)/);
- assert.match(boot,/ldd-text-actions\.js\?v=20261124-study-only1/);
- assert.match(boot,/ldd-test-annotations\.js\?v=20261123-highlight-toggle1/);
+ assert.match(boot,/ldd-text-actions\.js\?v=20261124-mlh7-two-actions1/);
+ assert.match(boot,/ldd-test-annotations\.js\?v=20261124-mlh7-annotations1/);
  assert.match(boot,/ldd-text-actions\.css\?v=20261122-universal-three-actions1/);
  assert.match(boot,/ldd-ui-vocab-grammar\.js\?v=20261119-conj-return1/);
- assert.match(page,/ldd-ui-upgrade\.js\?v=20261124-study-only1/);
+ assert.match(page,/ldd-ui-upgrade\.js\?v=20261124-mlh7-review1/);
  assert.match(page,/scriptphonetics\.js\?v=20261122-pronunciation-history1/);
 });
 test('assigned-test highlights and notes use account-owned Supabase rows and safe text anchors',()=>{
@@ -88,7 +88,7 @@ test('news annotations retain their account-specific identity and text anchors',
  assert.match(annotations,/data-article-id/);
  assert.match(annotations,/panel\.dataset\.annotationArticleId=card\.dataset\.articleId/);
  assert.match(annotations,/key:'news:'\+\(articleId\|\|hash/);
- assert.match(annotations,/\['ctest-take-sections','ilt-take-body','irt-take-body','news-article-text'\]/);
+ assert.match(annotations,/\['ctest-take-sections','ilt-take-body','irt-take-body','news-article-text','ldd-mlh7-text'\]/);
  assert.match(annotations,/\.eq\('user_id',uid\)\.eq\('test_key',info\.key\)/);
  assert.match(annotations,/s\.items=data\|\|\[\]/);
  assert.match(annotations,/resolveRange\(info\.root,a\)/);
@@ -96,8 +96,8 @@ test('news annotations retain their account-specific identity and text anchors',
  assert.match(annotations,/function resolveRange\(root,entry\)/);
  assert.match(annotations,/normalized\.indexOf\(expected/);
  assert.match(annotations,/if\(currentRoot!==root\|\|state\(info\)\?\.key!==info\.key\)/);
- assert.match(boot,/ldd-test-annotations\.js\?v=20261123-highlight-toggle1/);
- assert.match(page,/ldd-ui-upgrade\.js\?v=20261124-study-only1/);
+ assert.match(boot,/ldd-test-annotations\.js\?v=20261124-mlh7-annotations1/);
+ assert.match(page,/ldd-ui-upgrade\.js\?v=20261124-mlh7-review1/);
 });
 
 test('every dictionary-enabled reading surface uses the same three actions by default',()=>{
@@ -115,7 +115,7 @@ test('every dictionary-enabled reading surface uses the same three actions by de
 test('the whole news article can be highlighted, annotated, or translated as passage text',()=>{
  assert.match(actions,/MAX_SELECTION=20000/);
  assert.match(actions,/articleSelection=inArticleText\(r\.startContainer\)&&inArticleText\(r\.endContainer\)/);
- assert.match(actions,/menu\.querySelector\('\[data-action="translate"\]'\)\.disabled=!english/);
+ assert.match(actions,/translateButton\.disabled=translationDisabled\|\|!english/);
  assert.match(actions,/async function passageRequest\(text\)/);
  assert.match(actions,/text\.split\(\/\\s\+\/\)/);
  assert.match(actions,/functions\/v1\/ai-proxy/);
@@ -210,4 +210,15 @@ test('the toolbar only runs on dictionary-enabled learning text, never folder ca
  assert.match(click,/tokenizedTextBlock\(e\.target\)\)\)\{hideMenu\(\);return;\}/);
  assert.match(actions,/if\(!el\|\|blocked\(el\.parentElement\)\|\|!inLearningArea\(el\)\|\|!el\.isConnected\)return false/);
  assert.match(actions,/!node\|\|node\.nodeType!==3\|\|blocked\(node\)\|\|!isLookupReader\(node\)\)return null/);
+});
+
+test('grade-seven workbook shows only Highlight and Note without changing other readers',()=>{
+ assert.match(actions,/translateButton\.hidden=translationDisabled/);
+ assert.match(actions,/translateButton\.disabled=translationDisabled\|\|!english/);
+ assert.match(actions,/\[data-ldd-no-translation\]/);
+ assert.match(actions,/if\(!elementOf\(snapshot\.range\?\.commonAncestorContainer\)\?\.closest\('\[data-ldd-no-translation\]'\)\) void translate\(snapshot\)/);
+ assert.match(annotations,/key:'mlh7:'\+testId/);
+ assert.match(annotations,/view\.dataset\.annotationTestId/);
+ assert.match(annotations,/'ldd-mlh7-text'/);
+ assert.match(boot,/ldd-test-annotations\.js\?v=20261124-mlh7-annotations1/);
 });
