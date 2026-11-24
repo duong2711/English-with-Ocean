@@ -567,7 +567,7 @@
         const total = progress.total, done = Math.min(progress.done, total);
         const percent = total ? Math.floor(done * 100 / total) : 0;
         const level = !total || !progress.reliable ? 0 : percent === 100 ? 4 : percent >= 75 ? 3 : percent >= 50 ? 2 : percent >= 25 ? 1 : 0;
-        const messages = ['Bắt đầu nhé!', 'Khởi đầu tốt lắm!', 'Được nửa chặng rồi!', 'Sắp hoàn thành rồi!', 'Hoàn thành hôm nay!'];
+        const messages = ['Hoàn thành các việc bên dưới nhé!', 'Khởi đầu tốt lắm!', 'Được nửa chặng rồi!', 'Sắp hoàn thành rồi!', 'Hoàn thành hôm nay!'];
         const node = document.createElement('div');
         node.className = 'ldd-study-companion';
         node.dataset.milestone = String(level);
@@ -600,13 +600,12 @@
                 <svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="5"/><circle class="ldd-companion-fill" cx="32" cy="32" r="27" fill="none" stroke="#fff0ae" stroke-width="5" stroke-linecap="round" pathLength="100" transform="rotate(-90 32 32)"/></svg>
                 <strong></strong>
             </div>
-            <span class="ldd-companion-count"></span><span class="ldd-companion-message"></span>`;
+            <span class="ldd-companion-message"></span>`;
         const ring = node.querySelector('.ldd-companion-ring');
         if (progress.reliable) ring.setAttribute('aria-valuenow', String(percent));
         ring.setAttribute('aria-valuetext', progress.reliable ? done + '/' + total + ' đầu việc hoàn thành' : 'Đang cập nhật tiến độ');
         node.querySelector('.ldd-companion-fill').setAttribute('stroke-dasharray', percent + ' 100');
         ring.querySelector('strong').textContent = progress.reliable && total ? done + '/' + total : '—';
-        node.querySelector('.ldd-companion-count').textContent = progress.reliable && total ? 'Việc đã hoàn thành' : '';
         node.querySelector('.ldd-companion-message').textContent = !progress.reliable ? 'Đang cập nhật' : !total ? 'Chưa có nhiệm vụ' : messages[level];
         return node;
     }
