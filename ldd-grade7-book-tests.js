@@ -310,16 +310,6 @@ function boot(){
       input.addEventListener('blur',()=>{void flushAnswers(ctx)});
       field.append(input);
     }
-    if(ctx.submitted){
-      const row=el('p','ldd-mlh7-solution',q.answer?'Đáp án sách: '+q.answer:'Phần tự luận: giảng viên đối chiếu và chấm theo đáp án sách.');
-      if(q.type!=='written')row.classList.add(autoMark(q,ctx.answers[key])?'ldd-mlh7-right':'ldd-mlh7-wrong');
-      const comment=ctx.review?.comments?.[key];
-      const override=ctx.review?.grades?.[key];
-      if(override===0||override===1)
-        row.append(el('span','ldd-mlh7-teacher-mark',' · Giáo viên: '+(override?'Đúng':'Sai')));
-      if(comment)row.append(el('span','ldd-mlh7-teacher-mark',' · Nhận xét: '+comment));
-      field.append(row);
-    }
     return field;
   }
   // Original scanned source is the authority for question text. Each Unit is
@@ -422,6 +412,40 @@ function boot(){
     for(const url of scannedPages.values())URL.revokeObjectURL(url);
     scannedPages.clear();
   });
+  function appendAnswerReview(ctx,form){
+    if(!ctx.submitted)return;
+    // A student's highlight positions are anchored to #ldd-mlh7-text.
+    // Keep every answer/review OUTSIDE that root: publishing marks must not
+    // add text inside the bookmarked article and shift saved offsets.
+    const details=el('details','ldd-mlh7-graded-solutions');
+    const heading=el('summary','','Xem đáp án và nhận xét sau khi nộp');
+    details.append(heading);
+    ctx.test.sections.forEach(sec=>{
+      const group=el('section','ldd-mlh7-graded-section');
+      group.append(el('h3','',sec.label+'. '+sec.title));
+      sec.questions.forEach((q,i)=>{
+        const key=answerKey(sec,i);
+        const row=el('article','ldd-mlh7-graded-item');
+        row.append(el('strong','',key+' · '),
+          el('span','',q.answer?'Đáp án sách: '+q.answer:
+            'Giảng viên đối chiếu đáp án sách để chấm.'));
+        if(q.type==='choice'||q.type==='match'){
+          const machine=autoMark(q,ctx.answers[key]);
+          row.classList.add(machine?'ldd-mlh7-right':'ldd-mlh7-wrong');
+        }
+        const overridden=ctx.review?.grades?.[key];
+        const comment=ctx.review?.comments?.[key];
+        if(overridden===0||overridden===1)
+          row.append(el('span','ldd-mlh7-teacher-mark',
+            ' · Giảng viên: '+(overridden?'Đúng':'Sai')));
+        if(comment)row.append(el('p','ldd-mlh7-teacher-mark',
+          'Nhận xét: '+comment));
+        group.append(row);
+      });
+      details.append(group);
+    });
+    form.append(details);
+  }
   function drawExam(ctx){
     current=ctx.test;currentContext=ctx;unit=ctx.test.unit;
     setView('exam');
@@ -464,6 +488,7 @@ function boot(){
     // The verified interactive source itself is selectable. Do not prepend
     // OCR here: its late-loading text would shift saved highlight/note offsets.
     form.append(content);
+    appendAnswerReview(ctx,form);
     const actions=el('div','ldd-mlh7-actions');
     if(!ctx.submitted){
       actions.append(button('Nộp bài','ldd-mlh7-primary',()=>{void submitExam(ctx)}));
