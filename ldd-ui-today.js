@@ -385,6 +385,15 @@
 
     // Reuse the dashboard's existing authenticated data rather than making
     // Oci repeat requests for read/listen history. Send only minimum metadata.
+    // Lightweight single-article preview; no all-articles content download.
+    window.LDDOciNewsPreview = async function (articleId, expectedUid) {
+        const id = String(articleId || '');
+        if (!/^\d+$/.test(id) || !getToken() || userId() !== expectedUid) return null;
+        const rows = await query('news_articles', 'id,title,thumb,content', { id: 'eq.' + id, limit: '1' });
+        if (userId() !== expectedUid) return null;
+        return rows[0] || null;
+    };
+
     function publishOciCandidates(state, uid) {
         const readIds = new Set((state.reads || []).map(row => String(row.article_id)));
         const listeningIds = new Set((state.podcastProgress || []).map(row => String(row.podcast_id)));
