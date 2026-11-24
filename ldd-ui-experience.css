@@ -674,3 +674,25 @@ body.ldd-ui-v2 #tab-trang-chu .ldd-oci-next { min-height: 36px; }
 @media (prefers-reduced-motion: reduce) {
   body.ldd-ui-v2 #tab-trang-chu .ldd-home-dashboard .ldd-ux-cta { transition: none !important; transform: none !important; }
 }
+
+/* The priority card is the ONLY prominent study CTA. Keep it above the fold. */
+body.ldd-ui-v2 #tab-trang-chu .ldd-today-tasks .ldd-study-next {
+  min-height: 0;
+  padding: clamp(16px,2.2vw,22px);
+  border-radius: 17px;
+}
+body.ldd-ui-v2 #tab-trang-chu .ldd-today-tasks .ldd-study-next h3 {
+  font-size: clamp(1.18rem,2.2vw,1.55rem);
+  margin: 6px 0;
+  line-height: 1.25;
+}
+body.ldd-ui-v2 #tab-trang-chu .ldd-today-tasks .ldd-study-next p {
+  margin-bottom: 12px;
+  font-size: .83rem;
+  line-height: 1.45;
+}
+body.ldd-ui-v2 #tab-trang-chu .ldd-today-tasks .ldd-study-next button {
+  min-height: 42px;
+  font-size: .83rem;
+  padding: 9px 15px;
+}
