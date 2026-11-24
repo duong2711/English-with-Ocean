@@ -459,7 +459,7 @@
             if (!side) {
                 side = document.createElement('aside');
                 side.className = 'ldd-home-side ldd-today-shell';
-                side.innerHTML = '<div class="ldd-home-side-title">Hôm nay</div><div id="ldd-today-tasks" class="ldd-today-tasks"></div>';
+                side.innerHTML = '<div id="ldd-today-tasks" class="ldd-today-tasks"></div>';
                 dashboard.appendChild(side);
             }
             host = side.querySelector('#ldd-today-tasks');
@@ -515,7 +515,7 @@
         box.className = 'ldd-study-next';
         box.innerHTML = '<small></small><h3></h3><p></p><button type="button"></button>';
         const assigned = item.target === 'tests';
-        box.querySelector('small').textContent = assigned ? 'Giáo viên giao' : 'Gợi ý hôm nay';
+        box.querySelector('small').textContent = assigned ? 'Giáo viên giao' : 'Việc hôm nay';
         box.querySelector('h3').textContent = item.title;
         box.querySelector('p').textContent = assigned
             ? 'Em có ' + item.count + ' bài đang chờ. Mở danh sách để chọn bài làm trước.'
