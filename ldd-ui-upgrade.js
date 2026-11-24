@@ -50,7 +50,7 @@
         ensureStylesheet('ldd-text-actions-style', 'ldd-text-actions.css?v=20261122-universal-three-actions1');
         ensureStylesheet('ldd-ctest-student-groups-style', 'ldd-ctest-student-groups.css?v=20261116-grouped1');
         ensureStylesheet('ldd-grade7-book-tests-style', 'ldd-grade7-book-tests.css?v=20261124-mlh7-all12-1');
-        ensureStylesheet('ldd-learning-experience-style', 'ldd-ui-experience.css?v=20261124-studentfirst2');
+        ensureStylesheet('ldd-learning-experience-style', 'ldd-ui-experience.css?v=20261124-compact1');
 
         // Load first. Dynamic scripts are async by default, so ensureScript sets async=false
         // to preserve insertion order and let all helper modules benefit from the guard.
@@ -59,7 +59,7 @@
         ensureScript('ldd-pronunciation-fix-script', 'ldd-pronunciation-fix.js?v=20261104-flash-mic4');
         ensureScript('ldd-vocab-grammar-script', 'ldd-ui-vocab-grammar.js?v=20261124-catalog3');
         ensureScript('ldd-home-phonetics-script', 'ldd-ui-home-phonetics.js?v=20261116-feedback');
-        ensureScript('ldd-mascot-oci-script', 'ldd-mascot-oci.js?v=20261116-oci1');
+        ensureScript('ldd-mascot-oci-script', 'ldd-mascot-oci.js?v=20261124-compact1');
         ensureScript('ldd-student-grade-script', 'ldd-student-grade.js?v=20261110-university-track1');
         ensureScript('ldd-thcs-vocab-reset-script', 'ldd-thcs-vocab-reset.js?v=11');
         ensureScript('ldd-fast-progress-script', 'ldd-fast-progress.js?v=1');
@@ -79,7 +79,7 @@
         ensureScript('ldd-grade7-book-tests-unit2', 'ldd-grade7-book-tests-unit2.js?v=20261124-mlh7-1');
         ensureScript('ldd-grade7-book-tests-rest', 'ldd-grade7-book-tests-rest.js?v=20261124-mlh7-rest1');
         ensureScript('ldd-grade7-book-tests', 'ldd-grade7-book-tests.js?v=20261124-mlh7-all12-final2');
-        ensureScript('ldd-learning-experience-script', 'ldd-ui-experience.js?v=20261124-catalog3');
+        ensureScript('ldd-learning-experience-script', 'ldd-ui-experience.js?v=20261124-compact1');
     }
 
     function ensureStylesheet(id, href) {
