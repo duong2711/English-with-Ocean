@@ -216,7 +216,7 @@
             return Array.isArray(data) ? data : [];
         } catch (err) {
             console.warn('[LDD Today] ' + table + ': ' + (err && err.message ? err.message : err));
-            return [];
+            return Object.assign([], { lddFailed: true });
         } finally {
             if (timeoutId) clearTimeout(timeoutId);
         }
@@ -276,6 +276,7 @@
                 kid: result[9], thcs: result[10], vocabTests: result[11], rank: result[12], day: day
             };
 
+            state.progressReliable = result.slice(0, 9).every(rows => !rows.lddFailed);
             state.vocabTestPending = await getVocabTestPending();
             state.customTestCount = badgeCount(document.getElementById('ctest-folder-badge'));
 
@@ -510,19 +511,117 @@
         return section;
     }
 
-    function buildNextTask(item) {
+    // Daily plan is isolated by learner and day. Keep finished items in the
+    // denominator even when the pending-task list no longer contains them.
+    let dailyPlanMemory = null;
+    function dailyProgress(state, active, completed, raw) {
+        const key = 'ldd_daily_plan_v1::' + userId() + '::' + state.day;
+        let plan = dailyPlanMemory && dailyPlanMemory.key === key ? dailyPlanMemory.items : {};
+        try { const saved = JSON.parse(localStorage.getItem(key) || 'null'); if (saved && typeof saved === 'object') plan = saved; } catch (_) {}
+        const pending = new Map(active.map(item => [item.target, item]));
+        const done = new Map(completed.map(item => [item.target, item]));
+        if (state.progressReliable !== false) {
+            pending.forEach((item, target) => {
+                if (!plan[target]) plan[target] = { item: item, goal: item.count, initial: raw[target], done: false };
+                const entry = plan[target];
+                if (Object.prototype.hasOwnProperty.call(raw, target)) {
+                    // Count the reduction in outstanding items, not a guessed number of clicks.
+                    if (!Number.isFinite(entry.initial)) entry.initial = raw[target];
+                    if (entry.initial - raw[target] >= entry.goal || raw[target] === 0) entry.done = true;
+                } else {
+                    entry.done = false;
+                }
+                if (entry.done) {
+                    const i = active.indexOf(item);
+                    if (i >= 0) active.splice(i, 1);
+                    if (!done.has(target)) completed.push(entry.item);
+                }
+            });
+            done.forEach((item, target) => { plan[target] = { item: item, done: true }; });
+            Object.keys(plan).forEach(target => {
+                const entry = plan[target];
+                if (!pending.has(target) && !done.has(target)) {
+                    entry.done = true;
+                    if (!completed.some(item => item.target === target)) completed.push(entry.item);
+                }
+            });
+            dailyPlanMemory = { key: key, items: plan };
+            try {
+                localStorage.setItem(key, JSON.stringify(plan));
+                // Only keep the current day's snapshot for this account.
+                const prefix = 'ldd_daily_plan_v1::' + userId() + '::';
+                for (let i = localStorage.length - 1; i >= 0; i--) {
+                    const name = localStorage.key(i);
+                    if (name && name.startsWith(prefix) && name !== key) localStorage.removeItem(name);
+                }
+            } catch (_) {}
+        }
+        const total = new Set([...active, ...completed].map(item => item.target)).size;
+        return { done: completed.length, total: total, reliable: state.progressReliable !== false };
+    }
+
+    function buildStudyMascot(progress) {
+        const total = progress.total, done = Math.min(progress.done, total);
+        const percent = total ? Math.floor(done * 100 / total) : 0;
+        const level = !total || !progress.reliable ? 0 : percent === 100 ? 4 : percent >= 75 ? 3 : percent >= 50 ? 2 : percent > 0 ? 1 : 0;
+        const messages = ['Bắt đầu nhé!', 'Khởi đầu tốt lắm!', 'Được nửa chặng rồi!', 'Sắp hoàn thành rồi!', 'Hoàn thành hôm nay!'];
+        const node = document.createElement('div');
+        node.className = 'ldd-study-companion';
+        node.dataset.milestone = String(level);
+        node.innerHTML = `
+            <svg class="ldd-companion-owl" viewBox="0 0 136 116" aria-hidden="true" focusable="false">
+                <ellipse cx="68" cy="107" rx="37" ry="5" fill="#102d4e" opacity=".42"/>
+                <g class="ldd-owl-body">
+                    <path d="M36 29 31 8 55 22M100 29 105 8 81 22" fill="#66d6d0" stroke="#17405d" stroke-width="3" stroke-linejoin="round"/>
+                    <path d="M29 54C9 59 13 88 38 88L43 67M107 54C127 59 123 88 98 88L93 67" fill="#48b5bd" stroke="#17405d" stroke-width="3"/>
+                    <path class="ldd-owl-wing" d="M99 61Q124 62 119 35Q116 26 110 36L99 49" fill="#80e4d5" stroke="#17405d" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                    <ellipse cx="68" cy="65" rx="39" ry="42" fill="#68d7d0" stroke="#17405d" stroke-width="3"/>
+                    <ellipse cx="68" cy="78" rx="25" ry="24" fill="#c6f6e6"/>
+                    <circle cx="52" cy="48" r="19" fill="#fffaf0"/><circle cx="84" cy="48" r="19" fill="#fffaf0"/>
+                    <g class="ldd-owl-eyes"><circle cx="54" cy="48" r="6" fill="#19365a"/><circle cx="82" cy="48" r="6" fill="#19365a"/><circle cx="56" cy="46" r="2" fill="white"/><circle cx="84" cy="46" r="2" fill="white"/></g>
+                    <g class="ldd-owl-happy" fill="none" stroke="#19365a" stroke-width="3.5" stroke-linecap="round"><path d="M46 49q7-11 14 0M76 49q7-11 14 0"/></g>
+                    <path d="m61 58 7 9 7-9z" fill="#ffd47b" stroke="#b9793a" stroke-width="1.5"/>
+                    <path d="M44 102h15M77 102h15" stroke="#ffd47b" stroke-width="7" stroke-linecap="round"/>
+                    <g class="ldd-owl-book" stroke="#19365a" stroke-width="2" stroke-linejoin="round"><path d="M41 75q15-5 27 5 12-10 27-5v21q-15-4-27 5-12-9-27-5z" fill="#fff0ae"/><path d="M68 80v21" fill="none"/></g>
+                    <g class="ldd-owl-pencil"><path d="m83 92 15-25 5 3-15 25-6 4z" fill="#ffd47b" stroke="#19365a" stroke-width="1.5"/></g>
+                </g>
+                <g class="ldd-owl-stars" fill="#ffe596"><path d="m17 23 3 7 8 1-6 5 2 8-7-4-7 4 2-8-6-5 8-1z"/><path d="m117 6 2 5 6 1-4 4 1 6-5-3-5 3 1-6-4-4 6-1z"/><circle cx="126" cy="62" r="3"/><circle cx="11" cy="65" r="2.5"/></g>
+                <g class="ldd-owl-check"><circle cx="107" cy="91" r="13" fill="#fff0ae" stroke="#19365a" stroke-width="2"/><path d="m101 91 4 4 7-9" fill="none" stroke="#19725d" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></g>
+            </svg>
+            <div class="ldd-companion-ring" role="progressbar" aria-label="Tiến độ việc hôm nay" aria-valuemin="0" aria-valuemax="100">
+                <svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="5"/><circle class="ldd-companion-fill" cx="32" cy="32" r="27" fill="none" stroke="#fff0ae" stroke-width="5" stroke-linecap="round" pathLength="100" transform="rotate(-90 32 32)"/></svg>
+                <strong></strong>
+            </div>
+            <span class="ldd-companion-message"></span>`;
+        const ring = node.querySelector('.ldd-companion-ring');
+        ring.setAttribute('aria-valuenow', String(percent));
+        ring.setAttribute('aria-valuetext', progress.reliable ? done + '/' + total + ' đầu việc hoàn thành' : 'Đang cập nhật tiến độ');
+        node.querySelector('.ldd-companion-fill').setAttribute('stroke-dasharray', percent + ' 100');
+        ring.querySelector('strong').textContent = progress.reliable ? done + '/' + total : '—';
+        node.querySelector('.ldd-companion-message').textContent = !progress.reliable ? 'Đang cập nhật' : !total ? 'Chưa có nhiệm vụ' : messages[level];
+        return node;
+    }
+
+    function buildNextTask(item, progress) {
         const box = document.createElement('section');
-        box.className = 'ldd-study-next';
-        box.innerHTML = '<small></small><h3></h3><p></p><button type="button"></button>';
-        const assigned = item.target === 'tests';
-        box.querySelector('small').textContent = assigned ? 'Giáo viên giao' : 'Việc hôm nay';
-        box.querySelector('h3').textContent = item.title;
-        box.querySelector('p').textContent = assigned
+        box.className = 'ldd-study-next ldd-study-next-with-companion';
+        const copy = document.createElement('div');
+        copy.className = 'ldd-study-next-copy';
+        copy.innerHTML = '<small></small><h3></h3><p></p>';
+        const assigned = item && item.target === 'tests';
+        copy.querySelector('small').textContent = assigned ? 'Giáo viên giao' : 'Việc hôm nay';
+        copy.querySelector('h3').textContent = item ? item.title : progress.total && progress.reliable ? 'Hoàn thành rồi!' : 'Không có nhiệm vụ đang chờ';
+        copy.querySelector('p').textContent = item ? (assigned
             ? 'Em có ' + item.count + ' bài đang chờ. Mở danh sách để chọn bài làm trước.'
-            : item.note + '.';
-        const button = box.querySelector('button');
-        button.textContent = assigned ? 'Xem bài được giao →' : 'Bắt đầu luyện →';
-        button.addEventListener('click', () => navigateToday(item.target));
+            : item.note + '.') : 'Em có thể luyện thêm theo sở thích.';
+        if (item) {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.textContent = assigned ? 'Xem bài được giao →' : 'Bắt đầu luyện →';
+            button.addEventListener('click', () => navigateToday(item.target));
+            copy.appendChild(button);
+        }
+        box.append(copy, buildStudyMascot(progress));
         return box;
     }
 
@@ -611,18 +710,19 @@
             );
         }
 
+        const progress = dailyProgress(state, activeTasks, completedTasks, { 'vocab-poor': poor, 'vocab-unpronounced': unpronounced, ipa: state.ipaUnrecorded || 0 });
         const days = activityWeek(state, new Date());
         const priority = activeTasks.find(item => item.target === 'tests')
             || activeTasks.find(item => item.target === 'vocabtest')
             || activeTasks[0];
-        const signature = JSON.stringify([activeTasks, completedTasks, days]);
+        const signature = JSON.stringify([activeTasks, completedTasks, days, progress]);
         if (host.dataset.tasksSignature === signature) return;
         host.dataset.tasksSignature = signature;
         host.innerHTML = '';
 
         const overview = document.createElement('div');
         overview.className = 'ldd-study-overview';
-        if (priority) overview.appendChild(buildNextTask(priority));
+        overview.appendChild(buildNextTask(priority, progress));
         overview.appendChild(buildStudyWeek(days));
         host.appendChild(overview);
 
