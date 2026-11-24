@@ -87,7 +87,7 @@
         ensureScript('ldd-grade7-book-tests-unit11', 'ldd-grade7-book-tests-unit11.js?v=20261124-mlh7-full1');
         ensureScript('ldd-grade7-book-tests-unit12', 'ldd-grade7-book-tests-unit12.js?v=20261124-mlh7-full1');
         ensureScript('ldd-grade7-book-tests-source-links', 'ldd-grade7-book-tests-source-links.js?v=20261124-mlh7-full1');
-        ensureScript('ldd-grade7-book-tests', 'ldd-grade7-book-tests.js?v=20261124-mlh7-full1');
+        ensureScript('ldd-grade7-book-tests', 'ldd-grade7-book-tests.js?v=20261124-mlh7-full2');
     }
 
     function ensureStylesheet(id, href) {
