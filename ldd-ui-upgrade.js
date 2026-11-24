@@ -37,7 +37,7 @@
         ensureStylesheet('ldd-roadmap-news-style', 'ldd-ui-roadmap-news.css?v=2.4');
         ensureStylesheet('ldd-vocab-grammar-style', 'ldd-ui-vocab-grammar.css?v=20261124-compact-catalog1');
         ensureStylesheet('ldd-home-phonetics-style', 'ldd-ui-home-phonetics.css?v=20261124-feedback-right1');
-        ensureStylesheet('ldd-mascot-oci-style', 'ldd-mascot-oci.css?v=20261125-curiosity-teaser3');
+        ensureStylesheet('ldd-mascot-oci-style', 'ldd-mascot-oci.css?v=20261125-curiosity-spacing1');
         ensureStylesheet('ldd-timers-style', 'ldd-ui-timers.css?v=2.2');
         ensureStylesheet('ldd-student-grade-style', 'ldd-student-grade.css?v=1');
         ensureStylesheet('ldd-vocab-race-style', 'ldd-vocab-race.css?v=3');
