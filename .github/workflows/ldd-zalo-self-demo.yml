@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
-      - name: Send one demo to the connected account only
+      - name: Send one demo to My Cloud only
         env:
           LDD_REMINDER_BRIDGE_SECRET: ${{ secrets.LDD_REMINDER_BRIDGE_SECRET }}
         shell: bash
@@ -24,15 +24,16 @@ jobs:
             const r=await fetch('https://ywqbaksmmtvwbojcgsdd.supabase.co/functions/v1/ldd-zalo-edge-test',{
               method:'POST',
               headers:{'content-type':'application/json','x-reminder-secret':process.env.LDD_REMINDER_BRIDGE_SECRET},
-              body:JSON.stringify({action:'self_test_once'}),
+              body:JSON.stringify({action:'cloud_test_once'}),
               signal:AbortSignal.timeout(90000)
             });
             const data=await r.json().catch(()=>({}));
-            if(r.ok && data.ok===true && data.recipient==='own_account' && data.messages_sent===1){
-              console.log('One demo message sent to the connected account only.');
+            if(r.ok && data.ok===true && data.recipient==='own_cloud' && data.messages_sent===1){
+              console.log('One demo message sent to My Cloud only.');
             } else {
-              const stages=['own_id','database_config','test_claim','already_attempted','self_send','login','cookie_format','library_import','missing_zalo_secrets'];
+              const stages=['cloud_id','database_config','test_claim','already_attempted','cloud_send','login','cookie_format','library_import','missing_zalo_secrets'];
               console.error('HTTP '+r.status+'; stage: '+(stages.includes(data.stage)?data.stage:'runtime'));
+              if (Number.isSafeInteger(data.zalo_code)) console.error('Zalo error code: '+data.zalo_code);
               process.exitCode=1;
             }
           } catch {
