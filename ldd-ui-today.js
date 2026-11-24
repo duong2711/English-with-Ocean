@@ -154,6 +154,7 @@
         if (token && token !== activeToken) {
             activeToken = token;
             latestState = null;
+            window.LDDOciCandidateSnapshot = null;
             window.dispatchEvent(new CustomEvent('ldd:oci-candidates', { detail: null }));
             renderToday(null);
             // A fresh login should not inherit a dashboard cache from the previous session.
@@ -165,6 +166,7 @@
             activeToken = null;
             latestState = null;
             refreshAfterCurrent = false;
+            window.LDDOciCandidateSnapshot = null;
             window.dispatchEvent(new CustomEvent('ldd:oci-candidates', { detail: null }));
             renderToday(null);
             renderLive(null);
@@ -412,9 +414,9 @@
                         vi: String(seg?.vi || '').slice(0, 170)
                     }))
             })).reverse();
-        window.dispatchEvent(new CustomEvent('ldd:oci-candidates', {
-            detail: { uid: String(uid), articles, podcasts }
-        }));
+        const snapshot = { uid: String(uid), articles, podcasts };
+        window.LDDOciCandidateSnapshot = snapshot;
+        window.dispatchEvent(new CustomEvent('ldd:oci-candidates', { detail: snapshot }));
     }
 
     function estimatePodcastBlankCount(pod) {
