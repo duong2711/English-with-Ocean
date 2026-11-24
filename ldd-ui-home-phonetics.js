@@ -22,8 +22,8 @@
     }
 
     function ensureTodayAssets() {
-        ensureStyle('ldd-today-style', 'ldd-ui-today.css?v=20261116-feedback');
-        ensureScript('ldd-today-script', 'ldd-ui-today.js?v=20261124-oci-teasers-vi1');
+        ensureStyle('ldd-today-style', 'ldd-ui-today.css?v=20261124-feedback-under-actions1');
+        ensureScript('ldd-today-script', 'ldd-ui-today.js?v=20261124-feedback-under-actions1');
     }
 
     function ensureStyle(id, href) {
@@ -144,11 +144,13 @@
                 '<div class="ldd-home-intro">' +
                     '<h2 class="ldd-home-title">Chào <strong data-ldd-home-name>Học viên</strong> 👋</h2>' +
                 '</div>' +
-                '<div class="ldd-home-actions">' +
+                '<div class="ldd-home-tools">' +
+                    '<div class="ldd-home-actions">' +
                     actionHtml('Aa', 'Từ vựng', 'Ôn & vận dụng', 'tab-tu-vung', 'vocab') +
                     actionHtml('G', 'Ngữ pháp', 'Học & luyện bài', 'tab-ngu-phap') +
                     actionHtml('★', 'Giải trí', 'Học mà chơi', 'tab-giai-tri') +
                     actionHtml('✓', 'Kiểm tra', 'Bài được giao', 'tab-kiem-tra', 'tests') +
+                    '</div>' +
                 '</div>' +
             '</div>' +
             '<aside class="ldd-home-side ldd-today-shell">' +
