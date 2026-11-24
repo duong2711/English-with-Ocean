@@ -277,6 +277,9 @@
             if(!mount()) return false;
             if(window.LDDOciCandidateSnapshot?.uid) {
                 onCandidates({detail:window.LDDOciCandidateSnapshot});
+                // If the event arrived before Oci mounted, its previous render
+                // was skipped. Always paint after mounting in that case.
+                if (!nodes.preview.textContent.trim() && !nodes.preview.childElementCount) void showNext();
             } else {
                 void showNext();
             }
