@@ -1,0 +1,64 @@
+/* Scoped card design: school vocabulary and entertainment game selector. */
+#thcs-panel .school-vocab-grid {
+  grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; margin:20px 0;
+}
+#thcs-panel .school-vocab-grid > .school-vocab-tile {
+  --tile-a:#21458c; --tile-b:#197a95;
+  position:relative; isolation:isolate; overflow:hidden; display:flex; align-items:center;
+  justify-content:space-between; gap:12px; min-height:112px; padding:18px 20px;
+  border:1px solid rgba(255,255,255,.24); border-radius:17px;
+  color:#fff; background:linear-gradient(125deg,var(--tile-a),var(--tile-b));
+  box-shadow:0 8px 20px rgba(34,48,112,.16);
+  transition:transform .18s ease,box-shadow .18s ease;
+}
+#thcs-panel .school-vocab-tile[data-theme="purple"]{--tile-a:#4b319c;--tile-b:#7850cb}
+#thcs-panel .school-vocab-tile[data-theme="teal"]{--tile-a:#116482;--tile-b:#138873}
+#thcs-panel .school-vocab-tile[data-theme="indigo"]{--tile-a:#292b7a;--tile-b:#6241b7}
+#thcs-panel .school-vocab-tile[data-theme="rose"]{--tile-a:#892d81;--tile-b:#bd496d}
+#thcs-panel .school-vocab-tile[data-theme="orange"]{--tile-a:#a84722;--tile-b:#c56b1e}
+#thcs-panel .school-vocab-tile::after,
+#tab-giai-tri #entertainment-games-grid > .folder-card::after {
+  content:""; position:absolute; z-index:-1; pointer-events:none;
+  width:75%; height:125%; bottom:-84%; right:-9%;
+  border-radius:50%; transform:rotate(-14deg);
+  background:rgba(255,255,255,.12); box-shadow:0 -17px 0 rgba(255,255,255,.06);
+}
+#thcs-panel .school-vocab-tile-label{font-size:clamp(.95rem,1.35vw,1.16rem);font-weight:750;line-height:1.3;overflow-wrap:anywhere}
+#thcs-panel .school-vocab-tile-icon{font-size:2.6rem;line-height:1.15;flex:0 0 auto;filter:drop-shadow(0 5px 5px #15154b45)}
+#thcs-panel .school-vocab-tile:hover{transform:translateY(-3px);box-shadow:0 12px 25px #26366d35}
+#tab-giai-tri #entertainment-games-grid {
+  grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; align-items:stretch;
+}
+#tab-giai-tri #entertainment-games-grid > .folder-card {
+  --game-a:#232866; --game-b:#722eab; --game-glow:#b891ff;
+  display:flex!important; position:relative; isolation:isolate; overflow:hidden;
+  align-items:center; justify-content:flex-start; gap:14px; text-align:left;
+  box-sizing:border-box; width:100%; min-width:0; min-height:126px;
+  height:100%; padding:20px 18px!important; border-radius:17px!important;
+  border:1px solid #ffffff38!important;
+  background:linear-gradient(120deg,var(--game-a),var(--game-b))!important;
+  color:#fff!important; box-shadow:0 8px 22px #23316a30!important;
+  transition:transform .18s ease,box-shadow .18s ease;
+}
+#tab-giai-tri #entertainment-games-grid > #ldd-cloud-card {--game-a:#172e68;--game-b:#176d81;--game-glow:#a1e7ff}
+#tab-giai-tri #entertainment-games-grid > #shooter-folder-card {--game-a:#171a4b;--game-b:#5d2d92;--game-glow:#ff97dd}
+#tab-giai-tri #entertainment-games-grid > #vocab-race-folder-card {--game-a:#163379;--game-b:#0d7183;--game-glow:#77e7ff}
+#tab-giai-tri #entertainment-games-grid > .folder-card:hover{transform:translateY(-3px);box-shadow:0 13px 28px #26366d40!important}
+#tab-giai-tri #entertainment-games-grid > .folder-card > span:first-child {
+  display:grid;place-items:center;width:48px;height:52px;flex:0 0 48px;
+  font-size:2.25rem;line-height:1;background:none!important;border:0!important;border-radius:0;
+  filter:drop-shadow(0 2px 9px var(--game-glow));
+}
+#tab-giai-tri #entertainment-games-grid > .folder-card > span:last-child{min-width:0;flex:1;text-align:left}
+#tab-giai-tri #entertainment-games-grid > .folder-card strong,
+#tab-giai-tri #entertainment-games-grid > .folder-card small{display:block;color:#fff!important;text-align:left;white-space:normal;overflow-wrap:anywhere}
+#tab-giai-tri #entertainment-games-grid > .folder-card strong{font-size:clamp(.9rem,1.1vw,1.05rem);line-height:1.3;font-weight:750}
+#tab-giai-tri #entertainment-games-grid > .folder-card small{font-size:.76rem;line-height:1.4;margin-top:5px;opacity:.9;font-weight:500}
+#tab-giai-tri #entertainment-games-grid > .folder-card::before{display:none!important}
+#tab-giai-tri #entertainment-games-grid > .folder-card:focus-visible,
+#thcs-panel .school-vocab-tile:focus-visible{outline:3px solid #829cff;outline-offset:3px}
+@media(min-width:1600px){#thcs-panel .school-vocab-grid{grid-template-columns:repeat(6,minmax(0,1fr));}}
+@media(max-width:1100px){#tab-giai-tri #entertainment-games-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media(max-width:720px){#thcs-panel .school-vocab-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}#thcs-panel .school-vocab-grid > .school-vocab-tile{padding:12px;min-height:86px;gap:8px}#thcs-panel .school-vocab-tile-icon{font-size:1.8rem}}
+@media(max-width:540px){#tab-giai-tri #entertainment-games-grid{grid-template-columns:1fr;gap:12px}#tab-giai-tri #entertainment-games-grid > .folder-card{min-height:92px;padding:14px 16px!important}}
+@media(prefers-reduced-motion:reduce){#thcs-panel .school-vocab-tile,#tab-giai-tri #entertainment-games-grid > .folder-card{transition:none}#thcs-panel .school-vocab-tile:hover,#tab-giai-tri #entertainment-games-grid > .folder-card:hover{transform:none}}
