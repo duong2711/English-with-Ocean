@@ -507,6 +507,26 @@
         } else cover.append($el('div', 'ldd-ent-cover-fallback', '🎬'));
         return cover;
       };
+      const {data: completedRows, error: completedError} = await client.rpc('ldd_completed_movies');
+      if (completedError) console.warn('[LDD Film] Không tải được trạng thái hoàn thành', completedError);
+      if (seq !== generation) return;
+      const completedIds = new Set((completedRows || []).map(row => String(row.movie_id)));
+      const completionMark = item => {
+        const mark = $el('small', 'ldd-film-completion-mark', '✓ Đã hoàn thành');
+        mark.hidden = !completedIds.has(String(item.id));
+        mark.style.color = '#16803c';
+        return mark;
+      };
+      const markComplete = event => {
+        const id = String(event.detail?.movieId);
+        completedIds.add(id);
+        body.querySelectorAll('[data-film-id]').forEach(card => {
+          if (card.dataset.filmId === id) card.querySelector('.ldd-film-completion-mark')?.removeAttribute('hidden');
+        });
+      };
+      if (body.__lddFilmMarkComplete) body.removeEventListener('ldd:film-complete', body.__lddFilmMarkComplete);
+      body.__lddFilmMarkComplete = markComplete;
+      body.addEventListener('ldd:film-complete', markComplete);
       const labelOf = lesson =>
         Array.isArray(lesson.segments) && lesson.segments.length
           ? lesson.segments.length + ' câu luyện nghe'
@@ -558,6 +578,7 @@
             desc.append($el('strong', 'ldd-film-rec-title', item.title || 'Video'));
             desc.append($el('small', 'ldd-film-rec-subtitle',
               labelOf(item) + ' · ' + (providerOf(item.video_url)?.provider || 'video')));
+            desc.append(completionMark(item));
             card.append(coverOf(item), desc);
             card.addEventListener('click', () => select(item));
             recList.append(card);
@@ -572,7 +593,7 @@
         const card = button('', 'ldd-ent-media-card');
         if (item.id != null) card.dataset.filmId = String(item.id);
         card.append(coverOf(item), $el('strong', 'ldd-film-card-title', item.title || 'Video'),
-          $el('small', '', labelOf(item)));
+          $el('small', '', labelOf(item)), completionMark(item));
         card.addEventListener('click', () => select(item));
         target.append(card);
       };
@@ -665,6 +686,10 @@
       const completed = currentKeys.map(key => answers.get(key)).filter(Boolean);
       const earned = completed.reduce((sum, row) => sum + Number(row.score_change || 0), 0);
       tally.textContent = completed.length + ' / ' + gradedBlanks + ' từ đã làm · ' + earned + ' điểm';
+      if (gradedBlanks > 0 && completed.length === gradedBlanks) {
+        tally.textContent += ' · Đã hoàn thành';
+        panel.dispatchEvent(new CustomEvent('ldd:film-complete', {bubbles:true, detail:{movieId:lesson.id}}));
+      }
     };
     count();
 
@@ -719,7 +744,7 @@
         input.value = drafts.get(key) || '';
         input.addEventListener('input', () => drafts.set(key, input.value));
         if (answers.has(key)) {
-          input.value = '✓';
+          input.value = part;
           input.disabled = true;
           input.classList.add('done');
         } else if (idx !== gateIndex) {
@@ -812,13 +837,13 @@
               status: data.status
             });
             if (askHint) hintedIndices.add(idx);
-            field.input.value = data.word || (askHint ? '✓' : field.input.value);
+            field.input.value = data.word || blanksIn(cue.text)[field.blankIndex] || field.input.value;
             field.input.disabled = true;
             field.input.classList.add('done');
             check.hidden = hint.hidden = true;
-            feedback.textContent = data.status === 'correct' ? 'Chính xác! +1 điểm' :
-              data.status === 'hint_known' ? 'Từ đã có trong kho: −1 điểm.' :
-              data.status === 'hint_new' ? 'Đã lưu từ gợi ý vào kho từ vựng.' :
+            feedback.textContent = data.already_done ? 'Đáp án này đã được ghi nhận.' : data.status === 'correct' ? 'Chính xác! +5 điểm' :
+              data.status === 'hint_known' ? 'Từ đã có trong kho: 0 điểm.' :
+              data.status === 'hint_new' ? 'Đã lưu từ gợi ý vào kho từ vựng: 0 điểm.' :
               'Đáp án này đã được ghi nhận.';
             count();
             document.dispatchEvent(new Event('ldd:today-refresh'));
@@ -1405,6 +1430,10 @@
       meter.max = total || 1;
       meter.value = currentAnswers.length;
       progress.append(meter);
+      if (total > 0 && currentAnswers.length === total) {
+        progress.append(document.createTextNode(' · Đã hoàn thành'));
+        progress.dispatchEvent(new CustomEvent('ldd:film-complete',{bubbles:true,detail:{movieId:lesson.id}}));
+      }
     }
     tally();
     let adapter;
@@ -1460,7 +1489,7 @@
         const check = button('Kiểm tra', 'ldd-film-check');
         const hint = button('Gợi ý', 'ldd-film-hint');
         if (done) {
-          input.value = done.word || drafts.get(itemKey) || '✓';
+          input.value = done.word || part;
           input.disabled = true;
           check.hidden = hint.hidden = true;
           field.classList.add('done');
@@ -1486,14 +1515,14 @@
                   word: data.word || input.value,
                   score_change: data.already_done ? Number(data.total_delta) || 0 : Number(data.delta) || 0 };
                 answers.set(itemKey, row);
-                input.value = data.word || (data.status === 'correct' ? input.value : '✓');
+                input.value = data.word || part;
                 input.disabled = true;
                 check.hidden = hint.hidden = true;
                 field.classList.add('done');
                 group.remove();
-                feedback.textContent = data.status === 'hint_new' ? 'Đã thêm “' + part + '” vào kho từ vựng.' :
-                  data.status === 'hint_known' ? '“' + part + '” đã có trong kho: −1 điểm.' :
-                  'Chính xác! +1 điểm.';
+                feedback.textContent = data.already_done ? 'Đáp án này đã được ghi nhận.' : data.status === 'hint_new' ? 'Đã thêm “' + part + '” vào kho từ vựng.' :
+                  data.status === 'hint_known' ? '“' + part + '” đã có trong kho: 0 điểm.' :
+                  'Chính xác! +5 điểm.';
                 tally();
                 document.dispatchEvent(new Event('ldd:today-refresh'));
                 document.dispatchEvent(new Event('ldd:vocab-senses-updated'));
