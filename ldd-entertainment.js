@@ -794,7 +794,6 @@
             dialog.setAttribute('aria-label', 'Truyện lớp ' + grade + ', Unit ' + unit.number);
             let lookupHome = null;
             let frameObserver = null;
-            const frameSeenTimers = new Map();
             const frameVisibleSince = new Map();
             const lookedUpWordsByFrame = new Map();
             const recordedLookups = new Set();
@@ -865,19 +864,7 @@
                         if (!Number.isInteger(frameIndex)) return;
                         if (entry.isIntersecting && entry.intersectionRatio >= 0.68) {
                             if (!frameVisibleSince.has(frameIndex)) frameVisibleSince.set(frameIndex, Date.now());
-                            if (!claimedWordRewardFrames.has(frameIndex) && !frameSeenTimers.has(frameIndex)) {
-                                const timer = setTimeout(() => {
-                                    frameSeenTimers.delete(frameIndex);
-                                    void claimFrameWordRewards(frameIndex);
-                                }, 2400);
-                                frameSeenTimers.set(frameIndex, timer);
-                            }
                         } else {
-                            const timer = frameSeenTimers.get(frameIndex);
-                            if (timer) {
-                                clearTimeout(timer);
-                                frameSeenTimers.delete(frameIndex);
-                            }
                             const since = frameVisibleSince.get(frameIndex);
                             frameVisibleSince.delete(frameIndex);
                             if (since && Date.now() - since >= 1000) {
@@ -919,9 +906,12 @@
             });
             dialog.addEventListener('close', () => {
                 restoreLookup();
+                // Award words only after the learner finishes reading the visible frame.
+                frameVisibleSince.forEach((since, frameIndex) => {
+                    if (Date.now() - since >= 1000) void claimFrameWordRewards(frameIndex);
+                });
+                frameVisibleSince.clear();
                 if (frameObserver) { frameObserver.disconnect(); frameObserver = null; }
-                frameSeenTimers.forEach(timer => clearTimeout(timer));
-                frameSeenTimers.clear();
                 if (request === comicRequest) comicRequest += 1;
                 if (readerZoom === dialog) readerZoom = null;
                 dialog.remove();
