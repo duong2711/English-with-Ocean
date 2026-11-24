@@ -46,7 +46,40 @@
         try { return now - Number(localStorage.getItem(cachedLastSeenKey(uid)) || 0) >= MIN_TOUCH_MS; }
         catch (_) { return true; }
     }
+    const checkedNotices = new Set();
+    let checkingNotice = false;
+    async function checkScoreNotice() {
+        if (document.hidden || checkingNotice) return;
+        const token = sessionToken();
+        const claims = token && claimsFor(token);
+        if (!claims || checkedNotices.has(claims.sub)) return;
+        checkingNotice = true;
+        try {
+            const response = await fetch('https://' + PROJECT + '.supabase.co/rest/v1/rpc/ldd_claim_score_adjustment', {
+                method:'POST', mode:'cors', credentials:'omit',
+                headers:{'Content-Type':'application/json','apikey':PUBLISHABLE_KEY,'Authorization':'Bearer ' + token},
+                body:'{}'
+            });
+            if (!response.ok) return;
+            const notice = await response.json();
+            checkedNotices.add(claims.sub);
+            if (!notice) return;
+            const format = n => Number(n).toLocaleString('vi-VN');
+            const lines = [
+                'Thông báo điều chỉnh điểm chăm chỉ',
+                'Điểm trước: ' + format(notice.old_score) + ' → Điểm sau: ' + format(notice.new_score)
+            ];
+            if (notice.game_removed) lines.push('Điểm trò chơi vượt 2 lượt/ngày được điều chỉnh: −' + format(notice.game_removed) + ' điểm.');
+            if (notice.film_added) lines.push('Bổ sung điểm cho các từ đã điền đúng trong phim: +' + format(notice.film_added) + ' điểm.');
+            lines.push('Quy định mới: mỗi trò chỉ tính điểm 2 lượt đầu mỗi ngày, làm mới lúc 00:00 giờ Việt Nam. Lượt sau vẫn chơi được nhưng không cộng hoặc trừ điểm. Phim: tự điền đúng +5 điểm/từ (một lần), dùng gợi ý 0 điểm, sai được thử lại.');
+            lines.push('Đây là điều chỉnh do thay đổi cơ chế tính điểm, không phải kết luận gian lận.');
+            window.alert(lines.join('\n\n'));
+            document.dispatchEvent(new Event('ldd:today-refresh'));
+        } catch (_) { /* Retry on the next visible check. */ }
+        finally { checkingNotice = false; }
+    }
     async function recordVisit() {
+        void checkScoreNotice();
         if (document.hidden || inFlight) return;
         const token = sessionToken();
         const claims = token && claimsFor(token);
@@ -79,6 +112,14 @@
         void recordVisit();
         // No background network traffic: checks return immediately when hidden.
         setInterval(function () { if (!document.hidden) void recordVisit(); }, 60 * 1000);
+        // Detect same-tab sign-in without repeatedly making network requests.
+        let lastNoticeUser = '';
+        setInterval(function () {
+            if (document.hidden) return;
+            const token = sessionToken();
+            const uid = token && claimsFor(token)?.sub || '';
+            if (uid !== lastNoticeUser) { lastNoticeUser = uid; if (uid) void checkScoreNotice(); }
+        }, 1500);
         document.addEventListener('visibilitychange',function () { if (!document.hidden) void recordVisit(); });
         window.addEventListener('pageshow',function () { void recordVisit(); });
         window.addEventListener('online',function () { void recordVisit(); });
