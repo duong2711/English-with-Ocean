@@ -200,6 +200,10 @@ body.ldd-ui-v2 #tab-trang-chu .ldd-home-side-title {
   letter-spacing: -.025em;
   text-transform: none;
 }
+/* The task card already has its own heading. Hide the legacy outer title. */
+body #tab-trang-chu .ldd-today-shell .ldd-home-side-title {
+  display: none !important;
+}
 body.ldd-ui-v2 #tab-trang-chu .ldd-today-tasks { min-width: 0; }
 body.ldd-ui-v2 #tab-trang-chu .ldd-study-overview { gap: 14px; }
 body.ldd-ui-v2 #tab-trang-chu .ldd-study-next {
