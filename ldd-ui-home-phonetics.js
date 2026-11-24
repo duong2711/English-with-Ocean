@@ -156,7 +156,6 @@
             '<aside class="ldd-home-side ldd-today-shell">' +
                 '<div class="ldd-today-head">' +
                     '<div class="ldd-today-head-copy">' +
-                        '<div class="ldd-home-side-title">Việc học hôm nay</div>' +
                     '</div>' +
                 '</div>' +
                 '<div id="ldd-today-tasks" class="ldd-today-tasks"><div class="ldd-today-loading">Đang tải nhiệm vụ...</div></div>' +
