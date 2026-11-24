@@ -89,6 +89,9 @@ function syncTeacherButton(){
  const menu=document.getElementById('account-menu');if(!menu)return;let b=document.getElementById('teacher-grade-manager-btn');
  if(!b){b=document.createElement('button');b.type='button';b.id='teacher-grade-manager-btn';b.className='account-menu-item account-menu-item-teacher';b.textContent='🎓 Gán học viên';const x=document.getElementById('teacher-impersonate-btn');x&&x.nextSibling?menu.insertBefore(b,x.nextSibling):menu.appendChild(b);b.onclick=()=>{if(teacher()){menu.classList.remove('open');openModal();}};}
  b.style.display=token()&&teacher()?'':'none';
+ let z=document.getElementById('teacher-zalo-manager-btn');
+ if(!z){z=document.createElement('button');z.type='button';z.id='teacher-zalo-manager-btn';z.className='account-menu-item account-menu-item-teacher';z.textContent='🔔 Nhắc nhở Zalo';z.onclick=()=>{if(teacher()&&window.LDDZaloTeacher){menu.classList.remove('open');window.LDDZaloTeacher.open();}};b.after(z);}
+ z.style.display=token()&&teacher()?'':'none';
 }
 const assignmentValue=r=>r.learning_track||r.grade_level||'';
 const assignmentLabel=v=>v==='ielts'?'Luyện IELTS':v==='work'?'Đi làm':v==='university'?'Sinh viên':gradeNum(v)?'Lớp '+gradeNum(v):'Chưa gán';
