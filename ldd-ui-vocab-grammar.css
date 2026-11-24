@@ -520,3 +520,48 @@ body.ldd-ui-v2 #grammar-panels [class*="grammar-"][class*="card"] {
 .school-vocab-list { display:grid; gap:8px; }
 .school-vocab-row { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.5fr); gap:12px; border:1px solid var(--border); border-radius:10px; padding:12px; overflow-wrap:anywhere; }
 @media(max-width:480px) { .school-vocab-grid { grid-template-columns:1fr; } .school-vocab-row { grid-template-columns:1fr; gap:5px; } }
+
+
+/* Student-first vocabulary catalog: categories, not another large hero.
+   Keep the original markup and navigation while making the folder grid primary. */
+body.ldd-ui-v2 #tab-tu-vung .ldd-vocab-hero {
+    display: block;
+    min-height: 0;
+    margin: 0 0 14px;
+    padding: 5px 2px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    overflow: visible;
+}
+body.ldd-ui-v2 #tab-tu-vung .ldd-vocab-hero::after { content: none; }
+body.ldd-ui-v2 #tab-tu-vung .ldd-vocab-hero-icon,
+body.ldd-ui-v2 #tab-tu-vung .ldd-vocab-hero-kicker { display: none; }
+body.ldd-ui-v2 #tab-tu-vung .ldd-vocab-hero h2 {
+    margin: 0;
+    font-size: clamp(1.2rem, 2.2vw, 1.6rem);
+    letter-spacing: -.025em;
+}
+body.ldd-ui-v2 #tab-tu-vung .ldd-vocab-hero p {
+    max-width: 680px;
+    margin: 4px 0 0;
+    line-height: 1.4;
+    font-size: .82rem;
+}
+body.ldd-ui-v2 #vocab-folder-grid > #myvocab-folder-card {
+    border-color: #c1d0f7;
+    background: linear-gradient(125deg,#f3f6ff,#ffffff);
+}
+body.ldd-ui-v2 #vocab-folder-grid > #myvocab-folder-card:hover {
+    border-color: #91a8ea;
+}
+body.ldd-ui-v2 #vocab-folder-grid > .folder-card {
+    min-height: 118px;
+    padding: 15px;
+    gap: 9px;
+}
+@media (max-width:480px) {
+    body.ldd-ui-v2 #tab-tu-vung .ldd-vocab-hero { margin-bottom: 8px; }
+    body.ldd-ui-v2 #vocab-folder-grid > .folder-card { min-height: 105px; }
+}

@@ -142,7 +142,7 @@
 
         const kicker = document.createElement('div');
         kicker.className = 'ldd-vocab-hero-kicker';
-        kicker.textContent = 'LDD Vocabulary Lab';
+        kicker.textContent = 'Học và ôn từ';
 
         const desc = document.createElement('p');
         desc.textContent = 'Ôn từ đã lưu, học theo lớp, đọc bài báo hoặc luyện nghe Podcast.';
@@ -151,25 +151,11 @@
         copy.appendChild(title);
         copy.appendChild(desc);
 
-        const stat = document.createElement('button');
-        stat.type = 'button';
-        stat.addEventListener('click', function () { document.getElementById('myvocab-folder-card').click(); });
-        stat.className = 'ldd-vocab-hero-stat';
-        stat.innerHTML = '<strong>★</strong><span>Kho từ vựng của tôi</span><span class="ldd-hero-vocab-count" aria-live="polite"></span>';
-        const mine = document.getElementById('myvocab-folder-card');
-        mine.hidden = true;
-        mine.style.display = 'none';
-        function syncCount() {
-            const count = mine.querySelector('.ldd-vocab-card-progress');
-            const target = stat.querySelector('.ldd-hero-vocab-count');
-            target.textContent = count ? count.textContent : '';
-        }
-        new MutationObserver(syncCount).observe(mine, { childList: true, subtree: true, characterData: true });
-        syncCount();
-
+        // My vocabulary is an important study destination, not a hidden link.
+        // Leave #myvocab-folder-card in the grid so its badge/count and
+        // original click handler stay visible and usable.
         hero.appendChild(icon);
         hero.appendChild(copy);
-        hero.appendChild(stat);
         grid.parentNode.insertBefore(hero, grid);
     }
 
