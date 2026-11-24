@@ -1,0 +1,46 @@
+name: LDD Supabase Zalo runtime test
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/ldd-zalo-edge-runtime-test.yml'
+permissions: {}
+concurrency:
+  group: ldd-zalo-edge-runtime-test
+  cancel-in-progress: false
+jobs:
+  runtime-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Test Supabase runtime without sending
+        shell: bash
+        env:
+          LDD_REMINDER_BRIDGE_SECRET: ${{ secrets.LDD_REMINDER_BRIDGE_SECRET }}
+        run: |
+          node --input-type=module <<'JS'
+          if (!process.env.LDD_REMINDER_BRIDGE_SECRET) {
+            console.error('Missing bridge secret'); process.exit(1);
+          }
+          try {
+            const res = await fetch('https://ywqbaksmmtvwbojcgsdd.supabase.co/functions/v1/ldd-zalo-edge-test', {
+              method: 'POST',
+              headers: {'content-type':'application/json','x-reminder-secret':process.env.LDD_REMINDER_BRIDGE_SECRET},
+              body: '{}',
+              signal: AbortSignal.timeout(90000)
+            });
+            const data = await res.json().catch(() => ({}));
+            if (res.ok && data.ok === true && data.zalo_login === true && data.messages_sent === 0) {
+              console.log('Supabase runtime and Zalo login passed. No messages sent.');
+            } else {
+              const known = ['library_import','missing_zalo_secrets','login'];
+              const stage = known.includes(data.stage) ? data.stage : 'request_or_runtime';
+              console.error('Test failed: HTTP ' + res.status + '; stage: ' + stage);
+              process.exitCode = 1;
+            }
+          } catch {
+            console.error('Test request failed or timed out.');
+            process.exitCode = 1;
+          }
+          JS
