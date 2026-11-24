@@ -15,6 +15,71 @@
         { sounds: ['/θ/', '/ð/'], keys: ['θ', 'ð'], words: ['thin', 'this'], hint: 'Đặt lưỡi đúng vị trí và kiểm tra độ rung.' },
         { sounds: ['/tʃ/', '/dʒ/'], keys: ['tʃ', 'dʒ'], words: ['cheap', 'jeep'], hint: 'Chú ý độ rung của âm hữu thanh.' }
     ];
+    // Vietnamese editorial teasers reviewed against the corresponding article text.
+    // New articles must have a verified teaser here before Oci can recommend them.
+    // Key: article ID; value: [source title, curiosity headline, factual Vietnamese hook].
+    const NEWS_TEASERS = Object.freeze({
+        71: ["Gen Z and money – level 1","Vì sao Gen Z thấy tiết kiệm tiền ngày càng khó?","Chi phí nhà ở và sinh hoạt tăng, trong khi hình ảnh cuộc sống giàu có trên mạng xã hội còn tạo thêm áp lực cho người trẻ."],
+        70: ["Questions after a laboratory death in Russia – level 1","Một ca tử vong trong phòng thí nghiệm khiến người ta lo điều gì?","Báo cáo chưa xác định được nguyên nhân tử vong; chuyên gia nhấn mạnh một trường hợp chưa đủ chứng minh có dịch bệnh bùng phát."],
+        69: ["Indonesia’s vice president and school records – level 1","Vụ kiện đã kết thúc, vì sao hồ sơ học tập vẫn gây tranh cãi?","Tòa kết thúc vụ kiện vì lý do thủ tục, nhưng quyết định đó không giải đáp toàn bộ những câu hỏi được nêu về hồ sơ."],
+        68: ["Lithuania and nuclear weapons – level 1","Vì sao Lithuania tranh luận về vũ khí hạt nhân?","Một số chính trị gia muốn hợp tác quốc phòng chặt chẽ hơn, trong khi những người khác lo thay đổi chính sách có thể làm căng thẳng leo thang."],
+        67: ["2026 Chemistry Nobel Prize – level 1","Phân tử giống bàn tay trái và phải thì có gì khác?","Hai dạng phân tử có hình dạng như hai bàn tay đối xứng có thể tác động khác nhau trong cơ thể, điều rất quan trọng khi nghiên cứu thuốc."],
+        66: ["Malaysian durians attract more buyers – level 1","Điều gì khiến sầu riêng Malaysia hấp dẫn người mua?","Nhiều nhà vườn để sầu riêng chín ngay trên cây rồi rụng tự nhiên; loại quả chín này thơm ngon nhưng khó bảo quản lâu."],
+        65: ["Fake concert tickets in Canada – level 1","Mua vé xem Taylor Swift, vì sao hơn 100 người vỡ mộng?","Hơn một trăm người được thông báo vé concert họ mua là giả; một cặp đôi tại Canada bị cáo buộc liên quan đến vụ bán vé."],
+        64: ["A village for women in Syria – level 1","Ngôi làng đặc biệt ở Syria được xây cho ai?","Jinwar là cộng đồng nơi phụ nữ và trẻ em có thể sống an toàn hơn, cùng trồng trọt, học nghề và chăm sóc lẫn nhau."],
+        63: ["Questions about Starlink in Ukraine – level 1","Khi mạng vệ tinh chậm đi giữa chiến tranh, điều gì xảy ra?","Một báo cáo đặt câu hỏi về cách Starlink được kiểm soát sau khi một số kết nối tại Ukraine bị chậm vào những thời điểm quan trọng."],
+        62: ["No more horses in New York streets – level 1","Vì sao xe ngựa có thể biến mất khỏi đường phố New York?","Lãnh đạo thành phố bỏ phiếu chấm dứt dịch vụ xe ngựa kéo, giữa những lo ngại về giao thông, tiếng ồn và sức khỏe của ngựa."],
+        61: ["India’s big river project – level 1","Dự án dẫn nước giúp nông dân, vậy tại sao dân làng lo lắng?","Kế hoạch nối sông Ken và Betwa có thể đưa nước đến vùng khô hạn, nhưng một số nhà cửa, ruộng đất và đền thờ đã bị nước dâng ảnh hưởng."],
+        60: ["The business of Roman Abramovich – level 1","Những giấy tờ kinh doanh nào đang bị đặt dấu hỏi?","Theo điều tra được bài báo thuật lại, một số cố vấn của Roman Abramovich có thể đã thay đổi ngày trên giấy tờ liên quan đến tài sản."],
+        59: ["Young people and concussion – level 1","Chấn động não ở trẻ: nằm nghỉ thật lâu có phải tốt nhất?","Các bác sĩ hiện thường khuyên nghỉ ngắn rồi trở lại trường học và sinh hoạt một cách thận trọng, thay vì nằm nghỉ kéo dài."],
+        58: ["A politician is hurt in Australia – level 1","Một chính trị gia Australia bị xe đâm: điều gì đã xảy ra?","Bài báo kể rằng một chiếc xe đâm vào bà Helen Haines trước văn phòng và cảnh sát nghi ngờ tài xế cố ý gây ra vụ việc."],
+        57: ["To buy or to rent? – level 1","Mua nhà hay thuê nhà: lựa chọn nào thật sự có lợi?","Ví dụ về hai chị em cho thấy người mua phải tự trả tiền sửa chữa, còn người thuê thường nhờ chủ nhà xử lý hỏng hóc."],
+        56: ["Heineken sells less beer – level 1","Vì sao một hãng bia lớn lo doanh số sụt giảm?","Heineken liên hệ nhu cầu yếu ở một số thị trường với áp lực kinh tế; kết quả bán hàng khác nhau giữa từng quốc gia."],
+        52: ["A robot makes fries – level 1","Robot có thể tự chiên khoai tây trong nhà hàng không?","Một robot bếp ở California có thể làm khoai tây chiên, hành chiên và các công việc nấu nướng khác nhờ cánh tay máy tính điều khiển."],
+        51: ["Israel’s election and Iran – level 1","Xung đột với Iran đang chia rẽ tranh luận bầu cử ra sao?","Bài báo thuật lại các quan điểm khác nhau tại Israel: có người muốn tiếp tục hành động quân sự, người khác nghi ngờ hiệu quả của chiến lược hiện tại."],
+        50: ["A religious leader in court – level 1","Vì sao một thủ lĩnh tôn giáo ở Kenya phải ra tòa?","Các điều tra viên cáo buộc một số tín đồ được yêu cầu ngừng ăn vì lý do tôn giáo; vụ án liên quan đến nhiều người tử vong."],
+        49: ["Pumpkin festival – level 1","Một quả bí ngô nặng 772 kg trông sẽ ra sao?","Lễ hội gần Brussels trưng bày nhiều loại bí ngô khổng lồ; một quả được giới thiệu nặng khoảng 772 kg."],
+        48: ["Kenya and plastics – level 1","Tại sao một chiếc túi nhựa có thể thành vấn đề nhiều năm?","Kenya đã có quy định nghiêm với túi nhựa, nhưng lượng rác ở bãi Dandora vẫn cho thấy đồ nhựa tồn tại rất lâu trong môi trường."],
+        47: ["Space elevator – level 1","Đi lên vũ trụ bằng thang máy: ý tưởng có thật không?","Thay vì chỉ dùng tên lửa, các nhà khoa học từng nghiên cứu ý tưởng một sợi cáp rất dài để đưa vật thể từ Trái Đất lên không gian."],
+        46: ["Bangladesh is fighting a dangerous disease – level 1","Điều gì khiến dịch sởi ở Bangladesh trở nên nghiêm trọng?","Bài báo cho biết tiêm chủng thường kỳ bị gián đoạn khi xảy ra bất ổn chính trị, khiến nhiều trẻ em không được bảo vệ đầy đủ."],
+        45: ["Why does tech cost more? – level 1","Vì sao điện thoại đắt hơn dù chẳng nâng cấp được bao nhiêu?","Nhu cầu chip nhớ của các trung tâm AI tăng khiến linh kiện dành cho điện thoại và máy tính phổ thông bị cạnh tranh nguồn cung."],
+        44: ["Farming in Iceland – level 1","Iceland lạnh giá mà vẫn trồng dâu tây dưới lòng đất?","Một dự án trồng dâu dưới đất, trong khi dự án khác tận dụng hơi ấm từ trung tâm dữ liệu để trồng rau trong container."],
+        43: ["The best countries to retire – level 1","Quốc gia nào bất ngờ đứng đầu danh sách nơi nghỉ hưu?","Một bảng so sánh quốc tế được bài báo nhắc tới xếp Uruguay đứng đầu, dựa trên những yếu tố như chi phí sống và an toàn."],
+        42: ["Hackers attack French supermarkets – level 1","Tin tặc có thể làm hỏng thực phẩm trong siêu thị thế nào?","Một cuộc tấn công mạng can thiệp hệ thống giữ lạnh tại các siêu thị Pháp, khiến một số thực phẩm không thể tiếp tục bán."],
+        41: ["India’s luxury fashion industry – level 1","Một chiếc áo mất 2.000 giờ làm ở Ấn Độ, sao nhãn lại ghi nơi khác?","Bài báo mô tả một chiếc áo được thêu khoảng 2.000 giờ ở Ấn Độ, rồi hoàn thiện chưa tới 100 giờ tại châu Âu."],
+        40: ["Are wind turbines safe for birds? – level 1","16 camera theo dõi tua-bin: có bao nhiêu con chim va phải?","Trong một năm quan sát bằng 16 camera, nhóm nghiên cứu xác nhận hai lần chim va chạm với tua-bin gió."],
+        39: ["Disney Animal Kingdom – level 1","Vườn thú Disney chuẩn bị bao nhiêu thức ăn mỗi ngày?","Các loài vật tại Animal Kingdom ăn khoảng 4.500 kg thức ăn mỗi ngày, với khoảng 1.500 chế độ ăn khác nhau."],
+        38: ["Is the internet dead? – level 1","Internet đang có quá nhiều nội dung do AI tạo ra?","Bài báo đặt câu hỏi khi chatbot và nội dung tự động ngày càng phổ biến, còn các trang tin có thể mất độc giả."],
+        37: ["French students protest – level 1","Vì sao học sinh và giáo viên Pháp xuống đường phản đối?","Những người biểu tình nói rằng một số lớp quá đông, trường học xuống cấp và thiếu giáo viên."],
+        36: ["Fluffy the alligator snapping turtle (Level 1)","Một con rùa tên Fluffy xuất hiện ở Anh có gì đáng lo?","Fluffy thuộc loài rùa cá sấu bản địa Bắc Mỹ, có hàm rất khỏe và được chuyên gia cứu hộ đưa đến bác sĩ thú y."],
+        35: ["FIFA makes people angry (Level 1)","Vì sao một kế hoạch của FIFA khiến nhiều đội bóng phản ứng?","Theo bài báo, các đội châu Âu từng đe dọa không dự World Cup 2030 nếu kế hoạch gây tranh cãi tiếp tục."],
+        34: ["World’s biggest gold bar (Level 1)","Thỏi vàng nặng hơn nửa tấn có giá bao nhiêu?","Một xưởng đúc tiền tại Australia làm thỏi vàng hơn 520 kg, được định giá trên 100 triệu USD trong bài báo."],
+        33: ["Crabs wear plastic shells (Level 1)","Vì sao cua ẩn sĩ lại chọn nắp chai nhựa làm nhà?","Các nhà nghiên cứu phát hiện nhiều ảnh cua ẩn sĩ dùng vật thể nhân tạo, kể cả nắp chai nhựa, thay cho vỏ ốc tự nhiên."],
+        32: ["European children are not strong anymore (Level 1)","Trẻ em châu Âu ngày nay có yếu hơn thế hệ trước?","Nghiên cứu trên hơn 417.000 trẻ ở 20 quốc gia ghi nhận sức cơ và độ dẻo dai giảm ở nhiều nhóm trẻ."],
+        31: ["Why New Year’s resolutions don’t work (Level 1)","Vì sao lời hứa đầu năm thường thất bại rất nhanh?","Một lý do phổ biến là mục tiêu quá lớn hoặc mơ hồ; bài báo gợi ý đặt mục tiêu cụ thể và có thể đo lường."],
+        30: ["Madona’s home (Level 1)","Trong nhà Madonna có món đồ nào gắn với gia đình?","Ngoài tranh của Frida Kahlo, Madonna còn giữ một chiếc chăn do con gái làm trong thời kỳ dịch COVID."],
+        29: ["Egypt’s pyramid restoration (Level 1)","Có nên gắn lại đá granite lên một kim tự tháp cổ?","Kế hoạch trùng tu kim tự tháp Menkaure gây tranh luận: người ủng hộ muốn tái hiện diện mạo xưa, còn một số chuyên gia lo tác động lên di tích."],
+        28: ["Saving the Panama Canal (Level 1)","Một con kênh nổi tiếng có thể gặp khó chỉ vì thiếu mưa?","Kênh đào Panama cần nước ngọt để vận hành; khi mực nước thấp, tàu lớn có thể phải giảm hàng hoặc chờ lâu hơn."],
+        27: ["People in Iceland say NO to the EU – level 1","Vì sao 52,5% cử tri Iceland nói không với EU?","Theo bài báo, nhiều người muốn giữ quyền tự chủ và bảo vệ nguồn cá cùng vùng biển của Iceland."],
+        25: ["US pension system gets a bad rating – level 1","Vì sao hệ thống hưu trí Mỹ chỉ được điểm C+?","Bài báo chỉ ra hai vấn đề: không phải ai cũng tham gia kế hoạch hưu trí và nhiều người rút tiền tiết kiệm quá sớm."],
+        24: ["Meta must pay and change its apps – level 1","Các ứng dụng mạng xã hội của Meta đang bị yêu cầu thay đổi gì?","Bài báo thuật lại tranh chấp về tác động của Facebook và Instagram tới sức khỏe trẻ em, cùng các đề xuất hạn chế thời gian sử dụng."],
+        22: ["World Humanoid Games – level 1","Robot hình người thi đấu thể thao sẽ trông như thế nào?","Các đội từ 16 quốc gia tham gia sự kiện ở Bắc Kinh, cho robot thử chạy, đá bóng, nhảy và đấu đối kháng."],
+        21: ["Why people stutter – level 1","Vì sao có người bị nói lắp, và ai có thể gặp tình trạng này?","Theo bài báo, có những người lặp lại từ hoặc khó bắt đầu câu nói; nói lắp có thể xuất hiện ở cả trẻ em và người lớn."],
+        20: ["How old is the Moon? (Level 1)","Một mẩu đá bé xíu có thể tiết lộ tuổi Mặt Trăng?","Các nhà khoa học nghiên cứu khoáng chất zircon trong đá Mặt Trăng do phi hành gia Apollo 17 mang về để ước tính tuổi của nó."],
+        19: ["Scam centers – level 1","Bên trong các trung tâm lừa đảo trực tuyến có gì?","Không phải ai làm việc ở đó cũng tự nguyện; bài báo kể về những người bị giữ lại và ép tham gia lừa đảo."],
+        18: ["Indonesia has too much waste – level 1","Một núi rác cao như tòa nhà có thể nguy hiểm thế nào?","Gần Jakarta có bãi rác rất lớn; bài báo kể về vụ rác đổ sập gây chết người và kế hoạch xử lý rác an toàn hơn."],
+        17: ["Bubble tea may not be healthy – level 1","Trà sữa trân châu ngon nhưng điều gì khiến bác sĩ lo ngại?","Bài báo nhấn mạnh lượng đường cao trong nhiều đồ uống kiểu này có thể ảnh hưởng sức khỏe khi dùng quá thường xuyên."],
+        16: ["US teenagers do not sleep enough – level 1","Vì sao 6 giờ sáng có thể quá sớm với tuổi teen?","Nhịp sinh học thay đổi khiến nhiều thanh thiếu niên buồn ngủ muộn hơn, trong khi trường học lại bắt đầu từ rất sớm."],
+        15: ["People like music and nature festivals – level 1","Lễ hội nào kết hợp âm nhạc, yoga và thiên nhiên?","Medicine Festival ở Anh thu hút hơn 10.000 người tham gia các hoạt động như yoga, âm nhạc và nghi lễ truyền thống."],
+        14: ["Reading changes our brain – level 1","Chỉ cần học đọc, bộ não của chúng ta thay đổi ra sao?","Việc đọc kết hợp hoạt động nhìn, nghe, nói và tập trung; các hệ chữ viết có thể huy động những cách xử lý khác nhau trong não."],
+        13: ["The future of a steak","Protein làm từ vi sinh vật có thể được tạo ra trong một ngày?","Một công ty dùng sinh vật cực nhỏ trong hệ thống nuôi cấy kín và cho biết có thể tạo protein chỉ sau một ngày."],
+        12: ["Too much electronic waste","Bạn đang giữ bao nhiêu món đồ điện tử không dùng đến?","Một báo cáo được bài viết nhắc tới cho biết số thiết bị điện tử bỏ không trung bình tăng từ khoảng 20 lên 30 món."],
+        11: ["Dogs help travelers","Vì sao sân bay Istanbul lại có chó hỗ trợ hành khách?","Sân bay đưa chó trị liệu đến giúp những người căng thẳng trước chuyến bay cảm thấy thư giãn hơn."],
+        10: ["Why people have hair","Tóc trên đầu chỉ để làm đẹp thôi sao?","Tóc giúp bảo vệ da đầu khỏi tia UV và góp phần điều hòa nhiệt độ khi trời nóng hoặc lạnh."],
+        7: ["How Donald Trump makes money","Nguồn thu nào của Donald Trump đang gây chú ý?","Theo bài báo về báo cáo tài chính, các dự án tiền mã hóa chiếm phần đáng kể trong nguồn thu được công bố."],
+        2: ["Biodegradable tampons","Có thể làm sản phẩm vệ sinh phân hủy sinh học từ tảo?","Bài báo nói đến việc nghiên cứu sợi từ tảo để thay thế vật liệu nhựa trong một số sản phẩm vệ sinh."]
+    });
+
     const PODCAST_HOOKS = {
         1: 'Công việc nhà tưởng đơn giản, nhưng làm sao trao đổi bằng tiếng Anh cho tự nhiên?',
         2: 'Một cuộc trò chuyện về cà phê: bạn sẽ diễn tả thói quen của mình thế nào?',
@@ -54,14 +119,13 @@
         node.querySelectorAll('script,style,figure,figcaption,footer,nav').forEach(x => x.remove());
         return String(node.textContent || '').replace(/\s+/g, ' ').trim();
     }
-    function factFromArticle(content) {
-        const text = plain(content);
-        const sentences = (text.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || []).map(x => x.trim())
-            .filter(x => x.split(/\s+/).length >= 7 && x.split(/\s+/).length <= 37);
-        const factual = sentences.find(x => /\b(can|could|because|scientists?|researchers?|people|years?|study|found|first|some|many|more|less|than|percent|important)\b|\d/i.test(x));
-        const sentence = factual || sentences[0] || text;
-        // Only quote the existing content; never invent a fact about the article.
-        return sentence ? 'Một chi tiết đáng chú ý: ' + short(sentence, 190) : 'Khám phá điều thú vị trong bài báo tiếng Anh này.';
+    function verifiedNewsTeaser(row) {
+        const teaser = NEWS_TEASERS[String(row?.id)];
+        if (!teaser) return null;
+        // A changed/replaced article must never inherit a stale teaser from its ID.
+        const normalize = value => String(value || '').trim().replace(/\s+/g, ' ').toLowerCase();
+        return normalize(row.title) === normalize(teaser[0])
+            ? { headline: teaser[1], fact: teaser[2] } : null;
     }
     function bookCover(label) {
         const cover = el('div','ldd-oci-illustration');
@@ -137,8 +201,12 @@
         for(let tries=0;tries<3;tries++) {
             const type=types[(state.turn++) % types.length];
             if(type==='news' && state.articles.length) {
-                const id=state.articles[state.articleOffset++ % state.articles.length];
-                return {type:'news',id,uid:state.uid};
+                // Only show articles with a vetted Vietnamese teaser.
+                const eligible = state.articles.filter(id => NEWS_TEASERS[String(id)]);
+                if (eligible.length) {
+                    const id=eligible[state.articleOffset++ % eligible.length];
+                    return {type:'news',id,uid:state.uid};
+                }
             }
             if(type==='podcast' && state.podcasts.length) {
                 const pod=state.podcasts[state.podcastOffset++ % state.podcasts.length];
@@ -169,8 +237,16 @@
                 showIpa(pair);
                 return;
             }
+            const teaser = verifiedNewsTeaser(row);
+            if (!teaser) {
+                // Never display a headline or fact that belongs to another article.
+                const pair=IPA[state.ipaOffset++ % IPA.length];
+                state.current={type:'ipa',pair,uid:state.uid};
+                showIpa(pair);
+                return;
+            }
             selected.row=row;
-            paint('📰 BÀI BÁO CHƯA ĐỌC',row.title,factFromArticle(row.content),
+            paint('📰 BÀI BÁO CHƯA ĐỌC',teaser.headline,teaser.fact,
                 newsCover(row),'Đọc bài này');
         } else if(selected.type==='podcast') {
             const p=selected.pod;
