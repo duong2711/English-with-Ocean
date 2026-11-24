@@ -1,0 +1,268 @@
+{
+  "name": "LDD English · 24h one-time Zalo inactivity reminder",
+  "nodes": [
+    {
+      "id": "a1",
+      "name": "Hourly (Vietnam daytime)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        80,
+        240
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 8-19 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://ywqbaksmmtvwbojcgsdd.supabase.co/functions/v1/ldd-inactivity-reminder",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"action\":\"claim\"}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "a2",
+      "name": "Claim One Reminder",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        310,
+        240
+      ],
+      "notes": "Set Header Auth credential: name x-reminder-secret; value identical to Supabase secret LDD_REMINDER_BRIDGE_SECRET. Never paste this key into workflow JSON.",
+      "notesInFlow": false
+    },
+    {
+      "id": "a3",
+      "name": "Has Eligible Student?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        540,
+        240
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "ready-condition",
+              "leftValue": "={{ $json.ready }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "a4",
+      "name": "Send One Zalo Message",
+      "type": "n8n-nodes-mochi-zalo.zaloMessage",
+      "typeVersion": 1,
+      "position": [
+        770,
+        145
+      ],
+      "parameters": {
+        "operation": "sendText",
+        "threadId": "={{ $('Claim One Reminder').item.json.recipient_uid }}",
+        "threadType": 0,
+        "messageText": "={{ $('Claim One Reminder').item.json.message_text }}"
+      },
+      "continueOnFail": true,
+      "retryOnFail": false,
+      "notes": "Select Zalo Personal API credential in n8n. No cookie/IMEI is stored in this workflow file."
+    },
+    {
+      "id": "a5",
+      "name": "Sent Successfully?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        990,
+        145
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "sent-condition",
+              "leftValue": "={{ $json.success }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://ywqbaksmmtvwbojcgsdd.supabase.co/functions/v1/ldd-inactivity-reminder",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ action: 'report', reminder_id: $('Claim One Reminder').first().json.reminder_id, state: 'sent' }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "a6",
+      "name": "Report Sent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1210,
+        70
+      ],
+      "notes": "Set Header Auth credential: name x-reminder-secret; value identical to Supabase secret LDD_REMINDER_BRIDGE_SECRET. Never paste this key into workflow JSON.",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://ywqbaksmmtvwbojcgsdd.supabase.co/functions/v1/ldd-inactivity-reminder",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ action: 'report', reminder_id: $('Claim One Reminder').first().json.reminder_id, state: 'failed' }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "a7",
+      "name": "Report Failed",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1210,
+        205
+      ],
+      "notes": "Set Header Auth credential: name x-reminder-secret; value identical to Supabase secret LDD_REMINDER_BRIDGE_SECRET. Never paste this key into workflow JSON.",
+      "notesInFlow": false
+    }
+  ],
+  "connections": {
+    "Hourly (Vietnam daytime)": {
+      "main": [
+        [
+          {
+            "node": "Claim One Reminder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claim One Reminder": {
+      "main": [
+        [
+          {
+            "node": "Has Eligible Student?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Eligible Student?": {
+      "main": [
+        [
+          {
+            "node": "Send One Zalo Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Send One Zalo Message": {
+      "main": [
+        [
+          {
+            "node": "Sent Successfully?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sent Successfully?": {
+      "main": [
+        [
+          {
+            "node": "Report Sent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Report Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Ho_Chi_Minh",
+    "saveDataErrorExecution": "none",
+    "saveDataSuccessExecution": "none",
+    "saveManualExecutions": false,
+    "saveExecutionProgress": false
+  },
+  "pinData": {},
+  "tags": []
+}
