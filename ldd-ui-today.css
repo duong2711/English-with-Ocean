@@ -544,12 +544,12 @@ body.ldd-ui-v2 #tab-trang-chu .ldd-today-shell {
     transform-box:fill-box; transform-origin:center;
 }
 @media (prefers-reduced-motion:no-preference) {
-    #tab-trang-chu .ldd-study-companion[data-milestone="0"] .ldd-owl-eyes { animation:lddOwlBlink 2.2s 2; }
-    #tab-trang-chu .ldd-study-companion[data-milestone="1"] .ldd-owl-wing { animation:lddOwlWave .65s ease-in-out 3; transform-origin:left bottom; }
-    #tab-trang-chu .ldd-study-companion[data-milestone="2"] .ldd-owl-body { animation:lddOwlNod .8s ease-in-out 2; }
-    #tab-trang-chu .ldd-study-companion[data-milestone="3"] .ldd-owl-body { animation:lddOwlJump .65s ease-in-out 2; }
-    #tab-trang-chu .ldd-study-companion[data-milestone="4"] .ldd-owl-body { animation:lddOwlJump .55s ease-in-out 4; }
-    #tab-trang-chu .ldd-study-companion[data-milestone="4"] .ldd-owl-stars { animation:lddOwlSpark .65s ease-in-out 4; }
+    #tab-trang-chu .ldd-study-companion.is-animating[data-milestone="0"] .ldd-owl-eyes { animation:lddOwlBlink 2.2s 2; }
+    #tab-trang-chu .ldd-study-companion.is-animating[data-milestone="1"] .ldd-owl-wing { animation:lddOwlWave .65s ease-in-out 3; transform-origin:left bottom; }
+    #tab-trang-chu .ldd-study-companion.is-animating[data-milestone="2"] .ldd-owl-body { animation:lddOwlNod .8s ease-in-out 2; }
+    #tab-trang-chu .ldd-study-companion.is-animating[data-milestone="3"] .ldd-owl-body { animation:lddOwlJump .65s ease-in-out 2; }
+    #tab-trang-chu .ldd-study-companion.is-animating[data-milestone="4"] .ldd-owl-body { animation:lddOwlJump .55s ease-in-out 4; }
+    #tab-trang-chu .ldd-study-companion.is-animating[data-milestone="4"] .ldd-owl-stars { animation:lddOwlSpark .65s ease-in-out 4; }
 }
 @keyframes lddOwlBlink { 0%,42%,52%,100%{transform:scaleY(1)} 47%{transform:scaleY(.12)} }
 @keyframes lddOwlWave { 0%,100%{transform:rotate(0)} 50%{transform:rotate(-22deg)} }
