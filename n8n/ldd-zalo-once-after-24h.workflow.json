@@ -29,7 +29,7 @@
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\"action\":\"claim\"}",
+        "jsonBody": "{\"action\":\"claim\"}",
         "options": {
           "response": {
             "response": {
@@ -140,7 +140,7 @@
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\"action\":\"report\",\"reminder_id\":\"{{ $('Claim One Reminder').item.json.reminder_id }}\",\"state\":\"sent\"}",
+        "jsonBody": "={{ JSON.stringify({ action: 'report', reminder_id: $('Claim One Reminder').first().json.reminder_id, state: 'sent' }) }}",
         "options": {
           "response": {
             "response": {
@@ -168,7 +168,7 @@
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\"action\":\"report\",\"reminder_id\":\"{{ $('Claim One Reminder').item.json.reminder_id }}\",\"state\":\"failed\"}",
+        "jsonBody": "={{ JSON.stringify({ action: 'report', reminder_id: $('Claim One Reminder').first().json.reminder_id, state: 'failed' }) }}",
         "options": {
           "response": {
             "response": {
