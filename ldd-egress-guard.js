@@ -220,7 +220,7 @@
         if (!document.getElementById('ldd-news-translation-score-script')) {
             const script = document.createElement('script');
             script.id = 'ldd-news-translation-score-script';
-            script.src = 'ldd-news-translation-score.js?v=20260917-1';
+            script.src = 'ldd-news-translation-score.js?v=20261125-plus5';
             script.async = false;
             document.body.appendChild(script);
         }
