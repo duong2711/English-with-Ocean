@@ -1,11 +1,10 @@
-/* LDD English — News translation diligence scoring v1
-   Reuses the existing ai-proxy request instead of making a second AI call.
-   Rules per sentence: good +1, weak 0, nonsense/blank -1.
+/* LDD English — News translation diligence scoring v2
+   Each good sentence earns +5. Weak, nonsense and blank translations earn 0 (no penalty).
    The backend locks the first score per user/article/sentence to prevent farming. */
 (function () {
     'use strict';
 
-    if (window.__lddNewsTranslationScoreV1) return;
+    if (window.__lddNewsTranslationScoreV2) return;
     window.__lddNewsTranslationScoreV1 = true;
 
     const AI_PROXY_MARKER = '/functions/v1/ai-proxy';
@@ -43,7 +42,7 @@
 
         // Legacy handler refuses empty input before it can reach AI. A zero-width placeholder
         // passes that local check but is stripped again before the structured request is sent,
-        // so the server records a true blank translation and assigns -1 exactly once.
+        // so the server records a true blank translation and assigns 0 points without a penalty.
         const textarea = document.getElementById('news-translate-textarea');
         if (textarea && !String(textarea.value || '').trim()) textarea.value = '\u200B';
     }, true);
