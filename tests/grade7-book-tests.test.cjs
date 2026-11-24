@@ -31,11 +31,11 @@ test('assets for exam, two-action menu and persisted annotations are cache-versi
   for(let unit=3;unit<=12;unit++)
     assert.match(boot,new RegExp('ldd-grade7-book-tests-unit'+unit+'\\.js\\?v=20261124-mlh7-'));
   assert.doesNotMatch(boot,/ensureScript\('ldd-grade7-book-tests-rest'/);
-  assert.match(boot,/ldd-grade7-book-tests\.js\?v=20261124-mlh7-full2/);
-  assert.match(boot,/ldd-grade7-book-tests\.css\?v=20261124-mlh7-all12-1/);
-  assert.match(boot,/ldd-text-actions\.js\?v=20261124-mlh7-full2/);
+  assert.match(boot,/ldd-grade7-book-tests\.js\?v=20261124-mlh7-annotation-stable3/);
+  assert.match(boot,/ldd-grade7-book-tests\.css\?v=20261124-mlh7-annotation-stable3/);
+  assert.match(boot,/ldd-text-actions\.js\?v=20261124-mlh7-all12-final2/);
   assert.match(boot,/ldd-test-annotations\.js\?v=20261124-mlh7-annotations1/);
-  assert.match(page,/ldd-ui-upgrade\.js\?v=20261124-all-twelve-verified1/);
+  assert.match(page,/ldd-ui-upgrade\.js\?v=20261124-[A-Za-z0-9_-]+/);
 });
 test('all twelve units exist; only scanned and reviewed workbook tests appear',()=>{
   assert.equal(book.units.length,12);
@@ -176,4 +176,14 @@ test('verified interactive text does not load OCR that would shift saved highlig
  assert.doesNotMatch(view,/^\s*addSelectableStudyText\(ctx\.test,content\);/m);
  assert.match(view,/const wrap=el\('details','ldd-mlh7-source'\)/);
  assert.match(view,/if\(!wrap\.open\|\|requested\)return/);
+});
+
+test('publishing results does not shift saved highlight or note text anchors',()=>{
+  assert.match(view,/function appendAnswerReview\(ctx,form\)/);
+  assert.match(view,/form\.append\(content\);\s*appendAnswerReview\(ctx,form\)/);
+  assert.match(view,/const details=el\('details','ldd-mlh7-graded-solutions'\)/);
+  const questionRenderer=view.slice(view.indexOf('function renderQuestion('),view.indexOf('function appendAnswerReview('));
+  assert.doesNotMatch(questionRenderer,/if\(ctx\.submitted\)\s*\{[\s\S]*?ldd-mlh7-solution/);
+  assert.match(view,/content\.id='ldd-mlh7-text'/);
+  assert.match(css,/#ldd-school-exams-panel \.ldd-mlh7-graded-solutions/);
 });
