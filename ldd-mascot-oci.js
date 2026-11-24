@@ -182,7 +182,7 @@
         const wrap=el('div','ldd-oci-preview-row');
         const artHost=el('div','ldd-oci-preview-art');
         const details=el('div','ldd-oci-preview-copy');
-        const heading=el('strong','ldd-oci-name','Oci gợi ý cho bạn');
+        const heading=el('strong','ldd-oci-name','Có thể bạn chưa biết');
         const headline=el('strong','ldd-oci-headline');
         const summary=el('p','ldd-oci-tip');
         details.setAttribute('aria-live','polite');
@@ -217,7 +217,7 @@
         if (!nodes) return;
         nodes.artHost.replaceChildren(art);
         nodes.headline.textContent=short(title,110);
-        nodes.summary.textContent=short(desc,218);
+        nodes.summary.textContent=short(desc,108);
         nodes.primary.disabled=false;
         nodes.primary.textContent=action;
         nodes.preview.dataset.ociReady='1';
