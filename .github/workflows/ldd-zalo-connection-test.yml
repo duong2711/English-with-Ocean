@@ -1,0 +1,63 @@
+name: LDD Zalo connection test
+on:
+  workflow_dispatch:
+permissions: {}
+concurrency:
+  group: ldd-zalo-connection-test
+  cancel-in-progress: false
+jobs:
+  connection-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Install pinned Zalo test library
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/ldd-zalo-test"
+          cd "$RUNNER_TEMP/ldd-zalo-test"
+          npm install --no-audit --no-fund --ignore-scripts --save-exact mochi-zalo@1.0.0
+      - name: Check bridge and login without sending messages
+        shell: bash
+        env:
+          LDD_REMINDER_BRIDGE_SECRET: ${{ secrets.LDD_REMINDER_BRIDGE_SECRET }}
+          ZALO_COOKIE: ${{ secrets.ZALO_COOKIE }}
+          ZALO_IMEI: ${{ secrets.ZALO_IMEI }}
+          ZALO_USER_AGENT: ${{ secrets.ZALO_USER_AGENT }}
+        run: |
+          cd "$RUNNER_TEMP/ldd-zalo-test"
+          cat > test.mjs <<'JS'
+          const required = ['LDD_REMINDER_BRIDGE_SECRET','ZALO_COOKIE','ZALO_IMEI','ZALO_USER_AGENT'];
+          if (required.some(key => !process.env[key])) process.exit(10);
+          try {
+            const response = await fetch('https://ywqbaksmmtvwbojcgsdd.supabase.co/functions/v1/ldd-inactivity-reminder', {
+              method: 'POST',
+              headers: {'content-type':'application/json', 'x-reminder-secret':process.env.LDD_REMINDER_BRIDGE_SECRET},
+              body: JSON.stringify({action:'connection_test'}),
+              signal: AbortSignal.timeout(15000)
+            });
+            const data = await response.json();
+            if (response.status !== 400 || data.error !== 'unknown_action') process.exit(20);
+          } catch { process.exit(20); }
+          try {
+            const {Zalo} = await import('mochi-zalo');
+            let cookie = process.env.ZALO_COOKIE;
+            try { cookie = JSON.parse(cookie); } catch {}
+            const api = await new Zalo({logging:false}).login({
+              cookie,
+              imei:process.env.ZALO_IMEI,
+              userAgent:process.env.ZALO_USER_AGENT
+            });
+            if (!api) process.exit(30);
+            process.exit(0);
+          } catch { process.exit(30); }
+          JS
+          # Never expose library output or raw error objects in public logs.
+          code=0
+          timeout 60s node test.mjs >/dev/null 2>&1 || code=$?
+          case "$code" in
+            0) echo "Supabase and Zalo login checks passed. No messages sent." ;;
+            10) echo "::error::Missing one or more required repository secrets."; exit 1 ;;
+            20) echo "::error::Supabase bridge authentication or connection failed."; exit 1 ;;
+            30) echo "::error::Zalo session login failed. Verify the session locally."; exit 1 ;;
+            *) echo "::error::Connection test timed out or failed."; exit 1 ;;
+          esac
