@@ -175,12 +175,10 @@
     function syncPrimaryAction(tab, host) {
         const title = host && host.querySelector('.ldd-study-next h3');
         const priority = title && title.textContent.trim();
-        const source = host && host.querySelector('.ldd-study-next small');
-        const assigned = !!source && source.textContent.trim() === 'Giáo viên giao';
         const description = tab.querySelector('.ldd-ux-intro-copy');
         if (!description) return;
         description.textContent = priority
-            ? (assigned ? 'Bài cần ưu tiên: ' : 'Gợi ý hôm nay: ') + priority
+            ? 'Bài cần ưu tiên: ' + priority
             : 'Chọn việc học bên dưới để bắt đầu.';
     }
 
