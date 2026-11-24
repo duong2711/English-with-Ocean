@@ -1,0 +1,43 @@
+name: LDD one-time student reminder demo
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/ldd-zalo-hv1-demo.yml'
+permissions: {}
+concurrency:
+  group: ldd-zalo-hv1-demo
+  cancel-in-progress: false
+jobs:
+  demo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Send authorized one-time reminder demo
+        env:
+          LDD_REMINDER_BRIDGE_SECRET: ${{ secrets.LDD_REMINDER_BRIDGE_SECRET }}
+        shell: bash
+        run: |
+          node --input-type=module <<'JS'
+          if (!process.env.LDD_REMINDER_BRIDGE_SECRET) process.exit(1);
+          try {
+            const r=await fetch('https://ywqbaksmmtvwbojcgsdd.supabase.co/functions/v1/ldd-zalo-edge-test',{
+              method:'POST',
+              headers:{'content-type':'application/json','x-reminder-secret':process.env.LDD_REMINDER_BRIDGE_SECRET},
+              body:JSON.stringify({action:'hv1_demo_once'}),
+              signal:AbortSignal.timeout(90000)
+            });
+            const data=await r.json().catch(()=>({}));
+            if(r.ok && data.ok===true && data.recipient==='hv1' && data.messages_sent===1){
+              console.log('One authorized demo message accepted by Zalo.');
+            } else {
+              const stages=['database_config','test_claim','already_attempted','hv1_send','login','cookie_format','library_import','missing_zalo_secrets'];
+              console.error('HTTP '+r.status+'; stage: '+(stages.includes(data.stage)?data.stage:'runtime'));
+              if(Number.isSafeInteger(data.zalo_code)) console.error('Zalo error code: '+data.zalo_code);
+              process.exitCode=1;
+            }
+          } catch {
+            console.error('Request failed or timed out.');
+            process.exitCode=1;
+          }
+          JS
