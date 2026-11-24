@@ -8,7 +8,7 @@
         ['ldd-vocab-race-v7-style', 'ldd-vocab-race-v7.css?v=20260919-21'],
         ['ldd-vocab-race-v8-style', 'ldd-vocab-race-v8.css?v=20260919-21'],
         ['ldd-vocab-race-v9-style', 'ldd-vocab-race-v9.css?v=20260919-21'],
-        ['ldd-vocab-race-v10-motion-style', 'ldd-vocab-race-v10-motion.css?v=20261024-clock-motion1']
+        ['ldd-vocab-race-v10-motion-style', 'ldd-vocab-race-v10-motion.css?v=20261125-inner-ui1']
     ];
 
     styles.forEach(function (item) {
