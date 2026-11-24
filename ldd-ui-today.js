@@ -567,7 +567,7 @@
         const total = progress.total, done = Math.min(progress.done, total);
         const percent = total ? Math.floor(done * 100 / total) : 0;
         const level = !total || !progress.reliable ? 0 : percent === 100 ? 4 : percent >= 75 ? 3 : percent >= 50 ? 2 : percent >= 25 ? 1 : 0;
-        const messages = ['Hoàn thành các việc bên dưới nhé!', 'Khởi đầu tốt lắm!', 'Được nửa chặng rồi!', 'Sắp hoàn thành rồi!', 'Hoàn thành hôm nay!'];
+        const messages = ['Hoàn thành ' + total + ' việc bên dưới nhé!', 'Khởi đầu tốt lắm!', 'Được nửa chặng rồi!', 'Sắp hoàn thành rồi!', 'Hoàn thành hôm nay!'];
         const node = document.createElement('div');
         node.className = 'ldd-study-companion';
         node.dataset.milestone = String(level);
@@ -642,10 +642,6 @@
             button.textContent = assigned ? 'Xem bài được giao →' : 'Bắt đầu luyện →';
             button.addEventListener('click', () => navigateToday(item.target));
             copy.appendChild(button);
-            const hint = document.createElement('span');
-            hint.className = 'ldd-daily-progress-hint';
-            hint.textContent = 'Hoàn thành mỗi mục (kể cả các mục bên dưới) để tăng 1 việc.';
-            copy.appendChild(hint);
         }
         box.append(copy, buildStudyMascot(progress));
         return box;
