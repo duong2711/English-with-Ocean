@@ -149,6 +149,56 @@
 
     // Load only image pointers for the selected grade (max 48 rows), once per visit.
     // Keep the static preview snapshot as an immediate, offline-safe fallback.
+
+    const COMIC_PROJECT = 'ywqbaksmmtvwbojcgsdd';
+    const COMIC_PUBLISHABLE_KEY = 'sb_publishable_AQZ6Jc8ZGID7kfRYPe9fLQ_Wmy7ekp_';
+
+    function comicSessionToken() {
+        try {
+            const saved = JSON.parse(localStorage.getItem('sb-' + COMIC_PROJECT + '-auth-token') || 'null');
+            return (saved && (saved.access_token || saved.currentSession?.access_token || saved[0]?.access_token)) || '';
+        } catch (_) { return ''; }
+    }
+
+    function comicRequestHeaders() {
+        const token = comicSessionToken();
+        if (!token) throw Error('Bạn cần đăng nhập để lưu điểm học tập.');
+        return {
+            apikey: COMIC_PUBLISHABLE_KEY,
+            Authorization: 'Bearer ' + token,
+            'Content-Type': 'application/json'
+        };
+    }
+
+    async function comicRpc(name, payload) {
+        const response = await fetch('https://' + COMIC_PROJECT + '.supabase.co/rest/v1/rpc/' + encodeURIComponent(name), {
+            method: 'POST',
+            headers: comicRequestHeaders(),
+            body: JSON.stringify(payload)
+        });
+        const data = await response.json().catch(() => null);
+        if (!response.ok) throw Error(data?.message || data?.details || 'Không lưu được điểm truyện tranh (' + response.status + ').');
+        return Array.isArray(data) ? (data[0] || {}) : (data || {});
+    }
+
+    async function gradeComicFrame(payload) {
+        const response = await fetch('https://' + COMIC_PROJECT + '.supabase.co/functions/v1/ai-proxy', {
+            method: 'POST',
+            headers: comicRequestHeaders(),
+            body: JSON.stringify(Object.assign({task:'grade_comic_translation'}, payload))
+        });
+        const data = await response.json().catch(() => null);
+        if (!response.ok || data?.error) {
+            throw Error(data?.error || 'AI chưa chấm được bản dịch (' + response.status + ').');
+        }
+        return data;
+    }
+
+    function normalizeComicLookupWord(value) {
+        return String(value || '').toLowerCase().normalize('NFKC')
+            .replace(/^[^\\p{L}\\p{N}]+|[^\\p{L}\\p{N}]+$/gu, '').trim();
+    }
+
     async function fetchComicCovers(grade) {
         const project = 'ywqbaksmmtvwbojcgsdd';
         const apiKey = 'sb_publishable_AQZ6Jc8ZGID7kfRYPe9fLQ_Wmy7ekp_';
@@ -743,6 +793,86 @@
             const dialog = el('dialog', 'ldd-comic-overlay');
             dialog.setAttribute('aria-label', 'Truyện lớp ' + grade + ', Unit ' + unit.number);
             let lookupHome = null;
+            let frameObserver = null;
+            const frameSeenTimers = new Map();
+            const frameVisibleSince = new Map();
+            const lookedUpWordsByFrame = new Map();
+            const wordRewardNotes = new Map();
+            const claimedWordRewardFrames = new Set();
+
+            function noteBoldWordLookup(word, slide) {
+                const frameIndex = Number(slide?.dataset?.frameIndex);
+                const normalized = normalizeComicLookupWord(word);
+                if (!Number.isInteger(frameIndex) || frameIndex < 1 || !normalized) return;
+                const words = lookedUpWordsByFrame.get(frameIndex) || new Set();
+                words.add(normalized);
+                lookedUpWordsByFrame.set(frameIndex, words);
+            }
+
+            async function claimFrameWordRewards(frameIndex) {
+                if (claimedWordRewardFrames.has(frameIndex)) return;
+                claimedWordRewardFrames.add(frameIndex);
+                const note = wordRewardNotes.get(frameIndex);
+                try {
+                    const words = Array.from(lookedUpWordsByFrame.get(frameIndex) || []);
+                    const result = await comicRpc('record_comic_frame_word_rewards', {
+                        p_grade: grade,
+                        p_unit_id: unit.id,
+                        p_frame_index: frameIndex,
+                        p_looked_up_words: words
+                    });
+                    const points = Number(result.points_awarded || 0);
+                    if (note) {
+                        note.classList.remove('is-error');
+                        note.classList.add(points > 0 ? 'is-awarded' : 'is-checked');
+                        note.textContent = points > 0
+                            ? '✨ Bạn nhận +' + points + ' điểm chăm chỉ từ những từ in đậm chưa tra.'
+                            : 'Đã ghi nhận khung truyện. Các từ in đậm bạn đã tra không được cộng điểm.';
+                    }
+                    if (points > 0) document.dispatchEvent(new CustomEvent('ldd:today-refresh'));
+                } catch (error) {
+                    claimedWordRewardFrames.delete(frameIndex);
+                    if (note) {
+                        note.classList.add('is-error');
+                        note.textContent = 'Chưa lưu được điểm từ vựng. Hãy cuộn sang khung khác rồi quay lại để thử lại.';
+                    }
+                    console.warn('[LDD comic word points]', error);
+                }
+            }
+
+            function startComicFrameObserver(deck) {
+                if (typeof IntersectionObserver !== 'function') return;
+                if (frameObserver) frameObserver.disconnect();
+                frameObserver = new IntersectionObserver(entries => {
+                    entries.forEach(entry => {
+                        const frameIndex = Number(entry.target.dataset.frameIndex);
+                        if (!Number.isInteger(frameIndex)) return;
+                        if (entry.isIntersecting && entry.intersectionRatio >= 0.68) {
+                            if (!frameVisibleSince.has(frameIndex)) frameVisibleSince.set(frameIndex, Date.now());
+                            if (!claimedWordRewardFrames.has(frameIndex) && !frameSeenTimers.has(frameIndex)) {
+                                const timer = setTimeout(() => {
+                                    frameSeenTimers.delete(frameIndex);
+                                    void claimFrameWordRewards(frameIndex);
+                                }, 2400);
+                                frameSeenTimers.set(frameIndex, timer);
+                            }
+                        } else {
+                            const timer = frameSeenTimers.get(frameIndex);
+                            if (timer) {
+                                clearTimeout(timer);
+                                frameSeenTimers.delete(frameIndex);
+                            }
+                            const since = frameVisibleSince.get(frameIndex);
+                            frameVisibleSince.delete(frameIndex);
+                            if (since && Date.now() - since >= 1000) {
+                                void claimFrameWordRewards(frameIndex);
+                            }
+                        }
+                    });
+                }, {root:deck, threshold:[0,0.68,1]});
+                deck.querySelectorAll('.ldd-comic-swipe-slide').forEach(slide => frameObserver.observe(slide));
+            }
+
             function restoreLookup() {
                 if (!lookupHome) return;
                 const {popup, parent, next} = lookupHome;
@@ -773,6 +903,9 @@
             });
             dialog.addEventListener('close', () => {
                 restoreLookup();
+                if (frameObserver) { frameObserver.disconnect(); frameObserver = null; }
+                frameSeenTimers.forEach(timer => clearTimeout(timer));
+                frameSeenTimers.clear();
                 if (request === comicRequest) comicRequest += 1;
                 if (readerZoom === dialog) readerZoom = null;
                 dialog.remove();
@@ -781,6 +914,8 @@
             deck.addEventListener('click', event => {
                 const word = event.target.closest('.tappable-word');
                 if (!word) return;
+                const slide = word.closest('.ldd-comic-swipe-slide');
+                if (word.closest('strong,b') && slide) noteBoldWordLookup(word.textContent, slide);
                 if (window.LDDTextActions?.presentWordElement?.(word)) {
                     event.preventDefault(); event.stopPropagation();
                     return;
@@ -872,9 +1007,89 @@
                     text.append(comicText(frame.content_html));
                     text.dataset.vocabContext = text.textContent;
                     text.dataset.vocabSource = 'Truyện học đường – Lớp ' + grade + ' – Unit ' + unit.number;
+
+                    const translateBox = el('section', 'ldd-comic-translation-box');
+                    const translateHead = el('div', 'ldd-comic-translation-head');
+                    translateHead.append(
+                        el('strong', '', '✍️ Tự dịch khung truyện'),
+                        el('small', '', 'Viết bản dịch tiếng Việt của riêng bạn, sau đó nhờ AI chấm.')
+                    );
+                    const textarea = document.createElement('textarea');
+                    textarea.className = 'ldd-comic-translation-input';
+                    textarea.rows = 4;
+                    textarea.maxLength = 3000;
+                    textarea.placeholder = 'Nhập bản dịch tiếng Việt của khung truyện này…';
+                    textarea.setAttribute('aria-label', 'Bản dịch tiếng Việt khung truyện ' + (index + 1));
+                    const submit = el('button', 'ldd-comic-translation-submit', '🤖 AI chấm bản dịch');
+                    submit.type = 'button';
+                    const feedback = el('div', 'ldd-comic-translation-feedback');
+                    feedback.hidden = true;
+                    submit.addEventListener('click', async () => {
+                        const translationValue = textarea.value.trim();
+                        if (!translationValue) {
+                            feedback.hidden = false;
+                            feedback.className = 'ldd-comic-translation-feedback is-retry';
+                            feedback.textContent = 'Bạn hãy tự dịch khung truyện trước khi gửi AI chấm nhé.';
+                            textarea.focus();
+                            return;
+                        }
+                        submit.disabled = true;
+                        submit.textContent = '⏳ AI đang chấm…';
+                        feedback.hidden = true;
+                        try {
+                            const response = await gradeComicFrame({
+                                grade,
+                                unit_id: unit.id,
+                                frame_index: Number(frame.frame_index),
+                                translation: translationValue
+                            });
+                            const result = response.result || {};
+                            const quality = String(result.quality || 'weak');
+                            const good = quality === 'good';
+                            feedback.hidden = false;
+                            feedback.className = 'ldd-comic-translation-feedback ' + (good ? 'is-good' : 'is-retry');
+                            feedback.replaceChildren();
+                            const status = el('strong', 'ldd-comic-translation-status',
+                                good
+                                    ? (result.awarded_now ? '✅ ĐẠT YÊU CẦU · +5 ĐIỂM CHĂM CHỈ' : '✅ ĐẠT YÊU CẦU · ĐÃ GHI NHẬN TRƯỚC ĐÓ')
+                                    : '📝 CHƯA ĐẠT · CẦN CHỈNH SỬA');
+                            const comment = el('p', '', String(result.comment || ''));
+                            feedback.append(status, comment);
+                            if (result.translation) {
+                                const sample = document.createElement('details');
+                                sample.className = 'ldd-comic-translation-reference';
+                                const summary = document.createElement('summary');
+                                summary.textContent = 'Xem bản dịch tham khảo';
+                                sample.append(summary, el('p', '', String(result.translation)));
+                                feedback.append(sample);
+                            }
+                            if (good) {
+                                textarea.disabled = true;
+                                submit.disabled = true;
+                                submit.textContent = result.awarded_now ? '🏆 Đã nhận +5 điểm' : 'Đã hoàn thành khung này';
+                                if (result.awarded_now) document.dispatchEvent(new CustomEvent('ldd:today-refresh'));
+                            } else {
+                                submit.disabled = false;
+                                submit.textContent = '↻ Thử lại sau khi sửa';
+                            }
+                        } catch (error) {
+                            feedback.hidden = false;
+                            feedback.className = 'ldd-comic-translation-feedback is-error';
+                            feedback.textContent = error?.message || 'Không kết nối được hệ thống chấm AI. Hãy thử lại.';
+                            submit.disabled = false;
+                            submit.textContent = 'Thử chấm lại';
+                        }
+                    });
+                    translateBox.append(translateHead, textarea, submit, feedback);
+                    const rewardNote = el('div', 'ldd-comic-word-reward-note',
+                        '📖 Đọc khung này: mỗi từ in đậm chưa tra được +2 điểm chăm chỉ.');
+                    rewardNote.dataset.frameIndex = String(frame.frame_index);
+                    wordRewardNotes.set(Number(frame.frame_index), rewardNote);
+                    text.append(translateBox, rewardNote);
                     slide.append(text);
                     deck.append(slide);
                 });
+                startComicFrameObserver(deck);
             }
             dialog.showModal();
             deck.focus({preventScroll:true});
