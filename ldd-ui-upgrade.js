@@ -51,12 +51,14 @@
         ensureStylesheet('ldd-ctest-student-groups-style', 'ldd-ctest-student-groups.css?v=20261116-grouped1');
         ensureStylesheet('ldd-grade7-book-tests-style', 'ldd-grade7-book-tests.css?v=20261124-mlh7-annotation-stable3');
 
+        ensureStylesheet('ldd-colorful-cards-style', 'ldd-colorful-cards.css?v=20261125-cards1');
+
         // Load first. Dynamic scripts are async by default, so ensureScript sets async=false
         // to preserve insertion order and let all helper modules benefit from the guard.
         ensureScript('ldd-egress-guard-script', 'ldd-egress-guard.js?v=1');
         ensureScript('ldd-vocab-dedup-script', 'ldd-vocab-dedup.js?v=1');
         ensureScript('ldd-pronunciation-fix-script', 'ldd-pronunciation-fix.js?v=20261104-flash-mic4');
-        ensureScript('ldd-vocab-grammar-script', 'ldd-ui-vocab-grammar.js?v=20261124-compact-catalog1');
+        ensureScript('ldd-vocab-grammar-script', 'ldd-ui-vocab-grammar.js?v=20261125-colorful-cards1');
         ensureScript('ldd-home-phonetics-script', 'ldd-ui-home-phonetics.js?v=20261124-daily-goals4');
         ensureScript('ldd-student-presence-script', 'ldd-student-site-presence.js?v=20261124-score-audit1');
         ensureScript('ldd-mascot-oci-script', 'ldd-mascot-oci.js?v=20261124-random-news1');
