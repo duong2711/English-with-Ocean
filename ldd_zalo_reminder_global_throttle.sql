@@ -1,4 +1,5 @@
--- Stronger safeguard: serialize claims globally and prevent message bursts.\ncreate or replace function public.ldd_claim_single_zalo_inactivity_reminder()
+-- Stronger safeguard: serialize claims globally and prevent message bursts.
+create or replace function public.ldd_claim_single_zalo_inactivity_reminder()
 returns table(reminder_id uuid, recipient_uid text, message_text text)
 language plpgsql security definer set search_path = pg_catalog, public
 as $function$
