@@ -745,3 +745,17 @@ body:has(.ldd-ent-upload-dialog[open]) { overflow: hidden; }
     #tab-giai-tri .ldd-comic-translation-box { padding: 14px; border-radius: 15px; }
     #tab-giai-tri .ldd-comic-translation-submit { width: 100%; justify-self: stretch; }
 }
+/* Ensure the dubbing folder card follows the same left-aligned layout as its siblings. */
+#tab-giai-tri #dub-folder-card {
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    text-align: left !important;
+}
+#tab-giai-tri #dub-folder-card > * {
+    align-self: flex-start;
+    text-align: left !important;
+}
+#tab-giai-tri #dub-folder-card > strong,
+#tab-giai-tri #dub-folder-card > small {
+    width: 100%;
+}
