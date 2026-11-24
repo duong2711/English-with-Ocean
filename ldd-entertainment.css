@@ -745,17 +745,23 @@ body:has(.ldd-ent-upload-dialog[open]) { overflow: hidden; }
     #tab-giai-tri .ldd-comic-translation-box { padding: 14px; border-radius: 15px; }
     #tab-giai-tri .ldd-comic-translation-submit { width: 100%; justify-self: stretch; }
 }
-/* Ensure the dubbing folder card follows the same left-aligned layout as its siblings. */
-#tab-giai-tri #dub-folder-card {
+
+/* Match the dubbing tile's content alignment to the other entertainment tiles. */
+#dub-folder-card {
+    display: flex !important;
+    flex-flow: column nowrap !important;
     align-items: flex-start !important;
     justify-content: flex-start !important;
     text-align: left !important;
+    padding: 20px !important;
+    gap: 8px !important;
 }
-#tab-giai-tri #dub-folder-card > * {
-    align-self: flex-start;
+#dub-folder-card > .ldd-ent-root-emoji,
+#dub-folder-card > strong,
+#dub-folder-card > small {
+    display: block !important;
+    align-self: flex-start !important;
+    width: 100% !important;
+    margin-inline: 0 !important;
     text-align: left !important;
-}
-#tab-giai-tri #dub-folder-card > strong,
-#tab-giai-tri #dub-folder-card > small {
-    width: 100%;
 }
