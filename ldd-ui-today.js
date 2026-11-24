@@ -527,7 +527,9 @@
                 if (Object.prototype.hasOwnProperty.call(raw, target)) {
                     // Count the reduction in outstanding items, not a guessed number of clicks.
                     if (!Number.isFinite(entry.initial)) entry.initial = raw[target];
-                    if (entry.initial - raw[target] >= entry.goal || raw[target] === 0) entry.done = true;
+                    const remaining = Math.max(0, Math.min(raw[target], entry.goal, entry.goal - Math.max(0, entry.initial - raw[target])));
+                    if (remaining === 0) entry.done = true;
+                    else if (!entry.done) item.count = remaining;
                 } else {
                     entry.done = false;
                 }
@@ -598,14 +600,31 @@
                 <svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="rgba(255,255,255,.2)" stroke-width="5"/><circle class="ldd-companion-fill" cx="32" cy="32" r="27" fill="none" stroke="#fff0ae" stroke-width="5" stroke-linecap="round" pathLength="100" transform="rotate(-90 32 32)"/></svg>
                 <strong></strong>
             </div>
-            <span class="ldd-companion-message"></span>`;
+            <span class="ldd-companion-count"></span><span class="ldd-companion-message"></span>`;
         const ring = node.querySelector('.ldd-companion-ring');
         if (progress.reliable) ring.setAttribute('aria-valuenow', String(percent));
         ring.setAttribute('aria-valuetext', progress.reliable ? done + '/' + total + ' đầu việc hoàn thành' : 'Đang cập nhật tiến độ');
         node.querySelector('.ldd-companion-fill').setAttribute('stroke-dasharray', percent + ' 100');
-        ring.querySelector('strong').textContent = progress.reliable ? done + '/' + total : '—';
+        ring.querySelector('strong').textContent = progress.reliable && total ? done + '/' + total : '—';
+        node.querySelector('.ldd-companion-count').textContent = progress.reliable && total ? 'Việc đã hoàn thành' : '';
         node.querySelector('.ldd-companion-message').textContent = !progress.reliable ? 'Đang cập nhật' : !total ? 'Chưa có nhiệm vụ' : messages[level];
         return node;
+    }
+
+    // Every displayed task is one step on the companion's daily progress ring.
+    function dailyRequirement(item) {
+        const n = item.count;
+        switch (item.target) {
+            case 'vocab-poor': return 'Luyện lại ' + n + ' từ, đạt từ 60% trở lên';
+            case 'vocab-unpronounced': return 'Hoàn thành phát âm ' + n + ' từ chưa luyện';
+            case 'ipa': return 'Hoàn thành ghi âm ' + n + ' âm IPA chưa luyện';
+            case 'news': return 'Đọc xong 1 bài báo';
+            case 'tests': return 'Hoàn thành ' + n + ' bài kiểm tra được giao';
+            case 'vocabtest': return 'Hoàn thành bài kiểm tra từ vựng';
+            case 'conj': return 'Hoàn thành 1 lượt luyện liên từ';
+            case 'podcast': return 'Hoàn thành giai đoạn 1 của 1 podcast';
+            default: return item.note;
+        }
     }
 
     function buildNextTask(item, progress) {
@@ -617,15 +636,17 @@
         const assigned = item && item.target === 'tests';
         copy.querySelector('small').textContent = assigned ? 'Giáo viên giao' : 'Việc hôm nay';
         copy.querySelector('h3').textContent = item ? item.title : progress.total && progress.reliable ? 'Hoàn thành rồi!' : 'Không có nhiệm vụ đang chờ';
-        copy.querySelector('p').textContent = item ? (assigned
-            ? 'Em có ' + item.count + ' bài đang chờ. Mở danh sách để chọn bài làm trước.'
-            : item.note + '.') : 'Em có thể luyện thêm theo sở thích.';
+        copy.querySelector('p').textContent = item ? dailyRequirement(item) + '.' : 'Em có thể luyện thêm theo sở thích.';
         if (item) {
             const button = document.createElement('button');
             button.type = 'button';
             button.textContent = assigned ? 'Xem bài được giao →' : 'Bắt đầu luyện →';
             button.addEventListener('click', () => navigateToday(item.target));
             copy.appendChild(button);
+            const hint = document.createElement('span');
+            hint.className = 'ldd-daily-progress-hint';
+            hint.textContent = 'Hoàn thành mỗi mục (kể cả các mục bên dưới) để tăng 1 việc.';
+            copy.appendChild(hint);
         }
         box.append(copy, buildStudyMascot(progress));
         return box;
@@ -742,12 +763,6 @@
             });
         }
         if (activeGrid.childElementCount) {
-            if (priority) {
-                const label = document.createElement('h3');
-                label.className = 'ldd-study-more';
-                label.textContent = 'Em có thể luyện thêm';
-                host.appendChild(label);
-            }
             host.appendChild(activeGrid);
         }
 
@@ -775,6 +790,7 @@
         button.type = 'button';
         button.className = 'ldd-daily-mission' + (done ? ' is-done' : '');
         button.dataset.todayTarget = item.target;
+        if (!done) button.setAttribute('aria-label', item.title + '. ' + dailyRequirement(item) + '. Hoàn thành để tăng 1 việc.');
         button.innerHTML =
             '<span class="ldd-daily-mission-icon"></span>' +
             '<span class="ldd-daily-mission-copy"><strong></strong><small></small></span>' +
@@ -783,7 +799,7 @@
 
         button.querySelector('.ldd-daily-mission-icon').textContent = item.icon;
         button.querySelector('strong').textContent = item.title;
-        button.querySelector('small').textContent = item.note;
+        button.querySelector('small').textContent = done ? 'Đã tính vào tiến độ hôm nay' : dailyRequirement(item);
         button.querySelector('.ldd-daily-mission-goal').textContent = done
             ? '✓ Xong'
             : item.count + ' ' + item.unit;
