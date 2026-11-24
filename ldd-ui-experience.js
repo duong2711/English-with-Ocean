@@ -53,15 +53,9 @@
             title.insertAdjacentElement('afterend', copy);
         }
 
+        // Keep the greeting free of duplicate CTAs. The recommended-task card
+        // directly below already contains the actual action for that lesson.
         const actions = make('div', 'ldd-ux-hero-actions');
-        const next = make('button', 'ldd-ux-cta ldd-ux-cta-primary', icon('arrow') + '<span>Chọn bài để học</span>');
-        next.type = 'button';
-        next.addEventListener('click', function () {
-            const priority = tab.querySelector('.ldd-study-next button');
-            if (priority) priority.click();
-            else goTo('tab-tu-vung');
-        });
-        actions.appendChild(next);
         intro.appendChild(actions);
 
         const cards = [
@@ -184,15 +178,10 @@
         const source = host && host.querySelector('.ldd-study-next small');
         const assigned = !!source && source.textContent.trim() === 'Giáo viên giao';
         const description = tab.querySelector('.ldd-ux-intro-copy');
-        const action = tab.querySelector('.ldd-ux-cta-primary span');
-        if (!description || !action) return;
-        if (!priority) {
-            description.textContent = 'Chọn mục học bên dưới để bắt đầu.';
-            action.textContent = 'Mở kho từ vựng';
-            return;
-        }
-        description.textContent = (assigned ? 'Bài cần ưu tiên: ' : 'Gợi ý hôm nay: ') + priority;
-        action.textContent = assigned ? 'Xem bài được giao' : priority;
+        if (!description) return;
+        description.textContent = priority
+            ? (assigned ? 'Bài cần ưu tiên: ' : 'Gợi ý hôm nay: ') + priority
+            : 'Chọn việc học bên dưới để bắt đầu.';
     }
 
     function simplifyDailyTasks(host) {
