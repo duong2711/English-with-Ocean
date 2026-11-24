@@ -58,7 +58,7 @@
         ensureScript('ldd-pronunciation-fix-script', 'ldd-pronunciation-fix.js?v=20261104-flash-mic4');
         ensureScript('ldd-vocab-grammar-script', 'ldd-ui-vocab-grammar.js?v=20261124-compact-catalog1');
         ensureScript('ldd-home-phonetics-script', 'ldd-ui-home-phonetics.js?v=20261124-daily-goals4');
-        ensureScript('ldd-student-presence-script', 'ldd-student-site-presence.js?v=20261124-reminder-presence1');
+        ensureScript('ldd-student-presence-script', 'ldd-student-site-presence.js?v=20261124-score-audit1');
         ensureScript('ldd-mascot-oci-script', 'ldd-mascot-oci.js?v=20261124-random-news1');
         ensureScript('ldd-student-grade-script', 'ldd-student-grade.js?v=20261110-university-track1');
         ensureScript('ldd-thcs-vocab-reset-script', 'ldd-thcs-vocab-reset.js?v=11');
@@ -72,7 +72,7 @@
         ensureScript('ldd-entertainment-data-script', 'ldd-entertainment-data.js?v=20261027-wimpy1');
         ensureScript('ldd-entertainment-script', 'ldd-entertainment.js?v=20261122-universal-three-actions1');
         ensureScript('ldd-film-timing-script', 'ldd-film-timing.js?v=20261029-transcript-import1');
-        ensureScript('ldd-film-cloze-script', 'ldd-film-cloze.js?v=20261116-script-visibility1');
+        ensureScript('ldd-film-cloze-script', 'ldd-film-cloze.js?v=20261124-score-audit1');
         ensureScript('ldd-text-actions-script', 'ldd-text-actions.js?v=20261124-mlh7-all12-final2');
         ensureScript('ldd-test-annotations-script', 'ldd-test-annotations.js?v=20261124-mlh7-annotations1');
         ensureScript('ldd-grade7-book-tests-data', 'ldd-grade7-book-tests-data.js?v=20261124-mlh7-1');
