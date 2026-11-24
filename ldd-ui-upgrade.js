@@ -45,7 +45,7 @@
         ensureStylesheet('ldd-game-grammar-style', 'ldd-game-grammar.css?v=20261114-grammar1');
         ensureStylesheet('ldd-word-cloud-style', 'ldd-word-cloud.css?v=20261115-five-choices1');
         ensureStylesheet('ldd-quick-lookup-style', 'ldd-quick-lookup.css?v=20261025-valid2');
-        ensureStylesheet('ldd-entertainment-style', 'ldd-entertainment.css?v=20261125-dub-card1');
+        ensureStylesheet('ldd-entertainment-style', 'ldd-entertainment.css?v=20261125-dub-left-align');
         ensureStylesheet('ldd-film-cloze-style', 'ldd-film-cloze.css?v=20261116-film-cue-padding3');
         ensureStylesheet('ldd-text-actions-style', 'ldd-text-actions.css?v=20261122-universal-three-actions1');
         ensureStylesheet('ldd-ctest-student-groups-style', 'ldd-ctest-student-groups.css?v=20261116-grouped1');
