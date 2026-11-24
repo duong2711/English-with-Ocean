@@ -391,7 +391,7 @@
     window.LDDOciNewsPreview = async function (articleId, expectedUid) {
         const id = String(articleId || '');
         if (!/^\d+$/.test(id) || !getToken() || userId() !== expectedUid) return null;
-        const rows = await query('news_articles', 'id,title,thumb,content', { id: 'eq.' + id, limit: '1' });
+        const rows = await query('news_articles', 'id,title,thumb', { id: 'eq.' + id, limit: '1' });
         if (userId() !== expectedUid) return null;
         return rows[0] || null;
     };
