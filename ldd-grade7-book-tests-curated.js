@@ -69,10 +69,10 @@ for(const test of bank.tests){
   if(!section||section.questions.length!==items.length)continue;
   for(let i=0;i<items.length;i++){
    const record=items[i];
-   const options=Array.isArray(record[0])?record:record[1];
+   const options=Array.isArray(record[1])?record[1]:record;
    if(options.length!==4)continue;
    section.questions[i].options=options;
-   if(!Array.isArray(record[0]))
+   if(Array.isArray(record[1]))
      section.questions[i].text=record[0];
    enriched++;
   }
