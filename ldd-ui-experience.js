@@ -48,26 +48,20 @@
 
         const title = intro.querySelector('.ldd-home-title');
         if (title) {
-            const kicker = make('span', 'ldd-ux-kicker', icon('spark') + ' HỌC TỪNG BƯỚC');
-            intro.insertBefore(kicker, title);
             const copy = make('p', 'ldd-ux-intro-copy');
-            copy.textContent = 'Bài giáo viên giao và những phần cần ôn được sắp xếp ngay bên dưới. Cứ bắt đầu từ việc quan trọng nhất.';
+            copy.textContent = 'Nhiệm vụ cần làm được xếp ngay bên dưới.';
             title.insertAdjacentElement('afterend', copy);
         }
 
         const actions = make('div', 'ldd-ux-hero-actions');
-        const next = make('button', 'ldd-ux-cta ldd-ux-cta-primary', icon('arrow') + '<span>Bắt đầu học</span>');
+        const next = make('button', 'ldd-ux-cta ldd-ux-cta-primary', icon('arrow') + '<span>Chọn bài để học</span>');
         next.type = 'button';
         next.addEventListener('click', function () {
             const priority = tab.querySelector('.ldd-study-next button');
             if (priority) priority.click();
             else goTo('tab-tu-vung');
         });
-        const tests = make('button', 'ldd-ux-cta', icon('book') + '<span>Hướng dẫn sử dụng</span>');
-        tests.type = 'button';
-        tests.addEventListener('click', function () { goTo('tab-huong-dan'); });
         actions.appendChild(next);
-        actions.appendChild(tests);
         intro.appendChild(actions);
 
         const cards = [
@@ -184,8 +178,27 @@
 
     // Progressive disclosure: no task is deleted or disabled. Hidden tasks
     // remain accessible through a clearly labeled keyboard-operable button.
+    function syncPrimaryAction(tab, host) {
+        const title = host && host.querySelector('.ldd-study-next h3');
+        const priority = title && title.textContent.trim();
+        const source = host && host.querySelector('.ldd-study-next small');
+        const assigned = !!source && source.textContent.trim() === 'Giáo viên giao';
+        const description = tab.querySelector('.ldd-ux-intro-copy');
+        const action = tab.querySelector('.ldd-ux-cta-primary span');
+        if (!description || !action) return;
+        if (!priority) {
+            description.textContent = 'Chọn mục học bên dưới để bắt đầu.';
+            action.textContent = 'Mở kho từ vựng';
+            return;
+        }
+        description.textContent = (assigned ? 'Bài cần ưu tiên: ' : 'Gợi ý hôm nay: ') + priority;
+        action.textContent = assigned ? 'Xem bài được giao' : priority;
+    }
+
     function simplifyDailyTasks(host) {
         if (!host) return;
+        const tab = document.getElementById('tab-trang-chu');
+        if (tab) syncPrimaryAction(tab, host);
         const weekTitle = host.querySelector('.ldd-study-week h3');
         if (weekTitle && weekTitle.textContent === '7 ngày vừa qua') {
             // Only reading, podcast and IPA-related activity currently feeds this chart.
