@@ -110,13 +110,17 @@
             feedbackNext = 0;
             if (panel) { panel.remove(); panel = null; }
         }
-        const home = document.querySelector('#tab-trang-chu.active .ldd-home-dashboard');
-        if (!token || !home || document.hidden || feedbackBusy || Date.now() < feedbackNext) return;
+        const tools = document.querySelector('#tab-trang-chu.active .ldd-home-dashboard .ldd-home-tools');
+        if (!token || !tools || document.hidden) return;
+        // Keep the existing feedback panel directly under the four home actions.
+        // Moving the DOM node preserves its loaded feedback and avoids a second request.
+        if (panel && panel.parentElement !== tools) tools.appendChild(panel);
+        if (feedbackBusy || Date.now() < feedbackNext) return;
         if (!panel) {
             panel = document.createElement('section');
             panel.id = 'ldd-home-study-feedback';
             panel.innerHTML = '<h3>Nhận xét từ bài kiểm tra</h3><div aria-live="polite">Đang xem kết quả của em…</div>';
-            home.insertBefore(panel, home.querySelector('.ldd-today-shell') || home.firstChild);
+            tools.appendChild(panel);
         }
         const body = panel.querySelector('div');
         const version = feedbackVersion;
