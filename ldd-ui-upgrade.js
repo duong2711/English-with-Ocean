@@ -37,7 +37,7 @@
         ensureStylesheet('ldd-roadmap-news-style', 'ldd-ui-roadmap-news.css?v=2.4');
         ensureStylesheet('ldd-vocab-grammar-style', 'ldd-ui-vocab-grammar.css?v=20261124-compact-catalog1');
         ensureStylesheet('ldd-home-phonetics-style', 'ldd-ui-home-phonetics.css?v=20261124-feedback-right1');
-        ensureStylesheet('ldd-mascot-oci-style', 'ldd-mascot-oci.css?v=20261124-tight-buttons2');
+        ensureStylesheet('ldd-mascot-oci-style', 'ldd-mascot-oci.css?v=20261124-mobile-actions1');
         ensureStylesheet('ldd-timers-style', 'ldd-ui-timers.css?v=2.2');
         ensureStylesheet('ldd-student-grade-style', 'ldd-student-grade.css?v=1');
         ensureStylesheet('ldd-vocab-race-style', 'ldd-vocab-race.css?v=3');
@@ -59,7 +59,7 @@
         ensureScript('ldd-vocab-grammar-script', 'ldd-ui-vocab-grammar.js?v=20261124-compact-catalog1');
         ensureScript('ldd-home-phonetics-script', 'ldd-ui-home-phonetics.js?v=20261124-daily-goals4');
         ensureScript('ldd-student-presence-script', 'ldd-student-site-presence.js?v=20261124-reminder-presence1');
-        ensureScript('ldd-mascot-oci-script', 'ldd-mascot-oci.js?v=20261124-tight-buttons2');
+        ensureScript('ldd-mascot-oci-script', 'ldd-mascot-oci.js?v=20261124-mobile-actions1');
         ensureScript('ldd-student-grade-script', 'ldd-student-grade.js?v=20261110-university-track1');
         ensureScript('ldd-thcs-vocab-reset-script', 'ldd-thcs-vocab-reset.js?v=11');
         ensureScript('ldd-fast-progress-script', 'ldd-fast-progress.js?v=1');
