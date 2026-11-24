@@ -35,12 +35,6 @@
     line-height: 1.5;
     font-weight: 500;
 }
-#tab-giai-tri #dub-folder-card {
-    display: flex;
-    align-items: center;
-    min-height: 118px;
-    padding: 20px;
-}
 #tab-giai-tri .ldd-ent-view {
     display: block;
     width: 100%;
@@ -293,7 +287,6 @@
 @media (max-width: 620px) {
     #tab-giai-tri .ldd-entertainment-root-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
     #tab-giai-tri .ldd-entertainment-root-card { min-height: 134px; padding: 14px; }
-    #tab-giai-tri #dub-folder-card { min-height: 134px; padding: 14px; }
     #tab-giai-tri .ldd-ent-root-emoji { font-size: 25px; }
     #tab-giai-tri .ldd-entertainment-root-card strong { font-size: 15px; }
     #tab-giai-tri .ldd-entertainment-root-card small { font-size: 11.5px; }
