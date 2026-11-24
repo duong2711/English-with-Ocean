@@ -194,10 +194,18 @@
         next.addEventListener('click',function(){void showNext();});
         primary.addEventListener('click',function(){void openCurrent();});
         controls.append(primary,next);
-        // The buttons remain inside the right column when the suggestion changes.
-        // Only the illustration and text update, preserving keyboard focus.
+        // Mobile: move the same controls below both columns. Desktop keeps
+        // the existing right-column layout. No duplicate buttons or handlers.
         details.append(heading,headline,summary,controls);
         wrap.append(artHost,details);
+        const compact=window.matchMedia('(max-width: 600px)');
+        function placeControls(){
+            const target=compact.matches?wrap:details;
+            if(controls.parentElement!==target)target.append(controls);
+        }
+        placeControls();
+        if(compact.addEventListener)compact.addEventListener('change',placeControls);
+        else if(compact.addListener)compact.addListener(placeControls);
         preview.append(wrap);
         body.append(preview);
         welcome.append(body);
