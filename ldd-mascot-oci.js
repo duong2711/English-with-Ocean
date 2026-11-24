@@ -183,7 +183,6 @@
         const artHost=el('div','ldd-oci-preview-art');
         const details=el('div','ldd-oci-preview-copy');
         const heading=el('strong','ldd-oci-name','Oci gợi ý cho bạn');
-        const category=el('span','ldd-oci-kind');
         const headline=el('strong','ldd-oci-headline');
         const summary=el('p','ldd-oci-tip');
         details.setAttribute('aria-live','polite');
@@ -197,19 +196,18 @@
         controls.append(primary,next);
         // The buttons remain inside the right column when the suggestion changes.
         // Only the illustration and text update, preserving keyboard focus.
-        details.append(heading,category,headline,summary,controls);
+        details.append(heading,headline,summary,controls);
         wrap.append(artHost,details);
         preview.append(wrap);
         body.append(preview);
         welcome.append(body);
         intro.appendChild(welcome);
-        nodes={welcome,preview,artHost,category,headline,summary,primary,next};
+        nodes={welcome,preview,artHost,headline,summary,primary,next};
         return true;
     }
-    function paint(kind,title,desc,art,action) {
+    function paint(title,desc,art,action) {
         if (!nodes) return;
         nodes.artHost.replaceChildren(art);
-        nodes.category.textContent=kind;
         nodes.headline.textContent=short(title,110);
         nodes.summary.textContent=short(desc,218);
         nodes.primary.disabled=false;
@@ -245,7 +243,6 @@
         state.current=selected;
         nodes.primary.disabled=true;
         if(selected.type==='news') {
-            nodes.category.textContent='📰 BÀI CHƯA ĐỌC';
             nodes.headline.textContent='Đang tìm bài báo phù hợp…';
             nodes.summary.textContent='';
             nodes.preview.dataset.ociReady='0';
@@ -269,7 +266,7 @@
                 return;
             }
             selected.row=row;
-            paint('📰 BẠN CÓ BIẾT? · BÀI CHƯA ĐỌC',teaser.headline,teaser.fact,
+            paint(teaser.headline,teaser.fact,
                 newsCover(row),'Đọc bài này');
         } else if(selected.type==='podcast') {
             const p=selected.pod;
@@ -277,7 +274,7 @@
             const excerpt=opening.map(x=>x.vi).find(x=>String(x||'').length>30);
             const description=PODCAST_HOOKS[Number(p.id)] ||
                 (excerpt ? 'Nghe một cuộc hội thoại bắt đầu bằng: “'+short(excerpt,115)+'”' : 'Khám phá tình huống giao tiếp và thử nghe hiểu bằng tiếng Anh.');
-            paint('🎧 PODCAST CHƯA NGHE',PODCAST_HEADLINES[Number(p.id)] || 'Podcast này có điều gì đáng nghe?',description,podcastCover(p.title),'Nghe podcast này');
+            paint(PODCAST_HEADLINES[Number(p.id)] || 'Podcast này có điều gì đáng nghe?',description,podcastCover(p.title),'Nghe podcast này');
         } else {
             showIpa(selected.pair);
         }
@@ -288,7 +285,7 @@
         pair.sounds.forEach(function(sound){
             tile.appendChild(el('span','ldd-oci-ipa-sound',sound));
         });
-        paint('🔊 THỬ THÁCH IPA','Bạn có nghe ra sự khác nhau giữa ' + pair.sounds.join(' và ') + '?',
+        paint('Bạn có nghe ra sự khác nhau giữa ' + pair.sounds.join(' và ') + '?',
             pair.words.join(' – ') + '. ' + pair.hint,tile,'Luyện âm này');
     }
     function visitMain(target) {
