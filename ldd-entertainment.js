@@ -797,6 +797,7 @@
             const frameSeenTimers = new Map();
             const frameVisibleSince = new Map();
             const lookedUpWordsByFrame = new Map();
+            const recordedLookups = new Set();
             const wordRewardNotes = new Map();
             const claimedWordRewardFrames = new Set();
 
@@ -807,6 +808,21 @@
                 const words = lookedUpWordsByFrame.get(frameIndex) || new Set();
                 words.add(normalized);
                 lookedUpWordsByFrame.set(frameIndex, words);
+
+                // Persist the lookup immediately, so a reload cannot turn an already
+                // looked-up bold word into an unearned +2 reward.
+                const key = frameIndex + '/' + normalized;
+                if (recordedLookups.has(key)) return;
+                recordedLookups.add(key);
+                void comicRpc('record_comic_bold_word_lookup', {
+                    p_grade: grade,
+                    p_unit_id: unit.id,
+                    p_frame_index: frameIndex,
+                    p_word: normalized
+                }).catch(error => {
+                    recordedLookups.delete(key);
+                    console.warn('[LDD comic word lookup]', error);
+                });
             }
 
             async function claimFrameWordRewards(frameIndex) {
