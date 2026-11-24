@@ -643,7 +643,7 @@
     }
     if (!client) throw Error('Bạn cần đăng nhập để làm bài.');
     const { data: saved, error } = await client.from('movie_cloze_progress')
-      .select('segment_index,blank_index,status,score_change')
+      .select('segment_index,blank_index,status,score_change,answer_word')
       .eq('movie_id', lesson.id);
     if (error) throw error;
     if (seq !== generation) return;
@@ -744,7 +744,7 @@
         input.value = drafts.get(key) || '';
         input.addEventListener('input', () => drafts.set(key, input.value));
         if (answers.has(key)) {
-          input.value = part;
+          input.value = answers.get(key)?.answer_word || 'Đã hoàn thành';
           input.disabled = true;
           input.classList.add('done');
         } else if (idx !== gateIndex) {
@@ -834,10 +834,11 @@
             }
             answers.set(field.key, {
               score_change: data.already_done ? Number(data.total_delta) || 0 : Number(data.delta) || 0,
-              status: data.status
+              status: data.status,
+              answer_word: data.word
             });
             if (askHint) hintedIndices.add(idx);
-            field.input.value = data.word || blanksIn(cue.text)[field.blankIndex] || field.input.value;
+            field.input.value = data.word || field.input.value;
             field.input.disabled = true;
             field.input.classList.add('done');
             check.hidden = hint.hidden = true;
@@ -1408,7 +1409,7 @@
     }
     try {
       const { data, error } = await client.from('movie_cloze_progress')
-        .select('segment_index,blank_index,status,score_change').eq('movie_id', lesson.id);
+        .select('segment_index,blank_index,status,score_change,answer_word').eq('movie_id', lesson.id);
       if (error) throw error;
       if (seq !== generation) return;
       for (const row of data || []) answers.set(keyOf(row.segment_index, row.blank_index), row);
@@ -1489,7 +1490,7 @@
         const check = button('Kiểm tra', 'ldd-film-check');
         const hint = button('Gợi ý', 'ldd-film-hint');
         if (done) {
-          input.value = done.word || part;
+          input.value = done.answer_word || done.word || 'Đã hoàn thành';
           input.disabled = true;
           check.hidden = hint.hidden = true;
           field.classList.add('done');
@@ -1512,10 +1513,10 @@
                 feedback.textContent = 'Chưa chính xác, hãy nghe lại và thử tiếp.';
               } else if (data.status === 'correct' || data.status === 'hint_new' || data.status === 'hint_known' || data.already_done) {
                 const row = { segment_index: idx, blank_index: blankIndex, status: data.status,
-                  word: data.word || input.value,
+                  word: data.word || input.value, answer_word: data.word,
                   score_change: data.already_done ? Number(data.total_delta) || 0 : Number(data.delta) || 0 };
                 answers.set(itemKey, row);
-                input.value = data.word || part;
+                input.value = data.word || input.value;
                 input.disabled = true;
                 check.hidden = hint.hidden = true;
                 field.classList.add('done');
