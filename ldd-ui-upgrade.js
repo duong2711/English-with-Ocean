@@ -49,7 +49,7 @@
         ensureStylesheet('ldd-film-cloze-style', 'ldd-film-cloze.css?v=20261116-film-cue-padding3');
         ensureStylesheet('ldd-text-actions-style', 'ldd-text-actions.css?v=20261122-universal-three-actions1');
         ensureStylesheet('ldd-ctest-student-groups-style', 'ldd-ctest-student-groups.css?v=20261116-grouped1');
-        ensureStylesheet('ldd-grade7-book-tests-style', 'ldd-grade7-book-tests.css?v=20261124-mlh7-all12-1');
+        ensureStylesheet('ldd-grade7-book-tests-style', 'ldd-grade7-book-tests.css?v=20261124-mlh7-annotation-stable3');
 
         // Load first. Dynamic scripts are async by default, so ensureScript sets async=false
         // to preserve insertion order and let all helper modules benefit from the guard.
@@ -87,7 +87,7 @@
         ensureScript('ldd-grade7-book-tests-unit11', 'ldd-grade7-book-tests-unit11.js?v=20261124-mlh7-full1');
         ensureScript('ldd-grade7-book-tests-unit12', 'ldd-grade7-book-tests-unit12.js?v=20261124-mlh7-full1');
         ensureScript('ldd-grade7-book-tests-source-links', 'ldd-grade7-book-tests-source-links.js?v=20261124-mlh7-full1');
-        ensureScript('ldd-grade7-book-tests', 'ldd-grade7-book-tests.js?v=20261124-mlh7-full2');
+        ensureScript('ldd-grade7-book-tests', 'ldd-grade7-book-tests.js?v=20261124-mlh7-annotation-stable3');
     }
 
     function ensureStylesheet(id, href) {
