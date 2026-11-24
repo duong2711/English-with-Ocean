@@ -1,0 +1,42 @@
+name: LDD Zalo self-message demo
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/ldd-zalo-self-demo.yml'
+permissions: {}
+concurrency:
+  group: ldd-zalo-self-demo
+  cancel-in-progress: false
+jobs:
+  demo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Send one demo to the connected account only
+        env:
+          LDD_REMINDER_BRIDGE_SECRET: ${{ secrets.LDD_REMINDER_BRIDGE_SECRET }}
+        shell: bash
+        run: |
+          node --input-type=module <<'JS'
+          if (!process.env.LDD_REMINDER_BRIDGE_SECRET) process.exit(1);
+          try {
+            const r=await fetch('https://ywqbaksmmtvwbojcgsdd.supabase.co/functions/v1/ldd-zalo-edge-test',{
+              method:'POST',
+              headers:{'content-type':'application/json','x-reminder-secret':process.env.LDD_REMINDER_BRIDGE_SECRET},
+              body:JSON.stringify({action:'self_test_once'}),
+              signal:AbortSignal.timeout(90000)
+            });
+            const data=await r.json().catch(()=>({}));
+            if(r.ok && data.ok===true && data.recipient==='own_account' && data.messages_sent===1){
+              console.log('One demo message sent to the connected account only.');
+            } else {
+              const stages=['own_id','database_config','test_claim','already_attempted','self_send','login','cookie_format','library_import','missing_zalo_secrets'];
+              console.error('HTTP '+r.status+'; stage: '+(stages.includes(data.stage)?data.stage:'runtime'));
+              process.exitCode=1;
+            }
+          } catch {
+            console.error('Request failed or timed out.');
+            process.exitCode=1;
+          }
+          JS
