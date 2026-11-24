@@ -112,7 +112,7 @@
         14: 'Một chuyến đi thang máy im lặng đến ngượng ngùng: bắt chuyện ở nơi làm việc thế nào?',
         15: 'Bạn có ý tưởng hay nhưng lại ngại lên tiếng? Học cách ngắt lời và phản biện lịch sự.'
     };
-    const state = { uid:null, articles:[], podcasts:[], turn:0, articleOffset:0, podcastOffset:0, ipaOffset:0, request:0, current:null };
+    const state = { uid:null, articles:[], podcasts:[], turn:0, podcastOffset:0, ipaOffset:0, request:0, current:null };
     let nodes = null;
 
     function el(tag, cls, text) {
@@ -222,6 +222,39 @@
         nodes.primary.textContent=action;
         nodes.preview.dataset.ociReady='1';
     }
+    // Rotate randomly through unread, verified articles for each account.
+    // Persist only article IDs locally, never content or student answers.
+    const articleHistory = new Map();
+    function randomNewsId(uid, ids) {
+        const eligible = Array.from(new Set(ids.map(String)));
+        if (!uid || !eligible.length) return null;
+        const key = 'ldd-oci-news-cycle-v1:' + uid;
+        let history = articleHistory.get(uid);
+        if (!history) {
+            try { history = JSON.parse(localStorage.getItem(key) || 'null'); } catch (_) {}
+            if (!history || !Array.isArray(history.seen)) history = { seen: [], last: null };
+        }
+        const available = new Set(eligible);
+        let seen = new Set(history.seen.map(String).filter(id => available.has(id)));
+        let choices = eligible.filter(id => !seen.has(id));
+        if (!choices.length) {
+            seen = new Set();
+            choices = eligible.slice();
+        }
+        // Even at the boundary of a completed cycle, avoid the last article
+        // whenever there is another eligible option.
+        if (choices.length > 1 && choices.includes(String(history.last))) {
+            choices = choices.filter(id => id !== String(history.last));
+        } else if (choices.length === 1 && choices[0] === String(history.last) && eligible.length > 1 && !seen.size) {
+            choices = eligible.filter(id => id !== String(history.last));
+        }
+        const id = choices[Math.floor(Math.random() * choices.length)];
+        seen.add(id);
+        history = { seen: Array.from(seen), last: id };
+        articleHistory.set(uid, history);
+        try { localStorage.setItem(key, JSON.stringify(history)); } catch (_) {}
+        return id;
+    }
     function choose() {
         const types=['news','podcast','ipa'];
         for(let tries=0;tries<3;tries++) {
@@ -230,7 +263,7 @@
                 // Only show articles with a vetted Vietnamese teaser.
                 const eligible = state.articles.filter(id => NEWS_TEASERS[String(id)]);
                 if (eligible.length) {
-                    const id=eligible[state.articleOffset++ % eligible.length];
+                    const id=randomNewsId(state.uid,eligible);
                     return {type:'news',id,uid:state.uid};
                 }
             }
@@ -367,7 +400,7 @@
         state.articles=Array.isArray(input.articles) ? input.articles.map(String) : [];
         state.podcasts=Array.isArray(input.podcasts) ? input.podcasts.filter(x=>x&&x.id&&x.title) : [];
         if(changed) {
-            state.turn=0;state.articleOffset=0;state.podcastOffset=0;
+            state.turn=0;state.podcastOffset=0;
             void showNext();
         } else {
             const shown=state.current;
