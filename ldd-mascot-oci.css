@@ -1,7 +1,7 @@
 /* Oci – concise, genuinely actionable recommendations.
-   Uses existing home greeting, keeps the mascot small and avoids extra banners. */
+   Uses the existing home greeting without a mascot illustration or extra banners. */
 #tab-trang-chu .ldd-oci-welcome {
-  grid-template-columns: 60px minmax(0,1fr);
+  grid-template-columns: minmax(0,1fr);
   align-items: start;
   gap: 12px;
   padding: 12px 14px;
@@ -9,13 +9,6 @@
   border-radius: 15px;
   background: #f1f7ff;
   box-shadow: none;
-}
-#tab-trang-chu .ldd-oci-portrait {
-  max-width: 60px;
-  width: 60px;
-  height: auto;
-  margin-top: 8px;
-  animation: none;
 }
 #tab-trang-chu .ldd-oci-content { min-width: 0; }
 #tab-trang-chu .ldd-oci-name {
@@ -136,12 +129,11 @@
 }
 @media(max-width:520px) {
   #tab-trang-chu .ldd-oci-welcome {
-    grid-template-columns: 44px minmax(0,1fr);
+    grid-template-columns: minmax(0,1fr);
     padding: 10px;
     gap: 9px;
     border-radius: 13px;
   }
-  #tab-trang-chu .ldd-oci-portrait { width: 44px; max-width: 44px; }
   #tab-trang-chu .ldd-oci-preview-row {
     grid-template-columns: 74px minmax(0,1fr);
     gap: 9px;
