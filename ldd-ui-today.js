@@ -560,14 +560,20 @@
         return { done: completed.length, total: total, reliable: state.progressReliable !== false };
     }
 
+    let lastCompanionMilestone = '';
     function buildStudyMascot(progress) {
         const total = progress.total, done = Math.min(progress.done, total);
         const percent = total ? Math.floor(done * 100 / total) : 0;
-        const level = !total || !progress.reliable ? 0 : percent === 100 ? 4 : percent >= 75 ? 3 : percent >= 50 ? 2 : percent > 0 ? 1 : 0;
+        const level = !total || !progress.reliable ? 0 : percent === 100 ? 4 : percent >= 75 ? 3 : percent >= 50 ? 2 : percent >= 25 ? 1 : 0;
         const messages = ['Bắt đầu nhé!', 'Khởi đầu tốt lắm!', 'Được nửa chặng rồi!', 'Sắp hoàn thành rồi!', 'Hoàn thành hôm nay!'];
         const node = document.createElement('div');
         node.className = 'ldd-study-companion';
         node.dataset.milestone = String(level);
+        const milestoneKey = userId() + ':' + todayIso() + ':' + level;
+        if (progress.reliable && milestoneKey !== lastCompanionMilestone) {
+            node.classList.add('is-animating');
+            lastCompanionMilestone = milestoneKey;
+        }
         node.innerHTML = `
             <svg class="ldd-companion-owl" viewBox="0 0 136 116" aria-hidden="true" focusable="false">
                 <ellipse cx="68" cy="107" rx="37" ry="5" fill="#102d4e" opacity=".42"/>
@@ -594,7 +600,7 @@
             </div>
             <span class="ldd-companion-message"></span>`;
         const ring = node.querySelector('.ldd-companion-ring');
-        ring.setAttribute('aria-valuenow', String(percent));
+        if (progress.reliable) ring.setAttribute('aria-valuenow', String(percent));
         ring.setAttribute('aria-valuetext', progress.reliable ? done + '/' + total + ' đầu việc hoàn thành' : 'Đang cập nhật tiến độ');
         node.querySelector('.ldd-companion-fill').setAttribute('stroke-dasharray', percent + ' 100');
         ring.querySelector('strong').textContent = progress.reliable ? done + '/' + total : '—';
