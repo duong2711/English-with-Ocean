@@ -80,6 +80,23 @@
         2: ["Biodegradable tampons","Có thể làm sản phẩm vệ sinh phân hủy sinh học từ tảo?","Bài báo nói đến việc nghiên cứu sợi từ tảo để thay thế vật liệu nhựa trong một số sản phẩm vệ sinh."]
     });
 
+    const PODCAST_HEADLINES = {
+        "1": "Chuyện việc nhà: ai làm gì mới là công bằng?",
+        "2": "Một ly cà phê có thể mở đầu bao nhiêu câu chuyện?",
+        "3": "Muốn phàn nàn mà vẫn lịch sự: bạn sẽ nói sao?",
+        "4": "Nếu được hỏi về du học, bạn sẽ trả lời thế nào?",
+        "5": "Bạn có đủ kiên nhẫn trong những tình huống khó chịu?",
+        "6": "Vì sao đang đọc sách bạn lại dễ mất tập trung?",
+        "7": "Đồ ngọt hấp dẫn đến mức nào: bạn sẽ diễn đạt ra sao?",
+        "8": "Chọn nhà riêng hay căn hộ: lý do của bạn là gì?",
+        "9": "Chỉ một câu về thể thao liệu có đủ ghi điểm Speaking?",
+        "10": "Đến khách sạn sau chuyến đi dài: nên nói gì trước?",
+        "11": "Gọi cà phê bằng tiếng Anh sao cho tự nhiên?",
+        "12": "Bị lạc ở một thành phố lạ: hỏi đường như thế nào?",
+        "13": "Chuyến bay bị hủy: nói gì để được hỗ trợ?",
+        "14": "Chuyến thang máy im lặng: làm sao bắt chuyện bớt ngượng?",
+        "15": "Có ý tưởng hay trong cuộc họp nhưng không dám nói?"
+    };
     const PODCAST_HOOKS = {
         1: 'Công việc nhà tưởng đơn giản, nhưng làm sao trao đổi bằng tiếng Anh cho tự nhiên?',
         2: 'Một cuộc trò chuyện về cà phê: bạn sẽ diễn tả thói quen của mình thế nào?',
@@ -254,7 +271,7 @@
             const excerpt=opening.map(x=>x.vi).find(x=>String(x||'').length>30);
             const description=PODCAST_HOOKS[Number(p.id)] ||
                 (excerpt ? 'Nghe một cuộc hội thoại bắt đầu bằng: “'+short(excerpt,115)+'”' : 'Khám phá tình huống giao tiếp và thử nghe hiểu bằng tiếng Anh.');
-            paint('🎧 PODCAST CHƯA NGHE',p.title,description,podcastCover(p.title),'Nghe podcast này');
+            paint('🎧 PODCAST CHƯA NGHE',PODCAST_HEADLINES[Number(p.id)] || 'Podcast này có điều gì đáng nghe?',description,podcastCover(p.title),'Nghe podcast này');
         } else {
             showIpa(selected.pair);
         }
@@ -265,7 +282,7 @@
         pair.sounds.forEach(function(sound){
             tile.appendChild(el('span','ldd-oci-ipa-sound',sound));
         });
-        paint('🔊 THỬ THÁCH IPA','Phân biệt ' + pair.sounds.join(' và '),
+        paint('🔊 THỬ THÁCH IPA','Bạn có nghe ra sự khác nhau giữa ' + pair.sounds.join(' và ') + '?',
             pair.words.join(' – ') + '. ' + pair.hint,tile,'Luyện âm này');
     }
     function visitMain(target) {
