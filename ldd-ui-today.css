@@ -161,7 +161,7 @@ body.ldd-ui-v2 #tab-trang-chu .ldd-home-dashboard {
 body.ldd-ui-v2 #tab-trang-chu .ldd-home-main {
     display: grid;
     grid-template-columns: minmax(0,1fr) minmax(390px,.9fr);
-    align-items: end;
+    align-items: start;
     gap: 18px;
 }
 body.ldd-ui-v2 #tab-trang-chu .ldd-home-intro {
@@ -495,6 +495,16 @@ body.ldd-ui-v2 #tab-trang-chu .ldd-today-shell {
     #tab-trang-chu .ldd-study-overview { grid-template-columns: 1fr; gap: 10px; }
 }
 
-#ldd-home-study-feedback { grid-column: 1 / -1; padding: 14px 18px; text-align: left; border: 1px solid #b1dacf; border-radius: 16px; background: #f2faf6; color: #193d36; }
-#ldd-home-study-feedback h3 { margin: 0 0 6px; font-size: 1rem; }
-#ldd-home-study-feedback p { margin: 4px 0 0; line-height: 1.5; font-size: .92rem; }
+#tab-trang-chu .ldd-home-tools > #ldd-home-study-feedback {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    padding: 13px 14px;
+    text-align: left;
+    border: 1px solid #b1dacf;
+    border-radius: 14px;
+    background: #f2faf6;
+    color: #193d36;
+}
+#tab-trang-chu .ldd-home-tools > #ldd-home-study-feedback h3 { margin: 0 0 6px; font-size: .91rem; }
+#tab-trang-chu .ldd-home-tools > #ldd-home-study-feedback p { margin: 4px 0 0; line-height: 1.5; font-size: .83rem; overflow-wrap: anywhere; }
