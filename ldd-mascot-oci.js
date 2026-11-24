@@ -117,7 +117,6 @@
         welcome.append(mascot,body);
         intro.appendChild(welcome);
         nodes={welcome,preview,primary,next};
-        void showNext();
         return true;
     }
     function paint(kind,title,desc,art,action) {
@@ -274,9 +273,18 @@
     }
     window.addEventListener('ldd:oci-candidates',onCandidates);
     function init() {
-        if(mount())return;
+        const ready=()=> {
+            if(!mount()) return false;
+            if(window.LDDOciCandidateSnapshot?.uid) {
+                onCandidates({detail:window.LDDOciCandidateSnapshot});
+            } else {
+                void showNext();
+            }
+            return true;
+        };
+        if(ready())return;
         const observer=new MutationObserver(()=>{
-            if(mount())observer.disconnect();
+            if(ready())observer.disconnect();
         });
         observer.observe(document.body,{childList:true,subtree:true});
     }
