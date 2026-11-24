@@ -64,8 +64,22 @@
         return exp > Date.now() + (skewMs || 0);
     }
 
+    function subject(token) {
+        try {
+            let p = String(token || '').split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+            p = p.padEnd(Math.ceil(p.length / 4) * 4, '=');
+            return JSON.parse(atob(p)).sub || '';
+        } catch (_) { return ''; }
+    }
+    function stillSameSession(record) {
+        const latest = readSessionRecord();
+        return !!latest && !!subject(record.session.access_token) &&
+            subject(latest.session.access_token) === subject(record.session.access_token) &&
+            latest.session.refresh_token === record.session.refresh_token;
+    }
+
     function persistRefreshedSession(record, refreshed) {
-        if (!record || !record.store || !refreshed || !refreshed.access_token) return;
+        if (!record || !record.store || !refreshed || !refreshed.access_token || !stillSameSession(record) || subject(refreshed.access_token) !== subject(record.session.access_token)) return false;
 
         const merged = Object.assign({}, record.session || {}, refreshed);
         if (!merged.expires_at && merged.expires_in) {
@@ -81,10 +95,12 @@
         // If another storage area already contains the same auth key, keep it in sync.
         const other = record.store === window.localStorage ? window.sessionStorage : window.localStorage;
         try {
-            if (other.getItem(AUTH_STORAGE_KEY)) {
+            const mirror = parseStoredSession(other.getItem(AUTH_STORAGE_KEY));
+            if (mirror && subject(mirror.access_token) === subject(record.session.access_token)) {
                 other.setItem(AUTH_STORAGE_KEY, JSON.stringify(merged));
             }
         } catch (_) {}
+        return true;
     }
 
     async function refreshAccessToken(force) {
@@ -117,15 +133,17 @@
 
             const data = await response.json().catch(function () { return {}; });
             if (response.ok && data && data.access_token) {
-                persistRefreshedSession(before, data);
-                return String(data.access_token);
+                if (persistRefreshedSession(before, data)) return String(data.access_token);
+                const latest = readSessionRecord();
+                if (latest && subject(latest.session.access_token) === subject(oldAccessToken) && tokenStillUsable(latest.session.access_token, 5000)) return String(latest.session.access_token);
+                return '';
             }
 
             // Refresh tokens rotate. If another tab won the race, use the newer session
             // that it has already written instead of treating this as a logout.
             const after = readSessionRecord();
             const newer = after && after.session ? String(after.session.access_token || '') : '';
-            if (newer && newer !== oldAccessToken && tokenStillUsable(newer, 5000)) return newer;
+            if (newer && newer !== oldAccessToken && subject(newer) === subject(oldAccessToken) && tokenStillUsable(newer, 5000)) return newer;
             return '';
         })();
 
@@ -171,7 +189,7 @@
         const suppliedToken = suppliedAuth.replace(/^Bearer\s+/i, '').trim();
         if (suppliedToken && !tokenStillUsable(suppliedToken, 15000)) {
             const freshBefore = await refreshAccessToken(false);
-            if (freshBefore) {
+            if (freshBefore && subject(freshBefore) === subject(suppliedToken)) {
                 return nativeFetch(input, withBearer(init, freshBefore));
             }
         }
@@ -182,7 +200,7 @@
         // A 401 from verify-device is treated as a stale-access-token signal first.
         // Refresh once, retry once, and only then let the caller decide the session is dead.
         const freshToken = await refreshAccessToken(true);
-        if (!freshToken) return first;
+        if (!freshToken || !suppliedToken || subject(freshToken) !== subject(suppliedToken)) return first;
 
         return nativeFetch(input, withBearer(init, freshToken));
     };
