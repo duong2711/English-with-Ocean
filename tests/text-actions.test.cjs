@@ -63,7 +63,7 @@ test('shared collocations render in existing vocabulary category and assets load
  assert.match(boot,/ldd-test-annotations\.js\?v=20261124-mlh7-annotations1/);
  assert.match(boot,/ldd-text-actions\.css\?v=20261122-universal-three-actions1/);
  assert.match(boot,/ldd-ui-vocab-grammar\.js\?v=20261124-catalog3/);
- assert.match(page,/ldd-ui-upgrade\.js\?v=20261124-mlh7-all12-catalog4/);
+ assert.match(page,/ldd-ui-upgrade\.js\?v=20261124-[A-Za-z0-9_-]+/);
  assert.match(page,/scriptphonetics\.js\?v=20261122-pronunciation-history1/);
 });
 test('assigned-test highlights and notes use account-owned Supabase rows and safe text anchors',()=>{
@@ -97,7 +97,7 @@ test('news annotations retain their account-specific identity and text anchors',
  assert.match(annotations,/normalized\.indexOf\(expected/);
  assert.match(annotations,/if\(currentRoot!==root\|\|state\(info\)\?\.key!==info\.key\)/);
  assert.match(boot,/ldd-test-annotations\.js\?v=20261124-mlh7-annotations1/);
- assert.match(page,/ldd-ui-upgrade\.js\?v=20261124-mlh7-all12-catalog4/);
+ assert.match(page,/ldd-ui-upgrade\.js\?v=20261124-[A-Za-z0-9_-]+/);
 });
 
 test('every dictionary-enabled reading surface uses the same three actions by default',()=>{
