@@ -508,3 +508,62 @@ body.ldd-ui-v2 #tab-trang-chu .ldd-today-shell {
 }
 #tab-trang-chu .ldd-home-tools > #ldd-home-study-feedback h3 { margin: 0 0 6px; font-size: .91rem; }
 #tab-trang-chu .ldd-home-tools > #ldd-home-study-feedback p { margin: 4px 0 0; line-height: 1.5; font-size: .83rem; overflow-wrap: anywhere; }
+
+
+/* Daily mission companion: inline SVG, no image requests or animation timers. */
+#tab-trang-chu .ldd-study-next.ldd-study-next-with-companion {
+    display:grid; grid-template-columns:minmax(0,1fr) minmax(100px,32%); align-items:center;
+    gap:clamp(10px,2vw,24px); container-type:inline-size;
+}
+#tab-trang-chu .ldd-study-next-copy { min-width:0; overflow-wrap:anywhere; }
+#tab-trang-chu .ldd-study-companion {
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    min-width:0; gap:4px; text-align:center; color:white;
+}
+#tab-trang-chu .ldd-companion-owl { display:block; width:min(100%,128px); height:auto; overflow:visible; }
+#tab-trang-chu .ldd-companion-ring { position:relative; width:58px; height:58px; flex-shrink:0; }
+#tab-trang-chu .ldd-companion-ring svg { display:block; width:100%; height:100%; }
+#tab-trang-chu .ldd-companion-ring strong {
+    position:absolute; inset:0; display:grid; place-items:center;
+    color:#fff; font-size:16px; font-variant-numeric:tabular-nums; font-weight:800;
+}
+#tab-trang-chu .ldd-companion-message { color:#e2faf5; font-size:12px; font-weight:650; line-height:1.3; }
+#tab-trang-chu .ldd-owl-wing, #tab-trang-chu .ldd-owl-happy,
+#tab-trang-chu .ldd-owl-pencil, #tab-trang-chu .ldd-owl-stars, #tab-trang-chu .ldd-owl-check { display:none; }
+#tab-trang-chu .ldd-study-companion[data-milestone="1"] .ldd-owl-wing,
+#tab-trang-chu .ldd-study-companion[data-milestone="3"] .ldd-owl-wing,
+#tab-trang-chu .ldd-study-companion[data-milestone="4"] .ldd-owl-wing,
+#tab-trang-chu .ldd-study-companion[data-milestone="2"] .ldd-owl-pencil,
+#tab-trang-chu .ldd-study-companion[data-milestone="3"] .ldd-owl-stars,
+#tab-trang-chu .ldd-study-companion[data-milestone="4"] .ldd-owl-stars,
+#tab-trang-chu .ldd-study-companion[data-milestone="4"] .ldd-owl-check,
+#tab-trang-chu .ldd-study-companion[data-milestone="4"] .ldd-owl-happy { display:inline; }
+#tab-trang-chu .ldd-study-companion:is([data-milestone="1"],[data-milestone="2"],[data-milestone="3"],[data-milestone="4"]) .ldd-owl-book,
+#tab-trang-chu .ldd-study-companion[data-milestone="4"] .ldd-owl-eyes { display:none; }
+#tab-trang-chu .ldd-owl-body, #tab-trang-chu .ldd-owl-wing, #tab-trang-chu .ldd-owl-eyes {
+    transform-box:fill-box; transform-origin:center;
+}
+@media (prefers-reduced-motion:no-preference) {
+    #tab-trang-chu .ldd-study-companion[data-milestone="0"] .ldd-owl-eyes { animation:lddOwlBlink 2.2s 2; }
+    #tab-trang-chu .ldd-study-companion[data-milestone="1"] .ldd-owl-wing { animation:lddOwlWave .65s ease-in-out 3; transform-origin:left bottom; }
+    #tab-trang-chu .ldd-study-companion[data-milestone="2"] .ldd-owl-body { animation:lddOwlNod .8s ease-in-out 2; }
+    #tab-trang-chu .ldd-study-companion[data-milestone="3"] .ldd-owl-body { animation:lddOwlJump .65s ease-in-out 2; }
+    #tab-trang-chu .ldd-study-companion[data-milestone="4"] .ldd-owl-body { animation:lddOwlJump .55s ease-in-out 4; }
+    #tab-trang-chu .ldd-study-companion[data-milestone="4"] .ldd-owl-stars { animation:lddOwlSpark .65s ease-in-out 4; }
+}
+@keyframes lddOwlBlink { 0%,42%,52%,100%{transform:scaleY(1)} 47%{transform:scaleY(.12)} }
+@keyframes lddOwlWave { 0%,100%{transform:rotate(0)} 50%{transform:rotate(-22deg)} }
+@keyframes lddOwlNod { 0%,100%{transform:rotate(0)} 50%{transform:rotate(5deg)} }
+@keyframes lddOwlJump { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-7px)} }
+@keyframes lddOwlSpark { 0%,100%{opacity:1} 50%{opacity:.35} }
+@container (max-width:320px) {
+    #tab-trang-chu .ldd-companion-owl { width:82px; }
+    #tab-trang-chu .ldd-companion-ring { width:48px; height:48px; }
+    #tab-trang-chu .ldd-companion-message { font-size:11px; }
+}
+@media (max-width:420px) {
+    #tab-trang-chu .ldd-study-next.ldd-study-next-with-companion { grid-template-columns:minmax(0,1fr) minmax(86px,29%); gap:8px; }
+    #tab-trang-chu .ldd-companion-owl { max-width:94px; }
+    #tab-trang-chu .ldd-companion-ring { width:48px; height:48px; }
+    #tab-trang-chu .ldd-study-next-copy button { max-width:100%; white-space:normal; }
+}
