@@ -22,8 +22,8 @@
     }
 
     function ensureTodayAssets() {
-        ensureStyle('ldd-today-style', 'ldd-ui-today.css?v=20261124-daily-goals3');
-        ensureScript('ldd-today-script', 'ldd-ui-today.js?v=20261124-daily-goals3');
+        ensureStyle('ldd-today-style', 'ldd-ui-today.css?v=20261124-daily-goals4');
+        ensureScript('ldd-today-script', 'ldd-ui-today.js?v=20261124-daily-goals4');
     }
 
     function ensureStyle(id, href) {
