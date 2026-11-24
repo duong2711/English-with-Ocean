@@ -145,3 +145,30 @@ body:has(#tab-kiem-tra.active #ldd-school-exams-panel:not([hidden]) #ldd-mlh7-te
   #ldd-school-exams-panel .ldd-mlh7-pdf-frame{height:62vh;min-height:400px}
   #ldd-school-exams-panel .ldd-mlh7-ocr-text{font-size:14px;padding:10px}
 }
+
+/* Submitted answers live outside the bookmarked learning text, so publishing
+   teacher feedback never changes existing highlight offsets. */
+#ldd-school-exams-panel .ldd-mlh7-graded-solutions{
+  margin:16px 0;border:1px solid var(--border-color,#dce5ee);
+  border-radius:12px;background:var(--card-bg,#fff);padding:14px 17px;
+}
+#ldd-school-exams-panel .ldd-mlh7-graded-solutions summary{
+  cursor:pointer;font:700 15px/1.5 system-ui,sans-serif;
+  min-height:28px;
+}
+#ldd-school-exams-panel .ldd-mlh7-graded-section{
+  border-top:1px solid var(--border-color,#e6ebf2);margin:14px 0 0;padding:12px 0 0;
+}
+#ldd-school-exams-panel .ldd-mlh7-graded-section h3{
+  margin:0 0 10px;font:650 14px/1.5 system-ui,sans-serif;
+}
+#ldd-school-exams-panel .ldd-mlh7-graded-item{
+  font:400 14px/1.6 system-ui,sans-serif;
+  margin:6px 0;padding:7px 10px;border-radius:7px;overflow-wrap:anywhere;
+}
+#ldd-school-exams-panel .ldd-mlh7-graded-item.ldd-mlh7-right{
+  border-left:3px solid #22856b;background:rgba(44,150,104,.065);
+}
+#ldd-school-exams-panel .ldd-mlh7-graded-item.ldd-mlh7-wrong{
+  border-left:3px solid #c68a53;background:rgba(220,140,65,.055);
+}
