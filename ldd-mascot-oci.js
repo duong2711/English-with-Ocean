@@ -178,9 +178,15 @@
         const welcome=el('section','ldd-oci-welcome');
         welcome.id='ldd-oci-welcome';
         const body=el('div','ldd-oci-content');
-        const heading=el('strong','ldd-oci-name','Oci gợi ý cho bạn');
         const preview=el('div','ldd-oci-preview');
-        preview.setAttribute('aria-live','polite');
+        const wrap=el('div','ldd-oci-preview-row');
+        const artHost=el('div','ldd-oci-preview-art');
+        const details=el('div','ldd-oci-preview-copy');
+        const heading=el('strong','ldd-oci-name','Oci gợi ý cho bạn');
+        const category=el('span','ldd-oci-kind');
+        const headline=el('strong','ldd-oci-headline');
+        const summary=el('p','ldd-oci-tip');
+        details.setAttribute('aria-live','polite');
         const controls=el('div','ldd-oci-controls');
         const primary=el('button','ldd-oci-go','');
         primary.type='button'; primary.disabled=true;
@@ -189,24 +195,26 @@
         next.addEventListener('click',function(){void showNext();});
         primary.addEventListener('click',function(){void openCurrent();});
         controls.append(primary,next);
-        body.append(heading,preview,controls);
+        // The buttons remain inside the right column when the suggestion changes.
+        // Only the illustration and text update, preserving keyboard focus.
+        details.append(heading,category,headline,summary,controls);
+        wrap.append(artHost,details);
+        preview.append(wrap);
+        body.append(preview);
         welcome.append(body);
         intro.appendChild(welcome);
-        nodes={welcome,preview,primary,next};
+        nodes={welcome,preview,artHost,category,headline,summary,primary,next};
         return true;
     }
     function paint(kind,title,desc,art,action) {
         if (!nodes) return;
-        const details=el('div','ldd-oci-preview-copy');
-        const category=el('span','ldd-oci-kind',kind);
-        const strong=el('strong','ldd-oci-headline',short(title,110));
-        const summary=el('p','ldd-oci-tip',short(desc,218));
-        details.append(category,strong,summary);
-        const wrap=el('div','ldd-oci-preview-row');
-        wrap.append(art,details);
-        nodes.preview.replaceChildren(wrap);
+        nodes.artHost.replaceChildren(art);
+        nodes.category.textContent=kind;
+        nodes.headline.textContent=short(title,110);
+        nodes.summary.textContent=short(desc,218);
         nodes.primary.disabled=false;
         nodes.primary.textContent=action;
+        nodes.preview.dataset.ociReady='1';
     }
     function choose() {
         const types=['news','podcast','ipa'];
@@ -237,7 +245,10 @@
         state.current=selected;
         nodes.primary.disabled=true;
         if(selected.type==='news') {
-            nodes.preview.textContent='Đang tìm một bài báo bạn chưa đọc…';
+            nodes.category.textContent='📰 BÀI CHƯA ĐỌC';
+            nodes.headline.textContent='Đang tìm bài báo phù hợp…';
+            nodes.summary.textContent='';
+            nodes.preview.dataset.ociReady='0';
             const getter=window.LDDOciNewsPreview;
             const row=typeof getter==='function' && selected.uid
                 ? await getter(selected.id,selected.uid) : null;
@@ -364,10 +375,11 @@
         const ready=()=> {
             if(!mount()) return false;
             if(window.LDDOciCandidateSnapshot?.uid) {
+                const previousRequest=state.request;
                 onCandidates({detail:window.LDDOciCandidateSnapshot});
-                // If the event arrived before Oci mounted, its previous render
-                // was skipped. Always paint after mounting in that case.
-                if (!nodes.preview.textContent.trim() && !nodes.preview.childElementCount) void showNext();
+                // Handle an event that arrived before Oci mounted, without
+                // fetching a second suggestion if onCandidates already did so.
+                if(state.request===previousRequest && nodes.preview.dataset.ociReady!=='1') void showNext();
             } else {
                 void showNext();
             }
