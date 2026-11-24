@@ -59,7 +59,7 @@
         ensureScript('ldd-vocab-grammar-script', 'ldd-ui-vocab-grammar.js?v=20261124-compact-catalog1');
         ensureScript('ldd-home-phonetics-script', 'ldd-ui-home-phonetics.js?v=20261124-daily-goals4');
         ensureScript('ldd-student-presence-script', 'ldd-student-site-presence.js?v=20261124-reminder-presence1');
-        ensureScript('ldd-mascot-oci-script', 'ldd-mascot-oci.js?v=20261124-mobile-actions1');
+        ensureScript('ldd-mascot-oci-script', 'ldd-mascot-oci.js?v=20261124-random-news1');
         ensureScript('ldd-student-grade-script', 'ldd-student-grade.js?v=20261110-university-track1');
         ensureScript('ldd-thcs-vocab-reset-script', 'ldd-thcs-vocab-reset.js?v=11');
         ensureScript('ldd-fast-progress-script', 'ldd-fast-progress.js?v=1');
