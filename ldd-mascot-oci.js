@@ -217,7 +217,7 @@
         if (!nodes) return;
         nodes.artHost.replaceChildren(art);
         nodes.headline.textContent=short(title,110);
-        nodes.summary.textContent=short(desc,Math.max(1,Math.floor(String(desc || '').replace(/\\s+/g,' ').trim().length * 0.75)));
+        nodes.summary.textContent=short(desc,Math.max(1,Math.floor(String(desc || '').replace(/\s+/g,' ').trim().length * 0.75)));
         nodes.primary.disabled=false;
         nodes.primary.textContent=action;
         nodes.preview.dataset.ociReady='1';
