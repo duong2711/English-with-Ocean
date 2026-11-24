@@ -74,7 +74,7 @@ try{
 }catch{}
 window.addEventListener('storage',e=>{
  if((e.key===AUTH||e.key===null)&&watched(e.storageArea)){
-  changed(identity(e.oldValue)||owner,current(),e.storageArea);
+  changed(identity(e.oldValue)||owner,identity(read(e.storageArea)),e.storageArea);
  }
 });
 function check(){
