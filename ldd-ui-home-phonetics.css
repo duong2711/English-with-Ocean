@@ -65,6 +65,13 @@ body.ldd-ui-v2 #tab-phien-am {
     line-height: 1.6;
 }
 
+.ldd-home-tools {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: 12px;
+}
+
 .ldd-home-actions {
     display: grid;
     grid-template-columns: repeat(4,minmax(0,1fr));
