@@ -533,3 +533,216 @@ body:has(.ldd-ent-upload-dialog[open]) { overflow: hidden; }
 #tab-giai-tri .ldd-wimpy-translation h4 { margin:0 0 12px; color:#69452e; }
 #tab-giai-tri .ldd-wimpy-translation-text { white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.75; font-size:clamp(16px,1.65vw,19px); }
 @media (max-width:480px) { #tab-giai-tri .ldd-wimpy-reader-header { gap:5px; } #tab-giai-tri .ldd-wimpy-reader-header strong { font-size:14px; } #tab-giai-tri .ldd-wimpy-translate-toggle { padding:8px; font-size:13px; } }
+
+
+/* Comic study mode — self translation, AI feedback and transparent diligence rewards */
+#tab-giai-tri .ldd-comic-translation-box {
+    display: grid;
+    gap: 11px;
+    margin: 24px 0 14px;
+    padding: clamp(16px, 2.4vw, 23px);
+    border: 1px solid #c8d8ff;
+    border-radius: 19px;
+    background:
+        radial-gradient(circle at 100% 0, rgba(194,211,255,.42), transparent 36%),
+        linear-gradient(145deg, #f4f7ff, #ffffff 64%, #f5f0ff);
+    box-shadow: 0 10px 26px rgba(61,91,158,.09), inset 0 1px 0 #fff;
+    color: #233452;
+}
+#tab-giai-tri .ldd-comic-translation-head { display: grid; gap: 3px; }
+#tab-giai-tri .ldd-comic-translation-head strong {
+    color: #344fa3;
+    font-size: 16px;
+    line-height: 1.35;
+}
+#tab-giai-tri .ldd-comic-translation-head small {
+    color: #6b7894;
+    font-size: 12px;
+    line-height: 1.5;
+}
+#tab-giai-tri .ldd-comic-translation-input {
+    display: block;
+    width: 100%;
+    min-height: 108px;
+    resize: vertical;
+    box-sizing: border-box;
+    padding: 12px 14px;
+    border: 1px solid #cbd5eb;
+    border-radius: 13px;
+    outline: none;
+    background: rgba(255,255,255,.94);
+    color: #233452;
+    font: 500 14px/1.7 inherit;
+    box-shadow: inset 0 1px 3px rgba(35,52,82,.04);
+}
+#tab-giai-tri .ldd-comic-translation-input:focus {
+    border-color: #718cf0;
+    box-shadow: 0 0 0 3px rgba(113,140,240,.15);
+}
+#tab-giai-tri .ldd-comic-translation-input:disabled { background: #f0fdf4; color: #476453; opacity: 1; }
+#tab-giai-tri .ldd-comic-translation-submit {
+    justify-self: start;
+    min-height: 42px;
+    padding: 0 17px;
+    border: 0;
+    border-radius: 12px;
+    background: linear-gradient(115deg, #536fe8, #8057c8);
+    color: white;
+    font: 800 13px/1 inherit;
+    cursor: pointer;
+    box-shadow: 0 6px 16px rgba(89,103,205,.23), inset 0 1px 0 rgba(255,255,255,.24);
+    transition: transform .15s ease, filter .15s ease, box-shadow .15s ease;
+}
+#tab-giai-tri .ldd-comic-translation-submit:hover:not(:disabled) {
+    transform: translateY(-1px);
+    filter: brightness(1.05);
+    box-shadow: 0 9px 20px rgba(89,103,205,.28);
+}
+#tab-giai-tri .ldd-comic-translation-submit:disabled { opacity: .58; cursor: not-allowed; }
+#tab-giai-tri .ldd-comic-translation-feedback {
+    padding: 12px 14px;
+    border: 1px solid #d7deee;
+    border-radius: 13px;
+    background: #fff;
+    font-size: 13px;
+    line-height: 1.65;
+}
+#tab-giai-tri .ldd-comic-translation-feedback[hidden] { display: none !important; }
+#tab-giai-tri .ldd-comic-translation-feedback.is-good { border-color: #9de0bd; background: #f0fdf5; color: #17613d; }
+#tab-giai-tri .ldd-comic-translation-feedback.is-retry { border-color: #f2d39c; background: #fffaf0; color: #825116; }
+#tab-giai-tri .ldd-comic-translation-feedback.is-error { border-color: #fecaca; background: #fff1f2; color: #a12635; }
+#tab-giai-tri .ldd-comic-translation-status { display: block; margin-bottom: 5px; font-size: 12px; letter-spacing: .02em; }
+#tab-giai-tri .ldd-comic-translation-feedback p { margin: 0; }
+#tab-giai-tri .ldd-comic-translation-reference { margin-top: 9px; padding-top: 8px; border-top: 1px dashed currentColor; }
+#tab-giai-tri .ldd-comic-translation-reference summary { cursor: pointer; font-weight: 800; font-size: 12px; }
+#tab-giai-tri .ldd-comic-translation-reference p { margin-top: 7px; white-space: pre-wrap; }
+#tab-giai-tri .ldd-comic-word-reward-note {
+    margin-top: 9px;
+    padding: 9px 12px;
+    border: 1px dashed #a6b8eb;
+    border-radius: 11px;
+    background: #f2f5ff;
+    color: #4a5f9c;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.5;
+}
+#tab-giai-tri .ldd-comic-word-reward-note.is-awarded { border-color: #8ed5ad; background: #effcf4; color: #187345; }
+#tab-giai-tri .ldd-comic-word-reward-note.is-checked { border-color: #cbd5e1; background: #f8fafc; color: #64748b; }
+#tab-giai-tri .ldd-comic-word-reward-note.is-error { border-color: #f4b4b9; background: #fff1f2; color: #a12635; }
+
+/* Lô tô — colorful host controls, player cards and bingo board */
+#tab-giai-tri :is(#loto-panel, #loto-game-panel) {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    border: 1px solid rgba(132,151,222,.3);
+    border-radius: 24px;
+    padding: clamp(12px, 2.2vw, 24px);
+    background:
+        radial-gradient(ellipse at 5% 0, rgba(194,208,255,.62), transparent 34%),
+        radial-gradient(ellipse at 98% 100%, rgba(244,210,255,.58), transparent 35%),
+        linear-gradient(145deg, #f5f7ff, #f9faff 55%, #fff7fd);
+    box-shadow: 0 16px 38px rgba(64,78,142,.13);
+}
+#tab-giai-tri .loto-setup-screen,
+#tab-giai-tri .loto-admin-zone,
+#tab-giai-tri .loto-player-block,
+#tab-giai-tri .loto-end-screen {
+    border: 1px solid rgba(155,169,213,.38);
+    border-radius: 19px;
+    background: linear-gradient(145deg, rgba(255,255,255,.98), rgba(246,248,255,.96));
+    box-shadow: 0 9px 24px rgba(66,84,145,.09), inset 0 1px 0 #fff;
+}
+#tab-giai-tri .loto-setup-screen { padding: clamp(18px,3vw,28px); }
+#tab-giai-tri .loto-setup-intro { max-width: 650px; color: #667493; font-size: .9rem; }
+#tab-giai-tri .loto-pick-card {
+    min-width: 0;
+    border: 1px solid #d9e0f6;
+    border-radius: 17px;
+    background: linear-gradient(145deg, #f1f5ff, #fff 72%);
+    box-shadow: 0 7px 16px rgba(74,95,160,.08);
+    transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
+}
+#tab-giai-tri .loto-pick-card:not(.taken):hover {
+    transform: translateY(-3px);
+    border-color: #9baded;
+    box-shadow: 0 12px 22px rgba(74,95,160,.14);
+}
+#tab-giai-tri .loto-pick-card.taken { border-color: #7bd1a2; background: linear-gradient(145deg,#e7fff0,#f5fff9); }
+#tab-giai-tri .loto-pick-label { color: #364d92; font-size: 1rem; }
+#tab-giai-tri .loto-pick-btn,
+#tab-giai-tri .loto-action-btn {
+    min-height: 42px;
+    border-radius: 13px;
+    background: linear-gradient(120deg, #536fe8, #7954c5);
+    box-shadow: 0 6px 15px rgba(85,103,204,.24);
+}
+#tab-giai-tri .loto-admin-zone { padding: clamp(13px,2.1vw,20px); gap: 15px; }
+#tab-giai-tri .loto-admin-zone-header h4 { color: #354b8c; }
+#tab-giai-tri .loto-strike-display { border-radius: 999px; }
+#tab-giai-tri .loto-timer-display {
+    min-width: 108px;
+    padding: 7px 18px;
+    border: 1px solid rgba(255,255,255,.42);
+    border-radius: 17px;
+    background: linear-gradient(135deg,#425ed0,#7e58c5);
+    color: white;
+    font-size: clamp(2rem,4vw,2.8rem);
+    box-shadow: 0 8px 20px rgba(71,88,177,.22), inset 0 1px 0 rgba(255,255,255,.26);
+}
+#tab-giai-tri .loto-timer-display.warning { color: #fff7d6; background: linear-gradient(135deg,#d18a26,#e5a23e); }
+#tab-giai-tri .loto-timer-display.danger { color: #fff; background: linear-gradient(135deg,#cf4252,#ec6c72); }
+#tab-giai-tri .loto-pending-number {
+    border: 1px dashed #889ce8;
+    border-radius: 13px;
+    background: linear-gradient(120deg,#edf2ff,#f7efff);
+    color: #455db2;
+    box-shadow: 0 4px 12px rgba(86,104,194,.1);
+}
+#tab-giai-tri .loto-sheets-row { gap: 14px; }
+#tab-giai-tri .loto-player-block {
+    min-width: 0;
+    padding: clamp(12px,2vw,18px);
+    box-shadow: 0 8px 20px rgba(66,84,145,.08);
+}
+#tab-giai-tri .loto-player-block h4 { color: #384f95; }
+#tab-giai-tri .loto-sheet-grid { gap: clamp(4px,.8vw,7px); }
+#tab-giai-tri .loto-cell {
+    border: 1px solid #d5def4;
+    border-radius: 12px;
+    background: linear-gradient(145deg,#fff,#edf2ff);
+    color: #324575;
+    font-weight: 850;
+    box-shadow: 0 3px 7px rgba(70,88,145,.08);
+}
+#tab-giai-tri .loto-cell:hover:not(.marked):not(.disabled) {
+    background: linear-gradient(145deg,#fff,#e2eaff);
+    box-shadow: 0 5px 12px rgba(74,103,196,.16);
+    transform: translateY(-1px);
+}
+#tab-giai-tri .loto-cell.marked {
+    border-color: #059669;
+    background: linear-gradient(145deg,#22c58b,#079568);
+    color: #fff;
+    box-shadow: 0 4px 10px rgba(5,150,105,.22);
+}
+#tab-giai-tri .loto-cell.wrong-pick {
+    border-color: #dc5662;
+    background: linear-gradient(145deg,#f87179,#d83d55);
+    color: #fff;
+}
+#tab-giai-tri .loto-bingo-btn { border-radius: 13px; box-shadow: 0 7px 16px rgba(5,150,105,.23); }
+#tab-giai-tri .loto-log { border: 1px solid #dbe2f3; border-radius: 13px; background: #f5f7ff; }
+#tab-giai-tri .loto-end-screen { padding: clamp(22px,4vw,42px) 20px; }
+#tab-giai-tri .loto-end-message { color: #354b8c; }
+#tab-giai-tri .loto-end-screen .loto-action-btn { min-width: 170px; }
+
+@media (max-width: 600px) {
+    #tab-giai-tri :is(#loto-panel, #loto-game-panel) { padding: 10px; border-radius: 17px; }
+    #tab-giai-tri .loto-admin-zone { padding: 12px; border-radius: 15px; }
+    #tab-giai-tri .loto-player-block { padding: 10px; border-radius: 14px; }
+    #tab-giai-tri .loto-cell { border-radius: 8px; font-size: .95rem; }
+    #tab-giai-tri .ldd-comic-translation-box { padding: 14px; border-radius: 15px; }
+    #tab-giai-tri .ldd-comic-translation-submit { width: 100%; justify-self: stretch; }
+}
