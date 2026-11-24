@@ -154,6 +154,8 @@
         if (token && token !== activeToken) {
             activeToken = token;
             latestState = null;
+            window.LDDOciCandidateSnapshot = null;
+            window.dispatchEvent(new CustomEvent('ldd:oci-candidates', { detail: null }));
             renderToday(null);
             // A fresh login should not inherit a dashboard cache from the previous session.
             if (window.LDDEgress && typeof window.LDDEgress.clear === 'function') {
@@ -164,6 +166,8 @@
             activeToken = null;
             latestState = null;
             refreshAfterCurrent = false;
+            window.LDDOciCandidateSnapshot = null;
+            window.dispatchEvent(new CustomEvent('ldd:oci-candidates', { detail: null }));
             renderToday(null);
             renderLive(null);
         }
@@ -281,6 +285,7 @@
             await reconcileIpa(state);
             if (getToken() !== requestToken) return;
             computePodcastState(state);
+            publishOciCandidates(state, uid);
             renderToday(state);
             renderLive(state);
             installVocabPoorFilter();
@@ -378,6 +383,40 @@
             if (!complete) state.podcastIncomplete += 1;
             if (doneToday || localPodcastDoneToday(key)) state.podcastCompletedToday = true;
         });
+    }
+
+    // Reuse the dashboard's existing authenticated data rather than making
+    // Oci repeat requests for read/listen history. Send only minimum metadata.
+    // Lightweight single-article preview; no all-articles content download.
+    window.LDDOciNewsPreview = async function (articleId, expectedUid) {
+        const id = String(articleId || '');
+        if (!/^\d+$/.test(id) || !getToken() || userId() !== expectedUid) return null;
+        const rows = await query('news_articles', 'id,title,thumb,content', { id: 'eq.' + id, limit: '1' });
+        if (userId() !== expectedUid) return null;
+        return rows[0] || null;
+    };
+
+    function publishOciCandidates(state, uid) {
+        const readIds = new Set((state.reads || []).map(row => String(row.article_id)));
+        const listeningIds = new Set((state.podcastProgress || []).map(row => String(row.podcast_id)));
+        const articles = (state.articles || [])
+            .filter(row => !readIds.has(String(row.id)))
+            .map(row => String(row.id)).reverse();
+        const podcasts = (state.podcasts || [])
+            .filter(row => !listeningIds.has(String(row.id)) && !(state.podcastInfo || {})[String(row.id)]?.complete)
+            .map(row => ({
+                id: String(row.id),
+                title: String(row.title || ''),
+                // Keep the data passed to the mascot small; only an excerpt.
+                opening: (Array.isArray(row.segments) ? row.segments : [])
+                    .slice(0, 4).map(seg => ({
+                        en: String(seg?.en || '').slice(0, 170),
+                        vi: String(seg?.vi || '').slice(0, 170)
+                    }))
+            })).reverse();
+        const snapshot = { uid: String(uid), articles, podcasts };
+        window.LDDOciCandidateSnapshot = snapshot;
+        window.dispatchEvent(new CustomEvent('ldd:oci-candidates', { detail: snapshot }));
     }
 
     function estimatePodcastBlankCount(pod) {
