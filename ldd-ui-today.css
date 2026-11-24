@@ -567,3 +567,8 @@ body.ldd-ui-v2 #tab-trang-chu .ldd-today-shell {
     #tab-trang-chu .ldd-companion-ring { width:48px; height:48px; }
     #tab-trang-chu .ldd-study-next-copy button { max-width:100%; white-space:normal; }
 }
+
+/* Clarify that each daily card contributes one completed task. */
+#tab-trang-chu .ldd-daily-progress-hint { display:block; margin-top:10px; color:#d5f8f2; font-size:.76rem; line-height:1.4; }
+#tab-trang-chu .ldd-companion-count { color:#fff; font-size:.72rem; font-weight:700; line-height:1.25; }
+#tab-trang-chu .ldd-study-overview + .ldd-today-primary { margin-top:12px; }
