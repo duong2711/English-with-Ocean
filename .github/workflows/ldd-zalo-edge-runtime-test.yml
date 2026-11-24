@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
-      - name: Test Supabase runtime without sending
+      - name: Test Supabase runtime (zca-js 2.4.0) without sending
         shell: bash
         env:
           LDD_REMINDER_BRIDGE_SECRET: ${{ secrets.LDD_REMINDER_BRIDGE_SECRET }}
@@ -34,7 +34,7 @@ jobs:
             if (res.ok && data.ok === true && data.zalo_login === true && data.messages_sent === 0) {
               console.log('Supabase runtime and Zalo login passed. No messages sent.');
             } else {
-              const known = ['library_import','missing_zalo_secrets','login'];
+              const known = ['library_import','missing_zalo_secrets','cookie_format','login'];
               const stage = known.includes(data.stage) ? data.stage : 'request_or_runtime';
               console.error('Test failed: HTTP ' + res.status + '; stage: ' + stage);
               process.exitCode = 1;
