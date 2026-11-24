@@ -355,27 +355,34 @@ function boot(){
   }
   function sourceViewer(test,target){
     if(!test.pdfAsset)return null;
-    const wrap=el('section','ldd-mlh7-source');
-    const heading=el('h3','','Đề gốc từ sách · Unit '+test.unit);
+    // Keep interactive questions visible without forcing a PDF download.
+    // Source pages are available on demand to check the precise printed layout.
+    const wrap=el('details','ldd-mlh7-source');
+    const heading=el('summary','','📖 Đối chiếu đề gốc từ sách · Unit '+test.unit);
     const note=el('p','ldd-mlh7-intro',
-      'Đọc câu hỏi và các phương án trên bản scan gốc. Phiếu bên dưới dùng để trả lời theo số câu trong sách.');
-    const viewer=el('div','ldd-mlh7-pdf-container','Đang tải trang đề gốc…');
+      'Bản PDF là trang đề gốc. Bạn có thể mở để đối chiếu khi cần.');
+    const viewer=el('div','ldd-mlh7-pdf-container','');
     const tools=el('div','ldd-mlh7-source-tools');
     wrap.append(heading,note,tools,viewer);
     target.append(wrap);
-    void originalPDF(test).then(url=>{
-      if(!wrap.isConnected)return;
-      viewer.replaceChildren();
-      const iframe=el('iframe','ldd-mlh7-pdf-frame');
-      iframe.title='Bản PDF gốc Test for Unit '+test.unit;
-      iframe.loading='lazy';iframe.src=url+'#view=FitH&toolbar=1';
-      viewer.append(iframe);
-      const link=el('a','ldd-mlh7-source-link','Mở đề gốc ở cửa sổ riêng');
-      link.href=url;link.target='_blank';link.rel='noopener';
-      const download=el('a','ldd-mlh7-source-link','Lưu bản PDF của Unit '+test.unit);
-      download.href=url;download.download='Mai-Lan-Huong-Grade7-Unit'+test.unit+'-Test.pdf';
-      tools.append(link,download);
-    }).catch(e=>{if(wrap.isConnected)viewer.textContent=e.message||'Không tải được PDF';});
+    let requested=false;
+    wrap.addEventListener('toggle',()=>{
+      if(!wrap.open||requested)return;
+      requested=true;viewer.textContent='Đang tải trang đề gốc…';
+      void originalPDF(test).then(url=>{
+        if(!wrap.isConnected)return;
+        viewer.replaceChildren();
+        const iframe=el('iframe','ldd-mlh7-pdf-frame');
+        iframe.title='Bản PDF gốc Test for Unit '+test.unit;
+        iframe.loading='lazy';iframe.src=url+'#view=FitH&toolbar=1';
+        viewer.append(iframe);
+        const link=el('a','ldd-mlh7-source-link','Mở đề gốc ở cửa sổ riêng');
+        link.href=url;link.target='_blank';link.rel='noopener';
+        const download=el('a','ldd-mlh7-source-link','Lưu bản PDF của Unit '+test.unit);
+        download.href=url;download.download='Mai-Lan-Huong-Grade7-Unit'+test.unit+'-Test.pdf';
+        tools.append(link,download);
+      }).catch(e=>{if(wrap.isConnected)viewer.textContent=e.message||'Không tải được PDF';requested=false;});
+    });
     return wrap;
   }
   async function ocrCompanion(){
@@ -454,7 +461,8 @@ function boot(){
       sec.questions.forEach((q,i)=>section.append(renderQuestion(sec,q,i,ctx)));
       content.append(section);
     });
-    addSelectableStudyText(ctx.test,content);
+    // The verified interactive source itself is selectable. Do not prepend
+    // OCR here: its late-loading text would shift saved highlight/note offsets.
     form.append(content);
     const actions=el('div','ldd-mlh7-actions');
     if(!ctx.submitted){
