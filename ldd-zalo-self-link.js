@@ -13,9 +13,9 @@ function token(){
  return '';
 }
 function isTeacher(){try{const p=token().split('.')[1].replace(/-/g,'+').replace(/_/g,'/');return JSON.parse(atob(p.padEnd(Math.ceil(p.length/4)*4,'='))).email?.toLowerCase()===teacherEmail;}catch{return false;}}
-async function request(action,id){
+async function request(action,id,recipientId){
  const t=token();if(!t||!isTeacher())throw Error('forbidden');
- const r=await fetch(base,{method:'POST',cache:'no-store',credentials:'omit',headers:{'Content-Type':'application/json',Authorization:'Bearer '+t,apikey:anon},body:JSON.stringify({action:'teacher_'+action,student_id:id})});
+ const r=await fetch(base,{method:'POST',cache:'no-store',credentials:'omit',headers:{'Content-Type':'application/json',Authorization:'Bearer '+t,apikey:anon},body:JSON.stringify({action:'teacher_'+action,student_id:id,recipient_id:recipientId})});
  const d=await r.json();if(!r.ok)throw Error(d.status||'unavailable');return d;
 }
 let modal,list,summary,notice,search,rows=[],issued=new Map(),busy=new Set(),loading=false,poll=null,version=0,lastFocus=null;
@@ -69,23 +69,25 @@ async function refresh(){
   render();
  }catch{if(v===version)showError();}finally{if(v===version)loading=false;}
 }
-function inviteText(name,code){return 'Để nhận lời nhắc học tiếng Anh của '+name+', em hoặc phụ huynh mở chat với bot LDD English:\n'+botLink+'\n\nSao chép và gửi đúng mã sau vào chat bot:\n'+code+'\n\nGửi mã nghĩa là đồng ý nhận tối đa 2 lời nhắc mỗi đợt vắng học. Nếu học viên chưa đủ tuổi, phụ huynh cần đồng ý. Mã có hạn 24 giờ và chỉ dùng một lần. Nhắn STOP để ngừng nhận.';}
+function inviteText(name,code){return 'Để nhận lời nhắc học tiếng Anh của '+name+', em hoặc phụ huynh mở chat với bot LDD English:\n'+botLink+'\n\nSao chép và gửi đúng mã sau vào chat bot:\n'+code+'\n\nGửi mã nghĩa là đồng ý nhận tối đa 2 lời nhắc mỗi đợt vắng học. Nếu học viên chưa đủ tuổi, phụ huynh cần đồng ý. Mã có hạn 24 giờ và chỉ dùng một lần. Nhắn STOP để ngừng tất cả lời nhắc trên Zalo này.';}
 async function copyText(text,area){
  try{await navigator.clipboard.writeText(text);note('Đã sao chép lời mời. Bạn có thể dán vào Zalo để gửi.');}
  catch{area.focus();area.select();try{if(document.execCommand('copy')){note('Đã sao chép lời mời.');return;}}catch{}note('Hãy sao chép phần lời mời đang được chọn.');}
 }
-async function mutate(action,r){
+async function mutate(action,r,recipient){
  if(!r.user_id||busy.has(r.user_id))return;
- if(action==='disable'&&!confirm('Tắt nhắc nhở Zalo của '+r.name+'?'))return;
+ if(action==='disable'&&!confirm('Tắt tất cả Zalo nhận nhắc nhở của '+r.name+'?'))return;
+ if(action==='disable_contact'&&!confirm('Tắt Zalo …'+recipient.suffix+' cho '+r.name+'? Các Zalo khác vẫn nhận tin.'))return;
  if(action==='cancel'&&!confirm('Hủy mã chưa sử dụng của '+r.name+'?'))return;
  if(action==='generate'&&r.status==='pending'&&!confirm('Tạo mã mới sẽ làm mã cũ mất hiệu lực. Tiếp tục?'))return;
  busy.add(r.user_id);note('');render();const v=version;
  try{
-  const d=await request(action,r.user_id);if(v!==version||modal.hidden)return;
+  const d=await request(action,r.user_id,recipient?.id);if(v!==version||modal.hidden)return;
   if(action==='generate'&&d.status==='ready'&&/^LDD-[A-F0-9]{24}$/.test(d.code)){
    issued.set(r.user_id,d);r.status='pending';r.expires_at=d.expires_at;note('Đã tạo mã cho '+r.name+'.');
-  }else if(action==='disable'&&d.status==='disabled'){issued.delete(r.user_id);r.status='disabled';note('Đã tắt nhắc nhở.');}
-  else if(action==='cancel'&&d.status==='cancelled'){issued.delete(r.user_id);r.status='unlinked';r.expires_at=null;note('Đã hủy mã.');}
+  }else if(action==='disable_contact'&&d.status==='recipient_disabled'){r.recipients=(r.recipients||[]).filter(x=>x.id!==recipient.id);r.linked_count=r.recipients.length;r.status=r.expires_at?'pending':r.linked_count?'linked':'disabled';note('Đã tắt Zalo này cho '+r.name+'.');}
+  else if(action==='disable'&&d.status==='disabled'){issued.delete(r.user_id);r.status='disabled';r.linked_count=0;r.recipients=[];r.expires_at=null;note('Đã tắt nhắc nhở.');}
+  else if(action==='cancel'&&d.status==='cancelled'){issued.delete(r.user_id);r.status=r.linked_count?'linked':'unlinked';r.expires_at=null;note('Đã hủy mã.');}
   else if(d.status==='linked'){issued.delete(r.user_id);r.status='linked';note('Học viên đã liên kết.');}
   else if(d.status==='busy')note('Vừa tạo mã. Thử lại sau vài giây.');
   else throw Error(d.status);
@@ -94,22 +96,32 @@ async function mutate(action,r){
 }
 function render(){
  if(!list||modal.hidden)return;
- const q=search.value.trim().toLowerCase(),linked=rows.filter(x=>x.status==='linked').length;
+ const q=search.value.trim().toLowerCase(),linked=rows.filter(x=>Number(x.linked_count)>0||x.status==='linked').length;
  summary.textContent=linked+'/'+rows.length+' tài khoản đã liên kết';
  const fragment=document.createDocumentFragment();
  for(const r of rows.filter(x=>(x.name+' '+x.email).toLowerCase().includes(q))){
   const row=el('article','ldd-zt-row'),identity=el('div','ldd-zt-identity');identity.append(el('strong','',r.name),el('small','',r.email));
   const st=el('div','ldd-zt-status'+(r.status==='linked'?' ldd-zt-linked':''),labels[r.status]||'Chưa liên kết');
+  if(Number(r.linked_count)>0)st.textContent=Number(r.linked_count)+' Zalo đã liên kết'+(r.status==='pending'?' · Chờ mã mới':'');
   if(r.status==='pending'&&r.expires_at)st.textContent+=' · Hết hạn '+expiry(r.expires_at);
   identity.append(st);row.append(identity);
   const actions=el('div','ldd-zt-actions');
-  if(r.status==='linked')actions.append(btn('Tắt nhắc nhở',()=>void mutate('disable',r)));
-  else if(r.status!=='no_account'){
-   actions.append(btn(r.status==='pending'?'Tạo mã mới':'Tạo mã',()=>void mutate('generate',r),'ldd-zt-primary'));
+  if(r.status!=='no_account'){
+   actions.append(btn(r.status==='pending'?'Tạo mã mới':Number(r.linked_count)>0?'Thêm Zalo':'Tạo mã',()=>void mutate('generate',r),'ldd-zt-primary'));
+   if(Number(r.linked_count)>0)actions.append(btn('Tắt tất cả',()=>void mutate('disable',r)));
    if(r.status==='pending')actions.append(btn('Hủy mã',()=>void mutate('cancel',r)));
   }
   for(const b of actions.querySelectorAll('button'))b.disabled=busy.has(r.user_id);
   row.append(actions);
+  if(Array.isArray(r.recipients)&&r.recipients.length){
+   const box=el('div','ldd-zt-invite');
+   for(const [i,recipient] of r.recipients.entries()){
+    const line=el('div','ldd-zt-head');const info=el('div','ldd-zt-identity');
+    info.append(el('strong','','Zalo '+(i+1)+' · …'+recipient.suffix),el('small','','Liên kết '+expiry(recipient.linked_at)));
+    const off=btn('Tắt',()=>void mutate('disable_contact',r,recipient));off.disabled=busy.has(r.user_id);line.append(info,off);box.append(line);
+   }
+   row.append(box);
+  }
   const inv=issued.get(r.user_id);
   if(inv&&r.status==='pending'&&Date.parse(inv.expires_at)>Date.now()){
    const card=el('div','ldd-zt-invite');card.append(el('code','',inv.code));const area=el('textarea');area.readOnly=true;area.value=inviteText(inv.name||r.name,inv.code);area.setAttribute('aria-label','Lời mời gửi cho '+r.name);
