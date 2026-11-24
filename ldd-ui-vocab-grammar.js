@@ -360,13 +360,23 @@
             const el = document.createElement('button');
             el.type = 'button'; el.className = 'school-vocab-button'; el.textContent = label; el.addEventListener('click', fn); return el;
         }
+        function category(label, icon, theme, fn) {
+            const el = button(label, fn);
+            el.classList.add('school-vocab-tile');
+            el.dataset.theme = theme;
+            const name = document.createElement('span'); name.className = 'school-vocab-tile-label'; name.textContent = label;
+            const art = document.createElement('span'); art.className = 'school-vocab-tile-icon'; art.textContent = icon; art.setAttribute('aria-hidden','true');
+            el.replaceChildren(name, art);
+            return el;
+        }
+        const categoryArt = {'Collocations':['🧩','purple'],'Lượng từ':['🧮','teal'],'Liên từ':['🔗','indigo'],'Giới từ':['📍','rose'],'Trạng từ mức độ':['📊','orange']};
         function clear() { area.replaceChildren(); }
         function home() {
             grid.style.display = 'none'; clear();
             const buttons = document.createElement('div'); buttons.className = 'school-vocab-grid';
-            buttons.appendChild(button('Từ vựng SGK', function () { clear(); grid.style.display = ''; area.appendChild(button('← Các nhóm từ vựng', home)); }));
+            buttons.appendChild(category('Từ vựng SGK', '📚', 'blue', function () { clear(); grid.style.display = ''; area.appendChild(button('← Các nhóm từ vựng', home)); }));
             ['Collocations', 'Lượng từ', 'Liên từ', 'Giới từ', 'Trạng từ mức độ'].forEach(function (name) {
-                buttons.appendChild(button(name === 'Collocations' ? 'Collocation' : name, function () {
+                buttons.appendChild(category(name === 'Collocations' ? 'Collocation' : name, ...categoryArt[name], function () {
                     if (name === 'Liên từ') {
                         // Ghi nhớ nơi mở Liên từ để nút quay lại trở về đúng danh mục cấp trước.
                         conjOpenedFromCategories = true;
