@@ -40,3 +40,123 @@ body .vocab-race-game .vocab-race-car {
         transition-duration:.12s!important;
     }
 }
+
+
+/* Vocab Race inner-game visual refresh — keep room logic and timings untouched */
+body .vocab-race-panel {
+    padding: clamp(12px, 2.1vw, 22px);
+    border: 1px solid rgba(132,151,222,.38);
+    border-radius: 24px;
+    background:
+        radial-gradient(ellipse at 0 0, rgba(184,205,255,.42), transparent 31%),
+        radial-gradient(ellipse at 100% 100%, rgba(231,203,255,.3), transparent 32%),
+        linear-gradient(145deg,#f7f9ff,#f6f7ff 58%,#fff8fd);
+    box-shadow: 0 16px 38px rgba(54,72,138,.14);
+}
+body .vocab-race-panel-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 3px 2px 15px;
+    border-bottom: 1px solid rgba(147,163,214,.28);
+}
+body .vocab-race-panel-head h3 { color: #344b91; font-weight: 900; letter-spacing: -.025em; }
+body .vocab-race-panel-head p { color: #667493; font-size: .78rem; }
+body .vocab-race-status { border-radius: 13px; box-shadow: 0 4px 12px rgba(66,84,145,.06); }
+body .vocab-race-entry { gap: 16px; margin-top: 14px; }
+body .vocab-race-entry-card {
+    position: relative;
+    overflow: hidden;
+    padding: clamp(18px,2.6vw,27px);
+    border: 1px solid rgba(139,158,220,.38);
+    border-radius: 21px;
+    background:
+        radial-gradient(circle at 100% 0, rgba(196,211,255,.44), transparent 38%),
+        linear-gradient(145deg,#fff,#f4f6ff);
+    box-shadow: 0 12px 26px rgba(66,84,145,.1), inset 0 1px 0 #fff;
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+body .vocab-race-entry-card::after {
+    content: "";
+    position: absolute;
+    width: 150px;
+    height: 150px;
+    right: -78px;
+    bottom: -102px;
+    border-radius: 50%;
+    background: rgba(130,151,230,.1);
+    pointer-events: none;
+}
+body .vocab-race-entry-card:hover {
+    transform: translateY(-3px);
+    border-color: #a5b5ed;
+    box-shadow: 0 17px 32px rgba(66,84,145,.15);
+}
+body .vocab-race-entry-card h4 { color: #354b91; font-size: 1.08rem; font-weight: 900; }
+body .vocab-race-entry-card p { color: #687594; font-size: .78rem; line-height: 1.65; }
+body .vocab-race-entry-icon {
+    width: 62px;
+    height: 62px;
+    border-radius: 19px;
+    background: linear-gradient(145deg,#e4ebff,#f3e8ff);
+    box-shadow: 0 7px 17px rgba(92,105,190,.14), inset 0 1px 0 #fff;
+}
+body .vocab-race-topic-field select,
+body .vocab-race-code-row input {
+    border: 1px solid #cbd5ef;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: inset 0 1px 3px rgba(35,52,82,.04);
+}
+body .vocab-race-primary {
+    border: 0;
+    border-radius: 12px;
+    background: linear-gradient(115deg,#526fe7,#7e58c7);
+    box-shadow: 0 7px 16px rgba(82,103,207,.23), inset 0 1px 0 rgba(255,255,255,.2);
+}
+body .vocab-race-primary:hover:not(:disabled) { filter: brightness(1.06); transform: translateY(-1px); }
+body .vocab-race-secondary { border-radius: 12px; background: #f7f8ff; border-color: #d4dcf2; }
+body .vocab-race-lobby {
+    border-color: rgba(139,158,220,.38);
+    border-radius: 20px;
+    background: linear-gradient(145deg,#fff,#f5f7ff);
+    box-shadow: 0 12px 26px rgba(66,84,145,.09);
+}
+body .vocab-race-room-code { color: #455eb2; font-variant-numeric: tabular-nums; }
+body .vocab-race-roster-row { border-radius: 13px; background: #f7f8ff; }
+body .vocab-race-roster-row.is-me { background: #edf2ff; }
+body .vocab-race-hud { gap: 10px; margin-bottom: 12px; }
+body .vocab-race-round,
+body .vocab-race-meaning,
+body .vocab-race-round-clock {
+    border: 1px solid #dbe2f5;
+    border-radius: 15px;
+    background: linear-gradient(145deg,#fff,#f5f7ff);
+    box-shadow: 0 6px 15px rgba(57,77,145,.08), inset 0 1px 0 #fff;
+}
+body .vocab-race-round strong { color: #3d559f; font-weight: 900; }
+body .vocab-race-meaning strong { color: #405bb2; font-weight: 900; }
+body .vocab-race-round-clock { color: #425bb2; }
+body .vocab-race-event { border: 1px solid #e1e6f5; border-radius: 12px; }
+body .vocab-race-score-strip { padding-top: 11px; }
+body .vocab-race-mini-score {
+    border-color: #dce3f5;
+    border-radius: 12px;
+    background: linear-gradient(145deg,#fff,#f7f8ff);
+    box-shadow: 0 4px 10px rgba(57,77,145,.06);
+}
+body .vocab-race-mini-score.is-me { border-color: #9cafea; background: linear-gradient(145deg,#edf2ff,#f6f4ff); }
+body .vocab-race-finish {
+    border-color: #d6def3;
+    border-radius: 22px;
+    background:
+        radial-gradient(circle at 50% 0, rgba(252,221,145,.32), transparent 40%),
+        linear-gradient(145deg,#fff,#f6f7ff);
+    box-shadow: 0 16px 32px rgba(66,84,145,.12);
+}
+body .vocab-race-finish h3 { color: #3d559f; font-size: 1.35rem; }
+@media (max-width:760px) {
+    body .vocab-race-panel { padding: 11px; border-radius: 17px; }
+    body .vocab-race-entry-card { border-radius: 16px; }
+    body .vocab-race-panel-head { padding-bottom: 11px; }
+}
