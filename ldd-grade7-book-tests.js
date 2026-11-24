@@ -255,10 +255,38 @@ function boot(){
     label.append(radio,el('span','ldd-mlh7-letter',letters[index]+'.'),answer);
     group.append(label);
   }
+  // Reproduce ten distinct road-sign pictograms for Unit 7 matching exercise.
+  // Sign meanings are NOT written on the image so students still do the match.
+  function roadSignGraphic(index){
+    const base=(body)=>'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 110 110" role="img">'+body+'</svg>';
+    const circle=body=>base('<circle cx="55" cy="54" r="43" fill="white" stroke="#dc2929" stroke-width="8"/>'+body);
+    const blue=body=>base('<circle cx="55" cy="54" r="46" fill="#1877bf"/>'+body);
+    const warning=body=>base('<path d="M55 7L107 98H3Z" fill="white" stroke="#dc2929" stroke-width="7" stroke-linejoin="round"/>'+body);
+    const car=(x,y,color)=>'<path d="M'+x+' '+(y+12)+'h28l-5-12h-18z" fill="'+color+'"/><rect x="'+(x-3)+'" y="'+(y+12)+'" width="34" height="14" rx="4" fill="'+color+'"/><circle cx="'+(x+4)+'" cy="'+(y+28)+'" r="5"/><circle cx="'+(x+24)+'" cy="'+(y+28)+'" r="5"/>';
+    const patterns=[
+      circle('<path d="M24 25L86 87M86 25L24 87" stroke="#d62c26" stroke-width="10"/><path d="M38 33L72 79M72 33L38 79" stroke="white" stroke-width="3"/>'),
+      warning('<path d="M27 80q11-24 20-7t19-7t18 9" fill="none" stroke="#111" stroke-width="5"/>'+car(41,42,'#171717')),
+      blue('<path d="M55 14L30 45h14v45h22V45h14Z" fill="white"/>'),
+      base('<rect x="6" y="6" width="98" height="98" rx="12" fill="#1764a4"/><path d="M37 18V91M75 18V91M37 54H75" stroke="white" stroke-width="12"/>'),
+      circle(car(25,38,'#151515')+car(61,38,'#d62929')),
+      circle('<text x="55" y="70" text-anchor="middle" fill="#161616" font-size="57" font-family="sans-serif" font-weight="bold">P</text><path d="M25 86L85 24" stroke="#d62828" stroke-width="10"/>'),
+      warning('<path d="M55 27V82M29 53H81" stroke="#161616" stroke-width="8"/>'),
+      circle('<path d="M79 77V49Q79 34 60 34H36L46 25M36 34L46 44" fill="none" stroke="#161616" stroke-width="8" stroke-linejoin="round"/><path d="M24 85L86 23" stroke="#d62828" stroke-width="9"/>'),
+      blue('<path d="M15 48H69V30L99 54L69 79V62H15Z" fill="white"/>'),
+      warning('<path d="M26 86h59M35 79l-12-11m31 11L42 68m32 11L62 68" stroke="#161616" stroke-width="5"/><circle cx="53" cy="40" r="7"/><path d="M53 47L49 66L40 78M49 66L64 73M52 54L68 57" fill="none" stroke="#161616" stroke-width="5"/>')
+    ];
+    if(index<1||index>patterns.length)return null;
+    const img=el('img','ldd-mlh7-road-sign');
+    img.alt='Biển báo '+index;
+    img.loading='lazy';
+    img.src='data:image/svg+xml;charset=UTF-8,'+encodeURIComponent(patterns[index-1]);
+    return img;
+  }
   function renderQuestion(sec,q,i,ctx){
     const key=answerKey(sec,i);
     const field=el('fieldset','ldd-mlh7-question');
     field.append(el('legend','',String(i+1)+'. '+(q.text||'')));
+    if(q.signIndex){const sign=roadSignGraphic(q.signIndex);if(sign)field.append(sign);}
     if(q.type==='choice'){
       const group=el('div','ldd-mlh7-options');
       q.options.forEach((opt,n)=>drawChoice(group,ctx,key,q,opt,n,sec.underlines?.[i]));
@@ -591,6 +619,7 @@ function boot(){
         sec.questions.forEach((q,i)=>{
           const key=answerKey(sec,i),field=el('article','ldd-mlh7-review-item');
           field.append(el('h4','',key+' · '+(q.text||('Câu '+(i+1)+' ('+sec.title+')'))));
+          if(q.signIndex){const sign=roadSignGraphic(q.signIndex);if(sign)field.append(sign);}
           // Show the actual source options; without these, teachers cannot
           // judge questions that contain only four answer choices.
           if(q.type==='choice'){
