@@ -696,3 +696,8 @@ body.ldd-ui-v2 #tab-trang-chu .ldd-today-tasks .ldd-study-next button {
   font-size: .83rem;
   padding: 9px 15px;
 }
+
+/* Let the on-demand Oci popover render above the task section. */
+body.ldd-ui-v2 #tab-trang-chu .ldd-home-dashboard > .ldd-home-main {
+  z-index: 3;
+}
