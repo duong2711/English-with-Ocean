@@ -52,7 +52,7 @@ test('grouped teacher layout is responsive, and new assets are cache-busted', ()
   assert.match(css, /\.ctest-student-group-summary/);
   assert.match(css, /@media\(max-width:600px\)/);
   assert.match(boot, /ldd-ctest-student-groups\.css\?v=20261116-grouped1/);
-  assert.match(boot, /ldd-film-cloze\.js\?v=20261116-script-visibility1/);
+  assert.match(boot, /ldd-film-cloze\.js\?v=20261124-score-audit2/);
   assert.match(page, /scriptphonetics\.js\?v=20261116-ctest-student-groups1/);
   assert.match(page, /ldd-ui-upgrade\.js\?v=20261116-ctest-student-groups1/);
 });
