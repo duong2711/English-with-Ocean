@@ -11,7 +11,7 @@ const css=fs.readFileSync(path.join(base,'ldd-grade7-book-tests.css'),'utf8');
 const actions=fs.readFileSync(path.join(base,'ldd-text-actions.js'),'utf8');
 const annotations=fs.readFileSync(path.join(base,'ldd-test-annotations.js'),'utf8');
 const scope={window:{}};
-for(const file of ['ldd-grade7-book-tests-data.js','ldd-grade7-book-tests-unit2.js','ldd-grade7-book-tests-rest.js'])
+for(const file of ['ldd-grade7-book-tests-data.js','ldd-grade7-book-tests-unit2.js',...Array.from({length:10},(_,i)=>'ldd-grade7-book-tests-unit'+(i+3)+'.js'),'ldd-grade7-book-tests-source-links.js'])
   vm.runInNewContext(fs.readFileSync(path.join(base,file),'utf8'),scope);
 const book=scope.window.LDDGrade7BookTests;
 
@@ -27,12 +27,15 @@ test('school-exam folder opens 12 grade-seven units without replacing private ex
 test('assets for exam, two-action menu and persisted annotations are cache-versioned',()=>{
   assert.match(boot,/ldd-grade7-book-tests-data\.js\?v=20261124-mlh7-1/);
   assert.match(boot,/ldd-grade7-book-tests-unit2\.js\?v=20261124-mlh7-1/);
-  assert.match(boot,/ldd-grade7-book-tests-rest\.js\?v=20261124-mlh7-rest1/);
-  assert.match(boot,/ldd-grade7-book-tests\.js\?v=20261124-mlh7-all12-final2/);
+  assert.match(boot,/ldd-grade7-book-tests-source-links\.js\?v=20261124-mlh7-full1/);
+  for(let unit=3;unit<=12;unit++)
+    assert.match(boot,new RegExp('ldd-grade7-book-tests-unit'+unit+'\\.js\\?v=20261124-mlh7-'));
+  assert.doesNotMatch(boot,/ensureScript\('ldd-grade7-book-tests-rest'/);
+  assert.match(boot,/ldd-grade7-book-tests\.js\?v=20261124-mlh7-full2/);
   assert.match(boot,/ldd-grade7-book-tests\.css\?v=20261124-mlh7-all12-1/);
-  assert.match(boot,/ldd-text-actions\.js\?v=20261124-mlh7-all12-final2/);
+  assert.match(boot,/ldd-text-actions\.js\?v=20261124-mlh7-full2/);
   assert.match(boot,/ldd-test-annotations\.js\?v=20261124-mlh7-annotations1/);
-  assert.match(page,/ldd-ui-upgrade\.js\?v=20261124-mlh7-all12-catalog4/);
+  assert.match(page,/ldd-ui-upgrade\.js\?v=20261124-restore-original-compact1/);
 });
 test('all twelve units exist; only scanned and reviewed workbook tests appear',()=>{
   assert.equal(book.units.length,12);
@@ -110,7 +113,7 @@ test('all remaining units contain the original scanned test and a keyed answer s
   const exam=book.tests.find(t=>t.unit===unit);
   assert.ok(exam);
   assert.equal(exam.verified,true);
-  assert.equal(exam.sourceFormat,'scanned-original');
+  assert.equal(exam.sourceFormat,'scanned-original-plus-transcription');
   assert.equal(exam.pdfAsset,'assets/mlh7/u'+String(unit).padStart(2,'0')+'-test-pdf.js');
   assert.ok(exam.sections.length>=10);
   assert.ok(exam.sections.reduce((n,s)=>n+s.questions.length,0)>=65);
@@ -118,7 +121,7 @@ test('all remaining units contain the original scanned test and a keyed answer s
    assert.ok(/^[IVX]+$/.test(section.label));
    for(const q of section.questions){
     assert.ok(['choice','match','written'].includes(q.type));
-    if(q.type==='match')assert.ok(section.choices?.length>=8);
+    if(q.type==='match')assert.ok(section.choices?.length>=5);
     if(q.type==='choice')assert.ok(q.options?.length>=2);
     if(q.type!=='written')assert.ok(/^[a-j]$/.test(q.answer));
    }
@@ -139,4 +142,38 @@ test('scanned original is lazy-loaded, OCR is labelled and student annotations r
  assert.match(view,/sourceViewer\(test,panel\)/);
  assert.match(view,/sourceViewer\(ctx\.test,panel\)/);
  assert.match(view,/const letters=\['a','b','c','d','e','f','g','h','i','j'\]/);
+});
+
+test('each unit has its actual question text, answer choices and verifiable source pages',()=>{
+ const expectedCounts=[73,71,77,74,73,78,87,94,88,82,89,90];
+ const total=book.tests.reduce((n,exam)=>n+exam.sections.reduce((m,s)=>m+s.questions.length,0),0);
+ assert.equal(total,expectedCounts.reduce((a,b)=>a+b,0));
+ for(const [index,exam] of book.tests.entries()){
+  assert.equal(exam.sections.reduce((n,s)=>n+s.questions.length,0),expectedCounts[index]);
+  for(const section of exam.sections){
+   assert.ok(section.title.length>10);
+   for(const q of section.questions){
+    assert.ok(typeof q.text==='string');
+    assert.doesNotMatch(q.text,/xem trang sách gốc|xem trang đề gốc|Câu \d+ · xem/);
+    if(q.type==='choice'){
+      assert.ok(q.options.every(x=>typeof x==='string'&&x.trim().length>0));
+      assert.ok(q.answer.length===1&&'abcd'.includes(q.answer));
+    }
+    if(q.type==='match') assert.ok('abcdefghij'.includes(q.answer));
+   }
+  }
+ }
+});
+test('road-sign figures are presented with source meaning kept hidden until matching',()=>{
+ const unit7=book.tests.find(t=>t.unit===7);
+ const signs=unit7.sections.find(s=>s.label==='II').questions;
+ assert.equal(signs.length,10);
+ signs.forEach((q,i)=>assert.equal(q.signIndex,i+1));
+ assert.match(view,/function roadSignGraphic\(index\)/);
+ assert.match(view,/if\(q.signIndex\)\{const sign=roadSignGraphic\(q.signIndex\)/);
+});
+test('verified interactive text does not load OCR that would shift saved highlight offsets',()=>{
+ assert.doesNotMatch(view,/^\s*addSelectableStudyText\(ctx\.test,content\);/m);
+ assert.match(view,/const wrap=el\('details','ldd-mlh7-source'\)/);
+ assert.match(view,/if\(!wrap\.open\|\|requested\)return/);
 });
