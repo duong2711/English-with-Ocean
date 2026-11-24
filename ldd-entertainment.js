@@ -849,7 +849,7 @@
                     claimedWordRewardFrames.delete(frameIndex);
                     if (note) {
                         note.classList.add('is-error');
-                        note.textContent = 'Chưa lưu được điểm từ vựng. Hãy cuộn sang khung khác rồi quay lại để thử lại.';
+                        note.textContent = 'Chưa lưu được điểm từ vựng. Hãy lướt sang khung khác rồi quay lại để thử lại.';
                     }
                     console.warn('[LDD comic word points]', error);
                 }
@@ -889,7 +889,7 @@
             close.setAttribute('aria-label', 'Đóng truyện');
             const deck = el('div', 'ldd-comic-swipe-deck');
             deck.tabIndex = 0;
-            deck.setAttribute('aria-label', 'Vuốt ngang hoặc dùng phím mũi tên để xem truyện');
+            deck.setAttribute('aria-label', 'Kéo hoặc vuốt ngang, hoặc dùng phím mũi tên để xem truyện');
             const loading = el('span', 'ldd-comic-loading');
             loading.setAttribute('role', 'status');
             loading.setAttribute('aria-label', 'Đang tải truyện');
@@ -956,15 +956,6 @@
                 event.preventDefault();
                 move(event.key === 'ArrowRight' ? 1 : -1);
             });
-            let lastWheel = 0;
-            deck.addEventListener('wheel', event => {
-                if (Math.abs(event.deltaX) > Math.abs(event.deltaY) || !event.deltaY || event.ctrlKey) return;
-                const slide = event.target.closest('.ldd-comic-swipe-slide');
-                if (slide && slide.scrollHeight > slide.clientHeight + 2 && event.target.closest('.ldd-comic-swipe-text')) return;
-                event.preventDefault();
-                const now = Date.now();
-                if (now - lastWheel > 450) { lastWheel = now; move(event.deltaY > 0 ? 1 : -1); }
-            }, {passive:false});
             let drag = null;
             deck.addEventListener('pointerdown', event => {
                 if (event.pointerType !== 'mouse' || event.button !== 0 || !event.target.closest('.ldd-comic-swipe-art')) return;
