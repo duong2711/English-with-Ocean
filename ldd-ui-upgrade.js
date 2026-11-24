@@ -80,8 +80,14 @@
         ensureScript('ldd-grade7-book-tests-unit4', 'ldd-grade7-book-tests-unit4.js?v=20261124-mlh7-1');
         ensureScript('ldd-grade7-book-tests-unit5', 'ldd-grade7-book-tests-unit5.js?v=20261124-mlh7-1');
         ensureScript('ldd-grade7-book-tests-unit6', 'ldd-grade7-book-tests-unit6.js?v=20261124-mlh7-1');
-        ensureScript('ldd-grade7-book-tests-rest', 'ldd-grade7-book-tests-rest.js?v=20261124-mlh7-rest1');
-        ensureScript('ldd-grade7-book-tests', 'ldd-grade7-book-tests.js?v=20261124-mlh7-all12-final2');
+        ensureScript('ldd-grade7-book-tests-unit7', 'ldd-grade7-book-tests-unit7.js?v=20261124-mlh7-full1');
+        ensureScript('ldd-grade7-book-tests-unit8', 'ldd-grade7-book-tests-unit8.js?v=20261124-mlh7-full1');
+        ensureScript('ldd-grade7-book-tests-unit9', 'ldd-grade7-book-tests-unit9.js?v=20261124-mlh7-full1');
+        ensureScript('ldd-grade7-book-tests-unit10', 'ldd-grade7-book-tests-unit10.js?v=20261124-mlh7-full1');
+        ensureScript('ldd-grade7-book-tests-unit11', 'ldd-grade7-book-tests-unit11.js?v=20261124-mlh7-full1');
+        ensureScript('ldd-grade7-book-tests-unit12', 'ldd-grade7-book-tests-unit12.js?v=20261124-mlh7-full1');
+        ensureScript('ldd-grade7-book-tests-source-links', 'ldd-grade7-book-tests-source-links.js?v=20261124-mlh7-full1');
+        ensureScript('ldd-grade7-book-tests', 'ldd-grade7-book-tests.js?v=20261124-mlh7-full1');
     }
 
     function ensureStylesheet(id, href) {
