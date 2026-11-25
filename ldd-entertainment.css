@@ -842,17 +842,6 @@ body:has(.ldd-ent-upload-dialog[open]) { overflow: hidden; }
   top:0;
   z-index:3;
 }
-#tab-giai-tri .ldd-wimpy-score-line {
-  position:sticky;
-  top:46px;
-  z-index:2;
-  padding:8px 16px;
-  border-bottom:1px solid #eee7db;
-  background:#fffaf0;
-  color:#79562e;
-  font-size:12px;
-  font-weight:750;
-}
 #tab-giai-tri .ldd-wimpy-translation-text {
   padding:16px clamp(14px,2vw,24px) 28px;
   white-space:pre-wrap;
