@@ -636,7 +636,7 @@
             paneSplitter.setAttribute('aria-label', 'Điều chỉnh chiều cao giữa truyện gốc và bản dịch');
             paneSplitter.setAttribute('aria-orientation', 'horizontal');
             paneSplitter.setAttribute('aria-valuemin', '140');
-            paneSplitter.setAttribute('aria-valuenow', '42');
+            paneSplitter.setAttribute('aria-valuenow', '140');
             paneSplitter.setAttribute('aria-valuetext', 'Có thể kéo lên hoặc xuống để thay đổi chiều cao hai phần');
             paneSplitter.tabIndex = 0;
             const splitterGrip = el('span', 'ldd-wimpy-pane-splitter-grip');
@@ -1046,6 +1046,7 @@
 
             renderPage();
             dialog.showModal();
+            setOriginalPaneHeight(readerGrid.clientHeight * 0.42);
             imageViewport.focus({preventScroll:true});
             wimpyWordPositions().then(data => {
                 if (dialog.open) {
