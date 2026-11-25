@@ -894,19 +894,30 @@
                     cursor = range.end;
                 });
                 translationText.append(document.createTextNode(text.slice(cursor)));
-                if (!ranges.length) translationText.textContent = text || 'Trang này chưa có bản dịch.';
 
-                // Pages without saved phrase highlights still show an empty exercise slot.
-                // It is deliberately disabled: no fake answer choices or AI generation.
+                // Remove the redundant score strip if an older cached fragment injects it.
+                translationText.querySelectorAll('.ldd-wimpy-score-line').forEach(node => node.remove());
+
+                // Keep empty exercise slots visible on every translation paragraph
+                // that has no saved phrase highlight. These are visual placeholders only:
+                // no fabricated choices, answer keys, or AI generation on page open.
                 if (!ranges.length) {
-                    const emptySlot = el('span', 'ldd-wimpy-cloze ldd-wimpy-cloze-empty');
-                    const emptyTrigger = el('button', 'ldd-wimpy-cloze-trigger ldd-wimpy-cloze-trigger-empty', '');
-                    emptyTrigger.type = 'button';
-                    emptyTrigger.disabled = true;
-                    emptyTrigger.setAttribute('aria-label', 'Ô chọn nghĩa đang để trống');
-                    emptyTrigger.title = 'Trang này chưa có từ hoặc cụm từ được đánh dấu';
-                    emptySlot.append(emptyTrigger);
-                    translationText.append(document.createTextNode(' '), emptySlot);
+                    translationText.replaceChildren();
+                    const paragraphs = String(text || 'Trang này chưa có bản dịch.').split(/\\n+/);
+                    paragraphs.forEach((paragraph, index) => {
+                        if (index) translationText.append(document.createElement('br'));
+                        if (paragraph) translationText.append(document.createTextNode(paragraph));
+                        if (paragraph.trim()) {
+                            const emptySlot = el('span', 'ldd-wimpy-cloze ldd-wimpy-cloze-empty');
+                            const emptyTrigger = el('button', 'ldd-wimpy-cloze-trigger ldd-wimpy-cloze-trigger-empty', '');
+                            emptyTrigger.type = 'button';
+                            emptyTrigger.disabled = true;
+                            emptyTrigger.setAttribute('aria-label', 'Ô chọn nghĩa đang để trống');
+                            emptyTrigger.title = 'Đoạn này chưa có từ hoặc cụm từ được đánh dấu';
+                            emptySlot.append(emptyTrigger);
+                            translationText.append(document.createTextNode(' '), emptySlot);
+                        }
+                    });
                 }
             }
 
