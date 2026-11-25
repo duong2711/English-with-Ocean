@@ -631,13 +631,24 @@
             originalPane.append(originalHeading, imageViewport);
 
             const translation = el('section', 'ldd-wimpy-translation');
+            const paneSplitter = el('div', 'ldd-wimpy-pane-splitter');
+            paneSplitter.setAttribute('role', 'separator');
+            paneSplitter.setAttribute('aria-label', 'Điều chỉnh chiều cao giữa truyện gốc và bản dịch');
+            paneSplitter.setAttribute('aria-orientation', 'horizontal');
+            paneSplitter.setAttribute('aria-valuemin', '140');
+            paneSplitter.setAttribute('aria-valuenow', '42');
+            paneSplitter.setAttribute('aria-valuetext', 'Có thể kéo lên hoặc xuống để thay đổi chiều cao hai phần');
+            paneSplitter.tabIndex = 0;
+            const splitterGrip = el('span', 'ldd-wimpy-pane-splitter-grip');
+            splitterGrip.setAttribute('aria-hidden', 'true');
+            paneSplitter.append(splitterGrip);
             const translationHeading = el('h4', 'ldd-wimpy-pane-heading', '🇻🇳 Bản dịch tiếng Việt');
             const scoreLine = el('div', 'ldd-wimpy-score-line', 'Đang tải bài luyện…');
             scoreLine.setAttribute('aria-live', 'polite');
             const translationText = el('div', 'ldd-wimpy-translation-text');
             translation.setAttribute('aria-live', 'polite');
             translation.append(translationHeading, scoreLine, translationText);
-            readerGrid.append(originalPane, translation);
+            readerGrid.append(originalPane, paneSplitter, translation);
 
             const controls = el('div', 'ldd-wimpy-controls');
             const prev = el('button', '', '← Trước');
@@ -650,6 +661,67 @@
             dialog.append(header, readerGrid, controls);
             comics.append(dialog);
             readerZoom = dialog;
+
+            // Mobile-only draggable divider: resize the original page and
+            // translation panes while keeping both readable.
+            const mobileReaderQuery = window.matchMedia?.('(max-width:700px)');
+            let splitterPointerId = null;
+            function splitterBounds() {
+                const height = readerGrid.clientHeight;
+                const handleHeight = paneSplitter.offsetHeight || 26;
+                const minOriginal = 140;
+                const minTranslation = 140;
+                return {
+                    min: minOriginal,
+                    max: Math.max(minOriginal, height - handleHeight - minTranslation)
+                };
+            }
+            function setOriginalPaneHeight(requestedHeight) {
+                const bounds = splitterBounds();
+                const height = Math.round(Math.max(bounds.min, Math.min(bounds.max, requestedHeight)));
+                readerGrid.style.setProperty('--ldd-wimpy-original-height', height + 'px');
+                paneSplitter.setAttribute('aria-valuemax', String(bounds.max));
+                paneSplitter.setAttribute('aria-valuenow', String(height));
+                paneSplitter.setAttribute('aria-valuetext', 'Khung truyện gốc cao ' + height + ' px; phần còn lại dành cho bản dịch');
+            }
+            function currentOriginalPaneHeight() {
+                const gridRect = readerGrid.getBoundingClientRect();
+                const handleRect = paneSplitter.getBoundingClientRect();
+                return handleRect.top - gridRect.top;
+            }
+            paneSplitter.addEventListener('pointerdown', event => {
+                if (!mobileReaderQuery?.matches || !event.isPrimary || (event.pointerType === 'mouse' && event.button !== 0)) return;
+                event.preventDefault();
+                splitterPointerId = event.pointerId;
+                paneSplitter.setPointerCapture?.(event.pointerId);
+                setOriginalPaneHeight(event.clientY - readerGrid.getBoundingClientRect().top);
+            });
+            paneSplitter.addEventListener('pointermove', event => {
+                if (splitterPointerId !== event.pointerId) return;
+                event.preventDefault();
+                setOriginalPaneHeight(event.clientY - readerGrid.getBoundingClientRect().top);
+            });
+            function stopSplitterDrag(event) {
+                if (splitterPointerId !== event.pointerId) return;
+                splitterPointerId = null;
+                if (paneSplitter.hasPointerCapture?.(event.pointerId)) paneSplitter.releasePointerCapture(event.pointerId);
+            }
+            paneSplitter.addEventListener('pointerup', stopSplitterDrag);
+            paneSplitter.addEventListener('pointercancel', stopSplitterDrag);
+            paneSplitter.addEventListener('lostpointercapture', () => { splitterPointerId = null; });
+            paneSplitter.addEventListener('keydown', event => {
+                if (!mobileReaderQuery?.matches) return;
+                const bounds = splitterBounds();
+                const current = currentOriginalPaneHeight();
+                let next = current;
+                if (event.key === 'ArrowUp') next -= 24;
+                else if (event.key === 'ArrowDown') next += 24;
+                else if (event.key === 'Home') next = bounds.min;
+                else if (event.key === 'End') next = bounds.max;
+                else return;
+                event.preventDefault();
+                setOriginalPaneHeight(next);
+            });
 
             let page = 0;
             let positions = {};
