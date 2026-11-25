@@ -114,9 +114,9 @@ begin
     returning d.id,d.notification_id,d.chat_id
   )
   select x.id,x.notification_id,x.chat_id,
-    '🔔 LDD English có bài kiểm tra mới dành cho bạn!' || E'\\n\\n📝 ' ||
+    '🔔 LDD English có bài kiểm tra mới dành cho bạn!' || E'\n\n📝 ' ||
     left(coalesce(nullif(btrim(t.title),''),'Bài kiểm tra mới'),240) ||
-    E'\\n\\nGiảng viên đã giao bài này. Đăng nhập tại https://lddenglish.page/ rồi mở mục “Bài kiểm tra riêng” để xem đề và làm bài nhé.'
+    E'\n\nGiảng viên đã giao bài này. Đăng nhập tại https://lddenglish.page/ rồi mở mục “Bài kiểm tra riêng” để xem đề và làm bài nhé.'
   from claimed x
   join public.ldd_bot_test_notifications n on n.id=x.notification_id
   join public.custom_tests t on t.id=n.test_id;
