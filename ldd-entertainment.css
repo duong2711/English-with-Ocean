@@ -1055,3 +1055,24 @@ body:has(.ldd-ent-upload-dialog[open]) { overflow: hidden; }
     overflow-y:auto;
   }
 }
+
+
+/* Wimpy Kid: remove the redundant score strip on every viewport. */
+#tab-giai-tri .ldd-wimpy-score-line,
+#tab-giai-tri .ldd-wimpy-translation .ldd-wimpy-score-line {
+  display:none !important;
+}
+
+/* Empty exercise slot for pages that do not yet have phrase highlights. */
+#tab-giai-tri .ldd-wimpy-cloze-trigger-empty,
+#tab-giai-tri .ldd-wimpy-cloze-trigger-empty:disabled {
+  width:118px;
+  min-width:118px;
+  height:30px;
+  padding:0;
+  border:1px dashed #c8b99f;
+  border-radius:7px;
+  background:#faf7f0;
+  cursor:default;
+  opacity:.75;
+}
