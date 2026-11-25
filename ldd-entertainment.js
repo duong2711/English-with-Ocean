@@ -1357,18 +1357,23 @@ function showGrades(series, selectedGrade) {
                     });
                     const points = Number(result.points_awarded || 0);
                     if (note) {
-                        note.classList.remove('is-error');
-                        note.classList.add(points > 0 ? 'is-awarded' : 'is-checked');
-                        note.textContent = points > 0
-                            ? '✨ Bạn nhận +' + points + ' điểm chăm chỉ từ những từ in đậm chưa tra.'
-                            : 'Đã ghi nhận khung truyện. Các từ in đậm bạn đã tra không được cộng điểm.';
+                        note.classList.remove('is-error', 'is-checked');
+                        if (points > 0) {
+                            note.hidden = false;
+                            note.classList.add('is-awarded');
+                            note.textContent = '✨ +' + points + ' điểm chăm chỉ';
+                        } else {
+                            note.hidden = true;
+                            note.textContent = '';
+                        }
                     }
                     if (points > 0) document.dispatchEvent(new CustomEvent('ldd:today-refresh'));
                 } catch (error) {
                     claimedWordRewardFrames.delete(frameIndex);
                     if (note) {
+                        note.hidden = false;
                         note.classList.add('is-error');
-                        note.textContent = 'Chưa lưu được điểm từ vựng. Hãy lướt sang khung khác rồi quay lại để thử lại.';
+                        note.textContent = 'Chưa lưu được điểm từ vựng. Thử lại khi có kết nối.';
                     }
                     console.warn('[LDD comic word points]', error);
                 }
@@ -1411,25 +1416,16 @@ function showGrades(series, selectedGrade) {
             deck.setAttribute('aria-label', 'Kéo hoặc vuốt ngang, hoặc dùng phím mũi tên để xem truyện');
             const swipeGuide = el('div', 'ldd-comic-swipe-guide');
             const swipeGuideIcon = el('span', 'ldd-comic-swipe-guide-icon', '↔');
-            const swipeGuideText = el('span', 'ldd-comic-swipe-guide-text', 'Vuốt ngang hoặc kéo sang trái để xem khung tiếp theo');
-            const swipeGuideCount = el('span', 'ldd-comic-swipe-guide-count', 'Khung 1/1');
-            swipeGuide.append(swipeGuideIcon, swipeGuideText, swipeGuideCount);
+            swipeGuideIcon.setAttribute('aria-hidden', 'true');
+            const swipeGuideCount = el('span', 'ldd-comic-swipe-guide-count', '1/1');
+            swipeGuide.append(swipeGuideIcon, swipeGuideCount);
             let renderedFrameCount = 0;
             function updateComicSwipeGuide() {
                 const width = deck.clientWidth;
                 const activeIndex = width ? Math.max(0, Math.min(renderedFrameCount - 1, Math.round(deck.scrollLeft / width))) : 0;
-                if (renderedFrameCount > 1 && activeIndex < renderedFrameCount - 1) {
-                    swipeGuideText.textContent = activeIndex === 0
-                        ? 'Vuốt ngang hoặc kéo sang trái để xem khung tiếp theo'
-                        : 'Tiếp tục vuốt ngang để xem khung tiếp theo';
-                } else if (renderedFrameCount > 1) {
-                    swipeGuideText.textContent = 'Đã đến khung cuối · vuốt sang phải để xem lại';
-                } else {
-                    swipeGuideText.textContent = 'Đây là khung truyện duy nhất của phần này';
-                }
                 swipeGuideCount.textContent = renderedFrameCount
-                    ? 'Khung ' + (activeIndex + 1) + '/' + renderedFrameCount
-                    : 'Đang tải…';
+                    ? (activeIndex + 1) + '/' + renderedFrameCount
+                    : '…';
                 swipeGuide.dataset.atEnd = String(renderedFrameCount > 1 && activeIndex === renderedFrameCount - 1);
             }
             deck.addEventListener('scroll', updateComicSwipeGuide, {passive:true});
@@ -1536,13 +1532,6 @@ function showGrades(series, selectedGrade) {
                     const readingPane = el('section', 'ldd-comic-reading-pane');
                     readingPane.setAttribute('aria-label', 'Truyện gốc và nội dung tiếng Anh');
 
-                    const readingHeading = el('div', 'ldd-comic-pane-heading');
-                    readingHeading.append(
-                        el('strong', '', '📖 Truyện gốc & nội dung'),
-                        el('small', '', 'Khung ' + (index + 1) + ' / ' + frames.length)
-                    );
-                    readingPane.append(readingHeading);
-
                     const url = safeAsset(frame.image_url);
                     if (url) {
                         const art = el('div', 'ldd-comic-swipe-art');
@@ -1568,8 +1557,8 @@ function showGrades(series, selectedGrade) {
                     text.dataset.vocabSource = 'Truyện học đường – Lớp ' + grade + ' – Unit ' + unit.number;
                     readingPane.append(text);
 
-                    const rewardNote = el('div', 'ldd-comic-word-reward-note',
-                        '📖 Đọc khung này: mỗi từ in đậm chưa tra được +2 điểm chăm chỉ.');
+                    const rewardNote = el('div', 'ldd-comic-word-reward-note', '');
+                    rewardNote.hidden = true;
                     rewardNote.dataset.frameIndex = String(frame.frame_index);
                     wordRewardNotes.set(Number(frame.frame_index), rewardNote);
                     readingPane.append(rewardNote);
@@ -1579,8 +1568,7 @@ function showGrades(series, selectedGrade) {
                     const translateBox = el('section', 'ldd-comic-translation-box');
                     const translateHead = el('div', 'ldd-comic-translation-head');
                     translateHead.append(
-                        el('strong', '', '✍️ Bản dịch của bạn'),
-                        el('small', '', 'Đọc nội dung truyện ở cột trái, sau đó nhập bản dịch tiếng Việt vào đây.')
+                        el('strong', '', '✍️ Bản dịch của bạn')
                     );
                     const textarea = document.createElement('textarea');
                     textarea.className = 'ldd-comic-translation-input';
