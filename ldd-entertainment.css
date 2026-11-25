@@ -1099,8 +1099,8 @@ body:has(.ldd-ent-upload-dialog[open]) { overflow: hidden; }
 #tab-giai-tri .ldd-wimpy-admin-tools > strong { font-size: 13px; }
 #tab-giai-tri .ldd-wimpy-admin-status,
 #tab-giai-tri .ldd-wimpy-admin-detail { margin: 0; }
-#tab-giai-trai .ldd-wimpy-admin-status { font-size: 13px; font-weight: 650; }
-#tab-giai-trai .ldd-wimpy-admin-detail { font-size: 12px; opacity: .78; line-height: 1.5; overflow-wrap: anywhere; }
+#tab-giai-tri .ldd-wimpy-admin-status { font-size: 13px; font-weight: 650; }
+#tab-giai-tri .ldd-wimpy-admin-detail { font-size: 12px; opacity: .78; line-height: 1.5; overflow-wrap: anywhere; }
 #tab-giai-tri .ldd-wimpy-admin-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 #tab-giai-tri .ldd-wimpy-admin-actions button {
     min-height: 36px;
