@@ -903,7 +903,7 @@
                 // no fabricated choices, answer keys, or AI generation on page open.
                 if (!ranges.length) {
                     translationText.replaceChildren();
-                    const paragraphs = String(text || 'Trang này chưa có bản dịch.').split(/\\n+/);
+                    const paragraphs = String(text || 'Trang này chưa có bản dịch.').split(/\n+/);
                     paragraphs.forEach((paragraph, index) => {
                         if (index) translationText.append(document.createElement('br'));
                         if (paragraph) translationText.append(document.createTextNode(paragraph));
