@@ -72,7 +72,7 @@
         ensureScript('ldd-vocab-shooter-script', 'ldd-vocab-shooter.js?v=20261115-solo1');
         ensureScript('ldd-quick-lookup-script', 'ldd-quick-lookup.js?v=20261025-valid2');
         ensureScript('ldd-entertainment-data-script', 'ldd-entertainment-data.js?v=20261027-wimpy1');
-        ensureScript('ldd-entertainment-script', 'ldd-entertainment.js?v=20261125-wimpy-bilingual1');
+        ensureScript('ldd-entertainment-script', 'ldd-entertainment.js?v=20261125-wimpy-bilingual2');
         ensureScript('ldd-film-timing-script', 'ldd-film-timing.js?v=20261029-transcript-import1');
         ensureScript('ldd-film-cloze-script', 'ldd-film-cloze.js?v=20261124-score-audit2');
         ensureScript('ldd-text-actions-script', 'ldd-text-actions.js?v=20261124-mlh7-all12-final2');
