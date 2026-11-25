@@ -1083,3 +1083,39 @@ body:has(.ldd-ent-upload-dialog[open]) { overflow: hidden; }
   cursor:default;
   opacity:.75;
 }
+
+
+/* Teacher-only Wimpy quiz batch generator */
+#tab-giai-tri .ldd-wimpy-admin-tools {
+    display: grid;
+    gap: 8px;
+    margin: 0 0 16px;
+    padding: 14px 16px;
+    border: 1px solid var(--line, rgba(120,130,150,.22));
+    border-radius: 14px;
+    background: var(--surface-soft, rgba(120,130,150,.07));
+}
+#tab-giai-tri .ldd-wimpy-admin-tools[hidden] { display: none !important; }
+#tab-giai-tri .ldd-wimpy-admin-tools > strong { font-size: 13px; }
+#tab-giai-trai .ldd-wimpy-admin-status,
+#tab-giai-trai .ldd-wimpy-admin-detail { margin: 0; }
+#tab-giai-trai .ldd-wimpy-admin-status { font-size: 13px; font-weight: 650; }
+#tab-giai-trai .ldd-wimpy-admin-detail { font-size: 12px; opacity: .78; line-height: 1.5; overflow-wrap: anywhere; }
+#tab-giai-tri .ldd-wimpy-admin-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+#tab-giai-tri .ldd-wimpy-admin-actions button {
+    min-height: 36px;
+    padding: 8px 13px;
+    border: 1px solid var(--line, rgba(120,130,150,.28));
+    border-radius: 9px;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+#tab-giai-tri .ldd-wimpy-admin-start { background: var(--accent, #315fe8); color: #fff; border-color: transparent !important; }
+#tab-giai-tri .ldd-wimpy-admin-pause { background: transparent; color: inherit; }
+#tab-giai-tri .ldd-wimpy-admin-actions button:disabled { opacity: .55; cursor: wait; }
+@media (max-width: 600px) {
+    #tab-giai-tri .ldd-wimpy-admin-tools { padding: 12px; }
+    #tab-giai-tri .ldd-wimpy-admin-actions button { flex: 1 1 auto; }
+}
