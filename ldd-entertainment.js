@@ -560,6 +560,9 @@
             comicBody.append(header);
         }
         function showWimpyMonths(series) {
+            // Warm static book data while the learner chooses a month and page.
+            void wimpyTranslations().catch(() => {});
+            void wimpyWordPositions().catch(() => {});
             closeReaderZoom(); activeComicSeries = null; comicRequest += 1;
             comics.classList.remove('is-reading'); comicBody.replaceChildren();
             wimpyHeader(series, '← Danh sách bộ truyện', showSeriesLibrary);
@@ -766,16 +769,16 @@
                 }
             });
 
-            async function loadQuiz(pageName) {
+            async function loadCachedQuiz(pageName) {
                 if (quizCache.has(pageName)) return quizCache.get(pageName);
                 const response = await fetch('https://' + COMIC_PROJECT + '.supabase.co/functions/v1/ai-proxy', {
                     method: 'POST',
                     headers: comicRequestHeaders(),
-                    body: JSON.stringify({task:'generate_wimpy_translation_quiz', page_name:pageName})
+                    body: JSON.stringify({task:'get_cached_wimpy_translation_quiz', page_name:pageName})
                 });
                 const data = await response.json().catch(() => null);
                 if (!response.ok || data?.error || !Array.isArray(data?.result?.items)) {
-                    throw Error(data?.error || 'Không tạo được bài luyện cho trang này.');
+                    throw Error(data?.error || 'Không tải được dữ liệu bài luyện đã lưu.');
                 }
                 const items = data.result.items;
                 quizCache.set(pageName, items);
@@ -942,27 +945,40 @@
             }
 
             async function renderTranslationForPage(request, pageName) {
-                translationText.textContent = 'Đang tải bản dịch và tạo các ô chọn nghĩa…';
                 activeQuiz = [];
                 activeProgress = new Map();
                 renderWords();
+                let translatedText = '';
                 try {
-                    const [allTranslations, items, savedProgress] = await Promise.all([
-                        translations ? Promise.resolve(translations) : wimpyTranslations(),
-                        loadQuiz(pageName),
+                    // Show the saved Vietnamese translation as soon as its static file is ready.
+                    const allTranslations = translations || await wimpyTranslations();
+                    if (request !== translationRequest || !dialog.open || entry.pages[page] !== pageName) return;
+                    translations = allTranslations;
+                    translatedText = String(translations[pageName] || '');
+                    if (!translatedText) throw Error('Trang này chưa có bản dịch tiếng Việt.');
+                    renderTranslation(translatedText, [], pageName);
+                } catch (error) {
+                    if (request !== translationRequest || !dialog.open || entry.pages[page] !== pageName) return;
+                    translationText.textContent = error?.message || 'Không tải được bản dịch.';
+                    return;
+                }
+
+                // Quiz and progress are fetched in the background. This path reads saved
+                // quiz data only; opening a page must never ask an AI provider to create it.
+                try {
+                    const [items, savedProgress] = await Promise.all([
+                        loadCachedQuiz(pageName),
                         loadProgress(pageName)
                     ]);
                     if (request !== translationRequest || !dialog.open || entry.pages[page] !== pageName) return;
-                    translations = allTranslations;
-                    const translatedText = String(translations[pageName] || '');
-                    if (!translatedText) throw Error('Trang này chưa có bản dịch tiếng Việt.');
                     activeQuiz = items;
                     activeProgress = savedProgress;
                     renderTranslation(translatedText, items, pageName);
                     renderWords();
                 } catch (error) {
-                    if (request !== translationRequest || !dialog.open || entry.pages[page] !== pageName) return;
-                    translationText.textContent = error?.message || 'Không tải được bài luyện. Hãy thử tải lại trang.';
+                    // Keep the already-rendered translation visible if saved exercise data
+                    // or student progress is temporarily unavailable.
+                    console.warn('[Wimpy cached exercise]', error);
                 }
             }
 
