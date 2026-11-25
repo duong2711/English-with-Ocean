@@ -627,7 +627,6 @@ body:has(.ldd-ent-upload-dialog[open]) { overflow: hidden; }
     line-height: 1.5;
 }
 #tab-giai-tri .ldd-comic-word-reward-note.is-awarded { border-color: #8ed5ad; background: #effcf4; color: #187345; }
-#tab-giai-tri .ldd-comic-word-reward-note.is-checked { border-color: #cbd5e1; background: #f8fafc; color: #64748b; }
 #tab-giai-tri .ldd-comic-word-reward-note.is-error { border-color: #f4b4b9; background: #fff1f2; color: #a12635; }
 
 /* Lô tô — colorful host controls, player cards and bingo board */
@@ -1156,13 +1155,6 @@ body:has(.ldd-ent-upload-dialog[open]) { overflow: hidden; }
     font-weight: 800;
     animation: ldd-comic-swipe-nudge 1.8s ease-in-out infinite;
 }
-#tab-giai-tri .ldd-comic-swipe-guide-text {
-    min-width: 0;
-    font-size: 12px;
-    font-weight: 750;
-    line-height: 1.4;
-    text-align: center;
-}
 #tab-giai-tri .ldd-comic-swipe-guide-count {
     flex: 0 0 auto;
     margin-left: 4px;
@@ -1285,10 +1277,6 @@ body:has(.ldd-ent-upload-dialog[open]) { overflow: hidden; }
         min-height: 50px;
         padding-left: 24px;
     }
-    #tab-giai-tri .ldd-comic-swipe-guide-text {
-        text-align: left;
-        font-size: 13px;
-    }
     #tab-giai-tri .ldd-comic-swipe-guide-count,
     #tab-giai-tri .ldd-comic-swipe-guide-count {
         margin-left: auto;
@@ -1355,10 +1343,6 @@ body:has(.ldd-ent-upload-dialog[open]) { overflow: hidden; }
         width: 25px;
         height: 25px;
         font-size: 16px;
-    }
-    #tab-giai-tri .ldd-comic-swipe-guide-text {
-        text-align: left;
-        font-size: 10.5px;
     }
     #tab-giai-tri .ldd-comic-swipe-guide-count,
     #tab-giai-tri .ldd-comic-swipe-guide-count {
