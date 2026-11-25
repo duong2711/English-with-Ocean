@@ -559,6 +559,156 @@
             header.append(back, el('h4', '', series.title));
             comicBody.append(header);
         }
+
+        function makeWimpyQuizBatchTools(months) {
+            const panel = el('section', 'ldd-wimpy-admin-tools');
+            panel.hidden = true;
+            const heading = el('strong', '', 'Công cụ giáo viên · Dữ liệu truyện');
+            const status = el('p', 'ldd-wimpy-admin-status', 'Đang xác minh tài khoản giáo viên…');
+            const detail = el('small', 'ldd-wimpy-admin-detail', 'Dữ liệu được lưu từng trang; có thể tiếp tục sau khi tải lại.');
+            const actions = el('div', 'ldd-wimpy-admin-actions');
+            const start = el('button', 'ldd-wimpy-admin-start', 'Tạo dữ liệu còn thiếu');
+            start.type = 'button';
+            start.hidden = true;
+            const pause = el('button', 'ldd-wimpy-admin-pause', 'Tạm dừng');
+            pause.type = 'button';
+            pause.hidden = true;
+            actions.append(start, pause);
+            panel.append(heading, status, detail, actions);
+
+            const pageNames = Array.from(new Set(
+                (Array.isArray(months) ? months : []).flatMap(month =>
+                    (Array.isArray(month.entries) ? month.entries : []).flatMap(entry =>
+                        Array.isArray(entry.pages) ? entry.pages : []
+                    )
+                )
+            ));
+            const teacherEmail = 'lddbaiu@gmail.com';
+            const teacherUserId = 'b30200bf-9cb9-4d95-93c7-d710545946cd';
+            const authClient = window.supabase?.createClient
+                ? window.supabase.createClient(
+                    'https://' + COMIC_PROJECT + '.supabase.co',
+                    COMIC_PUBLISHABLE_KEY,
+                    { auth: { detectSessionInUrl: false } }
+                )
+                : null;
+            let paused = false;
+            let running = false;
+
+            async function requestBatch(task, extra) {
+                const response = await fetch('https://' + COMIC_PROJECT + '.supabase.co/functions/v1/ai-proxy', {
+                    method: 'POST',
+                    headers: comicRequestHeaders(),
+                    body: JSON.stringify(Object.assign({ task: task, page_names: pageNames }, extra || {}))
+                });
+                const data = await response.json().catch(() => null);
+                if (!response.ok || data?.error) {
+                    throw Error(data?.error || 'Không xử lý được dữ liệu (' + response.status + ').');
+                }
+                return data;
+            }
+
+            async function refreshStatus() {
+                const data = await requestBatch('get_wimpy_quiz_batch_status');
+                const result = data?.result || {};
+                const completed = Number(result.completed_count || 0);
+                const total = Number(result.total_pages || pageNames.length);
+                const missing = Number(result.missing_count || 0);
+                status.textContent = 'Đã có ' + completed + '/' + total +
+                    ' trang có dữ liệu · ' + missing + ' trang còn thiếu · ' +
+                    Number(result.total_items || 0) + ' câu hỏi';
+                return result;
+            }
+
+            pause.addEventListener('click', function () {
+                if (!running) return;
+                paused = true;
+                pause.disabled = true;
+                pause.textContent = 'Đang dừng sau trang hiện tại…';
+            });
+
+            start.addEventListener('click', async function () {
+                if (running) return;
+                running = true;
+                paused = false;
+                start.disabled = true;
+                pause.hidden = false;
+                pause.disabled = false;
+                pause.textContent = 'Tạm dừng';
+                const failures = [];
+                let unavailable = [];
+                try {
+                    const initial = await refreshStatus();
+                    const missing = Array.isArray(initial.missing_page_names) ? initial.missing_page_names : [];
+                    for (let index = 0; index < missing.length; index++) {
+                        if (paused) break;
+                        const pageName = missing[index];
+                        status.textContent = 'Đang tạo ' + (index + 1) + '/' + missing.length + ' · ' + pageName;
+                        let handled = false;
+                        for (let attempt = 0; attempt < 2 && !handled; attempt++) {
+                            try {
+                                const response = await requestBatch('generate_wimpy_translation_quiz_batch', {
+                                    page_names: [pageName]
+                                });
+                                const row = response?.result?.processed?.[0];
+                                if (row?.success) {
+                                    handled = true;
+                                } else if (row?.unavailable) {
+                                    unavailable.push(pageName);
+                                    handled = true;
+                                } else {
+                                    throw Error('AI chưa tạo được dữ liệu hợp lệ cho trang này.');
+                                }
+                            } catch (error) {
+                                if (attempt === 1) failures.push(pageName + ': ' + (error?.message || 'Lỗi không xác định'));
+                                else await new Promise(resolve => setTimeout(resolve, 1200));
+                            }
+                        }
+                        if ((index + 1) % 5 === 0 || index === missing.length - 1) {
+                            try { await refreshStatus(); } catch (_) {}
+                        }
+                        if (!paused) await new Promise(resolve => setTimeout(resolve, 300));
+                    }
+                    const finalStatus = await refreshStatus();
+                    if (paused) {
+                        detail.textContent = 'Đã tạm dừng. Bấm “Tạo dữ liệu còn thiếu” để tiếp tục; các trang đã lưu sẽ được giữ nguyên.';
+                    } else {
+                        detail.textContent = 'Hoàn tất lượt chạy. ' +
+                            Number(finalStatus.completed_count || 0) + '/' + pageNames.length +
+                            ' trang đã có dữ liệu. ' +
+                            (unavailable.length ? unavailable.length + ' trang thiếu dữ liệu chữ gốc/OCR: ' + unavailable.join(', ') + '. ' : '') +
+                            (failures.length ? failures.length + ' trang lỗi: ' + failures.join(' | ') : 'Không còn lỗi AI trong lượt chạy.');
+                    }
+                } catch (error) {
+                    detail.textContent = error?.message || 'Không thể chạy công cụ tạo dữ liệu.';
+                } finally {
+                    running = false;
+                    pause.hidden = true;
+                    start.disabled = false;
+                    start.textContent = 'Tiếp tục tạo dữ liệu còn thiếu';
+                }
+            });
+
+            (async function verifyTeacher() {
+                if (!authClient) return;
+                try {
+                    const { data, error } = await authClient.auth.getUser();
+                    const user = data?.user;
+                    if (error || !user ||
+                        String(user.email || '').trim().toLowerCase() !== teacherEmail ||
+                        String(user.id || '') !== teacherUserId) return;
+                    panel.hidden = false;
+                    start.hidden = false;
+                    try { await refreshStatus(); }
+                    catch (error) { status.textContent = error?.message || 'Không đọc được trạng thái dữ liệu.'; }
+                } catch (error) {
+                    console.warn('[Wimpy batch access]', error);
+                }
+            })();
+
+            return panel;
+        }
+
         function showWimpyMonths(series) {
             // Warm static book data while the learner chooses a month and page.
             void wimpyTranslations().catch(() => {});
@@ -567,6 +717,7 @@
             comics.classList.remove('is-reading'); comicBody.replaceChildren();
             wimpyHeader(series, '← Danh sách bộ truyện', showSeriesLibrary);
             const months = Array.isArray(window.LDDWimpyBook) ? window.LDDWimpyBook : [];
+            const batchTools = makeWimpyQuizBatchTools(months);
             const tabs = el('div', 'ldd-ent-grade-tabs');
             tabs.setAttribute('role', 'group');
             tabs.setAttribute('aria-label', 'Chọn tháng');
@@ -598,7 +749,7 @@
                 buttons.push({button, item: month});
                 tabs.append(button);
             });
-            comicBody.append(tabs, grid);
+            comicBody.append(batchTools, tabs, grid);
             if (months.length) selectMonth(months[0]);
             else grid.append(placeholder('Chưa có truyện', 'Nội dung đang được cập nhật.'));
         }
