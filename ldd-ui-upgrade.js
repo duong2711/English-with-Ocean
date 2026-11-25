@@ -45,7 +45,7 @@
         ensureStylesheet('ldd-game-grammar-style', 'ldd-game-grammar.css?v=20261114-grammar1');
         ensureStylesheet('ldd-word-cloud-style', 'ldd-word-cloud.css?v=20261115-five-choices1');
         ensureStylesheet('ldd-quick-lookup-style', 'ldd-quick-lookup.css?v=20261025-valid2');
-        ensureStylesheet('ldd-entertainment-style', 'ldd-entertainment.css?v=20261125-dub-align2');
+        ensureStylesheet('ldd-entertainment-style', 'ldd-entertainment.css?v=20261125-wimpy-bilingual1');
         ensureStylesheet('ldd-film-cloze-style', 'ldd-film-cloze.css?v=20261116-film-cue-padding3');
         ensureStylesheet('ldd-text-actions-style', 'ldd-text-actions.css?v=20261122-universal-three-actions1');
         ensureStylesheet('ldd-ctest-student-groups-style', 'ldd-ctest-student-groups.css?v=20261116-grouped1');
@@ -72,7 +72,7 @@
         ensureScript('ldd-vocab-shooter-script', 'ldd-vocab-shooter.js?v=20261115-solo1');
         ensureScript('ldd-quick-lookup-script', 'ldd-quick-lookup.js?v=20261025-valid2');
         ensureScript('ldd-entertainment-data-script', 'ldd-entertainment-data.js?v=20261027-wimpy1');
-        ensureScript('ldd-entertainment-script', 'ldd-entertainment.js?v=20261125-horizontal-comic-swipe1');
+        ensureScript('ldd-entertainment-script', 'ldd-entertainment.js?v=20261125-wimpy-bilingual1');
         ensureScript('ldd-film-timing-script', 'ldd-film-timing.js?v=20261029-transcript-import1');
         ensureScript('ldd-film-cloze-script', 'ldd-film-cloze.js?v=20261124-score-audit2');
         ensureScript('ldd-text-actions-script', 'ldd-text-actions.js?v=20261124-mlh7-all12-final2');
