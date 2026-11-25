@@ -790,7 +790,7 @@ body:has(.ldd-ent-upload-dialog[open]) { overflow: hidden; }
   border-right:1px solid #e7e0d5;
   background:#e8e4dc;
 }
-#tab-giai-trai .ldd-wimpy-pane-heading,
+#tab-giai-tri .ldd-wimpy-pane-heading,
 #tab-giai-tri .ldd-wimpy-pane-heading {
   flex:0 0 auto;
   margin:0;
@@ -1043,7 +1043,7 @@ body:has(.ldd-ent-upload-dialog[open]) { overflow: hidden; }
     outline:2px solid #926b43;
     outline-offset:-2px;
   }
-  #tab-giai-trai .ldd-wimpy-pane-splitter-grip,
+  #tab-giai-tri .ldd-wimpy-pane-splitter-grip,
   #tab-giai-tri .ldd-wimpy-pane-splitter-grip {
     width:58px;
     height:5px;
@@ -1183,7 +1183,7 @@ body:has(.ldd-ent-upload-dialog[open]) { overflow: hidden; }
     flex: 1 1 auto;
     min-height: 0;
     height: auto;
-    border-radius: 0 0 inherit inherit;
+    border-radius: 0;
 }
 #tab-giai-tri .ldd-comic-swipe-slide {
     display: block;
@@ -1242,7 +1242,7 @@ body:has(.ldd-ent-upload-dialog[open]) { overflow: hidden; }
     font-size: clamp(16px, 1.45vw, 20px);
     line-height: 1.8;
 }
-#tab-giai-trai .ldd-comic-reading-pane .ldd-comic-word-reward-note,
+#tab-giai-tri .ldd-comic-reading-pane .ldd-comic-word-reward-note,
 #tab-giai-tri .ldd-comic-reading-pane .ldd-comic-word-reward-note {
     margin: 6px 0 2px;
 }
@@ -1257,7 +1257,7 @@ body:has(.ldd-ent-upload-dialog[open]) { overflow: hidden; }
 #tab-giai-tri .ldd-comic-translation-pane .ldd-comic-translation-input {
     min-height: 190px;
 }
-#tab-giai-trai .ldd-comic-translation-pane .ldd-comic-translation-head,
+#tab-giai-tri .ldd-comic-translation-pane .ldd-comic-translation-head,
 #tab-giai-tri .ldd-comic-translation-pane .ldd-comic-translation-head {
     margin-bottom: 4px;
 }
@@ -1289,7 +1289,7 @@ body:has(.ldd-ent-upload-dialog[open]) { overflow: hidden; }
         text-align: left;
         font-size: 13px;
     }
-    #tab-giai-trai .ldd-comic-swipe-guide-count,
+    #tab-giai-tri .ldd-comic-swipe-guide-count,
     #tab-giai-tri .ldd-comic-swipe-guide-count {
         margin-left: auto;
         margin-right: 58px;
@@ -1315,7 +1315,7 @@ body:has(.ldd-ent-upload-dialog[open]) { overflow: hidden; }
     #tab-giai-tri .ldd-comic-reading-pane {
         padding-right: 4px;
     }
-    #tab-giai-trai .ldd-comic-reading-pane .ldd-comic-pane-heading,
+    #tab-giai-tri .ldd-comic-reading-pane .ldd-comic-pane-heading,
     #tab-giai-tri .ldd-comic-reading-pane .ldd-comic-pane-heading {
         position: sticky;
         top: 0;
@@ -1334,12 +1334,12 @@ body:has(.ldd-ent-upload-dialog[open]) { overflow: hidden; }
         padding: clamp(17px, 2vw, 25px);
         border-radius: 18px;
     }
-    #tab-giai-trai .ldd-comic-translation-pane .ldd-comic-translation-input,
+    #tab-giai-tri .ldd-comic-translation-pane .ldd-comic-translation-input,
     #tab-giai-tri .ldd-comic-translation-pane .ldd-comic-translation-input {
         min-height: clamp(210px, 34dvh, 360px);
         font-size: 15px;
     }
-    #tab-giai-trai .ldd-comic-translation-pane .ldd-comic-translation-submit,
+    #tab-giai-tri .ldd-comic-translation-pane .ldd-comic-translation-submit,
     #tab-giai-tri .ldd-comic-translation-pane .ldd-comic-translation-submit {
         position: static;
     }
@@ -1360,7 +1360,7 @@ body:has(.ldd-ent-upload-dialog[open]) { overflow: hidden; }
         text-align: left;
         font-size: 10.5px;
     }
-    #tab-giai-trai .ldd-comic-swipe-guide-count,
+    #tab-giai-tri .ldd-comic-swipe-guide-count,
     #tab-giai-tri .ldd-comic-swipe-guide-count {
         margin-left: auto;
         font-size: 10px;
@@ -1370,14 +1370,14 @@ body:has(.ldd-ent-upload-dialog[open]) { overflow: hidden; }
         padding: 13px 14px 24px;
         gap: 12px;
     }
-    #tab-giai-trai .ldd-comic-reading-pane .ldd-comic-swipe-image,
+    #tab-giai-tri .ldd-comic-reading-pane .ldd-comic-swipe-image,
     #tab-giai-tri .ldd-comic-reading-pane .ldd-comic-swipe-image {
         max-height: 48dvh;
     }
     #tab-giai-tri .ldd-comic-translation-pane {
         padding: 0 0 4px;
     }
-    #tab-giai-trai .ldd-comic-translation-pane .ldd-comic-translation-input,
+    #tab-giai-tri .ldd-comic-translation-pane .ldd-comic-translation-input,
     #tab-giai-tri .ldd-comic-translation-pane .ldd-comic-translation-input {
         min-height: 130px;
     }
