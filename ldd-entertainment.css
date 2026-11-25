@@ -1057,15 +1057,22 @@ body:has(.ldd-ent-upload-dialog[open]) { overflow: hidden; }
 }
 
 
-/* Wimpy Kid: remove the redundant score strip on every viewport. */
+/* Wimpy Kid: remove the redundant score strip wherever the reader renders it. */
+.ldd-wimpy-score-line,
 #tab-giai-tri .ldd-wimpy-score-line,
 #tab-giai-tri .ldd-wimpy-translation .ldd-wimpy-score-line {
   display:none !important;
 }
 
-/* Empty exercise slot for pages that do not yet have phrase highlights. */
+/* Empty exercise slots for translation paragraphs without phrase highlights. */
+#tab-giai-tri .ldd-wimpy-cloze-empty {
+  display:inline-block;
+  vertical-align:baseline;
+  margin:2px 3px;
+}
 #tab-giai-tri .ldd-wimpy-cloze-trigger-empty,
 #tab-giai-tri .ldd-wimpy-cloze-trigger-empty:disabled {
+  display:inline-flex;
   width:118px;
   min-width:118px;
   height:30px;
