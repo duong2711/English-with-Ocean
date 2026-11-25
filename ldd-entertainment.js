@@ -181,6 +181,18 @@
         return Array.isArray(data) ? (data[0] || {}) : (data || {});
     }
 
+
+    async function comicRpcRows(name, payload) {
+        const response = await fetch('https://' + COMIC_PROJECT + '.supabase.co/rest/v1/rpc/' + encodeURIComponent(name), {
+            method: 'POST',
+            headers: comicRequestHeaders(),
+            body: JSON.stringify(payload)
+        });
+        const data = await response.json().catch(() => null);
+        if (!response.ok) throw Error(data?.message || data?.details || 'Không tải được tiến độ truyện (' + response.status + ').');
+        return Array.isArray(data) ? data : (data ? [data] : []);
+    }
+
     async function gradeComicFrame(payload) {
         const response = await fetch('https://' + COMIC_PROJECT + '.supabase.co/functions/v1/ai-proxy', {
             method: 'POST',
@@ -587,128 +599,387 @@
             if (months.length) selectMonth(months[0]);
             else grid.append(placeholder('Chưa có truyện', 'Nội dung đang được cập nhật.'));
         }
+        
         function showWimpyReader(series, month, entry, entryIndex) {
             closeReaderZoom();
             const opener = document.activeElement;
             const dialog = el('dialog', 'ldd-comic-overlay ldd-wimpy-reader');
             dialog.setAttribute('aria-label', series.title + ' – ' + month.label + ' – ' + entry.dayVi);
+
             const header = el('div', 'ldd-wimpy-reader-header');
             const label = el('strong', '', month.label + ' · ' + entry.dayVi);
             const close = el('button', 'ldd-wimpy-close', '×');
-            close.type = 'button'; close.setAttribute('aria-label', 'Đóng truyện');
-            const headerActions = el('div', 'ldd-wimpy-reader-actions');
-            const toggleTranslation = el('button', 'ldd-wimpy-translate-toggle', 'Xem bản dịch');
-            toggleTranslation.type = 'button'; toggleTranslation.setAttribute('aria-pressed', 'false');
-            toggleTranslation.setAttribute('aria-controls', 'ldd-wimpy-translation');
-            close.addEventListener('click', () => dialog.close());
-            headerActions.append(toggleTranslation, close); header.append(label, headerActions);
-            const viewport = el('div', 'ldd-wimpy-viewport'); viewport.tabIndex = 0;
-            const image = el('img', 'ldd-wimpy-page'); image.alt = 'Trang truyện'; image.draggable = false;
-            const failure = el('p', 'ldd-wimpy-error', 'Không tải được trang truyện. Vui lòng thử lại.'); failure.hidden = true;
+            close.type = 'button';
+            close.setAttribute('aria-label', 'Đóng truyện');
+            header.append(label, close);
+
+            const readerGrid = el('div', 'ldd-wimpy-reader-grid');
+            const originalPane = el('section', 'ldd-wimpy-original-pane');
+            const originalHeading = el('h4', 'ldd-wimpy-pane-heading', '📖 Truyện gốc');
+            const imageViewport = el('div', 'ldd-wimpy-viewport');
+            imageViewport.tabIndex = 0;
+            const image = el('img', 'ldd-wimpy-page');
+            image.alt = 'Trang truyện gốc';
+            image.draggable = false;
+            const failure = el('p', 'ldd-wimpy-error', 'Không tải được trang truyện. Vui lòng thử lại.');
+            failure.hidden = true;
             const pageWrap = el('div', 'ldd-wimpy-page-wrap');
             const wordsLayer = el('div', 'ldd-wimpy-words');
+            pageWrap.append(image, wordsLayer);
+            imageViewport.append(pageWrap, failure);
+            originalPane.append(originalHeading, imageViewport);
+
             const translation = el('section', 'ldd-wimpy-translation');
-            translation.id = 'ldd-wimpy-translation'; translation.hidden = true;
-            translation.setAttribute('aria-live', 'polite');
-            const translationHeading = el('h4', '', 'Bản dịch tiếng Việt');
+            const translationHeading = el('h4', 'ldd-wimpy-pane-heading', '🇻🇳 Bản dịch tiếng Việt');
+            const scoreLine = el('div', 'ldd-wimpy-score-line', 'Đang tải bài luyện…');
+            scoreLine.setAttribute('aria-live', 'polite');
             const translationText = el('div', 'ldd-wimpy-translation-text');
-            translation.append(translationHeading, translationText);
-            pageWrap.append(image, wordsLayer); viewport.append(pageWrap, failure, translation);
+            translation.setAttribute('aria-live', 'polite');
+            translation.append(translationHeading, scoreLine, translationText);
+            readerGrid.append(originalPane, translation);
+
+            const controls = el('div', 'ldd-wimpy-controls');
+            const prev = el('button', '', '← Trước');
+            prev.type = 'button';
+            const count = el('span', 'ldd-wimpy-page-count');
+            count.setAttribute('aria-live', 'polite');
+            const next = el('button', '', 'Tiếp →');
+            next.type = 'button';
+            controls.append(prev, count, next);
+            dialog.append(header, readerGrid, controls);
+            comics.append(dialog);
+            readerZoom = dialog;
+
             let lookupHome = null;
+            let page = 0;
+            let positions = {};
+            let translations = null;
+            let translationRequest = 0;
+            let activeQuiz = [];
+            let activeProgress = new Map();
+            const quizCache = new Map();
+            const progressCache = new Map();
+
             function restoreLookup() {
                 if (!lookupHome) return;
                 const {popup, parent, next} = lookupHome;
                 popup.style.display = 'none';
-                if (next && next.parentNode === parent) parent.insertBefore(popup, next); else parent.append(popup);
+                if (next && next.parentNode === parent) parent.insertBefore(popup, next);
+                else parent.append(popup);
                 lookupHome = null;
             }
+
             wordsLayer.addEventListener('click', event => {
                 const word = event.target.closest('.tappable-word');
                 if (!word) return;
                 if (window.LDDTextActions?.presentWordElement?.(word)) {
-                    event.preventDefault(); event.stopPropagation();
+                    event.preventDefault();
+                    event.stopPropagation();
                     return;
                 }
                 if (!window.vocabTap?.handleTap) return;
-                event.preventDefault(); event.stopPropagation();
+                event.preventDefault();
+                event.stopPropagation();
                 const popup = document.getElementById('word-lookup-popup');
                 if (popup && popup.parentNode !== dialog) {
-                    lookupHome = {popup, parent:popup.parentNode, next:popup.nextSibling}; dialog.append(popup);
+                    lookupHome = {popup, parent:popup.parentNode, next:popup.nextSibling};
+                    dialog.append(popup);
                 }
                 window.vocabTap.handleTap(word);
             });
+
             dialog.addEventListener('cancel', event => {
                 if (lookupHome?.popup && lookupHome.popup.style.display !== 'none') {
-                    event.preventDefault(); lookupHome.popup.querySelector('#word-lookup-close')?.click();
+                    event.preventDefault();
+                    lookupHome.popup.querySelector('#word-lookup-close')?.click();
                 }
             });
-            const controls = el('div', 'ldd-wimpy-controls');
-            const prev = el('button', '', '← Trước'); prev.type = 'button';
-            const count = el('span', 'ldd-wimpy-page-count'); count.setAttribute('aria-live', 'polite');
-            const next = el('button', '', 'Tiếp →'); next.type = 'button';
-            controls.append(prev, count, next); dialog.append(header, viewport, controls);
-            comics.append(dialog); readerZoom = dialog; let page = 0;
-            let positions = {}, translations = null, translationOn = false, translationRequest = 0;
-            async function renderTranslation() {
-                const request = ++translationRequest;
-                translation.hidden = !translationOn;
-                toggleTranslation.textContent = translationOn ? 'Ẩn bản dịch' : 'Xem bản dịch';
-                toggleTranslation.setAttribute('aria-pressed', String(translationOn));
-                if (!translationOn) return;
-                const name = entry.pages[page];
-                if (!translations) {
-                    translationText.textContent = 'Đang tải bản dịch…';
-                    try { translations = await wimpyTranslations(); }
-                    catch (_) {
-                        if (request === translationRequest && dialog.open) translationText.textContent = 'Không tải được bản dịch. Hãy đóng và mở lại phần dịch để thử lại.';
-                        return;
-                    }
+
+            async function loadQuiz(pageName) {
+                if (quizCache.has(pageName)) return quizCache.get(pageName);
+                const response = await fetch('https://' + COMIC_PROJECT + '.supabase.co/functions/v1/ai-proxy', {
+                    method: 'POST',
+                    headers: comicRequestHeaders(),
+                    body: JSON.stringify({task:'generate_wimpy_translation_quiz', page_name:pageName})
+                });
+                const data = await response.json().catch(() => null);
+                if (!response.ok || data?.error || !Array.isArray(data?.result?.items)) {
+                    throw Error(data?.error || 'Không tạo được bài luyện cho trang này.');
                 }
-                if (request !== translationRequest || !dialog.open || !translationOn || entry.pages[page] !== name) return;
-                translationText.textContent = translations[name] || 'Trang này chưa có bản dịch.';
+                const items = data.result.items;
+                quizCache.set(pageName, items);
+                return items;
             }
-            toggleTranslation.addEventListener('click', () => { translationOn = !translationOn; void renderTranslation(); });
+
+            async function loadProgress(pageName) {
+                if (progressCache.has(pageName)) return progressCache.get(pageName);
+                const rows = await comicRpcRows('get_wimpy_translation_progress', {p_page_name:pageName});
+                const map = new Map(rows.map(row => [Number(row.blank_index), row]));
+                progressCache.set(pageName, map);
+                return map;
+            }
+
+            function normalizedWimpyWord(value) {
+                return String(value || '').toLowerCase().normalize('NFKD')
+                    .replace(/[^a-z0-9']/g, '');
+            }
+
+            function highlightedWordIndexes(list, items) {
+                const indexes = new Set();
+                (items || []).forEach(item => {
+                    const wanted = String(item.source_phrase || '').split(/\s+/)
+                        .map(normalizedWimpyWord).filter(Boolean);
+                    if (!wanted.length) return;
+                    for (let i = 0; i <= list.length - wanted.length; i++) {
+                        let match = true;
+                        for (let j = 0; j < wanted.length; j++) {
+                            if (normalizedWimpyWord(list[i + j]?.[0]) !== wanted[j]) {
+                                match = false;
+                                break;
+                            }
+                        }
+                        if (match) {
+                            for (let j = 0; j < wanted.length; j++) indexes.add(i + j);
+                            break;
+                        }
+                    }
+                });
+                return indexes;
+            }
+
+            function updateScoreLine() {
+                const total = activeQuiz.length;
+                const answered = activeProgress.size;
+                const correct = Array.from(activeProgress.values())
+                    .filter(row => row && row.is_correct === true).length;
+                const points = Array.from(activeProgress.values())
+                    .reduce((sum, row) => sum + Number(row?.points_awarded || 0), 0);
+                scoreLine.textContent = total
+                    ? 'Đúng ' + correct + '/' + total + ' ô · +' + points + ' điểm chăm chỉ' +
+                      (answered < total ? ' · Chọn nghĩa cho các ô còn lại' : ' · Đã hoàn thành trang này')
+                    : 'Đang tải bài luyện…';
+            }
+
+            function applySavedAnswer(trigger, item, row) {
+                const correct = row?.is_correct === true;
+                trigger.disabled = true;
+                trigger.classList.remove('is-open');
+                trigger.classList.add(correct ? 'is-correct' : 'is-wrong');
+                trigger.textContent = (correct ? '✓ ' : '✕ Đáp án: ') +
+                    String(row?.correct_answer || item.vietnamese_phrase || '');
+                const detail = el('small', 'ldd-wimpy-answer-detail',
+                    (correct ? 'Đã cộng ' + Number(row?.points_awarded || 0) + ' điểm' :
+                        'Bạn chọn: ' + String(row?.selected_option || '')));
+                trigger.parentElement.append(detail);
+            }
+
+            async function chooseWimpyOption(trigger, menu, item, blankIndex, selectedOption, pageName) {
+                menu.hidden = true;
+                trigger.disabled = true;
+                trigger.textContent = 'Đang kiểm tra…';
+                try {
+                    const result = await comicRpc('submit_wimpy_translation_answer', {
+                        p_page_name: pageName,
+                        p_blank_index: blankIndex,
+                        p_selected_option: selectedOption
+                    });
+                    const row = {
+                        is_correct: result.is_correct === true,
+                        correct_answer: result.correct_answer || item.vietnamese_phrase,
+                        points_awarded: Number(result.points_awarded || 0),
+                        selected_option: selectedOption
+                    };
+                    activeProgress.set(blankIndex, row);
+                    applySavedAnswer(trigger, item, row);
+                    updateScoreLine();
+                    if (result.awarded_now === true) {
+                        document.dispatchEvent(new CustomEvent('ldd:today-refresh'));
+                    }
+                } catch (error) {
+                    trigger.disabled = false;
+                    trigger.textContent = 'Thử chọn lại ▾';
+                    trigger.classList.add('is-error');
+                    menu.hidden = false;
+                    let note = trigger.parentElement.querySelector('.ldd-wimpy-answer-error');
+                    if (!note) {
+                        note = el('small', 'ldd-wimpy-answer-error');
+                        trigger.parentElement.append(note);
+                    }
+                    note.textContent = error?.message || 'Chưa lưu được kết quả. Hãy thử lại.';
+                }
+            }
+
+            function makeBlank(item, blankIndex, pageName) {
+                const wrap = el('span', 'ldd-wimpy-cloze');
+                const trigger = el('button', 'ldd-wimpy-cloze-trigger', 'Chọn nghĩa ▾');
+                trigger.type = 'button';
+                trigger.setAttribute('aria-haspopup', 'listbox');
+                trigger.setAttribute('aria-expanded', 'false');
+                const menu = el('span', 'ldd-wimpy-cloze-menu');
+                menu.hidden = true;
+                menu.setAttribute('role', 'listbox');
+                menu.setAttribute('aria-label', 'Chọn nghĩa tiếng Việt');
+                trigger.addEventListener('click', () => {
+                    if (trigger.disabled) return;
+                    const willOpen = menu.hidden;
+                    translationText.querySelectorAll('.ldd-wimpy-cloze-menu').forEach(other => { other.hidden = true; });
+                    translationText.querySelectorAll('.ldd-wimpy-cloze-trigger').forEach(other => {
+                        other.setAttribute('aria-expanded', 'false');
+                        other.classList.remove('is-open');
+                    });
+                    menu.hidden = !willOpen;
+                    trigger.setAttribute('aria-expanded', String(willOpen));
+                    trigger.classList.toggle('is-open', willOpen);
+                });
+                (item.options || []).forEach(option => {
+                    const choice = el('button', 'ldd-wimpy-cloze-option', String(option));
+                    choice.type = 'button';
+                    choice.setAttribute('role', 'option');
+                    choice.addEventListener('click', () => {
+                        void chooseWimpyOption(trigger, menu, item, blankIndex, String(option), pageName);
+                    });
+                    menu.append(choice);
+                });
+                wrap.append(trigger, menu);
+                const saved = activeProgress.get(blankIndex);
+                if (saved) applySavedAnswer(trigger, item, saved);
+                return wrap;
+            }
+
+            function renderTranslation(text, items, pageName) {
+                translationText.replaceChildren();
+                const ranges = (items || []).map((item, index) => ({
+                    item,
+                    blankIndex:index + 1,
+                    start:text.indexOf(item.vietnamese_phrase),
+                    end:text.indexOf(item.vietnamese_phrase) + item.vietnamese_phrase.length
+                })).filter(row => row.start >= 0)
+                  .sort((a,b) => a.start - b.start);
+                let cursor = 0;
+                ranges.forEach(range => {
+                    translationText.append(document.createTextNode(text.slice(cursor, range.start)));
+                    translationText.append(makeBlank(range.item, range.blankIndex, pageName));
+                    cursor = range.end;
+                });
+                translationText.append(document.createTextNode(text.slice(cursor)));
+                if (!ranges.length) translationText.textContent = text || 'Trang này chưa có bản dịch.';
+                updateScoreLine();
+            }
+
             function renderWords() {
                 wordsLayer.replaceChildren();
-                const list = positions[entry.pages[page]] || [];
+                const pageName = entry.pages[page];
+                const list = positions[pageName] || [];
+                const highlights = highlightedWordIndexes(list, activeQuiz);
                 wordsLayer.dataset.vocabContext = list.map(item => item[0]).join(' ');
                 wordsLayer.dataset.vocabSource = series.title + ' – ' + month.label + ' – ' + entry.dayVi;
-                list.forEach(([word, x, y, w, h]) => {
-                    const hit = el('span', 'ldd-wimpy-word-hit');
-                    hit.style.left = x + '%'; hit.style.top = y + '%'; hit.style.width = w + '%'; hit.style.height = h + '%';
-                    hit.append(comicText(word)); wordsLayer.append(hit);
+                list.forEach(([word, x, y, w, h], index) => {
+                    const hit = el('span', 'ldd-wimpy-word-hit' +
+                        (highlights.has(index) ? ' is-quiz-highlight' : ''));
+                    hit.style.left = x + '%';
+                    hit.style.top = y + '%';
+                    hit.style.width = w + '%';
+                    hit.style.height = h + '%';
+                    hit.append(comicText(word));
+                    wordsLayer.append(hit);
                 });
             }
-            function renderPage() {
-                failure.hidden = true; image.hidden = false;
-                image.alt = series.title + ', ' + month.label + ', ' + entry.dayVi + ', trang ' + (page + 1);
-                image.src = wimpyPageUrl(entry.pages[page]);
-                count.textContent = (page + 1) + ' / ' + entry.pages.length;
-                prev.disabled = page === 0; next.disabled = page === entry.pages.length - 1;
-                viewport.scrollTop = 0; renderWords(); void renderTranslation();
-                if (entry.pages[page + 1]) { const preload = new Image(); preload.src = wimpyPageUrl(entry.pages[page + 1]); }
+
+            async function renderTranslationForPage(request, pageName) {
+                translationText.textContent = 'Đang tải bản dịch và tạo các ô chọn nghĩa…';
+                scoreLine.textContent = 'Đang chuẩn bị bài luyện…';
+                activeQuiz = [];
+                activeProgress = new Map();
+                renderWords();
+                try {
+                    const [allTranslations, items, savedProgress] = await Promise.all([
+                        translations ? Promise.resolve(translations) : wimpyTranslations(),
+                        loadQuiz(pageName),
+                        loadProgress(pageName)
+                    ]);
+                    if (request !== translationRequest || !dialog.open || entry.pages[page] !== pageName) return;
+                    translations = allTranslations;
+                    const translatedText = String(translations[pageName] || '');
+                    if (!translatedText) throw Error('Trang này chưa có bản dịch tiếng Việt.');
+                    activeQuiz = items;
+                    activeProgress = savedProgress;
+                    renderTranslation(translatedText, items, pageName);
+                    renderWords();
+                } catch (error) {
+                    if (request !== translationRequest || !dialog.open || entry.pages[page] !== pageName) return;
+                    translationText.textContent = error?.message || 'Không tải được bài luyện. Hãy thử tải lại trang.';
+                    scoreLine.textContent = 'Chưa tải được bài luyện';
+                }
             }
-            image.addEventListener('error', () => { image.hidden = true; failure.hidden = false; });
-            prev.addEventListener('click', () => { if (page > 0) { page--; renderPage(); } });
-            next.addEventListener('click', () => { if (page + 1 < entry.pages.length) { page++; renderPage(); } });
-            dialog.addEventListener('keydown', e => {
-                if (lookupHome?.popup && lookupHome.popup.style.display !== 'none') return;
-                if (e.key === 'ArrowRight') { e.preventDefault(); next.click(); }
-                else if (e.key === 'ArrowLeft') { e.preventDefault(); prev.click(); }
+
+            function renderPage() {
+                const pageName = entry.pages[page];
+                failure.hidden = true;
+                image.hidden = false;
+                image.alt = series.title + ', ' + month.label + ', ' + entry.dayVi + ', trang ' + (page + 1);
+                image.src = wimpyPageUrl(pageName);
+                count.textContent = (page + 1) + ' / ' + entry.pages.length;
+                prev.disabled = page === 0;
+                next.disabled = page === entry.pages.length - 1;
+                imageViewport.scrollTop = 0;
+                translation.scrollTop = 0;
+                renderWords();
+                const request = ++translationRequest;
+                void renderTranslationForPage(request, pageName);
+                if (entry.pages[page + 1]) {
+                    const preload = new Image();
+                    preload.src = wimpyPageUrl(entry.pages[page + 1]);
+                }
+            }
+
+            image.addEventListener('error', () => {
+                image.hidden = true;
+                failure.hidden = false;
             });
+            prev.addEventListener('click', () => {
+                if (page > 0) { page--; renderPage(); }
+            });
+            next.addEventListener('click', () => {
+                if (page + 1 < entry.pages.length) { page++; renderPage(); }
+            });
+            close.addEventListener('click', () => dialog.close());
+            dialog.addEventListener('keydown', event => {
+                if (lookupHome?.popup && lookupHome.popup.style.display !== 'none') return;
+                if (event.key === 'ArrowRight') { event.preventDefault(); next.click(); }
+                else if (event.key === 'ArrowLeft') { event.preventDefault(); prev.click(); }
+                else if (event.key === 'Escape') {
+                    translationText.querySelectorAll('.ldd-wimpy-cloze-menu').forEach(menu => { menu.hidden = true; });
+                }
+            });
+
             let start = null;
-            viewport.addEventListener('touchstart', e => { if (e.touches.length === 1) start = {x:e.touches[0].clientX,y:e.touches[0].clientY}; }, {passive:true});
-            viewport.addEventListener('touchend', e => {
-                if (!start || !e.changedTouches.length) return;
-                const dx = e.changedTouches[0].clientX - start.x, dy = e.changedTouches[0].clientY - start.y;
-                start = null; if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 1.4) (dx < 0 ? next : prev).click();
+            imageViewport.addEventListener('touchstart', event => {
+                if (event.touches.length === 1) start = {x:event.touches[0].clientX,y:event.touches[0].clientY};
             }, {passive:true});
-            dialog.addEventListener('close', () => { restoreLookup(); if (readerZoom === dialog) readerZoom = null; dialog.remove(); if (opener?.isConnected) opener.focus({preventScroll:true}); });
-            renderPage(); dialog.showModal(); viewport.focus({preventScroll:true});
-            wimpyWordPositions().then(data => { if (dialog.open) { positions = data; renderWords(); } });
+            imageViewport.addEventListener('touchend', event => {
+                if (!start || !event.changedTouches.length) return;
+                const dx = event.changedTouches[0].clientX - start.x;
+                const dy = event.changedTouches[0].clientY - start.y;
+                start = null;
+                if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy) * 1.4) (dx < 0 ? next : prev).click();
+            }, {passive:true});
+
+            dialog.addEventListener('close', () => {
+                restoreLookup();
+                if (readerZoom === dialog) readerZoom = null;
+                dialog.remove();
+                if (opener?.isConnected) opener.focus({preventScroll:true});
+            });
+
+            renderPage();
+            dialog.showModal();
+            imageViewport.focus({preventScroll:true});
+            wimpyWordPositions().then(data => {
+                if (dialog.open) { positions = data; renderWords(); }
+            });
         }
 
-        function showGrades(series, selectedGrade) {
+function showGrades(series, selectedGrade) {
             closeReaderZoom();
             comics.classList.remove('is-reading');
             comicRequest += 1;
