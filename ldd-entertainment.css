@@ -1119,3 +1119,269 @@ body:has(.ldd-ent-upload-dialog[open]) { overflow: hidden; }
     #tab-giai-tri .ldd-wimpy-admin-tools { padding: 12px; }
     #tab-giai-tri .ldd-wimpy-admin-actions button { flex: 1 1 auto; }
 }
+
+
+/* Truyện học đường: clear desktop/tablet reading + translation workspace. */
+#tab-giai-tri .ldd-comic-overlay[open] {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+#tab-giai-tri .ldd-comic-swipe-guide {
+    position: relative;
+    z-index: 1;
+    flex: 0 0 auto;
+    min-height: 46px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 8px 58px 8px 16px;
+    border-bottom: 1px solid #e7eaf2;
+    background: linear-gradient(90deg, #f3f6ff, #fff 52%, #f8f3ff);
+    color: #4a5d91;
+    box-sizing: border-box;
+}
+#tab-giai-tri .ldd-comic-swipe-guide-icon {
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    width: 29px;
+    height: 29px;
+    border: 1px solid #c7d3f3;
+    border-radius: 50%;
+    background: #fff;
+    color: #4c65c3;
+    font-size: 19px;
+    font-weight: 800;
+    animation: ldd-comic-swipe-nudge 1.8s ease-in-out infinite;
+}
+#tab-giai-tri .ldd-comic-swipe-guide-text {
+    min-width: 0;
+    font-size: 12px;
+    font-weight: 750;
+    line-height: 1.4;
+    text-align: center;
+}
+#tab-giai-tri .ldd-comic-swipe-guide-count {
+    flex: 0 0 auto;
+    margin-left: 4px;
+    padding: 5px 9px;
+    border: 1px solid #d7def2;
+    border-radius: 999px;
+    background: rgba(255,255,255,.9);
+    color: #59688f;
+    font-size: 11px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+#tab-giai-tri .ldd-comic-swipe-guide[data-at-end="true"] {
+    background: linear-gradient(90deg, #f4f6fb, #fff);
+    color: #64708b;
+}
+#tab-giai-tri .ldd-comic-swipe-deck {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: auto;
+    border-radius: 0 0 inherit inherit;
+}
+#tab-giai-tri .ldd-comic-swipe-slide {
+    display: block;
+}
+#tab-giai-tri .ldd-comic-study-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 100%;
+    padding: 16px;
+    background: #fffdf8;
+}
+#tab-giai-tri .ldd-comic-reading-pane {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+#tab-giai-tri .ldd-comic-pane-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 0 0 10px;
+    color: #34466d;
+}
+#tab-giai-tri .ldd-comic-pane-heading strong {
+    font-size: 14px;
+    font-weight: 850;
+}
+#tab-giai-tri .ldd-comic-pane-heading small {
+    color: #7a8499;
+    font-size: 11px;
+    font-weight: 750;
+}
+#tab-giai-tri .ldd-comic-reading-pane .ldd-comic-swipe-art {
+    flex: 0 0 auto;
+    width: 100%;
+    overflow: hidden;
+    border: 1px solid #e6e0d6;
+    border-radius: 14px;
+    background: #eee9df;
+}
+#tab-giai-tri .ldd-comic-reading-pane .ldd-comic-swipe-image {
+    width: 100%;
+    max-height: 44dvh;
+    object-fit: contain;
+}
+#tab-giai-tri .ldd-comic-reading-pane .ldd-comic-swipe-text {
+    flex: 0 0 auto;
+    width: 100%;
+    max-width: 78ch;
+    margin: 0;
+    padding: 16px 4px 10px;
+    font-size: clamp(16px, 1.45vw, 20px);
+    line-height: 1.8;
+}
+#tab-giai-trai .ldd-comic-reading-pane .ldd-comic-word-reward-note,
+#tab-giai-tri .ldd-comic-reading-pane .ldd-comic-word-reward-note {
+    margin: 6px 0 2px;
+}
+#tab-giai-tri .ldd-comic-translation-pane {
+    min-width: 0;
+    box-sizing: border-box;
+}
+#tab-giai-tri .ldd-comic-translation-pane .ldd-comic-translation-box {
+    margin: 0;
+    min-height: 100%;
+}
+#tab-giai-tri .ldd-comic-translation-pane .ldd-comic-translation-input {
+    min-height: 190px;
+}
+#tab-giai-trai .ldd-comic-translation-pane .ldd-comic-translation-head,
+#tab-giai-tri .ldd-comic-translation-pane .ldd-comic-translation-head {
+    margin-bottom: 4px;
+}
+#tab-giai-tri .ldd-comic-translation-pane .ldd-comic-translation-submit {
+    position: sticky;
+    bottom: 0;
+}
+#tab-giai-tri .ldd-comic-overlay-close { z-index: 4; }
+
+@keyframes ldd-comic-swipe-nudge {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(4px); }
+}
+
+@media (min-width: 768px) {
+    #tab-giai-tri .ldd-comic-overlay {
+        width: min(1280px, 96vw);
+        max-width: 96vw;
+        height: min(900px, 94dvh);
+        max-height: 94dvh;
+        border-radius: 20px;
+    }
+    #tab-giai-tri .ldd-comic-swipe-guide {
+        justify-content: flex-start;
+        min-height: 50px;
+        padding-left: 24px;
+    }
+    #tab-giai-tri .ldd-comic-swipe-guide-text {
+        text-align: left;
+        font-size: 13px;
+    }
+    #tab-giai-trai .ldd-comic-swipe-guide-count,
+    #tab-giai-tri .ldd-comic-swipe-guide-count {
+        margin-left: auto;
+        margin-right: 58px;
+    }
+    #tab-giai-tri .ldd-comic-study-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1.08fr) minmax(290px, .92fr);
+        gap: clamp(16px, 2vw, 26px);
+        height: 100%;
+        min-height: 0;
+        padding: clamp(16px, 2vw, 28px);
+        align-items: stretch;
+    }
+    #tab-giai-tri .ldd-comic-reading-pane,
+    #tab-giai-tri .ldd-comic-translation-pane {
+        min-height: 0;
+        height: 100%;
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        scrollbar-width: thin;
+    }
+    #tab-giai-tri .ldd-comic-reading-pane {
+        padding-right: 4px;
+    }
+    #tab-giai-trai .ldd-comic-reading-pane .ldd-comic-pane-heading,
+    #tab-giai-tri .ldd-comic-reading-pane .ldd-comic-pane-heading {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        padding: 5px 0 11px;
+        background: #fffdf8;
+    }
+    #tab-giai-tri .ldd-comic-reading-pane .ldd-comic-swipe-image {
+        max-height: clamp(230px, 40dvh, 410px);
+    }
+    #tab-giai-tri .ldd-comic-translation-pane {
+        padding: 0 2px 4px 0;
+    }
+    #tab-giai-tri .ldd-comic-translation-pane .ldd-comic-translation-box {
+        min-height: 100%;
+        padding: clamp(17px, 2vw, 25px);
+        border-radius: 18px;
+    }
+    #tab-giai-trai .ldd-comic-translation-pane .ldd-comic-translation-input,
+    #tab-giai-tri .ldd-comic-translation-pane .ldd-comic-translation-input {
+        min-height: clamp(210px, 34dvh, 360px);
+        font-size: 15px;
+    }
+    #tab-giai-trai .ldd-comic-translation-pane .ldd-comic-translation-submit,
+    #tab-giai-tri .ldd-comic-translation-pane .ldd-comic-translation-submit {
+        position: static;
+    }
+}
+@media (max-width: 767px) {
+    #tab-giai-tri .ldd-comic-swipe-guide {
+        justify-content: flex-start;
+        min-height: 44px;
+        gap: 7px;
+        padding: 7px 54px 7px 10px;
+    }
+    #tab-giai-tri .ldd-comic-swipe-guide-icon {
+        width: 25px;
+        height: 25px;
+        font-size: 16px;
+    }
+    #tab-giai-tri .ldd-comic-swipe-guide-text {
+        text-align: left;
+        font-size: 10.5px;
+    }
+    #tab-giai-trai .ldd-comic-swipe-guide-count,
+    #tab-giai-tri .ldd-comic-swipe-guide-count {
+        margin-left: auto;
+        font-size: 10px;
+        padding: 4px 7px;
+    }
+    #tab-giai-tri .ldd-comic-study-layout {
+        padding: 13px 14px 24px;
+        gap: 12px;
+    }
+    #tab-giai-trai .ldd-comic-reading-pane .ldd-comic-swipe-image,
+    #tab-giai-tri .ldd-comic-reading-pane .ldd-comic-swipe-image {
+        max-height: 48dvh;
+    }
+    #tab-giai-tri .ldd-comic-translation-pane {
+        padding: 0 0 4px;
+    }
+    #tab-giai-trai .ldd-comic-translation-pane .ldd-comic-translation-input,
+    #tab-giai-tri .ldd-comic-translation-pane .ldd-comic-translation-input {
+        min-height: 130px;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    #tab-giai-tri .ldd-comic-swipe-guide-icon { animation: none; }
+}
