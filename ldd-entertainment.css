@@ -531,7 +531,7 @@ body:has(.ldd-ent-upload-dialog[open]) { overflow: hidden; }
 /* Comic study mode — self translation, AI feedback and transparent diligence rewards */
 #tab-giai-tri .ldd-comic-translation-box {
     display: grid;
-    gap: 11px;
+    gap: 14px;
     margin: 24px 0 14px;
     padding: clamp(16px, 2.4vw, 23px);
     border: 1px solid #c8d8ff;
@@ -542,7 +542,7 @@ body:has(.ldd-ent-upload-dialog[open]) { overflow: hidden; }
     box-shadow: 0 10px 26px rgba(61,91,158,.09), inset 0 1px 0 #fff;
     color: #233452;
 }
-#tab-giai-tri .ldd-comic-translation-head { display: grid; gap: 3px; }
+#tab-giai-tri .ldd-comic-translation-head { display: grid; gap: 6px; margin: 0; }
 #tab-giai-tri .ldd-comic-translation-head strong {
     color: #344fa3;
     font-size: 16px;
@@ -555,6 +555,7 @@ body:has(.ldd-ent-upload-dialog[open]) { overflow: hidden; }
 }
 #tab-giai-tri .ldd-comic-translation-input {
     display: block;
+    margin: 0;
     width: 100%;
     min-height: 108px;
     resize: vertical;
@@ -578,6 +579,7 @@ body:has(.ldd-ent-upload-dialog[open]) { overflow: hidden; }
 #tab-giai-tri .ldd-comic-translation-input:disabled { background: #f0fdf4; color: #476453; opacity: 1; }
 #tab-giai-tri .ldd-comic-translation-submit {
     justify-self: start;
+    margin: 0;
     min-height: 42px;
     padding: 0 17px;
     border: 0;
@@ -599,6 +601,7 @@ body:has(.ldd-ent-upload-dialog[open]) { overflow: hidden; }
 }
 #tab-giai-tri .ldd-comic-translation-submit:disabled { opacity: .58; cursor: not-allowed; }
 #tab-giai-tri .ldd-comic-translation-feedback {
+    margin: 0;
     padding: 12px 14px;
     border: 1px solid #d7deee;
     border-radius: 13px;
@@ -1127,21 +1130,24 @@ body:has(.ldd-ent-upload-dialog[open]) { overflow: hidden; }
     align-items: stretch;
 }
 #tab-giai-tri .ldd-comic-swipe-guide {
-    position: relative;
-    z-index: 1;
-    flex: 0 0 auto;
-    min-height: 34px;
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    padding: 4px 58px 4px 12px;
-    border-bottom: 1px solid #eee9e1;
-    background: #fffdf8;
+    position: absolute;
+    top: 12px;
+    left: 14px;
+    z-index: 4;
+    width: auto;
+    min-height: 0;
+    display: block;
+    padding: 0;
+    border: 0;
+    background: transparent;
     box-sizing: border-box;
+    pointer-events: none;
 }
 #tab-giai-tri .ldd-comic-swipe-guide-count {
+    display: inline-flex;
+    align-items: center;
     flex: 0 0 auto;
-    margin-left: 4px;
+    margin: 0;
     padding: 5px 9px;
     border: 1px solid #d7def2;
     border-radius: 999px;
@@ -1152,7 +1158,7 @@ body:has(.ldd-ent-upload-dialog[open]) { overflow: hidden; }
     font-variant-numeric: tabular-nums;
 }
 #tab-giai-tri .ldd-comic-swipe-guide[data-at-end="true"] {
-    background: linear-gradient(90deg, #f4f6fb, #fff);
+    background: transparent;
     color: #64708b;
 }
 #tab-giai-tri .ldd-comic-swipe-deck {
@@ -1227,15 +1233,18 @@ body:has(.ldd-ent-upload-dialog[open]) { overflow: hidden; }
     box-sizing: border-box;
 }
 #tab-giai-tri .ldd-comic-translation-pane .ldd-comic-translation-box {
+    display: grid;
+    align-content: start;
+    gap: 18px;
+    width: 100%;
     margin: 0;
     min-height: 100%;
 }
 #tab-giai-tri .ldd-comic-translation-pane .ldd-comic-translation-input {
     min-height: 190px;
 }
-#tab-giai-tri .ldd-comic-translation-pane .ldd-comic-translation-head,
 #tab-giai-tri .ldd-comic-translation-pane .ldd-comic-translation-head {
-    margin-bottom: 4px;
+    margin: 0;
 }
 #tab-giai-tri .ldd-comic-translation-pane .ldd-comic-translation-submit {
     position: sticky;
@@ -1253,9 +1262,8 @@ body:has(.ldd-ent-upload-dialog[open]) { overflow: hidden; }
         border-radius: 20px;
     }
     #tab-giai-tri .ldd-comic-swipe-guide {
-        justify-content: flex-start;
-        min-height: 34px;
-        padding-right: 66px;
+        top: 14px;
+        left: 16px;
     }
     #tab-giai-tri .ldd-comic-swipe-guide-count {
         margin-left: 0;
@@ -1313,9 +1321,8 @@ body:has(.ldd-ent-upload-dialog[open]) { overflow: hidden; }
 }
 @media (max-width: 767px) {
     #tab-giai-tri .ldd-comic-swipe-guide {
-        justify-content: flex-start;
-        min-height: 32px;
-        padding: 4px 54px 4px 10px;
+        top: 10px;
+        left: 11px;
     }
     #tab-giai-tri .ldd-comic-swipe-guide-count {
         margin-left: 0;
