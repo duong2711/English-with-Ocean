@@ -1640,6 +1640,38 @@ function showGrades(series, selectedGrade) {
                                 submit.disabled = false;
                                 submit.textContent = '↻ Thử lại sau khi sửa';
                             }
+
+                            // After any completed AI grading, briefly show the feedback,
+                            // then advance to the next comic frame. A weak translation can
+                            // still be edited and resubmitted by swiping back to this frame.
+                            const completedSlideIndex = Array.prototype.indexOf.call(deck.children, slide);
+                            const completedFrameCount = deck.children.length;
+                            const canAdvance = completedSlideIndex >= 0 && completedSlideIndex < completedFrameCount - 1;
+                            submit.disabled = true;
+                            submit.textContent = canAdvance ? 'Đã chấm · Đang chuyển khung…' : 'Đã chấm xong';
+                            window.setTimeout(() => {
+                                if (!dialog.open || !slide.isConnected) return;
+                                const currentIndex = deck.clientWidth
+                                    ? Math.round(deck.scrollLeft / deck.clientWidth)
+                                    : completedSlideIndex;
+                                // Do not override a learner who has already swiped elsewhere.
+                                if (currentIndex !== completedSlideIndex) return;
+                                if (canAdvance) {
+                                    if (!good) {
+                                        submit.disabled = false;
+                                        submit.textContent = '↻ Thử lại sau khi sửa';
+                                    }
+                                    deck.scrollTo({
+                                        left: (completedSlideIndex + 1) * deck.clientWidth,
+                                        behavior: reducedMotion() ? 'auto' : 'smooth'
+                                    });
+                                } else {
+                                    submit.disabled = good;
+                                    submit.textContent = good ? '🏆 Đã hoàn thành Unit' : '↻ Thử lại sau khi sửa';
+                                    feedback.append(el('p', '', '🎉 Bạn đã hoàn thành khung truyện cuối cùng của Unit này.'));
+                                    updateComicSwipeGuide();
+                                }
+                            }, 1400);
                         } catch (error) {
                             feedback.hidden = false;
                             feedback.className = 'ldd-comic-translation-feedback is-error';
