@@ -1415,10 +1415,8 @@ function showGrades(series, selectedGrade) {
             deck.tabIndex = 0;
             deck.setAttribute('aria-label', 'Kéo hoặc vuốt ngang, hoặc dùng phím mũi tên để xem truyện');
             const swipeGuide = el('div', 'ldd-comic-swipe-guide');
-            const swipeGuideIcon = el('span', 'ldd-comic-swipe-guide-icon', '↔');
-            swipeGuideIcon.setAttribute('aria-hidden', 'true');
             const swipeGuideCount = el('span', 'ldd-comic-swipe-guide-count', '1/1');
-            swipeGuide.append(swipeGuideIcon, swipeGuideCount);
+            swipeGuide.append(swipeGuideCount);
             let renderedFrameCount = 0;
             function updateComicSwipeGuide() {
                 const width = deck.clientWidth;
