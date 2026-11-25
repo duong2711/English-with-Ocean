@@ -895,6 +895,19 @@
                 });
                 translationText.append(document.createTextNode(text.slice(cursor)));
                 if (!ranges.length) translationText.textContent = text || 'Trang này chưa có bản dịch.';
+
+                // Pages without saved phrase highlights still show an empty exercise slot.
+                // It is deliberately disabled: no fake answer choices or AI generation.
+                if (!ranges.length) {
+                    const emptySlot = el('span', 'ldd-wimpy-cloze ldd-wimpy-cloze-empty');
+                    const emptyTrigger = el('button', 'ldd-wimpy-cloze-trigger ldd-wimpy-cloze-trigger-empty', '');
+                    emptyTrigger.type = 'button';
+                    emptyTrigger.disabled = true;
+                    emptyTrigger.setAttribute('aria-label', 'Ô chọn nghĩa đang để trống');
+                    emptyTrigger.title = 'Trang này chưa có từ hoặc cụm từ được đánh dấu';
+                    emptySlot.append(emptyTrigger);
+                    translationText.append(document.createTextNode(' '), emptySlot);
+                }
             }
 
             function normalizedWimpyWord(value) {
