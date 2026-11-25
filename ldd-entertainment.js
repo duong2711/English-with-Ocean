@@ -643,11 +643,9 @@
             splitterGrip.setAttribute('aria-hidden', 'true');
             paneSplitter.append(splitterGrip);
             const translationHeading = el('h4', 'ldd-wimpy-pane-heading', '🇻🇳 Bản dịch tiếng Việt');
-            const scoreLine = el('div', 'ldd-wimpy-score-line', 'Đang tải bài luyện…');
-            scoreLine.setAttribute('aria-live', 'polite');
             const translationText = el('div', 'ldd-wimpy-translation-text');
             translation.setAttribute('aria-live', 'polite');
-            translation.append(translationHeading, scoreLine, translationText);
+            translation.append(translationHeading, translationText);
             readerGrid.append(originalPane, paneSplitter, translation);
 
             const controls = el('div', 'ldd-wimpy-controls');
@@ -792,19 +790,6 @@
                 return map;
             }
 
-            function updateScoreLine() {
-                const total = activeQuiz.length;
-                const answered = activeProgress.size;
-                const correct = Array.from(activeProgress.values())
-                    .filter(row => row && row.is_correct === true).length;
-                const points = Array.from(activeProgress.values())
-                    .reduce((sum, row) => sum + Number(row?.points_awarded || 0), 0);
-                scoreLine.textContent = total
-                    ? 'Đúng ' + correct + '/' + total + ' ô · +' + points + ' điểm chăm chỉ' +
-                      (answered < total ? ' · Chọn nghĩa cho các ô còn lại' : ' · Đã hoàn thành trang này')
-                    : 'Trang này chưa có dữ liệu nhận diện chữ để tạo ô chọn nghĩa.';
-            }
-
             function applySavedAnswer(trigger, item, row) {
                 const correct = row?.is_correct === true;
                 trigger.disabled = true;
@@ -836,7 +821,6 @@
                     };
                     activeProgress.set(blankIndex, row);
                     applySavedAnswer(trigger, item, row);
-                    updateScoreLine();
                     if (result.awarded_now === true) {
                         document.dispatchEvent(new CustomEvent('ldd:today-refresh'));
                     }
@@ -908,7 +892,6 @@
                 });
                 translationText.append(document.createTextNode(text.slice(cursor)));
                 if (!ranges.length) translationText.textContent = text || 'Trang này chưa có bản dịch.';
-                updateScoreLine();
             }
 
             function normalizedWimpyWord(value) {
@@ -960,7 +943,6 @@
 
             async function renderTranslationForPage(request, pageName) {
                 translationText.textContent = 'Đang tải bản dịch và tạo các ô chọn nghĩa…';
-                scoreLine.textContent = 'Đang chuẩn bị bài luyện…';
                 activeQuiz = [];
                 activeProgress = new Map();
                 renderWords();
@@ -978,11 +960,9 @@
                     activeProgress = savedProgress;
                     renderTranslation(translatedText, items, pageName);
                     renderWords();
-                    updateScoreLine();
                 } catch (error) {
                     if (request !== translationRequest || !dialog.open || entry.pages[page] !== pageName) return;
                     translationText.textContent = error?.message || 'Không tải được bài luyện. Hãy thử tải lại trang.';
-                    scoreLine.textContent = 'Chưa tải được bài luyện';
                 }
             }
 
