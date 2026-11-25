@@ -1130,30 +1130,14 @@ body:has(.ldd-ent-upload-dialog[open]) { overflow: hidden; }
     position: relative;
     z-index: 1;
     flex: 0 0 auto;
-    min-height: 46px;
+    min-height: 34px;
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 10px;
-    padding: 8px 58px 8px 16px;
-    border-bottom: 1px solid #e7eaf2;
-    background: linear-gradient(90deg, #f3f6ff, #fff 52%, #f8f3ff);
-    color: #4a5d91;
+    justify-content: flex-end;
+    padding: 4px 58px 4px 12px;
+    border-bottom: 1px solid #eee9e1;
+    background: #fffdf8;
     box-sizing: border-box;
-}
-#tab-giai-tri .ldd-comic-swipe-guide-icon {
-    flex: 0 0 auto;
-    display: grid;
-    place-items: center;
-    width: 29px;
-    height: 29px;
-    border: 1px solid #c7d3f3;
-    border-radius: 50%;
-    background: #fff;
-    color: #4c65c3;
-    font-size: 19px;
-    font-weight: 800;
-    animation: ldd-comic-swipe-nudge 1.8s ease-in-out infinite;
 }
 #tab-giai-tri .ldd-comic-swipe-guide-count {
     flex: 0 0 auto;
@@ -1259,10 +1243,6 @@ body:has(.ldd-ent-upload-dialog[open]) { overflow: hidden; }
 }
 #tab-giai-tri .ldd-comic-overlay-close { z-index: 4; }
 
-@keyframes ldd-comic-swipe-nudge {
-    0%, 100% { transform: translateX(0); }
-    50% { transform: translateX(4px); }
-}
 
 @media (min-width: 768px) {
     #tab-giai-tri .ldd-comic-overlay {
@@ -1273,9 +1253,9 @@ body:has(.ldd-ent-upload-dialog[open]) { overflow: hidden; }
         border-radius: 20px;
     }
     #tab-giai-tri .ldd-comic-swipe-guide {
-        justify-content: flex-start;
-        min-height: 50px;
-        padding-left: 24px;
+        justify-content: flex-end;
+        min-height: 34px;
+        padding-right: 66px;
     }
     #tab-giai-tri .ldd-comic-swipe-guide-count,
     #tab-giai-tri .ldd-comic-swipe-guide-count {
@@ -1334,15 +1314,9 @@ body:has(.ldd-ent-upload-dialog[open]) { overflow: hidden; }
 }
 @media (max-width: 767px) {
     #tab-giai-tri .ldd-comic-swipe-guide {
-        justify-content: flex-start;
-        min-height: 44px;
-        gap: 7px;
-        padding: 7px 54px 7px 10px;
-    }
-    #tab-giai-tri .ldd-comic-swipe-guide-icon {
-        width: 25px;
-        height: 25px;
-        font-size: 16px;
+        justify-content: flex-end;
+        min-height: 32px;
+        padding: 4px 54px 4px 10px;
     }
     #tab-giai-tri .ldd-comic-swipe-guide-count,
     #tab-giai-tri .ldd-comic-swipe-guide-count {
@@ -1365,7 +1339,4 @@ body:has(.ldd-ent-upload-dialog[open]) { overflow: hidden; }
     #tab-giai-tri .ldd-comic-translation-pane .ldd-comic-translation-input {
         min-height: 130px;
     }
-}
-@media (prefers-reduced-motion: reduce) {
-    #tab-giai-tri .ldd-comic-swipe-guide-icon { animation: none; }
 }
