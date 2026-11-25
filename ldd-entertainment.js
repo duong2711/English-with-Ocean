@@ -757,7 +757,7 @@
                 scoreLine.textContent = total
                     ? 'Đúng ' + correct + '/' + total + ' ô · +' + points + ' điểm chăm chỉ' +
                       (answered < total ? ' · Chọn nghĩa cho các ô còn lại' : ' · Đã hoàn thành trang này')
-                    : 'Đang tải bài luyện…';
+                    : 'Trang này chưa có dữ liệu nhận diện chữ để tạo ô chọn nghĩa.';
             }
 
             function applySavedAnswer(trigger, item, row) {
