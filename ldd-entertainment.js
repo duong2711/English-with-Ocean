@@ -1409,11 +1409,35 @@ function showGrades(series, selectedGrade) {
             const deck = el('div', 'ldd-comic-swipe-deck');
             deck.tabIndex = 0;
             deck.setAttribute('aria-label', 'Kéo hoặc vuốt ngang, hoặc dùng phím mũi tên để xem truyện');
+            const swipeGuide = el('div', 'ldd-comic-swipe-guide');
+            const swipeGuideIcon = el('span', 'ldd-comic-swipe-guide-icon', '↔');
+            const swipeGuideText = el('span', 'ldd-comic-swipe-guide-text', 'Vuốt ngang hoặc kéo sang trái để xem khung tiếp theo');
+            const swipeGuideCount = el('span', 'ldd-comic-swipe-guide-count', 'Khung 1/1');
+            swipeGuide.append(swipeGuideIcon, swipeGuideText, swipeGuideCount);
+            let renderedFrameCount = 0;
+            function updateComicSwipeGuide() {
+                const width = deck.clientWidth;
+                const activeIndex = width ? Math.max(0, Math.min(renderedFrameCount - 1, Math.round(deck.scrollLeft / width))) : 0;
+                if (renderedFrameCount > 1 && activeIndex < renderedFrameCount - 1) {
+                    swipeGuideText.textContent = activeIndex === 0
+                        ? 'Vuốt ngang hoặc kéo sang trái để xem khung tiếp theo'
+                        : 'Tiếp tục vuốt ngang để xem khung tiếp theo';
+                } else if (renderedFrameCount > 1) {
+                    swipeGuideText.textContent = 'Đã đến khung cuối · vuốt sang phải để xem lại';
+                } else {
+                    swipeGuideText.textContent = 'Đây là khung truyện duy nhất của phần này';
+                }
+                swipeGuideCount.textContent = renderedFrameCount
+                    ? 'Khung ' + (activeIndex + 1) + '/' + renderedFrameCount
+                    : 'Đang tải…';
+                swipeGuide.dataset.atEnd = String(renderedFrameCount > 1 && activeIndex === renderedFrameCount - 1);
+            }
+            deck.addEventListener('scroll', updateComicSwipeGuide, {passive:true});
             const loading = el('span', 'ldd-comic-loading');
             loading.setAttribute('role', 'status');
             loading.setAttribute('aria-label', 'Đang tải truyện');
             deck.append(loading);
-            dialog.append(close, deck);
+            dialog.append(close, swipeGuide, deck);
             comicBody.append(dialog);
             readerZoom = dialog;
             close.addEventListener('click', closeReaderZoom);
@@ -1500,39 +1524,67 @@ function showGrades(series, selectedGrade) {
             });
             function render(frames) {
                 deck.replaceChildren();
+                renderedFrameCount = Array.isArray(frames) ? frames.length : 0;
                 frames.forEach((frame, index) => {
                     const slide = el('section', 'ldd-comic-swipe-slide');
                     slide.dataset.frameIndex = String(frame.frame_index);
-                    slide.setAttribute('aria-label', 'Trang ' + (index + 1) + ' trên ' + frames.length);
+                    slide.setAttribute('aria-label', 'Khung ' + (index + 1) + ' trên ' + frames.length);
+
+                    // Tablet and desktop: story on the left, learner translation workspace on the right.
+                    // Phones keep the same content in a natural vertical reading order.
+                    const studyLayout = el('div', 'ldd-comic-study-layout');
+                    const readingPane = el('section', 'ldd-comic-reading-pane');
+                    readingPane.setAttribute('aria-label', 'Truyện gốc và nội dung tiếng Anh');
+
+                    const readingHeading = el('div', 'ldd-comic-pane-heading');
+                    readingHeading.append(
+                        el('strong', '', '📖 Truyện gốc & nội dung'),
+                        el('small', '', 'Khung ' + (index + 1) + ' / ' + frames.length)
+                    );
+                    readingPane.append(readingHeading);
+
                     const url = safeAsset(frame.image_url);
                     if (url) {
                         const art = el('div', 'ldd-comic-swipe-art');
                         const image = el('img', 'ldd-comic-swipe-image');
                         image.src = url;
-                        image.alt = 'Minh họa câu chuyện, trang ' + (index + 1);
+                        image.alt = 'Minh họa câu chuyện, khung ' + (index + 1);
                         image.draggable = false;
                         image.loading = index === 0 ? 'eager' : 'lazy';
                         image.decoding = 'async';
-                        image.addEventListener('error', () => { art.remove(); slide.classList.add('is-text-only'); }, {once:true});
+                        image.addEventListener('error', () => {
+                            art.remove();
+                            slide.classList.add('is-text-only');
+                        }, {once:true});
                         art.append(image);
-                        slide.append(art);
+                        readingPane.append(art);
                     } else {
                         slide.classList.add('is-text-only');
                     }
+
                     const text = el('div', 'ldd-comic-swipe-text');
                     text.append(comicText(frame.content_html));
                     text.dataset.vocabContext = text.textContent;
                     text.dataset.vocabSource = 'Truyện học đường – Lớp ' + grade + ' – Unit ' + unit.number;
+                    readingPane.append(text);
 
+                    const rewardNote = el('div', 'ldd-comic-word-reward-note',
+                        '📖 Đọc khung này: mỗi từ in đậm chưa tra được +2 điểm chăm chỉ.');
+                    rewardNote.dataset.frameIndex = String(frame.frame_index);
+                    wordRewardNotes.set(Number(frame.frame_index), rewardNote);
+                    readingPane.append(rewardNote);
+
+                    const translationPane = el('aside', 'ldd-comic-translation-pane');
+                    translationPane.setAttribute('aria-label', 'Khu vực học viên tự dịch');
                     const translateBox = el('section', 'ldd-comic-translation-box');
                     const translateHead = el('div', 'ldd-comic-translation-head');
                     translateHead.append(
-                        el('strong', '', '✍️ Tự dịch khung truyện'),
-                        el('small', '', 'Viết bản dịch tiếng Việt của riêng bạn, sau đó nhờ AI chấm.')
+                        el('strong', '', '✍️ Bản dịch của bạn'),
+                        el('small', '', 'Đọc nội dung truyện ở cột trái, sau đó nhập bản dịch tiếng Việt vào đây.')
                     );
                     const textarea = document.createElement('textarea');
                     textarea.className = 'ldd-comic-translation-input';
-                    textarea.rows = 4;
+                    textarea.rows = 8;
                     textarea.maxLength = 3000;
                     textarea.placeholder = 'Nhập bản dịch tiếng Việt của khung truyện này…';
                     textarea.setAttribute('aria-label', 'Bản dịch tiếng Việt khung truyện ' + (index + 1));
@@ -1597,14 +1649,13 @@ function showGrades(series, selectedGrade) {
                         }
                     });
                     translateBox.append(translateHead, textarea, submit, feedback);
-                    const rewardNote = el('div', 'ldd-comic-word-reward-note',
-                        '📖 Đọc khung này: mỗi từ in đậm chưa tra được +2 điểm chăm chỉ.');
-                    rewardNote.dataset.frameIndex = String(frame.frame_index);
-                    wordRewardNotes.set(Number(frame.frame_index), rewardNote);
-                    text.append(translateBox, rewardNote);
-                    slide.append(text);
+                    translationPane.append(translateBox);
+
+                    studyLayout.append(readingPane, translationPane);
+                    slide.append(studyLayout);
                     deck.append(slide);
                 });
+                updateComicSwipeGuide();
                 startComicFrameObserver(deck);
             }
             dialog.showModal();
