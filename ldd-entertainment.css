@@ -1008,3 +1008,61 @@ body:has(.ldd-ent-upload-dialog[open]) { overflow: hidden; }
     line-height:1.8;
   }
 }
+
+
+/* Mobile-only draggable divider for the Diary of a Wimpy Kid bilingual reader. */
+#tab-giai-tri .ldd-wimpy-pane-splitter {
+  display:none;
+}
+#tab-giai-tri .ldd-wimpy-pane-splitter-grip {
+  display:block;
+  width:54px;
+  height:5px;
+  border-radius:999px;
+  background:#a99578;
+}
+@media (max-width:700px) {
+  #tab-giai-tri .ldd-wimpy-reader-grid {
+    grid-template-rows:minmax(140px,var(--ldd-wimpy-original-height,42%)) 30px minmax(140px,1fr);
+    overflow:hidden;
+  }
+  #tab-giai-tri .ldd-wimpy-original-pane {
+    min-height:0;
+    overflow:hidden;
+    border-bottom:0;
+  }
+  #tab-giai-tri .ldd-wimpy-pane-splitter {
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:30px;
+    margin:0;
+    border-top:1px solid #e4d9c9;
+    border-bottom:1px solid #e4d9c9;
+    background:#f7f2e9;
+    cursor:ns-resize;
+    touch-action:none;
+    user-select:none;
+    -webkit-user-select:none;
+    position:relative;
+    z-index:4;
+  }
+  #tab-giai-tri .ldd-wimpy-pane-splitter:active {
+    background:#eee2ce;
+  }
+  #tab-giai-tri .ldd-wimpy-pane-splitter:focus-visible {
+    outline:2px solid #926b43;
+    outline-offset:-2px;
+  }
+  #tab-giai-trai .ldd-wimpy-pane-splitter-grip,
+  #tab-giai-tri .ldd-wimpy-pane-splitter-grip {
+    width:58px;
+    height:5px;
+    background:#9e886b;
+    box-shadow:0 1px 0 rgba(255,255,255,.8);
+  }
+  #tab-giai-tri .ldd-wimpy-translation {
+    min-height:0;
+    overflow-y:auto;
+  }
+}
