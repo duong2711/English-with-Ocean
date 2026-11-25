@@ -617,19 +617,18 @@
             const readerGrid = el('div', 'ldd-wimpy-reader-grid');
             const originalPane = el('section', 'ldd-wimpy-original-pane');
             const originalHeading = el('h4', 'ldd-wimpy-pane-heading', '📖 Truyện gốc');
-            const sourceTextBlock = el('div', 'ldd-wimpy-source-text');
             const imageViewport = el('div', 'ldd-wimpy-viewport');
             imageViewport.tabIndex = 0;
-            imageViewport.hidden = true;
             const image = el('img', 'ldd-wimpy-page');
             image.alt = 'Trang truyện gốc';
             image.draggable = false;
             const failure = el('p', 'ldd-wimpy-error', 'Không tải được trang truyện. Vui lòng thử lại.');
             failure.hidden = true;
             const pageWrap = el('div', 'ldd-wimpy-page-wrap');
-            pageWrap.append(image);
+            const wordsLayer = el('div', 'ldd-wimpy-words');
+            pageWrap.append(image, wordsLayer);
             imageViewport.append(pageWrap, failure);
-            originalPane.append(originalHeading, sourceTextBlock, imageViewport);
+            originalPane.append(originalHeading, imageViewport);
 
             const translation = el('section', 'ldd-wimpy-translation');
             const translationHeading = el('h4', 'ldd-wimpy-pane-heading', '🇻🇳 Bản dịch tiếng Việt');
@@ -653,12 +652,49 @@
             readerZoom = dialog;
 
             let page = 0;
+            let positions = {};
             let translations = null;
             let translationRequest = 0;
             let activeQuiz = [];
             let activeProgress = new Map();
             const quizCache = new Map();
             const progressCache = new Map();
+
+            let lookupHome = null;
+            function restoreLookup() {
+                if (!lookupHome) return;
+                const {popup, parent, next} = lookupHome;
+                popup.style.display = 'none';
+                if (next && next.parentNode === parent) parent.insertBefore(popup, next);
+                else parent.append(popup);
+                lookupHome = null;
+            }
+
+            wordsLayer.addEventListener('click', event => {
+                const word = event.target.closest('.tappable-word');
+                if (!word) return;
+                if (window.LDDTextActions?.presentWordElement?.(word)) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    return;
+                }
+                if (!window.vocabTap?.handleTap) return;
+                event.preventDefault();
+                event.stopPropagation();
+                const popup = document.getElementById('word-lookup-popup');
+                if (popup && popup.parentNode !== dialog) {
+                    lookupHome = {popup, parent:popup.parentNode, next:popup.nextSibling};
+                    dialog.append(popup);
+                }
+                window.vocabTap.handleTap(word);
+            });
+
+            dialog.addEventListener('cancel', event => {
+                if (lookupHome?.popup && lookupHome.popup.style.display !== 'none') {
+                    event.preventDefault();
+                    lookupHome.popup.querySelector('#word-lookup-close')?.click();
+                }
+            });
 
             async function loadQuiz(pageName) {
                 if (quizCache.has(pageName)) return quizCache.get(pageName);
@@ -671,13 +707,9 @@
                 if (!response.ok || data?.error || !Array.isArray(data?.result?.items)) {
                     throw Error(data?.error || 'Không tạo được bài luyện cho trang này.');
                 }
-                const quiz = {
-                    items: data.result.items,
-                    source_text: String(data.result.source_text || ''),
-                    unavailable: data.result.unavailable === true
-                };
-                quizCache.set(pageName, quiz);
-                return quiz;
+                const items = data.result.items;
+                quizCache.set(pageName, items);
+                return items;
             }
 
             async function loadProgress(pageName) {
@@ -807,38 +839,61 @@
                 updateScoreLine();
             }
 
-            function renderSourceText(text, items) {
-                sourceTextBlock.replaceChildren();
-                const ranges = (items || []).map(item => {
-                    const phrase = String(item.source_phrase || '');
-                    const start = text.toLowerCase().indexOf(phrase.toLowerCase());
-                    return {phrase, start, end:start + phrase.length};
-                }).filter(row => row.phrase && row.start >= 0)
-                  .sort((a,b) => a.start - b.start);
-                let cursor = 0;
-                ranges.forEach(range => {
-                    if (range.start < cursor) return;
-                    sourceTextBlock.append(document.createTextNode(text.slice(cursor, range.start)));
-                    const highlighted = el('strong', 'ldd-wimpy-source-highlight',
-                        text.slice(range.start, range.end));
-                    sourceTextBlock.append(highlighted);
-                    cursor = range.end;
+            function normalizedWimpyWord(value) {
+                return String(value || '').toLowerCase().normalize('NFKD')
+                    .replace(/[^a-z0-9']/g, '');
+            }
+
+            function highlightedWordIndexes(list, items) {
+                const indexes = new Set();
+                (items || []).forEach(item => {
+                    const wanted = String(item.source_phrase || '').split(/\\s+/)
+                        .map(normalizedWimpyWord).filter(Boolean);
+                    if (!wanted.length) return;
+                    for (let i = 0; i <= list.length - wanted.length; i++) {
+                        let match = true;
+                        for (let j = 0; j < wanted.length; j++) {
+                            if (normalizedWimpyWord(list[i + j]?.[0]) !== wanted[j]) {
+                                match = false;
+                                break;
+                            }
+                        }
+                        if (match) {
+                            for (let j = 0; j < wanted.length; j++) indexes.add(i + j);
+                            break;
+                        }
+                    }
                 });
-                sourceTextBlock.append(document.createTextNode(text.slice(cursor)));
-                sourceTextBlock.hidden = false;
-                imageViewport.hidden = true;
+                return indexes;
+            }
+
+            function renderWords() {
+                wordsLayer.replaceChildren();
+                const pageName = entry.pages[page];
+                const list = positions[pageName] || [];
+                const highlights = highlightedWordIndexes(list, activeQuiz);
+                wordsLayer.dataset.vocabContext = list.map(item => item[0]).join(' ');
+                wordsLayer.dataset.vocabSource = series.title + ' – ' + month.label + ' – ' + entry.dayVi;
+                list.forEach(([word, x, y, w, h], index) => {
+                    const hit = el('span', 'ldd-wimpy-word-hit' +
+                        (highlights.has(index) ? ' is-quiz-highlight' : ''));
+                    hit.style.left = x + '%';
+                    hit.style.top = y + '%';
+                    hit.style.width = w + '%';
+                    hit.style.height = h + '%';
+                    hit.append(comicText(word));
+                    wordsLayer.append(hit);
+                });
             }
 
             async function renderTranslationForPage(request, pageName) {
                 translationText.textContent = 'Đang tải bản dịch và tạo các ô chọn nghĩa…';
-                sourceTextBlock.textContent = 'Đang tải truyện gốc…';
-                sourceTextBlock.hidden = false;
-                imageViewport.hidden = true;
                 scoreLine.textContent = 'Đang chuẩn bị bài luyện…';
                 activeQuiz = [];
                 activeProgress = new Map();
+                renderWords();
                 try {
-                    const [allTranslations, quiz, savedProgress] = await Promise.all([
+                    const [allTranslations, items, savedProgress] = await Promise.all([
                         translations ? Promise.resolve(translations) : wimpyTranslations(),
                         loadQuiz(pageName),
                         loadProgress(pageName)
@@ -847,23 +902,13 @@
                     translations = allTranslations;
                     const translatedText = String(translations[pageName] || '');
                     if (!translatedText) throw Error('Trang này chưa có bản dịch tiếng Việt.');
-                    activeQuiz = quiz.items;
+                    activeQuiz = items;
                     activeProgress = savedProgress;
-                    renderTranslation(translatedText, quiz.items, pageName);
-                    if (quiz.source_text) {
-                        renderSourceText(quiz.source_text, quiz.items);
-                    } else {
-                        sourceTextBlock.replaceChildren();
-                        sourceTextBlock.hidden = true;
-                        imageViewport.hidden = false;
-                        image.src = wimpyPageUrl(pageName);
-                        failure.hidden = true;
-                        image.hidden = false;
-                    }
+                    renderTranslation(translatedText, items, pageName);
+                    renderWords();
                     updateScoreLine();
                 } catch (error) {
                     if (request !== translationRequest || !dialog.open || entry.pages[page] !== pageName) return;
-                    sourceTextBlock.textContent = 'Chưa tải được văn bản gốc của trang này.';
                     translationText.textContent = error?.message || 'Không tải được bài luyện. Hãy thử tải lại trang.';
                     scoreLine.textContent = 'Chưa tải được bài luyện';
                 }
@@ -871,15 +916,18 @@
 
             function renderPage() {
                 const pageName = entry.pages[page];
-                sourceTextBlock.textContent = 'Đang tải truyện gốc…';
-                sourceTextBlock.hidden = false;
-                imageViewport.hidden = true;
+                activeQuiz = [];
+                imageViewport.hidden = false;
                 failure.hidden = true;
                 image.hidden = false;
                 image.alt = series.title + ', ' + month.label + ', ' + entry.dayVi + ', trang ' + (page + 1);
+                image.src = wimpyPageUrl(pageName);
                 count.textContent = (page + 1) + ' / ' + entry.pages.length;
                 prev.disabled = page === 0;
                 next.disabled = page === entry.pages.length - 1;
+                imageViewport.scrollTop = 0;
+                translation.scrollTop = 0;
+                renderWords();
                 const request = ++translationRequest;
                 void renderTranslationForPage(request, pageName);
             }
@@ -896,6 +944,7 @@
             });
             close.addEventListener('click', () => dialog.close());
             dialog.addEventListener('keydown', event => {
+                if (lookupHome?.popup && lookupHome.popup.style.display !== 'none') return;
                 if (event.key === 'ArrowRight') { event.preventDefault(); next.click(); }
                 else if (event.key === 'ArrowLeft') { event.preventDefault(); prev.click(); }
                 else if (event.key === 'Escape') {
@@ -917,6 +966,7 @@
             }, {passive:true});
 
             dialog.addEventListener('close', () => {
+                restoreLookup();
                 if (readerZoom === dialog) readerZoom = null;
                 dialog.remove();
                 if (opener?.isConnected) opener.focus({preventScroll:true});
@@ -924,7 +974,13 @@
 
             renderPage();
             dialog.showModal();
-            sourceTextBlock.focus?.({preventScroll:true});
+            imageViewport.focus({preventScroll:true});
+            wimpyWordPositions().then(data => {
+                if (dialog.open) {
+                    positions = data;
+                    renderWords();
+                }
+            });
         }
 
 function showGrades(series, selectedGrade) {
