@@ -37,23 +37,23 @@
 
   var templates = {
     basic: {
-      main:'Chào bạn, mình là Dương, gia sư tiếng Anh. Mình có nhận hỗ trợ học viên mất gốc hoặc hổng kiến thức từ nền tảng. Trước khi học, mình có thể trao đổi khoảng 30 phút và làm bài test đầu vào để xác định phần đang yếu. Học viên có website tự học theo năng lực, bài tập sau mỗi buổi và bài kiểm tra theo từng chương. Bạn có thể nhắn Zalo 0988007529 để trao đổi nhé!',
+      main:'Chào bạn, mình là Dương, gia sư tiếng Anh. Mình có nhận hỗ trợ học viên mất gốc hoặc hổng kiến thức từ nền tảng. Trước khi học, mình có thể trao đổi khoảng 30 phút và làm bài test đầu vào để xác định phần đang yếu. Học viên có website tự học theo năng lực, bài tập sau mỗi buổi, bài kiểm tra theo từng chương và hệ thống Zalo tự động nhắc học. Bạn có thể nhắn Zalo 0988007529 để trao đổi nhé!',
       reply:'Mình gửi thêm một số hình ảnh về hồ sơ gia sư, website tự học và hệ thống hỗ trợ học viên bên ngoài giờ học để bạn tham khảo.'
     },
     parent: {
-      main:'Chào bạn, mình là Dương, gia sư tiếng Anh. Mình có thể hỗ trợ học sinh tiểu học, THCS và ôn tập theo tình hình trên lớp. Mỗi học viên được theo dõi năng lực để điều chỉnh lộ trình; có bài tập sau mỗi buổi và bài kiểm tra sau từng chương. Mình cũng xây dựng website tự học riêng để các em luyện tập ngoài giờ. Phụ huynh có thể nhắn Zalo 0988007529 để trao đổi khoảng 30 phút và cho con làm bài test đầu vào nhé!',
+      main:'Chào bạn, mình là Dương, gia sư tiếng Anh. Mình có thể hỗ trợ học sinh tiểu học, THCS và ôn tập theo tình hình trên lớp. Mỗi học viên được theo dõi năng lực để điều chỉnh lộ trình; có bài tập sau mỗi buổi và bài kiểm tra sau từng chương. Mình cũng xây dựng website tự học riêng để các em luyện tập ngoài giờ, kèm hệ thống Zalo tự động nhắc học. Phụ huynh có thể nhắn Zalo 0988007529 để trao đổi khoảng 30 phút và cho con làm bài test đầu vào nhé!',
       reply:'Mình gửi bạn xem thêm CV, hình ảnh dạy học thực tế và giao diện website tự học LDD English.'
     },
     speaking: {
-      main:'Chào bạn, mình là Dương, gia sư tiếng Anh. Với nhu cầu giao tiếp, mình ưu tiên xác định trình độ và mục đích sử dụng tiếng Anh trước, sau đó điều chỉnh nội dung học theo khả năng và công việc thực tế. Ngoài buổi học, bạn có thể luyện tập trên website tự học và nhận nhắc nhở qua Zalo. Bạn có thể nhắn 0988007529 để trao đổi khoảng 30 phút và làm bài test đầu vào nhé!',
+      main:'Chào bạn, mình là Dương, gia sư tiếng Anh. Với nhu cầu giao tiếp, mình ưu tiên xác định trình độ và mục đích sử dụng tiếng Anh trước, sau đó điều chỉnh nội dung học theo khả năng và công việc thực tế. Ngoài buổi học, bạn có thể luyện tập trên website tự học và nhận nhắc nhở tự động qua Zalo. Bạn có thể nhắn 0988007529 để trao đổi khoảng 30 phút và làm bài test đầu vào nhé!',
       reply:'Mình gửi thêm hình ảnh hoạt động luyện giao tiếp thực tế, dạy online và hệ thống tự học để bạn tham khảo.'
     },
     worker: {
-      main:'Chào bạn, mình là Dương, gia sư tiếng Anh. Nếu lịch làm việc bận, mình có thể điều chỉnh lộ trình theo mục tiêu, thời gian và năng lực hiện tại của bạn. Website tự học giúp bạn luyện thêm ngoài giờ; bài tập và nội dung ôn tập được theo dõi, kèm hệ thống Zalo nhắc học. Bạn có thể nhắn 0988007529 để trao đổi khoảng 30 phút và làm bài test đầu vào nhé!',
+      main:'Chào bạn, mình là Dương, gia sư tiếng Anh. Nếu lịch làm việc bận, mình có thể điều chỉnh lộ trình theo mục tiêu, thời gian và năng lực hiện tại của bạn. Website tự học giúp bạn luyện thêm ngoài giờ; bài tập và nội dung ôn tập được theo dõi, kèm hệ thống Zalo tự động nhắc học. Bạn có thể nhắn 0988007529 để trao đổi khoảng 30 phút và làm bài test đầu vào nhé!',
       reply:'Mình gửi bạn xem giao diện website tự học, hình ảnh dạy online và tin nhắn nhắc học qua Zalo.'
     },
     longterm: {
-      main:'Chào bạn, mình là Dương, gia sư tiếng Anh. Mình chú trọng xây dựng lộ trình có thể thay đổi theo năng lực và kết quả học tập thực tế, thay vì cố định một chương trình cho tất cả. Học viên có website tự học, bài tập sau mỗi buổi, bài kiểm tra sau từng chương và hệ thống Zalo nhắc học. Bạn có thể nhắn 0988007529 để trao đổi khoảng 30 phút và làm bài test đầu vào nhé!',
+      main:'Chào bạn, mình là Dương, gia sư tiếng Anh. Mình chú trọng xây dựng lộ trình có thể thay đổi theo năng lực và kết quả học tập thực tế, thay vì cố định một chương trình cho tất cả. Học viên có website tự học, bài tập sau mỗi buổi, bài kiểm tra sau từng chương và hệ thống Zalo tự động nhắc học. Bạn có thể nhắn 0988007529 để trao đổi khoảng 30 phút và làm bài test đầu vào nhé!',
       reply:'Mình gửi kèm hình ảnh website tự học và hệ thống nhắc học Zalo để bạn hình dung cách học viên được hỗ trợ ngoài giờ.'
     }
   };
