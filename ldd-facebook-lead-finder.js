@@ -162,10 +162,10 @@
                 '<label class="fblf-label" for="fblf-category">Đối tượng muốn tìm</label><select id="fblf-category" class="fblf-select"></select>' +
                 '<label class="fblf-label" for="fblf-query">Từ khóa tìm kiếm</label><textarea id="fblf-query" class="fblf-area small"></textarea>' +
                 '<label class="fblf-label" for="fblf-target-group">Hội nhóm muốn mở</label><select id="fblf-target-group" class="fblf-select"></select>' +
-                '<div class="fblf-row"><button type="button" id="fblf-facebook-search" class="fblf-btn primary">Tìm trên Facebook</button><button type="button" id="fblf-google-search" class="fblf-btn">Tìm bài công khai trên Google</button></div>' +
-                '<div class="fblf-row"><button type="button" id="fblf-open-group" class="fblf-btn">Mở nhóm + sao chép từ khóa</button></div>' +
+                '<div class="fblf-row"><button type="button" id="fblf-facebook-search" class="fblf-btn primary">Tìm toàn Facebook</button><button type="button" id="fblf-google-search" class="fblf-btn">Tìm bài công khai trên Google</button></div>' +
+                '<div class="fblf-row"><button type="button" id="fblf-open-group" class="fblf-btn">Tìm trong nhóm đã chọn</button></div>' +
                 '<div id="fblf-search-status" class="fblf-status"></div>' +
-                '<div class="fblf-note">Công cụ không tự quét Facebook hoặc đọc bài đăng. Bạn tự kiểm tra kết quả, quyền riêng tư và nội quy nhóm; sau đó dán link và phần nội dung liên quan vào danh sách bài tiềm năng.</div></div>' +
+                '<div class="fblf-note">Tìm kiếm mở trực tiếp trong Facebook/Google; công cụ không tự đọc hay thu thập bài đăng. Chọn bài bạn có quyền xem, kiểm tra nội quy nhóm rồi dán link và nội dung vào danh sách để phân loại.</div></div>' +
             '</div>' +
           '</div>' +
           '<div class="fblf-page" data-page="leads">' +
@@ -282,15 +282,11 @@
     var query = queryValue();
     if (!group) { overlay.querySelector('#fblf-search-status').textContent = 'Hãy chọn một hội nhóm đã lưu.'; return; }
     if (!query) { overlay.querySelector('#fblf-search-status').textContent = 'Nhập từ khóa tìm kiếm trước.'; return; }
-    window.open(group.url, '_blank', 'noopener');
-    var status = overlay.querySelector('#fblf-search-status');
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(query).then(function () {
-        status.textContent = 'Đã mở nhóm và sao chép từ khóa. Dán từ khóa vào ô tìm kiếm trong nhóm.';
-      }).catch(function () {
-        status.textContent = 'Đã mở nhóm. Hãy sao chép thủ công từ khóa trong ô tìm kiếm của công cụ.';
-      });
-    } else status.textContent = 'Đã mở nhóm. Hãy sao chép thủ công từ khóa trong ô tìm kiếm của công cụ.';
+    var groupId = groupIdFromUrl(group.url);
+    if (!groupId) { overlay.querySelector('#fblf-search-status').textContent = 'Không nhận diện được mã hội nhóm. Hãy kiểm tra lại link nhóm.'; return; }
+    var searchUrl = 'https://www.facebook.com/groups/' + encodeURIComponent(groupId) + '/search/?q=' + encodeURIComponent(query);
+    window.open(searchUrl, '_blank', 'noopener');
+    overlay.querySelector('#fblf-search-status').textContent = 'Đã mở kết quả tìm kiếm trong nhóm “' + group.name + '”. Hãy kiểm tra từng bài trước khi lưu.';
   }
   function scoreText(text) {
     var normalized = normalize(text);
@@ -353,7 +349,7 @@
           ((item.intents || []).length ? ' · Nhu cầu: ' + esc(item.intents.join(', ')) : '') +
           (item.secondary ? ' · Nhóm phụ: ' + esc(item.secondary) : '') + '</p>' +
         ((item.excluded || []).length ? '<p class="fblf-muted">Cần đọc kỹ: ' + esc(item.excluded.join(', ')) + '</p>' : '') +
-        '<div class="fblf-row"><button type="button" class="fblf-btn primary" data-compose-lead="' + esc(item.id) + '">Chuyển sang soạn bình luận</button><button type="button" class="fblf-btn" data-delete-lead="' + esc(item.id) + '">Xóa</button></div>' +
+        '<div class="fblf-row"><button type="button" class="fblf-btn primary" data-compose-lead="' + esc(item.id) + '">Duyệt & soạn bình luận</button><button type="button" class="fblf-btn" data-delete-lead="' + esc(item.id) + '">Xóa</button></div>' +
       '</article>';
     }).join('');
     host.querySelectorAll('[data-compose-lead]').forEach(function (button) {
@@ -377,7 +373,7 @@
           if (state) state.textContent += ' · Điểm tiềm năng: ' + item.score + '/100. Hãy kiểm tra ngữ cảnh trước khi đăng.';
           var rows = savedLeads();
           var index = rows.findIndex(function (x) { return x.id === item.id; });
-          if (index >= 0) { rows[index].state = 'Đã chuyển sang soạn'; write(LEADS_KEY,rows); }
+          if (index >= 0) { rows[index].state = 'Đã duyệt – chờ bạn đăng'; write(LEADS_KEY,rows); }
         }
       });
     });
