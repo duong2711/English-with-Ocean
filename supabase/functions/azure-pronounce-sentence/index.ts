@@ -174,7 +174,8 @@ Deno.serve(async (req: Request) => {
     && alignment.correct===alignment.total && wordGrades.length>0
     && weakWords.length===0 && accuracy>=80 && rawScore>=80;
   return response(req,{
-    mode:'sentence', scoring:'azure-pronunciation-assessment-v1',
+    mode:wordRetry?'word':'sentence',
+    scoring:wordRetry?'azure-pronunciation-assessment-word-v1':'azure-pronunciation-assessment-v1',
     // Compatibility: existing Dịch câu gate expects a perfect content-validation score to advance.
     score:passed?100:Math.min(99,Math.max(0,Math.round(rawScore))),
     pronunciation_score:Math.round(rawScore), accuracy_score:accuracy,
