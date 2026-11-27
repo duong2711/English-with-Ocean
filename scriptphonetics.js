@@ -8048,7 +8048,18 @@ function toggleCompletion(symbolElement) {
         // [MỚI] Bước đọc bắt buộc thêm (ngoài dịch/điền từ) trong bài kiểm tra từ vựng — chấm
         // bằng Cloudflare Workers AI. Xuất hiện ngay sau khi trả lời xong câu dịch/điền từ,
         // MIỄN LÀ từ này còn thiếu lượt đọc đạt theo hạng (tier) của nó.
-        function renderVocabWeeklyPronounceStep(item, v, idx, total) {
+        async function renderVocabWeeklyPronounceStep(item, v, idx, total) {
+            const { data: excludedWord } = await sb.from('whisper_word_exclusions')
+                .select('word_norm').eq('word_norm', normalizeWord(v.word_norm || v.word)).eq('active', true).maybeSingle().catch(() => ({ data: null }));
+            if (excludedWord) {
+                item._examPronDone = true;
+                const skipped = document.createElement('div');
+                skipped.className = 'vocab-weekly-pron-step';
+                skipped.textContent = '⏭️ Từ này đang được miễn chấm phát âm cho toàn bộ học viên.';
+                vocabWeeklyBodyEl.appendChild(skipped);
+                appendVocabWeeklyNextButton(idx, total);
+                return;
+            }
             const progress = vocabWordProgressMap[String(item.vocab_id)] || {};
             const tier = progress.pron_tier_required;
             const passedCount = progress.pron_passed_count || 0;
@@ -8064,6 +8075,29 @@ function toggleCompletion(symbolElement) {
             vocabWeeklyBodyEl.appendChild(stepEl);
             const micBtn = stepEl.querySelector('.vocab-weekly-pron-mic-btn');
             const statusEl = stepEl.querySelector('.vocab-weekly-pron-status');
+            let failedAttempts = 0;
+            const reportBtn = document.createElement('button');
+            reportBtn.type = 'button';
+            reportBtn.className = 'word-lookup-report-btn';
+            reportBtn.textContent = '⚠️ Báo cáo chấm sai';
+            reportBtn.hidden = true;
+            stepEl.appendChild(reportBtn);
+            reportBtn.addEventListener('click', async () => {
+                if (failedAttempts < 3) return;
+                reportBtn.disabled = true;
+                try {
+                    const { error } = await sb.rpc('report_whisper_word', { p_word: v.word });
+                    if (error) throw error;
+                    item._examPronDone = true;
+                    statusEl.textContent = '⏭️ Đã báo cáo. Từ này được miễn chấm trên toàn hệ thống.';
+                    reportBtn.hidden = true;
+                    micBtn.style.display = 'none';
+                    appendVocabWeeklyNextButton(idx, total);
+                } catch (err) {
+                    reportBtn.disabled = false;
+                    statusEl.textContent = '⚠️ Chưa gửi được báo cáo: ' + (err.message || 'Lỗi kết nối.');
+                }
+            });
 
             micBtn.addEventListener('click', () => {
                 micBtn.disabled = true;
@@ -8092,11 +8126,23 @@ function toggleCompletion(symbolElement) {
                     onDone: async (score) => {
                         micBtn.classList.remove('kf-mic-listening');
                         const passed = score >= VOCAB_PRON_PASS_THRESHOLD;
-                        statusEl.textContent = passed ? `✅ Đạt (${score}%)!` : `📝 Điểm: ${score}% (chưa đạt, tính lại lần sau nhé)`;
-                        statusEl.className = 'vocab-weekly-pron-status word-lookup-pronounce-status ' + (passed ? 'word-lookup-pronounce-correct' : 'word-lookup-pronounce-wrong');
-                        micBtn.style.display = 'none';
-                        await recordPronunciationAttempt(item.vocab_id, score);
-                        appendVocabWeeklyNextButton(idx, total);
+                        if (passed) {
+                            statusEl.textContent = `✅ Đạt (${score}%)!`;
+                            statusEl.className = 'vocab-weekly-pron-status word-lookup-pronounce-status word-lookup-pronounce-correct';
+                            micBtn.style.display = 'none';
+                            reportBtn.hidden = true;
+                            await recordPronunciationAttempt(item.vocab_id, score);
+                            appendVocabWeeklyNextButton(idx, total);
+                        } else {
+                            failedAttempts++;
+                            statusEl.textContent = `📝 Điểm: ${score}% (chưa đạt) · Lần sai ${failedAttempts}/3. ` +
+                                (failedAttempts >= 3 ? 'Bạn có thể báo cáo nếu máy chấm sai.' : 'Hãy thử đọc lại.');
+                            statusEl.className = 'vocab-weekly-pron-status word-lookup-pronounce-status word-lookup-pronounce-wrong';
+                            micBtn.disabled = false;
+                            micBtn.querySelector('.kf-mic-label').textContent = 'Đọc lại';
+                            reportBtn.hidden = failedAttempts < 3;
+                            await recordPronunciationAttempt(item.vocab_id, score);
+                        }
                     }
                 });
             });
