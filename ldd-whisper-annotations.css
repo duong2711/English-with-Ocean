@@ -20,3 +20,6 @@
 @media(max-width:600px){.ldd-whisper-admin-launch{right:10px;bottom:10px}.ldd-whisper-report-card{align-items:flex-start;flex-direction:column}.ldd-whisper-add-form{flex-wrap:wrap}}
 
 .ldd-whisper-teacher-toast{position:fixed;right:18px;bottom:76px;z-index:10030;max-width:min(460px,calc(100vw - 36px));padding:13px 16px;border-radius:12px;background:#fff7e6;color:#744210;border:1px solid #e9c46a;box-shadow:0 8px 28px #0002;font-weight:650;line-height:1.5}
+/* Đưa nút quản trị Whisper sang góc trái để không đè lên nút/quyền đăng nhập ở góc phải. */
+.ldd-whisper-admin-launch{left:18px;right:auto;bottom:18px;z-index:10050}
+@media(max-width:600px){.ldd-whisper-admin-launch{left:10px;right:auto;bottom:10px}}
