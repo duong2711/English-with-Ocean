@@ -8075,12 +8075,12 @@ function toggleCompletion(symbolElement) {
             vocabWeeklyBodyEl.appendChild(stepEl);
             const micBtn = stepEl.querySelector('.vocab-weekly-pron-mic-btn');
             const statusEl = stepEl.querySelector('.vocab-weekly-pron-status');
-            let failedAttempts = 0;
+            let failedAttempts = Number(item._pronFailCount || 0);
             const reportBtn = document.createElement('button');
             reportBtn.type = 'button';
             reportBtn.className = 'word-lookup-report-btn';
             reportBtn.textContent = '⚠️ Báo cáo chấm sai';
-            reportBtn.hidden = true;
+            reportBtn.hidden = failedAttempts < 3;
             stepEl.appendChild(reportBtn);
             reportBtn.addEventListener('click', async () => {
                 if (failedAttempts < 3) return;
@@ -8135,6 +8135,7 @@ function toggleCompletion(symbolElement) {
                             appendVocabWeeklyNextButton(idx, total);
                         } else {
                             failedAttempts++;
+                            item._pronFailCount = failedAttempts;
                             statusEl.textContent = `📝 Điểm: ${score}% (chưa đạt) · Lần sai ${failedAttempts}/3. ` +
                                 (failedAttempts >= 3 ? 'Bạn có thể báo cáo nếu máy chấm sai.' : 'Hãy thử đọc lại.');
                             statusEl.className = 'vocab-weekly-pron-status word-lookup-pronounce-status word-lookup-pronounce-wrong';
