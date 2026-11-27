@@ -76,6 +76,14 @@
     if (!keys.length) return true;
     if (!currentUser) {
       try { await authenticate(); } catch (_) { return false; }
+    } else {
+      var refreshedToken = getToken();
+      if (!refreshedToken) {
+        currentUser = null;
+        try { await authenticate(); } catch (_) { return false; }
+      } else {
+        currentUser.token = refreshedToken;
+      }
     }
     var batch = pending;
     pending = {};
