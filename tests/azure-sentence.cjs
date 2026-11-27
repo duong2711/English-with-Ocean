@@ -53,6 +53,8 @@ const audio={duration:1,sampleRate:48000,numberOfChannels:2,getChannelData:()=>n
  transcript='teacher';
  const wordReq=()=>new Request('https://example.test',{method:'POST',headers:{Authorization:'Bearer test'},body:JSON.stringify({mode:'word',word:'teacher',audio:bytes.toString('base64')})});
  result=await(await handler(wordReq())).json();assert.equal(result.accepted,true,'Single word retry accepted');
+ assert.equal(result.mode,'word');assert.equal(result.scoring,'azure-pronunciation-assessment-word-v1');
+ assert.equal(result.word_scores[0].phonemes[0].score,95,'Word mode returns phoneme-level scores');
  wordScore=40;result=await(await handler(wordReq())).json();assert.equal(result.accepted,false,'Weak single word must not pass');wordScore=95;
  assert.deepEqual(repairWords('I am a teacher.',{word_feedback:{missing:[],wrong:['teacher']},word_scores:[{word:'I',score:95},{word:'teacher',score:40}]}),['teacher']);
  assert.deepEqual(repairWords("I'm a teacher.",{word_feedback:{missing:['am'],wrong:[]}}),["I'm"]);
