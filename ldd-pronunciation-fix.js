@@ -16,6 +16,9 @@
     const nativeFetch = window.fetch.bind(window);
     const ENDPOINT_URL = 'https://ywqbaksmmtvwbojcgsdd.supabase.co/functions/v1/cloudflare-pronounce-score';
     const ENDPOINT_MARKER = '/functions/v1/cloudflare-pronounce-score';
+    const AZURE_ENDPOINT_URL = 'https://ywqbaksmmtvwbojcgsdd.supabase.co/functions/v1/azure-pronounce-sentence';
+    const REPORTED_WORDS_CACHE_KEY = 'ldd-azure-reported-words-v1';
+    const REPORTED_WORDS_CACHE_MS = 60 * 1000;
     const PROGRESS_MARKER = '/rest/v1/vocab_word_progress';
     const SUPABASE_REF = 'ywqbaksmmtvwbojcgsdd';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl3cWJha3NtbXR2d2JvamNnc2RkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxNjc3NTAsImV4cCI6MjA5Nzc0Mzc1MH0.vhgt7cB6w2elm-MXY57U_wJtYkJQHDFAEsJwAArOjhQ';
@@ -42,6 +45,9 @@
     let gateSequence = 0;
     let cloudCooldownUntil = 0;
     let legacySpeechSession = null;
+    let azureReportedWords = null;
+    let azureReportedWordsLoadedAt = 0;
+    let azureReportedWordsLoading = null;
 
     function delay(ms) {
         return new Promise(function (resolve) { setTimeout(resolve, ms); });
@@ -363,6 +369,19 @@
 
         const body = parsePronunciationBody(init);
         if (body) {
+            let azureRoute = false;
+            try {
+                azureRoute = await isAzureReportedWord(body.word);
+            } catch (error) {
+                markRetryable('AZURE_WORD_LIST_UNAVAILABLE', TEMP_MESSAGE);
+                return jsonResponse({
+                    error: 'Chưa tải được danh sách từ báo cáo để chọn bộ chấm phát âm. Vui lòng thử lại.',
+                    code: 'AZURE_WORD_LIST_UNAVAILABLE',
+                    retryable: true,
+                    no_whisper_fallback: true
+                }, 503);
+            }
+            if (azureRoute) return azureResponseForReportedWord(body, init && init.signal);
             try {
                 if (await isClearlySilent(body.audio)) {
                     markRetryable('NO_SPEECH', NO_SPEECH_MESSAGE);
@@ -428,6 +447,253 @@
             reader.onerror = function () { reject(reader.error || new Error('read-error')); };
             reader.readAsDataURL(blob);
         });
+    }
+
+    function readCachedAzureReportedWords() {
+        try {
+            const cached = JSON.parse(window.localStorage.getItem(REPORTED_WORDS_CACHE_KEY) || 'null');
+            if (!cached || !Array.isArray(cached.words) || !Number.isFinite(cached.at) ||
+                Date.now() - cached.at > 10 * 60 * 1000) return null;
+            return new Set(cached.words.map(normalizeWord).filter(Boolean));
+        } catch (_) {
+            return null;
+        }
+    }
+
+    async function loadAzureReportedWords(force) {
+        if (!force && azureReportedWords && Date.now() - azureReportedWordsLoadedAt < REPORTED_WORDS_CACHE_MS) {
+            return azureReportedWords;
+        }
+        if (azureReportedWordsLoading) return azureReportedWordsLoading;
+
+        azureReportedWordsLoading = (async function () {
+            const cached = azureReportedWords || readCachedAzureReportedWords();
+            const token = getAccessToken();
+            if (!token) {
+                if (cached) return cached;
+                throw Object.assign(new Error('Vui lòng đăng nhập lại để tải danh sách từ báo cáo.'), { code: 'AUTH', status: 401 });
+            }
+            const url = 'https://' + SUPABASE_REF + '.supabase.co/rest/v1/whisper_word_exclusions?select=word_norm&active=eq.true&limit=500';
+            try {
+                const response = await nativeFetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer ' + token,
+                        'apikey': SUPABASE_ANON_KEY
+                    },
+                    cache: 'no-store'
+                });
+                if (!response.ok) throw Object.assign(new Error('Không tải được danh sách từ báo cáo.'), {
+                    code: 'AZURE_WORD_LIST_UNAVAILABLE', status: response.status
+                });
+                const rows = await response.json();
+                if (!Array.isArray(rows)) throw new Error('Danh sách từ báo cáo không hợp lệ.');
+                const words = new Set(rows.map(function (row) { return normalizeWord(row && row.word_norm); }).filter(Boolean));
+                azureReportedWords = words;
+                azureReportedWordsLoadedAt = Date.now();
+                try {
+                    window.localStorage.setItem(REPORTED_WORDS_CACHE_KEY, JSON.stringify({
+                        at: azureReportedWordsLoadedAt,
+                        words: Array.from(words)
+                    }));
+                } catch (_) {}
+                return words;
+            } catch (error) {
+                if (cached) {
+                    azureReportedWords = cached;
+                    azureReportedWordsLoadedAt = Date.now() - REPORTED_WORDS_CACHE_MS + 5000;
+                    return cached;
+                }
+                throw error;
+            }
+        })();
+
+        try {
+            return await azureReportedWordsLoading;
+        } finally {
+            azureReportedWordsLoading = null;
+        }
+    }
+
+    async function isAzureReportedWord(word) {
+        const target = String(word || '').trim();
+        // Azure's single-word route accepts one lexical token; phrases remain on the existing route.
+        if (!/^[A-Za-z0-9]+(?:['’][A-Za-z]+)*$/.test(target)) return false;
+        const words = await loadAzureReportedWords(false);
+        return words.has(normalizeWord(target));
+    }
+
+    function dataUrlToBlob(value, mimeType) {
+        if (value instanceof Blob) return value;
+        const raw = String(value || '');
+        const match = raw.match(/^data:([^;,]+)?(;base64)?,([\s\S]*)$/i);
+        let bytes;
+        let type = mimeType || 'audio/webm';
+        if (match) {
+            type = match[1] || type;
+            if (match[2]) {
+                const binary = atob(match[3]);
+                bytes = new Uint8Array(binary.length);
+                for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+            } else {
+                bytes = new TextEncoder().encode(decodeURIComponent(match[3]));
+            }
+        } else {
+            const binary = atob(raw.replace(/\s/g, ''));
+            bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        }
+        return new Blob([bytes], { type: type });
+    }
+
+    async function encodeAzureWavBase64(blob) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) throw Object.assign(new Error('Trình duyệt không hỗ trợ xử lý âm thanh để chấm Azure.'), {
+            code: 'AUDIO_CONVERSION_UNSUPPORTED', status: 503
+        });
+        let context = null;
+        try {
+            context = new AudioCtx();
+            const source = await context.decodeAudioData((await blob.arrayBuffer()).slice(0));
+            if (!source || !source.length || !source.numberOfChannels) {
+                throw Object.assign(new Error('Không đọc được đoạn ghi âm.'), { code: 'INVALID_AUDIO', status: 422 });
+            }
+            const inputLength = source.length;
+            const channels = [];
+            for (let ch = 0; ch < source.numberOfChannels; ch++) channels.push(source.getChannelData(ch));
+            const mono = new Float32Array(inputLength);
+            for (let i = 0; i < inputLength; i++) {
+                let sum = 0;
+                for (let ch = 0; ch < channels.length; ch++) sum += channels[ch][i] || 0;
+                mono[i] = sum / channels.length;
+            }
+
+            const targetRate = 16000;
+            const outputLength = Math.max(1, Math.floor(inputLength * targetRate / source.sampleRate));
+            const pcmBytes = new Uint8Array(outputLength * 2);
+            const pcmView = new DataView(pcmBytes.buffer);
+            let sumSquares = 0;
+            let peak = 0;
+            const ratio = source.sampleRate / targetRate;
+            for (let i = 0; i < outputLength; i++) {
+                const position = i * ratio;
+                const left = Math.min(inputLength - 1, Math.floor(position));
+                const right = Math.min(inputLength - 1, left + 1);
+                const fraction = position - left;
+                const sample = mono[left] * (1 - fraction) + mono[right] * fraction;
+                const clipped = Math.max(-1, Math.min(1, sample));
+                peak = Math.max(peak, Math.abs(clipped));
+                sumSquares += clipped * clipped;
+                pcmView.setInt16(i * 2, clipped < 0 ? clipped * 32768 : clipped * 32767, true);
+            }
+            const rms = Math.sqrt(sumSquares / outputLength);
+            const seconds = outputLength / targetRate;
+            if (seconds < 0.35 || seconds > 25) {
+                throw Object.assign(new Error('Thời lượng ghi âm không hợp lệ.'), { code: 'INVALID_AUDIO', status: 422 });
+            }
+            if (rms < 0.0045 && peak < 0.02) {
+                throw Object.assign(new Error('Không nghe thấy giọng nói. Hãy đọc lại gần micro hơn.'), {
+                    code: 'NO_SPEECH', status: 422, retryable: true
+                });
+            }
+
+            const wav = new Uint8Array(44 + pcmBytes.length);
+            const view = new DataView(wav.buffer);
+            function writeAscii(offset, value) {
+                for (let i = 0; i < value.length; i++) wav[offset + i] = value.charCodeAt(i);
+            }
+            writeAscii(0, 'RIFF');
+            view.setUint32(4, 36 + pcmBytes.length, true);
+            writeAscii(8, 'WAVE');
+            writeAscii(12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, 1, true);
+            view.setUint16(22, 1, true);
+            view.setUint32(24, targetRate, true);
+            view.setUint32(28, targetRate * 2, true);
+            view.setUint16(32, 2, true);
+            view.setUint16(34, 16, true);
+            writeAscii(36, 'data');
+            view.setUint32(40, pcmBytes.length, true);
+            wav.set(pcmBytes, 44);
+
+            let binary = '';
+            const chunkSize = 0x8000;
+            for (let i = 0; i < wav.length; i += chunkSize) {
+                binary += String.fromCharCode.apply(null, wav.subarray(i, Math.min(i + chunkSize, wav.length)));
+            }
+            return btoa(binary);
+        } catch (error) {
+            if (error && error.code) throw error;
+            throw Object.assign(new Error('Không thể chuyển ghi âm sang định dạng Azure.'), {
+                code: 'AUDIO_CONVERSION_FAILED', status: 422
+            });
+        } finally {
+            if (context) {
+                try { await context.close(); } catch (_) {}
+            }
+        }
+    }
+
+    async function callAzureReportedWord(targetWord, audioInput, signal, mimeType) {
+        const token = getAccessToken();
+        if (!token) throw Object.assign(new Error('Vui lòng đăng nhập lại.'), { status: 401, code: 'AUTH' });
+        const blob = dataUrlToBlob(audioInput, mimeType);
+        const audio = await encodeAzureWavBase64(blob);
+        let response;
+        try {
+            response = await nativeFetch(AZURE_ENDPOINT_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token,
+                    'apikey': SUPABASE_ANON_KEY
+                },
+                body: JSON.stringify({ word: targetWord, audio: audio, mode: 'word' }),
+                signal: signal
+            });
+        } catch (error) {
+            throw Object.assign(new Error(error && error.message || 'Không kết nối được Azure.'), {
+                code: 'AZURE_NETWORK_ERROR', status: 503, retryable: true
+            });
+        }
+        const data = await response.json().catch(function () { return {}; });
+        if (!response.ok || data.error || data.code) {
+            throw Object.assign(new Error(data.error || data.message || 'Azure chưa chấm được từ này.'), {
+                status: response.status,
+                code: data.code || 'AZURE_ERROR',
+                retryable: data.retryable === true,
+                provider: 'azure'
+            });
+        }
+        return data;
+    }
+
+    async function azureResponseForReportedWord(body, signal) {
+        try {
+            const result = await callAzureReportedWord(body.word, body.audio, signal, body.mimeType);
+            clearRetryable();
+            const rawScore = Number(result.pronunciation_score ?? result.score) || 0;
+            return jsonResponse(Object.assign({}, result, {
+                provider: 'azure-pronunciation-assessment',
+                raw_score: rawScore,
+                // Legacy vocabulary screens use score >= 60 as their pass gate.
+                // Keep Azure's stricter accepted decision authoritative.
+                score: result.accepted === true ? 100 : Math.min(59, Math.max(0, Math.round(rawScore)))
+            }), 200, { 'X-LDD-Pronunciation-Provider': 'azure' });
+        } catch (error) {
+            const code = String(error && error.code || 'AZURE_ERROR');
+            const status = Number(error && error.status) || 503;
+            const message = code === 'NO_SPEECH' ? NO_SPEECH_MESSAGE : TEMP_MESSAGE;
+            markRetryable(code, message);
+            return jsonResponse({
+                error: error && error.message || 'Azure chưa chấm được từ này.',
+                code: code,
+                retryable: true,
+                provider: 'azure',
+                no_whisper_fallback: true
+            }, status, { 'X-LDD-Pronunciation-Provider': 'azure' });
+        }
     }
 
     async function recordGateClip(isCancelled) {
@@ -615,17 +881,24 @@
         stopGate();
         const currentSequence = gateSequence;
         const isCurrent = function () { return currentSequence === gateSequence; };
+        let azureRoute = false;
+        try {
+            azureRoute = await isAzureReportedWord(targetWord);
+        } catch (_) {
+            if (isCurrent()) callbacks.onError && callbacks.onError('error');
+            if (isCurrent()) callbacks.onEnd && callbacks.onEnd();
+            return;
+        }
         const canCloud = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
-        if (!canCloud && !SR) {
+        if ((!canCloud && !SR) || (azureRoute && !canCloud)) {
             callbacks.onError && callbacks.onError('unsupported');
             callbacks.onEnd && callbacks.onEnd();
             return;
         }
 
-        // When the cloud service is temporarily down, use browser ASR on the
-        // next attempt. Never open SpeechRecognition and MediaRecorder together:
-        // competing capture sessions can lose the learner's first syllable.
-        if (!canCloud || (SR && Date.now() < cloudCooldownUntil)) {
+        // When the cloud service is temporarily down, use browser ASR only for
+        // ordinary Whisper words. Reported words must stay on Azure.
+        if (!canCloud || (!azureRoute && SR && Date.now() < cloudCooldownUntil)) {
             const speechOnly = startSpeechSession();
             activeGateSpeech = speechOnly;
             try {
@@ -653,7 +926,9 @@
             const timeout = setTimeout(function () { controller.abort(); }, 11500);
             let result;
             try {
-                result = await callCloudflareDirect(targetWord, clip, controller.signal);
+                result = azureRoute
+                    ? await callAzureReportedWord(targetWord, clip.blob, controller.signal, clip.mimeType)
+                    : await callCloudflareDirect(targetWord, clip, controller.signal);
             } finally {
                 clearTimeout(timeout);
                 if (activeGateController === controller) activeGateController = null;
@@ -662,14 +937,15 @@
             cloudCooldownUntil = 0;
             const score = Math.max(0, Math.min(100, Math.round(Number(result.score) || 0)));
             const heard = String(result.transcript || '');
-            if (score >= PASS_SCORE) callbacks.onMatch && callbacks.onMatch(heard);
+            const passed = azureRoute ? result.accepted === true : score >= PASS_SCORE;
+            if (passed) callbacks.onMatch && callbacks.onMatch(heard);
             else callbacks.onMismatch && callbacks.onMismatch(heard);
         } catch (err) {
             if (!isCurrent()) return;
             const status = Number(err && err.status || 0);
             const code = String(err && err.code || '');
             if (code === 'cancelled') return;
-            if (SR && (status === 408 || status === 429 || status >= 500 ||
+            if (!azureRoute && SR && (status === 408 || status === 429 || status >= 500 ||
                        code === 'NETWORK' || (err && err.name === 'AbortError'))) {
                 cloudCooldownUntil = Date.now() + 20000;
             }
@@ -685,8 +961,8 @@
 
     window.pronounceGate = {
         supported: !!((navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder) || SR),
-        primary: 'cloudflare-workers-ai',
-        fallback: SR ? 'browser-speech-recognition' : null,
+        primary: 'azure-for-reported-words-cloudflare-whisper-otherwise',
+        fallback: SR ? 'browser-speech-recognition-for-nonreported-words' : null,
         listen: function (targetWord, callbacks) { gateListen(targetWord, callbacks); },
         stop: stopGate,
         isMatch: browserIsMatch
@@ -718,8 +994,8 @@
     window.LDDPronunciationFix = {
         version: '3.0',
         endpoint: ENDPOINT_MARKER,
-        primary: 'cloudflare-workers-ai',
-        fallback: SR ? 'browser-speech-recognition' : null,
+        primary: 'azure-for-reported-words-cloudflare-whisper-otherwise',
+        fallback: SR ? 'browser-speech-recognition-for-nonreported-words' : null,
         passScore: PASS_SCORE,
         isRetryActive: retryActive,
         getLastRetryCode: function () { return lastRetryCode; },
