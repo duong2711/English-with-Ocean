@@ -1002,19 +1002,19 @@ document.addEventListener('DOMContentLoaded', () => {
                             style="width:100%;box-sizing:border-box;padding:12px 13px;border:1px solid #cbd5e1;border-radius:11px;font:inherit;font-size:15px;outline:none;">
                     </label>
                     <label style="display:grid;gap:6px;font-size:13px;font-weight:700;color:#334155;">
-                        Gmail đăng nhập
-                        <input type="email" id="create-account-email" placeholder="tenhocvien@gmail.com"
+                        Email đăng nhập
+                        <input type="email" id="create-account-email" placeholder="tenhocvien@example.com"
                             autocomplete="off" autocapitalize="none" required
                             style="width:100%;box-sizing:border-box;padding:12px 13px;border:1px solid #cbd5e1;border-radius:11px;font:inherit;font-size:15px;outline:none;">
                     </label>
                     <label style="display:grid;gap:6px;font-size:13px;font-weight:700;color:#334155;">
                         Mật khẩu do giảng viên đặt
-                        <input type="password" id="create-account-password" placeholder="Nhập mật khẩu"
+                        <input type="text" id="create-account-password" placeholder="Nhập mật khẩu"
                             autocomplete="new-password" required
                             style="width:100%;box-sizing:border-box;padding:12px 13px;border:1px solid #cbd5e1;border-radius:11px;font:inherit;font-size:15px;outline:none;">
                     </label>
                     <p style="font-size:12px;color:#64748b;line-height:1.55;margin:-2px 0 0;">
-                        Chỉ sử dụng địa chỉ có đuôi @gmail.com. Hãy gửi lại Gmail và mật khẩu này cho học viên sau khi tạo.
+                        Có thể sử dụng địa chỉ email thuộc bất kỳ nhà cung cấp nào. Hãy gửi lại email và mật khẩu này cho học viên sau khi tạo.
                     </p>
                     <p id="create-account-status" role="status" aria-live="polite"
                         style="font-size:13px;line-height:1.5;min-height:18px;margin:0;color:#475569;"></p>
@@ -1078,7 +1078,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (!/^[^\s@]+@gmail\.com$/i.test(email)) {
-            status.textContent = 'Vui lòng nhập địa chỉ email có đuôi @gmail.com.';
+            status.textContent = 'Vui lòng nhập địa chỉ email hợp lệ.';
             status.style.color = '#b91c1c';
             emailInput.focus();
             return;
