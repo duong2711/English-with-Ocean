@@ -56,16 +56,10 @@ Deno.serve(async(req:Request)=>{
   }
   if(event?.event_name!=="message.text.received"||m?.chat?.chat_type!=="PRIVATE"||m?.from?.is_bot!==false||typeof m?.chat?.id!=="string"||m.chat.id!==m?.from?.id||typeof m?.text!=="string")return json(req,{ok:true});
   const code=m.text.trim();
-  if(/^\/?(?:STOP|DUNG|DỪNG)$/i.test(code)){
-   const {data,error}=await admin.from("ldd_bot_contacts").update({enabled:false}).eq("chat_id",m.chat.id).eq("enabled",true).select("user_id");
-   if(error)return json(req,{ok:false},503);
-   if(data?.length)await zalo("sendMessage",{chat_id:m.chat.id,text:"Đã tắt lời nhắc của tất cả học viên trên Zalo này. Những Zalo khác vẫn nhận tin. Liên hệ giáo viên nếu muốn đăng ký lại."});
-   return json(req,{ok:true});
-  }
   if(!/^LDD-[A-F0-9]{24}$/.test(code))return json(req,{ok:true});
   const status=await link("complete",null,null,await hash(code),m.chat.id);
   console.info("ldd_bot_link_result",status);
-  if(status==="linked")await zalo("sendMessage",{chat_id:m.chat.id,text:"Đã đăng ký nhận lời nhắc học tập từ LDD English. Tối đa 2 tin mỗi đợt vắng học cho từng học viên. Gửi STOP để tắt mọi lời nhắc trên Zalo này."});
+  if(status==="linked")await zalo("sendMessage",{chat_id:m.chat.id,text:"Đã đăng ký nhận lời nhắc học tập từ LDD English. Tối đa 2 tin mỗi đợt vắng học cho từng học viên. Nếu cần thay đổi việc nhận nhắc nhở, vui lòng liên hệ giảng viên."});
   return json(req,{ok:true});
  }
  if(req.headers.has("x-ldd-cron-token")){
