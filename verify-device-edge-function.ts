@@ -112,8 +112,8 @@ Deno.serve(async (req: Request) => {
       if (!displayName) {
         return json({ error: 'Vui lòng nhập tên hiển thị của học viên.' }, 400);
       }
-      if (!/^[^\\s@]+@gmail\\.com$/i.test(email)) {
-        return json({ error: 'Vui lòng nhập địa chỉ email có đuôi @gmail.com.' }, 400);
+      if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
+        return json({ error: 'Vui lòng nhập địa chỉ email hợp lệ.' }, 400);
       }
       // No app-level password length or character-class checks here. Supabase Auth
       // still applies the project's own minimum/maximum and configured strength policy.
