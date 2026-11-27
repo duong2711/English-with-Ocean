@@ -501,7 +501,7 @@
             } catch (error) {
                 if (cached) {
                     azureReportedWords = cached;
-                    azureReportedWordsLoadedAt = Date.now() - REPORTED_WORDS_CACHE_MS + 5000;
+                    azureReportedWordsLoadedAt = Date.now();
                     return cached;
                 }
                 throw error;
