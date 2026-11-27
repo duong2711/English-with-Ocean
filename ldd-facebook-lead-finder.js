@@ -176,7 +176,7 @@
               '<label class="fblf-label" for="fblf-lead-link">Link bài đăng Facebook</label><input id="fblf-lead-link" class="fblf-input" type="url" placeholder="https://www.facebook.com/…">' +
               '<label class="fblf-label" for="fblf-lead-text">Nội dung bài đăng (phần liên quan)</label><textarea id="fblf-lead-text" class="fblf-area" placeholder="Dán phần nội dung công khai có liên quan đến nhu cầu học tiếng Anh…"></textarea>' +
               '<div class="fblf-row"><button type="button" id="fblf-score-lead" class="fblf-btn primary">Chấm điểm & lưu</button><span id="fblf-lead-status" class="fblf-status"></span></div>' +
-              '<div id="fblf-lead-list" class="fblf-list"></div>' +
+              '<div class="fblf-row" style="margin-top:14px"><select id="fblf-lead-filter" class="fblf-select" style="max-width:190px"><option value="all">Tất cả bài</option><option value="Mới">Chờ xem</option><option value="Đã duyệt – chờ bạn đăng">Đã duyệt</option><option value="Không phù hợp">Không phù hợp</option></select><input id="fblf-lead-search" class="fblf-input" style="flex:1;min-width:180px" placeholder="Lọc theo nội dung hoặc nhóm…"></div><div id="fblf-lead-count" class="fblf-muted" style="margin-top:8px"></div><div id="fblf-lead-list" class="fblf-list"></div>' +
             '</div>' +
           '</div>' +
         '</div>' +
@@ -193,6 +193,8 @@
     overlay.querySelector('#fblf-google-search').addEventListener('click', openGoogleSearch);
     overlay.querySelector('#fblf-open-group').addEventListener('click', openGroupAndCopy);
     overlay.querySelector('#fblf-score-lead').addEventListener('click', scoreAndSaveLead);
+    overlay.querySelector('#fblf-lead-filter').addEventListener('change', renderLeads);
+    overlay.querySelector('#fblf-lead-search').addEventListener('input', renderLeads);
     renderCategoryOptions();
     renderGroups();
     renderLeads();
@@ -340,19 +342,41 @@
   }
   function renderLeads() {
     var host = overlay.querySelector('#fblf-lead-list');
-    var list = savedLeads().sort(function (a,b) { return b.score-a.score; });
-    if (!list.length) { host.innerHTML = '<p class="fblf-muted">Chưa có bài đăng tiềm năng nào được lưu.</p>'; return; }
+    var all = savedLeads().slice().sort(function (a,b) { return b.score-a.score; });
+    var filter = overlay.querySelector('#fblf-lead-filter').value || 'all';
+    var query = normalize(overlay.querySelector('#fblf-lead-search').value || '');
+    var list = all.filter(function (item) {
+      var state = item.state || 'Mới';
+      var haystack = normalize([item.text,item.category,item.link,item.groupName].join(' '));
+      return (filter === 'all' || state === filter) && (!query || haystack.indexOf(query) >= 0);
+    });
+    var counts = {
+      all: all.length,
+      fresh: all.filter(function(x){return !x.state || x.state === 'Mới';}).length,
+      approved: all.filter(function(x){return x.state === 'Đã duyệt – chờ bạn đăng';}).length,
+      rejected: all.filter(function(x){return x.state === 'Không phù hợp';}).length
+    };
+    overlay.querySelector('#fblf-lead-count').textContent =
+      'Tổng ' + counts.all + ' · Chờ xem ' + counts.fresh + ' · Đã duyệt ' + counts.approved + ' · Không phù hợp ' + counts.rejected;
+    if (!list.length) { host.innerHTML = '<p class="fblf-muted">Không có bài nào trong bộ lọc này.</p>'; return; }
     host.innerHTML = list.map(function (item) {
       var badgeClass = item.score >= 75 ? 'high' : 'low';
+      var state = item.state || 'Mới';
       return '<article class="fblf-item">' +
-        '<span class="fblf-score ' + badgeClass + '">' + item.score + '/100</span> <strong>' + esc(item.category) + '</strong> · ' + esc(item.state) +
+        '<span class="fblf-score ' + badgeClass + '">' + item.score + '/100</span> <strong>' + esc(item.category) + '</strong> · ' + esc(state) +
         '<p><a href="' + esc(item.link) + '" target="_blank" rel="noopener">Mở bài đăng Facebook</a></p>' +
         '<p class="fblf-muted">' + esc((item.text || '').slice(0,260)) + ((item.text || '').length > 260 ? '…' : '') + '</p>' +
         '<p class="fblf-muted">Khớp: ' + esc((item.hits || []).slice(0,5).join(', ') || 'Chưa có từ khóa rõ') +
           ((item.intents || []).length ? ' · Nhu cầu: ' + esc(item.intents.join(', ')) : '') +
           (item.secondary ? ' · Nhóm phụ: ' + esc(item.secondary) : '') + '</p>' +
         ((item.excluded || []).length ? '<p class="fblf-muted">Cần đọc kỹ: ' + esc(item.excluded.join(', ')) + '</p>' : '') +
-        '<div class="fblf-row"><button type="button" class="fblf-btn primary" data-compose-lead="' + esc(item.id) + '">Duyệt & soạn bình luận</button><button type="button" class="fblf-btn" data-delete-lead="' + esc(item.id) + '">Xóa</button></div>' +
+        '<div class="fblf-row">' +
+          '<button type="button" class="fblf-btn primary" data-compose-lead="' + esc(item.id) + '">Duyệt & soạn bình luận</button>' +
+          (state === 'Không phù hợp'
+            ? '<button type="button" class="fblf-btn" data-restore-lead="' + esc(item.id) + '">Đưa lại vào hàng chờ</button>'
+            : '<button type="button" class="fblf-btn" data-reject-lead="' + esc(item.id) + '">Không phù hợp</button>') +
+          '<button type="button" class="fblf-btn" data-delete-lead="' + esc(item.id) + '">Xóa</button>' +
+        '</div>' +
       '</article>';
     }).join('');
     host.querySelectorAll('[data-compose-lead]').forEach(function (button) {
@@ -372,12 +396,23 @@
           linkField.value = item.link;
           postField.value = item.text || '';
           classifyButton.click();
-          var state = document.getElementById('fbsc-classify-result');
-          if (state) state.textContent += ' · Điểm tiềm năng: ' + item.score + '/100. Hãy kiểm tra ngữ cảnh trước khi đăng.';
+          var stateNode = document.getElementById('fbsc-classify-result');
+          if (stateNode) stateNode.textContent += ' · Điểm tiềm năng: ' + item.score + '/100. Hãy kiểm tra ngữ cảnh trước khi đăng.';
           var rows = savedLeads();
           var index = rows.findIndex(function (x) { return x.id === item.id; });
           if (index >= 0) { rows[index].state = 'Đã duyệt – chờ bạn đăng'; write(LEADS_KEY,rows); }
         }
+      });
+    });
+    host.querySelectorAll('[data-reject-lead],[data-restore-lead]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        var id = button.getAttribute('data-reject-lead') || button.getAttribute('data-restore-lead');
+        var rows = savedLeads();
+        var item = rows.find(function (x) { return x.id === id; });
+        if (!item) return;
+        item.state = button.hasAttribute('data-reject-lead') ? 'Không phù hợp' : 'Mới';
+        write(LEADS_KEY,rows);
+        renderLeads();
       });
     });
     host.querySelectorAll('[data-delete-lead]').forEach(function (button) {
