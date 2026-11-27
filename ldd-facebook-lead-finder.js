@@ -60,8 +60,11 @@
     catch (_) { return fallback; }
   }
   function write(key, value) {
-    try { localStorage.setItem(key, JSON.stringify(value)); return true; }
-    catch (_) { return false; }
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+      if (window.LDDFacebookCloud) window.LDDFacebookCloud.save(key, value);
+      return true;
+    } catch (_) { return false; }
   }
   function esc(value) {
     return String(value == null ? '' : value).replace(/[&<>"']/g, function (c) {
@@ -255,7 +258,7 @@
     if (!write(GROUPS_KEY,list.slice(0,100))) { status.textContent = 'Không lưu được trong trình duyệt này.'; return; }
     overlay.querySelector('#fblf-group-name').value = '';
     overlay.querySelector('#fblf-group-url').value = '';
-    status.textContent = 'Đã lưu hội nhóm trên trình duyệt này.';
+    status.textContent = 'Đã lưu hội nhóm; sẽ đồng bộ với kho dữ liệu LDD.';
     renderGroups();
     renderCategoryOptions();
   }
@@ -387,10 +390,15 @@
   }
   async function open() {
     if (!(await verifyTeacher(true))) return;
+    var cloudReady = window.LDDFacebookCloud ? await window.LDDFacebookCloud.load() : false;
     ensurePanel();
     renderGroups();
     renderCategoryOptions();
     renderLeads();
+    var cloudStatus = overlay.querySelector('#fblf-search-status');
+    if (cloudStatus) cloudStatus.textContent = cloudReady
+      ? 'Đã đồng bộ hội nhóm và bài tiềm năng với kho dữ liệu LDD.'
+      : 'Chưa kết nối được kho dữ liệu; hiện chỉ dùng dữ liệu trên trình duyệt này.';
     overlay.classList.add('is-open');
     document.body.style.overflow = 'hidden';
   }
