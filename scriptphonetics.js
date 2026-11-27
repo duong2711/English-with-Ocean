@@ -992,9 +992,15 @@ document.addEventListener('DOMContentLoaded', () => {
                         style="border:0;background:#f1f5f9;border-radius:10px;width:34px;height:34px;font-size:20px;cursor:pointer;color:#475569;">×</button>
                 </div>
                 <p style="font-size:13px;line-height:1.6;color:#64748b;margin:8px 0 18px;">
-                    Nhập Gmail và mật khẩu do giảng viên đặt. Tài khoản sẽ được xác thực email tự động để học viên có thể đăng nhập ngay.
+                    Điền tên hiển thị, Gmail và mật khẩu do giảng viên đặt. Tên này sẽ hiện trên website thay cho địa chỉ email. Tài khoản được xác thực tự động để học viên đăng nhập ngay.
                 </p>
                 <form id="create-account-form" style="display:grid;gap:12px;">
+                    <label style="display:grid;gap:6px;font-size:13px;font-weight:700;color:#334155;">
+                        Tên hiển thị của học viên
+                        <input type="text" id="create-account-display-name" placeholder="Ví dụ: Nguyễn Minh Anh"
+                            autocomplete="off" required
+                            style="width:100%;box-sizing:border-box;padding:12px 13px;border:1px solid #cbd5e1;border-radius:11px;font:inherit;font-size:15px;outline:none;">
+                    </label>
                     <label style="display:grid;gap:6px;font-size:13px;font-weight:700;color:#334155;">
                         Gmail đăng nhập
                         <input type="email" id="create-account-email" placeholder="tenhocvien@gmail.com"
@@ -1055,12 +1061,21 @@ document.addEventListener('DOMContentLoaded', () => {
         event.preventDefault();
         if (!isTeacher || isImpersonating) return;
 
+        const nameInput = document.getElementById('create-account-display-name');
         const emailInput = document.getElementById('create-account-email');
         const passwordInput = document.getElementById('create-account-password');
         const status = document.getElementById('create-account-status');
         const submit = document.getElementById('create-account-submit');
+        const displayName = String(nameInput.value || '').trim();
         const email = String(emailInput.value || '').trim().toLowerCase();
         const password = String(passwordInput.value || '');
+
+        if (!displayName) {
+            status.textContent = 'Vui lòng nhập tên hiển thị của học viên.';
+            status.style.color = '#b91c1c';
+            nameInput.focus();
+            return;
+        }
 
         if (!/^[^\s@]+@gmail\.com$/i.test(email)) {
             status.textContent = 'Vui lòng nhập địa chỉ email có đuôi @gmail.com.';
@@ -1093,7 +1108,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     'apikey': SUPABASE_ANON_KEY,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ mode: 'teacher_create_user', email, password })
+                body: JSON.stringify({ mode: 'teacher_create_user', email, password, displayName })
             });
             const result = await response.json().catch(() => ({}));
 
@@ -1108,6 +1123,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 ? '✅ Đã tạo tài khoản. Lưu ý: phần tương thích xác minh Gmail trên trình duyệt cũ chưa được đồng bộ.'
                 : '✅ Đã tạo tài khoản thành công. Email đã xác thực, học viên có thể đăng nhập ngay.';
             status.style.color = result.legacyAllowlistSynced === false ? '#a16207' : '#15803d';
+            nameInput.value = '';
             emailInput.value = '';
             passwordInput.value = '';
         } catch (error) {
