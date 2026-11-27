@@ -468,7 +468,8 @@
      body.textContent='Không tải được ghi chú/highlight: '+(e.message||'Lỗi quyền truy cập hoặc kết nối.');
    }
  }
-\n window.LDDTestAnnotations={highlight,isHighlighted,highlightStatus,note,renderTeacherPanel,refresh:()=>ROOTS.forEach(id=>{const r=document.getElementById(id);if(r)schedule(r);})};
+
+ window.LDDTestAnnotations={highlight,isHighlighted,highlightStatus,note,renderTeacherPanel,refresh:()=>ROOTS.forEach(id=>{const r=document.getElementById(id);if(r)schedule(r);})};
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});
  else boot();
 })();
