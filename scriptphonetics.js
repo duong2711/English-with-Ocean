@@ -8050,7 +8050,7 @@ function toggleCompletion(symbolElement) {
         // MIỄN LÀ từ này còn thiếu lượt đọc đạt theo hạng (tier) của nó.
         async function renderVocabWeeklyPronounceStep(item, v, idx, total) {
             const { data: excludedWord } = await sb.from('whisper_word_exclusions')
-                .select('word_norm').eq('word_norm', normalizeWord(v.word_norm || v.word)).eq('active', true).maybeSingle().catch(() => ({ data: null }));
+                .select('word_norm').eq('word_norm', normalizeWord(v.word_norm || v.word)).eq('active', true).maybeSingle();
             if (excludedWord) {
                 item._examPronDone = true;
                 const skipped = document.createElement('div');
