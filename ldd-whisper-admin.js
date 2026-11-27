@@ -65,6 +65,14 @@
   const btn=el('button','ldd-whisper-admin-launch','🎙️ Báo cáo Whisper');
   btn.type='button';btn.onclick=async()=>{try{await load();ensure().hidden=false;}catch(e){alert('Không tải được báo cáo: '+e.message);}};
   document.body.appendChild(btn);
+  const {data:notifications,error}=await db().rpc('claim_whisper_report_notifications');
+  if(!error&&notifications&&notifications.length){
+   btn.textContent='🎙️ Báo cáo Whisper ('+notifications.length+')';
+   const toast=el('div','ldd-whisper-teacher-toast',
+    '⚠️ Có '+notifications.length+' từ mới được học viên báo cáo chấm sai: '+notifications.map(x=>x.word).join(', '));
+   document.body.appendChild(toast);
+   setTimeout(()=>toast.remove(),9000);
+  }
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else void boot();
 })();
