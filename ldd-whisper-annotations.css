@@ -18,3 +18,5 @@
 .ldd-teacher-annotation-item blockquote{margin:6px 0;padding:8px 12px;border-left:3px solid #e5ad4d;background:rgba(245,158,11,.08);border-radius:4px}
 .ldd-teacher-annotation-item p{margin:6px 0;white-space:pre-wrap}
 @media(max-width:600px){.ldd-whisper-admin-launch{right:10px;bottom:10px}.ldd-whisper-report-card{align-items:flex-start;flex-direction:column}.ldd-whisper-add-form{flex-wrap:wrap}}
+
+.ldd-whisper-teacher-toast{position:fixed;right:18px;bottom:76px;z-index:10030;max-width:min(460px,calc(100vw - 36px));padding:13px 16px;border-radius:12px;background:#fff7e6;color:#744210;border:1px solid #e9c46a;box-shadow:0 8px 28px #0002;font-weight:650;line-height:1.5}
