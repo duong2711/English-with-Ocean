@@ -105,9 +105,13 @@ Deno.serve(async (req: Request) => {
     if (mode === 'teacher_create_user') {
       if (!isTeacher) return json({ error: 'teacher_only' }, 403);
 
+      const displayName = typeof body?.displayName === 'string' ? body.displayName.trim() : '';
       const email = String(body?.email || '').trim().toLowerCase();
       const password = typeof body?.password === 'string' ? body.password : '';
 
+      if (!displayName) {
+        return json({ error: 'Vui lòng nhập tên hiển thị của học viên.' }, 400);
+      }
       if (!/^[^\\s@]+@gmail\\.com$/i.test(email)) {
         return json({ error: 'Vui lòng nhập địa chỉ email có đuôi @gmail.com.' }, 400);
       }
@@ -121,7 +125,7 @@ Deno.serve(async (req: Request) => {
         email,
         password,
         email_confirm: true,
-        user_metadata: { display_name: email.split('@')[0] },
+        user_metadata: { display_name: displayName },
       });
 
       if (createErr) {
@@ -147,7 +151,7 @@ Deno.serve(async (req: Request) => {
 
       return json({
         ok: true,
-        user: { id: created.user?.id, email: created.user?.email },
+        user: { id: created.user?.id, email: created.user?.email, display_name: created.user?.user_metadata?.display_name },
         legacyAllowlistSynced: !allowlistErr,
       });
     }
