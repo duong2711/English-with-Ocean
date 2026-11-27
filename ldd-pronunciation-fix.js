@@ -381,7 +381,11 @@
                     no_whisper_fallback: true
                 }, 503);
             }
-            if (azureRoute) return azureResponseForReportedWord(body, init && init.signal);
+            if (azureRoute) {
+                if (legacySpeechSession && legacySpeechSession.abort) legacySpeechSession.abort();
+                legacySpeechSession = null;
+                return azureResponseForReportedWord(body, init && init.signal);
+            }
             try {
                 if (await isClearlySilent(body.audio)) {
                     markRetryable('NO_SPEECH', NO_SPEECH_MESSAGE);
@@ -673,6 +677,8 @@
         try {
             const result = await callAzureReportedWord(body.word, body.audio, signal, body.mimeType);
             clearRetryable();
+            if (legacySpeechSession && legacySpeechSession.abort) legacySpeechSession.abort();
+            legacySpeechSession = null;
             const rawScore = Number(result.pronunciation_score ?? result.score) || 0;
             return jsonResponse(Object.assign({}, result, {
                 provider: 'azure-pronunciation-assessment',
@@ -686,6 +692,8 @@
             const status = Number(error && error.status) || 503;
             const message = code === 'NO_SPEECH' ? NO_SPEECH_MESSAGE : TEMP_MESSAGE;
             markRetryable(code, message);
+            if (legacySpeechSession && legacySpeechSession.abort) legacySpeechSession.abort();
+            legacySpeechSession = null;
             return jsonResponse({
                 error: error && error.message || 'Azure chưa chấm được từ này.',
                 code: code,
@@ -935,6 +943,8 @@
             }
             if (!isCurrent()) return;
             cloudCooldownUntil = 0;
+            if (azureRoute && legacySpeechSession && legacySpeechSession.abort) legacySpeechSession.abort();
+            if (azureRoute) legacySpeechSession = null;
             const score = Math.max(0, Math.min(100, Math.round(Number(result.score) || 0)));
             const heard = String(result.transcript || '');
             const passed = azureRoute ? result.accepted === true : score >= PASS_SCORE;
@@ -942,6 +952,8 @@
             else callbacks.onMismatch && callbacks.onMismatch(heard);
         } catch (err) {
             if (!isCurrent()) return;
+            if (azureRoute && legacySpeechSession && legacySpeechSession.abort) legacySpeechSession.abort();
+            if (azureRoute) legacySpeechSession = null;
             const status = Number(err && err.status || 0);
             const code = String(err && err.code || '');
             if (code === 'cancelled') return;
