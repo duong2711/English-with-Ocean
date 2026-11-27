@@ -1,0 +1,22 @@
+.word-lookup-report-btn{margin:8px 0;padding:9px 13px;border:1px solid #dc8b42;border-radius:9px;background:rgba(245,158,11,.1);color:var(--text);font-weight:700;cursor:pointer}.word-lookup-report-btn[hidden]{display:none!important}
+.ldd-whisper-admin-launch{position:fixed;right:18px;bottom:18px;z-index:9990;border:0;border-radius:999px;padding:11px 16px;background:#253b63;color:#fff;font-weight:700;box-shadow:0 5px 22px #0003;cursor:pointer}
+.ldd-whisper-admin-overlay,.ldd-annotation-overlay{position:fixed;inset:0;z-index:10010;background:#0008;display:flex;align-items:center;justify-content:center;padding:16px}
+.ldd-whisper-admin-overlay[hidden],.ldd-annotation-overlay[hidden]{display:none}
+.ldd-whisper-admin-panel{width:min(760px,100%);max-height:88vh;overflow:auto;background:var(--surface,#fff);color:var(--text,#172033);border-radius:16px;padding:18px;box-shadow:0 18px 60px #0004}
+.ldd-whisper-admin-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.ldd-whisper-admin-head h2{font-size:20px;margin:0}
+.ldd-whisper-admin-content{display:grid;gap:10px;margin-top:14px}.ldd-whisper-admin-content h3{margin:16px 0 4px;font-size:16px}
+.ldd-whisper-add-form{display:flex;gap:8px}.ldd-whisper-add-form input{flex:1;min-width:0;padding:10px;border:1px solid var(--border,#ddd);border-radius:9px}
+.ldd-whisper-add-form button,.ldd-whisper-actions button,.ldd-whisper-word-row button,.ldd-whisper-admin-close{padding:8px 11px;border:1px solid var(--border,#ddd);border-radius:8px;background:var(--surface-2,#f4f5f7);color:inherit;cursor:pointer}
+.ldd-whisper-report-card,.ldd-whisper-word-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border:1px solid var(--border,#ddd);border-radius:10px;background:var(--surface-2,transparent)}
+.ldd-whisper-report-card p{margin:5px 0;font-size:13px;color:var(--text-muted,#667085)}.ldd-whisper-actions{display:flex;flex-wrap:wrap;gap:6px}.ldd-whisper-report-card small{display:block;color:var(--text-muted,#667085);margin-top:6px}
+.ldd-annotation-overlay{z-index:10020}.ldd-annotation-overlay>section{width:min(620px,100%);max-height:85vh;overflow:auto;background:var(--surface,#fff);color:var(--text,#172033);border-radius:14px;padding:18px}
+.ldd-annotation-close{float:right;border:0;background:transparent;font-size:24px;cursor:pointer}.ldd-annotation-body h3{margin:0 0 14px}
+.ldd-annotation-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}.ldd-annotation-footer button{padding:8px 12px;border:1px solid var(--border,#ddd);border-radius:8px;background:var(--surface-2,#f5f5f5);cursor:pointer}
+.ldd-teacher-annotations{padding:14px;margin:10px 0 16px;border:1px solid var(--border,#ddd);border-radius:12px;background:var(--surface-2,transparent)}
+.ldd-teacher-annotations h3{font-size:16px;margin:0 0 10px}.ldd-teacher-annotation-item{padding:10px 0;border-top:1px solid var(--border,#ddd)}
+.ldd-teacher-annotation-kind{display:inline-block;font-size:12px;font-weight:700;color:var(--text-muted,#667085)}
+.ldd-teacher-annotation-item blockquote{margin:6px 0;padding:8px 12px;border-left:3px solid #e5ad4d;background:rgba(245,158,11,.08);border-radius:4px}
+.ldd-teacher-annotation-item p{margin:6px 0;white-space:pre-wrap}
+@media(max-width:600px){.ldd-whisper-admin-launch{right:10px;bottom:10px}.ldd-whisper-report-card{align-items:flex-start;flex-direction:column}.ldd-whisper-add-form{flex-wrap:wrap}}
+
+.ldd-whisper-teacher-toast{position:fixed;right:18px;bottom:76px;z-index:10030;max-width:min(460px,calc(100vw - 36px));padding:13px 16px;border-radius:12px;background:#fff7e6;color:#744210;border:1px solid #e9c46a;box-shadow:0 8px 28px #0002;font-weight:650;line-height:1.5}

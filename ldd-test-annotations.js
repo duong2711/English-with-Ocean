@@ -436,7 +436,40 @@
    document.addEventListener('keydown',e=>{if(e.key==='Escape')close();},true);
    window.addEventListener('pageshow',()=>ROOTS.forEach(id=>{const root=document.getElementById(id);if(root)schedule(root);}));
  }
- window.LDDTestAnnotations={highlight,isHighlighted,highlightStatus,note,refresh:()=>ROOTS.forEach(id=>{const r=document.getElementById(id);if(r)schedule(r);})};
+
+ async function renderTeacherPanel(testId,studentEmail,host){
+   if(!host||!testId||!studentEmail||!db())return;
+   const panel=document.createElement('section');
+   panel.className='ldd-teacher-annotations';
+   const heading=document.createElement('h3');heading.textContent='🖍️ Highlight và ghi chú của học viên';
+   const body=document.createElement('div');body.textContent='Đang tải dữ liệu đánh dấu...';
+   panel.append(heading,body);
+   host.prepend(panel);
+   try{
+     const {data,error}=await db().rpc('get_custom_test_annotations_for_teacher',{
+       p_test_id:testId,p_student_email:studentEmail
+     });
+     if(error)throw error;
+     body.replaceChildren();
+     const rows=data||[];
+     if(!rows.length){body.textContent='Học viên chưa có highlight hoặc ghi chú trong bài này.';return;}
+     rows.forEach(entry=>{
+       const card=document.createElement('article');card.className='ldd-teacher-annotation-item';
+       const quote=document.createElement('blockquote');quote.textContent=entry.selected_text||'';
+       const tag=document.createElement('span');tag.className='ldd-teacher-annotation-kind';
+       tag.textContent=entry.kind==='note'?'Ghi chú':'Highlight';
+       card.append(tag,quote);
+       if(entry.kind==='note'&&entry.note_text){
+         const note=document.createElement('p');note.textContent=entry.note_text;card.appendChild(note);
+       }
+       body.appendChild(card);
+     });
+   }catch(e){
+     body.textContent='Không tải được ghi chú/highlight: '+(e.message||'Lỗi quyền truy cập hoặc kết nối.');
+   }
+ }
+
+ window.LDDTestAnnotations={highlight,isHighlighted,highlightStatus,note,renderTeacherPanel,refresh:()=>ROOTS.forEach(id=>{const r=document.getElementById(id);if(r)schedule(r);})};
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});
  else boot();
 })();
