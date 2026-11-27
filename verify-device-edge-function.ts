@@ -112,7 +112,7 @@ Deno.serve(async (req: Request) => {
       if (!displayName) {
         return json({ error: 'Vui lòng nhập tên hiển thị của học viên.' }, 400);
       }
-      if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         return json({ error: 'Vui lòng nhập địa chỉ email hợp lệ.' }, 400);
       }
       // No app-level password length or character-class checks here. Supabase Auth
