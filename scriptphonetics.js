@@ -1077,7 +1077,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        if (!/^[^\s@]+@gmail\.com$/i.test(email)) {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
             status.textContent = 'Vui lòng nhập địa chỉ email hợp lệ.';
             status.style.color = '#b91c1c';
             emailInput.focus();
