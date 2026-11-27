@@ -960,164 +960,165 @@ document.addEventListener('DOMContentLoaded', () => {
         recordStatus.textContent = user ? '' : 'Vui lòng đăng nhập để gửi ghi âm.';
     }
 
-    // ================== [MỚI] Giảng viên quản lý quyền đăng nhập (allowed_signup_emails) ==================
-    // Nút nổi (chỉ giảng viên thấy) mở bảng thêm/xoá email được phép đăng nhập. HTML được tạo
-    // hoàn toàn bằng JS (không cần sửa file index.html). Quyền thật sự nằm ở policy RLS trên
-    // Supabase (bảng allowed_signup_emails, policy cho phép đúng email giảng viên đọc/ghi) —
-    // xem SQL "teacher_manage_allowlist" đi kèm hướng dẫn. Nút này chỉ ẩn/hiện giao diện, không
-    // tự cấp quyền gì cả, nên an toàn kể cả nếu ai đó cố tình hiện nút lên bằng DevTools.
-    let allowlistBtn = null;
-    let allowlistModal = null;
+    // ================== Giảng viên tạo tài khoản học viên ==================
+    // Nút nổi chỉ hiện với tài khoản giảng viên. Việc tạo Auth user thực hiện tại
+    // Edge Function verify-device; service-role key tuyệt đối không gửi xuống trình duyệt.
+    let createAccountBtn = null;
+    let createAccountModal = null;
 
-    function ensureAllowlistUI() {
-        if (allowlistBtn) return; // đã tạo rồi, không tạo lại
+    function ensureCreateAccountUI() {
+        if (createAccountBtn) return;
 
-        allowlistBtn = document.createElement('button');
-        allowlistBtn.id = 'allowlist-manager-btn';
-        allowlistBtn.textContent = '🔑 Quyền đăng nhập';
-        allowlistBtn.className = 'kid-btn';
-        allowlistBtn.style.cssText = 'position:fixed; bottom:16px; right:16px; z-index:9998; display:none; box-shadow:0 2px 10px rgba(0,0,0,.25);';
-        allowlistBtn.addEventListener('click', openAllowlistModal);
-        document.body.appendChild(allowlistBtn);
+        createAccountBtn = document.createElement('button');
+        createAccountBtn.id = 'create-student-account-btn';
+        createAccountBtn.textContent = '＋ Tạo tài khoản';
+        createAccountBtn.className = 'kid-btn kid-btn-primary';
+        createAccountBtn.style.cssText = 'position:fixed; bottom:16px; right:16px; z-index:9998; display:none; box-shadow:0 2px 10px rgba(0,0,0,.25);';
+        createAccountBtn.addEventListener('click', openCreateAccountModal);
+        document.body.appendChild(createAccountBtn);
 
-        allowlistModal = document.createElement('div');
-        allowlistModal.id = 'allowlist-manager-modal';
-        allowlistModal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:9999; align-items:center; justify-content:center;';
-        allowlistModal.innerHTML = `
-            <div style="background:#fff; color:#222; border-radius:14px; padding:22px; max-width:480px; width:92%; max-height:80vh; overflow-y:auto;">
-                <h3 style="margin-top:0;">🔑 Quản lý quyền đăng nhập</h3>
-                <p style="font-size:13px; opacity:.75;">Chỉ email trong danh sách này mới đăng nhập được vào hệ thống.</p>
-                <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:6px;">
-                    <input type="email" id="allowlist-new-email" placeholder="email@gmail.com (tài khoản đăng nhập)" style="flex:1; min-width:160px; padding:8px; border-radius:8px; border:1px solid #ccc;">
-                    <input type="text" id="allowlist-new-note" placeholder="Ghi chú (vd: học viên)" style="flex:1; min-width:120px; padding:8px; border-radius:8px; border:1px solid #ccc;">
+        createAccountModal = document.createElement('div');
+        createAccountModal.id = 'create-student-account-modal';
+        createAccountModal.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(15,23,42,.62); z-index:99999; align-items:center; justify-content:center; padding:16px; box-sizing:border-box;';
+        createAccountModal.innerHTML = `
+            <section role="dialog" aria-modal="true" aria-labelledby="create-account-title"
+                style="background:#fff;color:#172033;border-radius:18px;padding:24px;max-width:440px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 22px 70px rgba(0,0,0,.24);box-sizing:border-box;">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:8px;">
+                    <div>
+                        <div style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#64748b;">Quản lý học viên</div>
+                        <h3 id="create-account-title" style="margin:5px 0 0;font-size:22px;color:#172033;">＋ Tạo tài khoản</h3>
+                    </div>
+                    <button type="button" id="create-account-x" aria-label="Đóng"
+                        style="border:0;background:#f1f5f9;border-radius:10px;width:34px;height:34px;font-size:20px;cursor:pointer;color:#475569;">×</button>
                 </div>
-                <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px;">
-                    <input type="email" id="allowlist-new-gmail" placeholder="Gmail liên kết (cơ chế cũ, không bắt buộc)" style="flex:1; min-width:160px; padding:8px; border-radius:8px; border:1px solid #ccc;">
-                    <button type="button" id="allowlist-add-btn" class="kid-btn kid-btn-primary">Thêm / Cập nhật</button>
-                </div>
-                <p style="font-size:12px; opacity:.65; margin:-4px 0 12px;">Hiện máy mới được duyệt qua mục "Duyệt thiết bị" trong tài khoản giáo viên. Gmail liên kết chỉ được giữ để tương thích với trình duyệt đang cache cơ chế xác minh cũ.</p>
-                <p id="allowlist-status" style="font-size:13px; min-height:18px;"></p>
-                <div id="allowlist-list"></div>
-                <button type="button" id="allowlist-close-btn" class="kid-btn" style="margin-top:14px;">Đóng</button>
-            </div>
+                <p style="font-size:13px;line-height:1.6;color:#64748b;margin:8px 0 18px;">
+                    Nhập Gmail và mật khẩu do giảng viên đặt. Tài khoản sẽ được xác thực email tự động để học viên có thể đăng nhập ngay.
+                </p>
+                <form id="create-account-form" style="display:grid;gap:12px;">
+                    <label style="display:grid;gap:6px;font-size:13px;font-weight:700;color:#334155;">
+                        Gmail đăng nhập
+                        <input type="email" id="create-account-email" placeholder="tenhocvien@gmail.com"
+                            autocomplete="off" autocapitalize="none" required
+                            style="width:100%;box-sizing:border-box;padding:12px 13px;border:1px solid #cbd5e1;border-radius:11px;font:inherit;font-size:15px;outline:none;">
+                    </label>
+                    <label style="display:grid;gap:6px;font-size:13px;font-weight:700;color:#334155;">
+                        Mật khẩu do giảng viên đặt
+                        <input type="password" id="create-account-password" placeholder="Nhập mật khẩu"
+                            autocomplete="new-password" required
+                            style="width:100%;box-sizing:border-box;padding:12px 13px;border:1px solid #cbd5e1;border-radius:11px;font:inherit;font-size:15px;outline:none;">
+                    </label>
+                    <p style="font-size:12px;color:#64748b;line-height:1.55;margin:-2px 0 0;">
+                        Chỉ sử dụng địa chỉ có đuôi @gmail.com. Hãy gửi lại Gmail và mật khẩu này cho học viên sau khi tạo.
+                    </p>
+                    <p id="create-account-status" role="status" aria-live="polite"
+                        style="font-size:13px;line-height:1.5;min-height:18px;margin:0;color:#475569;"></p>
+                    <div style="display:flex;gap:9px;justify-content:flex-end;flex-wrap:wrap;margin-top:2px;">
+                        <button type="button" id="create-account-cancel" class="kid-btn">Đóng</button>
+                        <button type="submit" id="create-account-submit" class="kid-btn kid-btn-primary">Tạo tài khoản</button>
+                    </div>
+                </form>
+            </section>
         `;
-        document.body.appendChild(allowlistModal);
+        document.body.appendChild(createAccountModal);
 
-        document.getElementById('allowlist-close-btn').addEventListener('click', closeAllowlistModal);
-        document.getElementById('allowlist-add-btn').addEventListener('click', addAllowlistEmail);
-    }
-
-    function openAllowlistModal() {
-        ensureAllowlistUI();
-        allowlistModal.style.display = 'flex';
-        loadAllowlist();
-    }
-
-    function closeAllowlistModal() {
-        if (allowlistModal) allowlistModal.style.display = 'none';
-    }
-
-    async function loadAllowlist() {
-        const listEl = document.getElementById('allowlist-list');
-        const statusEl = document.getElementById('allowlist-status');
-        listEl.innerHTML = 'Đang tải...';
-        const { data, error } = await sb
-            .from('allowed_signup_emails')
-            .select('id, email, note, linked_gmail, created_at')
-            .order('created_at', { ascending: false });
-
-        if (error) {
-            listEl.innerHTML = '';
-            statusEl.textContent = 'Lỗi tải danh sách: ' + error.message;
-            return;
-        }
-
-        if (!data.length) {
-            listEl.innerHTML = '<p style="opacity:.6;">Danh sách trống.</p>';
-            return;
-        }
-
-        listEl.innerHTML = data.map(row => `
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 0; border-bottom:1px solid #eee;">
-                <div>
-                    <div style="font-weight:600;">${row.email}</div>
-                    ${row.note ? `<div style="font-size:12px; opacity:.65;">${row.note}</div>` : ''}
-                    <div style="font-size:12px; opacity:.65;">${row.linked_gmail ? 'Gmail xác minh cũ: ' + row.linked_gmail : 'Không dùng Gmail xác minh cũ'}</div>
-                </div>
-                <div style="display:flex; gap:6px; flex-shrink:0;">
-                    <button type="button" class="kid-btn allowlist-edit-btn" data-email="${row.email}" data-note="${row.note || ''}" data-gmail="${row.linked_gmail || ''}" style="padding:4px 10px; font-size:12px;">Sửa</button>
-                    <button type="button" class="kid-btn allowlist-remove-btn" data-id="${row.id}" style="padding:4px 10px; font-size:12px;">Xoá</button>
-                </div>
-            </div>
-        `).join('');
-
-        listEl.querySelectorAll('.allowlist-remove-btn').forEach(btn => {
-            btn.addEventListener('click', () => removeAllowlistEmail(btn.dataset.id));
+        document.getElementById('create-account-form').addEventListener('submit', createStudentAccount);
+        document.getElementById('create-account-cancel').addEventListener('click', closeCreateAccountModal);
+        document.getElementById('create-account-x').addEventListener('click', closeCreateAccountModal);
+        createAccountModal.addEventListener('click', (event) => {
+            if (event.target === createAccountModal) closeCreateAccountModal();
         });
-        // [MỚI] "Sửa" chỉ đổ dữ liệu dòng đó lên 3 ô nhập phía trên — bấm lại "Thêm / Cập nhật"
-        // sẽ upsert (onConflict theo email) nên coi như sửa tại chỗ, không tạo dòng trùng.
-        listEl.querySelectorAll('.allowlist-edit-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.getElementById('allowlist-new-email').value = btn.dataset.email || '';
-                document.getElementById('allowlist-new-note').value = btn.dataset.note || '';
-                document.getElementById('allowlist-new-gmail').value = btn.dataset.gmail || '';
-                document.getElementById('allowlist-new-email').focus();
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && createAccountModal && createAccountModal.style.display === 'flex') {
+                closeCreateAccountModal();
+            }
+        });
+    }
+
+    function openCreateAccountModal() {
+        if (!isTeacher || isImpersonating) return;
+        ensureCreateAccountUI();
+        createAccountModal.style.display = 'flex';
+        const status = document.getElementById('create-account-status');
+        if (status) {
+            status.textContent = '';
+            status.style.color = '#475569';
+        }
+        const email = document.getElementById('create-account-email');
+        if (email) email.focus();
+    }
+
+    function closeCreateAccountModal() {
+        if (createAccountModal) createAccountModal.style.display = 'none';
+    }
+
+    async function createStudentAccount(event) {
+        event.preventDefault();
+        if (!isTeacher || isImpersonating) return;
+
+        const emailInput = document.getElementById('create-account-email');
+        const passwordInput = document.getElementById('create-account-password');
+        const status = document.getElementById('create-account-status');
+        const submit = document.getElementById('create-account-submit');
+        const email = String(emailInput.value || '').trim().toLowerCase();
+        const password = String(passwordInput.value || '');
+
+        if (!/^[^\s@]+@gmail\.com$/i.test(email)) {
+            status.textContent = 'Vui lòng nhập địa chỉ email có đuôi @gmail.com.';
+            status.style.color = '#b91c1c';
+            emailInput.focus();
+            return;
+        }
+        if (!password) {
+            status.textContent = 'Vui lòng nhập mật khẩu.';
+            status.style.color = '#b91c1c';
+            passwordInput.focus();
+            return;
+        }
+
+        submit.disabled = true;
+        status.textContent = 'Đang tạo tài khoản…';
+        status.style.color = '#475569';
+
+        try {
+            const { data: sessionData, error: sessionError } = await sb.auth.getSession();
+            const session = sessionData && sessionData.session;
+            if (sessionError || !session || !session.access_token) {
+                throw new Error('Phiên giảng viên đã hết hạn. Vui lòng đăng nhập lại.');
+            }
+
+            const response = await fetch(SUPABASE_URL + '/functions/v1/verify-device', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + session.access_token,
+                    'apikey': SUPABASE_ANON_KEY,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ mode: 'teacher_create_user', email, password })
             });
-        });
+            const result = await response.json().catch(() => ({}));
+
+            if (!response.ok || !result.ok) {
+                const message = result.error || (response.status === 401
+                    ? 'Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại.'
+                    : 'Không thể tạo tài khoản. Vui lòng thử lại.');
+                throw new Error(message);
+            }
+
+            status.textContent = result.legacyAllowlistSynced === false
+                ? '✅ Đã tạo tài khoản. Lưu ý: phần tương thích xác minh Gmail trên trình duyệt cũ chưa được đồng bộ.'
+                : '✅ Đã tạo tài khoản thành công. Email đã xác thực, học viên có thể đăng nhập ngay.';
+            status.style.color = result.legacyAllowlistSynced === false ? '#a16207' : '#15803d';
+            emailInput.value = '';
+            passwordInput.value = '';
+        } catch (error) {
+            status.textContent = error && error.message ? error.message : 'Có lỗi xảy ra khi tạo tài khoản.';
+            status.style.color = '#b91c1c';
+        } finally {
+            submit.disabled = false;
+        }
     }
+    // ================== Kết thúc tạo tài khoản học viên ==================
 
-    async function addAllowlistEmail() {
-        const emailInput = document.getElementById('allowlist-new-email');
-        const noteInput = document.getElementById('allowlist-new-note');
-        const gmailInput = document.getElementById('allowlist-new-gmail');
-        const statusEl = document.getElementById('allowlist-status');
-        const email = emailInput.value.trim().toLowerCase();
-        const note = noteInput.value.trim();
-        const linkedGmail = gmailInput.value.trim().toLowerCase();
-
-        if (!email || !email.includes('@')) {
-            statusEl.textContent = 'Vui lòng nhập email hợp lệ.';
-            return;
-        }
-        if (linkedGmail && !linkedGmail.includes('@')) {
-            statusEl.textContent = 'Gmail liên kết không hợp lệ.';
-            return;
-        }
-
-        statusEl.textContent = 'Đang lưu...';
-        const { error } = await sb
-            .from('allowed_signup_emails')
-            .upsert({ email, note: note || null, linked_gmail: linkedGmail || null }, { onConflict: 'email' });
-
-        if (error) {
-            statusEl.textContent = 'Lỗi: ' + error.message;
-            return;
-        }
-
-        statusEl.textContent = `✅ Đã lưu quyền đăng nhập cho ${email}.`;
-        emailInput.value = '';
-        noteInput.value = '';
-        gmailInput.value = '';
-        loadAllowlist();
-    }
-
-    async function removeAllowlistEmail(id) {
-        if (!confirm('Xoá quyền đăng nhập của email này? Người này sẽ không đăng nhập được nữa (ngay khi phiên hiện tại của họ hết hạn).')) return;
-        const statusEl = document.getElementById('allowlist-status');
-        statusEl.textContent = 'Đang xoá...';
-        const { error } = await sb
-            .from('allowed_signup_emails')
-            .delete()
-            .eq('id', id);
-
-        if (error) {
-            statusEl.textContent = 'Lỗi: ' + error.message;
-            return;
-        }
-        statusEl.textContent = '✅ Đã xoá quyền đăng nhập.';
-        loadAllowlist();
-    }
-    // ================== [KẾT THÚC] Quản lý quyền đăng nhập ==================
 
     // ================== [MỚI] Giảng viên theo dõi Egress (Băng thông) ==================
     let bandwidthBtn = null;
@@ -1299,9 +1300,9 @@ document.addEventListener('DOMContentLoaded', () => {
             // đang tự mình bị "xem" — trường hợp này không xảy ra vì isTeacher sẽ là false
             // ngay khi phiên đăng nhập là của học viên đang bị xem).
             if (teacherImpersonateBtn) teacherImpersonateBtn.style.display = isTeacher ? 'block' : 'none';
-            // [MỚI] Nút "Quyền đăng nhập" — chỉ giảng viên thấy, xem khối "Quản lý quyền đăng nhập" ở trên
-            ensureAllowlistUI();
-            if (allowlistBtn) allowlistBtn.style.display = isTeacher ? 'block' : 'none';
+            // Nút tạo tài khoản học viên — chỉ giảng viên chính mới được sử dụng.
+            ensureCreateAccountUI();
+            if (createAccountBtn) createAccountBtn.style.display = isTeacher && !isImpersonating ? 'block' : 'none';
             // [MỚI] Nút Quản lý Băng thông Egress
             ensureBandwidthUI();
             if (bandwidthBtn) bandwidthBtn.style.display = isTeacher ? 'block' : 'none';
@@ -1387,7 +1388,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentAccountCreatedAt = null;
             isTeacher = false;
             if (teacherImpersonateBtn) teacherImpersonateBtn.style.display = 'none';
-            if (allowlistBtn) { allowlistBtn.style.display = 'none'; closeAllowlistModal(); }
+            if (createAccountBtn) { createAccountBtn.style.display = 'none'; closeCreateAccountModal(); }
             if (bandwidthBtn) { bandwidthBtn.style.display = 'none'; if (bandwidthModal) bandwidthModal.style.display = 'none'; }
             if (lichHocAdminControls) lichHocAdminControls.style.display = 'none';
             if (lichHocStatusBadge) lichHocStatusBadge.style.display = 'none';
