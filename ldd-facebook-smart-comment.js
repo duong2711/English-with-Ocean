@@ -102,8 +102,11 @@
     catch (_) { return fallback; }
   }
   function writeJSON(key, value) {
-    try { localStorage.setItem(key, JSON.stringify(value)); return true; }
-    catch (_) { return false; }
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+      if (window.LDDFacebookCloud) window.LDDFacebookCloud.save(key, value);
+      return true;
+    } catch (_) { return false; }
   }
   function escapeHTML(value) {
     return String(value == null ? '' : value).replace(/[&<>"']/g, function (c) {
@@ -352,7 +355,7 @@
       current.keywords[field.getAttribute('data-keywords')] = field.value.split(/[,\n;]/).map(function (x) { return x.trim(); }).filter(Boolean);
     });
     var ok = writeJSON(STORE_KEY, current);
-    modal.querySelector('#fbsc-settings-status').textContent = ok ? 'Đã lưu bộ từ khóa trên trình duyệt này.' : 'Không thể lưu. Có thể bộ nhớ trình duyệt đã đầy.';
+    modal.querySelector('#fbsc-settings-status').textContent = ok ? 'Đã lưu; bộ từ khóa sẽ đồng bộ với kho dữ liệu LDD.' : 'Không thể lưu. Có thể bộ nhớ trình duyệt đã đầy.';
   }
 
   function renderImageSettings() {
@@ -476,9 +479,14 @@
 
   async function open() {
     if (!(await validateTeacher(true))) return;
+    var cloudReady = window.LDDFacebookCloud ? await window.LDDFacebookCloud.load() : false;
     ensureModal();
     renderImages();
     renderHistory();
+    var cloudStatus = modal.querySelector('#fbsc-compose-status');
+    if (cloudStatus) cloudStatus.textContent = cloudReady
+      ? 'Đã đồng bộ bộ từ khóa và lịch sử với kho dữ liệu LDD. Thư viện ảnh vẫn lưu trên thiết bị này.'
+      : 'Chưa kết nối được kho dữ liệu; bộ từ khóa và lịch sử chỉ dùng trên trình duyệt này.';
     modal.classList.add('is-open');
     document.body.style.overflow = 'hidden';
   }
