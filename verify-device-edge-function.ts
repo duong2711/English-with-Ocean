@@ -101,6 +101,57 @@ Deno.serve(async (req: Request) => {
     const userAgent = req.headers.get('user-agent') || '';
     const isTeacher = user.id === TEACHER_USER_ID && studentEmail === TEACHER_EMAIL;
 
+    // ---------- Teacher creates a real Supabase Auth account for a student ----------
+    if (mode === 'teacher_create_user') {
+      if (!isTeacher) return json({ error: 'teacher_only' }, 403);
+
+      const email = String(body?.email || '').trim().toLowerCase();
+      const password = typeof body?.password === 'string' ? body.password : '';
+
+      if (!/^[^\\s@]+@gmail\\.com$/i.test(email)) {
+        return json({ error: 'Vui lòng nhập địa chỉ email có đuôi @gmail.com.' }, 400);
+      }
+      // No app-level password length or character-class checks here. Supabase Auth
+      // still applies the project's own minimum/maximum and configured strength policy.
+      if (password.length === 0) {
+        return json({ error: 'Vui lòng nhập mật khẩu.' }, 400);
+      }
+
+      const { data: created, error: createErr } = await admin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: { display_name: email.split('@')[0] },
+      });
+
+      if (createErr) {
+        const message = String(createErr.message || '');
+        if (/already|registered|exists|email_exists/i.test(message)) {
+          return json({ error: 'Email này đã có tài khoản trên hệ thống.' }, 409);
+        }
+        return json({ error: message || 'Không thể tạo tài khoản.' }, 400);
+      }
+
+      // Keep the legacy Gmail-verification allowlist compatible with older cached clients.
+      const { error: allowlistErr } = await admin
+        .from('allowed_signup_emails')
+        .upsert({
+          email,
+          note: 'Tài khoản được tạo bởi giảng viên',
+          linked_gmail: email,
+        }, { onConflict: 'email' });
+
+      if (allowlistErr) {
+        console.error('Auth account created but legacy allowlist sync failed:', allowlistErr.message);
+      }
+
+      return json({
+        ok: true,
+        user: { id: created.user?.id, email: created.user?.email },
+        legacyAllowlistSynced: !allowlistErr,
+      });
+    }
+
     // ---------- Existing trusted device check (strict hash-only) ----------
     if (mode === 'check') {
       const deviceToken = String(body?.deviceToken || '').trim();
