@@ -69,7 +69,7 @@ async function refresh(){
   render();
  }catch{if(v===version)showError();}finally{if(v===version)loading=false;}
 }
-function inviteText(name,code){return 'Để nhận lời nhắc học tiếng Anh của '+name+', em hoặc phụ huynh mở chat với bot LDD English:\n'+botLink+'\n\nSao chép và gửi đúng mã sau vào chat bot:\n'+code+'\n\nGửi mã nghĩa là đồng ý nhận tối đa 2 lời nhắc mỗi đợt vắng học. Nếu học viên chưa đủ tuổi, phụ huynh cần đồng ý. Mã có hạn 24 giờ và chỉ dùng một lần. Nhắn STOP để ngừng tất cả lời nhắc trên Zalo này.';}
+function inviteText(name,code){return 'Để nhận lời nhắc học tiếng Anh của '+name+', em hoặc phụ huynh mở chat với bot LDD English:\n'+botLink+'\n\nSao chép và gửi đúng mã sau vào chat bot:\n'+code+'\n\nGửi mã nghĩa là đồng ý nhận tối đa 2 lời nhắc mỗi đợt vắng học. Nếu học viên chưa đủ tuổi, phụ huynh cần đồng ý. Mã có hạn 24 giờ và chỉ dùng một lần. Nếu cần thay đổi việc nhận nhắc nhở, vui lòng liên hệ giảng viên.';}
 async function copyText(text,area){
  try{await navigator.clipboard.writeText(text);note('Đã sao chép lời mời. Bạn có thể dán vào Zalo để gửi.');}
  catch{area.focus();area.select();try{if(document.execCommand('copy')){note('Đã sao chép lời mời.');return;}}catch{}note('Hãy sao chép phần lời mời đang được chọn.');}
