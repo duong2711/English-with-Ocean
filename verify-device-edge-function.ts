@@ -82,7 +82,7 @@ async function purgeExpiredTeacherDeletedAccounts() {
         if (error) throw error;
         const users = data?.users || [];
         for (const account of users) {
-          const meta = account.user_metadata || {};
+          const meta = { ...(account.user_metadata || {}), ...(account.app_metadata || {}) };
           const expires = Date.parse(meta.ldd_delete_expires_at || '');
           if (meta.ldd_deleted_at && Number.isFinite(expires) && expires <= now) {
             const email = String(account.email || '').toLowerCase();
@@ -236,7 +236,7 @@ Deno.serve(async (req: Request) => {
       if (target.id === TEACHER_USER_ID || String(target.email || '').toLowerCase() === TEACHER_EMAIL) {
         return json({ error: 'Không thể xóa tài khoản giảng viên.' }, 403);
       }
-      const meta = target.user_metadata || {};
+      const meta = { ...(target.user_metadata || {}), ...(target.app_metadata || {}) };
       if (meta.ldd_deleted_at) return json({ error: 'Tài khoản này đã nằm trong danh sách khôi phục.' }, 409);
       const now = new Date();
       const expires = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
