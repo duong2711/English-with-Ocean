@@ -156,6 +156,125 @@ Deno.serve(async (req: Request) => {
       });
     }
 
+    // ---------- Teacher account management: reversible deletion for 3 days ----------
+    async function purgeExpiredTeacherDeletedAccounts() {
+      const now = Date.now();
+      let page = 1;
+      let removed = 0;
+      while (page <= 100) {
+        const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 1000 });
+        if (error) throw error;
+        const users = data?.users || [];
+        for (const account of users) {
+          const meta = account.user_metadata || {};
+          const expires = Date.parse(meta.ldd_delete_expires_at || '');
+          if (meta.ldd_deleted_at && Number.isFinite(expires) && expires <= now) {
+            const email = String(account.email || '').toLowerCase();
+            const { error: deleteErr } = await admin.auth.admin.deleteUser(account.id);
+            if (deleteErr) {
+              console.error('Expired student account purge failed:', account.id, deleteErr.message);
+              continue;
+            }
+            if (email) {
+              await admin.from('allowed_signup_emails').delete().eq('email', email);
+              await admin.from('verified_devices').delete().eq('student_email', email);
+              await admin.from('device_approval_requests').delete().eq('student_email', email);
+            }
+            removed++;
+          }
+        }
+        if (users.length < 1000) break;
+        page++;
+      }
+      return removed;
+    }
+
+    if (mode === 'teacher_list_accounts') {
+      if (!isTeacher) return json({ error: 'teacher_only' }, 403);
+      const purged = await purgeExpiredTeacherDeletedAccounts();
+      const accounts: any[] = [];
+      let page = 1;
+      while (page <= 100) {
+        const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 1000 });
+        if (error) return json({ error: error.message }, 500);
+        const users = data?.users || [];
+        for (const account of users) {
+          if (account.id === TEACHER_USER_ID || String(account.email || '').toLowerCase() === TEACHER_EMAIL) continue;
+          const meta = account.user_metadata || {};
+          const deletedAt = meta.ldd_deleted_at || null;
+          const expiresAt = meta.ldd_delete_expires_at || null;
+          accounts.push({
+            id: account.id,
+            email: account.email || '',
+            display_name: meta.display_name || meta.full_name || '',
+            deleted_at: deletedAt,
+            delete_expires_at: expiresAt,
+            is_deleted: !!deletedAt && Number.isFinite(Date.parse(expiresAt || '')) && Date.parse(expiresAt) > Date.now()
+          });
+        }
+        if (users.length < 1000) break;
+        page++;
+      }
+      return json({ ok: true, accounts, purged });
+    }
+
+    if (mode === 'teacher_delete_user') {
+      if (!isTeacher) return json({ error: 'teacher_only' }, 403);
+      const userId = String(body?.userId || '');
+      if (!isUuid(userId)) return json({ error: 'Tài khoản không hợp lệ.' }, 400);
+      if (body?.confirmText !== 'XÓA') return json({ error: 'Vui lòng xác nhận bằng cách nhập chính xác XÓA.' }, 400);
+      const { data: found, error: findErr } = await admin.auth.admin.getUserById(userId);
+      if (findErr || !found?.user) return json({ error: 'Không tìm thấy tài khoản.' }, 404);
+      const target = found.user;
+      if (target.id === TEACHER_USER_ID || String(target.email || '').toLowerCase() === TEACHER_EMAIL) {
+        return json({ error: 'Không thể xóa tài khoản giảng viên.' }, 403);
+      }
+      const meta = target.user_metadata || {};
+      if (meta.ldd_deleted_at) return json({ error: 'Tài khoản này đã nằm trong danh sách khôi phục.' }, 409);
+      const now = new Date();
+      const expires = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+      const { data: updated, error: updateErr } = await admin.auth.admin.updateUserById(userId, {
+        ban_duration: '72h',
+        user_metadata: {
+          ...meta,
+          ldd_deleted_at: now.toISOString(),
+          ldd_delete_expires_at: expires.toISOString()
+        }
+      });
+      if (updateErr) return json({ error: updateErr.message }, 500);
+      const email = String(target.email || '').toLowerCase();
+      if (email) {
+        await admin.from('verified_devices').delete().eq('student_email', email);
+        await admin.from('device_approval_requests').delete().eq('student_email', email);
+      }
+      return json({ ok: true, deleted_at: now.toISOString(), delete_expires_at: expires.toISOString() });
+    }
+
+    if (mode === 'teacher_restore_user') {
+      if (!isTeacher) return json({ error: 'teacher_only' }, 403);
+      const userId = String(body?.userId || '');
+      if (!isUuid(userId)) return json({ error: 'Tài khoản không hợp lệ.' }, 400);
+      const { data: found, error: findErr } = await admin.auth.admin.getUserById(userId);
+      if (findErr || !found?.user) return json({ error: 'Tài khoản đã bị xóa vĩnh viễn hoặc không tồn tại.' }, 404);
+      const target = found.user;
+      const meta = target.user_metadata || {};
+      const expires = Date.parse(meta.ldd_delete_expires_at || '');
+      if (!meta.ldd_deleted_at) return json({ error: 'Tài khoản này không nằm trong danh sách đã xóa.' }, 409);
+      if (!Number.isFinite(expires) || expires <= Date.now()) {
+        await purgeExpiredTeacherDeletedAccounts();
+        return json({ error: 'Đã quá 3 ngày. Tài khoản đã hết thời hạn khôi phục.' }, 410);
+      }
+      const nextMeta = { ...meta };
+      delete nextMeta.ldd_deleted_at;
+      delete nextMeta.ldd_delete_expires_at;
+      const { error: restoreErr } = await admin.auth.admin.updateUserById(userId, {
+        ban_duration: 'none',
+        user_metadata: nextMeta
+      });
+      if (restoreErr) return json({ error: restoreErr.message }, 500);
+      return json({ ok: true, restored: true });
+    }
+
     // ---------- Existing trusted device check (strict hash-only) ----------
     if (mode === 'check') {
       const deviceToken = String(body?.deviceToken || '').trim();
