@@ -532,6 +532,7 @@ Deno.serve(async (req: Request) => {
     // ---------- Lightweight teacher badge count (avoid downloading device list in background) ----------
     if (mode === 'teacher_pending_count') {
       if (!isTeacher) return json({ error: 'teacher_only' }, 403);
+      await purgeExpiredTeacherDeletedAccounts();
       await expireOldRequests();
 
       const { count, error } = await admin
