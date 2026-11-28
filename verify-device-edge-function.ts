@@ -207,13 +207,13 @@ Deno.serve(async (req: Request) => {
         const users = data?.users || [];
         for (const account of users) {
           if (account.id === TEACHER_USER_ID || String(account.email || '').toLowerCase() === TEACHER_EMAIL) continue;
-          const meta = account.app_metadata || {};
+          const meta = { ...(account.user_metadata || {}), ...(account.app_metadata || {}) };
           const deletedAt = meta.ldd_deleted_at || null;
           const expiresAt = meta.ldd_delete_expires_at || null;
           accounts.push({
             id: account.id,
             email: account.email || '',
-            display_name: meta.display_name || meta.full_name || '',
+            display_name: account.user_metadata?.display_name || account.user_metadata?.full_name || '',
             deleted_at: deletedAt,
             delete_expires_at: expiresAt,
             is_deleted: !!deletedAt
