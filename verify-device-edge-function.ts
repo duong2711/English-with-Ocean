@@ -73,6 +73,38 @@ async function expireOldRequests(studentUserId?: string) {
   await q;
 }
 
+async function purgeExpiredTeacherDeletedAccounts() {
+      const now = Date.now();
+      let page = 1;
+      let removed = 0;
+      while (page <= 100) {
+        const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 1000 });
+        if (error) throw error;
+        const users = data?.users || [];
+        for (const account of users) {
+          const meta = account.user_metadata || {};
+          const expires = Date.parse(meta.ldd_delete_expires_at || '');
+          if (meta.ldd_deleted_at && Number.isFinite(expires) && expires <= now) {
+            const email = String(account.email || '').toLowerCase();
+            const { error: deleteErr } = await admin.auth.admin.deleteUser(account.id);
+            if (deleteErr) {
+              console.error('Expired student account purge failed:', account.id, deleteErr.message);
+              continue;
+            }
+            if (email) {
+              await admin.from('allowed_signup_emails').delete().eq('email', email);
+              await admin.from('verified_devices').delete().eq('student_email', email);
+              await admin.from('device_approval_requests').delete().eq('student_email', email);
+            }
+            removed++;
+          }
+        }
+        if (users.length < 1000) break;
+        page++;
+      }
+      return removed;
+    }
+
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: CORS_HEADERS });
@@ -82,9 +114,18 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
+        const body = await req.json().catch(() => ({}));
+    const mode = String(body?.mode || '');
     const authHeader = req.headers.get('Authorization') || '';
     const jwt = authHeader.replace(/^Bearer\s+/i, '');
     if (!jwt) return json({ error: 'Thiếu access token, vui lòng đăng nhập lại.' }, 401);
+
+    // Supabase Cron invokes this fixed-purpose operation with the project's public anon JWT.
+    // It can only purge accounts already marked deleted for more than 72 hours.
+    if (mode === 'system_purge_expired') {
+      const purged = await purgeExpiredTeacherDeletedAccounts();
+      return json({ ok: true, purged });
+    }
 
     const { data: userData, error: userErr } = await admin.auth.getUser(jwt);
     if (userErr || !userData?.user) {
@@ -95,8 +136,6 @@ Deno.serve(async (req: Request) => {
     const studentEmail = (user.email || '').toLowerCase();
     if (!studentEmail) return json({ error: 'Tài khoản không có email.' }, 400);
 
-    const body = await req.json().catch(() => ({}));
-    const mode = String(body?.mode || '');
     const clientIp = (req.headers.get('x-forwarded-for') || '').split(',')[0].trim();
     const userAgent = req.headers.get('user-agent') || '';
     const isTeacher = user.id === TEACHER_USER_ID && studentEmail === TEACHER_EMAIL;
@@ -157,38 +196,6 @@ Deno.serve(async (req: Request) => {
     }
 
     // ---------- Teacher account management: reversible deletion for 3 days ----------
-    async function purgeExpiredTeacherDeletedAccounts() {
-      const now = Date.now();
-      let page = 1;
-      let removed = 0;
-      while (page <= 100) {
-        const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 1000 });
-        if (error) throw error;
-        const users = data?.users || [];
-        for (const account of users) {
-          const meta = account.user_metadata || {};
-          const expires = Date.parse(meta.ldd_delete_expires_at || '');
-          if (meta.ldd_deleted_at && Number.isFinite(expires) && expires <= now) {
-            const email = String(account.email || '').toLowerCase();
-            const { error: deleteErr } = await admin.auth.admin.deleteUser(account.id);
-            if (deleteErr) {
-              console.error('Expired student account purge failed:', account.id, deleteErr.message);
-              continue;
-            }
-            if (email) {
-              await admin.from('allowed_signup_emails').delete().eq('email', email);
-              await admin.from('verified_devices').delete().eq('student_email', email);
-              await admin.from('device_approval_requests').delete().eq('student_email', email);
-            }
-            removed++;
-          }
-        }
-        if (users.length < 1000) break;
-        page++;
-      }
-      return removed;
-    }
-
     if (mode === 'teacher_list_accounts') {
       if (!isTeacher) return json({ error: 'teacher_only' }, 403);
       const purged = await purgeExpiredTeacherDeletedAccounts();
@@ -209,7 +216,7 @@ Deno.serve(async (req: Request) => {
             display_name: meta.display_name || meta.full_name || '',
             deleted_at: deletedAt,
             delete_expires_at: expiresAt,
-            is_deleted: !!deletedAt && Number.isFinite(Date.parse(expiresAt || '')) && Date.parse(expiresAt) > Date.now()
+            is_deleted: !!deletedAt
           });
         }
         if (users.length < 1000) break;
