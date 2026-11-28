@@ -207,7 +207,7 @@ Deno.serve(async (req: Request) => {
         const users = data?.users || [];
         for (const account of users) {
           if (account.id === TEACHER_USER_ID || String(account.email || '').toLowerCase() === TEACHER_EMAIL) continue;
-          const meta = account.user_metadata || {};
+          const meta = account.app_metadata || {};
           const deletedAt = meta.ldd_deleted_at || null;
           const expiresAt = meta.ldd_delete_expires_at || null;
           accounts.push({
@@ -241,9 +241,9 @@ Deno.serve(async (req: Request) => {
       const now = new Date();
       const expires = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
       const { data: updated, error: updateErr } = await admin.auth.admin.updateUserById(userId, {
-        ban_duration: '72h',
-        user_metadata: {
-          ...meta,
+        ban_duration: '876000h',
+        app_metadata: {
+          ...(target.app_metadata || {}),
           ldd_deleted_at: now.toISOString(),
           ldd_delete_expires_at: expires.toISOString()
         }
@@ -264,7 +264,7 @@ Deno.serve(async (req: Request) => {
       const { data: found, error: findErr } = await admin.auth.admin.getUserById(userId);
       if (findErr || !found?.user) return json({ error: 'Tài khoản đã bị xóa vĩnh viễn hoặc không tồn tại.' }, 404);
       const target = found.user;
-      const meta = target.user_metadata || {};
+      const meta = target.app_metadata || {};
       const expires = Date.parse(meta.ldd_delete_expires_at || '');
       if (!meta.ldd_deleted_at) return json({ error: 'Tài khoản này không nằm trong danh sách đã xóa.' }, 409);
       if (!Number.isFinite(expires) || expires <= Date.now()) {
@@ -276,7 +276,7 @@ Deno.serve(async (req: Request) => {
       delete nextMeta.ldd_delete_expires_at;
       const { error: restoreErr } = await admin.auth.admin.updateUserById(userId, {
         ban_duration: 'none',
-        user_metadata: nextMeta
+        app_metadata: nextMeta
       });
       if (restoreErr) return json({ error: restoreErr.message }, 500);
       return json({ ok: true, restored: true });
