@@ -116,16 +116,16 @@ Deno.serve(async (req: Request) => {
   try {
         const body = await req.json().catch(() => ({}));
     const mode = String(body?.mode || '');
-    const authHeader = req.headers.get('Authorization') || '';
-    const jwt = authHeader.replace(/^Bearer\s+/i, '');
-    if (!jwt) return json({ error: 'Thiếu access token, vui lòng đăng nhập lại.' }, 401);
-
-    // Supabase Cron invokes this fixed-purpose operation with the project's public anon JWT.
-    // It can only purge accounts already marked deleted for more than 72 hours.
+    // Public cron entry point: it can only delete accounts already marked for deletion
+    // whose fixed 72-hour recovery window has elapsed. All user-facing modes still verify JWT below.
     if (mode === 'system_purge_expired') {
       const purged = await purgeExpiredTeacherDeletedAccounts();
       return json({ ok: true, purged });
     }
+
+    const authHeader = req.headers.get('Authorization') || '';
+    const jwt = authHeader.replace(/^Bearer\s+/i, '');
+    if (!jwt) return json({ error: 'Thiếu access token, vui lòng đăng nhập lại.' }, 401);
 
     const { data: userData, error: userErr } = await admin.auth.getUser(jwt);
     if (userErr || !userData?.user) {
